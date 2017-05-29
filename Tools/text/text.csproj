@@ -1,0 +1,19 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp1.1</TargetFramework>
+    <RootNamespace>Text</RootNamespace>
+  </PropertyGroup>
+
+  <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="pubcore &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot;" />
+  </Target>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+  </ItemGroup>
+
+</Project>

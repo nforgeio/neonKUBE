@@ -1,0 +1,272 @@
+{
+  "template": "logstash-*",
+  "settings": {
+    "refresh_interval": "5s",
+    "number_of_shards": 8,
+    "number_of_replicas": 1
+  },
+  "mappings": {
+    "default": {
+      "_meta": {
+        "version": "0.0.1"
+      },
+      "dynamic_templates": [
+        {
+          "strings_as_keyword": {
+            "mapping": {
+              "ignore_above": 1024,
+              "type": "keyword"
+            },
+            "match_mapping_type": "string"
+          }
+        }
+      ],
+      "_all": {
+        "enabled": false
+      },
+      "_source": {
+        "enabled": true
+      },
+      "properties": {
+        "@timestamp": {
+          "type": "date",
+          "format": "strict_date_optional_time||epoch_millis"
+        },
+        "activity_id": {
+          "type": "keyword"
+        },
+        "cluster": {
+          "type": "keyword"
+        },
+        "container_id": {
+          "type": "keyword"
+        },
+        "datacenter": {
+          "type": "keyword"
+        },
+        "environment": {
+          "type": "keyword"
+        },
+        "level": {
+          "type": "keyword"
+        },
+        "location": {
+          "properties": {
+            "latitude": {
+              "type": "scaled_float",
+              "scaling_factor": 100000.0
+            },
+            "longitude": {
+              "type": "scaled_float",
+              "scaling_factor": 100000.0
+            },
+            "metro_code": {
+              "type": "integer"
+            },
+            "postal_code": {
+              "type": "keyword"
+            },
+            "time_zone": {
+              "type": "keyword"
+            },
+            "continent": {
+              "properties": {
+                "code": {
+                  "type": "keyword"
+                },
+                "geoname_id": {
+                  "type": "long"
+                },
+                "name": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "country": {
+              "properties": {
+                "geoname_id": {
+                  "type": "long"
+                },
+                "iso_code": {
+                  "type": "keyword"
+                },
+                "name": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "city": {
+              "properties": {
+                "geoname_id": {
+                  "type": "long"
+                },
+                "name": {
+                  "type": "keyword"
+                }
+              }
+            }
+          }
+        },
+        "message": {
+          "type": "text"
+        },
+        "module": {
+          "type": "keyword"
+        },
+        "node": {
+          "type": "keyword"
+        },
+        "node_dnsname": {
+          "type": "keyword"
+        },
+        "node_ip": {
+          "type": "ip"
+        },
+        "node_role": {
+          "type": "keyword"
+        },
+        "service": {
+          "type": "keyword"
+        },
+        "service_host": {
+          "type": "keyword"
+        },
+        "service_type": {
+          "type": "keyword"
+        },
+        "tag": {
+          "type": "keyword"
+        },
+        "proxy": {
+          "properties": {
+            "browser": {
+              "properties": {
+                "bot": {
+                  "type": "boolean"
+                },
+                "device": {
+                  "type": "keyword"
+                },
+                "name": {
+                  "type": "keyword"
+                },
+                "platform_name": {
+                  "type": "keyword"
+                },
+                "platform_version": {
+                  "type": "keyword"
+                },
+                "version": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "bytes_received": {
+              "type": "long"
+            },
+            "bytes_sent": {
+              "type": "long"
+            },
+            "client_ip": {
+              "type": "ip"
+            },
+            "conn_proxy": {
+              "type": "integer"
+            },
+            "conn_frontend": {
+              "type": "integer"
+            },
+            "conn_backend": {
+              "type": "integer"
+            },
+            "conn_server": {
+              "type": "integer"
+            },
+            "mode": {
+              "type": "keyword"
+            },
+            "queue_server": {
+              "type": "integer"
+            },
+            "queue_backend": {
+              "type": "integer"
+            },
+            "retries": {
+              "type": "short"
+            },
+            "route": {
+              "type": "keyword"
+            },
+            "server": {
+              "type": "keyword"
+            },
+            "server_ip": {
+              "type": "ip"
+            },
+            "server_port": {
+              "type": "integer"
+            },
+            "time_queue": {
+              "type": "scaled_float",
+              "scaling_factor": 1000.0
+            },
+            "time_connect": {
+              "type": "scaled_float",
+              "scaling_factor": 1000.0
+            },
+            "time_session": {
+              "type": "scaled_float",
+              "scaling_factor": 1000.0
+            },
+            "termination": {
+              "type": "keyword"
+            },
+            "tls_version": {
+              "type": "keyword"
+            },
+            "tls_cypher": {
+              "type": "keyword"
+            },
+            "http_host": {
+              "type": "keyword"
+            },
+            "http_method": {
+              "type": "keyword"
+            },
+            "http_status": {
+              "type": "short"
+            },
+            "http_time_active": {
+              "type": "scaled_float",
+              "scaling_factor": 1000.0
+            },
+            "http_time_idle": {
+              "type": "scaled_float",
+              "scaling_factor": 1000.0
+            },
+            "http_time_request": {
+              "type": "scaled_float",
+              "scaling_factor": 1000.0
+            },
+            "http_time_response": {
+              "type": "scaled_float",
+              "scaling_factor": 1000.0
+            },
+            "http_uri": {
+              "type": "keyword"
+            },
+            "http_uri_query": {
+              "type": "keyword"
+            },
+            "http_user_agent": {
+              "type": "text"
+            },
+            "http_version": {
+              "type": "keyword"
+            }
+          }
+        }
+      }
+    }
+  }
+}

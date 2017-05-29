@@ -1,0 +1,284 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="14.0" DefaultTargets="Build" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <Import Project="$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props" Condition="Exists('$(MSBuildExtensionsPath)\$(MSBuildToolsVersion)\Microsoft.Common.props')" />
+  <PropertyGroup>
+    <Configuration Condition=" '$(Configuration)' == '' ">Debug</Configuration>
+    <Platform Condition=" '$(Platform)' == '' ">AnyCPU</Platform>
+    <ProjectGuid>{78A69CC0-1CA5-4D1A-889F-765212271A9A}</ProjectGuid>
+    <OutputType>Library</OutputType>
+    <AppDesignerFolder>Properties</AppDesignerFolder>
+    <RootNamespace>Files</RootNamespace>
+    <AssemblyName>Files</AssemblyName>
+    <TargetFrameworkVersion>v4.5</TargetFrameworkVersion>
+    <FileAlignment>512</FileAlignment>
+    <TargetFrameworkProfile />
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Debug|AnyCPU' ">
+    <DebugSymbols>true</DebugSymbols>
+    <DebugType>full</DebugType>
+    <Optimize>false</Optimize>
+    <OutputPath>bin\Debug\</OutputPath>
+    <DefineConstants>DEBUG;TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <PropertyGroup Condition=" '$(Configuration)|$(Platform)' == 'Release|AnyCPU' ">
+    <DebugType>pdbonly</DebugType>
+    <Optimize>true</Optimize>
+    <OutputPath>bin\Release\</OutputPath>
+    <DefineConstants>TRACE</DefineConstants>
+    <ErrorReport>prompt</ErrorReport>
+    <WarningLevel>4</WarningLevel>
+  </PropertyGroup>
+  <ItemGroup>
+    <Reference Include="System" />
+    <Reference Include="System.Core" />
+    <Reference Include="System.Xml.Linq" />
+    <Reference Include="System.Data.DataSetExtensions" />
+    <Reference Include="Microsoft.CSharp" />
+    <Reference Include="System.Data" />
+    <Reference Include="System.Net.Http" />
+    <Reference Include="System.Xml" />
+  </ItemGroup>
+  <ItemGroup>
+    <Compile Include="Readme.cs" />
+    <Compile Include="Properties\AssemblyInfo.cs" />
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="dotnet\resolv.conf.head.sh" />
+    <Content Include="neon-cluster-manager\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="neon-cluster-manager\build.ps1" />
+    <None Include="neon-cluster-manager\docker-entrypoint.sh" />
+    <None Include="neon-cluster-manager\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-cluster-manager\publish.ps1" />
+    <None Include="neon-cluster-manager\README.md" />
+    <None Include="neon-log-collector\geoip\MaxMind.readme" />
+    <Content Include="_artifacts\README.txt" />
+    <Content Include="elasticsearch\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="haproxy\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="metricbeat\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="alpine\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="alpine\build.ps1" />
+    <None Include="alpine\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="alpine\publish.ps1" />
+    <None Include="alpine\README.md" />
+    <None Include="metricbeat\build.ps1" />
+    <None Include="metricbeat\config\metricbeat.yml.sh" />
+    <None Include="metricbeat\docker-entrypoint.sh" />
+    <None Include="metricbeat\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="metricbeat\publish.ps1" />
+    <None Include="metricbeat\README.md" />
+    <None Include="neon-log-collector\plugin\filter-neon-docker.rb" />
+    <None Include="neon-log-collector\plugin\filter-neon-proxy-geoip.rb" />
+    <None Include="neon-log-collector\plugin\filter-neon-loglevel.rb" />
+    <None Include="neon-log-collector\plugin\filter-neon-logfields.rb" />
+    <None Include="neon-log-collector\plugin\filter-neon-proxy.rb" />
+    <None Include="neon-log-collector\plugin\filter-neon-timestamp.rb" />
+    <None Include="neon-log-collector\template\logstash.json" />
+    <Content Include="neon-registry-cache\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="neon-proxy-vault\check-vault.sh" />
+    <None Include="neon-registry-cache\build.ps1" />
+    <None Include="neon-registry-cache\docker-entrypoint.sh" />
+    <None Include="neon-registry-cache\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-registry-cache\publish.ps1" />
+    <None Include="neon-registry-cache\README.md" />
+    <None Include="neon-registry-cache\config\registry.yml.sh" />
+    <Content Include="neon-cli\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="neon-cli\build.ps1" />
+    <None Include="neon-cli\docker-entrypoint.sh" />
+    <None Include="neon-cli\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-cli\publish.ps1" />
+    <None Include="neon-cli\README.md" />
+    <None Include="_common\log-debug.sh" />
+    <None Include="_common\log-fatal.sh" />
+    <None Include="_common\log-info.sh" />
+    <None Include="_artifacts\consul_0.7.1_linux_amd64.zip" />
+    <None Include="_artifacts\consul_latest_linux_amd64.zip" />
+    <None Include="_artifacts\vault_0.6.2_linux_amd64.zip" />
+    <None Include="_artifacts\vault_current_linux_amd64.zip" />
+    <Content Include="dotnet\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="dotnet\build.ps1" />
+    <None Include="dotnet\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="dotnet\publish.ps1" />
+    <None Include="dotnet\README.md" />
+    <None Include="elasticsearch\README.md" />
+    <Content Include="neon-proxy-manager\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="_common\log-error.sh" />
+    <None Include="neon-proxy-manager\build.ps1" />
+    <None Include="neon-proxy-manager\docker-entrypoint.sh" />
+    <None Include="neon-proxy-manager\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-proxy-manager\publish.ps1" />
+    <None Include="neon-proxy-manager\README.md" />
+    <None Include="neon-proxy\onconfigchange.sh" />
+    <None Include="neon-proxy\README.md" />
+    <None Include="neon-proxy\report-error.sh" />
+    <None Include="neon-proxy\warning-loop.sh" />
+    <None Include="haproxy\build.ps1" />
+    <None Include="haproxy\docker-entrypoint.sh" />
+    <None Include="haproxy\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="haproxy\publish.ps1" />
+    <None Include="haproxy\README.md" />
+    <None Include="includes.ps1" />
+    <None Include="kibana\kibana.yml.sh" />
+    <None Include="kibana\README.md" />
+    <None Include="neon-proxy-vault\README.md" />
+    <None Include="_common\log-warn.sh" />
+    <None Include="_common\neoncluster.sh" />
+    <None Include="elasticsearch\docker-entrypoint.sh" />
+    <None Include="elasticsearch\publish.ps1" />
+    <None Include="elasticsearch\build.ps1" />
+    <None Include="elasticsearch\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Content Include="neon-proxy\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="neon-proxy\build.ps1" />
+    <None Include="neon-proxy\docker-entrypoint.sh" />
+    <None Include="neon-proxy\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-proxy\publish.ps1" />
+    <Content Include="node\program.js" />
+    <Content Include="tdagent\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="node\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="neon-proxy-vault\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="neon-proxy-vault\build.ps1" />
+    <None Include="neon-proxy-vault\docker-entrypoint.sh" />
+    <None Include="neon-proxy-vault\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-proxy-vault\publish.ps1" />
+    <None Include="node\build.ps1" />
+    <None Include="node\docker-entrypoint.sh" />
+    <None Include="node\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="node\publish.ps1" />
+    <None Include="node\README.md" />
+    <None Include="publish.ps1" />
+    <Content Include="neon-log-host\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <Content Include="neon-log-collector\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="neon-log-collector\build.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-log-collector\docker-entrypoint.sh" />
+    <None Include="neon-log-collector\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-log-collector\publish.ps1" />
+    <None Include="neon-log-collector\td-agent.conf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-log-collector\README.md" />
+    <None Include="neon-log-host\build.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-log-host\docker-entrypoint.sh" />
+    <None Include="neon-log-host\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-log-host\publish.ps1" />
+    <Content Include="neon-log-host\td-agent.conf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="neon-log-host\README.md" />
+    <None Include="tdagent\build.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <Content Include="tdagent\td-agent.conf">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="tdagent\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="tdagent\publish.ps1" />
+    <None Include="tdagent\README.md" />
+    <None Include="elasticsearch\config\elasticsearch.yml.sh" />
+    <None Include="elasticsearch\config\log4j2.properties" />
+    <Content Include="kibana\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="kibana\publish.ps1" />
+    <None Include="kibana\build.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="kibana\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="kibana\docker-entrypoint.sh" />
+    <Content Include="ubuntu-16.04\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="ubuntu-16.04\build.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ubuntu-16.04\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ubuntu-16.04\publish.ps1" />
+    <None Include="ubuntu-16.04\README.md" />
+    <None Include="_common\vault-auth.sh" />
+  </ItemGroup>
+  <ItemGroup />
+  <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
+  <PropertyGroup>
+    <PostBuildEvent>
+    </PostBuildEvent>
+  </PropertyGroup>
+  <PropertyGroup>
+    <PreBuildEvent>
+    </PreBuildEvent>
+  </PropertyGroup>
+  <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
+       Other similar extension points exist, see Microsoft.Common.targets.
+  <Target Name="BeforeBuild">
+  </Target>
+  <Target Name="AfterBuild">
+  </Target>
+  -->
+</Project>

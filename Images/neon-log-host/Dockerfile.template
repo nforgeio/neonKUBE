@@ -1,0 +1,27 @@
+#------------------------------------------------------------------------------
+# FILE:         Dockerfile.template
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+#
+# TD-Agent deployed on each NeonCluster node that forwards log events to the
+# cluster log aggregator.
+
+FROM        neoncluster/tdagent
+MAINTAINER  jeff@lilltek.com
+STOPSIGNAL  SIGTERM
+
+# Expose the standard TDAgent network ports for TCP/UDP
+# and HTTP.
+
+EXPOSE 24224/tcp 24224/udp 9880/tcp
+
+COPY docker-entrypoint.sh   /
+COPY _common/*.sh           /
+COPY td-agent.conf          /etc/td-agent
+
+RUN chmod 700 /*.sh \
+    && chmod 600 /etc/td-agent \
+    && /usr/sbin/td-agent-gem install fluent-plugin-systemd -v 0.0.4 --no-document
+
+#ENTRYPOINT ["bash"]
+ENTRYPOINT ["/tini", "--", "/docker-entrypoint.sh"]

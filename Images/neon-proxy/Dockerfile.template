@@ -1,0 +1,43 @@
+#------------------------------------------------------------------------------
+# FILE:         Dockerfile.template
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+#
+# HAProxy image that dynamically loads its configuration from HashiCorp Consul
+# and Vault.
+#
+# This file cannot be used directly to create an image.  The [build.ps1] script 
+# generates a suitable dockerfile by replacing the following symbol references
+# then building the image.
+#
+#   ${VERSION}          - The .NET Core image tag (e.g. "1.1.0-runtime")
+
+FROM        haproxy:${VERSION}-alpine
+MAINTAINER  jeff@lilltek.com
+STOPSIGNAL  SIGTERM
+
+# Install the [tini] INIT manager.
+
+RUN apk add --update tini
+
+# Install the Consul and Vault binaries.
+
+COPY consul-binaries/*      /usr/local/bin
+COPY vault-binaries/*       /usr/local/bin
+
+# Install our custom entry point and helper scripts.
+
+COPY docker-entrypoint.sh   /
+COPY onconfigchange.sh      /
+COPY report-error.sh        /
+COPY warning-loop.sh        /
+COPY _common/*.sh           /
+
+# Set script permissions and then install [bash], [unzip] and [jq]. 
+
+RUN chmod 700 /*.sh \
+    && apk add --update bash unzip jq
+
+#ENTRYPOINT ["sh"]
+#ENTRYPOINT ["sleep", "100000"]
+ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]

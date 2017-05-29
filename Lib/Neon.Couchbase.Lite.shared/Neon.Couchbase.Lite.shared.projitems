@@ -1,0 +1,36 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <PropertyGroup>
+    <MSBuildAllProjects>$(MSBuildAllProjects);$(MSBuildThisFileFullPath)</MSBuildAllProjects>
+    <HasSharedItems>true</HasSharedItems>
+    <SharedGUID>8d7fe880-9006-488f-bab3-3a82011cd699</SharedGUID>
+  </PropertyGroup>
+  <PropertyGroup Label="Configuration">
+    <Import_RootNamespace>Neon.Stack.Couchbase.Lite.Shared</Import_RootNamespace>
+  </PropertyGroup>
+  <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AttachmentEventArgs.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ConflictDetails.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ConflictException.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ConflictPolicy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ConflictPolicyType.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)CustomConflictPolicy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DerivedCreateInfo.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EntityDatabase.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EntityDocument.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EntityLiveQuery.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EntityQuery.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EntityQueryEnumerator.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)EntityQueryRow.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)FailConflictPolicy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IEntityDocument.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IgnoreConflictPolicy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)KeepOtherConflictPolicy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)KeepThisConflictPolicy.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ManagerExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)NeonPropertyNames.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)RevisionExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)StubEntity.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)ViewExtensions.cs" />
+  </ItemGroup>
+</Project>

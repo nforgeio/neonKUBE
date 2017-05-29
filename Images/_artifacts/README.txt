@@ -1,0 +1,1 @@
+﻿This folder holds binaries and other files that may be copied to Docker images.

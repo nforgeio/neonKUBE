@@ -1,0 +1,166 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:	    RebootCommand.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Newtonsoft;
+using Newtonsoft.Json;
+
+using Neon.Cluster;
+using Neon.Common;
+using Neon.IO;
+
+namespace NeonTool
+{
+    /// <summary>
+    /// Implements the <b>reboot</b> command.
+    /// </summary>
+    public class RebootCommand : CommandBase
+    {
+        private const string usage = @"
+Reboots one or more cluster host nodes.
+
+USAGE:
+
+    neon reboot [OPTIONS] NODE...
+
+ARGUMENTS:
+
+    NODE        - One or more target node names, or the plus (+)
+                  sign to reboot all nodes.
+
+NOTES:
+
+The [-w/--wait] option specifies the number of seconds to wait
+for each node to stablize after it has successfully rebooted.  
+This defaults to 60 seconds.
+
+The [-m=COUNT/--max-parallel] option specifies the number
+of nodes to reboot in parallel.  This defaults to one for this 
+command.
+";
+
+        /// <inheritdoc/>
+        public override string[] Words
+        {
+            get { return new string[] { "reboot" }; }
+        }
+
+        /// <inheritdoc/>
+        public override void Help()
+        {
+            Console.WriteLine(usage);
+        }
+
+        /// <inheritdoc/>
+        public override void Run(CommandLine commandLine)
+        {
+            if (commandLine.HasHelpOption)
+            {
+                Console.WriteLine(usage);
+                Program.Exit(0);
+            }
+
+            var clusterLogin = Program.ConnectCluster();
+
+            // Process the command arguments.
+
+            var nodeDefinitions = new List<NodeDefinition>();
+
+            if (commandLine.Arguments.Length < 1)
+            {
+                Console.Error.WriteLine("*** ERROR: At least one NODE must be specified.");
+                Program.Exit(1);
+            }
+
+            if (commandLine.Arguments.Length == 1 && commandLine.Arguments[0] == "+")
+            {
+                foreach (var manager in clusterLogin.Definition.SortedManagers)
+                {
+                    nodeDefinitions.Add(manager);
+                }
+
+                foreach (var worker in clusterLogin.Definition.SortedWorkers)
+                {
+                    nodeDefinitions.Add(worker);
+                }
+            }
+            else
+            {
+                foreach (var name in commandLine.Arguments)
+                {
+                    NodeDefinition node;
+
+                    if (!clusterLogin.Definition.NodeDefinitions.TryGetValue(name, out node))
+                    {
+                        Console.WriteLine($"*** Error: Node [{name}] is not present in the cluster.");
+                        Program.Exit(1);
+                    }
+
+                    nodeDefinitions.Add(node);
+                }
+            }
+
+            // Perform the reboots.
+
+            var cluster   = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>);
+            var operation = 
+                new SetupController(Program.SafeCommandLine, cluster.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
+                {
+                    ShowStatus  = !Program.Quiet,
+                    MaxParallel = Program.MaxParallel
+                };
+
+            operation.AddWaitUntilOnlineStep();
+            operation.AddStep("reboot nodes",
+                n =>
+                {
+                    n.Status = "rebooting";
+                    n.Reboot(wait: true);
+
+                    n.Status = $"stablizing ({Program.WaitSeconds}s)";
+                    Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
+                });
+
+            if (!operation.Run())
+            {
+                Console.Error.WriteLine("*** ERROR: The reboot for one or more nodes failed.");
+                Program.Exit(1);
+            }
+        }
+        
+        /// <inheritdoc/>
+        public override ShimInfo Shim(DockerShim shim)
+        {
+            var commandLine = shim.CommandLine;
+
+            if (commandLine.Arguments.LastOrDefault() == "-")
+            {
+                shim.AddStdin(text: true);
+            }
+            else if (commandLine.Arguments.Length == 4)
+            {
+                switch (commandLine.Arguments[2])
+                {
+                    case "add":
+                    case "settings":
+
+                        shim.AddFile(commandLine.Arguments[3]);
+                        break;
+                }
+            }
+
+            return new ShimInfo(isShimmed: true, ensureConnection: true);
+        }
+    }
+}

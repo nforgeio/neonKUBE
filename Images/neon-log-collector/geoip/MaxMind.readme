@@ -1,0 +1,26 @@
+﻿This product includes GeoLite2 database created by MaxMind, available from
+http://www.maxmind.com.  License information:
+
+    Creative Commons Attribution-ShareAlike 4.0 International License
+    https://creativecommons.org/licenses/by-sa/4.0/
+
+This is downloaded from:
+
+	http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz
+
+This database provides for lookups with decent accuracy.  MaxMind also 
+provides much higher resolution databases at a very reasonable cost.
+
+Steps to upgrade to a better database:
+
+	1. License the database from MaxMind.
+
+	2. Create a custom Docker image that derives from this one.
+
+	3. Configure your Dockerfile to download the new database to:
+
+	   /geoip/database//geoip/database.mmdb.gz
+
+	4. Rebuild your image whenever MaxMind releases an update.
+
+That's all you need to do.

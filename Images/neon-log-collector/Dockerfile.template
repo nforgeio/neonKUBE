@@ -1,0 +1,43 @@
+#------------------------------------------------------------------------------
+# FILE:         Dockerfile.template
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+#
+# TD-Agent deployed as the [neon-log-collector] service to receive events
+# from the node [neon-log-host] containers, perform any transformations
+# and then persist them to Elasticsearch.
+
+FROM        neoncluster/tdagent
+MAINTAINER  jeff@lilltek.com
+STOPSIGNAL  SIGTERM
+
+# Expose the standard TDAgent network ports for TCP/UDP
+# and HTTP.
+
+EXPOSE 24224/tcp 24224/udp 9880/tcp
+
+# Copy the scripts and plugins.
+
+COPY docker-entrypoint.sh   /
+COPY _common/*.sh           /
+COPY td-agent.conf          /etc/td-agent
+COPY plugin/*               /etc/td-agent/plugin/
+COPY geoip/                 /geoip/
+COPY template/*             /etc/td-agent/template/
+
+# Set file security and install required Ruby gems.
+
+RUN chmod 700 /*.sh \
+    && chmod 600 /etc/td-agent \
+    && /usr/sbin/td-agent-gem install fluent-plugin-elasticsearch --no-document \
+    && /usr/sbin/td-agent-gem install fluent-plugin-record-modifier --no-document \
+    && /usr/sbin/td-agent-gem install browser --no-document \
+    && /usr/sbin/td-agent-gem install maxminddb --no-document
+
+# Download the Maxmind free GeoLite-City database.
+
+ADD http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz /geoip/database.mmdb.gz
+
+#ENTRYPOINT ["sleep", "10000"]
+#ENTRYPOINT ["bash"]
+ENTRYPOINT ["/tini", "--", "/docker-entrypoint.sh"]

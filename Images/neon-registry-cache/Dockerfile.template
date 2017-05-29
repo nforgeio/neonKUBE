@@ -1,0 +1,37 @@
+#------------------------------------------------------------------------------
+# FILE:         Dockerfile.template
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+#
+# This is a template of the [neon-registry-cache] definition file.
+#
+# This file cannot be used directly to create an image.  The [build.ps1] script 
+# generates a suitable dockerfile by replacing "${VERSION}" with the desired
+# version and then building the image.
+#
+#   ${VERSION}      - The Docker Registry version (e.g. "2.6.0")
+#
+# The external Registry data volume must be mounted at:
+#
+#       /var/lib/registry
+
+FROM        registry:${VERSION}
+MAINTAINER  jeff@lilltek.com
+STOPSIGNAL  SIGTERM
+
+# Install the [tini] INIT manager.
+
+RUN apk add --update tini
+
+# Install our custom entry point and helper scripts.
+
+COPY docker-entrypoint.sh   /
+COPY _common/*.sh           /
+COPY config/*               /
+
+# Set script permissions.
+
+RUN chmod 700 /*.sh
+
+#ENTRYPOINT ["/bin/sleep", "10000"]
+ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]

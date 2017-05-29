@@ -1,0 +1,40 @@
+#------------------------------------------------------------------------------
+# FILE:         Dockerfile.template
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+#
+# Creates the base [neoncluster/tdagent] image used by NeonCluster.
+#
+# This file cannot be used directly to create an image.  The [build.ps1] script 
+# generates a suitable dockerfile by replacing the following symbol references
+# then building the image.
+#
+#   ${VERSION}          - The .NET Core image tag (e.g. "1.1.0-runtime")
+#   ${TINI_VERSION}     - The version of the Tini INIT manager to install
+
+FROM        neoncluster/ubuntu-16.04
+MAINTAINER  jeff@lilltek.com
+STOPSIGNAL  SIGTERM
+
+# Install the [tini] INIT manager.
+
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod 700 /tini
+
+# Install TD-Agent.
+
+ADD https://packages.treasuredata.com/GPG-KEY-td-agent /tmp/GPG-KEY-td-agent.key
+
+RUN cat /tmp/GPG-KEY-td-agent.key | apt-key add - \
+    && rm /tmp/GPG-KEY-td-agent.key \
+    && echo "deb http://packages.treasuredata.com/2/ubuntu/xenial/ xenial contrib" > /etc/apt/sources.list.d/treasure-data.list \
+    && apt-get update \
+    && apt-get install -yq td-agent \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
+COPY td-agent.conf /etc/td-agent
+
+RUN chmod 600 /etc/td-agent
+
+ENTRYPOINT [ "/tini", "--", "/usr/sbin/td-agent" ]
+# ENTRYPOINT [ "/bin/bash" ]

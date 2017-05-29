@@ -1,0 +1,44 @@
+#------------------------------------------------------------------------------
+# FILE:         Dockerfile.template
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+#
+# This is a template of the docker image definition file to be used to generate a
+# Kibana image based on a specific version of the official Kibana image.
+#
+#   ${VERSION}    - The Kibana version (e.g. "5.0.0")
+#
+# This file cannot be used directly to create an image.  The [build.sh] script 
+# generates a suitable dockerfile by replacing "${VERSION}" with the desired
+# version and then building the image.
+#
+# Kibana listens internally on the default port 5601.
+
+FROM        kibana:${VERSION}
+MAINTAINER  jeff@lilltek.com
+
+# Environment
+
+ENV DEBIAN_FRONTEND noninteractive
+
+# Install X-PACK.
+
+ADD https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-${VERSION}.zip /tmp/x-pack.zip
+
+RUN cd /usr/share/kibana \
+    && bin/kibana-plugin install file:///tmp/x-pack.zip \
+    && rm /tmp/x-pack.zip
+
+# Overwrite the base Kibana entrpoint script with our own.
+
+COPY docker-entrypoint.sh   /
+copy kibana.yml.sh          /etc/kibana
+
+# NOTE: The first command modifies DNS to query for IPv4 before IPv6.
+
+RUN sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf \
+    && chmod 700 /docker-entrypoint.sh \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
+ENTRYPOINT [ "/docker-entrypoint.sh", "kibana" ]
+

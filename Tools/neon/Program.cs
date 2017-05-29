@@ -1,0 +1,1034 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:	    Program.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+
+using System;
+using System.Collections.Generic;
+using System.ComponentModel;
+using System.Diagnostics;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Net;
+using System.Text;
+using System.Threading.Tasks;
+
+using Newtonsoft.Json;
+
+using Neon;
+using Neon.Cluster;
+using Neon.Common;
+using Neon.Diagnostics;
+
+namespace NeonTool
+{
+    /// <summary>
+    /// This tool is used to configure the nodes of a Neon Docker Swarm cluster.
+    /// See <b>~/Stack/Dock/Ubuntu-16.04 Cluster Deploy.docx</b> for more information.
+    /// </summary>
+    public static class Program
+    {
+        /// <summary>
+        /// The <b>neon-cli</b> version/tag.
+        /// </summary>
+        public const string Version = "1.0.0";
+
+        /// <summary>
+        /// Program entry point.
+        /// </summary>
+        /// <param name="args">The command line arguments.</param>
+        public static void Main(string[] args)
+        {
+            string usage = $@"
+Neon Cluster Configuration Tool: neon [v{Program.Version}]
+{Build.Copyright}
+
+USAGE:
+
+    neon [OPTIONS] COMMAND [ARG...]
+
+COMMAND SUMMARY:
+
+    neon help               COMMAND
+
+    neon cluster add        LOGIN_PATH
+    neon cluster example
+    neon cluster prepare    [CLUSTER-DEF]
+    neon cluster setup      [CLUSTER-DEF]
+    neon cluster verify     [CLUSTER-DEF]
+    neon cert               CMD...
+    neon consul             ARGS
+    neon create key
+    neon create password
+    neon docker             ARGS
+    neon download           SOURCE TARGET [NODE]
+    neon exec               BASH-CMD
+    neon get                [VALUE-EXPR]
+    neon key                CLUSTER
+    neon login              [--vpn] USER@CLUSTER
+    neon login export       USER@CLUSTER
+    neon login import       PATH
+    neon login list
+    neon login ls
+    neon login remove       USER@CLUSTER
+    neon login rm           USER@CLUSTER
+    neon login status
+    neon node prepare       SERVER1 [SERVER2...]
+    neon proxy              CMD...
+    neon reboot             NODE...
+    neon scp                [NODE]
+    neon ssh                [NODE]
+    neon validate           CLUSTER-DEF
+    neon version            [-n]
+    neon upload             SOURCE TARGET [NODE...]
+    neon vault              ARGS
+
+ARGUMENTS:
+
+    ARGS                - Command pass-thru arguments.
+    BASH-CMD            - Bash command.
+    CLUSTER             - Names the cluster to be selected for subsequent
+                          operations.
+    CLUSTER-DEF         - Path to a cluster definition file.  This is
+                          optional for some commands when logged in.
+    CMD...              - Subcommand and arguments.
+    LOGIN-PATH          - Path to a cluster login file including the cluster
+                          definition and user credentials.
+    NODE                - Identifies a cluster node by name.
+    VALUE-EXPR          - A cluster value expression.  See the command for
+                          more details.
+    SERVER1...          - IP addresses or FQDNs of target servers
+    SOURCE              - Path to a source file.
+    TARGET              - Path to a destination file.
+    USER                - Cluster user name.
+
+OPTIONS:
+
+    --direct                            - See note below.
+    --help                              - Display help
+    --log=LOG-FOLDER                    - Optional log folder path
+    -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
+                                          configured in parallel [default=1]
+    --node=NODE                         - Some commands may be directed at
+                                          specific node(s)
+    --os=ubuntu-16.04                   - Target host OS
+    -p=PASSWORD, --password=PASSWORD    - Cluster host node root password
+    -q, --quiet                         - Disables operation progress
+    -w=SECONDS, --wait=SECONDS          - Seconds to delay for cluster
+                                          stablization (defaults to 60s).
+    -u=USER, --user=USER                - Cluster host node root username
+
+NOTES:
+
+By default, this tool runs a [neoncluster/neon-cli] image as a Docker
+container, passing the command line and any files into the container such
+that the command is actually executed there.  In this case, the tool
+is just acting as a shim.
+
+For limited circumstances, it may be desirable to have the tool actually
+perform the command on the operator's workstation rather than using
+Docker.  You can accomplish this by using the [--direct].  Note that the 
+tool requires admin priviledges for direct mode.
+";
+            // Disable any logging that might be performed by library classes.
+
+            LogManager.LogLevel = LogLevel.None;
+
+            // Configure the encrypted user-specific application data folder and initialize
+            // the subfolders.
+
+            ClusterRootFolder  = NeonClusterHelper.GetClusterRootFolder();
+            ClusterLoginFolder = NeonClusterHelper.GetClusterLoginFolder();
+            CurrentClusterPath = NeonClusterHelper.CurrentClusterPath;
+
+            // We're going to special case the temp folder and locate this within the [/dev/shm] 
+            // tmpfs based RAM drive if we're running in the tool container.
+
+            ClusterTempFolder  = NeonClusterHelper.InToolContainer ? "/dev/shm/temp" : Path.Combine(ClusterRootFolder, "temp");
+
+            Directory.CreateDirectory(ClusterLoginFolder);
+            Directory.CreateDirectory(ClusterTempFolder);
+
+            // Process the command line.
+
+            try
+            {
+                ICommand command;
+
+                CommandLine = new CommandLine(args);
+
+                CommandLine.DefineOption("-u", "--user");
+                CommandLine.DefineOption("-p", "--password");
+                CommandLine.DefineOption("-os").Default = "ubuntu-16.04";
+                CommandLine.DefineOption("-q", "--quiet");
+                CommandLine.DefineOption("-m", "--max-parallel").Default = "1";
+                CommandLine.DefineOption("-w", "--wait").Default = "60";
+                CommandLine.DefineOption("--log").Default = string.Empty;
+
+                var validOptions = new HashSet<string>();
+
+                validOptions.Add("-u");
+                validOptions.Add("--user");
+                validOptions.Add("-p");
+                validOptions.Add("--password");
+                validOptions.Add("--os");
+                validOptions.Add("--log");
+                validOptions.Add("-q");
+                validOptions.Add("--quiet");
+                validOptions.Add("-m");
+                validOptions.Add("--max-parallel");
+                validOptions.Add("-w");
+                validOptions.Add("--wait");
+                validOptions.Add("--direct");
+
+                if (CommandLine.Arguments.Length == 0)
+                {
+                    Console.WriteLine(usage);
+                    Program.Exit(0);
+                }
+
+                var commands = new List<ICommand>()
+                {
+                    new ClusterCommand(),
+                    new ClusterExampleCommand(),
+                    new ClusterPrepareCommand(),
+                    new ClusterPropertyCommand(),
+                    new ClusterSetupCommand(),
+                    new ClusterVerifyCommand(),
+                    new CertCommand(),
+                    new ConsulCommand(),
+                    new CreateCommand(),
+                    new CreateKeyCommand(),
+                    new CreatePasswordCommand(),
+                    new DockerCommand(),
+                    new DownloadCommand(),
+                    new ExecCommand(),
+                    new LoginCommand(),
+                    new LoginExportCommand(),
+                    new LoginImportCommand(),
+                    new LoginListCommand(),
+                    new LoginRemoveCommand(),
+                    new LoginStatusCommand(),
+                    new LogoutCommand(),
+                    new NodeCommand(),
+                    new NodePrepareCommand(),
+                    new ProxyCommand(),
+                    new RebootCommand(),
+                    new ScpCommand(),
+                    new SshCommand(),
+                    new UploadCommand(),
+                    new VaultCommand(),
+                    new VersionCommand(),
+                    new VpnCommand()
+                };
+
+                // Determine whether we're running in direct mode or shimming to a Docker container.
+
+                DirectMode = NeonClusterHelper.InToolContainer || CommandLine.GetOption("--direct") != null;
+
+                // Short-circuit the help command.
+
+                if (!DirectMode && CommandLine.Arguments[0] == "help")
+                {
+                    if (CommandLine.Arguments.Length == 1)
+                    {
+                        Console.WriteLine(usage);
+                        Program.Exit(0);
+                    }
+
+                    CommandLine = CommandLine.Shift(1);
+
+                    command = GetCommand(CommandLine, commands);
+
+                    if (command == null)
+                    {
+                        Console.Error.WriteLine($"*** ERROR: Unknown command: {CommandLine.Arguments[0]}");
+                        Console.Error.WriteLine(usage);
+                        Program.Exit(1);
+                    }
+
+                    command.Help();
+                    Program.Exit(0);
+                }
+
+                // Lookup the command.
+
+                command = GetCommand(CommandLine, commands);
+
+                if (command == null)
+                {
+                    Console.Error.WriteLine($"*** ERROR: Unknown command: {CommandLine.Arguments[0]}");
+                    Console.Error.WriteLine(usage);
+                    Program.Exit(1);
+                }
+
+                // Handle the logging options.
+
+                LogPath = CommandLine.GetOption("--log");
+                Quiet   = CommandLine.GetFlag("--quiet");
+
+                if (!string.IsNullOrEmpty(LogPath))
+                {
+                    if (NeonClusterHelper.InToolContainer)
+                    {
+                        // We hardcode logging to [/log] inside [neon-cli] containers.
+
+                        LogPath = "/log";
+                    }
+
+                    LogPath = Path.GetFullPath(LogPath);
+
+                    Directory.CreateDirectory(LogPath);
+                }
+
+                // Locate the command.
+
+                command = GetCommand(CommandLine, commands);
+
+                if (command == null)
+                {
+                    Console.Error.WriteLine($"*** ERROR: Unknown command: {CommandLine.Arguments[0]}");
+                    Program.Exit(1);
+                }
+
+                // When not running in direct mode, we're going to act as a shim
+                // and run the command in a Docker container.
+
+                if (!DirectMode)
+                {
+                    int exitCode;
+
+                    using (var shim = new DockerShim(CommandLine))
+                    {
+                        var secretsRoot = NeonClusterHelper.GetClusterRootFolder(ignoreNeonToolContainerVar: true);
+
+                        ClusterLogin = GetClusterLogin();
+
+                        // Give the command a chance to modify the shimmed command line and also
+                        // verify that the command can be run within Docker.
+
+                        var shimInfo = command.Shim(shim);
+
+                        if (shimInfo.EnsureConnection)
+                        {
+                            if (ClusterLogin == null)
+                            {
+                                Console.Error.WriteLine(Program.MustLoginMessage);
+                                Program.Exit(1);
+                            }
+
+                            if (ClusterLogin.ViaVpn)
+                            {
+                                NeonClusterHelper.VpnOpen(ClusterLogin,
+                                    onStatus: message => Console.Error.WriteLine(message),
+                                    onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
+                            }
+                        }
+
+                        if (!shimInfo.IsShimmed)
+                        {
+                            // Run the command locally.
+
+                            goto notShimmed;
+                        }
+
+                        // Map the container's [/log] directory as required.
+
+                        var logMount = string.Empty;
+
+                        if (!string.IsNullOrEmpty(LogPath))
+                        {
+                            var fullLogPath = Path.GetFullPath(LogPath);
+
+                            Directory.CreateDirectory(fullLogPath);
+
+                            logMount = $"-v {fullLogPath}:/log";
+                        }
+
+                        shim.WriteScript();
+
+                        // Run the [neoncluster/neon-cli] Docker image, passing the modified command line 
+                        // arguments and mounting the following read/write volumes:
+                        //
+                        //      /neoncluster    - the root folder for this workstation's cluster logins
+                        //      /shim           - the generated shim files
+                        //      /log            - the logging folder (if logging is enabled)
+
+                        var secretsMount = $"-v \"{secretsRoot}:/neoncluster\"";
+                        var shimMount    = $"-v \"{shim.ShimExternalFolder}:/shim\"";
+                        var options      = shim.Terminal ? "-it" : "-i";
+
+                        var process = Process.Start("docker", $"run {options} --rm {secretsMount} {shimMount} {logMount} --network host neoncluster/neon-cli:{Program.Version}");
+
+                        process.WaitForExit();
+                        exitCode = process.ExitCode;
+
+                        if (shim.PostAction != null)
+                        {
+                            shim.PostAction(exitCode);
+                        }
+                    }
+
+                    Program.Exit(exitCode);
+                }
+
+                // For direct mode, we're going to run the command here.
+
+            notShimmed:
+
+                // Process the standard command line options.
+
+                var leftCommandLine = CommandLine.Split(command.SplitItem).Left;
+                var os              = leftCommandLine.GetOption("--os", "ubuntu-16.04").ToLowerInvariant();
+
+                switch (os)
+                {
+                    // Choose reasonable operating system specific defaults here.
+
+                    case "ubuntu-16.04":
+
+                        OSProperties = new DockerOSProperties()
+                        {
+                            TargetOS      = TargetOS.Ubuntu_16_04,
+                            StorageDriver = DockerStorageDrivers.Overlay2
+                        };
+                        break;
+
+                    default:
+
+                        Console.Error.WriteLine($"*** ERROR: [--os={os}] is not a supported target operating system.");
+                        Program.Exit(1);
+                        break;
+                }
+
+                // Load the user name and password from the command line options, if present.
+
+                Username = leftCommandLine.GetOption("--user");
+                Password = leftCommandLine.GetOption("--password");
+
+                // Handle the other options.
+
+                var maxParallelOption = leftCommandLine.GetOption("--max-parallel");
+                int maxParallel;
+
+                if (!int.TryParse(maxParallelOption, out maxParallel) || maxParallel < 1)
+                {
+                    Console.Error.WriteLine($"*** ERROR: [--max-parallel={maxParallelOption}] option is not valid.");
+                    Program.Exit(1);
+                }
+
+                Program.MaxParallel = maxParallel;
+
+                var     waitSecondsOption = leftCommandLine.GetOption("--wait");
+                double  waitSeconds;
+
+                if (!double.TryParse(waitSecondsOption, out waitSeconds) || waitSeconds < 0)
+                {
+                    Console.Error.WriteLine($"*** ERROR: [--wait={waitSecondsOption}] option is not valid.");
+                    Program.Exit(1);
+                }
+
+                Program.WaitSeconds = waitSeconds;
+
+                // Make sure there are no unexpected command line options.
+
+                validOptions.Add("--help");
+
+                foreach (var optionName in command.ExtendedOptions)
+                {
+                    validOptions.Add(optionName);
+                }
+
+                foreach (var option in leftCommandLine.Options)
+                {
+                    if (!validOptions.Contains(option.Key))
+                    {
+                        var commandWords = string.Empty;
+
+                        foreach (var word in command.Words)
+                        {
+                            if (commandWords.Length > 0)
+                            {
+                                commandWords += " ";
+                            }
+
+                            commandWords += word;
+                        }
+
+                        Console.WriteLine($"*** ERROR: Command [{commandWords}] does not support [{option.Key}].");
+                        Program.Exit(1);
+                    }
+                }
+
+                // Load the current cluster if there is one.
+
+                ClusterLogin = GetClusterLogin();
+
+                // Run the command.
+
+                if (command.NeedsCommandCredentials)
+                {
+                    if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrEmpty(Password))
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine("    Enter cluster SSH credentials:");
+                        Console.WriteLine("    ------------------------------");
+                    }
+
+                    while (string.IsNullOrWhiteSpace(Username))
+                    {
+                        Console.Write("    username: ");
+                        Username = Console.ReadLine();
+                    }
+
+                    while (string.IsNullOrEmpty(Password))
+                    {
+                        Console.Write("    password: ");
+
+                        Password = NeonHelper.ReadConsolePassword();
+                    }
+                }
+
+                if (command.SplitItem != null)
+                {
+                    // We don't shift the command line for pass-thru commands 
+                    // because we don't want to change the order of any options.
+
+                    command.Run(CommandLine);
+                }
+                else
+                {
+                    command.Run(CommandLine.Shift(command.Words.Length));
+                }
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
+                Console.Error.WriteLine(string.Empty);
+                Program.Exit(1);
+            }
+
+            Program.Exit(0);
+        }
+
+        /// <summary>
+        /// Message written then a user is not logged into a cluster.
+        /// </summary>
+        public const string MustLoginMessage = "*** ERROR: You must first log into a cluster.";
+
+        /// <summary>
+        /// Path to the WinSCP program executable.
+        /// </summary>
+        public static string WinScpPath
+        {
+            get { return Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles(x86)"), @"WinSCP\WinSCP.exe"); }
+        }
+
+        /// <summary>
+        /// Path to the PuTTY program executable.
+        /// </summary>
+        public static string PuttyPath
+        {
+            get { return Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles(x86)"), @"PuTTY\putty.exe"); }
+        }
+
+        /// <summary>
+        /// Attempts to match the command line to the <see cref="ICommand"/> to be used
+        /// to implement the command.
+        /// </summary>
+        /// <param name="commandLine">The command line.</param>
+        /// <param name="commands">The commands.</param>
+        /// <returns>The command instance or <c>null</c>.</returns>
+        private static ICommand GetCommand(CommandLine commandLine, List<ICommand> commands)
+        {
+            // Sort the commands in decending order by number of words in the
+            // command (we want to match the longest sequence).
+
+            foreach (var command in commands.OrderByDescending(c => c.Words.Length))
+            {
+                if (command.Words.Length > commandLine.Arguments.Length)
+                {
+                    // Not enough arguments to match the command.
+
+                    continue;
+                }
+
+                var matches = true;
+
+                for (int i = 0; i < command.Words.Length; i++)
+                {
+                    if (!string.Equals(command.Words[i], commandLine.Arguments[i]))
+                    {
+                        matches = false;
+                        break;
+                    }
+                }
+
+                if (!matches && command.AltWords != null)
+                {
+                    matches = true;
+
+                    for (int i = 0; i < command.AltWords.Length; i++)
+                    {
+                        if (!string.Equals(command.AltWords[i], commandLine.Arguments[i]))
+                        {
+                            matches = false;
+                            break;
+                        }
+                    }
+                }
+
+                if (matches)
+                {
+                    return command;
+                }
+            }
+
+            // No match.
+
+            return null;
+        }
+
+        /// <summary>
+        /// Exits the program returning the specified process exit code.
+        /// </summary>
+        /// <param name="exitCode">The exit code.</param>
+        public static void Exit(int exitCode)
+        {
+            if (NeonClusterHelper.IsConnected)
+            {
+                NeonClusterHelper.DisconnectCluster();
+            }
+
+            Environment.Exit(exitCode);
+        }
+
+        /// <summary>
+        /// Returns the <see cref="CommandLine"/>.
+        /// </summary>
+        public static CommandLine CommandLine { get; private set; }
+
+        /// <summary>
+        /// Returns the command line as a string with sensitive information like a password
+        /// obscured.  This is suitable for using as a <see cref="SetupController"/>'s
+        /// operation summary.
+        /// </summary>
+        public static string SafeCommandLine
+        {
+            get
+            {
+                // Special case the situation when the tool is running in a Docker container
+                // and a special file is present with the original command line presented
+                // to the external shim.
+
+                if (DirectMode && File.Exists("__shim.org"))
+                {
+                    return File.ReadAllText("__shim.org").Trim();
+                }
+
+                // Obscure the [-p=xxxx] and [--password=xxxx] options.
+
+                var sb = new StringBuilder();
+
+                foreach (var item in CommandLine.Items)
+                {
+                    if (item.StartsWith("-p="))
+                    {
+                        sb.AppendWithSeparator("-p=[...]");
+                    }
+                    else if (item.StartsWith("--password="))
+                    {
+                        sb.AppendWithSeparator("--password=[...]");
+                    }
+                    else
+                    {
+                        sb.AppendWithSeparator(item);
+                    }
+                }
+
+                return sb.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Returns the node operating system specific information.
+        /// </summary>
+        public static DockerOSProperties OSProperties { get; private set; }
+
+        /// <summary>
+        /// Returns the folder where <b>neon-cli</b> persists local state.  This
+        /// folder and all subfolders are encrypted whwn supported by the current
+        /// operating system.
+        /// </summary>
+        public static string ClusterRootFolder { get; private set; }
+
+        /// <summary>
+        /// Returns the folder where <b>neon-cli</b> persists cluster login information.
+        /// </summary>
+        public static string ClusterLoginFolder { get; private set; }
+
+        /// <summary>
+        /// Returns the path to the file where the name of the current cluster is saved.
+        /// </summary>
+        public static string CurrentClusterPath { get; private set; }
+
+        /// <summary>
+        /// Returns the path to the (hopefully) encrypted or tmpfs based temporary folder.
+        /// </summary>
+        public static string ClusterTempFolder { get; private set; }
+
+        /// <summary>
+        /// Returns the path to the login information for the named cluster.
+        /// </summary>
+        /// <param name="userName">The operator's user name.</param>
+        /// <param name="clusterName">The cluster name.</param>
+        /// <returns>The path to the cluster's credentials file.</returns>
+        public static string GetClusterLoginPath(string userName, string clusterName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(userName));
+
+            return Path.Combine(ClusterLoginFolder, $"{userName}@{clusterName}.login.json");
+        }
+
+        /// <summary>
+        /// Returns the cluster login information for the currently logged in cluster.
+        /// </summary>
+        /// <param name="isRequired">Optionally ensures that a current login is required (defaults to <c>false</c>).</param>
+        /// <returns>The current cluster login or <c>null</c>.</returns>
+        public static ClusterLogin GetClusterLogin(bool isRequired = false)
+        {
+            var clusterLogin = NeonClusterHelper.GetClusterLogin(!isRequired);
+
+            if (isRequired && clusterLogin == null)
+            {
+                Console.Error.WriteLine(Program.MustLoginMessage);
+                Program.Exit(1);
+            }
+
+            Program.ClusterLogin = clusterLogin;
+
+            return clusterLogin;
+        }
+
+        /// <summary>
+        /// Uses <see cref="NeonClusterHelper.ConnectCluster(DebugSecrets, string)"/> to 
+        /// ensure that there's a currently logged-in cluster and that the VPN connection
+        /// is established if required.
+        /// </summary>
+        /// <param name="allowPreparedOnly">Optionally allows partially initialized cluster logins (defaults to <c>false</c>).</param>
+        /// <returns>The current cluster login or <c>null</c>.</returns>
+        /// <remarks>
+        /// Nearly all commands required a fully initialized cluster login.  The only exception
+        /// at this time it the <b>neon cluster setup</b> command which can accept a login
+        /// created by the <b>neon prepare cluster</b> command that generates a login that
+        /// has been initialized enough to allow setup to connect to the cluster via a VPN
+        /// if necessary, has the host root account credentials, and also includes the
+        /// cluster definition.  Partially intializated logins will have <see cref="ClusterLogin.PartialSetup"/>
+        /// set to <c>true</c>.
+        /// </remarks>
+        public static ClusterLogin ConnectCluster(bool allowPreparedOnly = false)
+        {
+            var clusterLogin = Program.GetClusterLogin(isRequired: true);
+
+            if (clusterLogin.PartialSetup && !allowPreparedOnly)
+            {
+                throw new Exception($"Cluster login [{clusterLogin.LoginName}] does not reference a fully configured cluster.  Use the [neon cluster setup...] command to complete cluster configuration.");
+            }
+
+            NeonClusterHelper.ConnectCluster(loginPath: NeonClusterHelper.GetClusterLoginPath(NeonClusterConst.RootUser, Program.ClusterLogin.ClusterName));
+
+            // Note that we never try to connect the VPN from within the
+            // [neon-cli] container.  Its expected that the VPN is always
+            // established on the operator's workstation.
+
+            if (!NeonClusterHelper.InToolContainer && clusterLogin.ViaVpn)
+            {
+                NeonClusterHelper.VpnOpen(clusterLogin,
+                    onStatus: message => Console.Error.WriteLine(message),
+                    onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
+            }
+
+            return clusterLogin;
+        }
+
+        /// <summary>
+        /// Returns the cluster's SSH user name.
+        /// </summary>
+        public static string Username { get; private set; }
+
+        /// <summary>
+        /// Returns the cluster's SSH user password.
+        /// </summary>
+        public static string Password { get; private set; }
+
+        /// <summary>
+        /// Returns the cluster login information for the currently logged in cluster or <c>null</c>.
+        /// </summary>
+        public static ClusterLogin ClusterLogin { get; set; }
+
+        /// <summary>
+        /// Returns the log folder path or a <c>null</c> or empty string 
+        /// to disable logging.
+        /// </summary>
+        public static string LogPath { get; set; }
+
+        /// <summary>
+        /// The maximum number of nodes to be configured in parallel.
+        /// </summary>
+        public static int MaxParallel { get; set; }
+
+        /// <summary>
+        /// The seconds to wait for cluster stablization.
+        /// </summary>
+        public static double WaitSeconds { get; set; }
+
+        /// <summary>
+        /// Indicates whether operation progress output is to be suppressed.
+        /// </summary>
+        public static bool Quiet { get; set; }
+
+        /// <summary>
+        /// Indicates whether the tool executes the command directly or acts as a shim to
+        /// a tool running in a Docker container.
+        /// </summary>
+        public static bool DirectMode { get; private set; }
+
+        /// <summary>
+        /// Creates a <see cref="NodeProxy{TMetadata}"/> for the specified host and server name,
+        /// configuring logging and the credentials as specified by the global command
+        /// line options.
+        /// </summary>
+        /// <param name="name">The node name.</param>
+        /// <param name="publicAddress">The node's public IP address or FQDN.</param>
+        /// <param name="privateAddress">The node's private IP address.</param>
+        /// <typeparam name="TMetadata">Defines the metadata type the command wishes to associate with the sewrver.</typeparam>
+        /// <returns>The <see cref="NodeProxy{TMetadata}"/>.</returns>
+        public static NodeProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, string publicAddress, IPAddress privateAddress)
+            where TMetadata : class
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            var logWriter = (TextWriter)null;
+
+            if (LogPath != null)
+            {
+                logWriter = new StreamWriter(new FileStream(Path.Combine(LogPath, name + ".log"), FileMode.Create, FileAccess.ReadWrite));
+            }
+
+            SshCredentials sshCredentials;
+
+            if (!string.IsNullOrEmpty(Program.Username) && !string.IsNullOrEmpty(Program.Password))
+            {
+                sshCredentials = SshCredentials.FromUserPassword(Program.Username, Program.Password);
+            }
+            else if (Program.ClusterLogin != null)
+            {
+                sshCredentials = Program.ClusterLogin.GetSshCredentials();
+            }
+            else
+            {
+                Console.Error.WriteLine("*** ERROR: Expected some node credentials.");
+                Program.Exit(1);
+
+                return null;
+            }
+
+            var proxy = new NodeProxy<TMetadata>(name, publicAddress, privateAddress, sshCredentials, logWriter);
+
+            proxy.RemotePath += $":{NodeHostFolders.Setup}";
+            proxy.RemotePath += $":{NodeHostFolders.Tools}";
+
+            return proxy;
+        }
+
+        /// <summary>
+        /// Returns the folder holding the Linux resource files for the target operating system.
+        /// </summary>
+        public static ResourceFiles.Folder LinuxFolder
+        {
+            get
+            {
+                switch (Program.OSProperties.TargetOS)
+                {
+                    case TargetOS.Ubuntu_16_04:
+
+                        return ResourceFiles.Linux.GetFolder("Ubuntu-16.04");
+
+                    default:
+
+                        throw new NotImplementedException($"Unexpected [{Program.OSProperties.TargetOS}] target operating system.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Identifies the service manager present on the target Linux distribution.
+        /// </summary>
+        public static ServiceManager ServiceManager
+        {
+            get
+            {
+                switch (Program.OSProperties.TargetOS)
+                {
+                    case TargetOS.Ubuntu_16_04:
+
+                        return ServiceManager.Systemd;
+
+                    default:
+
+                        throw new NotImplementedException($"Unexpected [{Program.OSProperties.TargetOS}] target operating system.");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the file path to the currently running executable.
+        /// </summary>
+        public static string PathToExecutable
+        {
+            get
+            {
+                // $hack(jeff.lill):
+                //
+                // This is a bit of hack.  There are two cases:
+                //
+                //      1. The tool is being run in the debugger, in which case
+                //         we're not running the standalone executable that has
+                //         all of the referenced assemblies merged in.  We can
+                //         tell this if the file name begins with an underscore (_).
+                //     
+                //         In this case, we're going to reference the fully merged
+                //         executable built in the post-build script and written
+                //         to %NF_BUILD%\bin.
+                //
+                //      2. The tool is running from the fully merged executable.
+                //         This will happen when running on the command line or
+                //         on a Linux box.
+
+                var path = Process.GetCurrentProcess().MainModule.FileName;
+
+                if (Path.GetFileName(path).StartsWith("_"))
+                {
+                    path = Path.Combine(BuildEnvironment.BuildArtifactPath, "neon-cli");
+                }
+
+                return path;
+            }
+        }
+
+        /// <summary>
+        /// Presents the user with a yes/no question and waits for a response.
+        /// </summary>
+        /// <param name="prompt">The question prompt.</param>
+        /// <returns><c>true</c> if the answer is yes, <b>false</b> for no.</returns>
+        public static bool PromptYesNo(string prompt)
+        {
+            while (true)
+            {
+                Console.Write($"{prompt} [Y/N]: ");
+
+                var key = Console.ReadKey().KeyChar;
+
+                Console.WriteLine();
+
+                if (key == 'y' || key == 'Y')
+                {
+                    return true;
+                }
+                else if (key == 'n' || key == 'N')
+                {
+                    return false;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Uses WinSCP to convert an OpenSSH PEM formatted key to the PPK format
+        /// required by PuTTY/WinSCP.  This works only on Windows.
+        /// </summary>
+        /// <param name="cluster">The related cluster login information.</param>
+        /// <param name="pemKey">The OpenSSH PEM key.</param>
+        /// <returns>The converted PPPK key.</returns>
+        /// <exception cref="NotImplementedException">Thrown when not running on Windows.</exception>
+        /// <exception cref="Win32Exception">Thrown if WinSCP could not be executed.</exception>
+        public static string ConvertPUBtoPPK(ClusterLogin cluster, string pemKey)
+        {
+            if (!NeonHelper.IsWindows)
+            {
+                throw new NotImplementedException("Not implemented for non-Windows platforms.");
+            }
+
+            var pemKeyPath = Path.Combine(Program.ClusterTempFolder, Guid.NewGuid().ToString("D"));
+            var ppkKeyPath = Path.Combine(Program.ClusterTempFolder, Guid.NewGuid().ToString("D"));
+
+            try
+            {
+                File.WriteAllText(pemKeyPath, pemKey);
+
+                var result = NeonHelper.ExecuteCaptureStreams("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{cluster.Definition.Name} Key"" /output=""{ppkKeyPath}""");
+
+                if (result.ExitCode != 0)
+                {
+                    Console.WriteLine(result.OutputText);
+                    Console.Error.WriteLine(result.ErrorText);
+                    Program.Exit(result.ExitCode);
+                }
+
+                return File.ReadAllText(ppkKeyPath);
+            }
+            finally
+            {
+                if (File.Exists(pemKeyPath))
+                {
+                    File.Delete(pemKeyPath);
+                }
+
+                if (File.Exists(ppkKeyPath))
+                {
+                    File.Delete(ppkKeyPath);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Executes a command on the local operating system and writes an error and
+        /// exits the program if the command fails.
+        /// </summary>
+        /// <param name="programPath">The program.</param>
+        /// <param name="args">The arguments.</param>
+        public static void Execute(string programPath, params object[] args)
+        {
+            var sbArgs = new StringBuilder();
+
+            foreach (var arg in args)
+            {
+                var argString = arg.ToString();
+
+                if (argString.Contains(" "))
+                {
+                    argString = "\"" + argString + "\"";
+                }
+
+                sbArgs.AppendWithSeparator(argString);
+            }
+
+            try
+            {
+                var response = NeonHelper.ExecuteCaptureStreams(programPath, sbArgs.ToString());
+
+                if (response.ExitCode != 0)
+                {
+                    Console.Write(response.AllText);
+                    Program.Exit(response.ExitCode);
+                }
+            }
+            catch (Win32Exception)
+            {
+                Console.WriteLine($"*** ERROR: Cannot launch [{programPath}].");
+                Program.Exit(1);
+            }
+        }
+    }
+}

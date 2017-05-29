@@ -1,0 +1,205 @@
+#------------------------------------------------------------------------------
+# Misc Docker related Linux scripts.
+
+#------------------------------------------------------------------------------
+# Deletes all containers from a Docker host.
+
+for CONTAINER_ID in $(docker ps -aq)
+do
+    docker rm $CONTAINER_ID
+done
+
+#------------------------------------------------------------------------------
+# Deletes all images from a Docker host (as well as any related containers)
+
+for IMAGE_ID in $(docker images -aq)
+do
+    docker rmi -f $IMAGE_ID
+done
+
+#------------------------------------------------------------------------------
+# [neon]: Ubuntu 16.04
+
+neon cluster health -u=spot -p=WagTheDog! c:\docker\cluster-small.json
+neon node prepare --package-cache=http://apt-cache.lilltek.net:3142 10.0.1.30 10.0.1.40 10.0.1.41 10.0.1.42 --max-parallel=4 -u=spot -p=WagTheDog! --log=c:\docker\neon.log
+neon cluster validate c:\docker\sample.json
+ 
+neon cluster prepare c:\docker\cluster-small.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 --package-cache=http://apt-cache.lilltek.net:3142
+neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 root@local
+
+neon cluster prepare c:\docker\cluster-azure.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=10
+neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=10 root@azure
+
+neon cluster prepare c:\docker\cluster-large.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=7 --package-cache=http://apt-cache.lilltek.net:3142
+neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 root@local
+
+neon cluster prepare c:\docker\cluster-test.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=6 --package-cache=http://apt-cache.lilltek.net:3142
+neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 root@test
+
+#------------------------------------------------------------------------------
+# Elasticsearch/Kibana
+
+docker run -it \
+    -v /etc/neoncloud/env-host:/etc/neoncloud/env-host:ro \
+	-v /etc/neoncloud/env-log-esnode:/etc/neoncloud/env-container:ro \
+	-v node-log-esdata:/usr/share/elasticsearch/data \
+	-p 11000:11000 \
+	-e ELASTICSEARCH_CLUSTER=test-cluster \
+	-e ELASTICSEARCH_NODE_DATA=true \
+	-e ELASTICSEARCH_TCP_PORT=11000 \
+	-e ELASTICSEARCH_SHARD_COUNT=8 \
+	-e ELASTICSEARCH_REPLICA_COUNT=1 \
+	-e ELASTICSEARCH_QUORUM=1 \
+	-e ELASTICSEARCH_BOOTSTRAP_NODES=node-0.lilltek.net \
+	neoncloud/elasticsearch:latest
+
+#------------------------------------------------------------------------------
+# Configure Couchbase Server
+
+# Run these commands to launch the Couchbase instances on the HOST network
+
+docker-swarm run -d \
+	--name=cb0 \
+	--net=host \
+	-e "constraint:node==node-0" \
+	-v cb0:/opt/couchbase/var \
+	--restart=always \
+	--ulimit nofile=40960:40960 \
+	--ulimit core=100000000:100000000 \
+	--ulimit memlock=100000000:100000000 \
+	couchbase:community
+	
+docker-swarm run -d \
+	--name=cb1 \
+	--net=host \
+	-e "constraint:node==node-1" \
+	-v cb1:/opt/couchbase/var \
+	--restart=always \
+	--ulimit nofile=40960:40960 \
+	--ulimit core=100000000:100000000 \
+	--ulimit memlock=100000000:100000000 \
+	couchbase:community
+
+docker-swarm run -d \
+	--name=cb2 \
+	--net=host \
+	-e "constraint:node==node-2" \
+	-v cb2:/opt/couchbase/var \
+	--restart=always \
+	--ulimit nofile=40960:40960 \
+	--ulimit core=100000000:100000000 \
+	--ulimit memlock=100000000:100000000 \
+	couchbase:community
+	
+# Manually connect into each node at http://XXXX:8091 and set the host name to
+# the IP address of the host node, accept the remaining defaults and enter the
+# new administrator password.
+
+# Then in one of the nodes, join the other nodes to create a cluster and then
+# rebalance.
+
+# Finally, use the web admin UX to create these buckets:
+#
+#		db		- for application development
+
+#------------------------------------------------------------------------------
+# Configure Couchbase Sync Gateway
+#
+# NOTE: Remove the [--pretty] option for production.
+
+docker -H 10.0.1.10:2375 \
+	run \
+	-d \
+	--name=sg0 \
+	-p 4984:4984 \
+	-p 4985:4985 \
+	couchbase/sync-gateway \
+		 -interface 0.0.0.0:4984 \
+		 -adminInterface 0.0.0.0:4985 \
+		 -bucket db \
+		 -dbname db \
+		 -url http://10.0.1.10:8091 \
+		 -pretty \
+		 -log REST
+
+docker -H 10.0.1.11:2375 \
+	run \
+	-d \
+	--name=sg1 \
+	-p 4984:4984 \
+	-p 4985:4985 \
+	couchbase/sync-gateway \
+		 -interface 0.0.0.0:4984 \
+		 -adminInterface 0.0.0.0:4985 \
+		 -bucket db \
+		 -dbname db \
+		 -url http://10.0.1.11:8091 \
+		 -pretty \
+		 -log REST
+
+docker -H 10.0.1.12:2375 \
+	run \
+	-d \
+	--name=sg2 \
+	-p 4984:4984 \
+	-p 4985:4985 \
+	couchbase/sync-gateway \
+		 -interface 0.0.0.0:4984 \
+		 -adminInterface 0.0.0.0:4985 \
+		 -bucket db \
+		 -dbname db \
+		 -url http://10.0.1.12:8091 \
+		 -pretty \
+		 -log REST
+
+#------------------------------------------------------------------------------
+# Run these commands to launch the Couchbase instances on the OVERLAY network.
+# Unforunately, we lose the host OS network when we try to create the cluster.
+
+docker-swarm run -d \
+	--name=cb0 \
+	--net=cluster.overlay \
+	--net-alias=cb.cluster.local \
+	--net-alias=cb0.cluster.local \
+	--dns-search=cluster.local \
+	-p 8091:8091 \
+	-p 8092:8092 \
+	-e "constraint:node==node-0" \
+	-v cb0:/opt/couchbase/var \
+	--restart=always \
+	--ulimit nofile=40960:40960 \
+	--ulimit core=100000000:100000000 \
+	--ulimit memlock=100000000:100000000 \
+	couchbase:community
+	
+docker-swarm run -d \
+	--name=cb1 \
+	--net=cluster.overlay \
+	--net-alias=cb.cluster.local \
+	--net-alias=cb1.cluster.local \
+	--dns-search=cluster.local \
+	-p 8091:8091 \
+	-p 8092:8092 \
+	-e "constraint:node==node-1" \
+	-v cb1:/opt/couchbase/var \
+	--restart=always \
+	--ulimit nofile=40960:40960 \
+	--ulimit core=100000000:100000000 \
+	--ulimit memlock=100000000:100000000 \
+	couchbase:community
+	
+docker-swarm run -d \
+	--name=cb2 \
+	--net=cluster.overlay \
+	--net-alias=cb.cluster.local \
+	--net-alias=cb2.cluster.local \
+	--dns-search=cluster.local \
+	-p 8091:8091 \
+	-p 8092:8092 \
+	-e "constraint:node==node-2" \
+	-v cb2:/opt/couchbase/var \
+	--restart=always \
+	--ulimit nofile=40960:40960 \
+	--ulimit core=100000000:100000000 \
+	--ulimit memlock=100000000:100000000 \
+	couchbase:community

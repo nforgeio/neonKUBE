@@ -1,0 +1,44 @@
+#------------------------------------------------------------------------------
+# FILE:         Dockerfile.template
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+#
+# This is a template of the docker image definition file to be used to generate
+# the Elastic Metricbeats image to be used to monitor NeonCluster hosts.
+#
+# This file cannot be used directly to create an image.  The [build.ps1] script 
+# generates a suitable dockerfile by replacing the following symbol references
+# then building the image.
+#
+#   ${VERSION}          - The .NET Core image tag (e.g. "1.1.0-runtime")
+#   ${TINI_VERSION}     - The version of the Tini INIT manager to install
+
+FROM        neoncluster/ubuntu-16.04
+MAINTAINER  jeff@lilltek.com
+STOPSIGNAL  SIGTERM
+
+# Install the [tini] INIT manager.
+
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod 700 /tini
+
+# Install Metricbeat.
+
+ADD https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-${VERSION}-linux-x86_64.tar.gz /tmp/metricbeat.tar.gz
+
+RUN tar -xvzf /tmp/metricbeat.tar.gz --directory /tmp \
+    && cp -r /tmp/metricbeat-${VERSION}-linux-x86_64/* / \
+    && chmod 700 /metricbeat \
+    && cp /metricbeat.yml /metricbeat.yml.org \
+    && rm /tmp/metricbeat.tar.gz \
+    && rm -r /tmp/metricbeat-${VERSION}-linux-x86_64
+
+COPY config/*               /
+COPY docker-entrypoint.sh   /
+COPY _common/*.sh           /
+
+RUN chmod 700 /*.sh
+
+#ENTRYPOINT ["bash"]
+ENTRYPOINT ["/tini", "--", "/docker-entrypoint.sh"]
+CMD ["service"]

@@ -1,0 +1,219 @@
+﻿#------------------------------------------------------------------------------
+# Configure and mount the node drives.  Note that the script currently supports
+# 1 to 8 disks with multiple disks being combined into a single RAID0 drive.
+#
+# NOTE: This script must be run under sudo.
+
+# $todo(jeff.lill):
+#
+# I need to research whether I need to do additional Linux tuning of the RAID
+# chunk size and other SSD related file system parameters.  The article below
+# describes some of this.  It's from 2009 though so it may be out of date.
+# Hopefully modern Linux distributions automatically tune for SSDs.
+#
+#		http://blog.nuclex-games.com/2009/12/aligning-an-ssd-on-linux/
+
+# $hack(jeff.lill):
+#
+# This script is not entirely general purpose.  It will initialize RAID for multiple
+# mounted disks on Azure VMs but it doesn't do this for Hyper-V VMs or physical machines.
+
+# Configure Bash strict mode so that the entire script will fail if 
+# any of the commands fail.
+#
+#       http://redsymbol.net/articles/unofficial-bash-strict-mode/
+
+set -euo pipefail
+
+echo
+echo "**********************************************" 1>&2
+echo "** SETUP-DISK                               **" 1>&2
+echo "**********************************************" 1>&2
+
+# Load the cluster configuration and setup utilities.
+
+. $<load-cluster-config>
+. setup-utility.sh
+
+# Ensure that setup is idempotent.
+
+startsetup setup-disk
+
+echo
+echo "**********************************************"
+echo "** Initializing data disk(s)                **"
+echo "**********************************************"
+
+#------------------------------------------------------------------------------
+# Creates a partition filling the specified drive.
+
+function partitionDrive {
+
+    fdisk $1 << EOF
+n
+p
+1
+
+
+w
+EOF
+}
+
+#------------------------------------------------------------------------------
+
+# Detect the number of attached data disks (up to a maximum of 8).
+
+if ls /dev | grep -qF "sdj"
+    then DISK_COUNT=8
+elif ls /dev | grep -qF "sdi"
+    then DISK_COUNT=7
+elif ls /dev | grep -qF "sdh"
+    then DISK_COUNT=6
+elif ls /dev | grep -qF "sdg"
+    then DISK_COUNT=5
+elif ls /dev | grep -qF "sdf"
+    then DISK_COUNT=4
+elif ls /dev | grep -qF "sde"
+    then DISK_COUNT=3
+elif ls /dev | grep -qF "sdd"
+    then DISK_COUNT=2
+elif ls /dev | grep -qF "sdc"
+    then DISK_COUNT=1
+else
+
+    # The node has no mounted disks so we're going to configure the local
+	# or ephemeral drive instead.  This will be a fast SSD for D, DS and G 
+	# series VMs.
+        
+    DISK_COUNT=0
+	mkdir -p /mnt
+    ln -s /mnt /mnt-data
+fi
+
+echo "DISK COUNT: $DISK_COUNT"
+
+if [ $DISK_COUNT -eq 0 ]; then
+
+	# We have no mounted drives so we're simply going to create a [/mnt-data]
+	# folder on the OS drive.
+
+	mkdir -p /mnt-data
+
+elif [ $DISK_COUNT -eq 1 ]; then
+
+    # We only have a single data disk so there's no need to configure
+    # RAID.  We'll simply initialize and mount the disk.
+
+    # Create the disk partition.
+
+    partitionDrive /dev/sdc
+
+    # Create an EXT4 file system on the new partition.
+
+    mkfs -t ext4 /dev/sdc1
+
+    # Mount the file system at [/mnt-data]
+
+    mkdir -p /mnt-data
+    mount /dev/sdc1 /mnt-data
+
+    # Remember the data device so we can add it to [/etc/fstab] below.
+
+    DATA_DEVICE=/dev/sdc1
+
+else
+
+    # We have more than one drive, so we'll need to install the Linux software
+    # RAID solution [mdadm] and then configure the disks.  This script was adapted
+    # from this article:
+    #
+    #	https://azure.microsoft.com/en-us/documentation/articles/virtual-machines-linux-configure-raid/
+        
+    # Install [mdadm]
+
+    apt-get -q -y install mdadm
+
+    # Create a partition on each disk and build up string including all of the
+    # drive partitions (which we'll use below to create the RAID array).
+
+	RAID_CHUNK_SIZE_KB=64
+
+    DISK_PARTITIONS=
+
+    for (( DISK=0; DISK<$DISK_COUNT; DISK++))
+    do
+        case $DISK in
+            0 )
+                DISK_NAME=/dev/sdc;;
+            1 )
+                DISK_NAME=/dev/sdd;;
+            2 )
+                DISK_NAME=/dev/sde;;
+            3 )
+                DISK_NAME=/dev/sdf;;
+            4 )
+                DISK_NAME=/dev/sdg;;
+            5 )
+                DISK_NAME=/dev/sdh;;
+            6 )
+                DISK_NAME=/dev/sdi;;
+            7 )
+                DISK_NAME=/dev/sdj;;
+        esac
+
+        partitionDrive $DISK_NAME 
+
+        DISK_PARTITIONS+="${DISK_NAME} "
+    done
+
+    # Create the RAID0 array.
+
+    mdadm --create /dev/md127 --level 0 --raid-devices $DISK_COUNT --chunk $RAID_CHUNK_SIZE_KB $DISK_PARTITIONS << EOF
+y
+EOF
+
+    # Create an EXT4 file system on the new array.
+
+    mkfs -t ext4 /dev/md127
+        
+    # Mount the file system at [/mnt-data]
+
+    mkdir -p /mnt-data
+    mount /dev/md127 /mnt-data
+
+    # Remember the data device so we can add it to [/etc/fstab] below.
+
+    DATA_DEVICE=/dev/md127
+fi
+
+if [ ! $DISK_COUNT -eq 0 ]; then
+
+    # The new file system won't be mounted automatically after a reboot
+    # until we add an entry for it in [/etc/fstab].  This is a two
+    # step process.  First, we need to get the UUID assigned to the 
+    # new file system and then we need to update [/etc/fstab].
+    #
+    # We're going to do this by listing the device UUIDs and GREPing
+    # out the line for the new device [/dev/sdc1] or [/dev/md127.  Then 
+    # we'll use Bash REGEX to extract the UUID.  Note the the device 
+    # listing lines look like:
+    #
+    #	/dev/sdc1: UUID="3d70d51a-fd8a-4761-b36d-dba5ca889b72" TYPE="ext4"
+    #
+    # or 
+    #
+    #	/dev/md127: UUID="3d70d51a-fd8a-4761-b36d-dba5ca889b72" TYPE="ext4"
+    #
+    # depending on whether we detected a single or multiple disks.
+
+    BLOCKID=$(sudo -i blkid | grep $DATA_DEVICE)
+    [[ "$BLOCKID" =~ UUID=\"(.*)\"\ TYPE= ]] && UUID=${BASH_REMATCH[1]}
+
+    # Update [/etc/fstab] to ensure that the new drive is mounted after reboots.
+
+    echo UUID=$UUID /mnt-data ext4 defaults,noatime,barrier=0 0 2 | tee -a /etc/fstab
+fi
+
+# Indicate that the script has completed.
+
+endsetup setup-disk

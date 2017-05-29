@@ -1,0 +1,22 @@
+#------------------------------------------------------------------------------
+# FILE:         Dockerfile.template
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+#
+# HAProxy image that loads its configuration from a mounted file.
+#
+# This file cannot be used directly to create an image.  The [build.ps1] script 
+# generates a suitable dockerfile by replacing the following symbol references
+# then building the image.
+#
+#   ${VERSION}          - The HAProxy image tag (e.g. "1.6.9")
+#   ${TINI_VERSION}     - The version of the Tini INIT manager to install
+
+FROM        alpine:${VERSION}
+MAINTAINER  jeff@lilltek.com
+STOPSIGNAL  SIGTERM
+
+# Install the [tini] INIT manager.
+
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod 700 /tini

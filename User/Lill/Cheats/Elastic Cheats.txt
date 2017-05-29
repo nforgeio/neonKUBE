@@ -1,0 +1,4 @@
+curl localhost:9200/_cat/health?v
+http://jeffli-wus-esr.cloudapp.net:666/_cat/health?v
+
+

@@ -1,0 +1,11 @@
+Follow the steps below to update the binaries.
+
+	1. Navigate to http://indy.fulgan.com/SSL/ in the browser.
+	
+	2. Scroll down to the bottom and locate the most recent Windows x64 build
+	   packaged as a ZIP.
+	   
+	3. Download and extract the contents to this folder.
+	
+	4. Commit the changes.
+	
