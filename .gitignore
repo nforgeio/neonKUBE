@@ -1,19 +1,79 @@
-# Build and Release Folders
-bin/
-bin-debug/
-bin-release/
-[Oo]bj/ # FlashDevelop obj
-[Bb]in/ # FlashDevelop bin
+﻿################################################################################
+# This .gitignore file was automatically created by Microsoft(R) Visual Studio.
+################################################################################=
 
-# Other files and folders
-.settings/
+# User-specific files
+*.suo
+*.user
+*.userosscache
+*.sln.docstates
 
-# Executables
-*.swf
-*.air
-*.ipa
-*.apk
+# Visual Studio Files
+[Tt]est[Rr]esult*/
+[Bb]uild[Ll]og.*
+*_i.c
+*_p.c
+*_i.h
+*.ilk
+*.meta
+*.obj
+*.pch
+*.pdb
+*.pgc
+*.pgd
+*.rsp
+*.sbr
+*.tlb
+*.tli
+*.tlh
+*.tmp
+*.tmp_proj
+*.log
+*.vspscc
+*.vssscc
+.builds
+*.pidb
+*.svclog
+*.scc
+*.psess
+*.vsp
+*.vspx
+*.[Rr]e[Ss]harper
+*.DotSettings.user
+*.opensdf
+*.sdf
+*.jmconfig
+*.suo
+**/launchSettings.json
 
-# Project files, i.e. `.project`, `.actionScriptProperties` and `.flexProperties`
-# should NOT be excluded as they contain compiler settings and other important
-# information for Eclipse / Flash Builder.
+# NuGet Packages
+*.nupkg
+# The packages folder can be ignored because of Package Restore
+**/packages/*
+# except build/, which is used as an MSBuild target.
+!**/packages/build/
+# Uncomment if necessary however generally it will be regenerated when needed
+# !**/packages/repositories.config
+
+# Common ASP.NET 5 Rules
+
+bower_components/
+node_modules/
+wwwroot/
+
+################################################################################
+# Custom rules added for this repository.
+################################################################################
+
+/.vs
+/.vs/**
+
+# Build artifacts: 
+#
+# NOTE: This assumes that we'll never want to check in folders
+#		named [bin] or [obj]
+
+/build/**
+**/bin/**
+**/obj/**
+
