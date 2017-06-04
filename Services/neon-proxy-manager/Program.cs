@@ -45,7 +45,7 @@ namespace NeonProxyManager
         private static string                   serviceNameVersion = $"{serviceName} v{Neon.Build.ClusterVersion}";
         private static TimeSpan                 delayTime          = TimeSpan.FromSeconds(5);
         private static CancellationTokenSource  ctsTerminate       = new CancellationTokenSource();
-        private static TimeSpan                 terminateTimeout   = TimeSpan.FromSeconds(5);
+        private static TimeSpan                 terminateTimeout   = TimeSpan.FromSeconds(10);
         private static bool                     terminated;
         private static ILog                     log;
         private static VaultClient              vault;
@@ -54,6 +54,7 @@ namespace NeonProxyManager
         private static TimeSpan                 pollInterval;
         private static TimeSpan                 certWarnTime;
         private static ClusterDefinition        cachedClusterDefinition;
+        private static Task                     monitorTask;
 
         /// <summary>
         /// Application entry point.
@@ -74,21 +75,20 @@ namespace NeonProxyManager
                     // Signal the sub-tasks that we're terminating and then 
                     // give them a chance to exit.
 
-                    log.Info(() => "Received SIGTERM.  Stopping tasks.");
+                    log.Info(() => "Received SIGTERM: Stopping tasks.");
 
                     ctsTerminate.Cancel();
 
                     try
                     {
                         NeonHelper.WaitFor(() => terminated, terminateTimeout);
+                        log.Info(() => "Tasks stopped.");
+                        Program.Exit(0);
                     }
                     catch (TimeoutException)
                     {
                         log.Warn(() => $"Tasks did not stop within [{terminateTimeout}].");
-                        return;
                     }
-
-                    log.Info(() => "Tasks stopped.");
                 };
 
             // Establish the cluster connections.
@@ -203,7 +203,7 @@ namespace NeonProxyManager
 
             leaderTTL    = TimeSpan.FromSeconds(await consul.KV.GetDouble(leaderTTLSecondsKey));
             pollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(pollSecondsKey));
-            certWarnTime = TimeSpan.FromSeconds(await consul.KV.GetDouble(certWarnDaysKey));
+            certWarnTime = TimeSpan.FromDays(await consul.KV.GetDouble(certWarnDaysKey));
 
             log.Info(() => $"Using setting [{leaderTTLSecondsKey}={leaderTTL}]");
             log.Info(() => $"Using setting [{pollSecondsKey}={pollSecondsKey}]");
@@ -255,15 +255,38 @@ namespace NeonProxyManager
                 loadContext.Unloading +=
                     (context) =>
                     {
+                        // $note(jeff.lill): 
+                        //
+                        // Docker appears to stop processing log messages after a SIGTERM is 
+                        // received (at least to the JSON-FILE driver) so the events logged
+                        // below may not actually make it into the logs.
+
                         exit = true;
 
-                        log.Info("SIGTERM received");
+                        log.Info("SIGTERM received.  Stopping tasks...");
+
+                        // Give the worker tasks a chance to stop gracefully.
+
                         cts.Cancel();
+
+                        if (monitorTask != null)
+                        {
+                            var terminateTimeout = TimeSpan.FromSeconds(15);
+
+                            if (monitorTask.Wait(terminateTimeout))
+                            {
+                                log.Info(() => "Tasks stopped gracefully.");
+                            }
+                            else
+                            {
+                                log.Warn(() => $"Tasks did not stop within [{terminateTimeout}].");
+                            }
+                        }
                     };
 
                 // Monitor Consul for configuration changes and update the proxy configs.
 
-                var monitorTask = Task.Run(
+                monitorTask = Task.Run(
                     async () =>
                     {
                         log.Debug("Starting [Monitor] task.");

@@ -77,7 +77,7 @@ namespace NeonClusterManager
 
         private static string                   serviceNameVersion = $"{serviceName} v{Neon.Build.ClusterVersion}";
         private static CancellationTokenSource  ctsTerminate       = new CancellationTokenSource();
-        private static TimeSpan                 terminateTimeout   = TimeSpan.FromSeconds(5);
+        private static TimeSpan                 terminateTimeout   = TimeSpan.FromSeconds(10);
         private static bool                     terminated;
         private static ILog                     log;
         private static ConsulClient             consul;
@@ -106,21 +106,20 @@ namespace NeonClusterManager
                     // Signal the sub-tasks that we're terminating and then 
                     // give them a chance to exit.
 
-                    log.Info(() => "Received SIGTERM.  Stopping tasks.");
+                    log.Info(() => "SIGTERM received: Stopping tasks...");
 
                     ctsTerminate.Cancel();
 
                     try
                     {
                         NeonHelper.WaitFor(() => terminated, terminateTimeout);
+                        log.Info(() => "Tasks stopped gracefully.");
+                        Program.Exit(0);
                     }
                     catch (TimeoutException)
                     {
                         log.Warn(() => $"Tasks did not stop within [{terminateTimeout}].");
-                        return;
                     }
-
-                    log.Info(() => "Tasks stopped.");
                 };
 
             try

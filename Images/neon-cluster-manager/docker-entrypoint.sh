@@ -23,7 +23,7 @@ fi
 
 PATH=${PATH}:/
 
-# Launch the service.
+# Launch the service using the Tini (mini-init manager) with the [-g]
+# option so that SIGTERM signals will be forwarded decendant processes.
 
-neon-cluster-manager
-
+/tini -g neon-cluster-manager
