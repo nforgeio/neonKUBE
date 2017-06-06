@@ -15,9 +15,12 @@ using System.Net.Sockets;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Net.Http.Client;
+
 using Neon.Common;
 using Neon.Net;
 using Neon.Retry;
+using System.Threading;
 
 // $todo(jeff.lill): Implement unit/integration tests
 
@@ -28,16 +31,41 @@ namespace Neon.Docker
     /// </summary>
     public partial class DockerClient : IDisposable
     {
+        private HttpMessageHandler  handler;
+        private Uri                 baseUri;
+
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="settings">The settings</param>
-        public DockerClient(DockerSettings settings = null)
+        public DockerClient(DockerSettings settings)
         {
-            var handler = new HttpClientHandler()
+            Covenant.Requires<ArgumentNullException>(settings != null);
+
+            // Select a custom managed handler when Docker is listening on a Unix
+            // domain sockets, otherwise use the standard handler.
+
+            if (settings.Uri.Scheme.Equals("unix", StringComparison.OrdinalIgnoreCase))
             {
-                 AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
-            };
+                baseUri = new UriBuilder("http", settings.Uri.Segments.Last()).Uri;
+                handler = new ManagedHandler(
+                    async (string host, int port, CancellationToken cancellationToken) =>
+                    {
+                        var sock = new Socket(AddressFamily.Unix, SocketType.Stream, ProtocolType.Unspecified);
+
+                        await sock.ConnectAsync(new UnixDomainSocketEndPoint(settings.Uri.LocalPath));
+                        
+                        return sock;
+                    });
+            }
+            else
+            {
+                baseUri = settings.Uri;
+                handler = new HttpClientHandler()
+                {
+                    AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
+                };
+            }
 
             this.Settings   = settings;
             this.JsonClient = new JsonClient(handler, disposeHandler: true)
@@ -89,16 +117,16 @@ namespace Neon.Docker
         {
             if (string.IsNullOrEmpty(item))
             {
-                return $"{Settings.Uri}/{command}";
+                return $"{baseUri}/{command}";
             }
             else
             {
-                return $"{Settings.Uri}/{command}/{item}";
+                return $"{baseUri}/{command}/{item}";
             }
         }
 
         /// <summary>
-        /// Pinge the remote Docker engine to verify that it's ready.
+        /// Ping the remote Docker engine to verify that it's ready.
         /// </summary>
         /// <returns><c>true</c> if ready.</returns>
         /// <remarks>

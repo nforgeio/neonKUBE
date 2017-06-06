@@ -584,14 +584,13 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="cluster">The cluster proxy.</param>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if a cluster is already connected.</exception>
         public static ClusterProxy ConnectCluster(ClusterProxy cluster)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null);
 
             if (IsConnected)
             {
-                throw new InvalidOperationException("Already connected to a cluster.");
+                return NeonClusterHelper.Cluster;
             }
 
             IsConnected = true;
@@ -758,18 +757,16 @@ namespace Neon.Cluster
         {
             VerifyConnected();
 
-            IPAddress address;
+            DockerSettings  settings; 
 
-            if (externalConnection)
+            if (externalConnection && false)
             {
-                address = Cluster.FirstManager.PrivateAddress;
+                settings = new DockerSettings(Cluster.FirstManager.PrivateAddress);
             }
             else
             {
-                address = IPAddress.Parse("127.0.0.1");
+                settings = new DockerSettings("unix:///var/run/docker.sock");
             }
-
-            var settings = new DockerSettings(address);
 
             return new DockerClient(settings);
         }
