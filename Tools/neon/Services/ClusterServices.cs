@@ -70,17 +70,20 @@ namespace NeonTool
                     // Deploy [neon-cluster-manager] as a container on each
                     // manager node.
 
-                    var vaultCredentialsBase64 = string.Empty;
+                    string unsealSecretOption = null;
 
                     if (cluster.Definition.Vault.AutoUnseal)
                     {
                         var vaultCredentials = NeonHelper.JsonClone<VaultCredentials>(cluster.ClusterLogin.VaultCredentials);
 
                         // We really don't want to include the root token in the credentials
-                        // passed to [neon-cluster-manager], which needs only the unseal keys.
+                        // passed to [neon-cluster-manager], which needs the unseal keys.
 
                         vaultCredentials.RootToken = null;
-                        vaultCredentialsBase64     = Convert.ToBase64String(Encoding.UTF8.GetBytes(NeonHelper.JsonSerialize(vaultCredentials)));
+
+                        cluster.DockerSecret.Set("neon-cluster-manager-vaultkeys", Encoding.UTF8.GetBytes(NeonHelper.JsonSerialize(vaultCredentials, Formatting.Indented)));
+
+                        unsealSecretOption = "--secret=neon-cluster-manager-vaultkeys";
                     }
 
                     foreach (var manager in cluster.Managers)
@@ -93,7 +96,7 @@ namespace NeonTool
                                 "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
                                 "--mount", "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
                                 "--env", "LOG_LEVEL=INFO",
-                                "--env", $"VAULT_CREDENTIALS={vaultCredentialsBase64}",
+                                unsealSecretOption,
                                 "--constraint", "node.role==manager",
                                 "--replicas", 1,
                                 "neoncluster/neon-cluster-manager");

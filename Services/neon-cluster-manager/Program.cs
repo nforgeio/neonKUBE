@@ -71,8 +71,6 @@ namespace NeonClusterManager
         private static readonly string serviceRootKey      = "neon/service/neon-proxy-manager";
         private static readonly string nodePollSecondsKey  = $"{serviceRootKey}/node_poll_seconds";
         private static readonly string vaultPollSecondsKey = $"{serviceRootKey}/vault_poll_seconds";
-        private static readonly string leaderKey           = $"{serviceRootKey}/leader";
-        private static readonly string leaderTTLSecondsKey = $"{serviceRootKey}/leader_ttl_seconds";
         private static readonly string clusterDefKey       = "neon/cluster/definition.deflate";
 
         private static string                   serviceNameVersion = $"{serviceName} v{Neon.Build.ClusterVersion}";
@@ -223,28 +221,26 @@ namespace NeonClusterManager
             log.Info(() => $"Using setting [{nodePollSecondsKey}={nodePollInterval}]");
             log.Info(() => $"Using setting [{vaultPollSecondsKey}={vaultPollInterval}]");
 
-            // Parse the Vault credentials from the VAULT_CREDENTIALS environment variable
-            // if present.   This will be base64 encoded JSON.
+            // Parse the Vault credentials from the [neon-cluster-manager-vaultkeys] 
+            // secret, if it exists.
 
-            var vaultCredentialsBase64 = Environment.GetEnvironmentVariable("VAULT_CREDENTIALS");
+            var vaultCredentialsJson = NeonClusterHelper.GetSecret("neon-cluster-manager-vaultkeys");
 
-            if (string.IsNullOrWhiteSpace(vaultCredentialsBase64))
+            if (string.IsNullOrWhiteSpace(vaultCredentialsJson))
             {
-                log.Info(() => "Vault unsealing is DISABLED because VAULT_CREDENTIALS environment variable is not set.");
+                log.Info(() => "Vault unsealing is DISABLED because [neon-cluster-manager-vaultkeys] Docker secret is not specified.");
             }
             else
             {
                 try
                 {
-                    var vaultCredentialsJson = Encoding.UTF8.GetString(Convert.FromBase64String(vaultCredentialsBase64));
-
                     vaultCredentials = NeonHelper.JsonDeserialize<VaultCredentials>(vaultCredentialsJson);
 
                     log.Info(() => "Vault unsealing is ENABLED.");
                 }
                 catch (Exception e)
                 {
-                    log.Error("Vault unsealing is DISABLED because the VAULT_CREDENTIALS environment variable could not be parsed.", e);
+                    log.Error("Vault unsealing is DISABLED because the [neon-cluster-manager-vaultkeys] Docker secret could not be parsed.", e);
                 }
             }
 
