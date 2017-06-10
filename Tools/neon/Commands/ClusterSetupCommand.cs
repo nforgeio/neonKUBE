@@ -1481,7 +1481,7 @@ $@"docker login \
             {
                 // Wait up to two minutes for Vault to initialize.
 
-                var timer = new Stopwatch();
+                var timer   = new Stopwatch();
                 var timeout = TimeSpan.FromMinutes(5);
 
                 while (true)
@@ -1520,7 +1520,7 @@ $@"docker login \
 
             // $todo(jeff.lill): Consider a more affirmative way to verify readiness (perhaps using [vault status])?
 
-            Thread.Sleep(TimeSpan.FromSeconds(30));
+            Thread.Sleep(TimeSpan.FromSeconds(60));
         }
 
         /// <summary>
