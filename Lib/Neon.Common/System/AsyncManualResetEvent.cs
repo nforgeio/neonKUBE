@@ -113,11 +113,6 @@ namespace System.Threading.Tasks
 
                 isDisposed = true;
             }
-
-            if (disposing)
-            {
-                GC.SuppressFinalize(this);
-            }
         }
 
         /// <summary>
