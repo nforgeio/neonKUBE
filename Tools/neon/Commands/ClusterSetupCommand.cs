@@ -1514,13 +1514,6 @@ $@"docker login \
                     manager.SudoCommand($"vault-direct unseal", cluster.VaultRunOptions, clusterLogin.VaultCredentials.UnsealKeys[i]);
                 }
             }
-
-            // It appears to take some time for Vault to be ready after unsealing.
-            // We're going to pause for another 30 seconds to be sure.
-
-            // $todo(jeff.lill): Consider a more affirmative way to verify readiness (perhaps using [vault status])?
-
-            Thread.Sleep(TimeSpan.FromSeconds(60));
         }
 
         /// <summary>
