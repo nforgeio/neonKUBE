@@ -121,7 +121,7 @@ swarm mode service or DNS name.
 
 Here's an example public TCP route that forwards TCP connections to the
 port 1000 on the cluster's Internet facing load balancer to the internal
-HAProxy server listening on Docker mesh port 11102 port which then
+HAProxy server listening on Docker ingress port 11102 port which then
 load balances the traffic to the backend servers listening on port 1000:
 
     {

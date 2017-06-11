@@ -13,7 +13,7 @@ namespace Neon.Cluster
 {
     /// <summary>
     /// Defines the Docker host network ports in the <b>5000-5499</b> range reserved 
-    /// by NeonCluster used by local services, containters and services on the mesh betwork.
+    /// by NeonCluster used by local services, containters and services on the ingress network.
     /// </summary>
     /// <remarks>
     /// <note>

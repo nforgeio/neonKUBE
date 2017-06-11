@@ -33,7 +33,7 @@ namespace Neon.Cluster
     /// </summary>
     /// <remarks>
     /// <note>
-    /// Docker mesh networks don't currently support forwarding of UDP traffic
+    /// Docker ingress networks don't currently support forwarding of UDP traffic
     /// to services.  HAProxy doesn't handle UDP either so UDP endpoints aren't
     /// super useful at this point.
     /// </note>
@@ -45,9 +45,9 @@ namespace Neon.Cluster
     /// </para>
     /// <para>
     /// This is typically used to route external TCP or UDP traffic to the
-    /// cluster's <b>neon-proxy-public</b> via the Docker mesh network during
+    /// cluster's <b>neon-proxy-public</b> via the Docker ingress network during
     /// cluster setup, by configuring a load balancer to balance traffic across
-    /// all Docker nodes.  The mesh network will take care of forwarding traffic
+    /// all Docker nodes.  The ingress network will take care of forwarding traffic
     /// to the <b>neon-proxy-public</b> instances which will handle SSL termination
     /// (if required) and then forward traffic onto the target Docker service.
     /// </para>

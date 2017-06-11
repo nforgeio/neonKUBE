@@ -12,7 +12,7 @@ NeonClusters deploy two general purpose reverse HTTP/TCP proxy services:
 
 * **neon-proxy-public** which is responsible for routing external network traffic (e.g. from an Internet facing load balancer or router) to cluster services.
 
-* **neon-proxy-private** which is used for internal routing for the scenarios the Docker overlay mesh network doesn't address out-of-the-box (e.g. load balancing and fail-over for groups of stateful containers that cannot be deployed as Docker swarm mode services).
+* **neon-proxy-private** which is used for internal routing for the scenarios the Docker overlay ingress network doesn't address out-of-the-box (e.g. load balancing and fail-over for groups of stateful containers that cannot be deployed as Docker swarm mode services).
 
 These proxy services are based on the [neon-proxy](https://hub.docker.com/r/neoncluster/neon-proxy/) image which deploys [HAProxy](http://haproxy.org) that actually handles the routing, along with some scripts that can dynamically download the proxy configuration from HashiCorp Consul and TLS certificates from HashiCorp Vault.
 

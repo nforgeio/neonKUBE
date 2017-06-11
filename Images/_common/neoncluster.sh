@@ -201,7 +201,7 @@ export NeonClusterConst_HAProxyUidFormat="%{+X}o%ci:%cp_%fi:%fp_%Ts_%rt"
 #
 # Defines the Docker host network ports in the [5000-5499] range reserved 
 # by NeonCluster used by local services, containters and services on the
-# mesh betwork.
+# ingress betwork.
 #
 # These must match the definitions in [Neon.Cluster.NeonHostPorts].
 
@@ -345,7 +345,7 @@ export NeonHosts_RegistryCache=neon-registry-cache.cluster
 # as in the [/etc/neoncluster/env-host] file that may be mounted into Docker containers and services.
 #
 # HTTP traffic should be directed to the [NeonHostPorts_ProxyPrivateHttpLogEsData] port which will be
-# routed to the [neon-proxy-private] service via the Docker mesh network.
+# routed to the [neon-proxy-private] service via the Docker ingress network.
 export NeonHosts_LogEsData=neon-log-esdata.cluster
 
 # The DNS name used to access for the cluster's HashiCorp Consul service.

@@ -50,7 +50,7 @@ namespace Neon.Cluster
         /// </para>
         /// <para>
         /// HTTP traffic should be directed to the <see cref="NeonHostPorts.ProxyPrivateHttpLogEsData"/> port which
-        /// will be routed to the <b>neon-proxy-private</b> service via the Docker mesh network.
+        /// will be routed to the <b>neon-proxy-private</b> service via the Docker ingress network.
         /// </para>
         /// </remarks>
         public const string LogEsData = "neon-log-esdata.cluster";

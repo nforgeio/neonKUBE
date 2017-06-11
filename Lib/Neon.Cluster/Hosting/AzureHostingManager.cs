@@ -81,7 +81,7 @@ namespace Neon.Cluster
         //         to your application services.  This traffic will be load balanced to every
         //         worker node, mapping the frontend port to an internal one.  Typically,
         //         the PUBLIC NeonCluster proxy will be configured to receive the inbound
-        //         traffic on the Docker mesh network and forward it on to your Docker services.
+        //         traffic on the Docker ingress network and forward it on to your Docker services.
         //
         //      7. It is possible to assign a public IP address to each cluster node.  This can
         //         help eliminate NAT port exhaustion in the load balancer for large clusters making
@@ -1171,7 +1171,7 @@ namespace Neon.Cluster
                     .DefineBackend(bePoolName)
                         .Attach()
 
-                    // We only need one probe because the Docker mesh network
+                    // We only need one probe because the Docker ingress network
                     // and HAProxy handles internal cluster fail-over.
 
                     .DefineTcpProbe(probeName)

@@ -18,7 +18,7 @@ The image does require the list of manager node IP addresses and the ports where
 
 where `NODE` identifies the Docker host node where the Vault instance is running and `IP:PORT` is the network endpoint.
 
-The load balancer service listens internally on the standard Vault **port 8200** which should be published to the Docker mesh network on port `NeonHostPorts.ProxyVault` (**5003**) to make the service available to Docker hosts.
+The load balancer service listens internally on the standard Vault **port 8200** which should be published to the Docker ingress network on port `NeonHostPorts.ProxyVault` (**5003**) to make the service available to Docker hosts.
 
 Note that this image will load environment variables from `/etc/neoncluster/env-host` and `/etc/neoncluster/env-container` if either of these files have been volume mapped into the container.
 

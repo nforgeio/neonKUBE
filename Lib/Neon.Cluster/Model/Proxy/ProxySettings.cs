@@ -31,13 +31,13 @@ namespace Neon.Cluster
         private const int defaultMaxConnections = 32000;
 
         /// <summary>
-        /// First reserved port on the Docker mesh network in the block allocated to this proxy.
+        /// First reserved port on the Docker ingress network in the block allocated to this proxy.
         /// </summary>
         [JsonProperty(PropertyName = "FirstPort", Required = Required.Always)]
         public int FirstPort { get; set; } = 0;
 
         /// <summary>
-        /// Last reserved port on the Docker mesh network in the block allocated to this proxy.
+        /// Last reserved port on the Docker ingress network in the block allocated to this proxy.
         /// </summary>
         [JsonProperty(PropertyName = "LastPort", Required = Required.Always)]
         public int LastPort { get; set; } = 0;
