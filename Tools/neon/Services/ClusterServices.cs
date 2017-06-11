@@ -86,21 +86,18 @@ namespace NeonTool
                         unsealSecretOption = "--secret=neon-cluster-manager-vaultkeys";
                     }
 
-                    foreach (var manager in cluster.Managers)
-                    {
-                        manager.Status = "start: neon-cluster-manager";
-                        manager.DockerCommand(RunOptions.Classified,
-                            "docker service create",
-                                "--name", "neon-cluster-manager",
-                                "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
-                                "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
-                                "--mount", "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
-                                "--env", "LOG_LEVEL=INFO",
-                                unsealSecretOption,
-                                "--constraint", "node.role==manager",
-                                "--replicas", 1,
-                                "neoncluster/neon-cluster-manager");
-                    }
+                    cluster.FirstManager.Status = "start: neon-cluster-manager";
+                    cluster.FirstManager.DockerCommand(RunOptions.Classified,
+                        "docker service create",
+                            "--name", "neon-cluster-manager",
+                            "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
+                            "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
+                            "--mount", "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
+                            "--env", "LOG_LEVEL=INFO",
+                            unsealSecretOption,
+                            "--constraint", "node.role==manager",
+                            "--replicas", 1,
+                            "neoncluster/neon-cluster-manager");
 
                     //---------------------------------------------------------
                     // Deploy proxy related services
