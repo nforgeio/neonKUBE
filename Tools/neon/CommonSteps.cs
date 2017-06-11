@@ -248,7 +248,7 @@ ClientAliveCountMax 20
             sb.AppendLine($"NEON_CLUSTER={clusterDefinition.Name}");
             sb.AppendLine($"NEON_DATACENTER={clusterDefinition.Datacenter.ToLowerInvariant()}");
             sb.AppendLine($"NEON_ENVIRONMENT={clusterDefinition.Environment.ToString().ToLowerInvariant()}");
-            sb.AppendLine($"NEON_HOSTING_PROVIDER={clusterDefinition.Hosting.Provider.ToString().ToLowerInvariant()}");
+            sb.AppendLine($"NEON_HOSTING={clusterDefinition.Hosting.Provider.ToString().ToLowerInvariant()}");
             sb.AppendLine($"NEON_NODE_NAME={node.Name}");
             sb.AppendLine($"NEON_NODE_ROLE={node.Metadata.Role}");
             sb.AppendLine($"NEON_NODE_IP={node.Metadata.PrivateAddress}");

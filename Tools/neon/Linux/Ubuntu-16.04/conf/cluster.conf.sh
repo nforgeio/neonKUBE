@@ -132,7 +132,7 @@ if $summary ; then
     echo "NEON_CLUSTER                       = ${NEON_CLUSTER}" 1>&2
     echo "NEON_DATACENTER                    = ${NEON_DATACENTER}" 1>&2
     echo "NEON_ENVIRONMENT                   = ${NEON_ENVIRONMENT}" 1>&2
-    echo "NEON_HOSTING_PROVIDER              = ${NEON_HOSTING_PROVIDER}" 1>&2
+    echo "NEON_HOSTING                       = ${NEON_HOSTING}" 1>&2
     echo "NEON_NODE_NAME                     = ${NEON_NODE_NAME}" 1>&2
     echo "NEON_NODE_ROLE                     = ${NEON_NODE_ROLE}" 1>&2
     echo "NEON_NODE_IP                       = ${NEON_NODE_IP}" 1>&2

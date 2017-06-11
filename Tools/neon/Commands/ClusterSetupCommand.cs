@@ -780,7 +780,7 @@ $@"#----------------------------------------------------------------------------
 export NEON_CLUSTER={cluster.Definition.Name}
 export NEON_DATACENTER={cluster.Definition.Datacenter}
 export NEON_ENVIRONMENT={cluster.Definition.Environment}
-export NEON_HOSTING_PROVIDER={cluster.Definition.Hosting.Provider.ToString().ToLowerInvariant()}
+export NEON_HOSTING={cluster.Definition.Hosting.Provider.ToString().ToLowerInvariant()}
 export NEON_NODE_NAME={node.Name}
 export NEON_NODE_ROLE={node.Metadata.Role}
 export NEON_NODE_IP={node.Metadata.PrivateAddress}

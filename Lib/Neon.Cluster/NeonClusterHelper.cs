@@ -623,7 +623,7 @@ namespace Neon.Cluster
             Environment.SetEnvironmentVariable("NEON_CLUSTER", clusterDefinition.Name);
             Environment.SetEnvironmentVariable("NEON_DATACENTER", clusterDefinition.Datacenter);
             Environment.SetEnvironmentVariable("NEON_ENVIRONMENT", clusterDefinition.Environment.ToString().ToUpperInvariant());
-            Environment.SetEnvironmentVariable("NEON_HOSTING_PROVIDER", hostingProvider);
+            Environment.SetEnvironmentVariable("NEON_HOSTING", hostingProvider);
             Environment.SetEnvironmentVariable("NEON_NODE_NAME", node.Name);
             Environment.SetEnvironmentVariable("NEON_NODE_ROLE", node.Metadata.Role);
             Environment.SetEnvironmentVariable("NEON_NODE_IP", node.Metadata.PrivateAddress.ToString());
