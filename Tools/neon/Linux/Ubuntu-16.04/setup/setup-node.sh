@@ -139,7 +139,7 @@ root        hard    memlock unlimited
 EOF
 
 #------------------------------------------------------------------------------
-# Tuning some Kernel network parameters.
+# Tuning some kernel network settings.
 
 cat <<EOF > /etc/sysctl.conf
 #
@@ -273,6 +273,28 @@ vm.max_map_count = 16777216
 # Specify the range of TCP ports that can be used by client sockets.
 net.ipv4.ip_local_port_range = 9000 65535
 EOF
+
+#------------------------------------------------------------------------------
+# Databases are generally not compatible with transparent huge pages.  It appears
+# that the best way to disable this is with a simple service.
+
+cat <<EOF > /lib/systemd/system/disable-thp.service
+# Disables transparent home pages.
+
+[Unit]
+Description=Disables transparent home pages (THP)
+
+[Service]
+Type=simple
+ExecStart=/bin/sh -c "echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled && echo 'never' > /sys/kernel/mm/transparent_hugepage/defrag"
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable disable-thp
+systemctl daemon-reload
+systemctl restart disable-thp
 
 #------------------------------------------------------------------------------
 # Configure the systemd journal to perist the journal to the file system at
