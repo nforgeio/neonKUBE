@@ -40,4 +40,4 @@ ADD http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz /ge
 
 #ENTRYPOINT ["sleep", "10000"]
 #ENTRYPOINT ["bash"]
-ENTRYPOINT ["/tini", "--", "-g", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]
