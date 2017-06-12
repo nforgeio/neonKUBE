@@ -22,4 +22,4 @@ RUN chmod 700 /docker-entrypoint.sh \
 
 EXPOSE 80
 #ENTRYPOINT ["sh"]
-ENTRYPOINT ["/tini", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/tini", "--", "-g", "/docker-entrypoint.sh"]

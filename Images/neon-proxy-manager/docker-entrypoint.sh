@@ -19,11 +19,6 @@ if [ -f /etc/neoncluster/env-container ] ; then
     . /etc/neoncluster/env-container
 fi
 
-# Add the root directory to the PATH.
+# Launch the service.
 
-PATH=${PATH}:/
-
-# Launch the service using the Tini (mini-init manager) with the [-g]
-# option so that SIGTERM signals will be forwarded decendant processes.
-
-/tini -g neon-proxy-manager
+neon-proxy-manager
