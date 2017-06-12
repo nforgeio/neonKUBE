@@ -61,6 +61,7 @@ COMMAND SUMMARY:
     neon consul             ARGS
     neon create key
     neon create password
+    neon db                 ARGS
     neon docker             ARGS
     neon download           SOURCE TARGET [NODE]
     neon exec               BASH-CMD
@@ -201,6 +202,8 @@ tool requires admin priviledges for direct mode.
                     new CreateCommand(),
                     new CreateKeyCommand(),
                     new CreatePasswordCommand(),
+                    new DbCommand(),
+                    new DbCreateCommand(),
                     new DockerCommand(),
                     new DownloadCommand(),
                     new ExecCommand(),
