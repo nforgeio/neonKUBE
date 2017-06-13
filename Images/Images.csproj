@@ -66,6 +66,16 @@
     </None>
     <None Include="couchbase\publish.ps1" />
     <None Include="couchbase\README.md" />
+    <Content Include="neon-couchbase-manager\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="neon-couchbase-manager\build.ps1" />
+    <None Include="neon-couchbase-manager\docker-entrypoint.sh" />
+    <None Include="neon-couchbase-manager\Dockerfile.template">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-couchbase-manager\publish.ps1" />
+    <None Include="neon-couchbase-manager\README.md" />
     <None Include="neon-log-collector\geoip\MaxMind.readme" />
     <Content Include="_artifacts\README.txt" />
     <Content Include="elasticsearch\.dockerignore">
@@ -274,9 +284,7 @@
     <None Include="ubuntu-16.04\README.md" />
     <None Include="_common\vault-auth.sh" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="neon-couchbase-manager\" />
-  </ItemGroup>
+  <ItemGroup />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
     <PostBuildEvent>
