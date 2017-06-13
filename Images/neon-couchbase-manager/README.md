@@ -6,7 +6,7 @@
 
 # Description
 
-The **neon-couchbase-manager** service manages the configuration and monitoring of a Couchbase database cluster deployed via a **neon-cli** `neon db create couchbase ... NAME` command.  This command actually deploys two services named after the database.
+The **neon-couchbase-manager** service manages the configuration and monitoring of a Couchbase database cluster deployed via a **neon-cli** `neon db create couchbase ... DBNAME` command.  This command actually deploys two services with names that derive from the database name specified.
 
 For example, `neon db create couchbase ... mydatabase` will deploy:
 
@@ -38,6 +38,6 @@ The current implementation of the Couchbase manager wakes up perodically and doe
 
 **neon-consul-manager** service will be deployed automatically by **neon-cli** when a
 
-&nbsp;&nbsp;&nbsp;&nbsp;`neon db create couchbase ... NAME`
+&nbsp;&nbsp;&nbsp;&nbsp;`neon db create couchbase ... DBNAME`
 
 command is executed.

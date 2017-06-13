@@ -13,6 +13,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Consul;
+
 using Newtonsoft;
 using Newtonsoft.Json;
 
@@ -57,6 +59,7 @@ SERVICE TYPES:
         private string          baseName;
         private string          serviceName;
         private string          managerName;
+        private string          dbInfoKey;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -87,10 +90,27 @@ SERVICE TYPES:
             this.clusterLogin = Program.ConnectCluster();
             this.cluster      = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>);
             this.commandLine  = commandLine;
-            this.serviceType  = commandLine.Arguments[0];
-            this.baseName     = commandLine.Arguments[1];
+            this.serviceType  = commandLine.Arguments[0].ToLowerInvariant();
+            this.baseName     = commandLine.Arguments[1].ToLowerInvariant();
             this.serviceName  = baseName + "-service";
             this.managerName  = baseName + "-manager";
+            this.dbInfoKey    = $"neon-databases/{baseName}";
+
+            // Verify that the database service doesn't already exist.
+
+            // $todo(jeff.lill): We'd establish a lock for the entire operation to be really correct.
+
+            try
+            {
+                var dbCluster = cluster.Consul.KV.GetObject<DbCluster>(dbInfoKey).Result;
+
+                Console.WriteLine($"*** ERROR: A database service named [{baseName}] is already deployed.");
+                Program.Exit(1);
+            }
+            catch (KeyNotFoundException)
+            {
+                // Expecting this
+            }
 
             if (cluster.FirstManager.SudoCommand($"docker service inspect {serviceName}").ExitCode == 0 ||
                 cluster.FirstManager.SudoCommand($"docker service inspect {managerName}").ExitCode == 0)
@@ -99,7 +119,7 @@ SERVICE TYPES:
                 Program.Exit(1);
             }
 
-            switch (serviceType.ToLowerInvariant())
+            switch (serviceType)
             {
                 case "couchbase":
 
