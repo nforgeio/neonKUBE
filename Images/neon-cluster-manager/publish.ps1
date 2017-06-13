@@ -49,10 +49,4 @@ function Build
 	}
 }
 
-if ($all)
-{
-	Build 1
-	Build 1.0
-}
-
 Build 1.0.0 -latest

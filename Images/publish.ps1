@@ -23,111 +23,42 @@ $image_root = "$env:NF_ROOT\\Images"
 # Take care to ensure that you order the image builds such that
 # dependant images are built before any dependancies.
 
-# $todo(jeff.lill): There's got to be a better way to pass the [-all] parameters.
-
-if ($all)
+function Publish
 {
-	cd "$image_root\\ubuntu-16.04"
-	./publish.ps1 -all
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=1)]
+        [string]$Path
+    )
 
-	cd "$image_root\\alpine"
-	./publish.ps1 -all
+	cd "$Path"
 
-	cd "$image_root\\dotnet"
-	./publish.ps1 -all
-
-	cd "$image_root\\elasticsearch"
-	./publish.ps1 -all
-
-	cd "$image_root\\kibana"
-	./publish.ps1 -all
-
-	cd "$image_root\\metricbeat"
-	./publish.ps1 -all
-
-	cd "$image_root\\tdagent"
-	./publish.ps1 -all
-
-	cd "$image_root\\neon-log-collector"
-	./publish.ps1 -all
-
-	cd "$image_root\\neon-log-host"
-	./publish.ps1 -all
-
-	cd "$image_root\\node"
-	./publish.ps1 -all
-
-	cd "$image_root\\haproxy"
-	./publish.ps1 -all
-
-	cd "$image_root\\neon-cli"
-	./publish.ps1 -all
-
-	cd "$image_root\\neon-cluster-manager"
-	./publish.ps1 -all
-
-	cd "$image_root\\neon-proxy"
-	./publish.ps1 -all
-
-	cd "$image_root\\neon-proxy-vault"
-	./publish.ps1 -all
-
-	cd "$image_root\\neon-proxy-manager"
-	./publish.ps1 -all
-
-	cd "$image_root\\neon-registry-cache"
-	./publish.ps1 -all
+	if ($all)
+	{
+		./publish.ps1 -all
+	}
+	else
+	{
+		./publish.ps1
+	}
 }
-else
-{
-	cd "$image_root\\ubuntu-16.04"
-	./publish.ps1
 
-	cd "$image_root\\alpine"
-	./publish.ps1
-
-	cd "$image_root\\dotnet"
-	./publish.ps1
-
-	cd "$image_root\\elasticsearch"
-	./publish.ps1
-
-	cd "$image_root\\kibana"
-	./publish.ps1
-
-	cd "$image_root\\metricbeat"
-	./publish.ps1
-
-	cd "$image_root\\tdagent"
-	./publish.ps1
-
-	cd "$image_root\\neon-log-collector"
-	./publish.ps1
-
-	cd "$image_root\\neon-log-host"
-	./publish.ps1
-
-	cd "$image_root\\node"
-	./publish.ps1
-
-	cd "$image_root\\haproxy"
-	./publish.ps1
-
-	cd "$image_root\\neon-cli"
-	./publish.ps1
-
-	cd "$image_root\\neon-cluster-manager"
-	./publish.ps1
-
-	cd "$image_root\\neon-proxy"
-	./publish.ps1
-
-	cd "$image_root\\neon-proxy-vault"
-	./publish.ps1
-
-	cd "$image_root\\neon-proxy-manager"
-	./publish.ps1
-
-	cd "$image_root\\neon-registry-cache"
-	./publish.ps1
-}
+Publish "$image_root\\ubuntu-16.04"
+Publish "$image_root\\alpine"
+Publish "$image_root\\dotnet"
+Publish "$image_root\\elasticsearch"
+Publish "$image_root\\kibana"
+Publish "$image_root\\metricbeat"
+Publish "$image_root\\tdagent"
+Publish "$image_root\\neon-log-collector"
+Publish "$image_root\\neon-log-host"
+Publish "$image_root\\node"
+Publish "$image_root\\haproxy"
+Publish "$image_root\\neon-cli"
+Publish "$image_root\\neon-cluster-manager"
+Publish "$image_root\\neon-proxy"
+Publish "$image_root\\neon-proxy-vault"
+Publish "$image_root\\neon-proxy-manager"
+Publish "$image_root\\neon-registry-cache"
+Publish "$image_root\\couchbase"
+Publish "$image_root\\neon-couchbase-manager"

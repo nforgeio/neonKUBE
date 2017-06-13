@@ -2,7 +2,7 @@
 
 # Supported Tags
 
-* `1.0.0, 1.0, 1, latest`
+* `1.0.0, latest`
 
 # Description
 
@@ -14,7 +14,7 @@ The **neon-cluster-manager** service performs a few cluster maintenance function
 
 # Cluster Definition
 
-NeonClusters persist a cluster defintion to Consul.  This is downloaded by the **neon-tool** and so that it can accurately make container placement decisions for situations where Docker services are not appropriate.  The cluster definition includes the non-confidential properties when the cluster was initialized provisioned plus the current set of cluster nodes including their Docker labels.
+NeonClusters persist a cluster defintion to Consul.  This is downloaded by the **neon-cli** and so that it can accurately make container placement decisions for situations where Docker services are not appropriate.  The cluster definition includes the non-confidential properties when the cluster was initialized provisioned plus the current set of cluster nodes including their Docker labels.
 
 This definition is serialized as JSON and then compressed via deflate before being persisted to Consul.  **neon-cluster-manager** also persists the MD5 hash of the definition JSON to Consul, making it possible to defer retrieving the definition only when it changes.  Nodes will be added or deleted and their labels modified relatively infrequently for many clusters, so this is a good optimization.
 
@@ -32,7 +32,7 @@ neon:
 
 NeonCluster uses HashiCorp [Vault)(http://vaultproject.io) as a secure place to store cluster secrets like hosting environment credentials, certificate private keys and VPN certificate authority secrets.  Vault servers are deployed on manager nodes and use Consul as its backing store, encrypting the information stored there.
 
-Vault is super secure by default, so secure that the keys required by Vault to decrypt its storage are not persisted anywhere in the cluster.  This means that after a Vault instance or its host manager node restarts, the instance is unable to decrypt its data.  This is called the **sealed** state.  Cluster operators will need to manually **unseal** Vault by providing keys returned when the Vault was first provisioned.  The **neon-tool** provides a command to accomplish this via the **neon-cli**:
+Vault is super secure by default, so secure that the keys required by Vault to decrypt its storage are not persisted anywhere in the cluster.  This means that after a Vault instance or its host manager node restarts, the instance is unable to decrypt its data.  This is called the **sealed** state.  Cluster operators will need to manually **unseal** Vault by providing keys returned when the Vault was first provisioned.  The **neon-cli** provides a command to accomplish this via the **neon-cli**:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon vault auto-unlock on|off`
 
@@ -73,4 +73,4 @@ To enable automatic Vault unsealing, you'll need to persist the Vault unseal key
 
 # Deployment
 
-**neon-consul-manager** service will be deployed automatically by **neon-tool** during cluster setup.
+**neon-consul-manager** service will be deployed automatically by **neon-cli** during cluster setup.

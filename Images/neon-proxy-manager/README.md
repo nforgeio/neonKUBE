@@ -4,7 +4,7 @@ Dynamically generates HAProxy configurations from routes and certificates persis
 
 # Supported Tags
 
-* `1.0.0, 1.0, 1, latest`
+* `1.0.0, latest`
 
 # Description
 
