@@ -24,39 +24,6 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
 
-// Implementation Note:
-// --------------------
-// I really wanted to deploy this as a Docker service with one replica
-// running on manager nodes.  This won't work at this time for three reasons:
-//
-//      1. We can't expose the Docker socket outside of the host
-//         for security reasons.
-//
-//      2. .NET Core is not currently capable of performing HTTP queries against
-//         Unix sockets, so we can't mount [/var/run/docker.sock] into our
-//         service.
-//
-//      3. The alternative to #1 and #2 is to expose a Docker socket on the
-//         [127.0.0.1] loopback address.  The problem here is that Docker
-//         services are unable to mount the host network.
-//
-// The solution is to run [neon-cluster-manager] as a container on each of
-// the manager nodes, mount the host network, and access Docker via the
-// loopback address.
-//
-// Ideally, we'd also use a Consul lock to ensure that only one instance is 
-// active at any time but I'm going to defer until later.  Doing this for the
-// time being this means that each manager node will be polling for node
-// status every 30 seconds.  This works out to roughly a 1.5K download per 
-// cluster node during each poll; so maybe 150K total for a 100 node cluster.
-// This should be manageable for most clusters and this could be mitigated by 
-// increasing the polling interval.
-
-// $todo(jeff.lill): 
-//
-// Come back later to see if problems #1 or #2 above have
-// been addressed.
-
 namespace NeonClusterManager
 {
     /// <summary>
