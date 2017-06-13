@@ -3,14 +3,22 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
-using ICSharpCode.SharpZipLib.Zip;
-using Neon.Common;
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
-using System.Security.Cryptography;
+using System.Linq;
 using System.Text;
+using System.Text.RegularExpressions;
+using System.Threading;
+using System.Threading.Tasks;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
+
+using Neon.Common;
 
 namespace Neon.Cluster
 {
@@ -19,5 +27,25 @@ namespace Neon.Cluster
     /// </summary>
     public class DbNode
     {
+        /// <summary>
+        /// The Docker node name.
+        /// </summary>
+        [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string Name { get; set; }
+
+        /// <summary>
+        /// The node's IP address.
+        /// </summary>
+        [JsonProperty(PropertyName = "Address", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string Address { get; set; }
+
+        /// <summary>
+        /// The node status.
+        /// </summary>
+        [JsonProperty(PropertyName = "Status", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(DbStatus.Unknown)]
+        public DbStatus Status { get; set; }
     }
 }

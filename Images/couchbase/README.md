@@ -6,7 +6,7 @@
 
 # Description
 
-The **neon-couchbase** is used to deploy pet Couchbase database clusters to a NeonCluster using the **neon-cli**.  The idea here is that being a persisted database, operators will need to give Couchbase clusters more TLC than they would stateless services.  **neon-cli** provides tools that help an operator treat the cluster service instances and data volumes more like pets than cattle.
+The **neon-couchbase** is used to deploy Couchbase database clusters to a NeonCluster using the **neon-cli**.  The idea here is that being a persisted database, operators will need to give Couchbase clusters more TLC than they would stateless services.  **neon-cli** provides tools that help an operator treat the cluster service instances and data volumes more like pets than cattle.
 
 This is a custom built image that includes Couchbase Community Edition Server:
 
@@ -14,7 +14,7 @@ This is a custom built image that includes Couchbase Community Edition Server:
 
 * Logs are written to standard output to be available to standard Docker logging
 
-* A service deploying the **neoncluster/neon-couchbase-manager** image handles cluster formation and monitoring
+* **neon-cli** a **neoncluster/neon-couchbase-manager** service that cluster formation and monitoring
 
 # Deployment
 
@@ -34,12 +34,12 @@ You'll need to increase the ULIMIT settings for the container to support running
 
 **Networks and Ports** 
 
-Couchbase will be able to form a cluster when deployed as a Docker service and also when deployed as containers on the host network as long as you expose/publish the standard Couchbase ports:
+The container must be deployed on the `--net=host` network and you must publish the following ports to the host network:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`8091-8094`
 &nbsp;&nbsp;&nbsp;&nbsp;`11210`
 
-Note that deploying as containers is not really recommended.
+To deploy more than one Couchbase database to the same Docker hosts, you'll need to map the internal container ports to something else, to avoid port conflicts.  
 
 **Data Volume**
 
