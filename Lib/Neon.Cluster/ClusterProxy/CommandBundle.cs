@@ -159,14 +159,54 @@ namespace Neon.Cluster
 
                 sb.Append(' ');
 
-                var argString = arg.ToString();
-
-                if (argString.Contains(' '))
+                if (arg is bool)
                 {
-                    sb.Append($"\"{argString}\"");
+                    sb.Append((bool)arg ? "true" : "false");
+                }
+                else if (arg is IEnumerable<string>)
+                {
+                    // Expand string arrays into multiple arguments.
+
+                    var first = true;
+
+                    foreach (var value in (IEnumerable<string>)arg)
+                    {
+                        var valueString = value.ToString();
+
+                        if (string.IsNullOrWhiteSpace(valueString))
+                        {
+                            valueString = "-"; // $todo(jeff.lill): Not sure if this makes sense any more.
+                        }
+                        else if (valueString.Contains(' '))
+                        {
+                            valueString = "\"" + valueString + "\"";
+                        }
+
+                        if (first)
+                        {
+                            first = false;
+                        }
+                        else
+                        {
+                            sb.Append(' ');
+                        }
+
+                        sb.Append(valueString);
+                    }
                 }
                 else
                 {
+                    var argString = arg.ToString();
+
+                    if (string.IsNullOrWhiteSpace(argString))
+                    {
+                        argString = "-";
+                    }
+                    else if (argString.Contains(' '))
+                    {
+                        argString = "\"" + argString + "\"";
+                    }
+
                     sb.Append(argString);
                 }
             }

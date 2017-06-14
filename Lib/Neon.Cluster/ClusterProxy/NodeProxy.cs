@@ -73,6 +73,7 @@ namespace Neon.Cluster
         private string          status;
         private bool            hasUploadFolder;
         private bool            hasStateFolder;
+        private string          faultMessage;
 
         /// <summary>
         /// Constructs a <see cref="NodeProxy{TMetadata}"/>.
@@ -325,7 +326,14 @@ namespace Neon.Cluster
             {
                 if (IsFaulted)
                 {
-                    return "*** FAULTED ***";
+                    if (string.IsNullOrEmpty(faultMessage))
+                    {
+                        return "*** FAULTED ***";
+                    }
+                    else
+                    {
+                        return $"*** FAULT: {faultMessage}";
+                    }
                 }
                 else
                 {
@@ -567,6 +575,7 @@ namespace Neon.Cluster
         {
             if (!string.IsNullOrEmpty(message))
             {
+                faultMessage = message;
                 LogLine("*** ERROR: " + message);
             }
             else
@@ -1241,6 +1250,37 @@ mono {scriptPath}.mono $@
                     if (arg is bool)
                     {
                         sb.Append((bool)arg ? "true" : "false");
+                    }
+                    else if (arg is IEnumerable<string>)
+                    {
+                        // Expand string arrays into multiple arguments.
+
+                        var first = true;
+
+                        foreach (var value in (IEnumerable<string>)arg)
+                        {
+                            var valueString = value.ToString();
+
+                            if (string.IsNullOrWhiteSpace(valueString))
+                            {
+                                valueString = "-"; // $todo(jeff.lill): Not sure if this makes sense any more.
+                            }
+                            else if (valueString.Contains(' '))
+                            {
+                                valueString = "\"" + valueString + "\"";
+                            }
+
+                            if (first)
+                            {
+                                first = false;
+                            }
+                            else
+                            {
+                                sb.Append(' ');
+                            }
+
+                            sb.Append(valueString);
+                        }
                     }
                     else
                     {

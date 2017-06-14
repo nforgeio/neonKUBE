@@ -26,45 +26,66 @@ namespace Neon.Cluster
     public class DbCouchbaseConfig
     {
         /// <summary>
-        /// The default and sets the Views REST API to use a custom port.
+        /// The Views REST API to use a custom port.
         /// </summary>
         [JsonProperty(PropertyName = "ApiPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(8092)]
+        [DefaultValue(0)]
         public int ApiPort { get; set; } = 8092;
 
         /// <summary>
-        /// The default and sets the direct port to use for Key/Value operations using the Binary Memcached protocol.
+        /// The direct port to use for Key/Value operations using the Binary Memcached protocol.
         /// </summary>
         [JsonProperty(PropertyName = "DirectPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(11210)]
+        [DefaultValue(0)]
         public int DirectPort { get; set; } = 11210;
 
         /// <summary>
-        /// The default and sets the Couchbase Views REST API to use a custom SSL port.
+        /// The Couchbase query services port.
+        /// </summary>
+        [JsonProperty(PropertyName = "QueryPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
+        public int QueryPort { get; set; } = 8093;
+
+        /// <summary>
+        /// The Couchbase search port.
+        /// </summary>
+        [JsonProperty(PropertyName = "SearchPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
+        public int SearchPort { get; set; } = 8094;
+
+        /// <summary>
+        /// The Couchbase Views REST API to use a custom SSL port.
         /// </summary>
         [JsonProperty(PropertyName = "HttpsApiPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(18092)]
+        [DefaultValue(0)]
         public int HttpsApiPort { get; set; } = 18092;
 
         /// <summary>
-        /// The default and sets the Couchbase Management REST API to use a custom SSL port.
+        /// The Couchbase Management REST API to use a custom SSL port.
         /// </summary>
         [JsonProperty(PropertyName = "HttpsMgmtPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(18091)]
+        [DefaultValue(0)]
         public int HttpsMgmtPort { get; set; } = 18091;
 
         /// <summary>
-        /// The default and sets the Couchbase Management REST API to use a custom port.
+        /// The Couchbase SSL query services port.
+        /// </summary>
+        [JsonProperty(PropertyName = "HttpsQueryPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
+        public int HttpsQueryPort { get; set; } = 18093;
+
+        /// <summary>
+        /// The Couchbase Management REST API to use a custom port.
         /// </summary>
         [JsonProperty(PropertyName = "MgmtPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(8091)]
+        [DefaultValue(0)]
         public int MgmtPort { get; set; } = 8091;
 
         /// <summary>
-        /// The default and sets the SSL port to use for Key/Value operations using the Binary Memcached protocol.
+        /// The SSL port to use for Key/Value operations using the Binary Memcached protocol.
         /// </summary>
         [JsonProperty(PropertyName = "SslPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(11207)]
+        [DefaultValue(0)]
         public int SslPort { get; set; } = 11207;
 
         /// <summary>

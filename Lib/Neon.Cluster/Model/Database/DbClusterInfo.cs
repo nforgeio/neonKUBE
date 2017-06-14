@@ -28,21 +28,28 @@ namespace Neon.Cluster
         /// Database specific information required for clients to establish a connection to the database.
         /// This is encoded as JSON.
         /// </summary>
-        [JsonProperty(PropertyName = "ClientConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "ClientConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
         public string ClientConfig { get; set; }
 
         /// <summary>
+        /// Identifies the underlying service type.
+        /// </summary>
+        [JsonProperty(PropertyName = "ServiceType", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue("")]
+        public string ServiceType { get; set; }
+
+        /// <summary>
         /// The overall status of the database cluster.
         /// </summary>
-        [JsonProperty(PropertyName = "Status", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Status", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(DbStatus.Unknown)]
         public DbStatus Status { get; set;}
 
         /// <summary>
         /// Status information for indvidual database cluster nodes.
         /// </summary>
-        [JsonProperty(PropertyName = "Nodes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Nodes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
         public List<DbNode> Nodes { get; set; } = new List<DbNode>();
     }

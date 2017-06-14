@@ -60,7 +60,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="couchbase\build.ps1" />
-    <None Include="couchbase\docker-entrypoint.sh" />
     <None Include="couchbase\Dockerfile.template">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

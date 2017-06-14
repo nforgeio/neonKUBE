@@ -3,31 +3,5 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
-FROM        ubuntu:14.04
+FROM        couchbase:community-${VERSION}
 MAINTAINER  jeff@lilltek.com
-STOPSIGNAL  SIGTERM
-
-# Environment
-
-ENV DEBIAN_FRONTEND noninteractive
-
-# Install the [tini] INIT manager.
-
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod 700 /tini
-
-# Install the entrypoint and download the Couchbase package.
-
-COPY docker-entrypoint.sh /
-ADD http://packages.couchbase.com/releases/${VERSION}/couchbase-server-community_${VERSION}-ubuntu14.04_amd64.deb /tmp/couchbase.deb
-
-# Install Couchbase, stop it, and then remove the downloaded package.
-
-RUN chmod 700 /docker-entrypoint.sh \
-    && dpkg --install /tmp/couchbase.deb \
-    && service couchbase-server stop \
-    && rm -f /tmp/couchbase.deb
-
-#ENTRYPOINT ["bash"]
-#ENTRYPOINT ["sleep", "100000"]
-ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]

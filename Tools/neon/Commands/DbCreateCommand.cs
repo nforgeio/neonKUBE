@@ -70,7 +70,6 @@ SERVICE TYPES:
         private List<NodeProxy<NodeDefinition>>     targetNodes;
         private List<string>                        publishedPorts;
         private Dictionary<int,int>                 internalToExternalPorts;
-        private ConsulClient                        consul;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -103,8 +102,8 @@ SERVICE TYPES:
             this.commandLine   = commandLine;
             this.serviceType   = commandLine.Arguments[0].ToLowerInvariant();
             this.baseName      = commandLine.Arguments[1].ToLowerInvariant();
-            this.containerName = $"neon-db-{baseName}";
-            this.managerName   = $"neon-db-{baseName}-manager";
+            this.containerName = $"db-{baseName}";
+            this.managerName   = $"db-{baseName}-manager";
             this.dbInfoKey     = $"neon/databases/{baseName}";
 
             // Verify the published ports.  We're also going to create a dictionary that

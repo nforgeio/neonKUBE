@@ -6,19 +6,19 @@
 
 # Description
 
-The **neon-couchbase** is used to deploy Couchbase database clusters to a NeonCluster using the **neon-cli**.  The idea here is that being a persisted database, operators will need to give Couchbase clusters more TLC than they would stateless services.  **neon-cli** provides tools that help an operator treat the cluster service instances and data volumes more like pets than cattle.
+The **neon-couchbase** is used to deploy Couchbase Community Edition database clusters to a NeonCluster using the **neon-cli**.  The idea here is that being a persisted database, operators will need to give Couchbase clusters more TLC than they would stateless services.  **neon-cli** provides tools that help an operator treat the cluster service instances and data volumes more like pets than cattle.
 
 This is a custom built image that includes Couchbase Community Edition Server:
 
 * Image version matches the Couchbase server version  
-
 * Logs are written to standard output to be available to standard Docker logging
-
 * **neon-cli** a **neoncluster/neon-couchbase-manager** service that cluster formation and monitoring
 
 # Deployment
 
-This image is generally deployed using the following **neon-cli** command
+NeonCluster hosts support only a single Couchbase instances.  Any attempt to host multiple instances will result in port conflicts.  This isn't too unreasonable for production databases and it's possible that we'll relax this constraint in the future.
+
+This image is generally deployed using the following **neon-cli** command:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon db create couchbase ...`
 
@@ -37,9 +37,7 @@ You'll need to increase the ULIMIT settings for the container to support running
 The container must be deployed on the `--net=host` network and you must publish the following ports to the host network:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`8091-8094`
-&nbsp;&nbsp;&nbsp;&nbsp;`11210`
-
-To deploy more than one Couchbase database to the same Docker hosts, you'll need to map the internal container ports to something else, to avoid port conflicts.  
+&nbsp;&nbsp;&nbsp;&nbsp;`11210`  
 
 **Data Volume**
 

@@ -30,21 +30,21 @@ namespace Neon.Cluster
         /// <summary>
         /// The Docker node name.
         /// </summary>
-        [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
         public string Name { get; set; }
 
         /// <summary>
         /// The node's IP address.
         /// </summary>
-        [JsonProperty(PropertyName = "Address", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Address", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
         public string Address { get; set; }
 
         /// <summary>
         /// The node status.
         /// </summary>
-        [JsonProperty(PropertyName = "Status", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Status", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(DbStatus.Unknown)]
         public DbStatus Status { get; set; }
     }
