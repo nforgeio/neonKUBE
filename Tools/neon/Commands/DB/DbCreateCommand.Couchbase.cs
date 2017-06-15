@@ -41,30 +41,34 @@ namespace NeonTool
                 Program.Exit(1);
             }
 
-            var image   = commandLine.GetOption("--image", "neoncluster/couchbase:latest");
+            //var image   = commandLine.GetOption("--image", "neoncluster/couchbase:latest");
+            //var image   = commandLine.GetOption("--image", "couchbase:community-4.5.1");
+            var image   = commandLine.GetOption("--image", "couchbase:latest");
             var runOpts = commandLine.GetOption("--runopts", "--ulimit nofile=40960:40960 --ulimit core=100000000:100000000 --ulimit memlock=100000000:100000000");
 
             // Generate the database cluster information we're going to persist to Consul.
 
-            var dbInfo        = new DbClusterInfo() { ServiceType = "couchbase" };
-            var clientConfig  = new DbCouchbaseConfig();
+            var dbInfo         = new DbClusterInfo() { ServiceType = "couchbase" };
+            var clientSettings = new DbCouchbaseSettings();
 
-            SetConfigPort(8091, port => clientConfig.MgmtPort = port);
-            SetConfigPort(8092, port => clientConfig.ApiPort = port);
-            SetConfigPort(8093, port => clientConfig.QueryPort = port);
-            SetConfigPort(8094, port => clientConfig.SearchPort = port);
-            SetConfigPort(11210, port => clientConfig.DirectPort = port);
-            SetConfigPort(18091, port => clientConfig.HttpsMgmtPort = port);
-            SetConfigPort(18092, port => clientConfig.HttpsApiPort = port);
+            clientSettings.UseSsl = false;
+
+            SetConfigPort(8091, port => clientSettings.MgmtPort = port);
+            SetConfigPort(8092, port => clientSettings.ApiPort = port);
+            SetConfigPort(8093, port => clientSettings.QueryPort = port);
+            SetConfigPort(8094, port => clientSettings.SearchPort = port);
+            SetConfigPort(11210, port => clientSettings.DirectPort = port);
+            SetConfigPort(18091, port => clientSettings.HttpsMgmtPort = port);
+            SetConfigPort(18092, port => clientSettings.HttpsApiPort = port);
 
             foreach (var node in targetNodes)
             {
-                clientConfig.Servers.Add(new Uri($"http://{node.PrivateAddress}:{clientConfig.MgmtPort}"));
+                clientSettings.Servers.Add(new Uri($"http://{node.PrivateAddress}:{clientSettings.MgmtPort}"));
             }
 
-            dbInfo.ClientConfig = NeonHelper.JsonSerialize(clientConfig, Formatting.Indented);
+            dbInfo.ClientSettings = NeonHelper.JsonSerialize(clientSettings, Formatting.Indented);
 
-            dbInfo.Status = DbStatus.Setup;
+            dbInfo.Status = DbStatus.Uninitialized;
 
             foreach (var node in targetNodes)
             {
@@ -73,7 +77,7 @@ namespace NeonTool
                     {
                         Name    = node.Name,
                         Address = node.PrivateAddress.ToString(),
-                        Status  = DbStatus.Setup
+                        Status  = DbStatus.Uninitialized
                     });
             }
 
@@ -83,8 +87,8 @@ namespace NeonTool
 
             foreach (var publishedPort in publishedPorts)
             {
-                portOpts.Append("-p");
-                portOpts.Append(publishedPort);
+                portOpts.Add("-p");
+                portOpts.Add(publishedPort);
             }
 
             // Perform the setup operations. 
@@ -106,6 +110,15 @@ namespace NeonTool
                     if (response.ExitCode != 0)
                     {
                         targetNode.Fault($"volume create failed: {response.AllText}");
+                    }
+
+                    targetNode.Status = $"pull: {image}";
+
+                    response = targetNode.SudoCommand($"docker pull", image);
+
+                    if (response.ExitCode != 0)
+                    {
+                        targetNode.Fault($"pull failed: {response.AllText}");
                     }
 
                     targetNode.Status = $"run container: {containerName}";

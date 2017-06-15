@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DbCouchbaseConfig.cs
+// FILE:	    DbCouchbaseSettings.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
@@ -21,9 +21,9 @@ namespace Neon.Cluster
 {
     /// <summary>
     /// Couchbase client configuration settings.  These are persisted in Consul as
-    /// the <see cref="DbClusterInfo.ClientConfig"/> property (as JSON text).
+    /// the <see cref="DbClusterInfo.ClientSettings"/> property (as JSON text).
     /// </summary>
-    public class DbCouchbaseConfig
+    public class DbCouchbaseSettings
     {
         /// <summary>
         /// The Views REST API to use a custom port.
@@ -87,6 +87,13 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "SslPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(0)]
         public int SslPort { get; set; } = 11207;
+
+        /// <summary>
+        /// Indicates whether SSL should be used for Key/Value operations using the Binary Memcached protocol.
+        /// </summary>
+        [JsonProperty(PropertyName = "UseSsl", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool UseSsl { get; set; } = false;
 
         /// <summary>
         /// Identifies the client bootstrap servers.

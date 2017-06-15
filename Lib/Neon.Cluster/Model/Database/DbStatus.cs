@@ -28,6 +28,12 @@ namespace Neon.Cluster
         Unknown = 0,
 
         /// <summary>
+        /// The database or node has not yet been initialized.
+        /// </summary>
+        [EnumMember(Value = "unintialized")]
+        Uninitialized,
+
+        /// <summary>
         /// The database or node is offline.
         /// </summary>
         [EnumMember(Value = "offline")]

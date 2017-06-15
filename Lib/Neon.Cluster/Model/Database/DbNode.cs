@@ -47,5 +47,12 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "Status", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(DbStatus.Unknown)]
         public DbStatus Status { get; set; }
+
+        /// <summary>
+        /// A status or error message for the node.
+        /// </summary>
+        [JsonProperty(PropertyName = "Message", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue("")]
+        public string Message { get; set; }
     }
 }

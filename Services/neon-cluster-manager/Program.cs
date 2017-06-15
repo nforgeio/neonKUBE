@@ -107,7 +107,7 @@ namespace NeonClusterManager
 
                 if (string.IsNullOrEmpty(nodeRole))
                 {
-                    log.Fatal(() => "Container does not appear to be running in a NeonCluster.");
+                    log.Fatal(() => "Container does not appear to be running on a NeonCluster.");
                     Program.Exit(1);
                 }
 

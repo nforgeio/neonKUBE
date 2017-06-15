@@ -3,17 +3,10 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
-using System;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System.Collections.Generic;
 using System.ComponentModel;
-using System.Diagnostics.Contracts;
-using System.IO;
-using System.Security.Cryptography;
-using System.Text;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
 
@@ -28,9 +21,9 @@ namespace Neon.Cluster
         /// Database specific information required for clients to establish a connection to the database.
         /// This is encoded as JSON.
         /// </summary>
-        [JsonProperty(PropertyName = "ClientConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "ClientSettings", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
-        public string ClientConfig { get; set; }
+        public string ClientSettings { get; set; }
 
         /// <summary>
         /// Identifies the underlying service type.
@@ -47,10 +40,36 @@ namespace Neon.Cluster
         public DbStatus Status { get; set;}
 
         /// <summary>
+        /// A status or error message for the cluster.
+        /// </summary>
+        [JsonProperty(PropertyName = "Message", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue("")]
+        public string Message { get; set; }
+
+        /// <summary>
         /// Status information for indvidual database cluster nodes.
         /// </summary>
         [JsonProperty(PropertyName = "Nodes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
         public List<DbNode> Nodes { get; set; } = new List<DbNode>();
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            var other = obj as DbClusterInfo;
+
+            if (other == null)
+            {
+                return false;
+            }
+
+            return NeonHelper.JsonSerialize(this) == NeonHelper.JsonSerialize(other);
+        }
+        /// <inheritdoc/>
+
+        public override int GetHashCode()
+        {
+            return NeonHelper.JsonSerialize(this).GetHashCode();
+        }
     }
 }

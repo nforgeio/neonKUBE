@@ -205,7 +205,7 @@ SERVICE TYPES:
                             Program.Exit(1);
                         }
 
-                        publishedPorts.Add($"{externalPortStart}-{externalPortEnd}:{internalPortStart}:{internalPortEnd}");
+                        publishedPorts.Add($"{externalPortStart}-{externalPortEnd}:{internalPortStart}-{internalPortEnd}");
 
                         for (int port = internalPortStart; port <= internalPortEnd; port++)
                         {
@@ -242,14 +242,14 @@ SERVICE TYPES:
 
             try
             {
-                var dbCluster = cluster.Consul.KV.GetObject<DbClusterInfo>(dbInfoKey).Result;
+                var dbInfo = cluster.Consul.KV.GetObject<DbClusterInfo>(dbInfoKey).Result;
 
                 Console.WriteLine($"*** ERROR: A database service named [{baseName}] is already deployed.");
                 Program.Exit(1);
             }
-            catch (AggregateException e)
+            catch (Exception e)
             {
-                if (e.InnerException is KeyNotFoundException)
+                if (e.TriggeredBy<KeyNotFoundException>())
                 {
                     // Expecting this
                 }

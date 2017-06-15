@@ -14,6 +14,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Couchbase;
+using Couchbase.Configuration.Client;
+using Couchbase.Management;
+
 using Consul;
 using Newtonsoft.Json;
 
@@ -41,6 +45,8 @@ namespace NeonCouchbaseManager
         private static string                   serviceNameVersion = $"{serviceName} v{Neon.Build.ClusterVersion}";
         private static CancellationTokenSource  ctsTerminate       = new CancellationTokenSource();
         private static TimeSpan                 terminateTimeout   = TimeSpan.FromSeconds(10);
+        private static TimeSpan                 pollInterval       = TimeSpan.FromSeconds(10);
+        private static string                   database;
         private static bool                     terminated;
         private static ILog                     log;
         private static ConsulClient             consul;
@@ -52,10 +58,36 @@ namespace NeonCouchbaseManager
         /// <param name="args">Command line arguments.</param>
         public static void Main(string[] args)
         {
+            Test();
+
             LogManager.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
             log = LogManager.GetLogger("neon-couchbase-manager");
 
             log.Info(() => $"Starting [{serviceNameVersion}]");
+
+            // Parse settings.
+
+            database = Environment.GetEnvironmentVariable("DATABASE") ?? string.Empty;
+
+            var pollSecondsVar = Environment.GetEnvironmentVariable("POLL_SECONDS");
+
+            if (!string.IsNullOrEmpty(pollSecondsVar))
+            {
+                if (int.TryParse(pollSecondsVar, out var pollSeconds) && pollSeconds > 0)
+                {
+                    pollInterval = TimeSpan.FromSeconds(pollSeconds);
+                }
+            }
+
+            log.Info(() => $"LOG_LEVEL    = [{LogManager.LogLevel}]");
+            log.Info(() => $"DATABASE     = [{database}]");
+            log.Info(() => $"POLL_SECONDS = [{pollInterval.TotalSeconds}]");
+
+            if (string.IsNullOrEmpty(database))
+            {
+                log.Fatal(() => "[DATABASE] environment variable must be set.");
+                Program.Exit(1);
+            }
 
             // Gracefully handle SIGTERM events.
 
@@ -101,7 +133,7 @@ namespace NeonCouchbaseManager
 
                 if (string.IsNullOrEmpty(nodeRole))
                 {
-                    log.Fatal(() => "Container does not appear to be running in a NeonCluster.");
+                    log.Fatal(() => "Container does not appear to be running on a NeonCluster.");
                     Program.Exit(1);
                 }
 
@@ -159,96 +191,110 @@ namespace NeonCouchbaseManager
         /// <returns>The <see cref="Task"/>.</returns>
         private static async Task RunAsync()
         {
-            // Launch the sub-tasks.  These will run until the service is terminated.
+            // Launch any sub-tasks.  These will run until the service is terminated.
 
-            await NeonHelper.WaitAllAsync(
-                NodePoller());
-
+            await Poller();
             terminated = true;
         }
 
         /// <summary>
-        /// Handles polling of Docker swarm about the cluster nodes and updating the cluster
-        /// definition and hash as changes are detected.
+        /// Periodically checks the database cluster status and also handles cluster initialization.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task NodePoller()
+        private static async Task Poller()
         {
+            Cluster     cluster            = null;
+            string      clientSettingsJson = null;
+
             while (true)
             {
-                //try
-                //{
-                //    log.Debug(() => "NodePoller: Polling");
+                try
+                {
+                    log.Debug(() => "Checking cluster");
 
-                //    if (ctsTerminate.Token.IsCancellationRequested)
-                //    {
-                //        log.Debug(() => "NodePoller: Cancelled");
-                //        return; // We've been signalled to terminate
-                //    }
+                    if (ctsTerminate.Token.IsCancellationRequested)
+                    {
+                        log.Debug(() => "Cancelled");
+                        return; // We've been signalled to terminate
+                    }
 
-                //    // Retrieve the current cluster definition from Consul if we don't already
-                //    // have it or if it's changed from what we've cached.
+                    // Read the cluster information from Consul.
 
-                //    cachedClusterDefinition = await NeonClusterHelper.GetClusterDefinitionAsync(cachedClusterDefinition, ctsTerminate.Token);
+                    var databaseKey = $"neon/databases/{database}";
 
-                //    // Retrieve the swarm nodes from Docker.
+                    try
+                    {
+                        var clusterInfo    = await consul.KV.GetObject<DbClusterInfo>(databaseKey);
+                        var clientSettings = NeonHelper.JsonDeserialize<DbCouchbaseSettings>(clusterInfo.ClientSettings);
 
-                //    log.Debug(() => $"NodePoller: Querying [{docker.Settings.Uri}]");
+                        if (clusterInfo.ClientSettings != clientSettingsJson || cluster != null)
+                        {
+                            cluster = new Cluster(
+                                new ClientConfiguration()
+                                {
+                                    ApiPort       = clientSettings.ApiPort,
+                                    DirectPort    = clientSettings.DirectPort,
+                                    HttpsApiPort  = clientSettings.HttpsApiPort,
+                                    HttpsMgmtPort = clientSettings.HttpsMgmtPort,
+                                    SslPort       = clientSettings.SslPort,
+                                    UseSsl        = clientSettings.UseSsl,
+                                    Servers       = clientSettings.Servers
+                                });
 
-                //    var swarmNodes = await docker.NodeListAsync();
 
-                //    // Parse the node definitions from the swarm nodes and build a new definition with
-                //    // using the new nodes.  Then compare the hashes of the cached and new cluster definitions
-                //    // and then update Consul if they're different.
+                        };
+                    }
+                    catch (Exception e)
+                    {
+                        if (e.TriggeredBy<KeyNotFoundException>())
+                        {
+                            log.Error(() => $"Consul key does not exist: [{databaseKey}]");
+                        }
+                        else
+                        {
+                            throw;
+                        }
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    log.Debug(() => "Cancelled");
+                    return;
+                }
+                catch (Exception e)
+                {
+                    log.Error(e);
+                }
 
-                //    var currentClusterDefinition = NeonHelper.JsonClone<ClusterDefinition>(cachedClusterDefinition);
-
-                //    currentClusterDefinition.NodeDefinitions.Clear();
-
-                //    foreach (var swarmNode in swarmNodes)
-                //    {
-                //        var nodeDefinition = NodeDefinition.ParseFromLabels(swarmNode.Labels);
-
-                //        nodeDefinition.Name = swarmNode.Hostname;
-
-                //        currentClusterDefinition.NodeDefinitions.Add(nodeDefinition.Name, nodeDefinition);
-                //    }
-
-                //    currentClusterDefinition.ComputeHash();
-
-                //    if (currentClusterDefinition.Hash != cachedClusterDefinition.Hash)
-                //    {
-                //        log.Info(() => "NodePoller: Changed cluster definition.  Updating Consul.");
-
-                //        await NeonClusterHelper.PutClusterDefinitionAsync(currentClusterDefinition, ctsTerminate.Token);
-
-                //        cachedClusterDefinition = currentClusterDefinition;
-                //    }
-                //    else
-                //    {
-                //        log.Debug(() => "NodePoller: Unchanged cluster definition.");
-                //    }
-                //}
-                //catch (OperationCanceledException)
-                //{
-                //    log.Debug(() => "NodePoller: Cancelled");
-                //    return;
-                //}
-                //catch (KeyNotFoundException)
-                //{
-                //    // We'll see this when no cluster definition has been persisted to the
-                //    // cluster.  This is a serious problem.  This is configured during setup
-                //    // and there should always be a definition in Consul.
-
-                //    log.Error(() => $"NodePoller: No cluster definition has been found at [{clusterDefKey}] in Consul.  This is a serious error that will have to be corrected manually.");
-                //}
-                //catch (Exception e)
-                //{
-                //    log.Error("NodePoller", e);
-                //}
-
-                //await Task.Delay(nodePollInterval, ctsTerminate.Token);
+                await Task.Delay(pollInterval, ctsTerminate.Token);
             }
+        }
+
+        private static void Test()
+        {
+            var config = new ClientConfiguration()
+            {
+                Servers = new List<Uri>()
+                {
+                    new Uri("http://10.0.1.40:8091/"),
+                    new Uri("http://10.0.1.41:8091/"),
+                    new Uri("http://10.0.1.42:8091/")
+                }
+            };
+
+            var cluster = new Cluster(config);
+
+            using (var provisioner = new ClusterProvisioner(cluster, "Administrator", "password"))
+            {
+                var results = provisioner.ProvisionEntryPointAsync().Result;
+            }
+
+            //config.Servers.Add(new Uri("http://10.0.1.40:8091/pools"));
+
+            //using (var clusterManager = cluster.CreateManager("Administrator", "password"))
+            //{
+            //    var result = clusterManager.ConfigureAdminAsync("10.0.1.41").Result;
+            //}
         }
     }
 }

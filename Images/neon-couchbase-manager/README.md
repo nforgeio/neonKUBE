@@ -32,6 +32,8 @@ The current implementation of the Couchbase manager wakes up perodically and doe
 
 * **DATABASE** Is the base name of the Couchbase service being managed (e.g. `mydatabase`).
 
+* **POLL_SECONDS** (*optional*) Specifies the number of seconds between database cluster status checks (defaults to 10 seconds).
+
 * **LOG_LEVEL** (*optional*) Specifies the logging level: `FATAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
 # Deployment
@@ -41,4 +43,3 @@ The current implementation of the Couchbase manager wakes up perodically and doe
 **neon-consul-manager** service will be deployed automatically by the **neon-cli** command
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon db create couchbase ... DBNAME`
-
