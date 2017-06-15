@@ -18,172 +18,44 @@ neon cluster prepare c:\docker\cluster-test.json -u=spot -p=WagTheDog! --log=c:\
 neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 root@test
 
 #------------------------------------------------------------------------------
-# Elasticsearch/Kibana
+# RabbitMQ
 
-docker run -it \
-    -v /etc/neoncloud/env-host:/etc/neoncloud/env-host:ro \
-	-v /etc/neoncloud/env-log-esnode:/etc/neoncloud/env-container:ro \
-	-v node-log-esdata:/usr/share/elasticsearch/data \
-	-p 11000:11000 \
-	-e ELASTICSEARCH_CLUSTER=test-cluster \
-	-e ELASTICSEARCH_NODE_DATA=true \
-	-e ELASTICSEARCH_TCP_PORT=11000 \
-	-e ELASTICSEARCH_SHARD_COUNT=8 \
-	-e ELASTICSEARCH_REPLICA_COUNT=1 \
-	-e ELASTICSEARCH_QUORUM=1 \
-	-e ELASTICSEARCH_BOOTSTRAP_NODES=node-0.lilltek.net \
-	neoncloud/elasticsearch:latest
+sudo cat <<EOF > /usr/bin/sbash
+# Starts Bash with elevated permissions while also inheriting
+# the current environment variables.
 
-#------------------------------------------------------------------------------
-# Configure Couchbase 
+/usr/bin/sudo -E bash \$@
+EOF
 
-docker volume create couchbase
-docker run -d --name couchbase -v couchbase:/opt/couchbase/var --restart always --net host -p 8091-8094:8091-8094 -p 11210:11210 couchbase
+sbash
 
-# Run these commands to launch the Couchbase instances on the HOST network
+echo mq > /etc/hostname
+sed -i "s/ubuntu/mq/g" /etc/hosts
+systemctl restart networking
 
-docker-swarm run -d \
-	--name=cb0 \
-	--net=host \
-	-e "constraint:node==node-0" \
-	-v cb0:/opt/couchbase/var \
-	--restart=always \
-	--ulimit nofile=40960:40960 \
-	--ulimit core=100000000:100000000 \
-	--ulimit memlock=100000000:100000000 \
-	couchbase:community
-	
-docker-swarm run -d \
-	--name=cb1 \
-	--net=host \
-	-e "constraint:node==node-1" \
-	-v cb1:/opt/couchbase/var \
-	--restart=always \
-	--ulimit nofile=40960:40960 \
-	--ulimit core=100000000:100000000 \
-	--ulimit memlock=100000000:100000000 \
-	couchbase:community
+chmod a+x /usr/bin/sbash
 
-docker-swarm run -d \
-	--name=cb2 \
-	--net=host \
-	-e "constraint:node==node-2" \
-	-v cb2:/opt/couchbase/var \
-	--restart=always \
-	--ulimit nofile=40960:40960 \
-	--ulimit core=100000000:100000000 \
-	--ulimit memlock=100000000:100000000 \
-	couchbase:community
-	
-# Manually connect into each node at http://XXXX:8091 and set the host name to
-# the IP address of the host node, accept the remaining defaults and enter the
-# new administrator password.
+wget https://packages.erlang-solutions.com/erlang-solutions_1.0_all.deb
+dpkg -i erlang-solutions_1.0_all.deb
 
-# Then in one of the nodes, join the other nodes to create a cluster and then
-# rebalance.
+wget https://packages.erlang-solutions.com/ubuntu/erlang_solutions.asc
+apt-key add erlang_solutions.asc
 
-# Finally, use the web admin UX to create these buckets:
+apt-get update
+apt-get install -yq esl-erlang socat
+
+# Couldn't get High-Performance Erlang (HiPE) to install for better performnce.
 #
-#		db		- for application development
+# apt-get install erlang-base-hipe
 
-#------------------------------------------------------------------------------
-# Configure Couchbase Sync Gateway
-#
-# NOTE: Remove the [--pretty] option for production.
+curl -L http://www.rabbitmq.com/releases/rabbitmq-server/v3.6.10/rabbitmq-server_3.6.10-1_all.deb -o rabbitmq.deb
+dpkg --install rabbitmq.deb
 
-docker -H 10.0.1.10:2375 \
-	run \
-	-d \
-	--name=sg0 \
-	-p 4984:4984 \
-	-p 4985:4985 \
-	couchbase/sync-gateway \
-		 -interface 0.0.0.0:4984 \
-		 -adminInterface 0.0.0.0:4985 \
-		 -bucket db \
-		 -dbname db \
-		 -url http://10.0.1.10:8091 \
-		 -pretty \
-		 -log REST
+rabbitmq-plugins enable rabbitmq_management
+rabbitmqctl add_user admin password
+rabbitmqctl set_user_tags admin administrator
 
-docker -H 10.0.1.11:2375 \
-	run \
-	-d \
-	--name=sg1 \
-	-p 4984:4984 \
-	-p 4985:4985 \
-	couchbase/sync-gateway \
-		 -interface 0.0.0.0:4984 \
-		 -adminInterface 0.0.0.0:4985 \
-		 -bucket db \
-		 -dbname db \
-		 -url http://10.0.1.11:8091 \
-		 -pretty \
-		 -log REST
+# Dashboard: http://10.0.0.93:15672
+# UID/PWD:   admin/password
 
-docker -H 10.0.1.12:2375 \
-	run \
-	-d \
-	--name=sg2 \
-	-p 4984:4984 \
-	-p 4985:4985 \
-	couchbase/sync-gateway \
-		 -interface 0.0.0.0:4984 \
-		 -adminInterface 0.0.0.0:4985 \
-		 -bucket db \
-		 -dbname db \
-		 -url http://10.0.1.12:8091 \
-		 -pretty \
-		 -log REST
-
-#------------------------------------------------------------------------------
-# Run these commands to launch the Couchbase instances on the OVERLAY network.
-# Unforunately, we lose the host OS network when we try to create the cluster.
-
-docker-swarm run -d \
-	--name=cb0 \
-	--net=cluster.overlay \
-	--net-alias=cb.cluster.local \
-	--net-alias=cb0.cluster.local \
-	--dns-search=cluster.local \
-	-p 8091:8091 \
-	-p 8092:8092 \
-	-e "constraint:node==node-0" \
-	-v cb0:/opt/couchbase/var \
-	--restart=always \
-	--ulimit nofile=40960:40960 \
-	--ulimit core=100000000:100000000 \
-	--ulimit memlock=100000000:100000000 \
-	couchbase:community
-	
-docker-swarm run -d \
-	--name=cb1 \
-	--net=cluster.overlay \
-	--net-alias=cb.cluster.local \
-	--net-alias=cb1.cluster.local \
-	--dns-search=cluster.local \
-	-p 8091:8091 \
-	-p 8092:8092 \
-	-e "constraint:node==node-1" \
-	-v cb1:/opt/couchbase/var \
-	--restart=always \
-	--ulimit nofile=40960:40960 \
-	--ulimit core=100000000:100000000 \
-	--ulimit memlock=100000000:100000000 \
-	couchbase:community
-	
-docker-swarm run -d \
-	--name=cb2 \
-	--net=cluster.overlay \
-	--net-alias=cb.cluster.local \
-	--net-alias=cb2.cluster.local \
-	--dns-search=cluster.local \
-	-p 8091:8091 \
-	-p 8092:8092 \
-	-e "constraint:node==node-2" \
-	-v cb2:/opt/couchbase/var \
-	--restart=always \
-	--ulimit nofile=40960:40960 \
-	--ulimit core=100000000:100000000 \
-	--ulimit memlock=100000000:100000000 \
-	couchbase:community
+rm *.deb

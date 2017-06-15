@@ -240,6 +240,16 @@ namespace Neon.Net
         /// </summary>
         public const int OpenVPN = 1194;
 
+        /// <summary>
+        /// The Advanced Messaging Queue Protocol (AMPQ) port (e.g. RabbitMQ).
+        /// </summary>
+        public const int AMQP = 5672;
+
+        /// <summary>
+        /// RabbitMQ Admin dashboard port.
+        /// </summary>
+        public const int RabbitMQAdmin = 15672;
+
         private static Dictionary<string, int> wellKnownMap;
 
         private struct Map
@@ -304,7 +314,9 @@ namespace Neon.Net
                 new Map("CouchbaseApi", CouchbaseApi),
                 new Map("CouchbaseSyncGatewayAdmin", CouchbaseSyncGatewayAdmin),
                 new Map("CouchbaseSyncGatewayPublic", CouchbaseSyncGatewayPublic),
-                new Map("OpenVPN", OpenVPN)
+                new Map("OpenVPN", OpenVPN),
+                new Map("AMQP", AMQP),
+                new Map("RabbitMQAdmin", RabbitMQAdmin)
             };
 
         wellKnownMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);

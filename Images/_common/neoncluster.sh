@@ -155,6 +155,12 @@ export NetworkPorts_CouchbaseApi=8092
 # The Couchbase Sync Gateway administration REST API port.
 export NetworkPorts_CouchbaseSyncGatewayAdmin=4985
 
+# The Advanced Messaging Queue Protocol (AMPQ) port (e.g. RabbitMQ).
+export NetworkPorts_AMQP=5672
+
+# RabbitMQ Admin dashboard port.
+export NetworkPorts_RabbitMQAdmin=15672
+
 #------------------------------------------------------------------------------
 # NeonClusterConst:
 #
