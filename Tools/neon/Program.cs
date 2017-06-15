@@ -202,8 +202,6 @@ tool requires admin priviledges for direct mode.
                     new CreateCommand(),
                     new CreateKeyCommand(),
                     new CreatePasswordCommand(),
-                    new DbCommand(),
-                    new DbCreateCommand(),
                     new DockerCommand(),
                     new DownloadCommand(),
                     new ExecCommand(),

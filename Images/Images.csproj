@@ -56,25 +56,6 @@
     </None>
     <None Include="neon-cluster-manager\publish.ps1" />
     <None Include="neon-cluster-manager\README.md" />
-    <Content Include="couchbase\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="couchbase\build.ps1" />
-    <None Include="couchbase\Dockerfile.template">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="couchbase\publish.ps1" />
-    <None Include="couchbase\README.md" />
-    <Content Include="neon-couchbase-manager\.dockerignore">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </Content>
-    <None Include="neon-couchbase-manager\build.ps1" />
-    <None Include="neon-couchbase-manager\docker-entrypoint.sh" />
-    <None Include="neon-couchbase-manager\Dockerfile.template">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
-    <None Include="neon-couchbase-manager\publish.ps1" />
-    <None Include="neon-couchbase-manager\README.md" />
     <None Include="neon-log-collector\geoip\MaxMind.readme" />
     <Content Include="_artifacts\README.txt" />
     <Content Include="elasticsearch\.dockerignore">

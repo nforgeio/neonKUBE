@@ -106,8 +106,6 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Renci.SshNet.NETCore", "Ext
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "neon-cluster-manager", "Services\neon-cluster-manager\neon-cluster-manager.csproj", "{C3CBC486-6217-49D5-AFA2-38EFEBF3FCBD}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "neon-couchbase-manager", "Services\neon-couchbase-manager\neon-couchbase-manager.csproj", "{3012F0C7-B2B0-4BEF-9B39-F81038AB6EC7}"
-EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Test\Test.Neon.Common.shared\Test.Neon.Common.shared.projitems*{21586925-6da1-4898-9eb1-72c27550c528}*SharedItemsImports = 13
@@ -357,18 +355,6 @@ Global
 		{C3CBC486-6217-49D5-AFA2-38EFEBF3FCBD}.Release|x64.Build.0 = Release|Any CPU
 		{C3CBC486-6217-49D5-AFA2-38EFEBF3FCBD}.Release|x86.ActiveCfg = Release|Any CPU
 		{C3CBC486-6217-49D5-AFA2-38EFEBF3FCBD}.Release|x86.Build.0 = Release|Any CPU
-		{3012F0C7-B2B0-4BEF-9B39-F81038AB6EC7}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
-		{3012F0C7-B2B0-4BEF-9B39-F81038AB6EC7}.Debug|Any CPU.Build.0 = Debug|Any CPU
-		{3012F0C7-B2B0-4BEF-9B39-F81038AB6EC7}.Debug|x64.ActiveCfg = Debug|Any CPU
-		{3012F0C7-B2B0-4BEF-9B39-F81038AB6EC7}.Debug|x64.Build.0 = Debug|Any CPU
-		{3012F0C7-B2B0-4BEF-9B39-F81038AB6EC7}.Debug|x86.ActiveCfg = Debug|Any CPU
-		{3012F0C7-B2B0-4BEF-9B39-F81038AB6EC7}.Debug|x86.Build.0 = Debug|Any CPU
-		{3012F0C7-B2B0-4BEF-9B39-F81038AB6EC7}.Release|Any CPU.ActiveCfg = Release|Any CPU
-		{3012F0C7-B2B0-4BEF-9B39-F81038AB6EC7}.Release|Any CPU.Build.0 = Release|Any CPU
-		{3012F0C7-B2B0-4BEF-9B39-F81038AB6EC7}.Release|x64.ActiveCfg = Release|Any CPU
-		{3012F0C7-B2B0-4BEF-9B39-F81038AB6EC7}.Release|x64.Build.0 = Release|Any CPU
-		{3012F0C7-B2B0-4BEF-9B39-F81038AB6EC7}.Release|x86.ActiveCfg = Release|Any CPU
-		{3012F0C7-B2B0-4BEF-9B39-F81038AB6EC7}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -400,6 +386,5 @@ Global
 		{2F5F8C90-0BD1-424F-997C-7BC6280919D1} = {998AB42D-9FDE-46D7-9479-5C36525BCBD4}
 		{7E6B1954-7583-4021-82DA-0DE9C171F2B7} = {998AB42D-9FDE-46D7-9479-5C36525BCBD4}
 		{C3CBC486-6217-49D5-AFA2-38EFEBF3FCBD} = {319CF481-DCE8-4114-B13F-FC7CFC48496D}
-		{3012F0C7-B2B0-4BEF-9B39-F81038AB6EC7} = {319CF481-DCE8-4114-B13F-FC7CFC48496D}
 	EndGlobalSection
 EndGlobal
