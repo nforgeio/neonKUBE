@@ -135,7 +135,7 @@ OPTIONS:
             // not provisioning on-premise or not running in the tool container.
 
             if (clusterLogin.Definition.Vpn.Enabled && 
-                clusterLogin.Definition.Hosting.Provider != HostingProviders.OnPremise && 
+                clusterLogin.Definition.Hosting.Environment != HostingEnvironments.Machine && 
                 !NeonClusterHelper.InToolContainer)
             {
                 NeonClusterHelper.VpnOpen(clusterLogin,
@@ -390,7 +390,7 @@ OPTIONS:
                 new CurrentClusterLogin()
                 {
                     Login  = $"{NeonClusterConst.RootUser}@{cluster.Definition.Name}",
-                    ViaVpn = clusterLogin.Definition.Hosting.Provider != HostingProviders.OnPremise
+                    ViaVpn = clusterLogin.Definition.Hosting.Environment != HostingEnvironments.Machine
                 };
 
             currentLogin.Save();
@@ -452,7 +452,7 @@ OPTIONS:
             // On-premise clusters are always setup via local network connections
             // so we will be connecting the VPN. 
 
-            if (clusterLogin.Definition.Vpn.Enabled && clusterLogin.Definition.Hosting.Provider != HostingProviders.OnPremise)
+            if (clusterLogin.Definition.Vpn.Enabled && clusterLogin.Definition.Hosting.Environment != HostingEnvironments.Machine)
             {
                 NeonClusterHelper.VpnOpen(clusterLogin,
                     onStatus: message => Console.WriteLine($"*** {message}"),
@@ -780,7 +780,7 @@ $@"#----------------------------------------------------------------------------
 export NEON_CLUSTER={cluster.Definition.Name}
 export NEON_DATACENTER={cluster.Definition.Datacenter}
 export NEON_ENVIRONMENT={cluster.Definition.Environment}
-export NEON_HOSTING={cluster.Definition.Hosting.Provider.ToString().ToLowerInvariant()}
+export NEON_HOSTING={cluster.Definition.Hosting.Environment.ToString().ToLowerInvariant()}
 export NEON_NODE_NAME={node.Name}
 export NEON_NODE_ROLE={node.Metadata.Role}
 export NEON_NODE_IP={node.Metadata.PrivateAddress}
@@ -944,7 +944,7 @@ export CONSUL_HTTP_FULLADDR=http://{NeonHosts.Consul}:{cluster.Definition.Consul
         /// <param name="node">The target cluster node.</param>
         private void ConfigureVpnReturnRoutes(NodeProxy<NodeDefinition> node)
         {
-            if (cluster.Definition.Hosting.Provider != HostingProviders.OnPremise)
+            if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine)
             {
                 // Cloud handle VPN return routing via routing tables setup
                 // during cluster preparation.

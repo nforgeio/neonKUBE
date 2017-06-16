@@ -93,12 +93,12 @@ USAGE:
     ""Hosting"": {
 
         // Identifies the hosting provider.  The possible values are [aws],
-        // [azure], [google], or [onpremise].  This defaults to [onpremise].
+        // [azure], [google], or [bare].  This defaults to [machine].
         //
-        // For cloud providers, you'll need to uncomment and initialize the
-        // corresponding section below.  See thw documentation for the details.
+        // You may need to uncomment and initialize the corresponding section
+        // below.  See the documentation for the details.
 
-        ""Provider"": ""onpremise"",
+        ""Provider"": ""machine"",
 
         // This property is required for on-premise clusters that enable
         // the VPN and should be set to the public IP address or FQDN of
@@ -106,12 +106,12 @@ USAGE:
 
         //""ManagerRouter"": ""myrouter.mydomain.com"",
 
-        // Cloud provider specific options.
+        // Hosting environment specific options.
 
         // ""Aws"": { ... }
         // ""Azure"": { ... }
         // ""Google"": { ... }
-        // ""OnPremise"": { ... }
+        // ""Machine"": { ... }
     },
 
     // Built-in 

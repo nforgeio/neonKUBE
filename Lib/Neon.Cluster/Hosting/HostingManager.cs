@@ -44,29 +44,29 @@ namespace Neon.Cluster
         /// <param name="provider">The target hosting provider.</param>
         /// <param name="cluster">The cluster being managed.</param>
         /// <returns>The <see cref="HostingManager"/>.</returns>
-        public static HostingManager GetManager(HostingProviders provider, ClusterProxy cluster)
+        public static HostingManager GetManager(HostingEnvironments provider, ClusterProxy cluster)
         {
-            switch (cluster.Definition.Hosting.Provider)
+            switch (cluster.Definition.Hosting.Environment)
             {
-                case HostingProviders.Aws:
+                case HostingEnvironments.Aws:
 
                     return new AwsHostingManager(cluster);
 
-                case HostingProviders.Azure:
+                case HostingEnvironments.Azure:
 
                     return new AzureHostingManager(cluster);
 
-                case HostingProviders.Google:
+                case HostingEnvironments.Google:
 
                     return new GoogleHostingManager(cluster);
 
-                case HostingProviders.OnPremise:
+                case HostingEnvironments.Machine:
 
-                    return new PrivateHostingManager(cluster);
+                    return new MachineHostingManager(cluster);
 
                 default:
 
-                    throw new NotImplementedException($"Hosting manager for [{cluster.Definition.Hosting.Provider}] is not implemented.");
+                    throw new NotImplementedException($"Hosting manager for [{cluster.Definition.Hosting.Environment}] is not implemented.");
             }
         }
 

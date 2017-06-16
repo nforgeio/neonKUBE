@@ -143,7 +143,7 @@ Server Requirements:
 
             // Initialize the hosting environment manager.
 
-            hostingManager              = HostingManager.GetManager(cluster.Definition.Hosting.Provider, cluster);
+            hostingManager              = HostingManager.GetManager(cluster.Definition.Hosting.Environment, cluster);
             hostingManager.HostUsername = Program.Username;
             hostingManager.HostPassword = Program.Password;
             hostingManager.ShowStatus   = !Program.Quiet;
@@ -187,7 +187,7 @@ Server Requirements:
             // able to reach the nodes on all ports.
 
             var operation = 
-                cluster.Definition.Hosting.Provider == HostingProviders.OnPremise
+                cluster.Definition.Hosting.Environment == HostingEnvironments.Machine
                     ? $"Preparing [{cluster.Definition.Name}] servers"
                     : $"STEP 2: Preparing [{cluster.Definition.Name}] virtual machines";
 
@@ -222,7 +222,7 @@ Server Requirements:
                 // datacenter because we're assuming that we're already directly connected to
                 // the LAN while preparing and setting up the cluster.
 
-                if (cluster.Definition.Hosting.Provider != HostingProviders.OnPremise)
+                if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine)
                 {
                     controller.AddStep("vpn connect",
                         manager =>

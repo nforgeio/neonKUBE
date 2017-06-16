@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    PrivateHostingManager.cs
+// FILE:	    MachineHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
@@ -31,9 +31,9 @@ using Neon.Time;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Manages cluster provisioning on private servers.
+    /// Manages cluster provisioning directly on bare metal or virtual machines.
     /// </summary>
-    public class PrivateHostingManager : HostingManager
+    public class MachineHostingManager : HostingManager
     {
         private ClusterProxy cluster;
 
@@ -41,7 +41,7 @@ namespace Neon.Cluster
         /// Constructor.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        public PrivateHostingManager(ClusterProxy cluster)
+        public MachineHostingManager(ClusterProxy cluster)
         {
             cluster.HostingManager = this;
 

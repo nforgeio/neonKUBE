@@ -129,7 +129,7 @@ ARGUMENTS:
 
             var useVpn = false;
 
-            if (clusterLogin.Definition.Hosting.Provider == HostingProviders.OnPremise)
+            if (clusterLogin.Definition.Hosting.Environment == HostingEnvironments.Machine)
             {
                 if (clusterLogin.Definition.Vpn.Enabled)
                 {

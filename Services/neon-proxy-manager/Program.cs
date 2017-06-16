@@ -1262,7 +1262,7 @@ backend http:{httpRoute.Name}
                 // This could be considered a feature.  For example, this allows
                 // the operator temporarily block a port manually.
 
-                var hostingManager  = HostingManager.GetManager(cachedClusterDefinition.Hosting.Provider, cluster);
+                var hostingManager  = HostingManager.GetManager(cachedClusterDefinition.Hosting.Environment, cluster);
 
                 if (!hostingManager.CanUpdatePublicEndpoints)
                 {

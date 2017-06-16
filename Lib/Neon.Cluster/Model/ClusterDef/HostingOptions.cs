@@ -34,18 +34,18 @@ namespace Neon.Cluster
         private const string defaulVpnReturnSubnet = "10.169.0.0/22";
 
         /// <summary>
-        /// Default constructor that initializes a <see cref="HostingProviders.OnPremise"/> provider.
+        /// Default constructor that initializes a <see cref="HostingEnvironments.Machine"/> provider.
         /// </summary>
         public HostingOptions()
         {
         }
 
         /// <summary>
-        /// Identifies the cloud hosting provider.  This defaults to <see cref="HostingProviders.OnPremise"/>.
+        /// Identifies the cloud or other hosting platform.  This defaults to <see cref="HostingEnvironments.Machine"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "Provider", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(HostingProviders.OnPremise)]
-        public HostingProviders Provider { get; set; } = HostingProviders.OnPremise;
+        [JsonProperty(PropertyName = "Environment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(HostingEnvironments.Machine)]
+        public HostingEnvironments Environment { get; set; } = HostingEnvironments.Machine;
 
         /// <summary>
         /// Specifies the Amazon Web Services hosting settings.
@@ -69,11 +69,11 @@ namespace Neon.Cluster
         public GoogleOptions Google { get; set; } = null;
 
         /// <summary>
-        /// Specifies the hosting settings for colocation or on premise clusters.
+        /// Specifies the hosting settings when hosting directly on bare metal or virtual machines.
         /// </summary>
-        [JsonProperty(PropertyName = "OnPremise", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Machine", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public LocalOptions OnPremise { get; set; } = null;
+        public MachineOptions Machine { get; set; } = null;
 
         /// <summary>
         /// The cluster's manager load balancer's FQDN or IP address during cluster
@@ -120,7 +120,7 @@ namespace Neon.Cluster
         /// <b>10.168.0.0/21</b>.
         /// </para>
         /// <note>
-        /// This property is ignored for the <see cref="HostingProviders.OnPremise"/> provider.
+        /// This property is ignored for the <see cref="HostingEnvironments.Machine"/> provider.
         /// </note>
         /// </summary>
         /// <remarks>
@@ -191,7 +191,7 @@ namespace Neon.Cluster
         /// The <b>/22</b> address space to be assigned to the cluster's cloud virtual network.
         /// </para>
         /// <note>
-        /// This property is ignored for the <see cref="HostingProviders.OnPremise"/> provider and is
+        /// This property is ignored for the <see cref="HostingEnvironments.Machine"/> provider and is
         /// computed automatically by the <b>neon-cli</b> when provisioning in a cloud environment.
         /// </note>
         /// </summary>
@@ -205,7 +205,7 @@ namespace Neon.Cluster
         /// a NIC attached to this subnet.
         /// </para>
         /// <note>
-        /// This property is ignored for the <see cref="HostingProviders.OnPremise"/> provider and is
+        /// This property is ignored for the <see cref="HostingEnvironments.Machine"/> provider and is
         /// computed automatically by the <b>neon</b> tool when provisioning in a cloud environment.
         /// </note>
         /// <note>
@@ -227,7 +227,7 @@ namespace Neon.Cluster
         /// return traffic from the nodes in the <see cref="NodesSubnet"/> back to the VPN clients.
         /// </para>
         /// <note>
-        /// This property is ignored for the <see cref="HostingProviders.OnPremise"/> provider and is
+        /// This property is ignored for the <see cref="HostingEnvironments.Machine"/> provider and is
         /// computed automatically by the <b>neon-cli</b> when provisioning in a cloud environment.
         /// </note>
         /// </summary>
@@ -243,8 +243,8 @@ namespace Neon.Cluster
         /// server.
         /// </para>
         /// <note>
-        /// This property must be specifically initialized when <see cref="Provider"/> is set to 
-        /// <see cref="HostingProviders.OnPremise"/> and is computed automatically by the <b>neon-cli</b>
+        /// This property must be specifically initialized when <see cref="Environment"/> is set to 
+        /// <see cref="HostingEnvironments.Machine"/> and is computed automatically by the <b>neon-cli</b>
         /// when provisioning in a cloud environment.
         /// </note>
         /// <note>
@@ -276,41 +276,41 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
-            var isCloudProvider = Provider != HostingProviders.OnPremise;
+            var isCloudProvider = Environment != HostingEnvironments.Machine;
 
-            switch (Provider)
+            switch (Environment)
             {
-                case HostingProviders.Aws:
+                case HostingEnvironments.Aws:
 
                     if (Aws == null)
                     {
-                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Aws)}] must be initialized when cloud provider is [{Provider}].");
+                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Aws)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
                     Aws.Validate(clusterDefinition);
                     break;
 
-                case HostingProviders.Azure:
+                case HostingEnvironments.Azure:
 
                     if (Azure == null)
                     {
-                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Azure)}] must be initialized when cloud provider is [{Provider}].");
+                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Azure)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
                     Azure.Validate(clusterDefinition);
                     break;
 
-                case HostingProviders.Google:
+                case HostingEnvironments.Google:
 
                     if (Google == null)
                     {
-                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Google)}] must be initialized when cloud provider is [{Provider}].");
+                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Google)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
                     Google.Validate(clusterDefinition);
                     break;
 
-                case HostingProviders.OnPremise:
+                case HostingEnvironments.Machine:
 
                     break;
 
@@ -394,7 +394,7 @@ namespace Neon.Cluster
 
                 if (clusterDefinition.Vpn.Enabled)
                 {
-                    if (Provider == HostingProviders.OnPremise)
+                    if (Environment == HostingEnvironments.Machine)
                     {
                         if (string.IsNullOrEmpty(ManagerRouterAddress))
                         {
@@ -451,7 +451,7 @@ namespace Neon.Cluster
             Aws       = null;
             Azure     = null;
             Google    = null;
-            OnPremise = null;
+            Machine = null;
         }
     }
 }

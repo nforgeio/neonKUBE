@@ -24,9 +24,9 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Specifies hosting settings for colocated or on premise clusters.
+    /// Specifies hosting settings for bare metal or virtual machines.
     /// </summary>
-    public class LocalOptions
+    public class MachineOptions
     {
     }
 }

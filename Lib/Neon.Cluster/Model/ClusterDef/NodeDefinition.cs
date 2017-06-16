@@ -242,7 +242,7 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
-            if (clusterDefinition.Hosting.Provider == HostingProviders.OnPremise)
+            if (clusterDefinition.Hosting.Environment == HostingEnvironments.Machine)
             {
                 if (string.IsNullOrEmpty(PrivateAddress))
                 {
@@ -255,7 +255,7 @@ namespace Neon.Cluster
                 }
             }
 
-            if (IsManager && clusterDefinition.Hosting.Provider == HostingProviders.OnPremise && clusterDefinition.Vpn.Enabled)
+            if (IsManager && clusterDefinition.Hosting.Environment == HostingEnvironments.Machine && clusterDefinition.Vpn.Enabled)
             {
                 if (!NetHelper.IsValidPort(VpnFrontendPort))
                 {

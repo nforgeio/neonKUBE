@@ -617,7 +617,7 @@ namespace Neon.Cluster
 
             if (cluster.Definition.Hosting != null)
             {
-                hostingProvider = cluster.Definition.Hosting.Provider.ToString().ToLowerInvariant();
+                hostingProvider = cluster.Definition.Hosting.Environment.ToString().ToLowerInvariant();
             }
 
             Environment.SetEnvironmentVariable("NEON_CLUSTER", clusterDefinition.Name);

@@ -523,7 +523,7 @@ namespace Neon.Cluster
                         throw new ClusterDefinitionException($"Node [name={node.Name}] has private IP address [{node.PrivateAddress}] that is not within the hosting [{nameof(Hosting.NodesSubnet)}={Hosting.NodesSubnet}].");
                     }
                 }
-                else if (Hosting.Provider == HostingProviders.OnPremise)
+                else if (Hosting.Environment == HostingEnvironments.Machine)
                 {
                     throw new ClusterDefinitionException($"Node [name={node.Name}] is not assigned a private IP address.  This is required when deploying to a [{nameof(Environment)}={Environment}] hosting environment.");
                 }
