@@ -76,12 +76,13 @@ namespace Neon.Net
         {
             if (handler == null)
             {
-                client = new HttpClient();
+                handler = new HttpClientHandler()
+                {
+                    AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
+                };
             }
-            else
-            {
-                client = new HttpClient(handler, disposeHandler);
-            }
+
+            client = new HttpClient(handler, disposeHandler);
 
             client.DefaultRequestHeaders.Add("Accept", DocumentType);
         }

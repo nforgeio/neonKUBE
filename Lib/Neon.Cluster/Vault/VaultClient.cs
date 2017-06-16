@@ -104,6 +104,7 @@ namespace Neon.Cluster
         {
             var handler = new HttpClientHandler()
             {
+                AutomaticDecompression                    = DecompressionMethods.Deflate | DecompressionMethods.GZip,
                 ServerCertificateCustomValidationCallback = ValidateRemoteCertificate
             };
 
