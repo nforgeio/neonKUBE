@@ -21,8 +21,8 @@ using Couchbase.Lite;
 using Couchbase.Lite.Auth;
 
 using Neon.Common;
-using Neon.Data;
-using Neon.Data.Internal;
+using Neon.DynamicData;
+using Neon.DynamicData.Internal;
 
 using Test.Neon.Models;
 
@@ -328,12 +328,12 @@ namespace TestLiteExtensions
                 var doc      = db.GetDocument("gum");
                 var unsaved  = doc.CreateRevision();
                 var content  = (JObject)unsaved.Properties[NeonPropertyNames.Content];
-                var typePath = (string)content[Entity.EntityTypePathName];
+                var typePath = (string)content[DynamicEntity.EntityTypePathName];
 
                 typePath = typePath.Replace("product.candy.gum:", "product.candy.unknown:");
 
                 content                                       = (JObject)content.DeepClone();
-                content[Entity.EntityTypePathName]    = typePath;
+                content[DynamicEntity.EntityTypePathName]    = typePath;
                 unsaved.Properties[NeonPropertyNames.Content] = content;
 
                 unsaved.Save();

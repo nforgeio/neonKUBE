@@ -16,14 +16,14 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace Couchbase.Lite
 {
     /// <summary>
     /// Defines some low-level attributes of a <see cref="EntityDocument{TEntity}"/>.
     /// </summary>
-    public interface IEntityDocument : IDocument
+    public interface IEntityDocument : IDynamicDocument
     {
         /// <summary>
         /// Returns the document content entity <see cref="Type"/>.  This information can

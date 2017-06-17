@@ -15,7 +15,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace EntityGen
 {
@@ -72,7 +72,7 @@ namespace EntityGen
             }
             else
             {
-                task.Log.LogError($"Binder document interface [{interfaceType.FullName}] references the entity type [{binderAttribute.EntityType.FullName}] which is not tagged with [{nameof(EntityAttribute)}].");
+                task.Log.LogError($"Binder document interface [{interfaceType.FullName}] references the entity type [{binderAttribute.EntityType.FullName}] which is not tagged with [{nameof(DynamicEntityAttribute)}].");
             }
 
             // Load the binder's attachment information.

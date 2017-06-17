@@ -17,7 +17,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace Test.Neon.Models
 {

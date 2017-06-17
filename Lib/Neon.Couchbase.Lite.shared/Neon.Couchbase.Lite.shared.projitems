@@ -17,7 +17,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)CustomConflictPolicy.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)DerivedCreateInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EntityDatabase.cs" />
-    <Compile Include="$(MSBuildThisFileDirectory)EntityDocument.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)DynamicEntityDocument.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EntityLiveQuery.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EntityQuery.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)EntityQueryEnumerator.cs" />

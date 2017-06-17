@@ -16,13 +16,13 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
-namespace Neon.Data.Internal
+namespace Neon.DynamicData.Internal
 {
     /// <summary>
-    /// <b>Platform use only:</b> Used by <see cref="IEntity"/> implementations to 
-    /// map a property to a linked <see cref="IEntity"/> instance.
+    /// <b>Platform use only:</b> Used by <see cref="IDynamicEntity"/> implementations to 
+    /// map a property to a linked <see cref="IDynamicEntity"/> instance.
     /// </summary>
     /// <typeparam name="TEntity">The property value type.</typeparam>
     /// <remarks>
@@ -33,7 +33,7 @@ namespace Neon.Data.Internal
     /// <para>
     /// This class is used to link a <see cref="JProperty"/> value to an external
     /// entity.  The property value will act as the entity link and the
-    /// <see cref="IEntityContext"/> passed to the constructor (if any) will be
+    /// <see cref="IDynamicEntityContext"/> passed to the constructor (if any) will be
     /// used to dereference the link and load the entity.
     /// </para>
     /// <para>
@@ -43,28 +43,28 @@ namespace Neon.Data.Internal
     /// referenced entity doesn't exist.
     /// </para>
     /// <note>
-    /// This class will simply return <c>null</c> if no <see cref="IEntityContext"/> 
+    /// This class will simply return <c>null</c> if no <see cref="IDynamicEntityContext"/> 
     /// is present.
     /// </note>
     /// </remarks>
     /// <threadsafety instance="false"/>
     public struct LinkMapper<TEntity> : IPropertyMapper
-        where TEntity : class, IEntity, new()
+        where TEntity : class, IDynamicEntity, new()
     {
-        private IEntity             parentEntity;
-        private IEntityContext      context;
+        private IDynamicEntity             parentEntity;
+        private IDynamicEntityContext      context;
         private JProperty           property;
-        private IEntity             entityValue;
+        private IDynamicEntity             entityValue;
         private Func<bool>          isDeletedFunc;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="parentEntity">The <see cref="IEntity"/> that owns this mapper.</param>
+        /// <param name="parentEntity">The <see cref="IDynamicEntity"/> that owns this mapper.</param>
         /// <param name="jsonName">The JSON property name.</param>
         /// <param name="propertyName">The entity property name.</param>
-        /// <param name="context">The <see cref="IEntityContext"/> or <c>null</c>.</param>
-        public LinkMapper(IEntity parentEntity, string jsonName, string propertyName, IEntityContext context)
+        /// <param name="context">The <see cref="IDynamicEntityContext"/> or <c>null</c>.</param>
+        public LinkMapper(IDynamicEntity parentEntity, string jsonName, string propertyName, IDynamicEntityContext context)
         {
             Covenant.Requires<ArgumentNullException>(parentEntity != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonName));

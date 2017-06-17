@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 // $todo(jeff.lill): Look into implementing extensions for SetMapReduce().
 
@@ -25,7 +25,7 @@ namespace Couchbase.Lite
     /// <param name="document">Passed as the entity.</param>
     /// <param name="emit">The mapping emit delegate.</param>
     public delegate void EntityMapDelegate<TEntity>(EntityDocument<TEntity> document, EmitDelegate emit)
-        where TEntity : class, IEntity, new();
+        where TEntity : class, IDynamicEntity, new();
 
     /// <summary>
     /// Implements extensions to the Couchbase Lite <see cref="View"/> class.
@@ -46,7 +46,7 @@ namespace Couchbase.Lite
         /// low-level properties, as expected.
         /// </remarks>
         public static void SetMap<TEntity>(this View view, EntityMapDelegate<TEntity> mapDelegate, string version)
-            where TEntity : class, IEntity, new()
+            where TEntity : class, IDynamicEntity, new()
         {
             Covenant.Requires<ArgumentNullException>(view != null);
             Covenant.Requires<ArgumentNullException>(mapDelegate != null);
@@ -92,7 +92,7 @@ namespace Couchbase.Lite
         /// </para>
         /// </remarks>
         public static EntityQuery<TEntity> CreateQuery<TEntity>(this View view)
-            where TEntity : class, IEntity, new()
+            where TEntity : class, IDynamicEntity, new()
         {
             return new EntityQuery<TEntity>(view.CreateQuery());
         }

@@ -16,41 +16,41 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace Test.Neon.Models
 {
-    [Entity(Type = "test.entity")]
+    [DynamicEntity(Type = "test.entity")]
     public interface ITestEntity
     {
-        [EntityProperty(Name = "string")]
+        [DynamicEntityProperty(Name = "string")]
         string String { get; set; }
 
-        [EntityProperty(Name = "int")]
+        [DynamicEntityProperty(Name = "int")]
         int Int { get; set; }
 
-        [EntityProperty(Name = "guid")]
+        [DynamicEntityProperty(Name = "guid")]
         Guid Guid { get; set; }
 
-        [EntityProperty(Name = "child")]
+        [DynamicEntityProperty(Name = "child")]
         ITestEntity Child { get; set; }
 
-        [EntityProperty(Name = "string_list")]
+        [DynamicEntityProperty(Name = "string_list")]
         string[] StringList { get; set; }
 
-        [EntityProperty(Name = "child_list")]
+        [DynamicEntityProperty(Name = "child_list")]
         ITestEntity[] ChildList { get; set; }
 
-        [EntityProperty(Name = "child_link", IsLink = true)]
+        [DynamicEntityProperty(Name = "child_link", IsLink = true)]
         ITestEntity ChildLink { get; set; }
 
-        [EntityProperty(Name = "link_list", IsLink = true)]
+        [DynamicEntityProperty(Name = "link_list", IsLink = true)]
         ITestEntity[] LinkList { get; set; }
 
-        [EntityProperty(Name = "doc_link")]
+        [DynamicEntityProperty(Name = "doc_link")]
         ITestBinder DocLink { get; set; }
 
-        [EntityProperty(Name = "doc_list")]
+        [DynamicEntityProperty(Name = "doc_list")]
         ITestBinder[] DocList { get; set; }
     }
 }

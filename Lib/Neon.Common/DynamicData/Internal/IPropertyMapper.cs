@@ -14,9 +14,9 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
-namespace Neon.Data.Internal
+namespace Neon.DynamicData.Internal
 {
     /// <summary>
     /// <b>Platform use only:</b> Defines common members implemented by entity

@@ -16,21 +16,21 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
-namespace Neon.Data.Internal
+namespace Neon.DynamicData.Internal
 {
     /// <summary>
-    /// The delegate registered by <see cref="IEntity"/> implementations that
+    /// The delegate registered by <see cref="IDynamicEntity"/> implementations that
     /// instantiates an entity using a parameterized constructor.
     /// </summary>
     /// <param name="jObject">The backing <see cref="JObject"/>.</param>
-    /// <param name="context">The <see cref="IEntityContext"/> or <c>null</c>.</param>
-    /// <returns>The new <see cref="IEntity"/>.</returns>
-    public delegate IEntity EntityCreateDelegate(JObject jObject, IEntityContext context);
+    /// <param name="context">The <see cref="IDynamicEntityContext"/> or <c>null</c>.</param>
+    /// <returns>The new <see cref="IDynamicEntity"/>.</returns>
+    public delegate IDynamicEntity EntityCreateDelegate(JObject jObject, IDynamicEntityContext context);
 
     /// <summary>
-    /// An <see cref="IEntity"/> implementation's registration information.
+    /// An <see cref="IDynamicEntity"/> implementation's registration information.
     /// </summary>
     public struct EntityRegistration
     {

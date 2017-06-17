@@ -15,7 +15,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace EntityGen
 {

@@ -17,11 +17,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace Test.Neon.Models
 {
-    [Include]
+    [DynamicInclude]
     public enum TestEntityTypes
     {
         [EnumMember(Value = "test.entity1")]
@@ -31,72 +31,72 @@ namespace Test.Neon.Models
         TestEntity3
     }
 
-    [Entity(Type = TestEntityTypes.TestEntity1)]
+    [DynamicEntity(Type = TestEntityTypes.TestEntity1)]
     public interface IEnumTypedEntity1
     {
-        [EntityProperty(Name = "name")]
+        [DynamicEntityProperty(Name = "name")]
         string Name { get; set; }
 
-        [EntityProperty(Name = "age")]
+        [DynamicEntityProperty(Name = "age")]
         int Age { get; set; }
     }
 
-    [Entity(Type = TestEntityTypes.TestEntity2)]
+    [DynamicEntity(Type = TestEntityTypes.TestEntity2)]
     public interface IEnumTypedEntity2
     {
-        [EntityProperty(Name = "name")]
+        [DynamicEntityProperty(Name = "name")]
         string Name { get; set; }
 
-        [EntityProperty(Name = "age")]
+        [DynamicEntityProperty(Name = "age")]
         int Age { get; set; }
     }
 
-    [Entity(Type = TestEntityTypes.TestEntity3)]
+    [DynamicEntity(Type = TestEntityTypes.TestEntity3)]
     public interface IEnumTypedEntity3
     {
-        [EntityProperty(Name = "name")]
+        [DynamicEntityProperty(Name = "name")]
         string Name { get; set; }
 
-        [EntityProperty(Name = "age")]
+        [DynamicEntityProperty(Name = "age")]
         int Age { get; set; }
 
-        [EntityProperty(IsTypeProperty = true)]
+        [DynamicEntityProperty(IsTypeProperty = true)]
         TestEntityTypes Type { get; }
 
         TestEntityTypes Enum { get; set; }
         TestEntityTypes[] EnumArray { get; set; }
     }
 
-    [Entity(Type = "string.entity1")]
+    [DynamicEntity(Type = "string.entity1")]
     public interface IStringTypedEntity1
     {
-        [EntityProperty(Name = "name")]
+        [DynamicEntityProperty(Name = "name")]
         string Name { get; set; }
 
-        [EntityProperty(Name = "age")]
+        [DynamicEntityProperty(Name = "age")]
         int Age { get; set; }
     }
 
-    [Entity(Type = "string.entity2")]
+    [DynamicEntity(Type = "string.entity2")]
     public interface IStringTypedEntity2
     {
-        [EntityProperty(Name = "name")]
+        [DynamicEntityProperty(Name = "name")]
         string Name { get; set; }
 
-        [EntityProperty(Name = "age")]
+        [DynamicEntityProperty(Name = "age")]
         int Age { get; set; }
     }
 
-    [Entity(Type = "string.entity3")]
+    [DynamicEntity(Type = "string.entity3")]
     public interface IStringTypedEntity3
     {
-        [EntityProperty(Name = "name")]
+        [DynamicEntityProperty(Name = "name")]
         string Name { get; set; }
 
-        [EntityProperty(Name = "age")]
+        [DynamicEntityProperty(Name = "age")]
         int Age { get; set; }
 
-        [EntityProperty(IsTypeProperty = true)]
+        [DynamicEntityProperty(IsTypeProperty = true)]
         string Type { get; }
     }
 }

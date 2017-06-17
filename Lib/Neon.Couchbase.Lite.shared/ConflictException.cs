@@ -16,7 +16,7 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace Couchbase.Lite
 {

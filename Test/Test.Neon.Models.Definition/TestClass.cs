@@ -17,11 +17,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace Test.Neon.Models
 {
-    [Include]
+    [DynamicInclude]
     public class TestClass
     {
         public const string TestString1 = "Hello World!";

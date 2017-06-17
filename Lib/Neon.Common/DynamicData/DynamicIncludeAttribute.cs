@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IncludeAttribute.cs
+// FILE:	    DynamicIncludeAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
@@ -12,9 +12,9 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
-namespace Neon.Data
+namespace Neon.DynamicData
 {
     /// <summary>
     /// Used to tag a <c>class</c> or <c>enum</c> such that the <b>entity-gen</b> Visual 
@@ -32,7 +32,7 @@ namespace Neon.Data
     /// </note>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Class | AttributeTargets.Enum)]
-    public class IncludeAttribute : Attribute
+    public class DynamicIncludeAttribute : Attribute
     {
         /// <summary>
         /// Optional namespace for the generated class; otherwise the namespace

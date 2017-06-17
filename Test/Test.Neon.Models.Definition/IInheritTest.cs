@@ -17,11 +17,11 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace Test.Neon.Models
 {
-    [Include]
+    [DynamicInclude]
     public enum ProductTypes
     {
         [EnumMember(Value = "product")]
@@ -43,46 +43,46 @@ namespace Test.Neon.Models
         Catalog
     }
 
-    [Entity(Type = ProductTypes.Product)]
+    [DynamicEntity(Type = ProductTypes.Product)]
     public interface IProduct
     {
         string Name { get; set; }
 
-        [EntityProperty(IsTypeProperty = true)]
+        [DynamicEntityProperty(IsTypeProperty = true)]
         ProductTypes ProductType { get; }
     }
 
-    [Entity(Type = ProductTypes.Candy)]
+    [DynamicEntity(Type = ProductTypes.Candy)]
     public interface ICandy : IProduct
     {
         int Calories { get; set; }
     }
 
-    [Entity(Type = ProductTypes.Gum)]
+    [DynamicEntity(Type = ProductTypes.Gum)]
     public interface IGum : ICandy
     {
         string Flavor { get; set; } 
     }
 
-    [Entity(Type = ProductTypes.CandyBar)]
+    [DynamicEntity(Type = ProductTypes.CandyBar)]
     public interface ICandyBar : ICandy
     {
         bool HasNuts { get; set; }
     }
 
-    [Entity(Type = ProductTypes.Computer)]
+    [DynamicEntity(Type = ProductTypes.Computer)]
     public interface IComputer : IProduct
     {
         bool IsLinux { get; set; }
     }
 
-    [Entity(Type = "CATALOG")]
+    [DynamicEntity(Type = "CATALOG")]
     public interface ICatalog
     {
         IProduct TopSeller { get; set; }
         IProduct[] Products { get; set; }
 
-        [EntityProperty(IsTypeProperty = true)]
+        [DynamicEntityProperty(IsTypeProperty = true)]
         string EntityType { get; }
     }
 }

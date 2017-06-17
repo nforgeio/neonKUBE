@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    EntityAttribute.cs
+// FILE:	    DynamicEntityAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
@@ -12,17 +12,17 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
-namespace Neon.Data
+namespace Neon.DynamicData
 {
     /// <summary>
     /// Used to tag an <c>interface</c> such that the <b>entity-gen</b> tool will 
     /// automatically generate equivalent data model classes derived from
-    /// <see cref="Entity"/>.
+    /// <see cref="DynamicEntity"/>.
     /// </summary>
     [AttributeUsage(AttributeTargets.Interface)]
-    public class EntityAttribute : Attribute
+    public class DynamicEntityAttribute : Attribute
     {
         /// <summary>
         /// Optional name for the generated class; otherwise the name will

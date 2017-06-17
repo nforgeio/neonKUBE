@@ -18,14 +18,14 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 // $todo(jeff.lill): Complete integration and testing of the build task into VS.
 
 namespace EntityGen
 {
     /// <summary>
-    /// Visual Studio build task that generates <see cref="Entity"/> based implementations
+    /// Visual Studio build task that generates <see cref="DynamicEntity"/> based implementations
     /// of data models described as .NET interfaces providing an easy way to map .NET objects into
     /// platforms such as Couchbase or Couchbase Lite.
     /// </summary>
@@ -33,7 +33,7 @@ namespace EntityGen
     /// <para>
     /// The <see cref="Sources"/> property of the build task must be set to the file system 
     /// path to the compiled assembly containing one or more interfaces tagged with 
-    /// <see cref="EntityAttribute"/>.  The task will generate a C# source file 
+    /// <see cref="DynamicEntityAttribute"/>.  The task will generate a C# source file 
     /// for each tagged interface and add these files to the current build.
     /// </para>
     /// <note>
@@ -80,7 +80,7 @@ namespace EntityGen
     /// <item>
     ///     <term>interfaces</term>
     ///     <description>
-    ///     You may define properties as any interface tagged with the <see cref="EntityAttribute"/>.
+    ///     You may define properties as any interface tagged with the <see cref="DynamicEntityAttribute"/>.
     ///     </description>
     /// </item>
     /// <item>
@@ -93,7 +93,7 @@ namespace EntityGen
     /// </item>
     /// </list>
     /// <para>
-    /// Interface properties may be decorated with a <see cref="EntityPropertyAttribute"/> to
+    /// Interface properties may be decorated with a <see cref="DynamicEntityPropertyAttribute"/> to
     /// customize the name used to serialize the property value.  This defaults to the property
     /// name as defined in the interface.
     /// </para>
@@ -106,7 +106,7 @@ namespace EntityGen
         private Dictionary<string, EntityInfo> entityDefinitions = new Dictionary<string, EntityInfo>();
 
         /// <summary>
-        /// The <c>enum</c> and <c>class</c> model types that we're tagged by <see cref="IncludeAttribute"/>.
+        /// The <c>enum</c> and <c>class</c> model types that we're tagged by <see cref="DynamicIncludeAttribute"/>.
         /// The table maps the original type to the some type information.
         /// </summary>
         private Dictionary<Type, IncludedType> includedTypes = new Dictionary<Type, IncludedType>();
@@ -144,7 +144,7 @@ namespace EntityGen
         /// that interfaces named <b>Foo.Bar.MyModel</b> will be processed.
         /// </para>
         /// <note>
-        /// Entities for all interfaces tagged by <see cref="EntityAttribute"/>
+        /// Entities for all interfaces tagged by <see cref="DynamicEntityAttribute"/>
         /// will be generated if this is not specified.
         /// </note>
         /// </summary>
@@ -223,7 +223,7 @@ namespace EntityGen
 
                     foreach (var type in assembly.GetExportedTypes().Where(t => t.GetTypeInfo().IsClass || t.GetTypeInfo().IsEnum))
                     {
-                        var includeAttribute = type.GetTypeInfo().GetCustomAttribute<IncludeAttribute>(inherit: false);
+                        var includeAttribute = type.GetTypeInfo().GetCustomAttribute<DynamicIncludeAttribute>(inherit: false);
 
                         if (includeAttribute == null)
                         {
@@ -237,7 +237,7 @@ namespace EntityGen
 
                     foreach (var type in assembly.GetExportedTypes().Where(t => t.GetTypeInfo().IsInterface))
                     {
-                        var entityAttribute = type.GetTypeInfo().GetCustomAttribute<EntityAttribute>(inherit: false);
+                        var entityAttribute = type.GetTypeInfo().GetCustomAttribute<DynamicEntityAttribute>(inherit: false);
 
                         if (entityAttribute == null)
                         {
@@ -408,8 +408,8 @@ namespace EntityGen
                 writer.WriteLine($"using Couchbase.Lite;");
                 writer.WriteLine();
                 writer.WriteLine($"using Neon.Common;");
-                writer.WriteLine($"using Neon.Data;");
-                writer.WriteLine($"using Neon.Data.Internal;");
+                writer.WriteLine($"using Neon.DynamicData;");
+                writer.WriteLine($"using Neon.DynamicData.Internal;");
 
                 // Append the source code for each entity.
 
@@ -427,13 +427,13 @@ namespace EntityGen
 
                     if (entityDefinition.Interface.GetTypeInfo().BaseType != null && !entityDefinitions.ContainsKey(entityDefinition.Interface.GetTypeInfo().BaseType.FullName))
                     {
-                        Log.LogError($"Interface [{entityDefinition.Interface.FullName}] cannot derive from an interface that not being generated or is not also tagged with [{nameof(EntityAttribute)}].");
+                        Log.LogError($"Interface [{entityDefinition.Interface.FullName}] cannot derive from an interface that not being generated or is not also tagged with [{nameof(DynamicEntityAttribute)}].");
                         continue;
                     }
 
                     // Determine which class we need to inherit.
 
-                    var parentClass = "Entity";
+                    var parentClass = nameof(DynamicEntity);
 
                     if (entityDefinition.Interface.GetParentInterface() != null)
                     {
@@ -625,7 +625,7 @@ namespace EntityGen
 
                     if (setEntityTypePath)
                     {
-                        writer.WriteLine($"                jObject[\"{Entity.EntityTypePathName}\"] = typePathString;");
+                        writer.WriteLine($"                jObject[\"{DynamicEntity.EntityTypePathName}\"] = typePathString;");
                     }
 
                     if (setEntityType)

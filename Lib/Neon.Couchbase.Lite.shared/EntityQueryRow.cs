@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace Couchbase.Lite
 {
@@ -27,7 +27,7 @@ namespace Couchbase.Lite
     /// </remarks>
     /// <threadsafety instance="false"/>
     public class EntityQueryRow<TEntity>
-        where TEntity : class, IEntity, new()
+        where TEntity : class, IDynamicEntity, new()
     {
         private EntityDocument<TEntity> cachedDocument;
 

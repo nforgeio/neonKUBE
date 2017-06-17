@@ -15,7 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 using Couchbase.Lite.Store;
 
@@ -47,7 +47,7 @@ namespace Couchbase.Lite
     /// <see cref="GetBinderDocument{TDocument}(string)"/>, and <see cref="GetExistingBinderDocument{TDocument}(string)"/>.
     /// </para>
     /// </remarks>
-    public class EntityDatabase : IEntityContext, IDisposable
+    public class EntityDatabase : IDynamicEntityContext, IDisposable
     {
         //---------------------------------------------------------------------
         // Static members
@@ -247,7 +247,7 @@ namespace Couchbase.Lite
         /// </para>
         /// </remarks>
         public EntityDocument<TEntity> CreateEntityDocument<TEntity>()
-            where TEntity : class, IEntity, new()
+            where TEntity : class, IDynamicEntity, new()
         {
             return new EntityDocument<TEntity>(Stub.Param, Base.CreateDocument());
         }
@@ -259,7 +259,7 @@ namespace Couchbase.Lite
         /// <param name="id">The document ID.</param>
         /// <returns>The existing or newly created document.</returns>
         public EntityDocument<TEntity> GetEntityDocument<TEntity>(string id)
-            where TEntity : class, IEntity, new()
+            where TEntity : class, IDynamicEntity, new()
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id));
 
@@ -273,7 +273,7 @@ namespace Couchbase.Lite
         /// <param name="id">The document ID.</param>
         /// <returns>The existing document if present or <c>null</c>.</returns>
         public EntityDocument<TEntity> GetExistingEntityDocument<TEntity>(string id)
-            where TEntity : class, IEntity, new()
+            where TEntity : class, IDynamicEntity, new()
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(id));
 
@@ -357,7 +357,7 @@ namespace Couchbase.Lite
 
         /// <inheritdoc/>
         public TEntity LoadEntity<TEntity>(string link, out Func<bool> isDeletedFunc) 
-            where TEntity : class, IEntity, new()
+            where TEntity : class, IDynamicEntity, new()
         {
             var document = GetExistingEntityDocument<TEntity>(link);
 
@@ -375,7 +375,7 @@ namespace Couchbase.Lite
 
         /// <inheritdoc/>
         public TDocument LoadDocument<TDocument>(string link, out Func<bool> isDeletedFunc)
-            where TDocument : class, IDocument
+            where TDocument : class, IDynamicDocument
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(link));
 

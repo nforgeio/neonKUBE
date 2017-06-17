@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IEntityContext.cs
+// FILE:	    IDynamicEntityContext.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
@@ -14,10 +14,10 @@ using System.Text;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
-using Neon.Data;
-using Neon.Data.Internal;
+using Neon.DynamicData;
+using Neon.DynamicData.Internal;
 
-namespace Neon.Data
+namespace Neon.DynamicData
 {
     /// <summary>
     /// Implements methods used to resolve entity links.
@@ -40,7 +40,7 @@ namespace Neon.Data
     /// and will throw an exception if there was some other kind of error.
     /// </para>
     /// </remarks>
-    public interface IEntityContext
+    public interface IDynamicEntityContext
     {
         /// <summary>
         /// Instantiates the entity of the requested type by dereferencing the 
@@ -66,7 +66,7 @@ namespace Neon.Data
         /// </para>
         /// </remarks>
         TEntity LoadEntity<TEntity>(string link, out Func<bool> isDeletedFunc)
-            where TEntity : class, IEntity, new();
+            where TEntity : class, IDynamicEntity, new();
 
         /// <summary>
         /// Instantiates the document of the requested type by dereferencing the 
@@ -92,6 +92,6 @@ namespace Neon.Data
         /// </para>
         /// </remarks>
         TDocument LoadDocument<TDocument>(string link, out Func<bool> isDeletedFunc)
-            where TDocument : class, IDocument;
+            where TDocument : class, IDynamicDocument;
     }
 }

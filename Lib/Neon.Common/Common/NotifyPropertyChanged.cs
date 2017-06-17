@@ -10,7 +10,7 @@ using System.Linq;
 using System.Runtime.CompilerServices;
 using System.Text;
 
-namespace Neon.Data
+namespace Neon.Common
 {
     /// <summary>
     /// A common implementation of <see cref="INotifyPropertyChanged"/>.

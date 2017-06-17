@@ -16,14 +16,14 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace Couchbase.Lite
 {
     /// <summary>
     /// Used internally to access the static <see cref="EntityDocument{TEntity}"/> methods.
     /// </summary>
-    internal class StubEntity : IEntity
+    internal class StubEntity : IDynamicEntity
     {
         #pragma warning disable 1591, 0067
 
@@ -38,7 +38,7 @@ namespace Couchbase.Lite
         public event EventHandler<EventArgs> Changed;
         public event PropertyChangedEventHandler PropertyChanged;
 
-        public void _Attach(IEntity parent)
+        public void _Attach(IDynamicEntity parent)
         {
         }
 

@@ -14,7 +14,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace EntityGen
 {
@@ -27,8 +27,8 @@ namespace EntityGen
         /// Constructor.
         /// </summary>
         /// <param name="type">The original included type.</param>
-        /// <param name="includeAttribute">The <see cref="IncludeAttribute"/> that tagged the type.</param>
-        public IncludedType(Type type, IncludeAttribute includeAttribute)
+        /// <param name="includeAttribute">The <see cref="DynamicIncludeAttribute"/> that tagged the type.</param>
+        public IncludedType(Type type, DynamicIncludeAttribute includeAttribute)
         {
             this.Type       = type;
             this.Name       = type.Name;

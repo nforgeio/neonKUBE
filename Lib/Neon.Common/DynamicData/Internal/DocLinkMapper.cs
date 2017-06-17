@@ -16,13 +16,13 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
-namespace Neon.Data.Internal
+namespace Neon.DynamicData.Internal
 {
     /// <summary>
-    /// <b>Platform use only:</b> Used by <see cref="IEntity"/> implementations to 
-    /// map a property to a linked <see cref="IEntity"/> instance.
+    /// <b>Platform use only:</b> Used by <see cref="IDynamicEntity"/> implementations to 
+    /// map a property to a linked <see cref="IDynamicEntity"/> instance.
     /// </summary>
     /// <typeparam name="TDocument">The property value type.</typeparam>
     /// <remarks>
@@ -33,7 +33,7 @@ namespace Neon.Data.Internal
     /// <para>
     /// This class is used to link a <see cref="JProperty"/> value to an external
     /// entity document.  The property value will act as the document link and the
-    /// <see cref="IEntityContext"/> passed to the constructor (if any) will be
+    /// <see cref="IDynamicEntityContext"/> passed to the constructor (if any) will be
     /// used to dereference the link and load the document.
     /// </para>
     /// <para>
@@ -43,28 +43,28 @@ namespace Neon.Data.Internal
     /// referenced document doesn't exist.
     /// </para>
     /// <note>
-    /// This class will simply return <c>null</c> if no <see cref="IEntityContext"/> 
+    /// This class will simply return <c>null</c> if no <see cref="IDynamicEntityContext"/> 
     /// is present.
     /// </note>
     /// </remarks>
     /// <threadsafety instance="false"/>
     public struct DocLinkMapper<TDocument> : IPropertyMapper
-        where TDocument : class, IDocument
+        where TDocument : class, IDynamicDocument
     {
-        private IEntity             parentEntity;
-        private IEntityContext      context;
+        private IDynamicEntity             parentEntity;
+        private IDynamicEntityContext      context;
         private JProperty           property;
-        private IDocument           documentValue;
+        private IDynamicDocument           documentValue;
         private Func<bool>          isDeletedFunc;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="parentEntity">The <see cref="IEntity"/> that owns this mapper.</param>
+        /// <param name="parentEntity">The <see cref="IDynamicEntity"/> that owns this mapper.</param>
         /// <param name="jsonName">The JSON property name.</param>
         /// <param name="propertyName">The entity property name.</param>
-        /// <param name="context">The <see cref="IEntityContext"/> or <c>null</c>.</param>
-        public DocLinkMapper(IEntity parentEntity, string jsonName, string propertyName, IEntityContext context)
+        /// <param name="context">The <see cref="IDynamicEntityContext"/> or <c>null</c>.</param>
+        public DocLinkMapper(IDynamicEntity parentEntity, string jsonName, string propertyName, IDynamicEntityContext context)
         {
             Covenant.Requires<ArgumentNullException>(parentEntity != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonName));

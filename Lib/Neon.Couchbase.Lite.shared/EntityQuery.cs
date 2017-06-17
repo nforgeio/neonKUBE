@@ -14,7 +14,7 @@ using System.Threading.Tasks;
 using Couchbase.Lite;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace Couchbase.Lite
 {
@@ -62,7 +62,7 @@ namespace Couchbase.Lite
     /// </remarks>
     /// <threadsafety instance="false"/>
     public sealed class EntityQuery<TEntity> : IDisposable
-        where TEntity : class, IEntity, new()
+        where TEntity : class, IDynamicEntity, new()
     {
         private Query                                   query;
         private Func<EntityQueryRow<TEntity>, bool>     postFilter;

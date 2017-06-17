@@ -17,7 +17,7 @@ using System.Threading.Tasks;
 using Couchbase.Lite;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace Couchbase.Lite
 {
@@ -55,7 +55,7 @@ namespace Couchbase.Lite
     /// </remarks>
     /// <threadsafety instance="false"/>
     public class EntityLiveQuery<TEntity> : IList<EntityQueryRow<TEntity>>, INotifyCollectionChanged
-        where TEntity : class, IEntity, new()
+        where TEntity : class, IDynamicEntity, new()
     {
         private LiveQuery                             liveQuery;
         private List<EntityQueryRow<TEntity>>         rowList;

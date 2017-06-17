@@ -18,12 +18,12 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
-namespace Neon.Data.Internal
+namespace Neon.DynamicData.Internal
 {
     /// <summary>
-    /// <b>Platform use only:</b> Used by <see cref="IEntity"/> implementations 
+    /// <b>Platform use only:</b> Used by <see cref="IDynamicEntity"/> implementations 
     /// to manage a list of simple (non-entity) objects.
     /// </summary>
     /// <typeparam name="TEntity">The list element type.</typeparam>
@@ -41,19 +41,19 @@ namespace Neon.Data.Internal
     /// <threadsafety instance="false"/>
     public struct ListMapper<TEntity> : IPropertyMapper
     {
-        private IEntity                 parentEntity;
-        private IEntityContext          context;
+        private IDynamicEntity                 parentEntity;
+        private IDynamicEntityContext          context;
         private JProperty               property;
         private ListWrapper<TEntity>    listWrapper;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="parentEntity">The <see cref="IEntity"/> that owns this mapper.</param>
+        /// <param name="parentEntity">The <see cref="IDynamicEntity"/> that owns this mapper.</param>
         /// <param name="jsonName">The JSON property name.</param>
         /// <param name="propertyName">The entity property name.</param>
-        /// <param name="context">The <see cref="IEntityContext"/> or <c>null</c>.</param>
-        public ListMapper(IEntity parentEntity, string jsonName, string propertyName, IEntityContext context)
+        /// <param name="context">The <see cref="IDynamicEntityContext"/> or <c>null</c>.</param>
+        public ListMapper(IDynamicEntity parentEntity, string jsonName, string propertyName, IDynamicEntityContext context)
         {
             Covenant.Requires<ArgumentNullException>(parentEntity != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonName));

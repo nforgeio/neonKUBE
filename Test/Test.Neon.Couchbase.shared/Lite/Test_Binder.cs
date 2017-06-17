@@ -21,8 +21,8 @@ using Couchbase.Lite;
 using Couchbase.Lite.Auth;
 
 using Neon.Common;
-using Neon.Data;
-using Neon.Data.Internal;
+using Neon.DynamicData;
+using Neon.DynamicData.Internal;
 
 using Test.Neon.Models;
 

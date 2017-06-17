@@ -12,7 +12,7 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace Couchbase.Lite
 {
@@ -28,7 +28,7 @@ namespace Couchbase.Lite
         /// <param name="revision">The revision.</param>
         /// <returns>The entity document.</returns>
         public static EntityDocument<TEntity> ToEntityDocument<TEntity>(this Revision revision)
-            where TEntity : class, IEntity, new()
+            where TEntity : class, IDynamicEntity, new()
         {
             Covenant.Requires<ArgumentNullException>(revision != null);
 

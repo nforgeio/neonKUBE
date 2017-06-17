@@ -14,7 +14,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace EntityGen
 {
@@ -47,7 +47,7 @@ namespace EntityGen
             this.task         = task;
             this.ignoreErrors = ignoreErrors;
 
-            var propertyAttribute = propInfo.GetCustomAttribute<EntityPropertyAttribute>(inherit: false);
+            var propertyAttribute = propInfo.GetCustomAttribute<DynamicEntityPropertyAttribute>(inherit: false);
 
             PropertyName = propInfo.Name;
             JsonName     = PropertyName;
@@ -71,7 +71,7 @@ namespace EntityGen
                 }
                 else if (propertyAttribute.IsTypeProperty)
                 {
-                    JsonName = Entity.EntityTypeName;
+                    JsonName = DynamicEntity.EntityTypeName;
                 }
 
                 if (propertyAttribute.IsLink && propertyAttribute.IsTypeProperty)
@@ -95,7 +95,7 @@ namespace EntityGen
 
                     if (parentEntity.Attribute.Type == null)
                     {
-                        LogError($"[{parentEntity.Interface.FullName}.{propInfo.Name}]: cannot be defined with [IsTypeProperty=true] because the entity interface does not set [{nameof(EntityAttribute)}.{nameof(EntityAttribute.Type)}].");
+                        LogError($"[{parentEntity.Interface.FullName}.{propInfo.Name}]: cannot be defined with [IsTypeProperty=true] because the entity interface does not set [{nameof(DynamicEntityAttribute)}.{nameof(DynamicEntityAttribute.Type)}].");
                     }
                     else
                     {
@@ -105,7 +105,7 @@ namespace EntityGen
                         {
                             if (propInfo.PropertyType != typeof(string))
                             {
-                                LogError($"[{parentEntity.Interface.FullName}.{propInfo.Name}]: is not type compatible with [{nameof(EntityAttribute)}.{nameof(EntityAttribute.Type)}] value.");
+                                LogError($"[{parentEntity.Interface.FullName}.{propInfo.Name}]: is not type compatible with [{nameof(DynamicEntityAttribute)}.{nameof(DynamicEntityAttribute.Type)}] value.");
                             }
 
                             TypePropertyValue = $"\"{propertyTypeString}\"";
@@ -116,7 +116,7 @@ namespace EntityGen
 
                             if (parentEntity.Attribute.Type.GetType() != propInfo.PropertyType)
                             {
-                                LogError($"[{parentEntity.Interface.FullName}.{propInfo.Name}]: is not type compatible with [{nameof(EntityAttribute)}.{nameof(EntityAttribute.Type)}] value.");
+                                LogError($"[{parentEntity.Interface.FullName}.{propInfo.Name}]: is not type compatible with [{nameof(DynamicEntityAttribute)}.{nameof(DynamicEntityAttribute.Type)}] value.");
                             }
 
                             TypePropertyValue = $"{propInfo.PropertyType.FullName}.{parentEntity.Attribute.Type}";

@@ -15,7 +15,7 @@ using Microsoft.Build.Framework;
 using Microsoft.Build.Utilities;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
 namespace EntityGen
 {
@@ -36,7 +36,7 @@ namespace EntityGen
         private static string GetEntityType(Type interfaceType, CodeGenerator task)
         {
             var entityTypeString = (string)null;
-            var entityAttribute  = interfaceType.GetTypeInfo().GetCustomAttribute<EntityAttribute>(inherit: false);
+            var entityAttribute  = interfaceType.GetTypeInfo().GetCustomAttribute<DynamicEntityAttribute>(inherit: false);
 
             if (entityAttribute.Type != null)
             {
@@ -55,7 +55,7 @@ namespace EntityGen
 
                     if (!enumType.GetTypeInfo().IsEnum)
                     {
-                        task.Log.LogError($"Entity [{interfaceType.FullName}] has a [{nameof(EntityAttribute)}] with a [{nameof(EntityAttribute.Type)}] value that is not a string or enum value.");
+                        task.Log.LogError($"Entity [{interfaceType.FullName}] has a [{nameof(DynamicEntityAttribute)}] with a [{nameof(DynamicEntityAttribute.Type)}] value that is not a string or enum value.");
                     }
                     else
                     {
@@ -87,9 +87,9 @@ namespace EntityGen
         /// Constructs the entity information from the entity interface definition.
         /// </summary>
         /// <param name="interfaceType">The entity interface definition.</param>
-        /// <param name="entityAttribute">The definition's <see cref="EntityAttribute"/>.</param>
+        /// <param name="entityAttribute">The definition's <see cref="DynamicEntityAttribute"/>.</param>
         /// <param name="task">The build task.</param>
-        public EntityInfo(Type interfaceType, EntityAttribute entityAttribute, CodeGenerator task)
+        public EntityInfo(Type interfaceType, DynamicEntityAttribute entityAttribute, CodeGenerator task)
         {
             this.interfaceType  = interfaceType;
             this.Attribute      = entityAttribute;
@@ -122,7 +122,7 @@ namespace EntityGen
 
             if (entityTypeString.Contains(":"))
             {
-                task.Log.LogError($"Entity [{interfaceType.FullName}] has a [{nameof(EntityAttribute)}] with a [{nameof(EntityAttribute.Type)}] value that includes a colon (:).");
+                task.Log.LogError($"Entity [{interfaceType.FullName}] has a [{nameof(DynamicEntityAttribute)}] with a [{nameof(DynamicEntityAttribute.Type)}] value that includes a colon (:).");
             }
 
             var entityTypePathList = new List<string>();
@@ -288,9 +288,9 @@ namespace EntityGen
         public Type Interface { get; private set; }
 
         /// <summary>
-        /// Returns the <see cref="EntityAttribute"/> used to tag the entity interface.
+        /// Returns the <see cref="DynamicEntityAttribute"/> used to tag the entity interface.
         /// </summary>
-        public EntityAttribute Attribute { get; private set; }
+        public DynamicEntityAttribute Attribute { get; private set; }
 
         /// <summary>
         /// Returns the target namespace.

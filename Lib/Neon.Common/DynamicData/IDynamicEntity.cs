@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IEntity.cs
+// FILE:	    IDynamicEntity.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
@@ -14,10 +14,10 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
-using Neon.Data;
-using Neon.Data.Internal;
+using Neon.DynamicData;
+using Neon.DynamicData.Internal;
 
-namespace Neon.Data
+namespace Neon.DynamicData
 {
     /// <summary>
     /// Defines the implementation of a data entity that wraps a JSON.NET
@@ -25,7 +25,7 @@ namespace Neon.Data
     /// is used in the Couchbase Lite extensions but may be useful for
     /// other scenarios that require future proofing.
     /// </summary>
-    public interface IEntity : INotifyPropertyChanged
+    public interface IDynamicEntity : INotifyPropertyChanged
     {
         /// <summary>
         /// Returns the entity type string or <c>null</c>.
@@ -39,7 +39,7 @@ namespace Neon.Data
         /// <remarks>
         /// <para>
         /// <see cref="_SetLink(string)"/> and <see cref="_GetLink()"/> are used to
-        /// implement entity linking for environments that provide an <see cref="IEntityContext"/> 
+        /// implement entity linking for environments that provide an <see cref="IDynamicEntityContext"/> 
         /// implementation.
         /// </para>
         /// <note>
@@ -54,7 +54,7 @@ namespace Neon.Data
         /// <returns>The link string or <c>null</c>.</returns>
         /// <remarks>
         /// <see cref="_SetLink(string)"/> and <see cref="_GetLink()"/> are used to
-        /// implement entity linking for environments that provide an <see cref="IEntityContext"/> 
+        /// implement entity linking for environments that provide an <see cref="IDynamicEntityContext"/> 
         /// implementation.
         /// </remarks>
         string _GetLink();
@@ -81,13 +81,13 @@ namespace Neon.Data
         bool _Load(JObject jObject, bool reload = false, bool setType = true);
 
         /// <summary>
-        /// Attaches the entity to an <see cref="IEntity"/> parent.
+        /// Attaches the entity to an <see cref="IDynamicEntity"/> parent.
         /// </summary>
         /// <param name="parent">The parent entity.</param>
-        void _Attach(IEntity parent);
+        void _Attach(IDynamicEntity parent);
 
         /// <summary>
-        /// Detaches the entity from its <see cref="IEntity"/> parent.
+        /// Detaches the entity from its <see cref="IDynamicEntity"/> parent.
         /// </summary>
         void _Detach();
 

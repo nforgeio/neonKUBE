@@ -16,8 +16,8 @@ using Newtonsoft.Json.Linq;
 using Couchbase.Lite;
 
 using Neon.Common;
-using Neon.Data;
-using Neon.Data.Internal;
+using Neon.DynamicData;
+using Neon.DynamicData.Internal;
 
 //-----------------------------------------------------------------------------
 
@@ -68,7 +68,7 @@ namespace Test.Neon.Models
         {
         }
 
-        public Candy(JObject jObject, IEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
+        public Candy(JObject jObject, IDynamicEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
             : base(jObject, context: context, load: false, derivedPropertyNameMap: derivedPropertyNameMap)
         {
             _Calories = new SimpleMapper<int>(this, "Calories", "Calories", context);
@@ -190,7 +190,7 @@ namespace Test.Neon.Models
         {
         }
 
-        public CandyBar(JObject jObject, IEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
+        public CandyBar(JObject jObject, IDynamicEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
             : base(jObject, context: context, load: false, derivedPropertyNameMap: derivedPropertyNameMap)
         {
             _HasNuts = new SimpleMapper<bool>(this, "HasNuts", "HasNuts", context);
@@ -269,7 +269,7 @@ namespace Test.Neon.Models
 
 namespace Test.Neon.Models
 {
-    public partial class Catalog : Entity
+    public partial class Catalog : DynamicEntity
     {
         //-----------------------------------------------------------------
         // Static members
@@ -314,7 +314,7 @@ namespace Test.Neon.Models
         {
         }
 
-        public Catalog(JObject jObject, IEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
+        public Catalog(JObject jObject, IDynamicEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
             : base(derivedPropertyNameMap ?? propertyNameMap, context)
         {
             _Products  = new EntityListMapper<Test.Neon.Models.Product>(this, "Products", "Products", context);
@@ -450,7 +450,7 @@ namespace Test.Neon.Models
         {
         }
 
-        public Computer(JObject jObject, IEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
+        public Computer(JObject jObject, IDynamicEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
             : base(jObject, context: context, load: false, derivedPropertyNameMap: derivedPropertyNameMap)
         {
             _IsLinux = new SimpleMapper<bool>(this, "IsLinux", "IsLinux", context);
@@ -529,7 +529,7 @@ namespace Test.Neon.Models
 
 namespace Test.Neon.Models
 {
-    public partial class EnumTypedEntity1 : Entity
+    public partial class EnumTypedEntity1 : DynamicEntity
     {
         //-----------------------------------------------------------------
         // Static members
@@ -574,7 +574,7 @@ namespace Test.Neon.Models
         {
         }
 
-        public EnumTypedEntity1(JObject jObject, IEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
+        public EnumTypedEntity1(JObject jObject, IDynamicEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
             : base(derivedPropertyNameMap ?? propertyNameMap, context)
         {
             _Age  = new SimpleMapper<int>(this, "age", "Age", context);
@@ -656,7 +656,7 @@ namespace Test.Neon.Models
 
 namespace Test.Neon.Models
 {
-    public partial class EnumTypedEntity2 : Entity
+    public partial class EnumTypedEntity2 : DynamicEntity
     {
         //-----------------------------------------------------------------
         // Static members
@@ -701,7 +701,7 @@ namespace Test.Neon.Models
         {
         }
 
-        public EnumTypedEntity2(JObject jObject, IEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
+        public EnumTypedEntity2(JObject jObject, IDynamicEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
             : base(derivedPropertyNameMap ?? propertyNameMap, context)
         {
             _Age  = new SimpleMapper<int>(this, "age", "Age", context);
@@ -783,7 +783,7 @@ namespace Test.Neon.Models
 
 namespace Test.Neon.Models
 {
-    public partial class EnumTypedEntity3 : Entity
+    public partial class EnumTypedEntity3 : DynamicEntity
     {
         //-----------------------------------------------------------------
         // Static members
@@ -832,7 +832,7 @@ namespace Test.Neon.Models
         {
         }
 
-        public EnumTypedEntity3(JObject jObject, IEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
+        public EnumTypedEntity3(JObject jObject, IDynamicEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
             : base(derivedPropertyNameMap ?? propertyNameMap, context)
         {
             _Age       = new SimpleMapper<int>(this, "age", "Age", context);
@@ -994,7 +994,7 @@ namespace Test.Neon.Models
         {
         }
 
-        public Gum(JObject jObject, IEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
+        public Gum(JObject jObject, IDynamicEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
             : base(jObject, context: context, load: false, derivedPropertyNameMap: derivedPropertyNameMap)
         {
             _Flavor = new SimpleMapper<string>(this, "Flavor", "Flavor", context);
@@ -1073,7 +1073,7 @@ namespace Test.Neon.Models
 
 namespace Test.Neon.Models
 {
-    public partial class Product : Entity
+    public partial class Product : DynamicEntity
     {
         //-----------------------------------------------------------------
         // Static members
@@ -1116,7 +1116,7 @@ namespace Test.Neon.Models
         {
         }
 
-        public Product(JObject jObject, IEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
+        public Product(JObject jObject, IDynamicEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
             : base(derivedPropertyNameMap ?? propertyNameMap, context)
         {
             _Name = new SimpleMapper<string>(this, "Name", "Name", context);
@@ -1196,7 +1196,7 @@ namespace Test.Neon.Models
 
 namespace Test.Neon.Models
 {
-    public partial class StringTypedEntity1 : Entity
+    public partial class StringTypedEntity1 : DynamicEntity
     {
         //-----------------------------------------------------------------
         // Static members
@@ -1241,7 +1241,7 @@ namespace Test.Neon.Models
         {
         }
 
-        public StringTypedEntity1(JObject jObject, IEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
+        public StringTypedEntity1(JObject jObject, IDynamicEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
             : base(derivedPropertyNameMap ?? propertyNameMap, context)
         {
             _Age  = new SimpleMapper<int>(this, "age", "Age", context);
@@ -1323,7 +1323,7 @@ namespace Test.Neon.Models
 
 namespace Test.Neon.Models
 {
-    public partial class StringTypedEntity2 : Entity
+    public partial class StringTypedEntity2 : DynamicEntity
     {
         //-----------------------------------------------------------------
         // Static members
@@ -1368,7 +1368,7 @@ namespace Test.Neon.Models
         {
         }
 
-        public StringTypedEntity2(JObject jObject, IEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
+        public StringTypedEntity2(JObject jObject, IDynamicEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
             : base(derivedPropertyNameMap ?? propertyNameMap, context)
         {
             _Age  = new SimpleMapper<int>(this, "age", "Age", context);
@@ -1450,7 +1450,7 @@ namespace Test.Neon.Models
 
 namespace Test.Neon.Models
 {
-    public partial class StringTypedEntity3 : Entity
+    public partial class StringTypedEntity3 : DynamicEntity
     {
         //-----------------------------------------------------------------
         // Static members
@@ -1495,7 +1495,7 @@ namespace Test.Neon.Models
         {
         }
 
-        public StringTypedEntity3(JObject jObject, IEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
+        public StringTypedEntity3(JObject jObject, IDynamicEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
             : base(derivedPropertyNameMap ?? propertyNameMap, context)
         {
             _Age  = new SimpleMapper<int>(this, "age", "Age", context);
@@ -1588,7 +1588,7 @@ namespace Test.Neon.Models
 
 namespace Test.Neon.Models
 {
-    public partial class TestEntity : Entity
+    public partial class TestEntity : DynamicEntity
     {
         //-----------------------------------------------------------------
         // Static members
@@ -1649,7 +1649,7 @@ namespace Test.Neon.Models
         {
         }
 
-        public TestEntity(JObject jObject, IEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
+        public TestEntity(JObject jObject, IDynamicEntityContext context = null, bool load = true, Dictionary<string, string> derivedPropertyNameMap = null)
             : base(derivedPropertyNameMap ?? propertyNameMap, context)
         {
             _Child      = new EntityMapper<Test.Neon.Models.TestEntity>(this, "child", "Child", context);
@@ -2021,7 +2021,7 @@ namespace Test.Neon.Models
             registrations.Add(Test.Neon.Models.StringTypedEntity3._GetRegistration());
             registrations.Add(Test.Neon.Models.TestEntity._GetRegistration());
 
-            Entity.Register(registrations);
+            DynamicEntity.Register(registrations);
 
             // Binder (AKA derived document) registrations
 

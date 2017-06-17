@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    EntityPropertyAttribute.cs
+// FILE:	    DynamicEntityPropertyAttribute.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
@@ -13,15 +13,15 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
-using Neon.Data;
-using Neon.Data.Internal;
+using Neon.DynamicData;
+using Neon.DynamicData.Internal;
 using System.Runtime.Serialization;
 
-namespace Neon.Data
+namespace Neon.DynamicData
 {
     /// <summary>
     /// Used to customize code generation for a property definition within an
-    /// <c>interface</c> tagged by <see cref="EntityAttribute"/> by the
+    /// <c>interface</c> tagged by <see cref="DynamicEntityAttribute"/> by the
     /// <b>entity-gen</b> build tool.
     /// </summary>
     /// <remarks>
@@ -37,7 +37,7 @@ namespace Neon.Data
     /// </note>
     /// <para>
     /// The <see cref="IsTypeProperty"/> may be assigned <c>true</c> to generate a read-only
-    /// property that returns the value specified by the <see cref="EntityAttribute.Type"/>
+    /// property that returns the value specified by the <see cref="DynamicEntityAttribute.Type"/>
     /// value used to tag the interface.
     /// </para>
     /// <note>
@@ -45,7 +45,7 @@ namespace Neon.Data
     /// of a derived interface heirarchy.
     /// </note>
     /// <note>
-    /// <see cref="Name"/> defaults to <see cref="Entity.EntityTypeName"/> if <see cref="IsTypeProperty"/>=<c>true</c>
+    /// <see cref="Name"/> defaults to <see cref="DynamicEntity.EntityTypeName"/> if <see cref="IsTypeProperty"/>=<c>true</c>
     /// rather than the actual property name to standardize the serialized type property
     /// name on a compact string.  Applications can override this behavior by explicitly
     /// setting <see cref="Name"/>.
@@ -59,7 +59,7 @@ namespace Neon.Data
     /// </para>
     /// </remarks>
     [AttributeUsage(AttributeTargets.Property)]
-    public class EntityPropertyAttribute : Attribute
+    public class DynamicEntityPropertyAttribute : Attribute
     {
         /// <summary>
         /// The optional name to use when serializing the property.  This defaults
@@ -82,7 +82,7 @@ namespace Neon.Data
         /// </note>
         /// <para>
         /// The <b>entity-gen</b> code generator will generate this as a read-only property
-        /// that returns the value specified by the <see cref="EntityAttribute.Type"/>
+        /// that returns the value specified by the <see cref="DynamicEntityAttribute.Type"/>
         /// value used to tag the interface.
         /// </para>
         /// </summary>
@@ -96,7 +96,7 @@ namespace Neon.Data
         /// <para>
         /// Reference properties will persist a string value that identifies the specific 
         /// entity being referenced (e.g. a Couchbase Lite document ID or perhaps a file
-        /// system path).  Advanced implementations can implement <see cref="IEntityContext"/> 
+        /// system path).  Advanced implementations can implement <see cref="IDynamicEntityContext"/> 
         /// to provide a way for entities to resolve the string reference into 
         /// the referenced entity instance.
         /// </para>

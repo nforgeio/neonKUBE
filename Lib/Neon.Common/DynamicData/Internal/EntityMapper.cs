@@ -16,13 +16,13 @@ using Newtonsoft.Json.Linq;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using Neon.Data;
+using Neon.DynamicData;
 
-namespace Neon.Data.Internal
+namespace Neon.DynamicData.Internal
 {
     /// <summary>
-    /// <b>Platform use only:</b> Used by <see cref="IEntity"/> implementations to 
-    /// map a property to a nested <see cref="IEntity"/> instance.
+    /// <b>Platform use only:</b> Used by <see cref="IDynamicEntity"/> implementations to 
+    /// map a property to a nested <see cref="IDynamicEntity"/> instance.
     /// </summary>
     /// <typeparam name="TEntity">The property value type.</typeparam>
     /// <remarks>
@@ -33,21 +33,21 @@ namespace Neon.Data.Internal
     /// </remarks>
     /// <threadsafety instance="false"/>
     public struct EntityMapper<TEntity> : IPropertyMapper
-        where TEntity : class, IEntity, new()
+        where TEntity : class, IDynamicEntity, new()
     {
-        private IEntity             parentEntity;
-        private IEntityContext      context;
+        private IDynamicEntity             parentEntity;
+        private IDynamicEntityContext      context;
         private JProperty           property;
-        private IEntity             entityValue;
+        private IDynamicEntity             entityValue;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="parentEntity">The <see cref="IEntity"/> that owns this mapper.</param>
+        /// <param name="parentEntity">The <see cref="IDynamicEntity"/> that owns this mapper.</param>
         /// <param name="jsonName">The JSON property name.</param>
         /// <param name="propertyName">The entity property name.</param>
-        /// <param name="context">The <see cref="IEntityContext"/> or <c>null</c>.</param>
-        public EntityMapper(IEntity parentEntity, string jsonName, string propertyName, IEntityContext context)
+        /// <param name="context">The <see cref="IDynamicEntityContext"/> or <c>null</c>.</param>
+        public EntityMapper(IDynamicEntity parentEntity, string jsonName, string propertyName, IDynamicEntityContext context)
         {
             Covenant.Requires<ArgumentNullException>(parentEntity != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonName));
@@ -89,7 +89,7 @@ namespace Neon.Data.Internal
                 //
                 //    * Then set the property value.
 
-                var newEntity = value as IEntity;
+                var newEntity = value as IDynamicEntity;
 
                 entityValue?._Detach();
                 newEntity?._Attach(parentEntity);
@@ -114,7 +114,7 @@ namespace Neon.Data.Internal
             }
             else if (newProperty.Value.Type == JTokenType.Object)
             {
-                entityValue = Entity.Create<TEntity>(newProperty.Value as JObject, context);
+                entityValue = DynamicEntity.Create<TEntity>(newProperty.Value as JObject, context);
                 entityValue._Attach(parentEntity);
             }
             else
