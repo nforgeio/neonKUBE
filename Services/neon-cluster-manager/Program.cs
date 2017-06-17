@@ -40,7 +40,7 @@ namespace NeonClusterManager
         private static readonly string vaultPollSecondsKey = $"{serviceRootKey}/vault_poll_seconds";
         private static readonly string clusterDefKey       = "neon/cluster/definition.deflate";
 
-        private static string                   serviceNameVersion = $"{serviceName} v{Neon.Build.ClusterVersion}";
+        private static string                   serviceNameVersion = $"{serviceName} v{Neon.Build.Version}";
         private static CancellationTokenSource  ctsTerminate       = new CancellationTokenSource();
         private static TimeSpan                 terminateTimeout   = TimeSpan.FromSeconds(10);
         private static bool                     terminated;

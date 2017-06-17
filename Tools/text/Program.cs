@@ -95,7 +95,7 @@ usage: text replace     -TEXT=VALUE... FILE
         {
             Console.WriteLine(
 $@"
-Neon Text File Utility: text [v{Build.StackVersion}]
+Neon Text File Utility: text [v{Build.Version}]
 {Build.Copyright}
 
 usage: text replace -VAR=VALUE... FILE

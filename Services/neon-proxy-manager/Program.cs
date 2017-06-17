@@ -42,7 +42,7 @@ namespace NeonProxyManager
         private const string proxyStatus         = consulPrefix + "/status";
         private const string vaultCertPrefix     = "neon-secret/cert";
 
-        private static string                   serviceNameVersion = $"{serviceName} v{Neon.Build.ClusterVersion}";
+        private static string                   serviceNameVersion = $"{serviceName} v{Neon.Build.Version}";
         private static TimeSpan                 delayTime          = TimeSpan.FromSeconds(5);
         private static CancellationTokenSource  ctsTerminate       = new CancellationTokenSource();
         private static TimeSpan                 terminateTimeout   = TimeSpan.FromSeconds(10);

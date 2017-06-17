@@ -19,7 +19,7 @@ namespace Neon
         /// <summary>
         /// The company name to use for all LillTek assemblies.
         /// </summary>
-        public const string Company = "NeonForge";
+        public const string Company = "NeonForge, LLC";
 
         /// <summary>
         /// The copyright statement to be included in all assemblies.
@@ -29,22 +29,12 @@ namespace Neon
         /// <summary>
         /// The product statement to be included in all assemblies.
         /// </summary>
-        public const string StackProduct = "NeonStack";
-
-        /// <summary>
-        /// The build version for all NeonStack assemblies.
-        /// </summary>
-        public const string StackVersion = "0.1.0.0";
-
-        /// <summary>
-        /// The product statement to be included in all assemblies.
-        /// </summary>
-        public const string ClusterProduct = "NeonCluster";
+        public const string Product = "NeonCluster";
 
         /// <summary>
         /// The build version for all NeonCluster assemblies.
         /// </summary>
-        public const string ClusterVersion = "0.1.0.0";
+        public const string Version = "0.0.0.0";
 
         /// <summary>
         /// The build configuration.

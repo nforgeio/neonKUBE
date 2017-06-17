@@ -66,7 +66,7 @@ namespace UnixText
             {
                 Console.WriteLine(
 $@"
-Neon Linux Text File Converter: unix-text [v{Build.StackVersion}]
+Neon Linux Text File Converter: unix-text [v{Build.Version}]
 {Build.Copyright}
 
 USAGE: unix-text [OPTIONS] [FILE...]

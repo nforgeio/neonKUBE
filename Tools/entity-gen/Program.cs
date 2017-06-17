@@ -37,7 +37,7 @@ namespace EntityGen
             var commandLine = new CommandLine(args);
             var usage =
 $@"
-Entity Code Generator v{Build.StackVersion}
+Entity Code Generator v{Build.Version}
 {Build.Copyright}
 
 usage: entity-gen SOURCES OUTPUT 
