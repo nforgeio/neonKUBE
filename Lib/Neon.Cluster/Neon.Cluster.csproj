@@ -9,9 +9,9 @@
     <Description>[Work in progress]: Provides NeonCluster management and service capabilities.</Description>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>This is still very much a work in progress and is not suitable for general usage.</PackageReleaseNotes>
-    <AssemblyVersion>0.0.4.0</AssemblyVersion>
+    <AssemblyVersion>0.0.4.1</AssemblyVersion>
     <FileVersion>0.0.4.0</FileVersion>
-    <Version>0.0.4.0-preview</Version>
+    <Version>0.0.4.1-preview</Version>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
@@ -27,11 +27,13 @@
 
   <ItemGroup>
     <PackageReference Include="Consul" Version="0.7.2.3" />
+    <PackageReference Include="CouchbaseNetClient" Version="2.4.6" />
     <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.0.0-beta50" />
     <PackageReference Include="Microsoft.Azure.Management.Network" Version="10.0.0-preview" />
     <PackageReference Include="Microsoft.Azure.Management.ResourceManager" Version="1.5.0-preview" />
     <PackageReference Include="Microsoft.Azure.Management.ResourceManager.Fluent" Version="1.0.0-beta50" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.2" />
+    <PackageReference Include="RabbitMQ.Client" Version="5.0.1-rc1" />
     <PackageReference Include="SharpZipLib.NETStandard" Version="0.86.0.1" />
     <PackageReference Include="System.Diagnostics.Contracts" Version="4.3.0" />
     <PackageReference Include="System.IO.Compression" Version="4.3.0" />
