@@ -37,16 +37,22 @@ namespace Neon.Common
         /// <summary>
         /// The security token.
         /// </summary>
+        [JsonProperty(PropertyName = "Token", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public string Token { get; set; }
 
         /// <summary>
         /// The username (use in conjunction with <see cref="Password"/>).
         /// </summary>
+        [JsonProperty(PropertyName = "Username", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public string Username { get; set; }
 
         /// <summary>
         /// The password (use in conjunction with <see cref="Username"/>).
         /// </summary>
+        [JsonProperty(PropertyName = "Password", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public string Password { get; set; }
 
         /// <summary>
