@@ -17,8 +17,10 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Couchbase;
 using Consul;
 using Newtonsoft.Json;
+using RabbitMQ.Client;
 
 using Neon.Common;
 using Neon.Diagnostics;
@@ -734,6 +736,38 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Returns the value of a named secret for a specific type parsed from JSON.
+        /// </summary>
+        /// <typeparam name="T">The desired output type.</typeparam>
+        /// <param name="name">The secret name.</param>
+        /// <returns>The secret of type <typeparamref name="T"/> or <c>null</c> if the secret doesn't exist.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method can be used to retrieve a secret provisioned to a container via the
+        /// Docker secrets feature or a secret provided to <see cref="ConnectCluster(DebugSecrets, string)"/> 
+        /// when we're emulating running the application as a cluster container.
+        /// </para>
+        /// <para>
+        /// Docker provisions secrets by mounting a <b>tmpfs</b> file system at <b>/var/run/secrets</b>
+        /// and writing the secrets there as text files with the file name identifying the secret.
+        /// When the application is not running in debug mode, this method simply attempts to read
+        /// the requested secret from the named file in this folder.
+        /// </para>
+        /// </remarks>
+        public static T GetSecret<T>(string name)
+            where T : class, new()
+        {
+            var secretJson = GetSecret(name);
+
+            if (secretJson == null)
+            {
+                return null;
+            }
+
+            return NeonHelper.JsonDeserialize<T>(secretJson);
+        }
+
+        /// <summary>
         /// Returns a client that can access the cluster Consul service.
         /// </summary>
         /// <returns>A <see cref="ConsulClient"/>.</returns>
@@ -1159,6 +1193,90 @@ namespace Neon.Cluster
             {
                 return $"traffic»http-v1»{proxyName}»%tr»%ci»%b»%s»%si»%sp»%sslv»%sslc»%U»%B»%Tw»%Tc»%Tt»%ts»%ac»%fc»%bc»%sc»%rc»%sq»%bq»%ID»%Ti»%TR»%Tr»%Ta»%HM»%HP»%HQ»%HV»%ST»%hr";
             }
+        }
+
+        /// <summary>
+        /// Connects to a Couchbase cluster whose connection settings are referenced in Consul 
+        /// using the credentials provisioned in a Docker secret.
+        /// </summary>
+        /// <param name="connectionKey">The Consul key for the connection settings.</param>
+        /// <param name="secretName">The local container name for the Docker secret.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The <see cref="Couchbase.Cluster"/>.</returns>
+        public static async Task<Couchbase.Cluster> ConnectCoucbaseClusterAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            VerifyConnected();
+
+            var connectionSettings = await Cluster.Consul.KV.GetObject<CouchbaseSettings>(connectionKey, cancellationToken);
+            var credentials        = GetSecret<Credentials>(secretName);
+
+            if (!connectionSettings.IsValid)
+            {
+                throw new ArgumentException($"Connection settings at [consul:{connectionKey}] are not valid for Couchbase.");
+            }
+
+            if (!credentials.HasUsernamePassword)
+            {
+                throw new ArgumentException($"Credentials at [secret:{secretName}] do not include a username and password.");
+            }
+
+            return connectionSettings.ConnectCluster(credentials);
+        }
+
+        /// <summary>
+        /// Connects to a Couchbase bucket whose connection settings are referenced in Consul 
+        /// using the credentials provisioned in a Docker secret.
+        /// </summary>
+        /// <param name="connectionKey">The Consul key for the connection settings.</param>
+        /// <param name="secretName">The local container name for the Docker secret.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The <see cref="Couchbase.Core.IBucket"/>.</returns>
+        public static async Task<Couchbase.Core.IBucket> ConnectCouchbaseBucketAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            VerifyConnected();
+
+            var connectionSettings = await Cluster.Consul.KV.GetObject<CouchbaseSettings>(connectionKey, cancellationToken);
+            var credentials        = GetSecret<Credentials>(secretName);
+
+            if (!connectionSettings.IsValid)
+            {
+                throw new ArgumentException($"Connection settings at [consul:{connectionKey}] are not valid for Couchbase.");
+            }
+
+            if (!credentials.HasUsernamePassword)
+            {
+                throw new ArgumentException($"Credentials at [secret:{secretName}] do not include a username and password.");
+            }
+
+            return connectionSettings.ConnectBucket(credentials);
+        }
+
+        /// <summary>
+        /// Connects to the RabbitMQ broker whose connection settings are referenced in Consul 
+        /// using the credentials provisioned in a Docker secret.
+        /// </summary>
+        /// <param name="connectionKey">The Consul key for the connection settings.</param>
+        /// <param name="secretName">The local container name for the Docker secret.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The <see cref="RabbitMQ.Client.IConnection"/>.</returns>
+        public static async Task<RabbitMQ.Client.IConnection> ConnectRabbitMQAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default(CancellationToken))
+        {
+            VerifyConnected();
+
+            var connectionSettings = await Cluster.Consul.KV.GetObject<RabbitMQSettings>(connectionKey, cancellationToken);
+            var credentials        = GetSecret<Credentials>(secretName);
+
+            if (!connectionSettings.IsValid)
+            {
+                throw new ArgumentException($"Connection settings at [consul:{connectionKey}] are not valid for RabbitMQ.");
+            }
+
+            if (!credentials.HasUsernamePassword)
+            {
+                throw new ArgumentException($"Credentials at [secret:{secretName}] do not include a username and password.");
+            }
+
+            return connectionSettings.ConnectBroker(credentials);
         }
     }
 }

@@ -48,5 +48,23 @@ namespace Neon.Common
         /// The password (use in conjunction with <see cref="Username"/>).
         /// </summary>
         public string Password { get; set; }
+
+        /// <summary>
+        /// Returns <c>true</c> if the credentials hold a <see cref="Token"/>.
+        /// </summary>
+        [JsonIgnore]
+        public bool HasToken
+        {
+            get { return !string.IsNullOrEmpty(Token); }
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the credentials hold a <see cref="Usernamee"/> and <see cref="Password"/>.
+        /// </summary>
+        [JsonIgnore]
+        public bool HasUsernamePassword
+        {
+            get { return !string.IsNullOrEmpty(Username) && !string.IsNullOrEmpty(Password); }
+        }
     }
 }

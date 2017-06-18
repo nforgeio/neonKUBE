@@ -34,5 +34,30 @@ namespace Neon.Common
         /// Optionally specifies the name of the target Couchbase bucket.
         /// </summary>
         public string Bucket { get; set; }
+
+        /// <summary>
+        /// Returns <c>true</c> if the settings are valid.
+        /// </summary>
+        [JsonIgnore]
+        public bool IsValid
+        {
+            get
+            {
+                if (Servers == null || Servers.Count == 0)
+                {
+                    return false;
+                }
+
+                foreach (var server in Servers)
+                {
+                    if (server == null)
+                    {
+                        return false;
+                    }
+                }
+
+                return true;
+            }
+        }
     }
 }

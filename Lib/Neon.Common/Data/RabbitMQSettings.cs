@@ -8,6 +8,7 @@ using System.Collections.Generic;
 
 using Neon.Common;
 using Neon.Data;
+using Neon.Net;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -40,5 +41,35 @@ namespace Neon.Common
         /// should use <b>5671</b> if TLS is enabled on the broker.
         /// </summary>
         public int Port { get; set; } = 5672;
+
+        /// <summary>
+        /// Returns <c>true</c> if the settings are valid.
+        /// </summary>
+        [JsonIgnore]
+        public bool IsValid
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(VirtualHost))
+                {
+                    return false;
+                }
+
+                if (Hostnames == null || Hostnames.Count == 0)
+                {
+                    return false;
+                }
+
+                foreach (var hostname in Hostnames)
+                {
+                    if (string.IsNullOrEmpty(hostname))
+                    {
+                        return false;
+                    }
+                }
+
+                return NetHelper.IsValidPort(Port);
+            }
+        }
     }
 }

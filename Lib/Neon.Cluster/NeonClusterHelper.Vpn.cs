@@ -29,7 +29,6 @@ namespace Neon.Cluster
 {
     public static partial class NeonClusterHelper
     {
-
         //---------------------------------------------------------------------
         // We manage VPN connections by launching OpenVPN specifying a configuration
         // file for the target cluster.  These configuration files and keys will be 
