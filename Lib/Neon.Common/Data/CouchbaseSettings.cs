@@ -12,22 +12,13 @@ using Neon.Data;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Neon.Cluster
+namespace Neon.Common
 {
     /// <summary>
-    /// Settings used to connect a Couchbase client to a Couchbase bucket.  This class sets
-    /// <see cref="IEntity.Type"/> to <see cref="NeonEntityTypes.CouchbaseSettings"/>.
+    /// Settings used to connect a Couchbase client to a Couchbase bucket.
     /// </summary>
-    public class CouchbaseSettings : Entity
+    public class CouchbaseSettings
     {
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        public CouchbaseSettings()
-        {
-            base.Type = NeonEntityTypes.CouchbaseSettings;
-        }
-
         /// <summary>
         /// One or more Couchbase server URIs.
         /// </summary>

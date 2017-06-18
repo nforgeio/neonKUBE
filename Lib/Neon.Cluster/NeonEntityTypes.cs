@@ -18,14 +18,5 @@ namespace Neon.Cluster
     /// </summary>
     public static class NeonEntityTypes
     {
-        /// <summary>
-        /// Maps to: <see cref="Neon.Cluster.CouchbaseSettings"/>.
-        /// </summary>
-        public const string CouchbaseSettings = "neon.couchbase-settings";
-
-        /// <summary>
-        /// Maps to: <see cref="Neon.Cluster.RabbitMQSettings"/>.
-        /// </summary>
-        public const string RabbitMQSettings = "neon.rabbitmq-settings";
     }
 }

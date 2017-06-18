@@ -21,7 +21,7 @@ using Newtonsoft.Json.Serialization;
 using Neon.Common;
 using Neon.Cryptography;
 
-namespace Neon.Cluster
+namespace Neon.Common
 {
     /// <summary>
     /// Used to persist database and other credentials as a Docker service secret.

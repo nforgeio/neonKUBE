@@ -12,22 +12,13 @@ using Neon.Data;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Neon.Cluster
+namespace Neon.Common
 {
     /// <summary>
-    /// Settings used to connect a RabbitMQ client to a broker.  This class sets
-    /// <see cref="IEntity.Type"/> to <see cref="NeonEntityTypes.RabbitMQSettings"/>.
+    /// Settings used to connect a RabbitMQ client to a broker.
     /// </summary>
     public class RabbitMQSettings : Entity
     {
-        /// <summary>
-        /// Constructor.
-        /// </summary>
-        public RabbitMQSettings()
-        {
-            Type = NeonEntityTypes.RabbitMQSettings;
-        }
-
         /// <summary>
         /// Specifies the virtual host namespace.  This defaults to <b>"/"</b>.
         /// </summary>
