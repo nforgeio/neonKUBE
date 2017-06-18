@@ -40,7 +40,6 @@ namespace NeonClusterManager
         private static readonly string vaultPollSecondsKey = $"{serviceRootKey}/vault_poll_seconds";
         private static readonly string clusterDefKey       = "neon/cluster/definition.deflate";
 
-        private static string                   serviceNameVersion = $"{serviceName} v{Neon.Build.Version}";
         private static CancellationTokenSource  ctsTerminate       = new CancellationTokenSource();
         private static TimeSpan                 terminateTimeout   = TimeSpan.FromSeconds(10);
         private static bool                     terminated;
@@ -59,9 +58,9 @@ namespace NeonClusterManager
         public static void Main(string[] args)
         {
             LogManager.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
-            log = LogManager.GetLogger("neon-cluster-manager");
+            log = LogManager.GetLogger(serviceName);
 
-            log.Info(() => $"Starting [{serviceNameVersion}]");
+            log.Info(() => $"Starting [{serviceName}]");
 
             // Gracefully handle SIGTERM events.
 
@@ -235,8 +234,8 @@ namespace NeonClusterManager
 
                     if (ctsTerminate.Token.IsCancellationRequested)
                     {
-                        log.Debug(() => "NodePoller: Cancelled");
-                        return; // We've been signalled to terminate
+                        log.Debug(() => "NodePoller: Terminating");
+                        return;
                     }
 
                     // Retrieve the current cluster definition from Consul if we don't already
@@ -284,7 +283,7 @@ namespace NeonClusterManager
                 }
                 catch (OperationCanceledException)
                 {
-                    log.Debug(() => "NodePoller: Cancelled");
+                    log.Debug(() => "NodePoller: Terminating");
                     return;
                 }
                 catch (KeyNotFoundException)
@@ -342,8 +341,8 @@ namespace NeonClusterManager
 
                         if (ctsTerminate.Token.IsCancellationRequested)
                         {
-                            log.Debug(() => "VaultPolling: Cancelled");
-                            return; // We've been signalled to terminate
+                            log.Debug(() => "VaultPolling: Terminating");
+                            return;
                         }
 
                         // Monitor Vault for status changes and handle unsealing if enabled.
@@ -417,7 +416,7 @@ namespace NeonClusterManager
                     }
                     catch (OperationCanceledException)
                     {
-                        log.Debug(() => "VaultPolling: Cancelled");
+                        log.Debug(() => "VaultPolling: Terminating");
                         return;
                     }
                     catch (Exception e)
