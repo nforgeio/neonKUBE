@@ -8,7 +8,6 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Reflection;
-using System.Runtime.Loader;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -40,9 +39,7 @@ namespace NeonClusterManager
         private static readonly string vaultPollSecondsKey = $"{serviceRootKey}/vault_poll_seconds";
         private static readonly string clusterDefKey       = "neon/cluster/definition.deflate";
 
-        private static CancellationTokenSource  ctsTerminate       = new CancellationTokenSource();
-        private static TimeSpan                 terminateTimeout   = TimeSpan.FromSeconds(10);
-        private static bool                     terminated;
+        private static ProcessTerminator        terminator;
         private static ILog                     log;
         private static ConsulClient             consul;
         private static DockerClient             docker;
@@ -59,32 +56,9 @@ namespace NeonClusterManager
         {
             LogManager.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
             log = LogManager.GetLogger(serviceName);
-
             log.Info(() => $"Starting [{serviceName}]");
 
-            // Gracefully handle SIGTERM events.
-
-            AssemblyLoadContext.Default.Unloading +=
-                context =>
-                {
-                    // Signal the sub-tasks that we're terminating and then 
-                    // give them a chance to exit.
-
-                    log.Info(() => "SIGTERM received: Stopping tasks...");
-
-                    ctsTerminate.Cancel();
-
-                    try
-                    {
-                        NeonHelper.WaitFor(() => terminated, terminateTimeout);
-                        log.Info(() => "Tasks stopped gracefully.");
-                        Program.Exit(0);
-                    }
-                    catch (TimeoutException)
-                    {
-                        log.Warn(() => $"Tasks did not stop within [{terminateTimeout}].");
-                    }
-                };
+            terminator = new ProcessTerminator(log);
 
             try
             {
@@ -155,6 +129,7 @@ namespace NeonClusterManager
         public static void Exit(int exitCode)
         {
             log.Info(() => $"Exiting: [{serviceName}]");
+            terminator.Exit();
             Environment.Exit(exitCode);
         }
 
@@ -216,7 +191,7 @@ namespace NeonClusterManager
                 NodePoller(),
                 VaultPoller());
 
-            terminated = true;
+            terminator.Exit();
         }
 
         /// <summary>
@@ -232,7 +207,7 @@ namespace NeonClusterManager
                 {
                     log.Debug(() => "NodePoller: Polling");
 
-                    if (ctsTerminate.Token.IsCancellationRequested)
+                    if (terminator.CancellationToken.IsCancellationRequested)
                     {
                         log.Debug(() => "NodePoller: Terminating");
                         return;
@@ -241,7 +216,7 @@ namespace NeonClusterManager
                     // Retrieve the current cluster definition from Consul if we don't already
                     // have it or if it's changed from what we've cached.
 
-                    cachedClusterDefinition = await NeonClusterHelper.GetClusterDefinitionAsync(cachedClusterDefinition, ctsTerminate.Token);
+                    cachedClusterDefinition = await NeonClusterHelper.GetClusterDefinitionAsync(cachedClusterDefinition, terminator.CancellationToken);
 
                     // Retrieve the swarm nodes from Docker.
 
@@ -272,7 +247,7 @@ namespace NeonClusterManager
                     {
                         log.Info(() => "NodePoller: Changed cluster definition.  Updating Consul.");
 
-                        await NeonClusterHelper.PutClusterDefinitionAsync(currentClusterDefinition, ctsTerminate.Token);
+                        await NeonClusterHelper.PutClusterDefinitionAsync(currentClusterDefinition, terminator.CancellationToken);
 
                         cachedClusterDefinition = currentClusterDefinition;
                     }
@@ -299,7 +274,7 @@ namespace NeonClusterManager
                     log.Error("NodePoller", e);
                 }
 
-                await Task.Delay(nodePollInterval, ctsTerminate.Token);
+                await Task.Delay(nodePollInterval, terminator.CancellationToken);
             }
         }
 
@@ -339,7 +314,7 @@ namespace NeonClusterManager
                     {
                         log.Debug(() => "VaultPolling: Polling");
 
-                        if (ctsTerminate.Token.IsCancellationRequested)
+                        if (terminator.CancellationToken.IsCancellationRequested)
                         {
                             log.Debug(() => "VaultPolling: Terminating");
                             return;
@@ -349,7 +324,7 @@ namespace NeonClusterManager
 
                         log.Debug(() => $"VaultPoller: Querying status from [{vaultUri}]");
 
-                        var newVaultStatus = await vault.GetHealthAsync(ctsTerminate.Token);
+                        var newVaultStatus = await vault.GetHealthAsync(terminator.CancellationToken);
                         var changed        = false;
 
                         if (lastVaultStatus == null)
@@ -398,7 +373,7 @@ namespace NeonClusterManager
                             try
                             {
                                 log.Info(() => "Unsealing Vault");
-                                await vault.UnsealAsync(vaultCredentials, ctsTerminate.Token);
+                                await vault.UnsealAsync(vaultCredentials, terminator.CancellationToken);
                                 log.Info(() => "Vault UNSEALED");
 
                                 // Schedule a status update on the next loop
@@ -424,7 +399,7 @@ namespace NeonClusterManager
                         log.Error("VaultPoller", e);
                     }
 
-                    await Task.Delay(vaultPollInterval, ctsTerminate.Token);
+                    await Task.Delay(vaultPollInterval, terminator.CancellationToken);
                 }
             }
         }

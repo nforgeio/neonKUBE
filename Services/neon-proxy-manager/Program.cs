@@ -42,10 +42,8 @@ namespace NeonProxyManager
         private const string proxyStatus         = consulPrefix + "/status";
         private const string vaultCertPrefix     = "neon-secret/cert";
 
-        private static TimeSpan                 delayTime          = TimeSpan.FromSeconds(5);
-        private static CancellationTokenSource  ctsTerminate       = new CancellationTokenSource();
-        private static TimeSpan                 terminateTimeout   = TimeSpan.FromSeconds(10);
-        private static bool                     terminated;
+        private static TimeSpan                 delayTime = TimeSpan.FromSeconds(5);
+        private static ProcessTerminator        terminator;
         private static ILog                     log;
         private static VaultClient              vault;
         private static ConsulClient             consul;
@@ -63,32 +61,9 @@ namespace NeonProxyManager
         {
             LogManager.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
             log = LogManager.GetLogger(serviceName);
-
             log.Info(() => $"Starting [{serviceName}]");
 
-            // Gracefully handle SIGTERM events.
-
-            AssemblyLoadContext.Default.Unloading +=
-                context =>
-                {
-                    // Signal the sub-tasks that we're terminating and then 
-                    // give them a chance to exit.
-
-                    log.Info(() => "Received SIGTERM: Stopping tasks.");
-
-                    ctsTerminate.Cancel();
-
-                    try
-                    {
-                        NeonHelper.WaitFor(() => terminated, terminateTimeout);
-                        log.Info(() => "Tasks stopped.");
-                        Program.Exit(0);
-                    }
-                    catch (TimeoutException)
-                    {
-                        log.Warn(() => $"Tasks did not stop within [{terminateTimeout}].");
-                    }
-                };
+            terminator = new ProcessTerminator(log);
 
             // Establish the cluster connections.
 
@@ -144,7 +119,7 @@ namespace NeonProxyManager
 
                             }).Wait();
 
-                        terminated = true;
+                        terminator.Exit();
                     }
                 }
             }
@@ -168,6 +143,7 @@ namespace NeonProxyManager
         public static void Exit(int exitCode)
         {
             log.Info(() => $"Exiting: [{serviceName}]");
+            terminator.Exit();
             Environment.Exit(exitCode);
         }
 
@@ -247,41 +223,29 @@ namespace NeonProxyManager
                 var ct   = cts.Token;
                 var exit = false;
 
-                // Gracefully exist when the application is being terminated (e.g. via a [SIGTERM]).
+                // Gracefully exit when the application is being terminated (e.g. via a [SIGTERM]).
 
-                var loadContext = AssemblyLoadContext.GetLoadContext(Assembly.GetEntryAssembly());
-
-                loadContext.Unloading +=
-                    (context) =>
+                terminator.AddHandler(
+                    () =>
                     {
-                        // $note(jeff.lill): 
-                        //
-                        // Docker appears to stop processing log messages after a SIGTERM is 
-                        // received (at least to the JSON-FILE driver) so the events logged
-                        // below may not actually make it into the logs.
-
                         exit = true;
-
-                        log.Info("SIGTERM received.  Stopping tasks...");
-
-                        // Give the worker tasks a chance to stop gracefully.
 
                         cts.Cancel();
 
                         if (monitorTask != null)
                         {
-                            var terminateTimeout = TimeSpan.FromSeconds(15);
-
-                            if (monitorTask.Wait(terminateTimeout))
+                            if (monitorTask.Wait(terminator.Timeout))
                             {
                                 log.Info(() => "Tasks stopped gracefully.");
                             }
                             else
                             {
-                                log.Warn(() => $"Tasks did not stop within [{terminateTimeout}].");
+                                log.Warn(() => $"Tasks did not stop within [{terminator.Timeout}].");
                             }
                         }
-                    };
+                    });
+
+                var loadContext = AssemblyLoadContext.GetLoadContext(Assembly.GetEntryAssembly());
 
                 // Monitor Consul for configuration changes and update the proxy configs.
 
@@ -296,7 +260,7 @@ namespace NeonProxyManager
                         {
                             log.Debug(() => "Polling");
 
-                            if (ctsTerminate.Token.IsCancellationRequested)
+                            if (terminator.CancellationToken.IsCancellationRequested)
                             {
                                 log.Debug(() => "Poll Terminating");
                                 return;
@@ -375,7 +339,7 @@ namespace NeonProxyManager
                                         await UpdateClusterNetwork(publicBuildStatus.Routes, cts.Token);
                                     },
                                     timeout: pollInterval,
-                                    cancellationToken: ctsTerminate.Token);
+                                    cancellationToken: terminator.CancellationToken);
                             }
                             catch (TaskCanceledException)
                             {
