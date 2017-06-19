@@ -53,8 +53,9 @@ namespace Neon.Common
         /// Returns a string representation of an exception suitable for logging.
         /// </summary>
         /// <param name="e">The exception.</param>
+        /// <param name="stackTrace">Optionally include the stack track.</param>
         /// <returns>The error string.</returns>
-        public static string ExceptionError(Exception e)
+        public static string ExceptionError(Exception e, bool stackTrace = false)
         {
             Covenant.Requires<ArgumentNullException>(e != null);
 
@@ -65,14 +66,23 @@ namespace Neon.Common
                 e = aggregate.InnerExceptions[0];
             }
 
+            string message;
+
             if (e == null)
             {
-                return "NULL Exception";
+                message = "NULL Exception";
             }
             else
             {
-                return $"[{e.GetType().Name}]: {e.Message}";
+                message = $"[{e.GetType().Name}]: {e.Message}";
             }
+
+            if (stackTrace && e != null)
+            {
+                message += $" [stack:{e.StackTrace}]";
+            }
+
+            return message;
         }
 
         /// <summary>

@@ -117,6 +117,7 @@ namespace Neon.Diagnostics
                 }
                 catch
                 {
+                    // Doesn't make sense to handle this.
                 }
             }
         }
@@ -130,15 +131,16 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log("DEBUG", $"{message} {NeonHelper.ExceptionError(e)}");
+                        Log("DEBUG", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                     else
                     {
-                        Log("DEBUG", $"{NeonHelper.ExceptionError(e)}");
+                        Log("DEBUG", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                 }
                 catch
                 {
+                    // Doesn't make sense to handle this.
                 }
             }
         }
@@ -154,6 +156,7 @@ namespace Neon.Diagnostics
                 }
                 catch
                 {
+                    // Doesn't make sense to handle this.
                 }
             }
         }
@@ -167,15 +170,16 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log("ERROR", $"{message} {NeonHelper.ExceptionError(e)}");
+                        Log("ERROR", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                     else
                     {
-                        Log("ERROR", $"{NeonHelper.ExceptionError(e)}");
+                        Log("ERROR", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                 }
                 catch
                 {
+                    // Doesn't make sense to handle this.
                 }
             }
         }
@@ -191,6 +195,7 @@ namespace Neon.Diagnostics
                 }
                 catch
                 {
+                    // Doesn't make sense to handle this.
                 }
             }
         }
@@ -204,15 +209,16 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log("FATAL", $"{message} {NeonHelper.ExceptionError(e)}");
+                        Log("FATAL", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                     else
                     {
-                        Log("FATAL", $"{NeonHelper.ExceptionError(e)}");
+                        Log("FATAL", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                 }
                 catch
                 {
+                    // Doesn't make sense to handle this.
                 }
             }
         }
@@ -228,6 +234,7 @@ namespace Neon.Diagnostics
                 }
                 catch
                 {
+                    // Doesn't make sense to handle this.
                 }
             }
         }
@@ -241,15 +248,16 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log("INFO", $"{message} {NeonHelper.ExceptionError(e)}");
+                        Log("INFO", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                     else
                     {
-                        Log("INFO", $"{NeonHelper.ExceptionError(e)}");
+                        Log("INFO", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                 }
                 catch
                 {
+                    // Doesn't make sense to handle this.
                 }
             }
         }
@@ -265,6 +273,7 @@ namespace Neon.Diagnostics
                 }
                 catch
                 {
+                    // Doesn't make sense to handle this.
                 }
             }
         }
@@ -278,15 +287,16 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log("WARN", $"{message} {NeonHelper.ExceptionError(e)}");
+                        Log("WARN", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                     else
                     {
-                        Log("WARN", $"{NeonHelper.ExceptionError(e)}");
+                        Log("WARN", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                 }
                 catch
                 {
+                    // Doesn't make sense to handle this.
                 }
             }
         }
