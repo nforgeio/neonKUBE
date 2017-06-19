@@ -3,6 +3,14 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
+// $todo(jeff.lill):
+//
+// Temporarily disabling leader locking because of [https://github.com/jefflill/NeonForge/issues/80].
+// This shouldn't reall be a problem since we're deploying only one service replica and the changes
+// are committed to Consul via a transaction.
+
+#define NO_LOCK
+
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -184,6 +192,7 @@ namespace NeonProxyManager
             log.Info(() => $"Using setting [{pollSecondsKey}={pollSecondsKey}]");
             log.Info(() => $"Using setting [{certWarnDaysKey}={certWarnTime}]");
 
+#if !NO_LOCK
             // We're going to use a Consul lock to prevent more than
             // one proxy manager from generating proxy configurations.
 
@@ -196,15 +205,18 @@ namespace NeonProxyManager
             var leaderLock = consul.CreateLock(lockOpts);
 
             log.Info("Starting as FOLLOWER");
+#endif
 
             while (true)
             {
+#if !NO_LOCK
                 if (!leaderLock.IsHeld)
                 {
                     await leaderLock.Acquire();
                 }
 
                 log.Info("Promoted to LEADER");
+#endif
 
                 // The implementation is pretty simple: We're going to watch
                 // the [neon/service/neon-proxy-manager/conf/] prefix for changes 
@@ -360,6 +372,7 @@ namespace NeonProxyManager
                         }
                     });
 
+#if !NO_LOCK
                 // Monitor the leader lock to detect when we are demoted.
 
                 while (leaderLock.IsHeld)
@@ -389,8 +402,11 @@ namespace NeonProxyManager
                 {
                     throw new TimeoutException($"Unable to stop poll and/or monitor tasks within [{timeout}].");
                 }
+#endif
 
+#if !NO_LOCK
                 await leaderLock.Release();
+#endif
             }
         }
 
@@ -596,21 +612,21 @@ $@"#----------------------------------------------------------------------------
 global
     daemon
 
-    # Specifiy the maximum number of connections allowed by the proxy.
+# Specifiy the maximum number of connections allowed by the proxy.
 
     maxconn             {settings.MaxConnections}
 
-    # Enable logging to syslog on the local Docker host under the
-    # NeonSysLogFacility_ProxyPublic facility.
+# Enable logging to syslog on the local Docker host under the
+# NeonSysLogFacility_ProxyPublic facility.
 
     log                 ""${{NEON_NODE_IP}}:{NeonHostPorts.LogHostSysLog}"" len 65535 {NeonSysLogFacility.ProxyName}
 
-    # Certificate Authority and Certificate file locations:
+# Certificate Authority and Certificate file locations:
 
     ca-base             ""${{HAPROXY_CONFIG_FOLDER}}""
     crt-base            ""${{HAPROXY_CONFIG_FOLDER}}""
 
-    # Other settings
+# Other settings
 
     tune.ssl.default-dh-param   {settings.MaxDHParamBits}
 
