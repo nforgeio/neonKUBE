@@ -135,7 +135,6 @@ docker service create --name neon-proxy-manager \
     --constraint node.role==manager \
     --replicas 1 \
     --log-driver fluentd \
-    --log-opt tag=neon-common \
     neoncluster/neon-proxy-manager
 ````
 &nbsp;
