@@ -129,7 +129,7 @@ namespace NeonClusterManager
         public static void Exit(int exitCode)
         {
             log.Info(() => $"Exiting: [{serviceName}]");
-            terminator.Exit();
+            terminator.ReadyToExit();
             Environment.Exit(exitCode);
         }
 
@@ -191,7 +191,7 @@ namespace NeonClusterManager
                 NodePoller(),
                 VaultPoller());
 
-            terminator.Exit();
+            terminator.ReadyToExit();
         }
 
         /// <summary>

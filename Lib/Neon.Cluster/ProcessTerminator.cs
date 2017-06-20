@@ -44,7 +44,7 @@ namespace Neon.Cluster
     /// will be called in parallel on its own thread.
     /// </para>
     /// <para>
-    /// Applications should call <see cref="Exit"/> when they have gracefully stopped
+    /// Applications should call <see cref="ReadyToExit"/> when they have gracefully stopped
     /// any activities and saved state so that the process will be terminated immediately.
     /// Otherwise, the process will be terminated when the parent process' timeout
     /// is finally exceeded.
@@ -143,9 +143,10 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Indicates that the application has gracefully stopped.
+        /// Indicates that the application has gracefully stopped and is 
+        /// ready to be terminated.
         /// </summary>
-        public void Exit()
+        public void ReadyToExit()
         {
             exited = true;
         }

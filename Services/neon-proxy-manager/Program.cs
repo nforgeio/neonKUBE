@@ -127,7 +127,7 @@ namespace NeonProxyManager
 
                             }).Wait();
 
-                        terminator.Exit();
+                        terminator.ReadyToExit();
                     }
                 }
             }
@@ -151,7 +151,7 @@ namespace NeonProxyManager
         public static void Exit(int exitCode)
         {
             log.Info(() => $"Exiting: [{serviceName}]");
-            terminator.Exit();
+            terminator.ReadyToExit();
             Environment.Exit(exitCode);
         }
 
