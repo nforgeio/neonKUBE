@@ -37,6 +37,14 @@ namespace Neon.Common
                 {
                     AllowIntegerValues = false
                 });
+
+            // Serialize dates as UTC like: 2012-07-27T18:51:45.53403Z
+            //
+            // The nice thing about this is that Couchbase and other NoSQL database will
+            // be able to do date range queries out-of-the-box.
+
+            JsonSerializerSettings.DateFormatHandling   = DateFormatHandling.IsoDateFormat;
+            JsonSerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
         }
 
         /// <summary>
