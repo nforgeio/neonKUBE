@@ -83,11 +83,13 @@ Follow steps below to configure a development or test workstation.
   
     ![WinSCP Hidden Files](./README/WinSCPHiddenFiles.png)
 
-14. *Optional*: Install **Fiddler4** from [here](http://www.telerik.com/download/fiddler)
+14. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
 
-15. *Optional*: Install **Notepad++** from [here](https://notepad-plus-plus.org/download)
+15. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-16. *Optional*: Install Chrome **Markdown Viewer** extension from [here](https://github.com/simov/markdown-viewer)
+16. *Optional*: Install Chrome **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
+
+17. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
 ## Cloud Environments
 
