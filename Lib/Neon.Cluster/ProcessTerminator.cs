@@ -54,7 +54,7 @@ namespace Neon.Cluster
     {
         private ILog                        log;
         private CancellationTokenSource     cts;
-        private bool                        exited;
+        private bool                        readyToExit;
         private List<Action>                handlers;
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Neon.Cluster
             AssemblyLoadContext.Default.Unloading +=
                 context =>
                 {
-                    if (exited)
+                    if (readyToExit)
                     {
                         // Application has already indicated that it has terminated.
 
@@ -100,7 +100,7 @@ namespace Neon.Cluster
 
                     try
                     {
-                        NeonHelper.WaitFor(() => exited, Timeout);
+                        NeonHelper.WaitFor(() => readyToExit, Timeout);
                         log?.Info(() => "Process stopped gracefully.");
                         Environment.Exit(0);
                     }
@@ -148,7 +148,7 @@ namespace Neon.Cluster
         /// </summary>
         public void ReadyToExit()
         {
-            exited = true;
+            readyToExit = true;
         }
     }
 }

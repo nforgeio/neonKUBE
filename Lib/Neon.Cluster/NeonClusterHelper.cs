@@ -389,7 +389,7 @@ namespace Neon.Cluster
         /// Indicates whether the application is running outside of a Docker container
         /// but we're going to try to simulate the environment such that the application
         /// believe it is running in a container within a Docker cluster.  See 
-        /// <see cref="ConnectCluster(DebugSecrets, string)"/> for more information.
+        /// <see cref="ConnectRemoteCluster(DebugSecrets, string)"/> for more information.
         /// </summary>
         public static bool IsConnected { get; private set; } = false;
 
@@ -472,7 +472,7 @@ namespace Neon.Cluster
         /// this.
         /// </note>
         /// </remarks>
-        public static ClusterProxy ConnectCluster(DebugSecrets secrets = null, string loginPath = null)
+        public static ClusterProxy ConnectRemoteCluster(DebugSecrets secrets = null, string loginPath = null)
         {
             if (IsConnected)
             {
@@ -567,7 +567,7 @@ namespace Neon.Cluster
         /// Thrown if the current process does not appear to be running as a cluster container
         /// with the node environment variables mapped in.
         /// </exception>
-        public static void ConnectClusterService()
+        public static void ConnectCluster()
         {
             log.Info(() => "Connecting to cluster as a service.");
 
@@ -653,7 +653,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Resets any temporary configurations made by <see cref="ConnectCluster(DebugSecrets, string)"/>
+        /// Resets any temporary configurations made by <see cref="ConnectRemoteCluster(DebugSecrets, string)"/>
         /// such as the modifications to the DNS resolver <b>hosts</b> file.  This should be called just
         /// before the application exits.
         /// </summary>
@@ -692,7 +692,7 @@ namespace Neon.Cluster
         /// <remarks>
         /// <para>
         /// This method can be used to retrieve a secret provisioned to a container via the
-        /// Docker secrets feature or a secret provided to <see cref="ConnectCluster(DebugSecrets, string)"/> 
+        /// Docker secrets feature or a secret provided to <see cref="ConnectRemoteCluster(DebugSecrets, string)"/> 
         /// when we're emulating running the application as a cluster container.
         /// </para>
         /// <para>
@@ -744,7 +744,7 @@ namespace Neon.Cluster
         /// <remarks>
         /// <para>
         /// This method can be used to retrieve a secret provisioned to a container via the
-        /// Docker secrets feature or a secret provided to <see cref="ConnectCluster(DebugSecrets, string)"/> 
+        /// Docker secrets feature or a secret provided to <see cref="ConnectRemoteCluster(DebugSecrets, string)"/> 
         /// when we're emulating running the application as a cluster container.
         /// </para>
         /// <para>
@@ -1203,7 +1203,7 @@ namespace Neon.Cluster
         /// <param name="secretName">The local container name for the Docker secret.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The <see cref="Couchbase.Cluster"/>.</returns>
-        public static async Task<Couchbase.Cluster> ConnectCoucbaseClusterAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<Couchbase.Cluster> ConnectCouchbaseClusterAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default(CancellationToken))
         {
             VerifyConnected();
 
@@ -1220,7 +1220,7 @@ namespace Neon.Cluster
                 throw new ArgumentException($"Credentials at [secret:{secretName}] do not include a username and password.");
             }
 
-            return connectionSettings.ConnectCluster(credentials);
+            return connectionSettings.OpenCluster(credentials);
         }
 
         /// <summary>
@@ -1248,7 +1248,7 @@ namespace Neon.Cluster
                 throw new ArgumentException($"Credentials at [secret:{secretName}] do not include a username and password.");
             }
 
-            return connectionSettings.ConnectBucket(credentials);
+            return connectionSettings.OpenBucket(credentials);
         }
 
         /// <summary>
@@ -1276,7 +1276,7 @@ namespace Neon.Cluster
                 throw new ArgumentException($"Credentials at [secret:{secretName}] do not include a username and password.");
             }
 
-            return connectionSettings.ConnectBroker(credentials);
+            return connectionSettings.OpenBroker(credentials);
         }
     }
 }

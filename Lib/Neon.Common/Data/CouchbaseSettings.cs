@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 using Neon.Common;
 using Neon.Data;
@@ -28,11 +29,15 @@ namespace Neon.Common
         /// specify multiple nodes in a clustered environment to avoid initial connection
         /// problems if any single node is down.
         /// </remarks>
+        [JsonProperty(PropertyName = "Servers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public List<Uri> Servers { get; set; } = new List<Uri>();
 
         /// <summary>
         /// Optionally specifies the name of the target Couchbase bucket.
         /// </summary>
+        [JsonProperty(PropertyName = "Bucket", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public string Bucket { get; set; }
 
         /// <summary>

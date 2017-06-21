@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 
 using Neon.Common;
 using Neon.Data;
@@ -23,6 +24,8 @@ namespace Neon.Common
         /// <summary>
         /// Specifies the virtual host namespace.  This defaults to <b>"/"</b>.
         /// </summary>
+        [JsonProperty(PropertyName = "VirtualHost", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public string VirtualHost { get; set; } = "/";
 
         /// <summary>
@@ -34,12 +37,16 @@ namespace Neon.Common
         /// practice to specify multiple nodes in a clustered environment to avoid initial
         /// connection problems if any single node is down.
         /// </remarks>
+        [JsonProperty(PropertyName = "Hostnames", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public List<string> Hostnames { get; set; } = new List<string>();
 
         /// <summary>
         /// Specifies the broker port number.  This defaults to <b>5672</b>.  You
         /// should use <b>5671</b> if TLS is enabled on the broker.
         /// </summary>
+        [JsonProperty(PropertyName = "Port", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
         public int Port { get; set; } = 5672;
 
         /// <summary>

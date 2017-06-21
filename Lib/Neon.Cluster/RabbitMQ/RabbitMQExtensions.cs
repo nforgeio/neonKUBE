@@ -26,7 +26,7 @@ namespace RabbitMQ.Client
         /// <param name="username">The username.</param>
         /// <param name="password">The password.</param>
         /// <returns>The RabbitMQ <see cref="IConnection"/>.</returns>
-        public static IConnection ConnectBroker(this RabbitMQSettings settings, string username, string password)
+        public static IConnection OpenBroker(this RabbitMQSettings settings, string username, string password)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.VirtualHost));
             Covenant.Requires<ArgumentNullException>(settings.Hostnames != null && settings.Hostnames.Count > 0);
@@ -48,13 +48,13 @@ namespace RabbitMQ.Client
         /// <param name="settings">The Couchbase settings.</param>
         /// <param name="credentials">The credentials.</param>
         /// <returns>The RabbitMQ <see cref="IConnection"/>.</returns>
-        public static IConnection ConnectBroker(this RabbitMQSettings settings, Credentials credentials)
+        public static IConnection OpenBroker(this RabbitMQSettings settings, Credentials credentials)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.VirtualHost));
             Covenant.Requires<ArgumentNullException>(settings.Hostnames != null && settings.Hostnames.Count > 0);
             Covenant.Requires<ArgumentNullException>(credentials != null);
 
-            return ConnectBroker(settings, credentials.Username, credentials.Password);
+            return OpenBroker(settings, credentials.Username, credentials.Password);
         }
 
         /// <summary>
@@ -63,7 +63,7 @@ namespace RabbitMQ.Client
         /// <param name="settings">The Couchbase settings.</param>
         /// <param name="secretName">The name of the Docker secret holding the credentials.</param>
         /// <returns>The RabbitMQ <see cref="IConnection"/>.</returns>
-        public static IConnection ConnectBroker(this RabbitMQSettings settings, string secretName)
+        public static IConnection OpenBroker(this RabbitMQSettings settings, string secretName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(settings.VirtualHost));
             Covenant.Requires<ArgumentNullException>(settings.Hostnames != null && settings.Hostnames.Count > 0);
@@ -71,7 +71,7 @@ namespace RabbitMQ.Client
 
             var credentials = NeonHelper.JsonDeserialize<Credentials>(NeonClusterHelper.GetSecret(secretName));
 
-            return ConnectBroker(settings, credentials);
+            return OpenBroker(settings, credentials);
         }
     }
 }

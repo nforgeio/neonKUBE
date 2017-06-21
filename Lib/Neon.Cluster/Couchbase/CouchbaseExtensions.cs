@@ -24,23 +24,20 @@ namespace Couchbase
         /// Returns a Couchbase cluster connection using specified settings and the username and password.
         /// </summary>
         /// <param name="settings">The Couchbase settings.</param>
-        /// <param name="username">The username.</param>
-        /// <param name="password">The password.</param>
+        /// <param name="adminUsername">Optional cluster admin username.</param>
+        /// <param name="adminPassword">Optional cluster admin password.</param>
         /// <returns>The connected <see cref="Cluster"/>.</returns>
-        public static Cluster ConnectCluster(this CouchbaseSettings settings, string username, string password)
+        public static Cluster OpenCluster(this CouchbaseSettings settings, string adminUsername, string adminPassword)
         {
             Covenant.Requires<ArgumentNullException>(settings.Servers != null && settings.Servers.Count > 0);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(password));
 
-            var config = new ClientConfiguration()
-            {
-                Servers = settings.Servers
-            };
-
+            var config  = settings.ToClientConfig();
             var cluster = new Cluster(config);
 
-            cluster.Authenticate(username, password);
+            if (!string.IsNullOrEmpty(adminUsername) && !string.IsNullOrEmpty(adminPassword))
+            {
+                cluster.Authenticate(adminUsername, adminPassword);
+            }
 
             return cluster;
         }
@@ -49,23 +46,21 @@ namespace Couchbase
         /// Returns a Couchbase cluster connection using specified settings and <see cref="Credentials"/>.
         /// </summary>
         /// <param name="settings">The Couchbase settings.</param>
-        /// <param name="credentials">The credentials.</param>
+        /// <param name="adminCredentials">The optional cluster admin credentials.</param>
         /// <returns>The connected <see cref="Cluster"/>.</returns>
-        public static Cluster ConnectCluster(this CouchbaseSettings settings, Credentials credentials)
+        public static Cluster OpenCluster(this CouchbaseSettings settings, Credentials adminCredentials = null)
         {
             Covenant.Requires<ArgumentNullException>(settings.Servers != null && settings.Servers.Count > 0);
-            Covenant.Requires<ArgumentNullException>(credentials != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(credentials.Username));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(credentials.Password));
+            Covenant.Requires<ArgumentNullException>(adminCredentials == null || !string.IsNullOrEmpty(adminCredentials.Username));
+            Covenant.Requires<ArgumentNullException>(adminCredentials == null || !string.IsNullOrEmpty(adminCredentials.Password));
 
-            var config = new ClientConfiguration()
-            {
-                Servers = settings.Servers
-            };
-
+            var config  = settings.ToClientConfig();
             var cluster = new Cluster(config);
 
-            cluster.Authenticate(credentials.Username, credentials.Password);
+            if (adminCredentials != null)
+            {
+                cluster.Authenticate(adminCredentials.Username, adminCredentials.Password);
+            }
 
             return cluster;
         }
@@ -76,27 +71,47 @@ namespace Couchbase
         /// <param name="settings">The Couchbase settings.</param>
         /// <param name="secretName">The name of the Docker secret holding the credentials.</param>
         /// <returns>The connected <see cref="Cluster"/>.</returns>
-        public static Cluster ConnectCluster(this CouchbaseSettings settings, string secretName)
+        public static Cluster OpenCluster(this CouchbaseSettings settings, string secretName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secretName));
 
             var credentials = NeonHelper.JsonDeserialize<Credentials>(NeonClusterHelper.GetSecret(secretName));
 
-            return ConnectCluster(settings, credentials);
+            return OpenCluster(settings, credentials);
         }
 
         /// <summary>
         /// Returns a Couchbase bucket connection using specified settings and the username and password.
         /// </summary>
         /// <param name="settings">The Couchbase settings.</param>
-        /// <param name="username">The username.</param>
-        /// <param name="password">The password.</param>
+        /// <param name="username">Optional username.</param>
+        /// <param name="password">Optional password.</param>
         /// <returns>The connected <see cref="CouchbaseBucket"/>.</returns>
-        public static IBucket ConnectBucket(this CouchbaseSettings settings, string username, string password)
+        public static IBucket OpenBucket(this CouchbaseSettings settings, string username = null, string password = null)
         {
-            var cluster = settings.ConnectCluster(username, password);
+            var config = settings.ToClientConfig();
 
-            return cluster.OpenBucket(settings.Bucket ?? "default");
+            config.BucketConfigs.Clear();
+
+            config.BucketConfigs.Add(settings.Bucket,
+                new BucketConfiguration()
+                {
+                    BucketName = settings.Bucket,
+                    Username   = username,
+                    Password   = password,
+
+                    PoolConfiguration = new PoolConfiguration()
+                    {
+                        SendTimeout = int.MaxValue,
+                        ConnectTimeout = int.MaxValue,
+                        MaxSize = 10,
+                        MinSize = 5
+                    }
+                });
+
+            var cluster = new Cluster(config);
+            
+            return cluster.OpenBucket(settings.Bucket);
         }
 
         /// <summary>
@@ -105,11 +120,11 @@ namespace Couchbase
         /// <param name="settings">The Couchbase settings.</param>
         /// <param name="credentials">The credentials.</param>
         /// <returns>The connected <see cref="CouchbaseBucket"/>.</returns>
-        public static IBucket ConnectBucket(this CouchbaseSettings settings, Credentials credentials)
+        public static IBucket OpenBucket(this CouchbaseSettings settings, Credentials credentials)
         {
-            var cluster = settings.ConnectCluster(credentials);
+            Covenant.Requires<ArgumentNullException>(credentials != null);
 
-            return cluster.OpenBucket(settings.Bucket ?? "default");
+            return settings.OpenBucket(credentials.Username, credentials.Password);
         }
 
         /// <summary>
@@ -124,7 +139,38 @@ namespace Couchbase
 
             var credentials = NeonHelper.JsonDeserialize<Credentials>(NeonClusterHelper.GetSecret(secretName));
 
-            return ConnectBucket(settings, credentials);
+            return OpenBucket(settings, credentials);
+        }
+
+        /// <summary>
+        /// Converts a <see cref="CouchbaseSettings"/> into a <see cref="ClientConfiguration"/>.
+        /// </summary>
+        /// <param name="settings"></param>
+        /// <returns></returns>
+        public static ClientConfiguration ToClientConfig(this CouchbaseSettings settings)
+        {
+            var config = new ClientConfiguration();
+
+            config.Servers.Clear();
+
+            foreach (var uri in settings.Servers)
+            {
+                config.Servers.Add(uri);
+            }
+
+            config.UseSsl = false;
+
+            return config;
+        }
+
+        /// <summary>
+        /// Generates a globally unique document key.
+        /// </summary>
+        /// <param name="bucket">The bucket.</param>
+        /// <returns>A <see cref="Guid"/> formatted as a string.</returns>
+        public static string GenKey(this IBucket bucket)
+        {
+            return Guid.NewGuid().ToString("D");
         }
     }
 }

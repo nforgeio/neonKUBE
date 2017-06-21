@@ -21,7 +21,7 @@ namespace Neon.Cluster
 {
     /// <summary>
     /// Used to emulate Docker service secrets when debugging an application using 
-    /// <see cref="NeonClusterHelper.ConnectCluster(DebugSecrets, string)"/>.
+    /// <see cref="NeonClusterHelper.ConnectRemoteCluster(DebugSecrets, string)"/>.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -151,7 +151,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Called internally by <see cref="NeonClusterHelper.ConnectCluster(DebugSecrets, string)"/> to 
+        /// Called internally by <see cref="NeonClusterHelper.ConnectRemoteCluster(DebugSecrets, string)"/> to 
         /// create any requested Vault and Consul credentials and add them to the dictionary.
         /// </summary>
         /// <param name="cluster">The attached cluster.</param>
