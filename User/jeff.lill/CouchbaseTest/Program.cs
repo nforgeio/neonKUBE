@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Data;
 using Neon.Diagnostics;
 
 namespace CouchbaseTest

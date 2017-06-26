@@ -11,7 +11,7 @@ using Neon.Data;
 
 namespace CouchbaseTest
 {
-    public class Item : Entity
+    public class Item
     {
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]

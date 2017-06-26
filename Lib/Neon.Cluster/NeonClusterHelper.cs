@@ -23,6 +23,7 @@ using Newtonsoft.Json;
 using RabbitMQ.Client;
 
 using Neon.Common;
+using Neon.Data;
 using Neon.Diagnostics;
 using Neon.Docker;
 using Neon.Net;

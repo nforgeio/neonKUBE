@@ -8,12 +8,11 @@ using System.Collections.Generic;
 using System.ComponentModel;
 
 using Neon.Common;
-using Neon.Data;
 
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-namespace Neon.Common
+namespace Neon.Data
 {
     /// <summary>
     /// Settings used to connect a Couchbase client to a Couchbase bucket.

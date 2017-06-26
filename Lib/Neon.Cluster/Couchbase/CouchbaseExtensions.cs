@@ -12,6 +12,7 @@ using Couchbase.Core;
 
 using Neon.Cluster;
 using Neon.Common;
+using Neon.Data;
 
 namespace Couchbase
 {
