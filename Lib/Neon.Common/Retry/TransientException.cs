@@ -23,8 +23,9 @@ namespace Neon.Retry
         /// Constructor.
         /// </summary>
         /// <param name="message">The message.</param>
-        public TransientException(string message)
-            : base(message)
+        /// <param name="innerException">Optional inner exception.</param>
+        public TransientException(string message, Exception innerException = null)
+            : base(message, innerException)
         {
         }
     }

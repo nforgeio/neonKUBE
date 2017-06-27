@@ -27,7 +27,7 @@ namespace Neon.Docker
         /// </summary>
         private DockerSettings()
         {
-            this.RetryPolicy = new ExponentialRetryPolicy(TransientDetector.NetworkAndHttp);
+            this.RetryPolicy = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp);
         }
 
         /// <summary>
@@ -75,7 +75,7 @@ namespace Neon.Docker
         /// <summary>
         /// The <see cref="IRetryPolicy"/> to be used when submitting requests to docker.
         /// This defaults to a reasonable <see cref="ExponentialRetryPolicy"/> using the
-        /// <see cref="TransientDetector.NetworkAndHttp(Exception)"/> transient detector.
+        /// <see cref="TransientDetector.NetworkOrHttp(Exception)"/> transient detector.
         /// </summary>
         public IRetryPolicy RetryPolicy { get; set; }
 

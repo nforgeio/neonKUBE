@@ -24,7 +24,7 @@ namespace Neon.Retry
     public static class TransientDetector
     {
         /// <summary>
-        /// Always determines that the exception is transient.
+        /// Always determines that the exception is always transient.
         /// </summary>
         /// <param name="e">The potential transient exception.</param>
         /// <returns><c>true</c></returns>
@@ -36,7 +36,7 @@ namespace Neon.Retry
         }
 
         /// <summary>
-        /// Never determines that the exception is transient.
+        /// Never determines that the exception is never transient.
         /// </summary>
         /// <param name="e">The potential transient exception.</param>
         /// <returns><c>false</c></returns>
@@ -166,7 +166,7 @@ namespace Neon.Retry
         }
 
         /// <summary>
-        /// Considers <see cref="SocketException"/> and <see cref="HttpRequestException"/> as possible
+        /// Considers <see cref="SocketException"/> or <see cref="HttpRequestException"/> as possible
         /// transient errors as well as these exceptions nested within an <see cref="AggregateException"/>.
         /// </summary>
         /// <param name="e">The potential transient exception.</param>
@@ -176,7 +176,7 @@ namespace Neon.Retry
         /// <see cref="TransientException"/> is always considered to be a transient exception.
         /// </note>
         /// </remarks>
-        public static bool NetworkAndHttp(Exception e)
+        public static bool NetworkOrHttp(Exception e)
         {
             Covenant.Requires<ArgumentException>(e != null);
 

@@ -46,6 +46,6 @@ namespace Neon.Couchbase.SyncGateway
         /// <summary>
         /// The operation retry policy.  This defaults to a reasonable <see cref="ExponentialRetryPolicy"/>.
         /// </summary>
-        public IRetryPolicy RetryPolicy { get; set; } = new ExponentialRetryPolicy(TransientDetector.NetworkAndHttp);
+        public IRetryPolicy RetryPolicy { get; set; } = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp);
     }
 }

@@ -22,7 +22,7 @@ namespace Neon.Retry
         /// <summary>
         /// Returns a copy of the retry policy.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The policy copy.</returns>
         IRetryPolicy Clone();
 
         /// <summary>

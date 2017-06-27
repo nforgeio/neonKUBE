@@ -63,7 +63,7 @@ namespace Neon.Net
         // Instance members
 
         private object          syncLock          = new object();
-        private IRetryPolicy    safeRetryPolicy   = new ExponentialRetryPolicy(TransientDetector.NetworkAndHttp);
+        private IRetryPolicy    safeRetryPolicy   = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp);
         private IRetryPolicy    unsafeRetryPolicy = new ExponentialRetryPolicy(TransientDetector.Network);
         private HttpClient      client;
 
@@ -149,7 +149,7 @@ namespace Neon.Net
         /// <para>
         /// The <see cref="IRetryPolicy"/> to be used to detect and retry transient network and HTTP
         /// errors for the <b>safe</b> methods.  This defaults to <see cref="ExponentialRetryPolicy"/> with 
-        /// the transient detector function set to <see cref="TransientDetector.NetworkAndHttp(Exception)"/>.
+        /// the transient detector function set to <see cref="TransientDetector.NetworkOrHttp(Exception)"/>.
         /// </para>
         /// <note>
         /// You may set this to <c>null</c> to disable safe transient error retry.
@@ -165,7 +165,7 @@ namespace Neon.Net
         /// <para>
         /// The <see cref="IRetryPolicy"/> to be used to detect and retry transient network errors for the
         /// <b>unsafe</b> methods.  This defaults to <see cref="ExponentialRetryPolicy"/> with the transient 
-        /// detector function set to <see cref="TransientDetector.NetworkAndHttp(Exception)"/>.
+        /// detector function set to <see cref="TransientDetector.NetworkOrHttp(Exception)"/>.
         /// </para>
         /// <note>
         /// You may set this to <c>null</c> to disable unsafe transient error retry.

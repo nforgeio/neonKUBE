@@ -176,7 +176,7 @@ namespace Neon.Docker
             Func<Exception, bool> transientDetector =
                 e =>
                 {
-                    if (TransientDetector.NetworkAndHttp(e))
+                    if (TransientDetector.NetworkOrHttp(e))
                     {
                         return true;
                     }

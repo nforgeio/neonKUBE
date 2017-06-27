@@ -109,7 +109,7 @@ namespace Neon.Cluster
             };
 
             jsonClient                 = new JsonClient(handler, disposeHandler: true);
-            jsonClient.SafeRetryPolicy = new ExponentialRetryPolicy(TransientDetector.NetworkAndHttp);
+            jsonClient.SafeRetryPolicy = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp);
             jsonClient.BaseAddress     = uri;
         }
 
