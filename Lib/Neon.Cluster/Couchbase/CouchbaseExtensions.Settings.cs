@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CouchbaseExtensions.cs
+// FILE:	    CouchbaseExtensions.Settings.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
@@ -20,7 +20,7 @@ namespace Couchbase
     /// <summary>
     /// Couchbase related extensions.
     /// </summary>
-    public static class CouchbaseExtensions
+    public static partial class CouchbaseExtensions
     {
         /// <summary>
         /// Returns a Couchbase cluster connection using specified settings and the username and password.
@@ -148,7 +148,7 @@ namespace Couchbase
         /// Converts a <see cref="CouchbaseSettings"/> into a <see cref="ClientConfiguration"/>.
         /// </summary>
         /// <param name="settings"></param>
-        /// <returns></returns>
+        /// <returns>A Couchbase <see cref="ClientConfiguration"/>.</returns>
         public static ClientConfiguration ToClientConfig(this CouchbaseSettings settings)
         {
             var config = new ClientConfiguration();
@@ -163,16 +163,6 @@ namespace Couchbase
             config.UseSsl = false;
 
             return config;
-        }
-
-        /// <summary>
-        /// Generates a globally unique document key.
-        /// </summary>
-        /// <param name="bucket">The bucket.</param>
-        /// <returns>A <see cref="Guid"/> formatted as a string.</returns>
-        public static string GenKey(this IBucket bucket)
-        {
-            return Convert.ToBase64String(Guid.NewGuid().ToByteArray());
         }
     }
 }

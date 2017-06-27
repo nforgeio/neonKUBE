@@ -5,7 +5,7 @@
 
 using System;
 
-namespace System.IO
+namespace System
 {
     /// <summary>
     /// <see cref="Exception"/> extensions.

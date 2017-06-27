@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.5</TargetFramework>
     <RootNamespace>Neon.Stack.Docker</RootNamespace>
-    <Version>0.0.4.12-preview</Version>
+    <Version>0.0.4.14-preview</Version>
     <Authors>Jeff Lill</Authors>
     <Company>NeonForge, LLC</Company>
     <Description>[Work in progress]: Docker REST API wrapper.</Description>
