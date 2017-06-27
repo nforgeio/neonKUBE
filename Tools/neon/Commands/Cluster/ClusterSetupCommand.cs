@@ -284,7 +284,7 @@ OPTIONS:
             controller.AddGlobalStep("cluster key/value", 
                 () =>
                 {
-                    NeonClusterHelper.ConnectCluster(cluster);
+                    NeonClusterHelper.OpenCluster(cluster);
 
                     VaultProxy();
                     VaultInitialize();

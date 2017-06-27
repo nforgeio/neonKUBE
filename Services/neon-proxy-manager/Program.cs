@@ -81,13 +81,13 @@ namespace NeonProxyManager
 
                 Environment.SetEnvironmentVariable("VAULT_CREDENTIALS", vaultCredentialsSecret);
 
-                NeonClusterHelper.ConnectRemoteCluster(
+                NeonClusterHelper.OpenRemoteCluster(
                     new DebugSecrets()
                         .VaultAppRole(vaultCredentialsSecret, "neon-proxy-manager"));
             }
             else
             {
-                NeonClusterHelper.ConnectCluster();
+                NeonClusterHelper.OpenCluster();
             }
 
             try
@@ -138,7 +138,7 @@ namespace NeonProxyManager
             }
             finally
             {
-                NeonClusterHelper.DisconnectCluster();
+                NeonClusterHelper.CloseCluster();
                 terminator.ReadyToExit();
             }
 

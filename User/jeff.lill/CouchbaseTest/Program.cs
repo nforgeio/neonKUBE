@@ -49,11 +49,11 @@ namespace CouchbaseTest
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    NeonClusterHelper.ConnectRemoteCluster();
+                    NeonClusterHelper.OpenRemoteCluster();
                 }
                 else
                 {
-                    NeonClusterHelper.ConnectCluster();
+                    NeonClusterHelper.OpenCluster();
                 }
 
                 Task.Run(() => RunAsync()).Wait();
@@ -65,7 +65,7 @@ namespace CouchbaseTest
             }
             finally
             {
-                NeonClusterHelper.DisconnectCluster();
+                NeonClusterHelper.CloseCluster();
                 terminator.ReadyToExit();
             }
 

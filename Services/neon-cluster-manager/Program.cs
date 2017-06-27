@@ -66,11 +66,11 @@ namespace NeonClusterManager
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    NeonClusterHelper.ConnectRemoteCluster();
+                    NeonClusterHelper.OpenRemoteCluster();
                 }
                 else
                 {
-                    NeonClusterHelper.ConnectCluster();
+                    NeonClusterHelper.OpenCluster();
                 }
 
                 // Ensure that we're running on a manager node.  We won't be able
@@ -116,7 +116,7 @@ namespace NeonClusterManager
             }
             finally
             {
-                NeonClusterHelper.DisconnectCluster();
+                NeonClusterHelper.CloseCluster();
                 terminator.ReadyToExit();
             }
 

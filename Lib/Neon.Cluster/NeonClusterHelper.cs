@@ -216,7 +216,7 @@ namespace Neon.Cluster
                         return clusterLogin;
                     }
 
-                    ConnectCluster(clusterLogin);
+                    OpenCluster(clusterLogin);
 
                     var clusterDefinition = GetLiveClusterDefinition(userName, clusterName);
 
@@ -390,7 +390,7 @@ namespace Neon.Cluster
         /// Indicates whether the application is running outside of a Docker container
         /// but we're going to try to simulate the environment such that the application
         /// believe it is running in a container within a Docker cluster.  See 
-        /// <see cref="ConnectRemoteCluster(DebugSecrets, string)"/> for more information.
+        /// <see cref="OpenRemoteCluster(DebugSecrets, string)"/> for more information.
         /// </summary>
         public static bool IsConnected { get; private set; } = false;
 
@@ -418,7 +418,7 @@ namespace Neon.Cluster
         /// system.
         /// </note>
         /// <note>
-        /// Take care to call <see cref="DisconnectCluster()"/> just before your application
+        /// Take care to call <see cref="CloseCluster()"/> just before your application
         /// exits to reset any temporary settings like the DNS resolver <b>hosts</b> file.
         /// </note>
         /// <note>
@@ -473,7 +473,7 @@ namespace Neon.Cluster
         /// this.
         /// </note>
         /// </remarks>
-        public static ClusterProxy ConnectRemoteCluster(DebugSecrets secrets = null, string loginPath = null)
+        public static ClusterProxy OpenRemoteCluster(DebugSecrets secrets = null, string loginPath = null)
         {
             if (IsConnected)
             {
@@ -497,7 +497,7 @@ namespace Neon.Cluster
 
             log.Info(() => $"Connecting to cluster [{ClusterLogin}].");
 
-            ConnectCluster(
+            OpenCluster(
                 new Cluster.ClusterProxy(ClusterLogin,
                     (name, publicAddress, privateAddress) =>
                     {
@@ -525,7 +525,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="login">The cluster login information.</param>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
-        public static ClusterProxy ConnectCluster(ClusterLogin login)
+        public static ClusterProxy OpenCluster(ClusterLogin login)
         {
             if (IsConnected)
             {
@@ -537,7 +537,7 @@ namespace Neon.Cluster
             ClusterLogin       = login;
             externalConnection = true;
 
-            ConnectCluster(
+            OpenCluster(
                 new Cluster.ClusterProxy(ClusterLogin,
                     (name, publicAddress, privateAddress) =>
                     {
@@ -568,7 +568,7 @@ namespace Neon.Cluster
         /// Thrown if the current process does not appear to be running as a cluster container
         /// with the node environment variables mapped in.
         /// </exception>
-        public static void ConnectCluster()
+        public static void OpenCluster()
         {
             log.Info(() => "Connecting to cluster as a service.");
 
@@ -587,7 +587,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="cluster">The cluster proxy.</param>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
-        public static ClusterProxy ConnectCluster(ClusterProxy cluster)
+        public static ClusterProxy OpenCluster(ClusterProxy cluster)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null);
 
@@ -654,11 +654,11 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Resets any temporary configurations made by <see cref="ConnectRemoteCluster(DebugSecrets, string)"/>
+        /// Resets any temporary configurations made by <see cref="OpenRemoteCluster(DebugSecrets, string)"/>
         /// such as the modifications to the DNS resolver <b>hosts</b> file.  This should be called just
         /// before the application exits.
         /// </summary>
-        public static void DisconnectCluster()
+        public static void CloseCluster()
         {
             if (!IsConnected)
             {
@@ -668,7 +668,7 @@ namespace Neon.Cluster
             IsConnected        = false;
             externalConnection = false;
 
-            log.Info("Emulating cluster disconnect.");
+            log.Info("Emulating cluster close.");
 
             NeonHelper.ModifyHostsFile();
         }
@@ -693,7 +693,7 @@ namespace Neon.Cluster
         /// <remarks>
         /// <para>
         /// This method can be used to retrieve a secret provisioned to a container via the
-        /// Docker secrets feature or a secret provided to <see cref="ConnectRemoteCluster(DebugSecrets, string)"/> 
+        /// Docker secrets feature or a secret provided to <see cref="OpenRemoteCluster(DebugSecrets, string)"/> 
         /// when we're emulating running the application as a cluster container.
         /// </para>
         /// <para>
@@ -745,7 +745,7 @@ namespace Neon.Cluster
         /// <remarks>
         /// <para>
         /// This method can be used to retrieve a secret provisioned to a container via the
-        /// Docker secrets feature or a secret provided to <see cref="ConnectRemoteCluster(DebugSecrets, string)"/> 
+        /// Docker secrets feature or a secret provided to <see cref="OpenRemoteCluster(DebugSecrets, string)"/> 
         /// when we're emulating running the application as a cluster container.
         /// </para>
         /// <para>
@@ -765,7 +765,14 @@ namespace Neon.Cluster
                 return null;
             }
 
-            return NeonHelper.JsonDeserialize<T>(secretJson);
+            try
+            {
+                return NeonHelper.JsonDeserialize<T>(secretJson);
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentException($"Unable to parse local secret [{name}] as a [{typeof(T).FullName}].", e);
+            }
         }
 
         /// <summary>
@@ -1204,12 +1211,17 @@ namespace Neon.Cluster
         /// <param name="secretName">The local container name for the Docker secret.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The <see cref="Couchbase.Cluster"/>.</returns>
-        public static async Task<Couchbase.Cluster> ConnectCouchbaseClusterAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<Couchbase.Cluster> OpenCouchbaseClusterAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default(CancellationToken))
         {
             VerifyConnected();
 
             var connectionSettings = await Cluster.Consul.KV.GetObject<CouchbaseSettings>(connectionKey, cancellationToken);
             var credentials        = GetSecret<Credentials>(secretName);
+
+            if (credentials == null)
+            {
+                throw new ArgumentException($"Secret [name={secretName}] is not present in the container.");
+            }
 
             if (!connectionSettings.IsValid)
             {
@@ -1232,12 +1244,17 @@ namespace Neon.Cluster
         /// <param name="secretName">The local container name for the Docker secret.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The <see cref="Couchbase.Core.IBucket"/>.</returns>
-        public static async Task<Couchbase.Core.IBucket> ConnectCouchbaseBucketAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<Couchbase.Core.IBucket> OpenCouchbaseBucketAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default(CancellationToken))
         {
             VerifyConnected();
 
             var connectionSettings = await Cluster.Consul.KV.GetObject<CouchbaseSettings>(connectionKey, cancellationToken);
             var credentials        = GetSecret<Credentials>(secretName);
+
+            if (credentials == null)
+            {
+                throw new ArgumentException($"Secret [name={secretName}] is not present in the container.");
+            }
 
             if (!connectionSettings.IsValid)
             {
@@ -1260,12 +1277,17 @@ namespace Neon.Cluster
         /// <param name="secretName">The local container name for the Docker secret.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The <see cref="RabbitMQ.Client.IConnection"/>.</returns>
-        public static async Task<RabbitMQ.Client.IConnection> ConnectRabbitMQAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<RabbitMQ.Client.IConnection> OpenRabbitMQAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default(CancellationToken))
         {
             VerifyConnected();
 
             var connectionSettings = await Cluster.Consul.KV.GetObject<RabbitMQSettings>(connectionKey, cancellationToken);
             var credentials        = GetSecret<Credentials>(secretName);
+
+            if (credentials == null)
+            {
+                throw new ArgumentException($"Secret [name={secretName}] is not present in the container.");
+            }
 
             if (!connectionSettings.IsValid)
             {

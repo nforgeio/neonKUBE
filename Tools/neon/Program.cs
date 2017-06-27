@@ -599,7 +599,7 @@ tool requires admin priviledges for direct mode.
         {
             if (NeonClusterHelper.IsConnected)
             {
-                NeonClusterHelper.DisconnectCluster();
+                NeonClusterHelper.CloseCluster();
             }
 
             Environment.Exit(exitCode);
@@ -714,7 +714,7 @@ tool requires admin priviledges for direct mode.
         }
 
         /// <summary>
-        /// Uses <see cref="NeonClusterHelper.ConnectRemoteCluster(DebugSecrets, string)"/> to 
+        /// Uses <see cref="NeonClusterHelper.OpenRemoteCluster(DebugSecrets, string)"/> to 
         /// ensure that there's a currently logged-in cluster and that the VPN connection
         /// is established if required.
         /// </summary>
@@ -738,7 +738,7 @@ tool requires admin priviledges for direct mode.
                 throw new Exception($"Cluster login [{clusterLogin.LoginName}] does not reference a fully configured cluster.  Use the [neon cluster setup...] command to complete cluster configuration.");
             }
 
-            NeonClusterHelper.ConnectRemoteCluster(loginPath: NeonClusterHelper.GetClusterLoginPath(NeonClusterConst.RootUser, Program.ClusterLogin.ClusterName));
+            NeonClusterHelper.OpenRemoteCluster(loginPath: NeonClusterHelper.GetClusterLoginPath(NeonClusterConst.RootUser, Program.ClusterLogin.ClusterName));
 
             // Note that we never try to connect the VPN from within the
             // [neon-cli] container.  Its expected that the VPN is always

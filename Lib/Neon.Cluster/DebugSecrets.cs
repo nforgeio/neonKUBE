@@ -21,7 +21,7 @@ namespace Neon.Cluster
 {
     /// <summary>
     /// Used to emulate Docker service secrets when debugging an application using 
-    /// <see cref="NeonClusterHelper.ConnectRemoteCluster(DebugSecrets, string)"/>.
+    /// <see cref="NeonClusterHelper.OpenRemoteCluster(DebugSecrets, string)"/>.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -71,11 +71,28 @@ namespace Neon.Cluster
         /// Adds a string secret.
         /// </summary>
         /// <param name="secretName">The secret name.</param>
-        /// <param name="value">The secret value.</param>
+        /// <param name="value">The secret value string.</param>
         /// <returns>The current instance to support fluent-style coding.</returns>
         public new DebugSecrets Add(string secretName, string value)
         {
+            Covenant.Requires<ArgumentNullException>(value != null);
+
             base.Add(secretName, value);
+
+            return this;
+        }
+
+        /// <summary>
+        /// Adds an object as JSON.
+        /// </summary>
+        /// <param name="secretName">The secret name.</param>
+        /// <param name="value">The secret value.</param>
+        /// <returns>The current instance to support fluent-style coding.</returns>
+        public new DebugSecrets Add(string secretName, object value)
+        {
+            Covenant.Requires<ArgumentNullException>(value != null);
+
+            base.Add(secretName, NeonHelper.JsonSerialize(value, Formatting.Indented));
 
             return this;
         }
@@ -151,7 +168,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Called internally by <see cref="NeonClusterHelper.ConnectRemoteCluster(DebugSecrets, string)"/> to 
+        /// Called internally by <see cref="NeonClusterHelper.OpenRemoteCluster(DebugSecrets, string)"/> to 
         /// create any requested Vault and Consul credentials and add them to the dictionary.
         /// </summary>
         /// <param name="cluster">The attached cluster.</param>

@@ -755,7 +755,7 @@ nsCertType              = server
                 Program.Exit(1);
             }
 
-            cluster = NeonClusterHelper.ConnectCluster(clusterLogin);
+            cluster = NeonClusterHelper.OpenCluster(clusterLogin);
         }
 
         /// <summary>
@@ -1014,7 +1014,7 @@ nsCertType              = server
             finally
             {
                 Directory.Delete(caFolder, recursive: true);
-                NeonClusterHelper.DisconnectCluster();
+                NeonClusterHelper.CloseCluster();
             }
         }
 
@@ -1067,7 +1067,7 @@ nsCertType              = server
             }
             finally
             {
-                NeonClusterHelper.DisconnectCluster();
+                NeonClusterHelper.CloseCluster();
             }
         }
 
@@ -1186,7 +1186,7 @@ nsCertType              = server
             }
             finally
             {
-                NeonClusterHelper.DisconnectCluster();
+                NeonClusterHelper.CloseCluster();
             }
         }
 
@@ -1242,7 +1242,7 @@ nsCertType              = server
             }
             finally
             {
-                NeonClusterHelper.DisconnectCluster();
+                NeonClusterHelper.CloseCluster();
             }
         }
     }
