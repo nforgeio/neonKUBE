@@ -7,6 +7,7 @@ using System;
 using System.Diagnostics.Contracts;
 
 using Couchbase;
+using Couchbase.Authentication;
 using Couchbase.Configuration.Client;
 using Couchbase.Core;
 
@@ -37,7 +38,7 @@ namespace Couchbase
 
             if (!string.IsNullOrEmpty(adminUsername) && !string.IsNullOrEmpty(adminPassword))
             {
-                cluster.Authenticate(adminUsername, adminPassword);
+                cluster.Authenticate(new Authentication.PasswordAuthenticator(adminUsername, adminPassword));
             }
 
             return cluster;
@@ -60,7 +61,7 @@ namespace Couchbase
 
             if (adminCredentials != null)
             {
-                cluster.Authenticate(adminCredentials.Username, adminCredentials.Password);
+                cluster.Authenticate(new Authentication.PasswordAuthenticator(adminCredentials.Username, adminCredentials.Password));
             }
 
             return cluster;
@@ -103,10 +104,10 @@ namespace Couchbase
 
                     PoolConfiguration = new PoolConfiguration()
                     {
-                        SendTimeout = int.MaxValue,
+                        SendTimeout    = int.MaxValue,
                         ConnectTimeout = int.MaxValue,
-                        MaxSize = 10,
-                        MinSize = 5
+                        MaxSize        = 10,
+                        MinSize        = 5
                     }
                 });
 
@@ -171,7 +172,7 @@ namespace Couchbase
         /// <returns>A <see cref="Guid"/> formatted as a string.</returns>
         public static string GenKey(this IBucket bucket)
         {
-            return Guid.NewGuid().ToString("D");
+            return Convert.ToBase64String(Guid.NewGuid().ToByteArray());
         }
     }
 }

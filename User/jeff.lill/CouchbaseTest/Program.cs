@@ -96,9 +96,9 @@ namespace CouchbaseTest
                     {
                         Servers = new List<Uri>()
                         {
-                            new Uri("http://10.0.0.90:8091/pools/"),
-                            new Uri("http://10.0.0.91:8091/pools/"),
-                            new Uri("http://10.0.0.92:8091/pools/")
+                            new Uri("couchbase://10.0.0.90"),
+                            new Uri("couchbase://10.0.0.91"),
+                            new Uri("couchbase://10.0.0.92")
                         },
                         Bucket = "stoke"
                     };
@@ -110,42 +110,12 @@ namespace CouchbaseTest
                         Password = Environment.GetEnvironmentVariable("TS_COUCHBASE_PASSWORD")
                     };
 
-                var config = new Couchbase.Configuration.Client.ClientConfiguration
-                {
-                    Servers = new List<Uri>
-                    {
-                        new Uri("http://10.0.0.90:8091/pools/"),
-                        new Uri("http://10.0.0.91:8091/pools/"),
-                        new Uri("http://10.0.0.92:8091/pools/")
-                    },
-                    UseSsl = false,
-                    BucketConfigs = new Dictionary<string, Couchbase.Configuration.Client.BucketConfiguration>
-                    {
-                        {
-                            "stoke",
-                            new Couchbase.Configuration.Client.BucketConfiguration
-                            {
-                                BucketName = "stoke",
-                                UseSsl = false,
-                                Username = "stoke",
-                                Password = "stoke.pro",
-                                PoolConfiguration = new Couchbase.Configuration.Client.PoolConfiguration
-                                {
-                                    MaxSize = 10,
-                                    MinSize = 5
-                                }
-                            }}
-                    }
-                };
-
-                var cluster = new Cluster(config);
-
-                using (var bucket = cluster.OpenBucket("stoke"))
+                using (var bucket = settings.OpenBucket(credentials))
                 {
                     var key = bucket.GenKey();
                     var result1 = await bucket.InsertAsync(key, new Document<Item>() { Id = key, Content = new Item() { Name = "Jeff", Age = 56 } });
 
-                    //result1.EnsureSuccess();
+                    result1.EnsureSuccess();
 
                     var exists = await bucket.ExistsAsync(key);
 

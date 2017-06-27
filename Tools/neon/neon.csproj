@@ -13,7 +13,7 @@
   </ItemGroup>
 
   <ItemGroup>
-    <PackageReference Include="CouchbaseNetClient" Version="2.4.6" />
+    <PackageReference Include="CouchbaseNetClient" Version="2.4.5" />
     <PackageReference Include="System.ValueTuple" Version="4.3.1" />
   </ItemGroup>
 
