@@ -40,6 +40,48 @@ namespace Neon.Data
         public string Bucket { get; set; }
 
         /// <summary>
+        /// Maximum time (milliseconds) to wait to establish a server connection (defaults to <b>10 seconds</b>).
+        /// </summary>
+        [JsonProperty(PropertyName = "ConnectTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(10000)]
+        public int ConnectTimeout { get; set; } = 10000;
+
+        /// <summary>
+        /// Maximum time (milliseconds) to wait to transmit a server request (defaults to <b>10 seconds</b>).
+        /// </summary>
+        [JsonProperty(PropertyName = "SendTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(10000)]
+        public int SendTimeout { get; set; } = 10000;
+
+        /// <summary>
+        /// Maximum time (milliseconds) to wait for an operation to complete (defaults to <b>10 seconds</b>).
+        /// </summary>
+        [JsonProperty(PropertyName = "OperationTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(10000)]
+        public int OperationTimeout { get; set; } = 10000;
+
+        /// <summary>
+        /// Maximum time (milliseconds) to wait for a query to complete (defaults to 75 seconds).
+        /// </summary>
+        [JsonProperty(PropertyName = "QueryRequestTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(75000)]
+        public int QueryRequestTimeout { get; set; } = 75000;
+
+        /// <summary>
+        /// Maximum number of pooled connections to a server bucket (defaults to <b>5</b>).
+        /// </summary>
+        [JsonProperty(PropertyName = "MaxPoolConnections", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(5)]
+        public int MaxPoolConnections { get; set; } = 5;
+
+        /// <summary>
+        /// Minimum number of pooled connections to a server bucket (defaults to <b>2</b>).
+        /// </summary>
+        [JsonProperty(PropertyName = "MinPoolConnections", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(2)]
+        public int MinPoolConnections { get; set; } = 2;
+
+        /// <summary>
         /// Returns <c>true</c> if the settings are valid.
         /// </summary>
         [JsonIgnore]

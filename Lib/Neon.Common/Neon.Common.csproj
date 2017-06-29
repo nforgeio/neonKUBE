@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.4</TargetFramework>
     <RootNamespace>Neon.Stack</RootNamespace>
-    <Version>0.0.4.14-preview</Version>
+    <Version>0.0.4.24-preview</Version>
     <Company>NeonForge, LLC</Company>
     <PackageReleaseNotes>This is still very much a work in progress and is not suitable for general usage.</PackageReleaseNotes>
     <Authors>Jeff Lill</Authors>

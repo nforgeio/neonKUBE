@@ -21,6 +21,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Data;
 using Neon.Diagnostics;
+using Neon.Retry;
 
 namespace CouchbaseTest
 {
@@ -112,16 +113,20 @@ namespace CouchbaseTest
 
                 using (var bucket = settings.OpenBucket(credentials))
                 {
-                    var key = bucket.GenKey();
-                    var result1 = await bucket.InsertAsync(key, new Document<Item>() { Id = key, Content = new Item() { Name = "Jeff", Age = 56 } });
+                    var retry = new ExponentialRetryPolicy(CouchbaseTransientDetector.IsTransient);
 
-                    result1.EnsureSuccess();
+                    for (int i = 0; i < 500000; i++)
+                    {
+                        var key = bucket.GenKey();
 
-                    var exists = await bucket.ExistsAsync(key);
+                        await retry.InvokeAsync(async () => await bucket.InsertSafeAsync(key, new Document<Item>() { Id = key, Content = new Item() { Name = "Jeff", Age = 56 } }));
 
-                    var result2 = await bucket.GetAsync<Document<Item>>(key);
+                        var exists = await bucket.ExistsAsync(key);
 
-                    result2.EnsureSuccess();
+                        var result2 = await bucket.GetAsync<Document<Item>>(key);
+
+                        result2.EnsureSuccess();
+                    }
                 }
             }
             catch (OperationCanceledException)

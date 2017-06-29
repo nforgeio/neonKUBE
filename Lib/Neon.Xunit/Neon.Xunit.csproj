@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.4</TargetFramework>
     <RootNamespace>Neon.Stack.Xunit</RootNamespace>
-    <Version>0.0.4.14-preview</Version>
+    <Version>0.0.4.24-preview</Version>
     <Authors>Jeff Lill</Authors>
     <Company>NeonForge, LLC</Company>
     <Description>[Work in progress]: Xunit related extensions.</Description>

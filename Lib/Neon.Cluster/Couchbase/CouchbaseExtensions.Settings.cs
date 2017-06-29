@@ -10,6 +10,7 @@ using Couchbase;
 using Couchbase.Authentication;
 using Couchbase.Configuration.Client;
 using Couchbase.Core;
+using Couchbase.Core.Serialization;
 
 using Neon.Cluster;
 using Neon.Common;
@@ -104,10 +105,10 @@ namespace Couchbase
 
                     PoolConfiguration = new PoolConfiguration()
                     {
-                        SendTimeout    = int.MaxValue,
-                        ConnectTimeout = int.MaxValue,
-                        MaxSize        = 10,
-                        MinSize        = 5
+                        ConnectTimeout = settings.ConnectTimeout,
+                        SendTimeout    = settings.SendTimeout,
+                        MaxSize        = settings.MaxPoolConnections,
+                        MinSize        = settings.MinPoolConnections
                     }
                 });
 
@@ -147,8 +148,17 @@ namespace Couchbase
         /// <summary>
         /// Converts a <see cref="CouchbaseSettings"/> into a <see cref="ClientConfiguration"/>.
         /// </summary>
-        /// <param name="settings"></param>
+        /// <param name="settings">The simplified Couchbase settings instance.</param>
         /// <returns>A Couchbase <see cref="ClientConfiguration"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method initializes the settings to use the <see cref="NeonHelper.JsonSerialize(object, Newtonsoft.Json.Formatting, Newtonsoft.Json.JsonSerializerSettings)"/>
+        /// and <see cref="NeonHelper.JsonDeserialize{TObject}(string, Newtonsoft.Json.JsonSerializerSettings)"/> methods 
+        /// using <see cref="NeonHelper.JsonSerializerSettings"/> to handle JSON serialization by default.  You can
+        /// override this by implementing your own <see cref="ITypeSerializer"/> and then setting to return
+        /// a <see cref="ClientConfiguration.Serializer"/> instance.
+        /// </note>
+        /// </remarks>
         public static ClientConfiguration ToClientConfig(this CouchbaseSettings settings)
         {
             var config = new ClientConfiguration();
@@ -160,7 +170,10 @@ namespace Couchbase
                 config.Servers.Add(uri);
             }
 
-            config.UseSsl = false;
+            config.UseSsl                   = false;
+            config.Serializer               = () => new CouchbaseSerializer();
+            config.DefaultOperationLifespan = (uint)settings.OperationTimeout;
+            config.DefaultConnectionLimit   = settings.MaxPoolConnections;
 
             return config;
         }

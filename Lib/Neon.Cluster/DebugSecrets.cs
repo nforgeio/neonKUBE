@@ -88,7 +88,7 @@ namespace Neon.Cluster
         /// <param name="secretName">The secret name.</param>
         /// <param name="value">The secret value.</param>
         /// <returns>The current instance to support fluent-style coding.</returns>
-        public new DebugSecrets Add(string secretName, object value)
+        public DebugSecrets Add(string secretName, object value)
         {
             Covenant.Requires<ArgumentNullException>(value != null);
 

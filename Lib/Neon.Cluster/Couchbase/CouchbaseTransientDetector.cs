@@ -33,6 +33,8 @@ namespace Couchbase
         /// <returns><c>true</c> if the error was potentially transient.</returns>
         public static bool IsTransient(Exception e)
         {
+            Console.WriteLine(NeonHelper.ExceptionError(e));
+
             // $todo(jeff.lill):
             //
             // I'm making a guess at these for now.  I'm not sure if this is the

@@ -98,5 +98,41 @@ namespace Neon.Common
 
             return JsonDeserialize<T>(JsonSerialize(value));
         }
+
+        /// <summary>
+        /// Compares two object instances for equality by serializing them JSON and
+        /// comparing the output.
+        /// </summary>
+        /// <param name="v1">Value 1</param>
+        /// <param name="v2">Value 2</param>
+        /// <returns><c>true</c> if the instances are the same.</returns>
+        /// <remarks>
+        /// This is a convienent and safe way of comparing two objects without having
+        /// to comparing a potentially complex tree of members and then maintaining
+        /// that as code changes over time at the cost of having to perform the
+        /// serializations.
+        /// </remarks>
+        public static bool JsonEquals(object v1, object v2)
+        {
+            // Optimize some common scenarios.
+
+            if (object.ReferenceEquals(v1, v2))
+            {
+                return true;
+            }
+
+            var v1Null = (object)v1 == null;
+            var v2Null = (object)v2 == null;
+
+            if (v1Null && !v1Null || !v1Null && v2Null)
+            {
+                return false;
+            }
+
+            // The instances are not NULL and are not the same so serialize
+            // and compare.
+
+            return JsonSerialize(v1, Formatting.None) == JsonSerialize(v2, Formatting.None);
+        }
     }
 }

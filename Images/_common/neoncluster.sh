@@ -23,7 +23,7 @@
 # NetworkPort:
 #
 # Define the common network port numbers.  These must match the definitions in
-# [Neon.Stack.Net.NetworkPort].
+# [Neon.Net.NetworkPort].
 
 # HyperText Transport Protocol.
 export NetworkPorts_HTTP=80

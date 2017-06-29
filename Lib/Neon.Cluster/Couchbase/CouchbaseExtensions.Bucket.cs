@@ -13,6 +13,7 @@ using Couchbase;
 using Couchbase.Authentication;
 using Couchbase.Configuration.Client;
 using Couchbase.Core;
+using Couchbase.IO;
 using Couchbase.N1QL;
 
 using Neon.Cluster;
@@ -24,6 +25,36 @@ namespace Couchbase
 {
     public static partial class CouchbaseExtensions
     {
+        // Implementation Notes:
+        // ---------------------
+        // The VerifySuccess() methods are used to examine the server responses
+        // to determine whether a transient error has occurred and throw a
+        // TransientException so that an upstack IRetryPolicy can handle things.
+        //
+        // There are family of edge cases around document mutations that make this
+        // more complicated.  Here's one scenario:
+        //
+        //      1. A document is inserted with an IRetryPolicy with ReplicateTo > 0.
+        //
+        //      2. The document makes it to one cluster node but is not replicated
+        //         in time to the other nodes before the operation times out.
+        //
+        //      3. Operation timeouts are considered transient, so the policy
+        //         retries it.
+        //
+        //      4. Because the document did make it to a node, the retried insert
+        //         fails because the key already exists and in a simple world,
+        //         this would be reported back to the application as an exception
+        //         (which would be really confusing).
+        //
+        // Similar situations will occur with remove as well as replace/upsert with CAS.
+        //
+        // I don't have a lot of experience with Couchbase yet, but I'll bet that
+        // this issue is limited to operations where ReplicateTo and/or PersistTo
+        // are greather than zero.  I don't think there's a transparent way to
+        // handle these situations, so I'm going to avoid considering operation
+        // timeouts as transient when there are replication/persistence constraints.
+
         /// <summary>
         /// Generates a globally unique document key.
         /// </summary>
@@ -35,10 +66,39 @@ namespace Couchbase
         }
 
         /// <summary>
+        /// Determines whether a Couchbase response status code should be considered
+        /// a transient error.
+        /// </summary>
+        /// <param name="status">The status code.</param>
+        /// <param name="replicateOrPersist">Indicates whether the operation has replication or persistance constraints.</param>
+        /// <returns><c>true</c> for a transient error.</returns>
+        private static bool IsTransientStatus(ResponseStatus status, bool replicateOrPersist)
+        {
+            switch (status)
+            {
+                case ResponseStatus.OperationTimeout:
+
+                    return !replicateOrPersist;
+
+                case ResponseStatus.Busy:
+                case ResponseStatus.NodeUnavailable:
+                case ResponseStatus.TemporaryFailure:
+                case ResponseStatus.TransportFailure:
+
+                    return true;
+
+                default:
+
+                    return false;
+            }
+        }
+
+        /// <summary>
         /// Throws an exception if an operation was not successful.
         /// </summary>
         /// <param name="result">The operation result.</param>
-        private static void VerifySuccess(IOperationResult result)
+        /// <param name="replicateOrPersist">Indicates whether the operation has replication or persistance constraints.</param>
+        private static void VerifySuccess(IOperationResult result, bool replicateOrPersist)
         {
             if (result.Success)
             {
@@ -48,6 +108,11 @@ namespace Couchbase
             if (result.ShouldRetry())
             {
                 throw new TransientException(result.Message, result.Exception);
+            }
+
+            if (IsTransientStatus(result.Status, replicateOrPersist))
+            {
+                throw new TransientException($"Couchbase response status: {result.Status}", result.Exception);
             }
 
             result.EnsureSuccess();
@@ -58,7 +123,8 @@ namespace Couchbase
         /// </summary>
         /// <typeparam name="T">The result type.</typeparam>
         /// <param name="result">The operation result.</param>
-        private static void VerifySuccess<T>(IOperationResult<T> result)
+        /// <param name="replicateOrPersist">Indicates whether the operation has replication or persistance constraints.</param>
+        private static void VerifySuccess<T>(IOperationResult<T> result, bool replicateOrPersist)
         {
             if (result.Success)
             {
@@ -68,6 +134,11 @@ namespace Couchbase
             if (result.ShouldRetry())
             {
                 throw new TransientException(result.Message, result.Exception);
+            }
+
+            if (IsTransientStatus(result.Status, replicateOrPersist))
+            {
+                throw new TransientException($"Couchbase response status: {result.Status}", result.Exception);
             }
 
             result.EnsureSuccess();
@@ -78,7 +149,8 @@ namespace Couchbase
         /// </summary>
         /// <typeparam name="T">The document content type.</typeparam>
         /// <param name="result">The operation result.</param>
-        private static void VerifySuccess<T>(IDocumentResult<T> result)
+        /// <param name="replicateOrPersist">Indicates whether the operation has replication or persistance constraints.</param>
+        private static void VerifySuccess<T>(IDocumentResult<T> result, bool replicateOrPersist)
         {
             if (result.Success)
             {
@@ -88,6 +160,11 @@ namespace Couchbase
             if (result.ShouldRetry())
             {
                 throw new TransientException(result.Message, result.Exception);
+            }
+
+            if (IsTransientStatus(result.Status, replicateOrPersist))
+            {
+                throw new TransientException($"Couchbase response status: {result.Status}", result.Exception);
             }
 
             result.EnsureSuccess();
@@ -124,7 +201,7 @@ namespace Couchbase
         {
             var result = await bucket.AppendAsync(key, value);
 
-            VerifySuccess<byte[]>(result);
+            VerifySuccess<byte[]>(result, replicateOrPersist: false);
 
             return result;
         }
@@ -140,7 +217,7 @@ namespace Couchbase
         {
             var result = await bucket.AppendAsync(key, value);
 
-            VerifySuccess<string>(result);
+            VerifySuccess<string>(result, replicateOrPersist: false);
 
             return result;
         }
@@ -169,7 +246,7 @@ namespace Couchbase
                 result = await bucket.DecrementAsync(key, delta, initial);
             }
 
-            VerifySuccess<ulong>(result);
+            VerifySuccess<ulong>(result, replicateOrPersist: false);
 
             return result;
         }
@@ -206,7 +283,7 @@ namespace Couchbase
                 return null;
             }
 
-            VerifySuccess<T>(result);
+            VerifySuccess<T>(result, replicateOrPersist: false);
 
             return result.Value;
         }
@@ -229,7 +306,7 @@ namespace Couchbase
                 return null;
             }
 
-            VerifySuccess<T>(result);
+            VerifySuccess<T>(result, replicateOrPersist: false);
 
             return result.Document;
         }
@@ -251,7 +328,7 @@ namespace Couchbase
 
             var result = await bucket.GetAndLockAsync<T>(key, expiration);
 
-            VerifySuccess<T>(result);
+            VerifySuccess<T>(result, replicateOrPersist: false);
 
             return result;
         }
@@ -268,7 +345,7 @@ namespace Couchbase
         {
             var result = await bucket.GetAndTouchAsync<T>(key, expiration);
 
-            VerifySuccess<T>(result);
+            VerifySuccess<T>(result, replicateOrPersist: false);
 
             return result.Value;
         }
@@ -285,7 +362,7 @@ namespace Couchbase
         {
             var result = await bucket.GetAndTouchDocumentAsync<T>(key, expiration);
 
-            VerifySuccess<T>(result);
+            VerifySuccess<T>(result, replicateOrPersist: false);
 
             return result.Document;
         }
@@ -302,7 +379,7 @@ namespace Couchbase
         {
             var result = await bucket.GetAsync<T>(key);
 
-            VerifySuccess<T>(result);
+            VerifySuccess<T>(result, replicateOrPersist: false);
 
             return result.Value;
         }
@@ -320,7 +397,7 @@ namespace Couchbase
         {
             var result = await bucket.GetDocumentAsync<T>(keys);
 
-            VerifySuccess<T>(result);
+            VerifySuccess<T>(result, replicateOrPersist: false);
 
             return result.Document;
         }
@@ -339,7 +416,7 @@ namespace Couchbase
 
             foreach (var result in results)
             {
-                VerifySuccess<T>(result);
+                VerifySuccess<T>(result, replicateOrPersist: false);
             }
 
             var documents = new IDocument<T>[results.Length];
@@ -364,7 +441,7 @@ namespace Couchbase
         {
             var result = await bucket.GetFromReplicaAsync<T>(key);
 
-            VerifySuccess<T>(result);
+            VerifySuccess<T>(result, replicateOrPersist: false);
 
             return result.Value;
         }
@@ -392,7 +469,7 @@ namespace Couchbase
                 result = await bucket.IncrementAsync(key, delta, initial);
             }
 
-            VerifySuccess<ulong>(result);
+            VerifySuccess<ulong>(result, replicateOrPersist: false);
 
             return result;
         }
@@ -405,14 +482,14 @@ namespace Couchbase
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InsertSafeAsync<T>(this IBucket bucket, string key, T value, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task InsertSafeAsync<T>(this IBucket bucket, string key, T value, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             var result = await bucket.InsertAsync<T>(key, value, replicateTo, persistTo);
 
-            VerifySuccess<T>(result);
+            VerifySuccess<T>(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }
 
         /// <summary>
@@ -425,14 +502,14 @@ namespace Couchbase
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
         /// <param name="expiration">The expiration TTL.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InsertSafeAsync<T>(this IBucket bucket, string key, T value, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task InsertSafeAsync<T>(this IBucket bucket, string key, T value, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             var result = await bucket.InsertAsync<T>(key, value, expiration, replicateTo, persistTo);
 
-            VerifySuccess<T>(result);
+            VerifySuccess<T>(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }
 
         /// <summary>
@@ -442,14 +519,14 @@ namespace Couchbase
         /// <typeparam name="T">The document content type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="document">The document.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InsertSafeAsync<T>(this IBucket bucket, IDocument<T> document, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task InsertSafeAsync<T>(this IBucket bucket, IDocument<T> document, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             var result = await bucket.InsertAsync<T>(document, replicateTo, persistTo);
 
-            VerifySuccess<T>(result);
+            VerifySuccess<T>(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }
 
         /// <summary>
@@ -459,16 +536,16 @@ namespace Couchbase
         /// <typeparam name="T">The document content type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="documents">The documents.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task InsertSafeAsync<T>(this IBucket bucket, List<IDocument<T>> documents, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task InsertSafeAsync<T>(this IBucket bucket, List<IDocument<T>> documents, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             var results = await bucket.InsertAsync<T>(documents, replicateTo, persistTo);
 
             foreach (var result in results)
             {
-                VerifySuccess<T>(result);
+                VerifySuccess<T>(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
             }
         }
 
@@ -507,14 +584,14 @@ namespace Couchbase
         /// </summary>
         /// <param name="bucket">The bucket.</param>
         /// <param name="document">The document to be deleted.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task RemoveSafeAsync(this IBucket bucket, IDocument<Task> document, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task RemoveSafeAsync(this IBucket bucket, IDocument<Task> document, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             var result = await bucket.RemoveAsync(document, replicateTo, persistTo);
 
-            VerifySuccess(result);
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }
 
         /// <summary>
@@ -522,16 +599,16 @@ namespace Couchbase
         /// </summary>
         /// <param name="bucket">The bucket.</param>
         /// <param name="documents">The document to be deleted.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task RemoveSafeAsync(this IBucket bucket, List<IDocument<Task>> documents, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task RemoveSafeAsync(this IBucket bucket, List<IDocument<Task>> documents, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             var results = await bucket.RemoveAsync(documents, replicateTo, persistTo);
 
             foreach (var result in results)
             {
-                VerifySuccess(result);
+                VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
             }
         }
 
@@ -540,14 +617,14 @@ namespace Couchbase
         /// </summary>
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key to be deleted.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task RemoveSafeAsync(this IBucket bucket, string key, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task RemoveSafeAsync(this IBucket bucket, string key, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             var result = await bucket.RemoveAsync(key, replicateTo, persistTo);
 
-            VerifySuccess(result);
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }
 
         /// <summary>
@@ -556,14 +633,14 @@ namespace Couchbase
         /// <typeparam name="T">The document content type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="document">The replacement document.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task ReplaceSafeAsync<T>(this IBucket bucket, IDocument<T> document, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task ReplaceSafeAsync<T>(this IBucket bucket, IDocument<T> document, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             var result = await bucket.ReplaceAsync<T>(document, replicateTo, persistTo);
 
-            VerifySuccess(result);
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }
 
         /// <summary>
@@ -572,16 +649,17 @@ namespace Couchbase
         /// <typeparam name="T">The document content type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="documents">The replacement documents.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task ReplaceSafeAsync<T>(this IBucket bucket, List<IDocument<T>> documents, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task ReplaceSafeAsync<T>(this IBucket bucket, List<IDocument<T>> documents, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
-            var results = await bucket.ReplaceAsync<T>(documents, replicateTo, persistTo);
+            var results            = await bucket.ReplaceAsync<T>(documents, replicateTo, persistTo);
+            var replicateOrPersist = replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero;
 
             foreach (var result in results)
             {
-                VerifySuccess(result);
+                VerifySuccess(result, replicateOrPersist);
             }
         }
 
@@ -592,14 +670,14 @@ namespace Couchbase
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <param name="value">The replacement value.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task ReplaceSafeAsync<T>(this IBucket bucket, string key, T value, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task ReplaceSafeAsync<T>(this IBucket bucket, string key, T value, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             var result = await bucket.ReplaceAsync<T>(key, value, replicateTo, persistTo);
 
-            VerifySuccess(result);
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }
 
         /// <summary>
@@ -612,12 +690,13 @@ namespace Couchbase
         /// <param name="value">The replacement value.</param>
         /// <param name="cas">The optional CAS value.</param>
         /// <param name="expiration">Optional expiration TTL.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task ReplaceSafeAsync<T>(this IBucket bucket, string key, T value, ulong? cas = null, TimeSpan? expiration = null, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task ReplaceSafeAsync<T>(this IBucket bucket, string key, T value, ulong? cas = null, TimeSpan? expiration = null, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             IOperationResult<T> result;
+            var                 replicateOrPersist = replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero;
 
             if (cas.HasValue && expiration.HasValue)
             {
@@ -638,11 +717,11 @@ namespace Couchbase
 
                 var result1 = await bucket.ReplaceAsync<T>(key, value, replicateTo, persistTo);
 
-                VerifySuccess<T>(result1);
+                VerifySuccess<T>(result1, replicateOrPersist);
 
                 var result2 = await bucket.TouchAsync(key, expiration.Value);
 
-                VerifySuccess(result2);
+                VerifySuccess(result2, replicateOrPersist);
                 return;
             }
             else
@@ -650,7 +729,7 @@ namespace Couchbase
                 result = await bucket.ReplaceAsync<T>(key, value, replicateTo, persistTo);
             }
 
-            VerifySuccess<T>(result);
+            VerifySuccess<T>(result, replicateOrPersist);
         }
 
         /// <summary>
@@ -664,7 +743,7 @@ namespace Couchbase
         {
             var result = await bucket.TouchAsync(key, expiration);
 
-            VerifySuccess(result);
+            VerifySuccess(result, replicateOrPersist: false);
         }
 
         /// <summary>
@@ -678,7 +757,7 @@ namespace Couchbase
         {
             var result = await bucket.UnlockAsync(key, cas);
 
-            VerifySuccess(result);
+            VerifySuccess(result, replicateOrPersist: false);
         }
 
         /// <summary>
@@ -687,14 +766,14 @@ namespace Couchbase
         /// <typeparam name="T">The document content type.</typeparam>
         /// <param name="bucket">The bucket.</param>
         /// <param name="document">The document.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task UpsertSafeAsync<T>(this IBucket bucket, IDocument<T> document, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task UpsertSafeAsync<T>(this IBucket bucket, IDocument<T> document, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             var result = await bucket.UpsertAsync<T>(document, replicateTo, persistTo);
 
-            VerifySuccess(result);
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }
 
         /// <summary>
@@ -704,14 +783,14 @@ namespace Couchbase
         /// <param name="bucket">The bucket.</param>
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task UpsertSafeAsync<T>(this IBucket bucket, string key, T value, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task UpsertSafeAsync<T>(this IBucket bucket, string key, T value, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             var result = await bucket.UpsertAsync<T>(key, value, replicateTo, persistTo);
 
-            VerifySuccess(result);
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }
 
         /// <summary>
@@ -722,10 +801,10 @@ namespace Couchbase
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
         /// <param name="cas">The CAS.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task UpsertSafeAsync<T>(this IBucket bucket, string key, T value, ulong cas, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task UpsertSafeAsync<T>(this IBucket bucket, string key, T value, ulong cas, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             // $todo(jeff.lill):
             //
@@ -733,7 +812,7 @@ namespace Couchbase
 
             var result = await bucket.UpsertAsync<T>(key, value, cas, uint.MaxValue, replicateTo, persistTo);
 
-            VerifySuccess(result);
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }
 
         /// <summary>
@@ -744,10 +823,10 @@ namespace Couchbase
         /// <param name="key">The key.</param>
         /// <param name="value">The value.</param>
         /// <param name="expiration">The expiration.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task UpsertSafeAsync<T>(this IBucket bucket, string key, T value, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task UpsertSafeAsync<T>(this IBucket bucket, string key, T value, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             // $todo(jeff.lill):
             //
@@ -755,7 +834,7 @@ namespace Couchbase
 
             var result = await bucket.UpsertAsync<T>(key, value, expiration, replicateTo, persistTo);
 
-            VerifySuccess(result);
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }
 
         /// <summary>
@@ -767,14 +846,14 @@ namespace Couchbase
         /// <param name="value">The value.</param>
         /// <param name="cas">The CAS.</param>
         /// <param name="expiration">The expiration.</param>
-        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.One"/>).</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
         /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public static async Task UpsertSafeAsync<T>(this IBucket bucket, string key, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.One, PersistTo persistTo = PersistTo.Zero)
+        public static async Task UpsertSafeAsync<T>(this IBucket bucket, string key, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             var result = await bucket.UpsertAsync<T>(key, value, cas, expiration, replicateTo, persistTo);
 
-            VerifySuccess(result);
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }
     }
 }

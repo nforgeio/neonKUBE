@@ -15,7 +15,7 @@ using Neon.Common;
 namespace Neon.Common
 {
     /// <summary>
-    /// Used to reference a block in a <see cref="BlockArray"/> or <see cref="Neon.Stack.IO.BlockStream"/>.
+    /// Used to reference a block in a <see cref="BlockArray"/> or <see cref="Neon.IO.BlockStream"/>.
     /// </summary>
     public sealed class Block
     {
