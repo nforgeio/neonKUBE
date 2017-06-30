@@ -75,7 +75,7 @@ namespace Neon.Cluster
         /// <returns>The current instance to support fluent-style coding.</returns>
         public new DebugSecrets Add(string secretName, string value)
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            value = value ?? string.Empty;
 
             base.Add(secretName, value);
 
@@ -90,7 +90,7 @@ namespace Neon.Cluster
         /// <returns>The current instance to support fluent-style coding.</returns>
         public DebugSecrets Add(string secretName, object value)
         {
-            Covenant.Requires<ArgumentNullException>(value != null);
+            value = value ?? string.Empty;
 
             base.Add(secretName, NeonHelper.JsonSerialize(value, Formatting.Indented));
 
