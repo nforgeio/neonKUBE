@@ -1,0 +1,78 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:	    TypeFilterAttribute.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+
+using System;
+using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Linq.Expressions;
+
+using Couchbase;
+using Couchbase.Authentication;
+using Couchbase.Configuration.Client;
+using Couchbase.Core;
+using Couchbase.IO;
+using Couchbase.Linq.Filters;
+
+using Neon.Cluster;
+using Neon.Common;
+using Neon.Data;
+using Neon.Retry;
+
+namespace Couchbase
+{
+    /// <summary>
+    /// Use this to decorate an <see cref="Entity{T}"/> implementations such that Linq2Couchbase
+    /// queries will automatically add where clause that filters on the specified document
+    /// type string.  This works much the same as the standard <see cref="DocumentTypeFilterAttribute"/>
+    /// except that this implementation queries on the <b>Type</b> property (with a capital "T")
+    /// and the standard filter queries on <b>type</b> (all lowercase).
+    /// </summary>
+    public class TypeFilterAttribute : DocumentFilterAttribute
+    {
+        /// <summary>
+        /// Filter the results to include documents with this string as the "type" attribute
+        /// </summary>
+        public string Type { get; set; }
+
+        /// <summary>
+        /// Creates a new DocumentTypeFilterAttribute
+        /// </summary>
+        /// <param name="type">Filter the results to include documents with this string as the <b>Type</b> attribute</param>
+        public TypeFilterAttribute(string type)
+        {
+            Type = type;
+        }
+
+        /// <summary>
+        /// Apply the filter to a LINQ query
+        /// </summary>
+        public override IDocumentFilter<T> GetFilter<T>()
+        {
+            return new WhereFilter<T>
+            {
+                Priority = Priority,
+                WhereExpression = GetExpression<T>()
+            };
+        }
+
+        private Expression<Func<T, bool>> GetExpression<T>()
+        {
+            var parameter = Expression.Parameter(typeof(T), "p");
+
+            return Expression.Lambda<Func<T, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, "Type"), Expression.Constant(Type)), parameter);
+        }
+
+        private class WhereFilter<T> : IDocumentFilter<T>
+        {
+            public Expression<Func<T, bool>> WhereExpression { get; set; }
+            public int Priority { get; set; }
+
+            public IQueryable<T> ApplyFilter(IQueryable<T> source)
+            {
+                return source.Where(WhereExpression);
+            }
+        }
+    }
+}
