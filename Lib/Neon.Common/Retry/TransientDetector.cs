@@ -137,7 +137,35 @@ namespace Neon.Retry
 
             if (httpRequestException != null)
             {
-                return true;
+                // $hack(jeff.lill): 
+                //
+                // Extract the formatted status code from the message which
+                // will look like this:
+                //
+                //      [status=404, reason=[Not Found]]: NotFound
+
+                var message = httpRequestException.Message;
+
+                if (message.StartsWith("[status="))
+                {
+                    var pos    = "[status=".Length;
+                    var posEnd = message.IndexOf(',', 0);
+
+                    if (int.TryParse(message.Substring(pos, posEnd - pos), out var statusCode))
+                    {
+                        switch ((HttpStatusCode)statusCode)
+                        {
+                            case HttpStatusCode.GatewayTimeout:
+                            case HttpStatusCode.InternalServerError:
+                            case HttpStatusCode.ServiceUnavailable:
+                            case (HttpStatusCode)429: // To many requests
+
+                                return true;
+                        }
+                    }
+                }
+
+                return false;
             }
 
             var httpException = e as HttpException;
