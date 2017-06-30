@@ -4,6 +4,7 @@
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
@@ -397,13 +398,6 @@ namespace Neon.Collections
         /// This constructor is useful for deserializing bitmaps persisted to a binary structure.
         /// </remarks>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="bytes" /> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">Thrown is <paramref name="length" /> is negative.</exception>
-        /// <remarks>
-        /// <note>
-        /// The byte array may be larger or smaller than the implied number of bits
-        /// as compared to the <paramref name="length" /> parameter.
-        /// </note>
-        /// </remarks>
         public Bits(byte[] bytes)
             : this(bytes, bytes.Length * 8)
         {

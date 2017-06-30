@@ -85,7 +85,7 @@ namespace Neon.Common
         /// Creates a deep clone of an object by first serializing to JSON and then
         /// deserializing it.
         /// </summary>
-        /// <typeparam name="TObject">The object type.</typeparam>
+        /// <typeparam name="T">The object type.</typeparam>
         /// <param name="value">The object being clonned or <c>null</c>.</param>
         /// <returns>The clone.</returns>
         public static T JsonClone<T>(T value)

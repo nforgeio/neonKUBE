@@ -21,9 +21,6 @@ namespace Neon.Time
     /// thread handlers even if a long-running thread is still handling an earlier
     /// timer event.
     /// </para>
-    /// <note>
-    /// Any exceptions thrown by timer callback will be logged to the <see cref="NeonHelper.Log" />.
-    /// </note>
     /// </remarks>
     public sealed class GatedTimer : IDisposable
     {

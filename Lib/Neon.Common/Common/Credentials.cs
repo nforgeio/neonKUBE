@@ -65,7 +65,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the credentials hold a <see cref="Usernamee"/> and <see cref="Password"/>.
+        /// Returns <c>true</c> if the credentials hold a <see cref="Username"/> and <see cref="Password"/>.
         /// </summary>
         [JsonIgnore]
         public bool HasUsernamePassword

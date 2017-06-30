@@ -27,7 +27,7 @@ namespace Neon.Collections
 {
     /// <summary>
     /// A dictionary of objects keyed by case insenstive strings used as a shorthand 
-    /// way for passing optional arguments to other class' methods (like <see cref="JsonClient"/>.
+    /// way for passing optional arguments to other class' methods.
     /// </summary>
     public class ArgDictionary : Dictionary<string, object>
     {

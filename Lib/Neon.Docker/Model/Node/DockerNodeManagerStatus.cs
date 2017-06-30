@@ -15,6 +15,9 @@ using Neon.Common;
 
 namespace Neon.Docker
 {
+    /// <summary>
+    /// Describes a Docker manager node's status.
+    /// </summary>
     public class DockerNodeManagerStatus
     {
         /// <summary>

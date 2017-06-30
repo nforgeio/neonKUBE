@@ -1,5 +1,8 @@
 ﻿namespace Microsoft.Net.Http.Client
 {
+    /// <summary>
+    /// Enumerates HTTP request redirect modes.
+    /// </summary>
     public enum RedirectMode
     {
         /// <summary>
