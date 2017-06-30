@@ -35,7 +35,7 @@ namespace Couchbase
     /// and the standard filter queries on <b>type</b> (all lowercase).
     /// </para>
     /// <para>
-    /// You can customize the property name by setting <see cref="PropertyName"/>.
+    /// You can customize the property name by setting <see cref="JsonProperty"/>.
     /// </para>
     /// </remarks>
     public class TypeFilterAttribute : DocumentFilterAttribute
@@ -46,9 +46,9 @@ namespace Couchbase
         public string Type { get; set; }
 
         /// <summary>
-        /// The entity property name to query.  This defaults to <b>"Type"</b>.
+        /// The entity's JSON property name to query.  This defaults to <b>"Type"</b>.
         /// </summary>
-        public string PropertyName { get; set; } = "Type";
+        public string JsonProperty { get; set; } = "Type";
 
         /// <summary>
         /// Creates a new DocumentTypeFilterAttribute
@@ -75,7 +75,7 @@ namespace Couchbase
         {
             var parameter = Expression.Parameter(typeof(T), "p");
 
-            return Expression.Lambda<Func<T, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, PropertyName), Expression.Constant(Type)), parameter);
+            return Expression.Lambda<Func<T, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, JsonProperty), Expression.Constant(Type)), parameter);
         }
 
         private class WhereFilter<T> : IDocumentFilter<T>
