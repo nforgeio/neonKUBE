@@ -12,7 +12,6 @@ using Couchbase.Configuration.Client;
 using Couchbase.Core;
 using Couchbase.IO;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Data;
 using Neon.Retry;

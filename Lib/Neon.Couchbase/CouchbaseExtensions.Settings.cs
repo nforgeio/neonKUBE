@@ -12,7 +12,6 @@ using Couchbase.Configuration.Client;
 using Couchbase.Core;
 using Couchbase.Core.Serialization;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Data;
 
@@ -69,21 +68,6 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Returns a Couchbase cluster connection using specified settings and a Docker secret.
-        /// </summary>
-        /// <param name="settings">The Couchbase settings.</param>
-        /// <param name="secretName">The name of the Docker secret holding the credentials.</param>
-        /// <returns>The connected <see cref="Cluster"/>.</returns>
-        public static Cluster OpenCluster(this CouchbaseSettings settings, string secretName)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secretName));
-
-            var credentials = NeonHelper.JsonDeserialize<Credentials>(NeonClusterHelper.GetSecret(secretName));
-
-            return OpenCluster(settings, credentials);
-        }
-
-        /// <summary>
         /// Returns a Couchbase bucket connection using specified settings and the username and password.
         /// </summary>
         /// <param name="settings">The Couchbase settings.</param>
@@ -128,21 +112,6 @@ namespace Couchbase
             Covenant.Requires<ArgumentNullException>(credentials != null);
 
             return settings.OpenBucket(credentials.Username, credentials.Password);
-        }
-
-        /// <summary>
-        /// Returns a Couchbase bucket connection using specified settings and a Docker secret.
-        /// </summary>
-        /// <param name="settings">The Couchbase settings.</param>
-        /// <param name="secretName">The Docker secret name.</param>
-        /// <returns>The connected <see cref="CouchbaseBucket"/>.</returns>
-        public static IBucket ConnectBucket(this CouchbaseSettings settings, string secretName)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secretName));
-
-            var credentials = NeonHelper.JsonDeserialize<Credentials>(NeonClusterHelper.GetSecret(secretName));
-
-            return OpenBucket(settings, credentials);
         }
 
         /// <summary>

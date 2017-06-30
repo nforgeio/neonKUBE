@@ -15,12 +15,12 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;NETSTANDARD1_5</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETSTANDARD1_6</DefineConstants>
     <DocumentationFile>bin\Debug\netstandard1.5\Neon.Cluster.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;RELEASE;NETSTANDARD1_5</DefineConstants>
+    <DefineConstants>TRACE;RELEASE;NETSTANDARD1_6</DefineConstants>
     <DocumentationFile>bin\Release\netstandard1.5\.xml</DocumentationFile>
   </PropertyGroup>
 
@@ -47,9 +47,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\External\SSH.NET\Renci.SshNet.NETCore\Renci.SshNet.NETCore.csproj" />
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.Couchbase\Neon.Couchbase.csproj" />
     <ProjectReference Include="..\Neon.Docker\Neon.Docker.csproj" />
-    <ProjectReference Include="..\Neon.RabbitMQ\Neon.RabbitMQ.csproj" />
   </ItemGroup>
 
   <ItemGroup>

@@ -15,7 +15,6 @@ using Couchbase.Core;
 using Couchbase.IO;
 using Couchbase.Linq.Filters;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Data;
 using Neon.Retry;
@@ -24,17 +23,32 @@ namespace Couchbase
 {
     /// <summary>
     /// Use this to decorate an <see cref="Entity{T}"/> implementations such that Linq2Couchbase
+    /// queries will automatically add where clause that filters on a specified document
+    /// type string.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// Use this to decorate an <see cref="Entity{T}"/> implementations such that Linq2Couchbase
     /// queries will automatically add where clause that filters on the specified document
     /// type string.  This works much the same as the standard <see cref="DocumentTypeFilterAttribute"/>
-    /// except that this implementation queries on the <b>Type</b> property (with a capital "T")
+    /// except that this implementation defaults to query on the <b>Type</b> property (with a capital "T")
     /// and the standard filter queries on <b>type</b> (all lowercase).
-    /// </summary>
+    /// </para>
+    /// <para>
+    /// You can customize the property name by setting <see cref="PropertyName"/>.
+    /// </para>
+    /// </remarks>
     public class TypeFilterAttribute : DocumentFilterAttribute
     {
         /// <summary>
         /// Filter the results to include documents with this string as the "type" attribute
         /// </summary>
         public string Type { get; set; }
+
+        /// <summary>
+        /// The entity property name to query.  This defaults to <b>"Type"</b>.
+        /// </summary>
+        public string PropertyName { get; set; } = "Type";
 
         /// <summary>
         /// Creates a new DocumentTypeFilterAttribute
@@ -52,7 +66,7 @@ namespace Couchbase
         {
             return new WhereFilter<T>
             {
-                Priority = Priority,
+                Priority        = Priority,
                 WhereExpression = GetExpression<T>()
             };
         }
@@ -61,7 +75,7 @@ namespace Couchbase
         {
             var parameter = Expression.Parameter(typeof(T), "p");
 
-            return Expression.Lambda<Func<T, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, "Type"), Expression.Constant(Type)), parameter);
+            return Expression.Lambda<Func<T, bool>>(Expression.Equal(Expression.PropertyOrField(parameter, PropertyName), Expression.Constant(Type)), parameter);
         }
 
         private class WhereFilter<T> : IDocumentFilter<T>

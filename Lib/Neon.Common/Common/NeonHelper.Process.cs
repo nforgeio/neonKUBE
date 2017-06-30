@@ -29,9 +29,9 @@ namespace Neon.Common
         /// is Windows or Linux/OSX.
         /// </para>
         /// <para>
-        /// For Windows, the <see cref="Process.Start"/> method does not search the PATH
-        /// for the application.  This method attempts to convert the program file name
-        /// into a fully qualified path by actually searching the PATH.
+        /// For Windows, the <see cref="Process.Start(ProcessStartInfo)"/> method does not 
+        /// search the PATH for the application.  This method attempts to convert the program
+        /// file name into a fully qualified path by actually searching the PATH.
         /// </para>
         /// <para>
         /// For Linux/OSX, the <paramref name="program"/> value is returned unchanged.
