@@ -22,6 +22,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Repository", "Repository", 
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		buildenv.cmd = buildenv.cmd
+		nuget-version.txt = nuget-version.txt
 		Setup-Build.docx = Setup-Build.docx
 	EndProjectSection
 EndProject
@@ -44,6 +45,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Couchbase.SyncGateway", "Lib\Neon.Couchbase.SyncGateway\Neon.Couchbase.SyncGateway.csproj", "{7017AF13-9C49-4C31-8304-9354D86E2886}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{FE7764F7-F5B5-4A92-9BE2-F51690EDF870}"
+	ProjectSection(SolutionItems) = preProject
+		Tools\pub-local.cmd = Tools\pub-local.cmd
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "text", "Tools\text\text.csproj", "{C33788B7-D2D0-42F9-A786-6E0419A97731}"
 	ProjectSection(ProjectDependencies) = postProject
@@ -109,6 +113,12 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Couchbase", "Lib\Neon.Couchbase\Neon.Couchbase.csproj", "{7AB3C81C-8F25-4F42-B992-947ACDF34056}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.RabbitMQ", "Lib\Neon.RabbitMQ\Neon.RabbitMQ.csproj", "{8397201A-C2CC-47A1-BF6C-336B11013E16}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ToolBin", "ToolBin", "{E9E3D01B-F890-4F0A-88F1-5F87E5D1F198}"
+	ProjectSection(SolutionItems) = preProject
+		ToolBin\pub-local.cmd = ToolBin\pub-local.cmd
+		ToolBin\pub-local.ps1 = ToolBin\pub-local.ps1
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
