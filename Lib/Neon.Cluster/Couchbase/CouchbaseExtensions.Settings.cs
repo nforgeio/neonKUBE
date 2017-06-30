@@ -171,7 +171,7 @@ namespace Couchbase
             }
 
             config.UseSsl                   = false;
-            config.Serializer               = () => new CouchbaseSerializer();
+            config.Serializer               = () => new DefaultSerializer(NeonHelper.JsonSerializerSettings, NeonHelper.JsonSerializerSettings);
             config.DefaultOperationLifespan = (uint)settings.OperationTimeout;
             config.DefaultConnectionLimit   = settings.MaxPoolConnections;
 
