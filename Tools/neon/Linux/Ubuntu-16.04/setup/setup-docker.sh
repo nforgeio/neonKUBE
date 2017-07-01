@@ -56,23 +56,24 @@ ln -s /mnt-data/docker /var/lib/docker
 #   https://docs.docker.com/engine/installation/linux/ubuntulinux/
 #
 # Note that NEON_DOCKER_VERSION can be set to [latest] (the default),
-# [test], [experimental], [development] or a version number like [1.12.0].
+# [test], [experimental], [development] or a version number like [17.03.0-ce].
 #
 # [latest], [test], and [experimental] install the current published
 # releases as described at https://github.com/docker/docker/releases
 # using the standard Docker setup scripts.
 #
-# Specifying a straight version number like [1.12.0] installs a specific
-# binary from https://get.docker.com/builds/Linux/x86_64/docker-1.12.0.tgz
+# Specifying a straight version number like [17.03.0-ce] installs a specific
+# binary from https://codeload.github.com/moby/moby/tar.gz//VERSION
 # as described here:
 #
 #   https://docs.docker.com/engine/installation/binaries/
 #
 # You can also specify the HTTP/HTTPS URI to the binary package to be installed.
 # This is useful for installing a custom build or a development snapshot copied 
-# from https://master.dockerproject.org/.  Be sure to copy the TAR file from:
+# from https://codeload.github.com/moby/moby/tar.gz/.  Be sure to copy the TAR file from
+# something like:
 #
-#       linux/amd64/docker-<docker-version>-dev.tgz
+#        https://codeload.github.com/moby/moby/tar.gz/VERSION
 
 # IMPORTANT!
 #
@@ -114,12 +115,19 @@ http*)
     # Specific Docker version requested.  We'll set ${binary_uri}
     # to the URI for binary and perform the actual installation below.
 
-    binary_uri="https://get.docker.com/builds/Linux/x86_64/docker-${NEON_DOCKER_VERSION}.tgz"
+    binary_uri="https://codeload.github.com/moby/moby/tar.gz/${NEON_DOCKER_VERSION}"
     ;;
 
 esac
 
 if [ "${binary_uri}" != "" ] ; then
+
+	# Make sure there are no temporary files and folders left over from
+	# a previous run.
+
+	rm -f /tmp/docker.tgz
+	rm -rf /tmp/docker
+	rm -rf /tmp/moby-${NEON_DOCKER_VERSION}
 
     # We're downloading and installing a specific Docker binary.
     # All we need to do is download the TAR binary and extract 
@@ -127,6 +135,17 @@ if [ "${binary_uri}" != "" ] ; then
 
     curl -4fsSLv ${CURL_RETRY} ${binary_uri} -o /tmp/docker.tgz 1>&2
     tar -xvzf /tmp/docker.tgz --directory /tmp
+
+	if [ ! -d /tmp/docker ]; then
+
+		# Older Docker releases would untar into a [docker] directory.
+		# Newer releases untar into a directory named [moby-${NEON_DOCKER_VERSION}].
+		# We're going to rename the newer folder (if necessary) to [docker] 
+		# so the remaining script will be simpler.
+
+		mv /tmp/moby-${NEON_DOCKER_VERSION} /tmp/docker
+	fi
+
     mv /tmp/docker/* /usr/bin
     rm -rf /tmp/docker
     rm -f /tmp/docker.tgz

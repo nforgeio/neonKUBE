@@ -77,9 +77,19 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Parses and validates a cluster definition file.
+        /// </summary>
+        /// <param name="path">The file path.</param>
+        /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
+        public static void ValidateFile(string path)
+        {
+            FromFile(path);
+        }
+
+        /// <summary>
         /// Parses a cluster definition from a file.
         /// </summary>
-        /// <param name="path"></param>
+        /// <param name="path">The file path.</param>
         /// <returns>The parsed <see cref="ClusterDefinition"/>.</returns>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         /// <remarks>
@@ -449,9 +459,13 @@ namespace Neon.Cluster
 
                     using (var client = new HttpClient())
                     {
-                        var response = client.GetAsync(new Uri(aptProxyUri, "/acng-report.html")).Result;
+                        try
+                        {
+                            var response = client.GetAsync(new Uri(aptProxyUri, "/acng-report.html")).Result;
 
-                        if (!response.IsSuccessStatusCode)
+                            response.EnsureSuccessStatusCode();
+                        }
+                        catch
                         {
                             throw new ClusterDefinitionException($"Could not reach the APT-PROXY server at [{aptProxyUri}].");
                         }

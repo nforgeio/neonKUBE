@@ -52,18 +52,18 @@ namespace Neon.Cluster
 
         /// <summary>
         /// <para>
-        /// The version of Docker to be installed.  This can be an older released Docker version
-        /// like <b>1.13.0</b> a new version like [17.03.0-ce].  You may also specify <b>latest</b>
+        /// The version of Docker to be installed like [17.03.0-ce].  You may also specify <b>latest</b>
         /// to install the most recent production release or <b>test</b> or <b>experimental</b> to
         /// install the latest releases from the test or experimental channels.
         /// </para>
         /// <para>
         /// You can also specify the HTTP/HTTPS URI to the binary package to be installed.
         /// This is useful for installing a custom build or a development snapshot copied 
-        /// from https://master.dockerproject.org/.  Be sure to copy the TAR file from:
+        /// from https://codeload.github.com/moby/moby/tar.gz/.  Be sure to copy the TAR file from
+        /// something like:
         /// </para>
         /// <example>
- 		/// linux/amd64/docker-<b>docker-version</b>-dev.tgz
+ 		/// https://codeload.github.com/moby/moby/tar.gz//VERSION
         /// </example>
         /// <para>
         /// This defaults to <b>latest</b>.
@@ -187,7 +187,7 @@ namespace Neon.Cluster
             else
             {
                 Version = version;
-                uri     = new Uri($"https://get.docker.com/builds/Linux/x86_64/docker-{version}.tgz");
+                uri     = new Uri($"https://codeload.github.com/moby/moby/tar.gz/{version}");
             }
 
             if (uri != null)
