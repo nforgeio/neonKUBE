@@ -123,7 +123,7 @@ OPTIONS:
                     NeonClusterHelper.VpnClose(clusterName);
                 }
 
-                Console.WriteLine($"Removed [{userName}@{clusterName}] login.");
+                Console.WriteLine($"Removed login [{userName}@{clusterName}]");
             }
             else
             {

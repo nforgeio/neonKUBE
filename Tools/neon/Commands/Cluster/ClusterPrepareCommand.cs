@@ -104,7 +104,10 @@ Server Requirements:
             }
 
             clusterDefPath = commandLine.Arguments[0];
-            cluster        = new ClusterProxy(ClusterDefinition.FromFile(clusterDefPath), Program.CreateNodeProxy<NodeDefinition>, RunOptions.LogOutput | RunOptions.FaultOnError);
+
+            ClusterDefinition.ValidateFile(clusterDefPath);
+
+            cluster = new ClusterProxy(ClusterDefinition.FromFile(clusterDefPath), Program.CreateNodeProxy<NodeDefinition>, RunOptions.LogOutput | RunOptions.FaultOnError);
 
             if (File.Exists(Program.GetClusterLoginPath(NeonClusterConst.RootUser, cluster.Definition.Name)))
             {
