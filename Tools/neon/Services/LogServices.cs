@@ -199,11 +199,11 @@ namespace NeonTool
                                     if (DateTime.UtcNow >= timeoutTime)
                                     {
                                         firstManager.Fault($"[Kibana] not initialized after waiting [{timeout}].");
+                                        return;
                                     }
                                 }
 
                                 Thread.Sleep(TimeSpan.FromSeconds(10));
-
                             }
 
                             // Wait for Kibana to initialize its configuration document.
