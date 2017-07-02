@@ -1460,6 +1460,7 @@ $@"docker login \
                             "--publish", $"{NeonHostPorts.ProxyVault}:{NetworkPorts.Vault}",
                             "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
                             "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
+                            "--restart-delay", "10s",
                             "neoncluster/neon-proxy-vault");
 
                     steps.Add(command);

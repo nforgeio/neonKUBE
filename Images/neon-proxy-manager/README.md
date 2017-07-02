@@ -51,8 +51,6 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon/service:`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neon-proxy-manager:`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`leader`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`leader_ttl_seconds: 60`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`poll-seconds: 300`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`cert-warn-days: 30`
 
@@ -85,17 +83,13 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`name2: <ProxyRoute json>`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`...`
 
-* **leader** Used to ensure that only one instance of neon-proxy-manager is actually active.
-
-* **leader_ttl_seconds** (*double*) Specifies the number of seconds a leader will hold onto the leader lock without renewing the session.  This should be somewhat longer than the time it takes for the neon-proxy-manager to generate the proxy configurations.  You may wish to increase this time for clusters with very extensive proxy routing rules.
-
 * **poll-seconds** (*double*) Specifies how often the proxy manager should scan TLS certificates persisted in Vault for expiration checks and updates and also poll the individual proxy definitions for changes.
 
 * **cert-warn-days** (*double*) Specifies the number of days in advance to begin warning of certificate expirations.
 
-* **proxies/.../conf** Holds public or private proxy�s generated HAProxy configuration as a ZIP archive.
+* **proxies/.../conf** Holds public or private proxy's generated HAProxy configuration as a ZIP archive.
 
-* **proxies/.../hash** The MD5 hash of the public or private proxy�s conf archive combined with the hash of all of the referenced certificates.  This is used by **neon-proxy** instances to detect when the proxy configuration has changed.
+* **proxies/.../hash** The MD5 hash of the public or private proxy's conf archive combined with the hash of all of the referenced certificates.  This is used by **neon-proxy** instances to detect when the proxy configuration has changed.
 
 * **status/...** (*json*) Describes the proxy route status at the time the **neon-proxy-manager** last processed cluster routes for the named proxy.
 
@@ -134,6 +128,7 @@ docker service create --name neon-proxy-manager \
     --secret neon-proxy-manager-credentials \
     --constraint node.role==manager \
     --replicas 1 \
+    --restart-delay 10s \
     --log-driver fluentd \
     neoncluster/neon-proxy-manager
 ````

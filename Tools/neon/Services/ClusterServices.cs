@@ -97,6 +97,7 @@ namespace NeonTool
                             unsealSecretOption,
                             "--constraint", "node.role==manager",
                             "--replicas", 1,
+                            "--restart-delay", "10s",
                             "neoncluster/neon-cluster-manager");
 
                     //---------------------------------------------------------
@@ -124,6 +125,7 @@ namespace NeonTool
                             "--secret", "neon-proxy-manager-credentials",
                             "--constraint", "node.role==manager",
                             "--replicas", 1,
+                            "--restart-delay", "10s",
                             "neoncluster/neon-proxy-manager");
 
                     // Initialize the public and private proxies.
@@ -171,6 +173,7 @@ namespace NeonTool
                             "--secret", "neon-proxy-public-credentials",
                             "--constraint", proxyConstraint,
                             "--mode", "global",
+                            "--restart-delay", "10s",
                             "--network", NeonClusterConst.ClusterPublicNetwork,
                             "neoncluster/neon-proxy");
 
@@ -188,6 +191,7 @@ namespace NeonTool
                             "--secret", "neon-proxy-private-credentials",
                             "--constraint", proxyConstraint,
                             "--mode", "global",
+                            "--restart-delay", "10s",
                             "--network", NeonClusterConst.ClusterPrivateNetwork,
                             "neoncluster/neon-proxy");
 

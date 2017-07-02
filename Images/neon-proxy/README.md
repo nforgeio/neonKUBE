@@ -126,6 +126,7 @@ docker service create --name neon-proxy-public \
     --secret neon-proxy-public-credentials \
     --constraint node.role!=manager \
     --mode global \
+    --restart-delay 10s \
     --network neon-cluster-public \
     neoncluster/neon-proxy
 
@@ -140,6 +141,7 @@ docker service create --name neon-proxy-private \
     --secret neon-proxy-public-credentials \
     --constraint node.role!=manager \
     --mode global \
+    --restart-delay 10s \
     --network neon-cluster-private \
     neoncluster/neon-proxy
 ````
