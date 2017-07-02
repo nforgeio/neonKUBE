@@ -375,7 +375,17 @@ namespace Neon.Cluster
         /// </summary>
         public static Uri VaultUri
         {
-            get { return new Uri(Environment.GetEnvironmentVariable("VAULT_ADDR")); }
+            get
+            {
+                var vaultUri = Environment.GetEnvironmentVariable("VAULT_ADDR");
+
+                if (string.IsNullOrEmpty(vaultUri))
+                {
+                    throw new NotSupportedException("Cannot access cluster Vault because the [VAULT_ADDR] environment variable was not passed to this container.");
+                }
+
+                return new Uri(vaultUri);
+            }
         }
 
         /// <summary>
@@ -383,7 +393,17 @@ namespace Neon.Cluster
         /// </summary>
         public static Uri ConsulUri
         {
-            get { return new Uri(Environment.GetEnvironmentVariable("CONSUL_HTTP_FULLADDR")); }
+            get
+            {
+                var consulUri = Environment.GetEnvironmentVariable("CONSUL_HTTP_FULLADDR");
+
+                if (string.IsNullOrEmpty(consulUri))
+                {
+                    throw new NotSupportedException("Cannot access cluster Consul because the [CONSUL_HTTP_FULLADDR] environment variable was not passed to this container.");
+                }
+
+                return new Uri(Environment.GetEnvironmentVariable("CONSUL_HTTP_FULLADDR"));
+            }
         }
 
         /// <summary>
@@ -561,7 +581,7 @@ namespace Neon.Cluster
         /// <note>
         /// This should only be called by services that are actually deployed in running 
         /// cluster containers that have mapped in the cluster node environment variables
-        /// (such as <b>NEON_CLUSTER</b>).
+        /// and host DNS mappings from <b>/etc/neoncluster/host-env</b>.
         /// </note>
         /// </summary>
         /// <exception cref="InvalidOperationException">
@@ -574,7 +594,7 @@ namespace Neon.Cluster
 
             if (Environment.GetEnvironmentVariable("NEON_CLUSTER") == null)
             {
-                throw new InvalidOperationException("Current process does not appear to be running as a cluster container with the node environment variables mapped in.");
+                throw new InvalidOperationException("Current process does not appear to be running as a cluster container with the [/etc/neoncluster/host-env] file mapped in.");
             }
 
             IsConnected        = true;
@@ -789,6 +809,26 @@ namespace Neon.Cluster
                 {
                     config.Address = ConsulUri;
                 });
+        }
+
+        /// <summary>
+        /// Returns an open cluster Consul client.
+        /// </summary>
+        /// <remarks>
+        /// <note>
+        /// The instance returned by the property is intended to be shared across
+        /// the application and should <b>not be disposed</b>.  Use <see cref="OpenConsul"/>
+        /// if you wish a private instance.
+        /// </note>
+        /// </remarks>
+        public static ConsulClient Consul
+        {
+            get
+            {
+                VerifyConnected();
+
+                return OpenConsul();
+            }
         }
 
         /// <summary>
@@ -1215,7 +1255,7 @@ namespace Neon.Cluster
         {
             VerifyConnected();
 
-            var connectionSettings = await Cluster.Consul.KV.GetObject<CouchbaseSettings>(connectionKey, cancellationToken);
+            var connectionSettings = await Consul.KV.GetObject<CouchbaseSettings>(connectionKey, cancellationToken);
             var credentials        = GetSecret<Credentials>(secretName);
 
             if (credentials == null)
@@ -1248,7 +1288,7 @@ namespace Neon.Cluster
         {
             VerifyConnected();
 
-            var connectionSettings = await Cluster.Consul.KV.GetObject<CouchbaseSettings>(connectionKey, cancellationToken);
+            var connectionSettings = await Consul.KV.GetObject<CouchbaseSettings>(connectionKey, cancellationToken);
             var credentials        = GetSecret<Credentials>(secretName);
 
             if (credentials == null)
@@ -1281,7 +1321,7 @@ namespace Neon.Cluster
         {
             VerifyConnected();
 
-            var connectionSettings = await Cluster.Consul.KV.GetObject<RabbitMQSettings>(connectionKey, cancellationToken);
+            var connectionSettings = await Consul.KV.GetObject<RabbitMQSettings>(connectionKey, cancellationToken);
             var credentials        = GetSecret<Credentials>(secretName);
 
             if (credentials == null)

@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard1.5</TargetFramework>
     <RootNamespace>Neon.RabbitMQ</RootNamespace>
-    <Version>0.0.4.33-preview</Version>
+    <Version>0.0.4.36-preview</Version>
     <Company>NeonForge, LLC</Company>
     <PackageReleaseNotes>This is still very much a work in progress and is not suitable for general usage.</PackageReleaseNotes>
     <Authors>Jeff Lill</Authors>
