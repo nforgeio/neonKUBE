@@ -56,15 +56,9 @@ namespace Neon.Cluster
         /// to install the most recent production release or <b>test</b> or <b>experimental</b> to
         /// install the latest releases from the test or experimental channels.
         /// </para>
-        /// <para>
-        /// You can also specify the HTTP/HTTPS URI to the binary package to be installed.
-        /// This is useful for installing a custom build or a development snapshot copied 
-        /// from https://codeload.github.com/moby/moby/tar.gz/.  Be sure to copy the TAR file from
-        /// something like:
-        /// </para>
-        /// <example>
- 		/// https://codeload.github.com/moby/moby/tar.gz//VERSION
-        /// </example>
+        /// <note>
+        /// Only Community Editions of Docker are supported at this time.
+        /// </note>
         /// <para>
         /// This defaults to <b>latest</b>.
         /// </para>
@@ -88,6 +82,42 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "Version", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue("latest")]
         public string Version { get; set; } = "latest";
+
+        /// <summary>
+        /// Returns <b>latest</b>, <b>test</b>, or <b>experimental</b> for current releases 
+        /// or the Ubuntu APT package version to be installed.
+        /// </summary>
+        [JsonIgnore]
+        public string PackageVersion
+        {
+            get
+            {
+                var version = Version.ToLowerInvariant();
+
+                switch (version)
+                {
+                    case "latest":
+                    case "test":
+                    case "experimental":
+
+                        return version;
+
+                    default:
+
+                        // Remove the "-ce" from the end of the version and then
+                        // return fully qualified package version.
+
+                        if (!version.EndsWith("-ce"))
+                        {
+                            throw new NotSupportedException("Docker version must end with [-ce] because only Docker Community Edition is supported at this time.");
+                        }
+
+                        version = version.Substring(0, version.Length - "-ce".Length);
+
+                        return $"{version}~ce-0~ubuntu-xenial";
+                }
+            }
+        }
 
         /// <summary>
         /// Specifies the URL of the Docker registry the cluster will use to download Docker images.
@@ -178,16 +208,17 @@ namespace Neon.Cluster
                 version == "test" ||
                 version == "experimental")
             {
-                Version   = version.ToLowerInvariant();
-            }
-            else if (Uri.TryCreate(Version, UriKind.Absolute, out uri))
-            {
-                Version = uri.ToString();   // Ensure that the scheme is lowercase.
+                Version = version.ToLowerInvariant();
             }
             else
             {
-                Version = version;
-                uri     = new Uri($"https://codeload.github.com/moby/moby/tar.gz/{version}");
+                Version = version.ToLowerInvariant();
+                uri     = new Uri($"https://codeload.github.com/moby/moby/tar.gz/v{version}");
+
+                if (!version.EndsWith("-ce"))
+                {
+                    throw new ClusterDefinitionException($"Version [{Version}] does not specify a Docker community edition.  NeonCluster only supports Docker Community Edition at this time.");
+                }
             }
 
             if (uri != null)

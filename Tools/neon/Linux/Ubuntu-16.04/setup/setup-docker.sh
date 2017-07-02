@@ -63,17 +63,9 @@ ln -s /mnt-data/docker /var/lib/docker
 # using the standard Docker setup scripts.
 #
 # Specifying a straight version number like [17.03.0-ce] installs a specific
-# binary from https://codeload.github.com/moby/moby/tar.gz//VERSION
-# as described here:
+# package, as described here:
 #
-#   https://docs.docker.com/engine/installation/binaries/
-#
-# You can also specify the HTTP/HTTPS URI to the binary package to be installed.
-# This is useful for installing a custom build or a development snapshot copied 
-# from https://codeload.github.com/moby/moby/tar.gz/.  Be sure to copy the TAR file from
-# something like:
-#
-#        https://codeload.github.com/moby/moby/tar.gz/VERSION
+#   https://docs.docker.com/engine/installation/linux/docker-ce/ubuntu/
 
 # IMPORTANT!
 #
@@ -82,80 +74,68 @@ ln -s /mnt-data/docker /var/lib/docker
 # same Docker release as the rest of the cluster.  This also prevents 
 # the package manager from inadvertently upgrading Docker.
 
-binary_uri=
+docker_version=
 
 case "${NEON_DOCKER_VERSION}" in
 
 test)
 
     curl -4fsSLv ${CURL_RETRY} https://test.docker.com/ | sh 1>&2
-    touch ${NEON_STATE_FOLDER}/docker-test-build
+    touch ${NEON_STATE_FOLDER}/docker
     ;;
 
 experimental)
 
     curl -4fsSLv ${CURL_RETRY} https://experimental.docker.com/ | sh 1>&2
-    touch ${NEON_STATE_FOLDER}/docker-experimental-build
+    touch ${NEON_STATE_FOLDER}/docker
     ;;
 
 latest)
-    # Install the latest production release from binaries further below.    
 
-    binary_uri=https://get.docker.com/builds/Linux/x86_64/docker-latest.tgz
-    ;;
-
-http*)
-    # NEON_DOCKER_VERSION is actually the URI for the binary and
-    # perform the actual installation below.
-    
-    binary_uri=${NEON_DOCKER_VERSION}
+    curl -4fsSLv ${CURL_RETRY} https://get.docker.com/ | sh 1>&2
+    touch ${NEON_STATE_FOLDER}/docker
     ;;
 
 *)
     # Specific Docker version requested.  We'll set ${binary_uri}
     # to the URI for binary and perform the actual installation below.
 
-    binary_uri="https://codeload.github.com/moby/moby/tar.gz/${NEON_DOCKER_VERSION}"
+    docker_version=${NEON_DOCKER_VERSION}
     ;;
 
 esac
 
-if [ "${binary_uri}" != "" ] ; then
+if [ "${docker_version}" != "" ] ; then
 
-	# Make sure there are no temporary files and folders left over from
-	# a previous run.
+	# Install prerequisites.
 
-	rm -f /tmp/docker.tgz
-	rm -rf /tmp/docker
-	rm -rf /tmp/moby-${NEON_DOCKER_VERSION}
+	apt-get install -yq apt-transport-https ca-certificates curl software-properties-common
 
-    # We're downloading and installing a specific Docker binary.
-    # All we need to do is download the TAR binary and extract 
-    # it to [/usr/bin].
+	# Configure the stable, edge, and testing repositorties
 
-    curl -4fsSLv ${CURL_RETRY} ${binary_uri} -o /tmp/docker.tgz 1>&2
-    tar -xvzf /tmp/docker.tgz --directory /tmp
+	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) edge"
+	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) testing"
 
-	if [ ! -d /tmp/docker ]; then
+	# Install a specific Docker version.
+	#
+	# This command lists the available versions:
+	#
+	#		apt-cache madison docker-ce
 
-		# Older Docker releases would untar into a [docker] directory.
-		# Newer releases untar into a directory named [moby-${NEON_DOCKER_VERSION}].
-		# We're going to rename the newer folder (if necessary) to [docker] 
-		# so the remaining script will be simpler.
+	# $todo(jeff.lill): SECURITY RISK
+	#
+	#	--allow-unauthenticated below is a security risk.
 
-		mv /tmp/moby-${NEON_DOCKER_VERSION} /tmp/docker
-	fi
-
-    mv /tmp/docker/* /usr/bin
-    rm -rf /tmp/docker
-    rm -f /tmp/docker.tgz
+	apt-get update
+	apt-get install -yq --allow-unauthenticated docker-ce=${docker_version}
 fi
 
 #--------------------------------------------------------------------------
 # We need to overwrite the Docker systemd unit file with one that has our
 # custom Docker options.  We'll save the Docker service file installed by
 # the package manager to [~/.save/docker/docker.service].  We may need to
-# restore this when  upgrading  Docker in the future.
+# restore this when upgrading  Docker in the future.
 #
 # Note that this file won't be present if we installed from binaries.
 

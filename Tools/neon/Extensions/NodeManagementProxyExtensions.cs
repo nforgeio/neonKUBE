@@ -327,7 +327,7 @@ namespace NeonTool
             SetBashVariable(preprocessReader, "ntp.manager.sources", managerTimeSources);
             SetBashVariable(preprocessReader, "ntp.worker.sources", workerTimeSources);
 
-            SetBashVariable(preprocessReader, "docker.version", clusterDefinition.Docker.Version);
+            SetBashVariable(preprocessReader, "docker.version", clusterDefinition.Docker.PackageVersion);
 
             SetBashVariable(preprocessReader, "consul.version", clusterDefinition.Consul.Version);
             SetBashVariable(preprocessReader, "consul.options", consulOptions);

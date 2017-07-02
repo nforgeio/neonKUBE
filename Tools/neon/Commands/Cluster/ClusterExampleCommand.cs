@@ -177,13 +177,6 @@ USAGE:
         // to install the most recent production release or specify [test], [experimental] for
         // other common release channels.
         //
-        //  You can also specify the HTTP/HTTPS URI to the binary package to be installed.
-        // This is useful for installing a custom build or a development snapshot copied 
-        // from https://codeload.github.com/moby/moby/tar.gz/.  Be sure to copy the TAR file from
-        // something like:
-        //
-        //      https://codeload.github.com/moby/moby/tar.gz/VERSION
-        // 
         // This defaults to [latest].
         //
         // IMPORTANT!
