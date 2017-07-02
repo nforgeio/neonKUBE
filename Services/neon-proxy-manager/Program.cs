@@ -9,8 +9,6 @@
 // This shouldn't reall be a problem since we're deploying only one service replica and the changes
 // are committed to Consul via a transaction.
 
-#define NO_LOCK
-
 using System;
 using System.Collections.Generic;
 using System.IO;
@@ -40,22 +38,19 @@ namespace NeonProxyManager
     /// </summary>
     public static class Program
     {
-        private const string serviceName         = "neon-proxy-manager";
-        private const string consulPrefix        = "neon/service/neon-proxy-manager";
-        private const string leaderKey           = consulPrefix + "/leader";
-        private const string leaderTTLSecondsKey = consulPrefix + "/leader-ttl-seconds";
-        private const string pollSecondsKey      = consulPrefix + "/poll-seconds";
-        private const string certWarnDaysKey     = consulPrefix + "/cert-warn-days";
-        private const string proxyConf           = consulPrefix + "/conf";
-        private const string proxyStatus         = consulPrefix + "/status";
-        private const string vaultCertPrefix     = "neon-secret/cert";
+        private const string serviceName     = "neon-proxy-manager";
+        private const string consulPrefix    = "neon/service/neon-proxy-manager";
+        private const string pollSecondsKey  = consulPrefix + "/poll-seconds";
+        private const string certWarnDaysKey = consulPrefix + "/cert-warn-days";
+        private const string proxyConf       = consulPrefix + "/conf";
+        private const string proxyStatus     = consulPrefix + "/status";
+        private const string vaultCertPrefix = "neon-secret/cert";
 
         private static TimeSpan                 delayTime = TimeSpan.FromSeconds(5);
         private static ProcessTerminator        terminator;
         private static ILog                     log;
         private static VaultClient              vault;
         private static ConsulClient             consul;
-        private static TimeSpan                 leaderTTL;
         private static TimeSpan                 pollInterval;
         private static TimeSpan                 certWarnTime;
         private static ClusterDefinition        cachedClusterDefinition;
@@ -82,8 +77,7 @@ namespace NeonProxyManager
                 Environment.SetEnvironmentVariable("VAULT_CREDENTIALS", vaultCredentialsSecret);
 
                 NeonClusterHelper.OpenRemoteCluster(
-                    new DebugSecrets()
-                        .VaultAppRole(vaultCredentialsSecret, "neon-proxy-manager"));
+                    new DebugSecrets().VaultAppRole(vaultCredentialsSecret, "neon-proxy-manager"));
             }
             else
             {
@@ -167,12 +161,6 @@ namespace NeonProxyManager
             // Initialize the proxy manager settings to their default values
             // if they don't already exist.
 
-            if (!await consul.KV.Exists(leaderTTLSecondsKey))
-            {
-                log.Info($"Persisting setting [{leaderTTLSecondsKey}=60.0]");
-                await consul.KV.PutDouble(leaderTTLSecondsKey, 60.0);
-            }
-
             if (!await consul.KV.Exists(pollSecondsKey))
             {
                 log.Info($"Persisting setting [{pollSecondsKey}=300.0]");
@@ -185,229 +173,166 @@ namespace NeonProxyManager
                 await consul.KV.PutDouble(certWarnDaysKey, 30.0);
             }
 
-            leaderTTL    = TimeSpan.FromSeconds(await consul.KV.GetDouble(leaderTTLSecondsKey));
             pollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(pollSecondsKey));
             certWarnTime = TimeSpan.FromDays(await consul.KV.GetDouble(certWarnDaysKey));
 
-            log.Info(() => $"Using setting [{leaderTTLSecondsKey}={leaderTTL}]");
             log.Info(() => $"Using setting [{pollSecondsKey}={pollSecondsKey}]");
             log.Info(() => $"Using setting [{certWarnDaysKey}={certWarnTime}]");
 
-#if !NO_LOCK
-            // We're going to use a Consul lock to prevent more than
-            // one proxy manager from generating proxy configurations.
+            // The implementation is pretty simple: We're going to watch
+            // the [neon/service/neon-proxy-manager/conf/] prefix for changes 
+            // with the timeout set to [pollTime].  The watch will fire 
+            // whenever [neon-cli] modifies a cluster certificate or any of
+            // the routes or settings for a proxy.
+            //
+            // Whenever the watch fires, the code will rebuild the proxy
+            // configurations and also update the deployment's public load balancer
+            // and network security as required.
 
-            var lockOpts = new LockOptions(leaderKey)
-            {
-                SessionName = Guid.NewGuid().ToString(),
-                SessionTTL  = leaderTTL
-            };
+            var cts  = new CancellationTokenSource();
+            var ct   = cts.Token;
+            var exit = false;
 
-            var leaderLock = consul.CreateLock(lockOpts);
+            // Gracefully exit when the application is being terminated (e.g. via a [SIGTERM]).
 
-            log.Info("Starting as FOLLOWER");
-#endif
+            terminator.AddHandler(
+                () =>
+                {
+                    exit = true;
+
+                    cts.Cancel();
+
+                    if (monitorTask != null)
+                    {
+                        if (monitorTask.Wait(terminator.Timeout))
+                        {
+                            log.Info(() => "Tasks stopped gracefully.");
+                        }
+                        else
+                        {
+                            log.Warn(() => $"Tasks did not stop within [{terminator.Timeout}].");
+                        }
+                    }
+                });
+
+            // Monitor Consul for configuration changes and update the proxy configs.
+
+            monitorTask = Task.Run(
+                async () =>
+                {
+                    log.Debug("Starting [Monitor] task.");
+
+                    var initialPoll = true;
+
+                    while (true)
+                    {
+                        log.Debug(() => "Polling");
+
+                        if (terminator.CancellationToken.IsCancellationRequested)
+                        {
+                            log.Debug(() => "Poll Terminating");
+                            return;
+                        }
+
+                        var utcNow = DateTime.UtcNow;
+
+                        try
+                        {
+                            await consul.KV.WatchPrefix(proxyConf + "/",
+                                async () =>
+                                {
+                                    if (initialPoll)
+                                    {
+                                        log.Info("Initial proxy configuration poll.");
+                                        initialPoll = false;
+                                    }
+                                    else
+                                    {
+                                        log.Info("Possible proxy or certificate change detected.");
+                                    }
+
+                                    // Load and check the cluster certificates.
+
+                                    var clusterCerts = new ClusterCerts();
+
+                                    log.Debug("Reading cluster certificates.");
+
+                                    try
+                                    {
+                                        foreach (var certName in await vault.ListAsync(vaultCertPrefix))
+                                        {
+                                            var certJson    = (await vault.ReadDynamicAsync($"{vaultCertPrefix}/{certName}")).ToString();
+                                            var certificate = NeonHelper.JsonDeserialize<TlsCertificate>(certJson);
+                                            var certInfo    = new CertInfo(certName, certificate);
+
+                                            if (!certInfo.Certificate.IsValidDate(utcNow))
+                                            {
+                                                log.Error(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] expired at [{certInfo.Certificate.ValidUntil.Value}].");
+                                            }
+                                            else if (!certInfo.Certificate.IsValidDate(utcNow + certWarnTime))
+                                            {
+                                                log.Warn(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] will expire in [{(certInfo.Certificate.ValidUntil.Value - utcNow).TotalDays}] days at [{certInfo.Certificate.ValidUntil}].");
+                                            }
+
+                                            clusterCerts.Add(certInfo);
+                                        }
+                                    }
+                                    catch (Exception e)
+                                    {
+                                        log.Error("Unable to load certificates from Vault.", e);
+                                        log.Error("Aborting proxy configuration.");
+                                        return;
+                                    }
+
+                                    // Rebuild the proxy configurations and write the captured status to
+                                    // Consul to make it available for the [neon proxy public|private status]
+                                    // command.
+
+                                    var publicBuildStatus = await BuildProxyConfigAsync("public", clusterCerts, ct);
+                                    var publicProxyStatus = new ProxyStatus() { Status = publicBuildStatus.Status };
+
+                                await consul.KV.PutString($"{proxyStatus}/public", NeonHelper.JsonSerialize(publicProxyStatus), ct);
+
+                                    var privateBuildStatus = await BuildProxyConfigAsync("private", clusterCerts, ct);
+                                    var privateProxyStatus = new ProxyStatus() { Status = privateBuildStatus.Status };
+
+                                    await consul.KV.PutString($"{proxyStatus}/private", NeonHelper.JsonSerialize(privateProxyStatus), ct);
+
+                                    // We need to ensure that the deployment's load balancer and security
+                                    // rules are updated to match changes to the public proxy routes.
+                                    // Note that we're going to call this even if the PUBLIC proxy
+                                    // hasn't changed to ensure that the load balancer doesn't get
+                                    // out of sync.
+
+                                    await UpdateClusterNetwork(publicBuildStatus.Routes, cts.Token);
+                                },
+                                timeout: pollInterval,
+                                cancellationToken: terminator.CancellationToken);
+                        }
+                        catch (TaskCanceledException)
+                        {
+                            log.Debug("Cancelling [Monitor] task.");
+                            return;
+                        }
+                        catch (Exception e)
+                        {
+                            log.Error(e);
+                        }
+
+                        if (exit)
+                        {
+                            return;
+                        }
+
+                        await Task.Delay(delayTime);
+                    }
+                });
+
+            // Just spin and let the monitor task run.
 
             while (true)
             {
-#if !NO_LOCK
-                if (!leaderLock.IsHeld)
-                {
-                    await leaderLock.Acquire();
-                }
-
-                log.Info("Promoted to LEADER");
-#endif
-
-                // The implementation is pretty simple: We're going to watch
-                // the [neon/service/neon-proxy-manager/conf/] prefix for changes 
-                // with the timeout set to [pollTime].  The watch will fire 
-                // whenever [neon-cli] modifies a cluster certificate or any of
-                // the routes or settings for a proxy.
-                //
-                // Whenever the watch fires, the code will rebuild the proxy
-                // configurations and also update the deployment's public load balancer
-                // and network security as required.
-                //
-                // We're also going to monitor the leader lock and cancel the task
-                // if we lose leadership status.
-
-                var cts  = new CancellationTokenSource();
-                var ct   = cts.Token;
-                var exit = false;
-
-                // Gracefully exit when the application is being terminated (e.g. via a [SIGTERM]).
-
-                terminator.AddHandler(
-                    () =>
-                    {
-                        exit = true;
-
-                        cts.Cancel();
-
-                        if (monitorTask != null)
-                        {
-                            if (monitorTask.Wait(terminator.Timeout))
-                            {
-                                log.Info(() => "Tasks stopped gracefully.");
-                            }
-                            else
-                            {
-                                log.Warn(() => $"Tasks did not stop within [{terminator.Timeout}].");
-                            }
-                        }
-                    });
-
-                var loadContext = AssemblyLoadContext.GetLoadContext(Assembly.GetEntryAssembly());
-
-                // Monitor Consul for configuration changes and update the proxy configs.
-
-                monitorTask = Task.Run(
-                    async () =>
-                    {
-                        log.Debug("Starting [Monitor] task.");
-
-                        var initialPoll = true;
-
-                        while (true)
-                        {
-                            log.Debug(() => "Polling");
-
-                            if (terminator.CancellationToken.IsCancellationRequested)
-                            {
-                                log.Debug(() => "Poll Terminating");
-                                return;
-                            }
-
-                            var utcNow = DateTime.UtcNow;
-
-                            try
-                                {
-                                await consul.KV.WatchPrefix(proxyConf + "/",
-                                    async () =>
-                                    {
-                                        if (initialPoll)
-                                        {
-                                            log.Info("Initial proxy configuration poll.");
-                                            initialPoll = false;
-                                        }
-                                        else
-                                        {
-                                            log.Info("Possible proxy or certificate change detected.");
-                                        }
-
-                                        // Load and check the cluster certificates.
-
-                                        var clusterCerts = new ClusterCerts();
-
-                                        log.Debug("Reading cluster certificates.");
-
-                                        try
-                                        {
-                                            foreach (var certName in await vault.ListAsync(vaultCertPrefix))
-                                            {
-                                                var certJson    = (await vault.ReadDynamicAsync($"{vaultCertPrefix}/{certName}")).ToString();
-                                                var certificate = NeonHelper.JsonDeserialize<TlsCertificate>(certJson);
-                                                var certInfo    = new CertInfo(certName, certificate);
-
-                                                if (!certInfo.Certificate.IsValidDate(utcNow))
-                                                {
-                                                    log.Error(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] expired at [{certInfo.Certificate.ValidUntil.Value}].");
-                                                }
-                                                else if (!certInfo.Certificate.IsValidDate(utcNow + certWarnTime))
-                                                {
-                                                    log.Warn(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] will expire in [{(certInfo.Certificate.ValidUntil.Value - utcNow).TotalDays}] days at [{certInfo.Certificate.ValidUntil}].");
-                                                }
-
-                                                clusterCerts.Add(certInfo);
-                                            }
-                                        }
-                                        catch (Exception e)
-                                        {
-                                            log.Error("Unable to load certificates from Vault.", e);
-                                            log.Error("Aborting proxy configuration.");
-                                            return;
-                                        }
-
-                                        // Rebuild the proxy configurations and write the captured status to
-                                        // Consul to make it available for the [neon proxy public|private status]
-                                        // command.
-
-                                        var publicBuildStatus = await BuildProxyConfigAsync("public", clusterCerts, ct);
-                                        var publicProxyStatus = new ProxyStatus() { Status = publicBuildStatus.Status };
-
-                                    await consul.KV.PutString($"{proxyStatus}/public", NeonHelper.JsonSerialize(publicProxyStatus), ct);
-
-                                        var privateBuildStatus = await BuildProxyConfigAsync("private", clusterCerts, ct);
-                                        var privateProxyStatus = new ProxyStatus() { Status = privateBuildStatus.Status };
-
-                                        await consul.KV.PutString($"{proxyStatus}/private", NeonHelper.JsonSerialize(privateProxyStatus), ct);
-
-                                        // We need to ensure that the deployment's load balancer and security
-                                        // rules are updated to match changes to the public proxy routes.
-                                        // Note that we're going to call this even if the PUBLIC proxy
-                                        // hasn't changed to ensure that the load balancer doesn't get
-                                        // out of sync.
-
-                                        await UpdateClusterNetwork(publicBuildStatus.Routes, cts.Token);
-                                    },
-                                    timeout: pollInterval,
-                                    cancellationToken: terminator.CancellationToken);
-                            }
-                            catch (TaskCanceledException)
-                            {
-                                log.Debug("Cancelling [Monitor] task.");
-                                return;
-                            }
-                            catch (Exception e)
-                            {
-                                log.Error(e);
-                            }
-
-                            if (exit)
-                            {
-                                return;
-                            }
-
-                            await Task.Delay(delayTime);
-                        }
-                    });
-
-#if !NO_LOCK
-                // Monitor the leader lock to detect when we are demoted.
-
-                while (leaderLock.IsHeld)
-                {
-                    await Task.Delay(delayTime);
-
-                    // The monitor task will complete only when there's an error.
-
-                    if (monitorTask.IsCompleted)
-                    {
-                        await leaderLock.Release();
-
-                        log.Info(() => $"Exiting: [{serviceName}]");
-                        Environment.Exit(1);
-                    }
-                }
-
-                log.Info("Demoted to FOLLOWER");
-
-                // Cancel the tasks then wait for them to stop.
-
-                cts.Cancel();
-
-                var timeout = TimeSpan.FromSeconds(30);
-
-                if (!monitorTask.Wait(timeout))
-                {
-                    throw new TimeoutException($"Unable to stop poll and/or monitor tasks within [{timeout}].");
-                }
-#endif
-
-#if !NO_LOCK
-                await leaderLock.Release();
-#endif
+                await Task.Delay(TimeSpan.FromSeconds(30));
             }
         }
 
