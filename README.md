@@ -83,13 +83,22 @@ Follow steps below to configure a development or test workstation.
   
     ![WinSCP Hidden Files](./README/WinSCPHiddenFiles.png)
 
-14. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
+14. Configure the NeonForge NuGet cli API key (so that batch publishing scripts will work).
 
-15. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+  * Obtain the API key from another developer (or follow these [instructions](https://docs.microsoft.com/en-us/nuget/create-packages/publish-a-package) to get your API key from NuGet.org).
+  * Run this DOS command, passing the key:
 
-16. *Optional*: Install Chrome **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
+  `setx NF_NUGET_API_KEY <API-KEY> /M`
 
-17. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+  * Restart Visual Studio and/or any command windows to pick up the change.
+
+15. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
+
+16. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+
+17. *Optional*: Install Chrome **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
+
+18. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
 ## Cloud Environments
 
@@ -123,7 +132,6 @@ Then you need to create credentials the **neon-cli** will use to authenticate wi
 6. Save the **Password** and **AppId** to the credentials file.
 
 7. Use the command below to create the service principal, passing the **AppId** captured above:
-
   `azure ad sp create -a APP-ID`
 
 8. Save the **ObjectId** returned as the **ServicePrincipalId** to the credentials file.
