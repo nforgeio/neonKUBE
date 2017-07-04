@@ -1,4 +1,4 @@
-# Publishes RELEASE builds of the NeonForge NuGet packages to the local
+# Publishes DEBUG builds of the NeonForge NuGet packages to the local
 # file system at: %NF_BUILD%\nuget.
 
 function Publish
@@ -10,7 +10,7 @@ function Publish
     )
 
 	text pack-version "$env:NF_ROOT\nuget-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
-	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -o "$env:NF_build\nuget"
+	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Debug --include-symbols --include-source -o "$env:NF_build\nuget"
 }
 
 Publish Neon.Cluster
