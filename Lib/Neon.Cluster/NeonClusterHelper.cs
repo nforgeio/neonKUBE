@@ -161,15 +161,15 @@ namespace Neon.Cluster
         /// <summary>
         /// Returns the path to the login information for the named cluster.
         /// </summary>
-        /// <param name="userName">The operator's user name.</param>
+        /// <param name="username">The operator's user name.</param>
         /// <param name="clusterName">The cluster name.</param>
         /// <returns>The path to the cluster's credentials file.</returns>
-        public static string GetClusterLoginPath(string userName, string clusterName)
+        public static string GetClusterLoginPath(string username, string clusterName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(userName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
 
-            return Path.Combine(GetClusterLoginFolder(), $"{userName}@{clusterName}.login.json");
+            return Path.Combine(GetClusterLoginFolder(), $"{username}@{clusterName}.login.json");
         }
 
         /// <summary>
@@ -201,13 +201,13 @@ namespace Neon.Cluster
                     return null;
                 }
 
-                var userName         = login.UserName;
+                var username         = login.Username;
                 var clusterName      = login.ClusterName;
-                var clusterLoginPath = GetClusterLoginPath(userName, clusterName);
+                var clusterLoginPath = GetClusterLoginPath(username, clusterName);
 
                 if (File.Exists(clusterLoginPath))
                 {
-                    var clusterLogin = NeonClusterHelper.LoadClusterLogin(userName, clusterName);
+                    var clusterLogin = NeonClusterHelper.LoadClusterLogin(username, clusterName);
 
                     clusterLogin.ViaVpn = current.ViaVpn;
 
@@ -218,7 +218,7 @@ namespace Neon.Cluster
 
                     OpenCluster(clusterLogin);
 
-                    var clusterDefinition = GetLiveClusterDefinition(userName, clusterName);
+                    var clusterDefinition = GetLiveClusterDefinition(username, clusterName);
 
                     clusterLogin.Definition.NodeDefinitions = clusterDefinition.NodeDefinitions;
 
@@ -238,27 +238,27 @@ namespace Neon.Cluster
         /// <summary>
         /// Returns the path to the cached cluster definition for the named cluster.
         /// </summary>
-        /// <param name="userName">The operator's user name.</param>
+        /// <param name="username">The operator's user name.</param>
         /// <param name="clusterName">The cluster name.</param>
         /// <returns>The path to the cluster's credentials file.</returns>
-        public static string GetCachedDefinitionPath(string userName, string clusterName)
+        public static string GetCachedDefinitionPath(string username, string clusterName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(userName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
 
-            return Path.Combine(GetClusterLoginFolder(), $"{userName}@{clusterName}.def.json");
+            return Path.Combine(GetClusterLoginFolder(), $"{username}@{clusterName}.def.json");
         }
 
         /// <summary>
         /// Returns the current cluster definition from the cluster if we're
         /// currently logged in.
         /// </summary>
-        /// <param name="userName">The operator's user name.</param>
+        /// <param name="username">The operator's user name.</param>
         /// <param name="clusterName">The cluster name.</param>
         /// <returns>The current cluster definition or <c>null</c>.</returns>
-        public static ClusterDefinition GetLiveClusterDefinition(string userName, string clusterName)
+        public static ClusterDefinition GetLiveClusterDefinition(string username, string clusterName)
         {
-            var clusterLoginPath = GetClusterLoginPath(userName, clusterName);
+            var clusterLoginPath = GetClusterLoginPath(username, clusterName);
 
             if (!File.Exists(clusterLoginPath))
             {
@@ -275,7 +275,7 @@ namespace Neon.Cluster
             // cluster definitions will change relatively infrequently for
             // many clusters.
 
-            var cachedDefinitionPath = GetCachedDefinitionPath(userName, clusterName);
+            var cachedDefinitionPath = GetCachedDefinitionPath(username, clusterName);
             var cachedDefinition     = (ClusterDefinition)null;
 
             if (File.Exists(cachedDefinitionPath))
@@ -318,7 +318,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="login">The cluster identifier.</param>
         /// <returns>The username and cluster name parts.</returns>
-        public static (bool IsOK, string UserName, string ClusterName) SplitLogin(string login)
+        public static (bool IsOK, string Username, string ClusterName) SplitLogin(string login)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(login));
 
@@ -326,24 +326,24 @@ namespace Neon.Cluster
 
             if (fields.Length != 2 || string.IsNullOrEmpty(fields[0]) || string.IsNullOrEmpty(fields[1]))
             {
-                return (IsOK: false, UserName: null, ClusterName: null);
+                return (IsOK: false, Username: null, ClusterName: null);
             }
 
-            return (IsOK: true, UserName: fields[0], ClusterName: fields[1]);
+            return (IsOK: true, Username: fields[0], ClusterName: fields[1]);
         }
 
         /// <summary>
         /// Loads the cluster login information for the current cluster, performing any necessary decryption.
         /// </summary>
-        /// <param name="userName">The operator's user name.</param>
+        /// <param name="username">The operator's user name.</param>
         /// <param name="clusterName">The name of the target cluster.</param>
         /// <returns>The <see cref="Cluster.ClusterLogin"/>.</returns>
-        public static ClusterLogin LoadClusterLogin(string userName, string clusterName)
+        public static ClusterLogin LoadClusterLogin(string username, string clusterName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(userName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
 
-            var path         = Path.Combine(GetClusterLoginFolder(), $"{userName}@{clusterName}.login.json");
+            var path         = Path.Combine(GetClusterLoginFolder(), $"{username}@{clusterName}.login.json");
             var clusterLogin = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(path));
 
             clusterLogin.Path = path;

@@ -26,38 +26,38 @@ namespace Neon.Cluster
         /// <summary>
         /// Returns credentials based on a user name and password.
         /// </summary>
-        /// <param name="userName">The user name.</param>
+        /// <param name="username">The user name.</param>
         /// <param name="password">The password.</param>
         /// <returns>The <see cref="SshCredentials"/>.</returns>
-        public static SshCredentials FromUserPassword(string userName, string password)
+        public static SshCredentials FromUserPassword(string username, string password)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(userName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
             Covenant.Requires<ArgumentNullException>(password != null);
 
             return new SshCredentials()
             {
-                UserName             = userName,
-                AuthenticationMethod = new PasswordAuthenticationMethod(userName, password)
+                Username             = username,
+                AuthenticationMethod = new PasswordAuthenticationMethod(username, password)
             };
         }
 
         /// <summary>
         /// Returns credentials based on a user name and password.
         /// </summary>
-        /// <param name="userName">The user name.</param>
+        /// <param name="username">The user name.</param>
         /// <param name="privateKey">The unencrypted PEM-encoded private key.</param>
         /// <returns>The <see cref="SshCredentials"/>.</returns>
-        public static SshCredentials FromPrivateKey(string userName, string privateKey)
+        public static SshCredentials FromPrivateKey(string username, string privateKey)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(userName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
             Covenant.Requires<ArgumentNullException>(privateKey != null);
 
             using (var privateKeyStream = new MemoryStream(Encoding.UTF8.GetBytes(privateKey)))
             {
                 return new SshCredentials()
                 {
-                    UserName             = userName,
-                    AuthenticationMethod = new PrivateKeyAuthenticationMethod(userName, new PrivateKeyFile(privateKeyStream))
+                    Username             = username,
+                    AuthenticationMethod = new PrivateKeyAuthenticationMethod(username, new PrivateKeyFile(privateKeyStream))
                 };
             }
         }
@@ -68,7 +68,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Returns the user name.
         /// </summary>
-        public string UserName { get; private set; }
+        public string Username { get; private set; }
 
         /// <summary>
         /// Returns the authentication method to be used to establish an SSH.NET session.

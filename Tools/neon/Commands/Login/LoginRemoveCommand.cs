@@ -85,13 +85,13 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            var userName         = login.UserName;
+            var username         = login.Username;
             var clusterName      = login.ClusterName;
-            var clusterLoginPath = Program.GetClusterLoginPath(userName, clusterName);
+            var clusterLoginPath = Program.GetClusterLoginPath(username, clusterName);
 
             if (File.Exists(clusterLoginPath))
             {
-                if (!commandLine.HasOption("--force") && !Program.PromptYesNo($"*** Are you sure you want to remove the [{userName}@{clusterName}] login?"))
+                if (!commandLine.HasOption("--force") && !Program.PromptYesNo($"*** Are you sure you want to remove the [{username}@{clusterName}] login?"))
                 {
                     return;
                 }
@@ -101,7 +101,7 @@ OPTIONS:
                 // Delete the backup and cached cluster definition files if present.
 
                 var backupPath     = clusterLoginPath + ".bak";
-                var definitionPath = NeonClusterHelper.GetCachedDefinitionPath(userName, clusterName);
+                var definitionPath = NeonClusterHelper.GetCachedDefinitionPath(username, clusterName);
 
                 if (File.Exists(backupPath))
                 {
@@ -116,18 +116,18 @@ OPTIONS:
                 // Remove the [.current] file if this is the logged-in cluster.
 
                 if (Program.ClusterLogin != null && 
-                    string.Equals(Program.ClusterLogin.Username, userName, StringComparison.OrdinalIgnoreCase) &&
+                    string.Equals(Program.ClusterLogin.Username, username, StringComparison.OrdinalIgnoreCase) &&
                     string.Equals(Program.ClusterLogin.ClusterName, clusterName, StringComparison.OrdinalIgnoreCase))
                 {
                     CurrentClusterLogin.Delete();
                     NeonClusterHelper.VpnClose(clusterName);
                 }
 
-                Console.WriteLine($"Removed [{userName}@{clusterName}]");
+                Console.WriteLine($"Removed [{username}@{clusterName}]");
             }
             else
             {
-                Console.WriteLine($"*** ERROR: Login [{userName}@{clusterName}] does not exist.");
+                Console.WriteLine($"*** ERROR: Login [{username}@{clusterName}] does not exist.");
                 return;
             }
 

@@ -67,9 +67,9 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            var userName         = login.UserName;
+            var username         = login.Username;
             var clusterName      = login.ClusterName;
-            var clusterLoginPath = Program.GetClusterLoginPath(userName, clusterName);
+            var clusterLoginPath = Program.GetClusterLoginPath(username, clusterName);
 
             if (File.Exists(clusterLoginPath))
             {
@@ -81,7 +81,7 @@ ARGUMENTS:
             }
             else
             {
-                Console.WriteLine($"*** ERROR: Login [{login.UserName}@{login.ClusterName}] does not exist.");
+                Console.WriteLine($"*** ERROR: Login [{login.Username}@{login.ClusterName}] does not exist.");
                 return;
             }
         }

@@ -682,15 +682,15 @@ tool requires admin priviledges for direct mode.
         /// <summary>
         /// Returns the path to the login information for the named cluster.
         /// </summary>
-        /// <param name="userName">The operator's user name.</param>
+        /// <param name="username">The operator's user name.</param>
         /// <param name="clusterName">The cluster name.</param>
         /// <returns>The path to the cluster's credentials file.</returns>
-        public static string GetClusterLoginPath(string userName, string clusterName)
+        public static string GetClusterLoginPath(string username, string clusterName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(userName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
 
-            return Path.Combine(ClusterLoginFolder, $"{userName}@{clusterName}.login.json");
+            return Path.Combine(ClusterLoginFolder, $"{username}@{clusterName}.login.json");
         }
 
         /// <summary>

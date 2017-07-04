@@ -168,7 +168,7 @@ namespace NeonTool
                             "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",
                             "--env", $"HOSTNAME={node.Name}.{NeonHosts.RegistryCache}",
                             "--env", $"REGISTRY={cluster.Definition.Docker.Registry}",
-                            "--env", $"USERNAME={cluster.Definition.Docker.RegistryUserName}",
+                            "--env", $"USERNAME={cluster.Definition.Docker.RegistryUsername}",
                             "--env", $"PASSWORD={cluster.Definition.Docker.RegistryPassword}",
                             "--env", "LOG_LEVEL=info",
                             "neoncluster/neon-registry-cache");

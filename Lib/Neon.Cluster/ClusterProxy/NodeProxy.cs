@@ -620,7 +620,7 @@ namespace Neon.Cluster
                 throw new Exception($"Node [{Name}] does not have a [{addressType}] address.");
             }
 
-            var connectionInfo = new ConnectionInfo(address, port, credentials.UserName, credentials.AuthenticationMethod)
+            var connectionInfo = new ConnectionInfo(address, port, credentials.Username, credentials.AuthenticationMethod)
             {
                 Timeout = ConnectTimeout
             };
@@ -844,7 +844,7 @@ namespace Neon.Cluster
         /// </summary>
         public string HomeFolderPath
         {
-            get { return $"/home/{credentials.UserName}"; }
+            get { return $"/home/{credentials.Username}"; }
         }
 
         /// <summary>

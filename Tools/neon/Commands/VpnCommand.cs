@@ -315,7 +315,7 @@ USAGE:
                 commandLine.Arguments[1] == "user" &&
                 commandLine.Arguments[2] == "create")
             {
-                var userName = commandLine.Arguments[3];
+                var username = commandLine.Arguments[3];
 
                 shim.SetPostAction(
                     exitCode =>
@@ -885,9 +885,9 @@ nsCertType              = server
         {
             DirectNotAllowed();
 
-            var userName = commandLine.Arguments.FirstOrDefault();
+            var username = commandLine.Arguments.FirstOrDefault();
 
-            if (string.IsNullOrEmpty(userName))
+            if (string.IsNullOrEmpty(username))
             {
                 Console.WriteLine("***ERROR: USER argument is required.");
                 Program.Exit(1);
@@ -895,7 +895,7 @@ nsCertType              = server
 
             var isUserValid = true;
 
-            foreach (var ch in userName)
+            foreach (var ch in username)
             {
                 if (!(char.IsLetterOrDigit(ch) || ch == '.' || ch == '_' || ch == '-'))
                 {
@@ -906,17 +906,17 @@ nsCertType              = server
 
             if (!isUserValid)
             {
-                Console.WriteLine($"***ERROR: USER [{userName}] is not valid.  Only letters, digits, periods, underscores, or dashes are allowed.");
+                Console.WriteLine($"***ERROR: USER [{username}] is not valid.  Only letters, digits, periods, underscores, or dashes are allowed.");
                 Program.Exit(1);
             }
 
-            switch (userName.ToLowerInvariant())
+            switch (username.ToLowerInvariant())
             {
                 case "ca":
                 case "dhparam":
                 case "server":
 
-                    Console.WriteLine($"***ERROR: USER [{userName}] is reserved by NeonCluster.  Please choose another name.");
+                    Console.WriteLine($"***ERROR: USER [{username}] is reserved by NeonCluster.  Please choose another name.");
                     Program.Exit(1);
                     break;
             }
@@ -964,17 +964,17 @@ nsCertType              = server
                 var serverKeyPath = Path.Combine(caFolder, "server.key");
                 var serverReqPath = Path.Combine(caFolder, "server.req");
                 var serverCrtPath = Path.Combine(caFolder, "server.crt");
-                var userCnfPath   = Path.Combine(caFolder, $"{userName}.cnf");
-                var userReqPath   = Path.Combine(caFolder, $"{userName}.req");
-                var userKeyPath   = Path.Combine(caFolder, $"{userName}.key");
-                var userCrtPath   = Path.Combine(caFolder, $"{userName}.crt");
+                var userCnfPath   = Path.Combine(caFolder, $"{username}.cnf");
+                var userReqPath   = Path.Combine(caFolder, $"{username}.req");
+                var userKeyPath   = Path.Combine(caFolder, $"{username}.key");
+                var userCrtPath   = Path.Combine(caFolder, $"{username}.crt");
                 var taKeyPath     = Path.Combine(caFolder, "ta.key");
                 var crlnumberPath = Path.Combine(caFolder, "crlnumber");
                 var crlPath       = Path.Combine(caFolder, "crl.pem");
 
                 // Build the new user client login.
 
-                File.WriteAllText(userCnfPath, GetClientConfig(cluster.Definition, userName, rootPrivileges));
+                File.WriteAllText(userCnfPath, GetClientConfig(cluster.Definition, username, rootPrivileges));
 
                 Program.Execute("openssl", "req", "-new",
                     "-config", userCnfPath,
@@ -992,7 +992,7 @@ nsCertType              = server
 
                 var newLogin = clusterLogin.Clone();
 
-                newLogin.Username                = userName;
+                newLogin.Username                = username;
                 newLogin.VpnCredentials.UserCert = VpnCaFiles.NormalizePem(File.ReadAllText(userCrtPath));
                 newLogin.VpnCredentials.UserKey  = File.ReadAllText(userKeyPath);
 
@@ -1001,8 +1001,8 @@ nsCertType              = server
                     newLogin.ClearRootSecrets();
                 }
 
-                File.WriteAllText($"{userName}@{newLogin.ClusterName}.login.json", NeonHelper.JsonSerialize(newLogin, Formatting.Indented));
-                File.WriteAllText("new-login.txt", $"{userName}@{newLogin.ClusterName}.login.json");
+                File.WriteAllText($"{username}@{newLogin.ClusterName}.login.json", NeonHelper.JsonSerialize(newLogin, Formatting.Indented));
+                File.WriteAllText("new-login.txt", $"{username}@{newLogin.ClusterName}.login.json");
 
                 // ZIP the CA files and store them to the cluster Vault.
 

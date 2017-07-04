@@ -95,12 +95,12 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            var userName    = login.UserName;
+            var usernme    = login.Username;
             var clusterName = login.ClusterName;
 
             if (clusterLogin != null && 
                 (!string.Equals(clusterLogin.ClusterName, clusterName, StringComparison.OrdinalIgnoreCase) ||
-                 !string.Equals(clusterLogin.Username, userName, StringComparison.OrdinalIgnoreCase)))
+                 !string.Equals(clusterLogin.Username, usernme, StringComparison.OrdinalIgnoreCase)))
             {
                 Console.WriteLine($"Logging out of [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
                 CurrentClusterLogin.Delete();
@@ -115,11 +115,11 @@ ARGUMENTS:
 
             // Fetch the new cluster login.
 
-            var clusterLoginPath = Program.GetClusterLoginPath(userName, clusterName);
+            var clusterLoginPath = Program.GetClusterLoginPath(usernme, clusterName);
 
             if (!File.Exists(clusterLoginPath))
             {
-                Console.Error.WriteLine($"*** ERROR: Cannot find login [{userName}@{clusterName}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot find login [{usernme}@{clusterName}].");
                 Program.Exit(1);
             }
 

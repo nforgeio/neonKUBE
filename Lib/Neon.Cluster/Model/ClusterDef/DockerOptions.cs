@@ -131,9 +131,9 @@ namespace Neon.Cluster
         /// Optionally specifies the username to be used to authenticate against the Docker registry
         /// and mirrors.
         /// </summary>
-        [JsonProperty(PropertyName = "RegistryUserName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "RegistryUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string RegistryUserName { get; set; } = null;
+        public string RegistryUsername { get; set; } = null;
 
         /// <summary>
         /// Optionally specifies the password to be used to authenticate against the Docker registry
@@ -198,7 +198,7 @@ namespace Neon.Cluster
 
             Version          = Version ?? "latest";
             Registry         = Registry ?? defaultRegistry;
-            RegistryUserName = RegistryUserName ?? string.Empty;
+            RegistryUsername = RegistryUsername ?? string.Empty;
             RegistryPassword = RegistryPassword ?? string.Empty;
 
             var version = Version.Trim().ToLower();

@@ -110,10 +110,10 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            var userName    = login.UserName;
+            var username    = login.Username;
             var clusterName = login.ClusterName;
 
-            clusterLoginPath = Program.GetClusterLoginPath(userName, clusterName);
+            clusterLoginPath = Program.GetClusterLoginPath(username, clusterName);
 
             if (!File.Exists(clusterLoginPath))
             {
@@ -425,10 +425,10 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            var userName    = login.UserName;
+            var username    = login.Username;
             var clusterName = login.ClusterName;
 
-            var clusterLoginPath = Program.GetClusterLoginPath(userName, clusterName);
+            var clusterLoginPath = Program.GetClusterLoginPath(username, clusterName);
 
             if (!File.Exists(clusterLoginPath))
             {
@@ -1099,7 +1099,7 @@ export CONSUL_HTTP_FULLADDR=http://{NeonHosts.Consul}:{cluster.Definition.Consul
                     node.SudoCommand("chmod 660 /etc/docker/daemon.json");
                     node.SudoCommand("setup-docker.sh");
 
-                    if (!string.IsNullOrEmpty(cluster.Definition.Docker.RegistryUserName))
+                    if (!string.IsNullOrEmpty(cluster.Definition.Docker.RegistryUsername))
                     {
                         // We need to log into the registry and/or cache.
 
@@ -1109,7 +1109,7 @@ export CONSUL_HTTP_FULLADDR=http://{NeonHosts.Consul}:{cluster.Definition.Consul
 
                         loginCommand.AddFile("docker-login.sh",
 $@"docker login \
--u ""{cluster.Definition.Docker.RegistryUserName}"" \
+-u ""{cluster.Definition.Docker.RegistryUsername}"" \
 -p ""{cluster.Definition.Docker.RegistryPassword}"" \
 {cluster.Definition.Docker.Registry}",
                             isExecutable: true);
@@ -1244,7 +1244,7 @@ $@"docker login \
                     node.UploadText("/etc/docker/daemon.json", GetDockerConfig(node));
                     node.SudoCommand("setup-docker.sh");
 
-                    if (!string.IsNullOrEmpty(cluster.Definition.Docker.RegistryUserName))
+                    if (!string.IsNullOrEmpty(cluster.Definition.Docker.RegistryUsername))
                     {
                         // We need to log into the registry and/or cache.
 
@@ -1254,7 +1254,7 @@ $@"docker login \
 
                         loginCommand.AddFile("docker-login.sh",
 $@"docker login \
--u ""{cluster.Definition.Docker.RegistryUserName}"" \
+-u ""{cluster.Definition.Docker.RegistryUsername}"" \
 -p ""{cluster.Definition.Docker.RegistryPassword}"" \
 {cluster.Definition.Docker.Registry}", 
                             isExecutable: true);
