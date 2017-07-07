@@ -170,7 +170,7 @@ usage: text replace     -TEXT=VALUE... FILE
         }
 
         /// <summary>
-        /// Reads a NuGet package version string from the first line of a text file and
+        /// Reads a Nuget package version string from the first line of a text file and
         /// then updates the version section in a CSPROJ file with the version.  This
         /// is useful for batch publishing multiple libraries.
         /// </summary>

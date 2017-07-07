@@ -1,5 +1,5 @@
-# Publishes DEBUG builds of the NeonForge NuGet packages to the
-# local file system and public NuGet.org repositories.
+# Publishes DEBUG builds of the NeonForge Nuget packages to the
+# local file system and public Nuget.org repositories.
 
 function Publish
 {
@@ -10,7 +10,7 @@ function Publish
     )
 
 	text pack-version "$env:NF_ROOT\nuget-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
-	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Debug --include-symbols --include-source -o "$env:NF_build\nuget"
+	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$env:NF_build\nuget"
 
 	$version = Get-Content "$env:NF_ROOT\nuget-version.txt" -First 1
 	nuget push "$env:NF_BUILD\nuget\$project.$version.nupkg" $env:NF_NUGET_API_KEY

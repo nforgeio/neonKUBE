@@ -4,7 +4,7 @@
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 //
 // For some reason, I can reference the [Microsoft.Build.Framework] and [Microsoft.Build.Utilities]
-// NuGet packages by the application won't run (it's unable to locate the assemblies.  I suspect
+// Nuget packages by the application won't run (it's unable to locate the assemblies.  I suspect
 // that this is a Visual Studio 2017 RC issue that will hopefully be resolved for it goes RTM.
 // I'll report this to MSFT.
 //

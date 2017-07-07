@@ -46,7 +46,7 @@
 *.suo
 **/launchSettings.json
 
-# NuGet Packages
+# Nuget Packages
 *.nupkg
 # The packages folder can be ignored because of Package Restore
 **/packages/*

@@ -83,9 +83,9 @@ Follow steps below to configure a development or test workstation.
   
     ![WinSCP Hidden Files](./README/WinSCPHiddenFiles.png)
 
-14. Configure the NeonForge NuGet cli API key (so that batch publishing scripts will work).
+14. Configure the NeonForge Nuget cli API key (so that batch publishing scripts will work).
 
-  * Obtain the API key from another developer (or follow these [instructions](https://docs.microsoft.com/en-us/nuget/create-packages/publish-a-package) to get your API key from NuGet.org).
+  * Obtain the API key from another developer (or follow these [instructions](https://docs.microsoft.com/en-us/nuget/create-packages/publish-a-package) to get your API key from Nuget.org).
   * Run this DOS command, passing the key:
 
   `setx NF_NUGET_API_KEY <API-KEY> /M`
@@ -99,6 +99,11 @@ Follow steps below to configure a development or test workstation.
 17. *Optional*: Install Chrome **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
 
 18. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+
+19. *Optional*: To target Microsoft Bot Framework apps at .NET Core 2.0:
+
+  * Install Visual Studio Community Edition 2017 15.3+ Preview (full) from: [here](https://www.visualstudio.com/vs/preview/)
+  * Install .NET Core SDK 2.0.0 Preview 2+ (Windows 64-bit) from: [here](https://www.microsoft.com/net/core/preview#windowscmd)
 
 ## Cloud Environments
 

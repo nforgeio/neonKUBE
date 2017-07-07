@@ -1,4 +1,4 @@
-# Publishes DEBUG builds of the NeonForge NuGet packages to the local
+# Publishes DEBUG builds of the NeonForge Nuget packages to the local
 # file system at: %NF_BUILD%\nuget.
 
 function Publish
