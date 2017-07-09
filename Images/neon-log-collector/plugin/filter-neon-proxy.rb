@@ -38,7 +38,8 @@ module Fluent
 			rawMessage = record["message"];
 
 			# We expect the message to hold the raw syslog message (without the priority).
-			# HAProxy related messages will prefix the HAProxy message part with:
+			# fields are separated by the pipe (|) character.  HAProxy related messages will
+			# prefix the HAProxy message part with:
 			#
 			#		"haproxy[#]: "
 			#
@@ -50,13 +51,13 @@ module Fluent
 
 				# Handle traffic and status events differently.
 
-				if message.start_with?("traffic»")
+				if message.start_with?("traffic|")
 
 					# Note that for valid formats, we're going to remove the original
 					# message from the event since this just duplicates what we're going
 					# to record in the [proxy] property.
 
-					fields = message.split('»');
+					fields = message.split('|');
 
 					case fields[1]
 

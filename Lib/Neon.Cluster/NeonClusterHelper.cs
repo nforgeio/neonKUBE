@@ -996,7 +996,7 @@ namespace Neon.Cluster
         /// <returns>The HAProxy log format string.</returns>
         /// <remarks>
         /// <para>
-        /// The log format consists fields separated by the <b>» (0xbb)</b>character.  None of the values 
+        /// The log format consists fields separated by the pipe (<b>|</b>) character.  None of the values 
         /// should include this so quoting or escaping are not required.  The tables below describe the 
         /// fields and include the HAProxy log format codes.  See the
         /// <a href="http://cbonte.github.io/haproxy-dconv/1.7/configuration.html#8.2.4">HAPoxy Documentation</a> 
@@ -1235,11 +1235,11 @@ namespace Neon.Cluster
         {
             if (tcp)
             {
-                return $"traffic»tcp-v1»{proxyName}»%t»%ci»%b»%s»%si»%sp»%sslv»%sslc»%U»%B»%Tw»%Tc»%Tt»%ts»%ac»%fc»%bc»%sc»%rc»%sq»%bq";
+                return $"traffic|tcp-v1|{proxyName}|%t|%ci|%b|%s|%si|%sp|%sslv|%sslc|%U|%B|%Tw|%Tc|%Tt|%ts|%ac|%fc|%bc|%sc|%rc|%sq|%bq";
             }
             else
             {
-                return $"traffic»http-v1»{proxyName}»%tr»%ci»%b»%s»%si»%sp»%sslv»%sslc»%U»%B»%Tw»%Tc»%Tt»%ts»%ac»%fc»%bc»%sc»%rc»%sq»%bq»%ID»%Ti»%TR»%Tr»%Ta»%HM»%HP»%HQ»%HV»%ST»%hr";
+                return $"traffic|http-v1|{proxyName}|%tr|%ci|%b|%s|%si|%sp|%sslv|%sslc|%U|%B|%Tw|%Tc|%Tt|%ts|%ac|%fc|%bc|%sc|%rc|%sq|%bq|%ID|%Ti|%TR|%Tr|%Ta|%HM|%HP|%HQ|%HV|%ST|%hr";
             }
         }
 
