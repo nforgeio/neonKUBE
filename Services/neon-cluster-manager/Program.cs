@@ -22,6 +22,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
+using Neon.Net;
 
 namespace NeonClusterManager
 {
@@ -188,9 +189,78 @@ namespace NeonClusterManager
 
             // Launch the sub-tasks.  These will run until the service is terminated.
 
-            await NeonHelper.WaitAllAsync(
-                NodePoller(),
-                VaultPoller());
+            var tasks = new List<Task>();
+
+            tasks.Add(NodePoller());
+
+            // $hack(jeff.lill):
+            //
+            // We need to start a vault poller for the vault instance running on each manager
+            // node.  We're going to construct the direct Vault URIs by parsing the Vault
+            // host names from the [hosts] file.  The Vault host names will look like:
+            //
+            //      *.neon-vault.cluster
+
+            var vaultUris = new List<string>();
+
+            if (NeonHelper.IsWindows)
+            {
+                // Assume that we're running in development mode if we're on Windows.
+
+                vaultUris.Add(Environment.GetEnvironmentVariable("VAULT_DIRECT"));
+            }
+            else
+            {
+                using (var reader = new StreamReader(new FileStream("/etc/hosts", FileMode.Open, FileAccess.Read)))
+                {
+                    foreach (var line in reader.Lines())
+                    {
+                        var extract = line.Trim();
+
+                        // Strip out any comments.
+
+                        var commentPos = line.IndexOf('#');
+
+                        if (commentPos != -1)
+                        {
+                            extract = extract.Substring(0, commentPos).Trim();
+                        }
+
+                        if (string.IsNullOrEmpty(extract))
+                        {
+                            continue;   // Ignore blank lines
+                        }
+
+                        // Extract the hostname
+
+                        var hostPos = 0;
+
+                        while (hostPos < extract.Length && !char.IsLetter(extract[hostPos]))
+                        {
+                            hostPos++;
+                        }
+
+                        if (hostPos >= extract.Length)
+                        {
+                            continue;   // Ignore malformed DNS entries.
+                        }
+
+                        var hostname = extract.Substring(hostPos);
+
+                        if (hostname.EndsWith(".neon-vault.cluster", StringComparison.OrdinalIgnoreCase))
+                        {
+                            vaultUris.Add($"https://{hostname}:{NetworkPorts.Vault}");
+                        }
+                    }
+                }
+            }
+
+            foreach (var uri in vaultUris)
+            {
+                tasks.Add(VaultPoller(uri));
+            }
+
+            await NeonHelper.WaitAllAsync(tasks);
 
             terminator.ReadyToExit();
         }
@@ -282,19 +352,13 @@ namespace NeonClusterManager
         /// <summary>
         /// Handles polling of Vault seal status and automatic unsealing if enabled.
         /// </summary>
+        /// <param name="vaultUri">The URI for the Vault instance being managed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task VaultPoller()
+        private static async Task VaultPoller(string vaultUri)
         {
             // Each cluster manager instance is only going to manage the Vault instance
             // running on the same host manager node.
 
-            // $todo(jeff.lill):
-            //
-            // This will need to change in the future when (hopefully) we'll be able
-            // deploy [neon-cluster-manager] as a service.  At that point, we'll need
-            // a single cluster manager to be able to manage all Vaults.
-
-            var vaultUri        = Environment.GetEnvironmentVariable("VAULT_DIRECT_ADDR");
             var lastVaultStatus = (VaultStatus)null;
 
             // We're going to periodically log Vault status even
@@ -303,7 +367,7 @@ namespace NeonClusterManager
             var statusUpdateTimeUtc  = DateTime.UtcNow;
             var statusUpdateInterval = TimeSpan.FromMinutes(30);
 
-            log.Debug(() => "Opening Vault");
+            log.Debug(() => $"Vault: opening [{vaultUri}]");
 
             using (var vault = VaultClient.OpenWithToken(new Uri(vaultUri)))
             {
@@ -313,17 +377,17 @@ namespace NeonClusterManager
                 {
                     try
                     {
-                        log.Debug(() => "VaultPolling: Polling");
+                        log.Debug(() => $"Vault: polling [{vaultUri}]");
 
                         if (terminator.CancellationToken.IsCancellationRequested)
                         {
-                            log.Debug(() => "VaultPolling: Terminating");
+                            log.Debug(() => $"Vault: terminating [{vaultUri}]");
                             return;
                         }
 
                         // Monitor Vault for status changes and handle unsealing if enabled.
 
-                        log.Debug(() => $"VaultPoller: Querying status from [{vaultUri}]");
+                        log.Debug(() => $"Vault: querying [{vaultUri}]");
 
                         var newVaultStatus = await vault.GetHealthAsync(terminator.CancellationToken);
                         var changed        = false;
@@ -341,11 +405,11 @@ namespace NeonClusterManager
                         {
                             if (!newVaultStatus.IsInitialized || newVaultStatus.IsSealed)
                             {
-                                log.Error(() => $"Vault Status: CHANGED");
+                                log.Error(() => $"Vault: status CHANGED [{vaultUri}]");
                             }
                             else
                             {
-                                log.Info(() => $"Vault Status: CHANGED");
+                                log.Info(() => $"Vault: status CHANGED [{vaultUri}]");
                             }
 
                             statusUpdateTimeUtc = DateTime.UtcNow; // Force logging status below
@@ -355,11 +419,11 @@ namespace NeonClusterManager
                         {
                             if (!newVaultStatus.IsInitialized || newVaultStatus.IsSealed)
                             {
-                                log.Error(() => $"Vault Status: {newVaultStatus}");
+                                log.Error(() => $"Vault: status={newVaultStatus} [{vaultUri}]");
                             }
                             else
                             {
-                                log.Info(() => $"Vault Status: {newVaultStatus}");
+                                log.Info(() => $"Vault: status={newVaultStatus} [{vaultUri}]");
                             }
 
                             statusUpdateTimeUtc = DateTime.UtcNow + statusUpdateInterval;
@@ -373,9 +437,9 @@ namespace NeonClusterManager
                         {
                             try
                             {
-                                log.Info(() => "Unsealing Vault");
+                                log.Info(() => $"Vault: unsealing [{vaultUri}]");
                                 await vault.UnsealAsync(vaultCredentials, terminator.CancellationToken);
-                                log.Info(() => "Vault UNSEALED");
+                                log.Info(() => $"Vault: UNSEALED [{vaultUri}]");
 
                                 // Schedule a status update on the next loop
                                 // and then loop immediately so we'll log the
@@ -386,18 +450,18 @@ namespace NeonClusterManager
                             }
                             catch (Exception e)
                             {
-                                log.Error("Vault unseal failed", e);
+                                log.Error($"Vault: unseal failed [{vaultUri}]", e);
                             }
                         }
                     }
                     catch (OperationCanceledException)
                     {
-                        log.Debug(() => "VaultPolling: Terminating");
+                        log.Debug(() => $"Vault: terminating [{vaultUri}]");
                         return;
                     }
                     catch (Exception e)
                     {
-                        log.Error("VaultPoller", e);
+                        log.Error($"Vault: [{vaultUri}]", e);
                     }
 
                     await Task.Delay(vaultPollInterval, terminator.CancellationToken);
