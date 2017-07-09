@@ -123,6 +123,11 @@ namespace Neon.Cluster
         /// <param name="context">The validation context.</param>
         public virtual void Validate(ProxyValidationContext context)
         {
+            if (string.IsNullOrEmpty(Name))
+            {
+                context.Error($"Proxy route name is required.");
+            }
+
             if (!ClusterDefinition.NameRegex.IsMatch(Name))
             {
                 context.Error($"Proxy route name [{nameof(Name)}={Name}] is not valid.");

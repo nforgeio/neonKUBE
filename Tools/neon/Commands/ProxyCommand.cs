@@ -106,6 +106,7 @@ Traffic is routed to the [foo_service] on port 80 which could be a Docker
 swarm mode service or DNS name.
 
     {
+        ""Name"": ""my-http-route"",
         ""Mode"": ""http"",
         ""HttpsRedirect"": true,
         ""Frontends"": [
@@ -125,6 +126,7 @@ HAProxy server listening on Docker ingress port 11102 port which then
 load balances the traffic to the backend servers listening on port 1000:
 
     {
+        ""Name"": ""my-tcp-route"",
         ""Mode"": ""tcp"",
         ""Frontends"": [
             { ""PublicPort"": 1000, ""ProxyPort"": 11102 }
@@ -426,7 +428,7 @@ See the documentation for more proxy route and setting details.
             {
                 switch (commandLine.Arguments[2])
                 {
-                    case "add":
+                    case "put":
                     case "settings":
 
                         shim.AddFile(commandLine.Arguments[3]);
