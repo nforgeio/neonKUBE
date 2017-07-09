@@ -171,8 +171,8 @@ usage: text replace     -TEXT=VALUE... FILE
 
         /// <summary>
         /// Reads a Nuget package version string from the first line of a text file and
-        /// then updates the version section in a CSPROJ file with the version.  This
-        /// is useful for batch publishing multiple libraries.
+        /// then updates the version section in a CSPROJ file or NUSPEC with the version.  
+        /// This is useful for batch publishing multiple libraries.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
         private static void PackVersion(CommandLine commandLine)
@@ -198,7 +198,7 @@ usage: text replace     -TEXT=VALUE... FILE
 
             var version = lines[0].Trim();
             var csproj  = File.ReadAllText(csprojPath);
-            var pos     = csproj.IndexOf("<Version>");
+            var pos     = csproj.IndexOf("<Version>", StringComparison.OrdinalIgnoreCase);
 
             pos += "<Version>".Length;
 
@@ -208,7 +208,7 @@ usage: text replace     -TEXT=VALUE... FILE
                 Program.Exit(1);
             }
 
-            var posEnd = csproj.IndexOf("</Version>", pos);
+            var posEnd = csproj.IndexOf("</Version>", pos, StringComparison.OrdinalIgnoreCase);
 
             if (posEnd == -1)
             {
