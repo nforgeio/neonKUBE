@@ -9,7 +9,8 @@ This product includes the GeoLite2 database created by MaxMind, available from [
 * `2017.02.08`
 * `2017.03.07`
 * `2017.04.04`
-* `2017.05.02, latest`
+* `2017.05.02`
+* `2017.07.04, latest`
 
 We'll retain several of the most recent images.
 
