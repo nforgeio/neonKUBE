@@ -84,9 +84,9 @@ USAGE:
     neon cert combine PATH-CERT PATH-KEY PATH-OUTPUT
     neon cert get NAME
     neon cert list|ls [--expired | --expiring]
+    neon cert put NAME PATH
+    neon cert put NAME PATH-CERT PATH-KEY
     neon cert remove|rm NAME
-    neon cert set NAME PATH
-    neon cert set NAME PATH-CERT PATH-KEY
     neon cert split PATH PATH-CERT PATH-KEY 
     neon verify PATH
 
@@ -112,8 +112,8 @@ certificates, and then finally the private key.
                 --expiring  lists certificates that have expired
                             or will expire within 30 days.
 
+    put         Saves or updates a named cluster certificate.
     remove|rm   Removes a named cluster certificate.
-    set         Saves or updates a named cluster certificate.
     split       Splits a certificate into its parts.
     verify      Verifies a local certificate file.
 
@@ -302,7 +302,7 @@ certificates, and then finally the private key.
                     }
                     break;
 
-                case "set":
+                case "put":
 
                     Program.ConnectCluster();
 
@@ -380,7 +380,7 @@ certificates, and then finally the private key.
 
                     return new ShimInfo(isShimmed: false);
 
-                case "set":
+                case "put":
 
                     if (commandLine.Arguments.Length >= 4)
                     {
