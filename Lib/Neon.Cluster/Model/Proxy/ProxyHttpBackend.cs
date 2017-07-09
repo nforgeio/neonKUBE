@@ -30,7 +30,7 @@ namespace Neon.Cluster
     public class ProxyHttpBackend
     {
         /// <summary>
-        /// The optional server backend server name.  The <b>neon-proxy-manmager</b> will
+        /// The optional server backend server name.  The <b>neon-proxy-manager</b> will
         /// generate a unique name within the route if this isn't specified.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
