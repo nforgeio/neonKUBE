@@ -121,11 +121,11 @@ namespace Neon.Cluster
         // external traffic into the cluster.
         //
         // [5100-5102] are used to route general purpose HTTP/S traffic
-        //             to both NeonCluster and user services.
+        //             to both NeonCluster and application services.
         //
         // [5102-5109] are reserved for internal NeonCluster TCP routes.
         //
-        // [5110-5299] are available for use by user services for TCP or
+        // [5110-5299] are available for use by application services for TCP or
         //             HTTP/S traffic.
 
         /// <summary>
@@ -166,11 +166,11 @@ namespace Neon.Cluster
         // Ports [5300-5499] are reserved for the private cluster proxy.
         //
         // [5300-5301] are used to route general purpose HTTP/S traffic
-        //             to both NeonCluster and user services.
+        //             to both NeonCluster and application services.
         //
         // [5302-5309] are reserved for internal NeonCluster TCP routes.
         //
-        // [5310-5499] are available for use by user services for TCP or
+        // [5310-5499] are available for use by application services for TCP or
         //             HTTP/S traffic.
 
         /// <summary>
