@@ -53,6 +53,14 @@ module Fluent
 
 				if message.start_with?("traffic^")
 
+					# Traffic events originated from services running on Docker, so
+					# change the [service_host] field from [systemd] to [docker].
+					# We need to do this because HAProxy logs events via syslog
+					# and the log pipeline assumes that syslog events come from
+					# services hosted directly by systemd.
+
+					record["service_host"] = "docker";
+
 					# Note that for valid formats, we're going to remove the original
 					# message from the event since this just duplicates what we're going
 					# to record in the [proxy] property.
