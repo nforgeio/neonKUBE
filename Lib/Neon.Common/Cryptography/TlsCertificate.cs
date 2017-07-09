@@ -182,7 +182,7 @@ namespace Neon.Cryptography
 
             if (keyPos < certPos)
             {
-                throw new ArgumentException($"[{nameof(pemCombined)}] is improperly formatted: The private key comes before the certificate.");
+                throw new ArgumentException($"[{nameof(pemCombined)}] is improperly formatted: The private key must be after the certificate.");
             }
 
             if (certPos > 0)
