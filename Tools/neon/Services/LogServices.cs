@@ -225,8 +225,8 @@ namespace NeonTool
                                     if (response.IsSuccess)
                                     {
                                         queryResults = (JObject)response.AsDynamic();
-                                        hitsObject = (JObject)queryResults.GetValue("hits");
-                                        hitsArray = (JArray)hitsObject.GetValue("hits");
+                                        hitsObject   = (JObject)queryResults.GetValue("hits");
+                                        hitsArray    = (JArray)hitsObject.GetValue("hits");
 
                                         if (hitsArray.Count > 0)
                                         {
