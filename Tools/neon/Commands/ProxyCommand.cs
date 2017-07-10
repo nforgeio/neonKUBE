@@ -21,6 +21,7 @@ using Newtonsoft.Json;
 using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
+using ICSharpCode.SharpZipLib.Zip;
 
 namespace NeonTool
 {
@@ -58,6 +59,8 @@ ARGUMENTS:
 COMMANDS:
 
     get             - Displays a specific route.
+
+    haproxy         - Outputs the HAProxy configuration.
 
     inspect         - Displays JSON details for all proxy routes
                       and settings.
@@ -231,6 +234,52 @@ See the documentation for more proxy route and setting details.
                     }
 
                     Console.WriteLine(NeonHelper.JsonSerialize(route, Formatting.Indented));
+                    break;
+
+                case "haproxy":
+
+                    // We're going to download the proxy's ZIP archive containing the [haproxy.cfg]
+                    // file, extract the file, and write it to the console.
+
+                    using (var consul = NeonClusterHelper.OpenConsul())
+                    {
+                        var confKey = $"neon/service/neon-proxy-manager/proxies/{proxyName}/conf";
+
+                        try
+                        {
+                            var confZipBytes = consul.KV.GetBytes(confKey).Result;
+
+                            using (var msZipData = new MemoryStream(confZipBytes))
+                            {
+                                using (var zip = new ZipFile(msZipData))
+                                {
+                                    var entry = zip.GetEntry("haproxy.cfg");
+
+                                    if (entry == null || !entry.IsFile)
+                                    {
+                                        Console.WriteLine($"*** ERROR: HAProxy ZIP configuration in Consul at [{confKey}] appears to be corrupt.  Cannot locate the [haproxy.cfg] entry.");
+                                        Program.Exit(1);
+                                    }
+
+                                    using (var entryStream = zip.GetInputStream(entry))
+                                    {
+                                        using (var reader = new StreamReader(entryStream))
+                                        {
+                                            foreach (var line in reader.Lines())
+                                            {
+                                                Console.WriteLine(line);
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                        catch (KeyNotFoundException)
+                        {
+                            Console.WriteLine($"*** ERROR: HAProxy ZIP configuration was not found in Consul at [{confKey}].");
+                            Program.Exit(1);
+                        }
+                    }
                     break;
 
                 case "inspect":
