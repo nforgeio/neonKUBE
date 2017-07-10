@@ -812,8 +812,9 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
             // HTTP routes are a bit tricker:
             //
             //      1. We need to generate an HAProxy frontend for each IP/port combination 
-            //         and then use HOST header or SNI rules to the correct backend.  NeonCluster
-            //         proxy frontends don't map directly to HAProxy frontends.
+            //         and then use HOST header or SNI rules to map the correct backend.  
+            //         This means that NeonCluster proxy frontends don't map directly to 
+            //         HAProxy frontends.
             //
             //      2. We need to generate an HAProxy backend for each NeonCluster proxy backend.
             //

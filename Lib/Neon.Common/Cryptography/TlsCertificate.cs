@@ -159,10 +159,11 @@ namespace Neon.Cryptography
         }
 
         /// <summary>
-        /// Constructs an instance by parsing the combined certficiate and private key
+        /// Constructs an instance by parsing the combined site certificate, any intermediate
+        /// certificates followed by the private key
         /// as PEM encoded text.
         /// </summary>
-        /// <param name="pemCombined">The certificate text followed by the private key text.</param>
+        /// <param name="pemCombined">The certificate(s) followed by the private key text.</param>
         public TlsCertificate(string pemCombined)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(pemCombined));
