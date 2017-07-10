@@ -15,13 +15,13 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Consul;
+using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft;
 using Newtonsoft.Json;
 
 using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
-using ICSharpCode.SharpZipLib.Zip;
 
 namespace NeonTool
 {
