@@ -145,9 +145,12 @@ if [ -f ${CONFIG_NEW_FOLDER}/.certs ] ; then
         # temporary JSON file and build the HAProxy certificates
         # by appending the key to the cert.
 
-        cat ${CERT_TEMP} | jq -r '.data.cert' > ${CERT_DIR}/${CERT_FILE}
-        cat ${CERT_TEMP} | jq -r '.data.key' >> ${CERT_DIR}/${CERT_FILE}
-        rm ${CERT_TEMP}
+        cat ${CERT_TEMP} | jq -r '.data.Cert' > ${CERT_DIR}/${CERT_FILE}
+        cat ${CERT_TEMP} | jq -r '.data.Key' >> ${CERT_DIR}/${CERT_FILE}
+
+        if [ "${DEBUG}" != "true" ] ; then
+            rm ${CERT_TEMP}
+        fi
     done
 fi
 
