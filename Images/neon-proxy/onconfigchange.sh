@@ -28,7 +28,7 @@
 #       starting HAProxy for the first time (ultimately terminating the container).
 #       Errors will be logged when restarting but we'll leave an existing HAProxy 
 #       running with the old configuration for resiliency and will fork a script 
-#       that will  periodically log warnings while the proxy is out-of-date.
+#       that will periodically log warnings while the proxy is out-of-date.
 
 if pidof haproxy ; then
     export RESTARTING=true
@@ -243,7 +243,7 @@ export HAPROXY_CONFIG_FOLDER=${CONFIG_FOLDER}
 
 haproxy -f ${CONFIG_PATH} ${STOP_OPTION} ${DEBUG_OPTION}
 
-# Give HAProxy a change to start/restart cleanly before 
+# Give HAProxy a chance to start/restart cleanly before 
 # the potential for another update.
 
 sleep ${START_SECONDS}
