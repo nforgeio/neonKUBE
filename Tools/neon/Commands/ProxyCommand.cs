@@ -388,7 +388,7 @@ See the documentation for more proxy route and setting details.
                             var proxyStatus = NeonHelper.JsonDeserialize<ProxyStatus>(statusJson);
 
                             Console.WriteLine();
-                            Console.WriteLine($"Status Time: {proxyStatus.TimestampUtc} (UTC)");
+                            Console.WriteLine($"Snapshot Time: {proxyStatus.TimestampUtc} (UTC)");
                             Console.WriteLine();
 
                             using (var reader = new StringReader(proxyStatus.Status))
