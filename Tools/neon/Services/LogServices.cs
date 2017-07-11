@@ -162,6 +162,7 @@ namespace NeonTool
                                 if (DateTime.UtcNow >= timeoutTime)
                                 {
                                     firstManager.Fault($"Unable to verify [neon-log-esdata] cluster after waiting [{timeout}].");
+                                    return;
                                 }
                             }
 
