@@ -24,7 +24,7 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes the global settings for a NeonCluster proxy.
+    /// Describes the global settings for a neonCLUSTER proxy.
     /// </summary>
     public class ProxySettings
     {

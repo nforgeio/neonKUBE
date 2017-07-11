@@ -28,7 +28,7 @@ namespace NeonTool
     {
         private const string usage = @"
 Configures cloud platform virtual machines  so that they are prepared 
-to host a NeonCluster.
+to host a neonCLUSTER.
 
 USAGE:
 
@@ -370,7 +370,7 @@ Server Requirements:
 
             var serverConf =
 $@"#------------------------------------------------------------------------------
-# OpenVPN config file customized for the [{manager.Name}] NeonCluster manager node.
+# OpenVPN config file customized for the [{manager.Name}] neonCLUSTER manager node.
 
 # OpenVPN listening port.
 port {NetworkPorts.OpenVPN}

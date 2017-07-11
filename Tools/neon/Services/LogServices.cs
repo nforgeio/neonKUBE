@@ -35,7 +35,7 @@ namespace NeonTool
     /// </summary>
     /// <remarks>
     /// <para>
-    /// NeonCluster logging is implemented by deploying <b>Elasticsearch</b>, <b>TD-Agent</b>, and 
+    /// neonCLUSTER logging is implemented by deploying <b>Elasticsearch</b>, <b>TD-Agent</b>, and 
     /// <b>Kibana</b>.  
     /// </para>
     /// <para>
@@ -60,7 +60,7 @@ namespace NeonTool
     /// </para>
     /// <para>
     /// <b>TD-Agent</b> is the community version of <b>Fluend</b> and is the foundation of the
-    /// NeonCluster logging pipeline.  This is deployed as the <b>neon-log-host</b> local container
+    /// neonCLUSTER logging pipeline.  This is deployed as the <b>neon-log-host</b> local container
     /// to every cluster node to capture the host systemd journal and syslog events as well
     /// as any container events forwarded by the local Docker daemon via the <b>fluent</b>
     /// log driver.  The appropriate events will be forwarded to the cluster's <b>neon-log-collector</b>

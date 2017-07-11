@@ -31,7 +31,7 @@ namespace Neon.Cluster
     /// The current implementation is focused on creating a cluster reachable from the
     /// external Internet via a load balancer or application gateway.  All Azure assets
     /// will be created within a specified resource group by appending a suffix to the
-    /// NeonCluster's name.
+    /// neonCLUSTER's name.
     /// </para>
     /// </remarks>
     public partial class AzureHostingManager : HostingManager
@@ -40,7 +40,7 @@ namespace Neon.Cluster
         // --------------------
         // The cluster is deployed behind an Azure load balancer which is configured to forward
         // TCP traffic on specified frontend ports to an internal port on any cluster node.
-        // NeonClusters will encounter three types of network traffic:
+        // neonCLUSTERs will encounter three types of network traffic:
         //
         //      1. We provision the cluster in two available sets: one for the manager nodes
         //         and the other for the workers.  This is required because we need to tightly
@@ -71,7 +71,7 @@ namespace Neon.Cluster
         //         first)  and then node name.   These load balancer mappings will be deleted once
         //         the cluster has been fully provisioned.
         //
-        //      5. VPN traffic: NeonClusters deploy an internal VPN, with the cluster manager
+        //      5. VPN traffic: neonCLUSTERs deploy an internal VPN, with the cluster manager
         //         nodes running OpenVPN running and listening on it's standard port (1194).
         //         The Azure load balancer will be configured to NAT TCP connections from 
         //         reserved frontend ports starting at [37100] by default to internal port 1194 
@@ -80,7 +80,7 @@ namespace Neon.Cluster
         //      6. Application service traffic.  This is the website, webapi, and TCP traffic
         //         to your application services.  This traffic will be load balanced to every
         //         worker node, mapping the frontend port to an internal one.  Typically,
-        //         the PUBLIC NeonCluster proxy will be configured to receive the inbound
+        //         the PUBLIC neonCLUSTER proxy will be configured to receive the inbound
         //         traffic on the Docker ingress network and forward it on to your Docker services.
         //
         //      7. It is possible to assign a public IP address to each cluster node.  This can
@@ -89,7 +89,7 @@ namespace Neon.Cluster
         //         route through the load balancers.
         //
         // Azure limits its load balancers to a maximum of 150 port mapping rules.  To make
-        // things easy, we're going to limit NeonClusters deployed to Azure to 100 nodes and 150 
+        // things easy, we're going to limit neonCLUSTERs deployed to Azure to 100 nodes and 150 
         // hosted frontend application endpoints.  This means that we can have one SSH NAT rule
         // for each node during setup and one OpenVPN NAT rule for each manager node.
         //

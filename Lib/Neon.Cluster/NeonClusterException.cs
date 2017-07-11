@@ -21,7 +21,7 @@ using Neon.Common;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes a NeonCluster management related error.
+    /// Describes a neonCLUSTER management related error.
     /// </summary>
     public class NeonClusterException : Exception
     {

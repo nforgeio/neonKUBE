@@ -13,7 +13,7 @@ namespace Neon.Cluster
 {
     /// <summary>
     /// Defines the Docker host network ports in the <b>5000-5499</b> range reserved 
-    /// by NeonCluster used by local services, containters and services on the ingress network.
+    /// by neonCLUSTER used by local services, containters and services on the ingress network.
     /// </summary>
     /// <remarks>
     /// <note>
@@ -57,12 +57,12 @@ namespace Neon.Cluster
     public static class NeonHostPorts
     {
         /// <summary>
-        /// The first reserved NeonCluster port.
+        /// The first reserved neonCLUSTER port.
         /// </summary>
         public const int First = 5000;
 
         /// <summary>
-        /// The last reserved NeonCluster port.
+        /// The last reserved neonCLUSTER port.
         /// </summary>
         public const int Last = 5499;
 
@@ -70,7 +70,7 @@ namespace Neon.Cluster
         // Cluster dashboard ports.
 
         /// <summary>
-        /// The main NeonCluster dashboard.
+        /// The main neonCLUSTER dashboard.
         /// </summary>
         public const int Dashboard = 5000;
 
@@ -121,9 +121,9 @@ namespace Neon.Cluster
         // external traffic into the cluster.
         //
         // [5100-5102] are used to route general purpose HTTP/S traffic
-        //             to both NeonCluster and application services.
+        //             to both neonCLUSTER and application services.
         //
-        // [5102-5109] are reserved for internal NeonCluster TCP routes.
+        // [5102-5109] are reserved for internal neonCLUSTER TCP routes.
         //
         // [5110-5299] are available for use by application services for TCP or
         //             HTTP/S traffic.
@@ -166,9 +166,9 @@ namespace Neon.Cluster
         // Ports [5300-5499] are reserved for the private cluster proxy.
         //
         // [5300-5301] are used to route general purpose HTTP/S traffic
-        //             to both NeonCluster and application services.
+        //             to both neonCLUSTER and application services.
         //
-        // [5302-5309] are reserved for internal NeonCluster TCP routes.
+        // [5302-5309] are reserved for internal neonCLUSTER TCP routes.
         //
         // [5310-5499] are available for use by application services for TCP or
         //             HTTP/S traffic.

@@ -82,7 +82,7 @@ COMMANDS:
 
 ROUTES:
 
-NeonCluster proxies support two types of routes: HTTP/S and TCP.
+neonCLUSTER proxies support two types of routes: HTTP/S and TCP.
 Each route defines one or more frontend and backends.
 
 HTTP/S frontends handle requests for a hostname for one or more hostname

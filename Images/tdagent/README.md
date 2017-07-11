@@ -1,6 +1,6 @@
 **Do not use: Work in progress**
 
-Base Treasure Data TD-AGENT log event processor configured for NeonClusters.
+Base Treasure Data TD-AGENT log event processor configured for neonCLUSTERs.
 
 # Supported Tags
 

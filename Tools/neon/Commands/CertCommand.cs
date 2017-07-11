@@ -97,7 +97,7 @@ ARGUMENTS:
 
 DETAILS:
 
-NeonCluster standardizes on HAProxy compatible PEM-encoded certificates.
+neonCLUSTER standardizes on HAProxy compatible PEM-encoded certificates.
 These include both the public certificate and private key into a single
 file.  The certificate appears first, followed by any intermediate
 certificates, and then finally the private key.

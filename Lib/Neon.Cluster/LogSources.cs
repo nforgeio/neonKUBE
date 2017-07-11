@@ -13,7 +13,7 @@ namespace Neon.Cluster
 {
     /// <summary>
     /// Identifies some common applications that may emit logs to be processed
-    /// by the NeonCluster log pipeline.
+    /// by the neonCLUSTER log pipeline.
     /// </summary>
     /// <remarks>
     /// <note>
@@ -23,7 +23,7 @@ namespace Neon.Cluster
     /// to break things.
     /// </note>
     /// <para>
-    /// By default, NeonCluster log pipeline attempts to extract some fields such
+    /// By default, neonCLUSTER log pipeline attempts to extract some fields such
     /// as the timestamp, log level, module, and the remaining message from log
     /// events passing through the pipeline.  This can work for many applications,
     /// but sometimes logs require custom processing.
@@ -37,7 +37,7 @@ namespace Neon.Cluster
     /// event parsing for the specific application.
     /// </para>
     /// <para>
-    /// These are the predefined identifiers supported by NeonCluster out of the box.
+    /// These are the predefined identifiers supported by neonCLUSTER out of the box.
     /// You may specify custom tags and then extend the neon-log-collector image to 
     /// support other applications.
     /// </para>

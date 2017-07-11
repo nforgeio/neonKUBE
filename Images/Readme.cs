@@ -8,7 +8,7 @@ namespace Files
 {
     /// <summary>
     /// This library will never be referenced by other projects.  It simply 
-    /// hosts various NeonCluster related Docker image definitions and scripts.
+    /// hosts various neonCLUSTER related Docker image definitions and scripts.
     /// </summary>
     public class Readme
     {

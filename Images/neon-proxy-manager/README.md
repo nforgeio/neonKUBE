@@ -1,6 +1,6 @@
 **Do not use: Work in progress**
 
-Dynamically generates HAProxy configurations from routes and certificates persisted to Consul and Vault for NeonCluster proxies based on the [neon-proxy](https://hub.docker.com/r/neoncluster/neon-proxy/) image.
+Dynamically generates HAProxy configurations from routes and certificates persisted to Consul and Vault for neonCLUSTER proxies based on the [neon-proxy](https://hub.docker.com/r/neoncluster/neon-proxy/) image.
 
 # Supported Tags
 
@@ -8,7 +8,7 @@ Dynamically generates HAProxy configurations from routes and certificates persis
 
 # Description
 
-NeonClusters deploy two general purpose reverse HTTP/TCP proxy services:
+neonCLUSTERs deploy two general purpose reverse HTTP/TCP proxy services:
 
 * **neon-proxy-public** which is responsible for routing external network traffic (e.g. from an Internet facing load balancer or router) to cluster services.
 
@@ -26,7 +26,7 @@ The **neon-proxy-manager** image handles the generation and updating of the prox
 
 # Secrets
 
-**neon-proxy-manager** needs to be able to read the TLS certificates stored in Vault and also be able to read/write Consul NeonCluster service keys for itself as well as **neon-proxy-public** and **neon-proxy-private**.  The credentials are serialized as JSON to the `/run/secrets/${VAULT_CREDENTIALS}` file using the Docker secrets feature.
+**neon-proxy-manager** needs to be able to read the TLS certificates stored in Vault and also be able to read/write Consul neonCLUSTER service keys for itself as well as **neon-proxy-public** and **neon-proxy-private**.  The credentials are serialized as JSON to the `/run/secrets/${VAULT_CREDENTIALS}` file using the Docker secrets feature.
 
 Two types of credentials are currently supported: **vault-token** and **vault-approle**.
 
@@ -43,7 +43,7 @@ Two types of credentials are currently supported: **vault-token** and **vault-ap
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`"VaultSecretId": "6a174c20-f6de-a53c-74d2-6018fcceff64"`
 &nbsp;&nbsp;&nbsp;&nbsp;`}`
 
-This service also requires Consul read/write access to `neon/service/neon-proxy-manager/*`, `neon/service/neon-proxy-public` and `neon/service/neon-proxy-private`.  NeonCluster does not currently enforce security on Consul, so there's no authentication necessary for this yet.
+This service also requires Consul read/write access to `neon/service/neon-proxy-manager/*`, `neon/service/neon-proxy-public` and `neon/service/neon-proxy-private`.  neonCLUSTER does not currently enforce security on Consul, so there's no authentication necessary for this yet.
 
 # Consul Settings
 

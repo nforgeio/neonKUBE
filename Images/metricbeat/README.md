@@ -8,7 +8,7 @@ The image tagging scheme mirrors the Elastic Metricbeat [releases](https://www.e
 
 # Description
 
-This image is used to deploy containers named **neon-log-metricbeat** to each node in a NeonCluster.  This deploys an [Elastic Metricbeat](https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-overview.html) that captures and ships Docker node metrics to the cluster's Elasticsearch logs for analysis and viewing via Kibana.
+This image is used to deploy containers named **neon-log-metricbeat** to each node in a neonCLUSTER.  This deploys an [Elastic Metricbeat](https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-overview.html) that captures and ships Docker node metrics to the cluster's Elasticsearch logs for analysis and viewing via Kibana.
 
 By default, this container launches Metricbeat configured to capture the following node metrics:
 
@@ -23,7 +23,7 @@ You may may modify these behaviors by creating a derived image, modifying the `/
 
 # Environment Variables
 
-* **ELASTICSEARCH_URL** (*optional*) is URL of the Elasticsearch cluster where the metrics are to be persisted.  The container will send these to the NeonCluster's log Elasticsearch cluster by default.
+* **ELASTICSEARCH_URL** (*optional*) is URL of the Elasticsearch cluster where the metrics are to be persisted.  The container will send these to the neonCLUSTER's log Elasticsearch cluster by default.
 
 * **PERIOD** (*optional*) is the interval at which metrics are collected with an "s" or "m" suffix for seconds or minutes.  This defaults to **60s**.
 

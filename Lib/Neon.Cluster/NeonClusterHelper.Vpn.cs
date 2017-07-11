@@ -143,7 +143,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns current NeonCluster VPN clients.
+        /// Returns current neonCLUSTER VPN clients.
         /// </summary>
         /// <returns>The <see cref="VpnClient"/> instances.</returns>
         public static List<VpnClient> VpnListClients()

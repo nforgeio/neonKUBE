@@ -6,7 +6,7 @@
 # IMPORTANT: Be careful to ensure that these values match the corresponding
 #            C# definitions.
 #
-# This script defines various constants that may be useful for NeonCluster containers.
+# This script defines various constants that may be useful for neonCLUSTER containers.
 # Containers that requires these should:
 #
 #   1. have their [build.ps1] script copy this file from the 
@@ -164,7 +164,7 @@ export NetworkPorts_RabbitMQAdmin=15672
 #------------------------------------------------------------------------------
 # NeonClusterConst:
 #
-# Important NeonCluster constants.  These must match the definitions in
+# Important neonCLUSTER constants.  These must match the definitions in
 # [Neon.Cluster.NeonClusterConst].
 
 # The local endpoint exposed by cluster docker instances to be monitored by the 
@@ -206,12 +206,12 @@ export NeonClusterConst_HAProxyUidFormat="%{+X}o%ci:%cp_%fi:%fp_%Ts_%rt"
 # NeonHostPorts:
 #
 # Defines the Docker host network ports in the [5000-5499] range reserved 
-# by NeonCluster used by local services, containters and services on the
+# by neonCLUSTER used by local services, containters and services on the
 # ingress betwork.
 #
 # These must match the definitions in [Neon.Cluster.NeonHostPorts].
 
-# The main NeonCluster dashboard.
+# The main neonCLUSTER dashboard.
 export NeonHostPorts_Dashboard=5000
 
 # The [neon-log-kibana] (Kibana) log analysis dashboard.
@@ -247,9 +247,9 @@ export NeonHostPorts_ReservedUnused=5099
 # external traffic into the cluster.
 #
 # [5100-5102] are used to route general purpose HTTP/S traffic
-#             to both NeonCluster and application services.
+#             to both neonCLUSTER and application services.
 #
-# [5102-5109] are reserved for internal NeonCluster TCP routes.
+# [5102-5109] are reserved for internal neonCLUSTER TCP routes.
 #
 # [5110-5299] are available for use by application services for TCP or
 #             HTTP/S traffic.
@@ -278,9 +278,9 @@ export NeonHostPorts_ProxyPublicLastUser=5299
 # Ports [5300-5499] are reserved for the private cluster proxy.
 #
 # [5300-5301] are used to route general purpose HTTP/S traffic
-#             to both NeonCluster and application services.
+#             to both neonCLUSTER and application services.
 #
-# [5302-5309] are reserved for internal NeonCluster TCP routes.
+# [5302-5309] are reserved for internal neonCLUSTER TCP routes.
 #
 # [5310-5499] are available for use by application services for TCP or
 #             HTTP/S traffic.
@@ -319,15 +319,15 @@ export NeonHostPorts_ProxyPrivateLastUser=5499
 #------------------------------------------------------------------------------
 # NeonSysLogFacility:
 #
-# Define the local SysLog facilities reserved for NeonCluster purposes.  These
+# Define the local SysLog facilities reserved for neonCLUSTER purposes.  These
 # must match the definitions in [Neon.Cluster.NeonSysLogFacility].
 
-# The syslog facility name used for traffic logs from the NeonCluster HAProxy based proxy
+# The syslog facility name used for traffic logs from the neonCLUSTER HAProxy based proxy
 # services such as [neon-proxy-vault], [neon-proxy-public], and [neon-proxy-private].
 # This maps to syslog facility number 23.
 export NeonSysLogFacility_ProxyName=local7
 
-# The syslog facility number used for traffic logs from the NeonCluster HAProxy based proxy
+# The syslog facility number used for traffic logs from the neonCLUSTER HAProxy based proxy
 # services such as [neon-proxy-vault], [neon-proxy-public], and [neon-proxy-private].
 export NeonSysLogFacility_ProxyNumbe=23
 
@@ -371,7 +371,7 @@ export NeonHosts_Vault=neon-vault.cluster
 # LogSources:
 #
 # Identifies some common applications that may emit logs to be processed
-# by the NeonCluster log pipeline.  These must match the definitions in
+# by the neonCLUSTER log pipeline.  These must match the definitions in
 # [Neon.Cluster.LogSources].
 
 # Many NeonResearch applications emit a common log message format that

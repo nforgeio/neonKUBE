@@ -30,7 +30,7 @@ mkdir -p /hostfs/var/log/neon-log-host
 
 PATH=${PATH}:/
 
-# Load the NeonCluster constants.
+# Load the neonCLUSTER constants.
 
 . neoncluster.sh
 

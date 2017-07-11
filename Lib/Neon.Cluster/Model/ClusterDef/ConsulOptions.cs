@@ -24,7 +24,7 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes the HashiCorp Consul options for a NeonCluster.
+    /// Describes the HashiCorp Consul options for a neonCLUSTER.
     /// </summary>
     public class ConsulOptions
     {

@@ -34,7 +34,7 @@ This configuration makes a NeonCluser self-bootstrapping where even this **neon-
 
 # Deployment
 
-The NeonCluster **neon-cli** handles the deployment of Docker pull-thru Registry caches to the cluster manager nodes unless disabled in the cluster definition.  The tool performs the following steps (documented [here](https://docs.docker.com/registry/insecure/):
+The neonCLUSTER **neon-cli** handles the deployment of Docker pull-thru Registry caches to the cluster manager nodes unless disabled in the cluster definition.  The tool performs the following steps (documented [here](https://docs.docker.com/registry/insecure/):
 
 1. Generates a self-signed certificate for each cluster manager with the certificate hosts matching **<manager-name>.neon-registry-cache.cluster** , where *<manager-name>* is the name of the manager node.
 

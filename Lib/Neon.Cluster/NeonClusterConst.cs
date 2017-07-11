@@ -14,7 +14,7 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Important NeonCluster constants.
+    /// Important neonCLUSTER constants.
     /// </summary>
     /// <remarks>
     /// <note>
@@ -116,7 +116,7 @@ namespace Neon.Cluster
         public const string HAProxyUidFormat = "%{+X}o%ci:%cp_%fi:%fp_%Ts_%rt";
 
         /// <summary>
-        /// The maximum number of manager nodes allowed in a NeonCluster.
+        /// The maximum number of manager nodes allowed in a neonCLUSTER.
         /// </summary>
         public const int MaxManagers = 5;
     }

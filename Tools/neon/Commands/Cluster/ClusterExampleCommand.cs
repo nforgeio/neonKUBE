@@ -426,7 +426,7 @@ USAGE:
     // will be available for Swarm filtering operations.  Some labels
     // are also used during cluster configuration.
     //
-    // You'll use the [Labels] property to specifiy labels.  NeonCluster
+    // You'll use the [Labels] property to specifiy labels.  neonCLUSTER
     // predefines several labels.  You may extend these using [Labels.Custom].
     //
     // The following reserved labels are currently supported (see the documentation
@@ -468,7 +468,7 @@ USAGE:
     //                  node.labels[custom name (lowercase)]
     //
     //            Note that the prefix The [node.labels.io.neoncluster] prefix
-    //            is reserved for NeonCluster related labels.
+    //            is reserved for neonCLUSTER related labels.
 
     ""Nodes"": {
 
@@ -477,7 +477,7 @@ USAGE:
         // Management nodes host Consul service discovery, Vault secret 
         // management, and the Docker Swarm managers.
         // 
-        // NeonClusters must have at least one manager node.  To have
+        // neonCLUSTERs must have at least one manager node.  To have
         // high availability, you may deploy three or five management node.
         // Only an odd number of management nodes are allowed up to a
         // maximum of five.  A majority of these must be healthy for the 

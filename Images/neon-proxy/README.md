@@ -1,6 +1,6 @@
 **Work in progress: Do not use**
 
-This is the standard NeonCluster network Proxy service based on **HAProxy**, **Consul**, and **Vault**.  This is typically deployed alongside the **neon-proxy-manager** service that monitors changes to proxy routes and TLS certificates to regenerate the HAProxy configuration.
+This is the standard neonCLUSTER network Proxy service based on **HAProxy**, **Consul**, and **Vault**.  This is typically deployed alongside the **neon-proxy-manager** service that monitors changes to proxy routes and TLS certificates to regenerate the HAProxy configuration.
 
 # Supported Tags
 

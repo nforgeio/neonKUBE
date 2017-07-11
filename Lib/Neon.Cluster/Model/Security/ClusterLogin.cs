@@ -26,7 +26,7 @@ namespace Neon.Cluster
     /// <summary>
     /// <para>
     /// Holds the <b>sensitive</b> information required to remotely manage an operating
-    /// NeonCluster using the <b>neon-cli</b>.
+    /// neonCLUSTER using the <b>neon-cli</b>.
     /// </para>
     /// <note>
     /// <b>WARNING:</b> The information serialized by this class must be carefully protected

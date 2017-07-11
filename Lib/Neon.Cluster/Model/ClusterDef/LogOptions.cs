@@ -24,7 +24,7 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes the logging options for a NeonCluster.
+    /// Describes the logging options for a neonCLUSTER.
     /// </summary>
     public class LogOptions
     {

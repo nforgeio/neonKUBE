@@ -70,7 +70,7 @@ namespace Neon.Cluster
         /// <para>
         /// This may be set to <b>0</b> which specifies that the node will store its data on 
         /// the local ephemeral (temporary) drive belonging to the Azure virtual machine.
-        /// This is not recommended for NeonCluster nodes.
+        /// This is not recommended for neonCLUSTER nodes.
         /// </para>
         /// <para>
         /// For most clusters, you'll wish to provision one or more drives per node.  Multiple
@@ -121,7 +121,7 @@ namespace Neon.Cluster
 
             if (!caps.LoadBalancing)
             {
-                throw new ClusterDefinitionException($"Cluster node [{nodeName}] has size [{VmSize}] which does not support load balancing and cannot be used for a NeonCluster.");
+                throw new ClusterDefinitionException($"Cluster node [{nodeName}] has size [{VmSize}] which does not support load balancing and cannot be used for a neonCLUSTER.");
             }
 
             if (!caps.SupportsDataStorageType(StorageType))

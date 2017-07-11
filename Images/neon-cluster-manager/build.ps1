@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 #
-# Builds the NeonCluster [neon-cluster-manager] image.
+# Builds the neonCLUSTER [neon-cluster-manager] image.
 #
 # Usage: powershell -file build.ps1 VERSION [-latest]
 

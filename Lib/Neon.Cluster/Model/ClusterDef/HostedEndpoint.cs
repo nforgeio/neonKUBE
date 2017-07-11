@@ -27,7 +27,7 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes a network endpoint to be exposed by a NeonCluster deployed to
+    /// Describes a network endpoint to be exposed by a neonCLUSTER deployed to
     /// hosting providers such as AWS, Azure, or Google by platform load platform
     /// load balancers.
     /// </summary>
@@ -39,7 +39,7 @@ namespace Neon.Cluster
     /// </note>
     /// <para>
     /// A hosted endpoint controls which external network traffic is routed into
-    /// a NeonCluster by specifying the external network port where the traffic is
+    /// a neonCLUSTER by specifying the external network port where the traffic is
     /// received and the internal cluster port where the traffic will be routed.
     /// This also specifies whether the traffic is to be treated as TCP or UDP.
     /// </para>

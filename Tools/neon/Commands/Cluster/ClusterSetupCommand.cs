@@ -39,7 +39,7 @@ namespace NeonTool
     public class ClusterSetupCommand : CommandBase
     {
         private const string usage = @"
-Configures a NeonCluster as described in the cluster definition file.
+Configures a neonCLUSTER as described in the cluster definition file.
 
 USAGE: 
 
@@ -1567,10 +1567,10 @@ $@"docker login \
                         firstManager.Status = "vault: audit enable";
                         cluster.VaultCommand("vault audit-enable syslog tag=\"vault\" facility=\"AUTH\"");
 
-                        // Mount a [generic] backend dedicated to NeonCluster related secrets.
+                        // Mount a [generic] backend dedicated to neonCLUSTER related secrets.
 
                         firstManager.Status = "vault: mount neon-secret backend";
-                        cluster.VaultCommand("vault mount", "-path=neon-secret", "-description=Reserved for NeonCluster secrets", "generic");
+                        cluster.VaultCommand("vault mount", "-path=neon-secret", "-description=Reserved for neonCLUSTER secrets", "generic");
 
                         // Mount the [transit] backend and create the cluster key.
 

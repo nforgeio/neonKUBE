@@ -22,7 +22,7 @@ fi
 
 PATH=${PATH}:/
 
-# Load the NeonCluster constants.
+# Load the neonCLUSTER constants.
 
 . neoncluster.sh
 

@@ -25,7 +25,7 @@ using Neon.Diagnostics;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes the standard NeonCluster and custom labels to be assigned to 
+    /// Describes the standard neonCLUSTER and custom labels to be assigned to 
     /// a Docker node.
     /// </summary>
     /// <remarks>
@@ -36,7 +36,7 @@ namespace Neon.Cluster
     /// </para>
     /// <para>
     /// By convention, label names should use a reverse domain name form using a
-    /// DNS domain you control.  For example, NeonCluster related labels are prefixed
+    /// DNS domain you control.  For example, neonCLUSTER related labels are prefixed
     /// with <b>"io.neon."</b>.  You should follow this convention for any
     /// custom labels you define.
     /// </para>
@@ -53,7 +53,7 @@ namespace Neon.Cluster
     /// since Docker supports double quoting, but there it is.
     /// </note>
     /// <para>
-    /// This class exposes several built-in NeonCluster properties.  You can use
+    /// This class exposes several built-in neonCLUSTER properties.  You can use
     /// the <see cref="Custom"/> dictionary to add your own labels.
     /// </para>
     /// </remarks>
@@ -466,7 +466,7 @@ namespace Neon.Cluster
         // Implementation
 
         /// <summary>
-        /// Enumerates the NeonCluster standard Docker labels and values.
+        /// Enumerates the neonCLUSTER standard Docker labels and values.
         /// </summary>
         [JsonIgnore]
         public IEnumerable<KeyValuePair<string, object>> Standard

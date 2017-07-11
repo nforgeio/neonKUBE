@@ -11,7 +11,7 @@
 # NOTE: Variables formatted like $<name> will be expanded by [node-conf]
 #       using a [PreprocessReader].
 #
-# This script defines the current configuration of the NeonCluster as is
+# This script defines the current configuration of the neonCLUSTER as is
 # currently known to this node.  [neon-cli] generates this during initial
 # cluster deployment and may modify it as the cluster is reconfigured.
 #

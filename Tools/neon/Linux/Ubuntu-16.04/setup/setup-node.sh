@@ -63,7 +63,7 @@ apt-get install -yq jq
 # NOTE: this assumes that the host name was originally configured 
 #       configured to be "ubuntu" as described in:
 #
-#       [Ubuntu-16.04 NeonCluster Template.docx]
+#       [Ubuntu-16.04 neonCLUSTER Template.docx]
 
 hostname ${NEON_NODE_NAME}
 echo ${NEON_NODE_NAME} > /etc/hostname
@@ -244,12 +244,12 @@ update-grub
 
 if ! ${NEON_NODE_SWAP} ; then
 
-    if ! grep NeonCluster /etc/sysctl.conf ; then
+    if ! grep neonCLUSTER /etc/sysctl.conf ; then
 
         cat <<EOF >> /etc/sysctl.conf
 
 ###################################################################
-# NeonCluster settings
+# neonCLUSTER settings
 
 # Disable swapping
 vm.swappiness = 0

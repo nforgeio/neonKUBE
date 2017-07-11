@@ -25,7 +25,7 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes the Docker options for a NeonCluster.
+    /// Describes the Docker options for a neonCLUSTER.
     /// </summary>
     public class DockerOptions
     {
@@ -217,7 +217,7 @@ namespace Neon.Cluster
 
                 if (!version.EndsWith("-ce"))
                 {
-                    throw new ClusterDefinitionException($"Version [{Version}] does not specify a Docker community edition.  NeonCluster only supports Docker Community Edition at this time.");
+                    throw new ClusterDefinitionException($"Version [{Version}] does not specify a Docker community edition.  neonCLUSTER only supports Docker Community Edition at this time.");
                 }
             }
 

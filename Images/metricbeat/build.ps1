@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 #
-# Builds a NeonCluster Metricbear image with the specified version, subversion
+# Builds a neonCLUSTER Metricbear image with the specified version, subversion
 # and majorversion.  The image built will be a slightly modified version of the 
 # Elasticsearch Metricbeat reference image.
 #

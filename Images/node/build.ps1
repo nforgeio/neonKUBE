@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 #
-# Builds a NeonCluster Node.js base image.
+# Builds a neonCLUSTER Node.js base image.
 #
 # Usage: powershell -file build.ps1
 

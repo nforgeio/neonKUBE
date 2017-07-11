@@ -25,7 +25,7 @@ using Neon.Cryptography;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Holds the definition of a NeonCluster proxy.
+    /// Holds the definition of a neonCLUSTER proxy.
     /// </summary>
     public class ProxyDefinition
     {

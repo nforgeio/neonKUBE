@@ -24,7 +24,7 @@ using Neon.Time;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Remotely manages a NeonCluster.
+    /// Remotely manages a neonCLUSTER.
     /// </summary>
     public class ClusterProxy : IDisposable
     {

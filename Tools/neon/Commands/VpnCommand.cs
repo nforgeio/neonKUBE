@@ -55,7 +55,7 @@ USAGE:
     ---------------------------------
     Generates the certificate authority and server certificate 
     files as well as the root client certificate to be used 
-    for securing a NeonCluster VPN.  This command is generally
+    for securing a neonCLUSTER VPN.  This command is generally
     executed internally during cluster setup.
 
     CLUSTER-DEF - Path to the cluster definition file.
@@ -916,7 +916,7 @@ nsCertType              = server
                 case "dhparam":
                 case "server":
 
-                    Console.WriteLine($"***ERROR: USER [{username}] is reserved by NeonCluster.  Please choose another name.");
+                    Console.WriteLine($"***ERROR: USER [{username}] is reserved by neonCLUSTER.  Please choose another name.");
                     Program.Exit(1);
                     break;
             }

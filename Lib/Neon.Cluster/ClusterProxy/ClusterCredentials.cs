@@ -21,7 +21,7 @@ using Neon.Common;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Holds NeonCluster credentials.
+    /// Holds neonCLUSTER credentials.
     /// </summary>
     public class ClusterCredentials
     {

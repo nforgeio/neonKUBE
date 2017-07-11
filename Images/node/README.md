@@ -1,6 +1,6 @@
 **Do not use: Work in progress**
 
-Base NeonCluster **node.js** image.
+Base neonCLUSTER **node.js** image.
 
 # Supported Tags
 

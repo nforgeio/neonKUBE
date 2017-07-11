@@ -24,7 +24,7 @@ namespace Neon.Cluster
     /// <para>
     /// This class is intended for use with the <see cref="NodeProxy{TMetadata}.RunCommand(CommandBundle, RunOptions)"/>
     /// and  <see cref="NodeProxy{TMetadata}.SudoCommand(CommandBundle, RunOptions)"/> methods for situations where
-    /// one or more files need to be uploaded to a NeonCluster host node and be used when a command is executed.
+    /// one or more files need to be uploaded to a neonCLUSTER host node and be used when a command is executed.
     /// </para>
     /// <para>
     /// A good example of this is performing a <b>docker stack</b> command on the cluster.  In this case, we need to

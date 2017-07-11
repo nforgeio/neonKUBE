@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 #
-# TD-Agent deployed on each NeonCluster node that forwards log events to the
+# TD-Agent deployed on each neonCLUSTER node that forwards log events to the
 # cluster log aggregator.
 
 FROM        neoncluster/tdagent

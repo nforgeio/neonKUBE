@@ -19,43 +19,43 @@ using Renci.SshNet;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Enumerates the paths of important directories on NeonCluster 
+    /// Enumerates the paths of important directories on neonCLUSTER 
     /// host servers.
     /// </summary>
     public static class NodeHostFolders
     {
         /// <summary>
-        /// Path to the NeonCluster configuration directory.
+        /// Path to the neonCLUSTER configuration directory.
         /// </summary>
         public const string Config = "/etc/neoncluster";
 
         /// <summary>
-        /// Path to the NeonCluster secrets directory.
+        /// Path to the neonCLUSTER secrets directory.
         /// </summary>
         public const string Secrets = "${HOME}/.secrets";
 
         /// <summary>
-        /// Path to the NeonCluster archive directory.
+        /// Path to the neonCLUSTER archive directory.
         /// </summary>
         public const string Archive = "${HOME}/.archive";
 
         /// <summary>
-        /// Path to the NeonCluster setup state directory.
+        /// Path to the neonCLUSTER setup state directory.
         /// </summary>
         public const string State = "/var/local/neoncluster";
 
         /// <summary>
-        /// Path to the NeonCluster setup scripts directory.
+        /// Path to the neonCLUSTER setup scripts directory.
         /// </summary>
         public const string Setup = "/opt/neonsetup";
 
         /// <summary>
-        /// Path to the NeonCluster tools directory.
+        /// Path to the neonCLUSTER tools directory.
         /// </summary>
         public const string Tools = "/opt/neontools";
 
         /// <summary>
-        /// Path to the NeonCluster management scripts directory.
+        /// Path to the neonCLUSTER management scripts directory.
         /// </summary>
         public const string Scripts = "${HOME}/.scripts";
 

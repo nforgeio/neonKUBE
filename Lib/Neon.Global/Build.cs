@@ -29,10 +29,10 @@ namespace Neon
         /// <summary>
         /// The product statement to be included in all assemblies.
         /// </summary>
-        public const string Product = "NeonCluster";
+        public const string Product = "neonCLUSTER";
 
         /// <summary>
-        /// The build version for all NeonCluster assemblies.
+        /// The build version for all neonCLUSTER assemblies.
         /// </summary>
         public const string Version = "0.0.0.0";
 

@@ -25,7 +25,7 @@ using Neon.Time;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes the HashiCorp Vault options for a NeonCluster.
+    /// Describes the HashiCorp Vault options for a neonCLUSTER.
     /// </summary>
     public class VaultOptions
     {
@@ -79,7 +79,7 @@ namespace Neon.Cluster
         /// service requests until it's been <b>unsealed</b> manually.
         /// </para>
         /// <para>
-        /// By default, NeonClusters will configure its <b>neon-cluster-manager</b> to
+        /// By default, neonCLUSTERs will configure its <b>neon-cluster-manager</b> to
         /// automatically unseal Vault servers by passing the Vault keys to <b>neon-cluster-manager</b>
         /// as an environment variable.  This will be reasonably secure and in the future
         /// we hope to use Docker secrets which will be more secure.

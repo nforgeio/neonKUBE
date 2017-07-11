@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Maps NeonCluster services to <b>local#</b> SysLog facilities.  These mappings
+    /// Maps neonCLUSTER services to <b>local#</b> SysLog facilities.  These mappings
     /// will be used when ingesting SysLog messages into the cluster logging
     /// infrastructure.
     /// </summary>
@@ -32,14 +32,14 @@ namespace Neon.Cluster
     public static class NeonSysLogFacility
     {
         /// <summary>
-        /// The syslog facility name used for traffic logs from the NeonCluster HAProxy based proxy
+        /// The syslog facility name used for traffic logs from the neonCLUSTER HAProxy based proxy
         /// services such as <b>neon-proxy-vault</b>, <b>neon-proxy-public</b>, and <b>neon-proxy-private</b>.
         /// This maps to syslog facility number 23.
         /// </summary>
         public const string ProxyName = "local7";
 
         /// <summary>
-        /// The syslog facility number used for traffic logs from the NeonCluster HAProxy based proxy
+        /// The syslog facility number used for traffic logs from the neonCLUSTER HAProxy based proxy
         /// services such as <b>neon-proxy-vault</b>, <b>neon-proxy-public</b>, and <b>neon-proxy-private</b>.
         /// </summary>
         public const int ProxyNumber = 23;

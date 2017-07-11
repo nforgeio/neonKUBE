@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 #
-# Builds the NeonCluster HAProxy base images.
+# Builds the neonCLUSTER HAProxy base images.
 #
 # Usage: powershell -file build.ps1 VERSION [-latest]
 

@@ -928,10 +928,10 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
             //
             //      1. We need to generate an HAProxy frontend for each IP/port combination 
             //         and then use HOST header or SNI rules in addition to an optional path
-            //         prefix to map the correct backend.   This means that NeonCluster proxy
+            //         prefix to map the correct backend.   This means that neonCLUSTER proxy
             //         frontends don't map directly to HAProxy frontends.
             //
-            //      2. We need to generate an HAProxy backend for each NeonCluster proxy backend.
+            //      2. We need to generate an HAProxy backend for each neonCLUSTER proxy backend.
             //
             //      3. For TLS frontends, we're going to persist all of the referenced certificates 
             //         into frontend specific folders and then reference the folder in the bind

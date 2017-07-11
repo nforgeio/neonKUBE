@@ -29,12 +29,12 @@ namespace Neon.Cluster
     public static class AzureHelper
     {
         /// <summary>
-        /// The maximum number of nodes currently allowed in a NeonCluster deployed to Azure.
+        /// The maximum number of nodes currently allowed in a neonCLUSTER deployed to Azure.
         /// </summary>
         public const int MaxClusterNodes = 100;
 
         /// <summary>
-        /// The maximum number of hosted load balanced TCP/UDP endpoints allowed  in a NeonCluster deployed to Azure.
+        /// The maximum number of hosted load balanced TCP/UDP endpoints allowed  in a neonCLUSTER deployed to Azure.
         /// This is an Azure limit.
         /// </summary>
         public const int MaxHostedEndpoints = 150;

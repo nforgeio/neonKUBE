@@ -28,7 +28,7 @@ using Renci.SshNet.Common;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Remotely manages a NeonCluster host node.
+    /// Remotely manages a neonCLUSTER host node.
     /// </summary>
     /// <typeparam name="TMetadata">
     /// Defines the metadata type the application wishes to associate with the server.
@@ -1931,7 +1931,7 @@ echo $? > {cmdFolder}/exit
         /// command, try uploading and executing a <see cref="CommandBundle"/> instead.
         /// </note>
         /// <para>
-        /// This method is intended for situations where one or more files need to be uploaded to a NeonCluster host node 
+        /// This method is intended for situations where one or more files need to be uploaded to a neonCLUSTER host node 
         /// and then be used when a command is executed.
         /// </para>
         /// <para>
@@ -2070,7 +2070,7 @@ echo $? > {cmdFolder}/exit
         /// <returns>The <see cref="CommandResponse"/>.</returns>
         /// <remarks>
         /// <para>
-        /// This method is intended for situations where one or more files need to be uploaded to a NeonCluster host node 
+        /// This method is intended for situations where one or more files need to be uploaded to a neonCLUSTER host node 
         /// and then be used when a command is executed.
         /// </para>
         /// <para>

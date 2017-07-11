@@ -293,7 +293,7 @@ ClientAliveCountMax 20
 
         /// <summary>
         /// Initializes a near virgin server with the basic capabilities required
-        /// for a NeonCluster host node.
+        /// for a neonCLUSTER host node.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
         /// <param name="clusterDefinition">The optional cluster definition.</param>

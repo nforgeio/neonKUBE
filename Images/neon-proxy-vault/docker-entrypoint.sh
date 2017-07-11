@@ -29,7 +29,7 @@ fi
 
 PATH=${PATH}:/
 
-# Load the NeonCluster definitions.
+# Load the neonCLUSTER definitions.
 
 . neoncluster.sh
 

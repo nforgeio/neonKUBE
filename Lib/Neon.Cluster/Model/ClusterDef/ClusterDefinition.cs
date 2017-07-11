@@ -29,7 +29,7 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes a NeonCluster.
+    /// Describes a neonCLUSTER.
     /// </summary>
     public class ClusterDefinition
     {
@@ -48,7 +48,7 @@ namespace Neon.Cluster
         public const string ClusterSchema = "1.0.0";
 
         /// <summary>
-        /// The prefix reserved for NeonCluster related Docker daemon, image, and container labels.
+        /// The prefix reserved for neonCLUSTER related Docker daemon, image, and container labels.
         /// </summary>
         public const string ReservedLabelPrefix = "io.neon";
 
@@ -616,7 +616,7 @@ namespace Neon.Cluster
         /// value specified.
         /// </para>
         /// <para>
-        /// Properties may be custom label names, NeonCluster label names prefixed with <b>io.neon.</b>,
+        /// Properties may be custom label names, neonCLUSTER label names prefixed with <b>io.neon.</b>,
         /// or <b>node</b> to indicate the node name.  Label name lookup is case insenstive.
         /// </para>
         /// </remarks>

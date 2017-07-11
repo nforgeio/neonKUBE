@@ -28,7 +28,7 @@ namespace NeonTool
     {
         private const string usage = @"
 Configures near pristine pyhsical Linux servers so that they are 
-prepared to host a NeonCluster.  Pass the IP addresses or FQDNs 
+prepared to host a neonCLUSTER.  Pass the IP addresses or FQDNs 
 of the nodes.
 
 USAGE:

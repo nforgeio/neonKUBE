@@ -1,6 +1,6 @@
 **Work in progress: Do not use**
 
-NeonCluster base image for Microsoft .NET Core Linux containers.
+neonCLUSTER base image for Microsoft .NET Core Linux containers.
 
 # Supported Tags
 

@@ -118,11 +118,11 @@ Follow steps below to configure a development or test workstation.
 
 ## Cloud Environments
 
-NeonClusters can currently be deployed to Microsoft Azure.  To test this, you'll need an Azure subscription and then gather the required authentication information.  The following sections describe how to accomplish this.
+neonCLUSTERs can currently be deployed to Microsoft Azure.  To test this, you'll need an Azure subscription and then gather the required authentication information.  The following sections describe how to accomplish this.
 
 ## Microsoft Azure
 
-Follow the steps below to enable an Azure account for NeonCluster deployments using the **neon-cli**.  You’ll need to sign up for an Azure account [here](https://azure.microsoft.com/en-us/free/), if you don’t already have one.
+Follow the steps below to enable an Azure account for neonCLUSTER deployments using the **neon-cli**.  You’ll need to sign up for an Azure account [here](https://azure.microsoft.com/en-us/free/), if you don’t already have one.
 
 Then you need to create credentials the **neon-cli** will use to authenticate with Azure.  The steps below are somewhat simplified from Microsoft’s [documentation](https://docs.microsoft.com/en-us/azure/azure-resource-manager/resource-group-create-service-principal-portal).  The instructions below assume that you have full administrative rights to the Azure subscription.
 
@@ -134,7 +134,7 @@ Then you need to create credentials the **neon-cli** will use to authenticate wi
 
   `azure login`
 
-4. Run the command below to list your Azure subscriptions.  Save the **Subscription ID** where you’ll be provisioning your NeonCluster to the credentials file.
+4. Run the command below to list your Azure subscriptions.  Save the **Subscription ID** where you’ll be provisioning your neonCLUSTER to the credentials file.
 
   `azure account list`
 

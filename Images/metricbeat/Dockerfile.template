@@ -4,7 +4,7 @@
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 #
 # This is a template of the docker image definition file to be used to generate
-# the Elastic Metricbeats image to be used to monitor NeonCluster hosts.
+# the Elastic Metricbeats image to be used to monitor neonCLUSTER hosts.
 #
 # This file cannot be used directly to create an image.  The [build.ps1] script 
 # generates a suitable dockerfile by replacing the following symbol references

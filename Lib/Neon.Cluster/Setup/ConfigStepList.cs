@@ -18,7 +18,7 @@ namespace Neon.Cluster
 {
     /// <summary>
     /// Implements a list of <see cref="ConfigStep"/>s to be performed
-    /// on a NeonCluster.
+    /// on a neonCLUSTER.
     /// </summary>
     public class ConfigStepList : List<ConfigStep>
     {

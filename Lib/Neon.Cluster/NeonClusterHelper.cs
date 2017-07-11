@@ -31,7 +31,7 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// NeonCluster related utilties.
+    /// neonCLUSTER related utilties.
     /// </summary>
     public static partial class NeonClusterHelper
     {
@@ -132,7 +132,7 @@ namespace Neon.Cluster
         /// <remarks>
         /// <para>
         /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
-        /// to deploy and manage NeonClusters.  Each known cluster will have a JSON file named
+        /// to deploy and manage neonCLUSTERs.  Each known cluster will have a JSON file named
         /// <b><i>cluster-name</i>.json</b> holding the serialized <see cref="Cluster.ClusterLogin"/> 
         /// information for the cluster.
         /// </para>
@@ -426,7 +426,7 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Attempts to simulate running the current application within the currently logged-in
-        /// NeonCluster cluster for external tools as well as for development and debugging purposes.
+        /// neonCLUSTER for external tools as well as for development and debugging purposes.
         /// </summary>
         /// <param name="secrets">Optional emulated Docker secrets.</param>
         /// <param name="loginPath">Optional path to a specific cluster login to override the current login.</param>
