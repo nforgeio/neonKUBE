@@ -357,7 +357,7 @@ namespace Neon.Cluster
                                 {
                                     step.NodeAction(node);
 
-                                    node.Status  = "* step complete";
+                                    node.Status  = "[step done]";
                                     node.IsReady = true;
                                 }
                                 catch (Exception e)
