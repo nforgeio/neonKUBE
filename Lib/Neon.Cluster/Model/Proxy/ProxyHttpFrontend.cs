@@ -36,6 +36,70 @@ namespace Neon.Cluster
         public string Host { get; set; }
 
         /// <summary>
+        /// <para>
+        /// The optional relative URI path prefix to be matched for this frontend.
+        /// </para>
+        /// <note>
+        /// This defaults to <c>null</c> indicating that all relative paths will be matched.
+        /// Specifying an empty string has the same effect.
+        /// </note>
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This property can be used to direct traffic based on the URI path.  For example,
+        /// you may wish to have different services implement parts of a REST API.  For example:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term>http://api.foo.com/v1/news</term>
+        ///     <description>
+        ///     news v1 service
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term>http://api.foo.com/v2/news</term>
+        ///     <description>
+        ///     news v2 service
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term>http://api.foo.com/v1/stocks</term>
+        ///     <description>
+        ///     stock service
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term>http://api.foo.com/v1/weather</term>
+        ///     <description>
+        ///     weather service
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// <para>
+        /// Here we expose a REST API sharing the same host: <b>api.foo.com</b> but actually deploy four
+        /// separate services that implement different parts of the API.  This is convienent because you
+        /// only need to maintain one host DNS record and certificate.  This also makes it easier to 
+        /// integrate with content delivery networks.
+        /// </para>
+        /// <para>
+        /// As you can see, I've split the API into news, stocks, and weather areas with distinct service
+        /// implementations for each area as well as splitting news services by API version.  This feature
+        /// fits in well with the Docker microservice concept.
+        /// </para>
+        /// <para>
+        /// When specified, this property must begin with a forward slash (<b>/</b>) and will be implicitly
+        /// terminated with a forward slash (<b>/</b>) if one isn't included.  Only valid URI characters
+        /// are allowed.
+        /// </para>
+        /// <note>
+        /// The proxy will match longer prefixes before shorter ones.
+        /// </note>
+        /// </remarks>
+        [JsonProperty(PropertyName = "PathPrefix", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string PathPrefix { get; set; }
+
+        /// <summary>
         /// Optionally names the TLS certificate to be used to secure requests to the frontend.
         /// </summary>
         [JsonProperty(PropertyName = "CertName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -90,6 +154,26 @@ namespace Neon.Cluster
                 !ClusterDefinition.DnsHostRegex.IsMatch(Host))
             {
                 context.Error($"Route [{route.Name}] defines the invalid hostname [{Host}].");
+            }
+
+            if (!string.IsNullOrEmpty(PathPrefix))
+            {
+                if (!PathPrefix.StartsWith("/"))
+                {
+                    context.Error($"Route [{route.Name}] references has [{nameof(PathPrefix)}={PathPrefix}] that does not begin with a forward slash.");
+                }
+                else
+                {
+                    if (!PathPrefix.EndsWith("/"))
+                    {
+                        PathPrefix += "/";
+                    }
+
+                    if (!Uri.TryCreate(PathPrefix, UriKind.Relative, out Uri uri))
+                    {
+                        context.Error($"Route [{route.Name}] references has [{nameof(PathPrefix)}={PathPrefix}] that is not a valid relative URI.");
+                    }
+                }
             }
 
             if (CertName != null)

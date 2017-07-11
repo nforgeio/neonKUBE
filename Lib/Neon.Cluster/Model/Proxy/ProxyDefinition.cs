@@ -87,6 +87,11 @@ namespace Neon.Cluster
                 {
                     var key = $"{frontend.Host}:{frontend.ProxyPort}";
 
+                    if (!string.IsNullOrEmpty(frontend.PathPrefix))
+                    {
+                        key += frontend.PathPrefix;
+                    }
+
                     if (httpMap.ContainsKey(key))
                     {
                         context.Error($"HTTP route [{httpRoute.Name}] has a frontend on [{key}] that conflicts with route [{httpMap[key].Name}].");

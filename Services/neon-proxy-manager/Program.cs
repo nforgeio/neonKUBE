@@ -45,6 +45,7 @@ namespace NeonProxyManager
         private const string proxyConf       = consulPrefix + "/conf";
         private const string proxyStatus     = consulPrefix + "/status";
         private const string vaultCertPrefix = "neon-secret/cert";
+        private const string allPrefix       = "~all~";   // Special path prefix indicating that all paths should be matched.
 
         private static TimeSpan                 delayTime = TimeSpan.FromSeconds(5);
         private static ProcessTerminator        terminator;
@@ -337,6 +338,23 @@ namespace NeonProxyManager
         }
 
         /// <summary>
+        /// Normalizes a path prefix by converting <c>null</c> or empty prefixes to <see cref="allPrefix"/>.
+        /// </summary>
+        /// <param name="pathPrefix">The input prefix.</param>
+        /// <returns>The prefix or <see cref="allPrefix"/>.</returns>
+        private static string NormalizePathPrefix(string pathPrefix)
+        {
+            if (string.IsNullOrEmpty(pathPrefix))
+            {
+                return allPrefix;
+            }
+            else
+            {
+                return pathPrefix;
+            }
+        }
+
+        /// <summary>
         /// Rebuilds the configuration for a public or private proxy and persists it
         /// to Consul if it differs from the previous version.
         /// </summary>
@@ -442,7 +460,7 @@ namespace NeonProxyManager
 
             if (httpRouteCount > 0)
             {
-                log.Record($"HTTP/S Routes [count={httpRouteCount}]");
+                log.Record($"HTTP Routes [count={httpRouteCount}]");
                 log.Record("------------------------------");
 
                 foreach (ProxyHttpRoute route in routes.Values
@@ -624,7 +642,8 @@ backend haproxy_stats
 
             var publicTcpPortToRoute = new Dictionary<int, ProxyRoute>();
 
-            foreach (ProxyTcpRoute route in routes.Values.Where(r => r.Mode == ProxyMode.Tcp))
+            foreach (ProxyTcpRoute route in routes.Values
+                .Where(r => r.Mode == ProxyMode.Tcp))
             {
                 foreach (var frontend in route.Frontends)
                 {
@@ -637,7 +656,7 @@ backend haproxy_stats
 
                     if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
                     {
-                        log.Error(() => $"TCP route [{route.Name}] has public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.Error(() => $"TCP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
                     }
                     else
@@ -647,17 +666,24 @@ backend haproxy_stats
                 }
             }
 
-            // Verify that HTTP routes don't have conflicting publically facing ports.  To pass,
-            // an HTTP frontend public port can't already be assigned to a TCP route and the
-            // hostname/port combination can't already be assigned to another frontend.
+            // Verify that HTTP routes don't have conflicting publically facing ports and path
+            // prefix combinations.  To pass, an HTTP frontend public port can't already be assigned
+            // to a TCP route and the hostname/port/path combination can't already be assigned to
+            // another frontend.
+            //
+            // The wrinkle here is that we need ensure that routes with a path prefix don't conflict
+            // with routes that don't.
 
-            var publicHttpHostNamePortToRoute = new Dictionary<string, ProxyRoute>();
+            var publicHttpHostPortPathToRoute = new Dictionary<string, ProxyRoute>();
 
-            foreach (ProxyHttpRoute route in routes.Values.Where(r => r.Mode == ProxyMode.Http))
+            // Check routes without path prefixes first.
+
+            foreach (ProxyHttpRoute route in routes.Values
+                .Where(r => r.Mode == ProxyMode.Http))
             {
                 foreach (var frontend in route.Frontends)
                 {
-                    if (frontend.PublicPort <= 0)
+                    if (frontend.PublicPort <= 0 || !string.IsNullOrEmpty(frontend.PathPrefix))
                     {
                         continue;
                     }
@@ -666,32 +692,71 @@ backend haproxy_stats
 
                     if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
                     {
-                        log.Error(() => $"HTTP route [{route.Name}] has public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.Error(() => $"HTTP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
                         continue;
                     }
 
                     var hostPort = $"{frontend.Host}:{frontend.ProxyPort}";
 
-                    if (publicHttpHostNamePortToRoute.TryGetValue(hostPort, out conflictRoute))
+                    if (publicHttpHostPortPathToRoute.TryGetValue(hostPort, out conflictRoute))
                     {
-                        log.Error(() => $"HTTP route [{route.Name}] has public Internet facing hostname/port [{hostPort}] conflict with HTTP route [{conflictRoute.Name}].");
+                        log.Error(() => $"HTTP route [{route.Name}] has a public Internet facing hostname/port [{hostPort}] conflict with HTTP route [{conflictRoute.Name}].");
                         configError = true;
                         continue;
                     }
                     else
                     {
-                        publicHttpHostNamePortToRoute.Add(hostPort, route);
+                        publicHttpHostPortPathToRoute.Add($"{hostPort}:{allPrefix}", route);
+                    }
+                }
+            }
+
+            // Now check the routes with path prefixes.
+
+            foreach (ProxyHttpRoute route in routes.Values
+                .Where(r => r.Mode == ProxyMode.Http))
+            {
+                foreach (var frontend in route.Frontends)
+                {
+                    if (frontend.PublicPort <= 0 || string.IsNullOrEmpty(frontend.PathPrefix))
+                    {
+                        continue;
+                    }
+
+                    ProxyRoute conflictRoute;
+
+                    if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
+                    {
+                        log.Error(() => $"HTTP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        configError = true;
+                        continue;
+                    }
+
+                    var pathPrefix   = NormalizePathPrefix(frontend.PathPrefix);
+                    var hostPortPath = $"{frontend.Host}:{frontend.ProxyPort}:{pathPrefix}";
+
+                    if (publicHttpHostPortPathToRoute.TryGetValue($"{frontend.Host}:{frontend.ProxyPort}:{allPrefix}", out conflictRoute) ||
+                        publicHttpHostPortPathToRoute.TryGetValue(hostPortPath, out conflictRoute))
+                    {
+                        log.Error(() => $"HTTP route [{route.Name}] has a public Internet facing hostname/port/path [{hostPortPath}] conflict with HTTP route [{conflictRoute.Name}].");
+                        configError = true;
+                        continue;
+                    }
+                    else
+                    {
+                        publicHttpHostPortPathToRoute.Add(hostPortPath, route);
                     }
                 }
             }
 
             // Verify that TCP routes don't have conflicting HAProxy frontends.  For
-            // TCP, this means that only one frontend can be assigned to a port.
+            // TCP, this means that a port can have only one assigned frontend.
 
             var haTcpProxyPortToRoute = new Dictionary<int, ProxyRoute>();
 
-            foreach (ProxyTcpRoute route in routes.Values.Where(r => r.Mode == ProxyMode.Tcp))
+            foreach (ProxyTcpRoute route in routes.Values
+                .Where(r => r.Mode == ProxyMode.Tcp))
             {
                 foreach (var frontend in route.Frontends)
                 {
@@ -699,7 +764,7 @@ backend haproxy_stats
 
                     if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
                     {
-                        log.Error(() => $"TCP route [{route.Name}] has HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.Error(() => $"TCP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
                     }
                     else
@@ -711,34 +776,80 @@ backend haproxy_stats
 
             // Verify that HTTP routes don't have conflicting HAProxy frontend ports.  For
             // HTTP, we need to make sure that there isn't already a TCP frontend on the
-            // port and then ensure that only one HTTP frontend maps to a hostname/port
+            // port and then ensure that only one HTTP frontend maps to a hostname/port/path
             // combination.
 
-            var haHttpProxyHostNamePortToRoute = new Dictionary<string, ProxyRoute>(StringComparer.OrdinalIgnoreCase);
+            var haHttpProxyHostPortPathToRoute = new Dictionary<string, ProxyRoute>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (ProxyHttpRoute route in routes.Values.Where(r => r.Mode == ProxyMode.Http))
+            // Check routes without path prefixes first.
+
+            foreach (ProxyHttpRoute route in routes.Values
+                .Where(r => r.Mode == ProxyMode.Http))
             {
                 foreach (var frontend in route.Frontends)
                 {
+                    if (!string.IsNullOrEmpty(frontend.PathPrefix))
+                    {
+                        continue;
+                    }
+
                     ProxyRoute conflictRoute;
 
                     if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
                     {
-                        log.Error(() => $"HTTP route [{route.Name}] has HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.Error(() => $"HTTP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
                         continue;
                     }
 
-                    var hostPort = $"{frontend.Host}:{frontend.ProxyPort}";
+                    var pathPrefix   = allPrefix;
+                    var hostPortPath = $"{frontend.Host}:{frontend.ProxyPort}:{pathPrefix}";
 
-                    if (haHttpProxyHostNamePortToRoute.TryGetValue(hostPort, out conflictRoute))
+                    if (haHttpProxyHostPortPathToRoute.TryGetValue(hostPortPath, out conflictRoute))
                     {
-                        log.Error(() => $"HTTP route [{route.Name}] has HAProxy frontend hostname/port [{hostPort}] conflict with HTTP route [{conflictRoute.Name}].");
+                        log.Error(() => $"HTTP route [{route.Name}] has an HAProxy frontend hostname/port/path [{hostPortPath}] conflict with HTTP route [{conflictRoute.Name}].");
                         configError = true;
                     }
                     else
                     {
-                        haHttpProxyHostNamePortToRoute.Add(hostPort, route);
+                        haHttpProxyHostPortPathToRoute.Add(hostPortPath, route);
+                    }
+                }
+            }
+
+            // Now check the routes with path prefixes.
+
+            foreach (ProxyHttpRoute route in routes.Values
+                .Where(r => r.Mode == ProxyMode.Http))
+            {
+                foreach (var frontend in route.Frontends)
+                {
+                    if (string.IsNullOrEmpty(frontend.PathPrefix))
+                    {
+                        continue;
+                    }
+
+                    ProxyRoute conflictRoute;
+
+                    if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
+                    {
+                        log.Error(() => $"HTTP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        configError = true;
+                        continue;
+                    }
+
+                    var pathPrefix   = frontend.PathPrefix;
+                    var hostPortPath = $"{frontend.Host}:{frontend.ProxyPort}:{pathPrefix}";
+
+                    if (haHttpProxyHostPortPathToRoute.TryGetValue($"{frontend.Host}:{frontend.ProxyPort}:{allPrefix}", out conflictRoute) ||
+                        haHttpProxyHostPortPathToRoute.TryGetValue(hostPortPath, out conflictRoute))
+                    {
+                        log.Error(() => $"HTTP route [{route.Name}] has an HAProxy frontend hostname/port/path [{hostPortPath}] conflict with HTTP route [{conflictRoute.Name}].");
+                        configError = true;
+                    }
+                    else
+                    {
+                        haHttpProxyHostPortPathToRoute.Add(hostPortPath, route);
                     }
                 }
             }
@@ -746,13 +857,16 @@ backend haproxy_stats
             //-----------------------------------------------------------------
             // Generate the TCP routes.
 
-            if (routes.Values.Where(r => r.Mode == ProxyMode.Tcp).Count() > 0)
+            if (routes.Values
+                .Where(r => r.Mode == ProxyMode.Tcp)
+                .Count() > 0)
             {
                 sbHaProxy.AppendLine("#------------------------------------------------------------------------------");
                 sbHaProxy.AppendLine("# TCP Routes");
             }
 
-            foreach (ProxyTcpRoute tcpRoute in routes.Values.Where(r => r.Mode == ProxyMode.Tcp))
+            foreach (ProxyTcpRoute tcpRoute in routes.Values
+                .Where(r => r.Mode == ProxyMode.Tcp))
             {
                 // Generate the resolvers argument to be used to locate the
                 // backend servers.
@@ -810,12 +924,12 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
             }
 
             //-----------------------------------------------------------------
-            // HTTP routes are a bit tricker:
+            // HTTP routes are tricker:
             //
             //      1. We need to generate an HAProxy frontend for each IP/port combination 
-            //         and then use HOST header or SNI rules to map the correct backend.  
-            //         This means that NeonCluster proxy frontends don't map directly to 
-            //         HAProxy frontends.
+            //         and then use HOST header or SNI rules in addition to an optional path
+            //         prefix to map the correct backend.   This means that NeonCluster proxy
+            //         frontends don't map directly to HAProxy frontends.
             //
             //      2. We need to generate an HAProxy backend for each NeonCluster proxy backend.
             //
@@ -825,16 +939,20 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
 
             var haProxyFrontends = new Dictionary<int, HAProxyHttpFrontend>();
 
-            if (routes.Values.Where(r => r.Mode == ProxyMode.Http).Count() > 0)
+            if (routes.Values
+                .Where(r => r.Mode == ProxyMode.Http)
+                .Count() > 0)
             {
                 sbHaProxy.AppendLine("#------------------------------------------------------------------------------");
                 sbHaProxy.AppendLine("# HTTP Routes");
 
                 // Enumerate all of the routes and build a dictionary with information about
                 // the HAProxy frontends we'll need to generate.  This dictionary will be
-                // keyed by the frontend PORT.
+                // keyed by the host/path.
 
-                foreach (ProxyHttpRoute httpRoute in routes.Values.Where(r => r.Mode == ProxyMode.Http).OrderBy(r => r.Name))
+                foreach (ProxyHttpRoute httpRoute in routes.Values
+                    .Where(r => r.Mode == ProxyMode.Http)
+                    .OrderBy(r => r.Name))
                 {
                     foreach (var frontend in httpRoute.Frontends)
                     {
@@ -844,22 +962,29 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
                         {
                             haProxyFrontend = new HAProxyHttpFrontend()
                             {
-                                Port = frontend.ProxyPort
+                                Port       = frontend.ProxyPort,
+                                PathPrefix = NormalizePathPrefix(frontend.PathPrefix)
                             };
 
                             haProxyFrontends.Add(frontend.ProxyPort, haProxyFrontend);
                         }
 
-                        if (haProxyFrontend.HostMappings.ContainsKey(frontend.Host))
+                        var hostPath = $"{frontend.Host}:{NormalizePathPrefix(frontend.PathPrefix)}";
+
+                        if (haProxyFrontend.HostPathMappings.ContainsKey(hostPath))
                         {
                             // It's possible to incorrectly define multiple HTTP routes with the same 
-                            // host name mapping to the same HAProxy frontend port.  This code will
-                            // simply choose a winner without reporting an error or warning.  It would
-                            // be better to have an explicit check for this situation.
+                            // host/path mapping to the same HAProxy frontend port.  This code will
+                            // simply choose a winner with a warning.
+
+                            // $todo(jeff.lill): 
+                            //
+                            // I'm not entirely sure that this check is really necessary.
 
                             ProxyHttpRoute conflictRoute = null;
 
-                            foreach (ProxyHttpRoute checkRoute in routes.Values.Where(r => r.Mode == ProxyMode.Http && r != httpRoute))
+                            foreach (ProxyHttpRoute checkRoute in routes.Values
+                                .Where(r => r.Mode == ProxyMode.Http && r != httpRoute))
                             {
                                 if (checkRoute.Frontends.Count(fe => fe.ProxyPort == frontend.ProxyPort && fe.Host.Equals(frontend.Host, StringComparison.CurrentCultureIgnoreCase)) > 0)
                                 {
@@ -867,11 +992,14 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
                                 }
                             }
 
-                            log.Warn(() => $"HTTP/S route [{httpRoute.Name}] defines a frontend for hostname [{frontend.Host}] and port [{frontend.ProxyPort}] which conflict with route [{conflictRoute.Name}].  This frontend will be ignored.");
+                            if (conflictRoute != null)
+                            {
+                                log.Warn(() => $"HTTP route [{httpRoute.Name}] defines a frontend for host/port [{frontend.Host}/{frontend.ProxyPort}] which conflicts with route [{conflictRoute.Name}].  This frontend will be ignored.");
+                            }
                         }
                         else
                         {
-                            haProxyFrontend.HostMappings[frontend.Host] = $"http:{httpRoute.Name}";
+                            haProxyFrontend.HostPathMappings[hostPath] = $"http:{httpRoute.Name}";
                         }
 
                         if (httpRoute.Log)
@@ -951,26 +1079,67 @@ frontend {haProxyFrontend.Name}
                         sbHaProxy.AppendLine($"    log-format          {NeonClusterHelper.GetProxyLogFormat("neon-proxy-" + proxyName, tcp: false)}");
                     }
 
-                    foreach (var hostMapping in haProxyFrontend.HostMappings.OrderBy(m => m.Key))
+                    // Generate the backend mappings for frontends without path prefixes first.
+                    // This code is a bit of a hack.  It depends on the host/path mapping key
+                    // being formatted as $"{host}:{path}" with [path] being normalized.
+
+                    foreach (var hostPathMapping in haProxyFrontend.HostPathMappings
+                        .Where(m => HAProxyHttpFrontend.GetPath(m.Key) == allPrefix)
+                        .OrderBy(m => HAProxyHttpFrontend.GetHost(m.Key)))
                     {
+                        var host = HAProxyHttpFrontend.GetHost(hostPathMapping.Key);
+
                         if (haProxyFrontend.Tls)
                         {
-                            sbHaProxy.AppendLine($"    use_backend         {hostMapping.Value} if {{ ssl_fc_sni {hostMapping.Key} }}");
+                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {{ ssl_fc_sni {host} }}");
                         }
                         else
                         {
-                            var aclName = $"is-{hostMapping.Key.Replace('.', '-')}";
+                            var hostAclName = $"is-{host.Replace('.', '-')}";
 
                             sbHaProxy.AppendLine();
-                            sbHaProxy.AppendLine($"    acl                 {aclName} hdr_reg(host) -i {hostMapping.Key}(:\\d+)?");
-                            sbHaProxy.AppendLine($"    use_backend         {hostMapping.Value} if {aclName}");
+                            sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
+                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {hostAclName}");
+                        }
+                    }
+
+                    // Generate the backend mappings for frontends with path prefixes.
+                    // Note that we're going to generate mappings for the longest 
+                    // paths first and we're also going to sort by path so the
+                    // HAProxy config file will be a bit easier to read.
+
+                    var pathAclCount = 0;
+
+                    foreach (var hostPathMapping in haProxyFrontend.HostPathMappings
+                        .Where(m => HAProxyHttpFrontend.GetPath(m.Key) != allPrefix)
+                        .OrderByDescending(m => HAProxyHttpFrontend.GetPath(m.Key).Length)
+                        .ThenBy(m => HAProxyHttpFrontend.GetPath(m.Key)))
+                    {
+                        var host        = HAProxyHttpFrontend.GetHost(hostPathMapping.Key);
+                        var path        = HAProxyHttpFrontend.GetPath(hostPathMapping.Key);
+                        var hostAclName = $"is-{host.Replace('.', '-')}";
+                        var pathAclName = $"is-path-{pathAclCount++}";
+
+                        if (haProxyFrontend.Tls)
+                        {
+                            sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
+                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {{ ssl_fc_sni {host} }} {pathAclName}");
+                        }
+                        else
+                        {
+                            sbHaProxy.AppendLine();
+                            sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
+                            sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
+                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {hostAclName} {pathAclName}");
                         }
                     }
                 }
 
                 // Generate the HTTP backends
 
-                foreach (ProxyHttpRoute httpRoute in routes.Values.Where(r => r.Mode == ProxyMode.Http).OrderBy(r => r.Name))
+                foreach (ProxyHttpRoute httpRoute in routes.Values
+                    .Where(r => r.Mode == ProxyMode.Http)
+                    .OrderBy(r => r.Name))
                 {
                     // Generate the resolvers argument to be used to locate the
                     // backend servers.
@@ -1222,7 +1391,8 @@ backend http:{httpRoute.Name}
                 // Build a dictionary mapping the load balancer frontend ports to 
                 // internal HAProxy frontend ports for the latest routes.
 
-                foreach (ProxyTcpRoute route in publicRoutes.Values.Where(r => r.Mode == ProxyMode.Tcp))
+                foreach (ProxyTcpRoute route in publicRoutes.Values
+                    .Where(r => r.Mode == ProxyMode.Tcp))
                 {
                     foreach (var frontend in route.Frontends)
                     {
@@ -1233,7 +1403,8 @@ backend http:{httpRoute.Name}
                     }
                 }
 
-                foreach (ProxyHttpRoute route in publicRoutes.Values.Where(r => r.Mode == ProxyMode.Http))
+                foreach (ProxyHttpRoute route in publicRoutes.Values
+                    .Where(r => r.Mode == ProxyMode.Http))
                 {
                     foreach (var frontend in route.Frontends)
                     {

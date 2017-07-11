@@ -224,14 +224,33 @@ namespace Neon.Cluster
 
             foreach (var frontend in Frontends)
             {
-                var key = $"{frontend.Host}:{frontend.ProxyPort}";
-
-                if (frontendMap.Contains(key))
+                if (string.IsNullOrEmpty(frontend.PathPrefix))
                 {
-                    context.Error($"HTTP route [{Name}] includes two or more frontends that map to [{key}].");
-                }
+                    var key = $"{frontend.Host}:{frontend.ProxyPort}";
 
-                frontendMap.Add(key);
+                    if (frontendMap.Contains(key))
+                    {
+                        context.Error($"HTTP route [{Name}] includes two or more frontends that map to [{key}].");
+                    }
+
+                    frontendMap.Add(key);
+                }
+            }
+
+            foreach (var frontend in Frontends)
+            {
+                if (!string.IsNullOrEmpty(frontend.PathPrefix))
+                {
+                    var key = $"{frontend.Host}:{frontend.ProxyPort}{frontend.PathPrefix}";
+
+                    if (frontendMap.Contains($"{frontend.Host}:{frontend.ProxyPort}") ||    // Ensure there's no *all* path frontend
+                        frontendMap.Contains(key))
+                    {
+                        context.Error($"HTTP route [{Name}] includes two or more frontends that map to [{key}].");
+                    }
+
+                    frontendMap.Add(key);
+                }
             }
         }
     }

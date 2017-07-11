@@ -32,6 +32,36 @@ namespace NeonProxyManager
     /// </summary>
     public class HAProxyHttpFrontend
     {
+        //---------------------------------------------------------------------
+        // Static members.
+
+        /// <summary>
+        /// Returns the host part from a $"{host}:{path}".
+        /// </summary>
+        /// <param name="hostPath"></param>
+        /// <returns></returns>
+        public static string GetHost(string hostPath)
+        {
+            var pos = hostPath.IndexOf(':');
+
+            return hostPath.Substring(0, pos);
+        }
+
+        /// <summary>
+        /// Returns the path part from a $"{host}:{path}".
+        /// </summary>
+        /// <param name="hostPath"></param>
+        /// <returns></returns>
+        public static string GetPath(string hostPath)
+        {
+            var pos = hostPath.IndexOf(':');
+
+            return hostPath.Substring(pos + 1);
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members.
+
         /// <summary>
         /// Retrurns the HAProxy frontend name.
         /// </summary>
@@ -51,14 +81,19 @@ namespace NeonProxyManager
         public int Port { get; set; }
 
         /// <summary>
+        /// The path prefix to be matched.
+        /// </summary>
+        public string PathPrefix { get; set; }
+
+        /// <summary>
         /// A dictionary of the referenced certificates keyed by name.
         /// </summary>
         public Dictionary<string, TlsCertificate> Certificates { get; private set; } = new Dictionary<string, TlsCertificate>();
 
         /// <summary>
-        /// A dictionary that maps host names to HAProxy backend names.
+        /// A dictionary that maps host:path prefix to HAProxy backend names.
         /// </summary>
-        public Dictionary<string, string> HostMappings { get; private set; } = new Dictionary<string, string>();
+        public Dictionary<string, string> HostPathMappings { get; private set; } = new Dictionary<string, string>();
 
         /// <summary>
         /// Returns <c>true</c> for TLS frontends.
