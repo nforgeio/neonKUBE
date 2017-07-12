@@ -857,10 +857,14 @@ backend haproxy_stats
             //-----------------------------------------------------------------
             // Generate the TCP routes.
 
+            var hasTcpRoutes = false;
+
             if (routes.Values
                 .Where(r => r.Mode == ProxyMode.Tcp)
                 .Count() > 0)
             {
+                hasTcpRoutes = true;
+
                 sbHaProxy.AppendLine("#------------------------------------------------------------------------------");
                 sbHaProxy.AppendLine("# TCP Routes");
             }
@@ -919,7 +923,7 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
                         backendName = backend.Name;
                     }
 
-                    sbHaProxy.AppendLine($"    server            {backendName} {backend.Server}:{backend.Port}{checkArg}{initAddrArg}{resolversArg}");
+                    sbHaProxy.AppendLine($"    server              {backendName} {backend.Server}:{backend.Port}{checkArg}{initAddrArg}{resolversArg}");
                 }
             }
 
@@ -943,6 +947,11 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
                 .Where(r => r.Mode == ProxyMode.Http)
                 .Count() > 0)
             {
+                if (hasTcpRoutes)
+                {
+                    sbHaProxy.AppendLine();
+                }
+
                 sbHaProxy.AppendLine("#------------------------------------------------------------------------------");
                 sbHaProxy.AppendLine("# HTTP Routes");
 
