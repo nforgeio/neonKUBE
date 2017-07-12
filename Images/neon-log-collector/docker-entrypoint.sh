@@ -28,7 +28,7 @@ PATH=${PATH}:/
 
 # Load the neonCLUSTER constants.
 
-. neoncluster.sh
+. /neoncluster.sh
 
 # Decompress the geoip database if one exists.
 

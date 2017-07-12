@@ -31,7 +31,7 @@ PATH=${PATH}:/
 
 # Load the neonCLUSTER definitions.
 
-. neoncluster.sh
+. /neoncluster.sh
 
 # Generate the static part of the HAProxy configuration file.  The config is
 # pretty simple, some global defaults, the frontend definition followed by the

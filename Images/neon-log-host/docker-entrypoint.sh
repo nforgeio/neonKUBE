@@ -32,7 +32,7 @@ PATH=${PATH}:/
 
 # Load the neonCLUSTER constants.
 
-. neoncluster.sh
+. /neoncluster.sh
 
 # Launch TD-Agent.
 

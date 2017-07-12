@@ -48,6 +48,7 @@ MAINTAINER  jeff@lilltek.com
 
 RUN sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf \
     && apt-get update \
+    && apt-get install -yq wget \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Overwrite the default Elasticsearch entrypoint to load the Docker host environment 
@@ -56,9 +57,8 @@ RUN sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /
 
 # Install X-PACK.
 
-ADD https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-${VERSION}.zip /tmp/x-pack.zip
-
-RUN cd /usr/share/elasticsearch \
+RUN wget -nv https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-${VERSION}.zip -O /tmp/x-pack.zip \
+    && cd /usr/share/elasticsearch \
     && bin/elasticsearch-plugin install --batch file:///tmp/x-pack.zip \
     && rm /tmp/x-pack.zip
 

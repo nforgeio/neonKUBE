@@ -24,7 +24,7 @@ PATH=${PATH}:/
 
 # Load the neonCLUSTER constants.
 
-. neoncluster.sh
+. /neoncluster.sh
 
 # Verify that a CONFIG_KEY was passed.
 

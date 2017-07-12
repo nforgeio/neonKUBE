@@ -9,23 +9,17 @@
 # generates a suitable dockerfile by replacing the following symbol references
 # then building the image.
 #
-#   ${VERSION}          - The .NET Core image tag (e.g. "1.1.0-runtime")
+#   ${VERSION}          - The TD-AGENT version (e.g. "2")
 #   ${TINI_VERSION}     - The version of the Tini INIT manager to install
 
 FROM        neoncluster/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
-# Install the [tini] INIT manager.
-
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod 700 /tini
-
 # Install TD-Agent.
 
-ADD https://packages.treasuredata.com/GPG-KEY-td-agent /tmp/GPG-KEY-td-agent.key
-
-RUN cat /tmp/GPG-KEY-td-agent.key | apt-key add - \
+RUN wget -nv https://packages.treasuredata.com/GPG-KEY-td-agent -O /tmp/GPG-KEY-td-agent.key \
+    && cat /tmp/GPG-KEY-td-agent.key | apt-key add - \
     && rm /tmp/GPG-KEY-td-agent.key \
     && echo "deb http://packages.treasuredata.com/2/ubuntu/xenial/ xenial contrib" > /etc/apt/sources.list.d/treasure-data.list \
     && apt-get update \

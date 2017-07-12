@@ -24,7 +24,7 @@ PATH=${PATH}:/
 
 # Load the neonCLUSTER constants.
 
-. neoncluster.sh
+. /neoncluster.sh
 
 # Initialize the configuration file check interval.
 

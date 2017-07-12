@@ -44,7 +44,10 @@ apt-key add erlang_solutions.asc
 apt-get update
 apt-get install -yq esl-erlang socat
 
-# $todo(jeff.lill): Couldn't get High-Performance Erlang (HiPE) to install for better performnce.
+# $todo(jeff.lill): 
+#
+# Couldn't get High-Performance Erlang (HiPE) to install for better performnce.
+# come back and investigate later.
 #
 # apt-get install erlang-base-hipe
 

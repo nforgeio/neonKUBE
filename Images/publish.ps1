@@ -43,6 +43,11 @@ function Publish
 	}
 }
 
+# NOTE: 
+#
+# The build order below is important since later images
+# may depend on earlier ones.
+
 Publish "$image_root\\ubuntu-16.04"
 Publish "$image_root\\alpine"
 Publish "$image_root\\dotnet"
