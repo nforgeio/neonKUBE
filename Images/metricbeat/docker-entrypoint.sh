@@ -22,7 +22,7 @@ PATH=${PATH}:/
 
 # Load the neonCLUSTER constants.
 
-. neoncluster.sh
+. /neoncluster.sh
 
 # Initialize the configuration defaults.
 
@@ -35,7 +35,7 @@ if [ "${PERIOD}" == "" ] ; then
 fi
 
 if [ "${PROCESSES}" == "" ] ; then
-    export PROCESSES=[\'dockerd\',\'consul\']
+    export PROCESSES=[\'dockerd\',\'consul\',\'vault\']
 fi
 
 if [ "${LOG_LEVEL}" == "" ] ; then

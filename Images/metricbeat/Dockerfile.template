@@ -17,16 +17,10 @@ FROM        neoncluster/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
-# Install the [tini] INIT manager.
-
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod 700 /tini
-
 # Install Metricbeat.
 
-ADD https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-${VERSION}-linux-x86_64.tar.gz /tmp/metricbeat.tar.gz
-
-RUN tar -xvzf /tmp/metricbeat.tar.gz --directory /tmp \
+RUN wget -nv https://artifacts.elastic.co/downloads/beats/metricbeat/metricbeat-${VERSION}-linux-x86_64.tar.gz -O /tmp/metricbeat.tar.gz \
+    && tar -xvzf /tmp/metricbeat.tar.gz --directory /tmp \
     && cp -r /tmp/metricbeat-${VERSION}-linux-x86_64/* / \
     && chmod 700 /metricbeat \
     && cp /metricbeat.yml /metricbeat.yml.org \

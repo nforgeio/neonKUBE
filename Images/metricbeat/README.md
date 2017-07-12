@@ -27,7 +27,7 @@ You may may modify these behaviors by creating a derived image, modifying the `/
 
 * **PERIOD** (*optional*) is the interval at which metrics are collected with an "s" or "m" suffix for seconds or minutes.  This defaults to **60s**.
 
-* **PROCESSES** (*optional*) is a JSON array specifying the regex's of the process names for which statistics are to be gathered.  This defaults to **['dockerd','consul']**.
+* **PROCESSES** (*optional*) is a JSON array specifying the regex's of the process names for which statistics are to be gathered.  This defaults to **['dockerd','consul','vault']**.
 
 * **LOG_LEVEL** (*optional*) specifies the Metricbeat log level.  This may be one of *critical*, *error*, *warning*, *info*, or *debug*.  This defaults to **debug**.
 
