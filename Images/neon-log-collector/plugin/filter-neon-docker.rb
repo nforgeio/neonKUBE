@@ -68,16 +68,13 @@ module Fluent
 			# the original [container_id].
 
 			container_id = record["container_id"];
-			record.delete(""container_id"");
+			record.delete("container_id");
 
-			if (container_id.length <= 12)
-			{
+			if container_id.length <= 12
 				record["cid"] = container_id;
-			}
 			else
-			{
-				record["cid"] = container_id[0, 12];
-			}
+				record["cid"] = container_id[0,12];
+			end
 
 			record["cid_full"] = container_id;
 
