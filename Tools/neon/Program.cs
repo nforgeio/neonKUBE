@@ -360,7 +360,18 @@ tool requires admin priviledges for direct mode.
                         var shimMount    = $"-v \"{shim.ShimExternalFolder}:/shim\"";
                         var options      = shim.Terminal ? "-it" : "-i";
 
-                        var process = Process.Start("docker", $"run {options} --rm {secretsMount} {shimMount} {logMount} --network host neoncluster/neon-cli:{Program.Version}");
+                        Process process;
+
+                        try
+                        {
+                            process = Process.Start("docker", $"run {options} --rm {secretsMount} {shimMount} {logMount} --network host neoncluster/neon-cli:{Program.Version}");
+                        }
+                        catch (Win32Exception)
+                        {
+                            Console.WriteLine("*** ERROR: Cannot run Docker.  Make sure that it is installed and is on the PATH.");
+                            Program.Exit(1);
+                            return;
+                        }
 
                         process.WaitForExit();
                         exitCode = process.ExitCode;

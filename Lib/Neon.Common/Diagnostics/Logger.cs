@@ -10,6 +10,7 @@ using System.Diagnostics.Contracts;
 using System.Net;
 using System.Net.Http;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -21,7 +22,8 @@ namespace Neon.Diagnostics
     /// </summary>
     internal class Logger : ILog
     {
-        private string name;
+        private string      name;
+        private long        emitCount;
 
         /// <inheritdoc/>
         public bool IsDebugEnabled { get; internal set; } = LogManager.LogLevel >= LogLevel.Debug;
@@ -93,15 +95,22 @@ namespace Neon.Diagnostics
                     activityId = $" [activity-id:{activityId}]";
                 }
 
+                var order = string.Empty;
+
+                if (LogManager.EmitOrder)
+                {
+                    order = $" [order={Interlocked.Increment(ref emitCount)}]";
+                }
+
                 if (LogManager.EmitTimestamp)
                 {
                     var timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff+00:00");
 
-                    Console.WriteLine($"[{timestamp}] [{level}]{activity}{module} {message}");
+                    Console.WriteLine($"[{timestamp}] [{level}]{activity}{module}{order} {message}");
                 }
                 else
                 {
-                    Console.WriteLine($"[{level}]{activity}{module} {message}");
+                    Console.WriteLine($"[{level}]{activity}{module}{order} {message}");
                 }
             }
         }

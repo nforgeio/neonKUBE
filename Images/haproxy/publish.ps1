@@ -55,7 +55,6 @@ if ($all)
 	Build 1.6.10
 	Build 1.7.0
 	Build 1.7.1
-	Build 1.7.2
 }
 
-Build 1.7.7 -latest
+Build 1.7.2 -latest

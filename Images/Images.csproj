@@ -156,6 +156,7 @@
     <None Include="kibana\kibana.yml.sh" />
     <None Include="kibana\README.md" />
     <None Include="neon-proxy-vault\README.md" />
+    <None Include="_common\log-order.sh" />
     <None Include="_common\log-warn.sh" />
     <None Include="_common\neoncluster.sh" />
     <None Include="elasticsearch\docker-entrypoint.sh" />

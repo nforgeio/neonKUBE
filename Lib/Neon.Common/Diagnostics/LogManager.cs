@@ -119,6 +119,14 @@ namespace Neon.Diagnostics
         public static bool EmitTimestamp { get; set; } = true;
 
         /// <summary>
+        /// Controls whether the <b>order</b> field is emitted.  This is a counter start
+        /// starts at zero for each application instance and is incremented for each event 
+        /// emitted to help reconstruct exactly what happened when the system time resolution
+        /// isn't fine enough.  This defaults to <c>true</c>.
+        /// </summary>
+        public static bool EmitOrder { get; set; } = true;
+
+        /// <summary>
         /// Returns a named logger.
         /// </summary>
         /// <param name="name">The logger name.</param>
