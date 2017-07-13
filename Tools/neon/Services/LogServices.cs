@@ -471,6 +471,11 @@ $@"
         /// <param name="steps">The configuration step list.</param>
         private void AddHostSteps(ConfigStepList steps)
         {
+            // $todo(jeff.lill):
+            //
+            // It would be nice to start these in parallel.  Perhaps a new
+            // CommandStep.CreateParallel() method or something?
+
             foreach (var node in cluster.Nodes)
             {
                 var runCommand = CommandStep.CreateIdempotentDocker(node.Name, "setup-neon-log-host",
