@@ -52,7 +52,7 @@ namespace Couchbase.Lite
         //---------------------------------------------------------------------
         // Static members
 
-        internal const string NotCompatibleError = "Neon Couchbase Lite extension doesn't support the current Couchbase Lite file system layout.  Please submit an issue to: https://github.com/NeonStack/Core/issues";
+        internal const string NotCompatibleError = "Neon Couchbase Lite extension doesn't support the current Couchbase Lite file system layout.  Please submit an issue to: https://github.com/NeonForge/issues";
 
         private static object syncRoot = new object();
 

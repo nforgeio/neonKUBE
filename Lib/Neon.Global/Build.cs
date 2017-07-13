@@ -12,7 +12,7 @@ using System.Threading.Tasks;
 namespace Neon
 {
     /// <summary>
-    /// NeonStack build constants.
+    /// Neon build constants.
     /// </summary>
     internal static partial class Build
     {
