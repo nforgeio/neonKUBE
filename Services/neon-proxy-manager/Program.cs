@@ -1076,14 +1076,14 @@ frontend {haProxyFrontend.Name}
     bind                *:{haProxyFrontend.Port}{certArg}
     unique-id-header    {LogActivity.HttpHeader}
     unique-id-format    {NeonClusterConst.HAProxyUidFormat}
-    capture             request header Host len 255
-    capture             request header User-Agent len 2048
     option              forwardfor
     option              http-server-close
 ");
 
                     if (haProxyFrontend.Log)
                     {
+                        sbHaProxy.AppendLine($"    capture             request header Host len 255");
+                        sbHaProxy.AppendLine($"    capture             request header User-Agent len 2048");
                         sbHaProxy.AppendLine($"    log                 global");
                         sbHaProxy.AppendLine($"    log-format          {NeonClusterHelper.GetProxyLogFormat("neon-proxy-" + proxyName, tcp: false)}");
                     }
@@ -1098,6 +1098,8 @@ frontend {haProxyFrontend.Name}
                     {
                         var host = HAProxyHttpFrontend.GetHost(hostPathMapping.Key);
 
+                        sbHaProxy.AppendLine();
+
                         if (haProxyFrontend.Tls)
                         {
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {{ ssl_fc_sni {host} }}");
@@ -1106,7 +1108,6 @@ frontend {haProxyFrontend.Name}
                         {
                             var hostAclName = $"is-{host.Replace('.', '-')}";
 
-                            sbHaProxy.AppendLine();
                             sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {hostAclName}");
                         }
@@ -1129,6 +1130,8 @@ frontend {haProxyFrontend.Name}
                         var hostAclName = $"is-{host.Replace('.', '-')}";
                         var pathAclName = $"is-path-{pathAclCount++}";
 
+                        sbHaProxy.AppendLine();
+
                         if (haProxyFrontend.Tls)
                         {
                             sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
@@ -1136,7 +1139,6 @@ frontend {haProxyFrontend.Name}
                         }
                         else
                         {
-                            sbHaProxy.AppendLine();
                             sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
                             sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {hostAclName} {pathAclName}");
