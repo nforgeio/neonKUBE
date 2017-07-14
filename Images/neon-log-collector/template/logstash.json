@@ -3,7 +3,7 @@
   "settings": {
     "refresh_interval": "5s",
     "number_of_shards": 8,
-    "number_of_replicas": 1
+    "number_of_replicas": 0
   },
   "mappings": {
     "default": {
@@ -30,7 +30,7 @@
       "properties": {
         "@timestamp": {
           "type": "date",
-          "format": "strict_date_optional_time||epoch_millis"
+          "format": "epoch_millis||strict_date_optional_time"
         },
         "order": {
           "type": "long"

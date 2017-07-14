@@ -22,7 +22,6 @@ cat <<EOF > /usr/share/elasticsearch/config/elasticsearch.yml
 #                                   being a dedicated master or just a router (true/false)
 #   ELASTICSEARCH_NODE_COUNT      - Number of nodes in the cluster
 #   ELASTICSEARCH_SHARD_COUNT     - The shard count
-#   ELASTICSEARCH_REPLICA_COUNT   - The replica count
 #   ELASTICSEARCH_QUORUM          - The minimum number of master nodes to be
 #                                   present for the cluster to be considered
 #                                   healthy.
