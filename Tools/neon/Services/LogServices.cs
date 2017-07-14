@@ -36,7 +36,8 @@ namespace NeonTool
     /// <remarks>
     /// <para>
     /// neonCLUSTER logging is implemented by deploying <b>Elasticsearch</b>, <b>TD-Agent</b>, and 
-    /// <b>Kibana</b>.  
+    /// <b>Kibana</b>, <b>metricbeat</b> as well as the neonCLUSTER <b>neon-log-collector</b> service
+    /// and <b>neon-log-host</b> containers.
     /// </para>
     /// <para>
     /// <b>Elasticsearch</b> acts as the stateful database for cluster log events.  This is deployed
