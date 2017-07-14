@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 #
-# Builds and publishes all of the NeonStack Docker images.
+# Builds and publishes all of the Neon Docker images.
 #
 # NOTE: You must be logged into Docker Hub.
 #
