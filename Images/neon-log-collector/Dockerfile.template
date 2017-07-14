@@ -16,7 +16,19 @@ STOPSIGNAL  SIGTERM
 
 EXPOSE 24224/tcp 24224/udp 9880/tcp
 
-# Copy the scripts and plugins.
+# Download the MAXMIND geolocation database.
+
+RUN mkdir -p /geoip \
+    && wget -nv http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz -O /geoip/database.mmdb.gz
+
+# Install required Ruby gems.
+
+RUN /usr/sbin/td-agent-gem install fluent-plugin-elasticsearch --no-document \
+    && /usr/sbin/td-agent-gem install fluent-plugin-record-modifier --no-document \
+    && /usr/sbin/td-agent-gem install browser --no-document \
+    && /usr/sbin/td-agent-gem install maxminddb --no-document
+
+# Configure custom scripts, templates and plugins.
 
 COPY docker-entrypoint.sh   /
 COPY _common/*.sh           /
@@ -25,17 +37,8 @@ COPY plugin/*               /etc/td-agent/plugin/
 COPY geoip/                 /geoip/
 COPY template/*             /etc/td-agent/template/
 
-# Set file security, install required Ruby gems and download the MAXMIND 
-# geolocation database.
-
 RUN chmod 700 /*.sh \
-    && chmod 600 /etc/td-agent \
-    && /usr/sbin/td-agent-gem install fluent-plugin-elasticsearch --no-document \
-    && /usr/sbin/td-agent-gem install fluent-plugin-record-modifier --no-document \
-    && /usr/sbin/td-agent-gem install browser --no-document \
-    && /usr/sbin/td-agent-gem install maxminddb --no-document \
-    && mkdir -p /geoip \
-    && wget -nv http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz -O /geoip/database.mmdb.gz
+    && chmod 600 /etc/td-agent
 
 #ENTRYPOINT ["sleep", "10000"]
 #ENTRYPOINT ["bash"]
