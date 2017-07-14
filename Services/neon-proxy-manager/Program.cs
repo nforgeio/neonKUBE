@@ -64,7 +64,7 @@ namespace NeonProxyManager
         public static void Main(string[] args)
         {
             LogManager.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
-            log = LogManager.GetLogger(serviceName);
+            log = LogManager.GetLogger();
             log.Info(() => $"Starting [{serviceName}]");
 
             terminator = new ProcessTerminator(log);

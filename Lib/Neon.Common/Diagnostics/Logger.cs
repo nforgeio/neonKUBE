@@ -46,7 +46,7 @@ namespace Neon.Diagnostics
         /// <param name="name">The instance name or <c>null</c>.</param>
         public Logger(string name = null)
         {
-            this.name = name ?? "[unknown]";
+            this.name = name ?? string.Empty;
         }
 
         /// <summary>
@@ -99,7 +99,7 @@ namespace Neon.Diagnostics
 
                 if (LogManager.EmitOrder)
                 {
-                    order = $" [order={Interlocked.Increment(ref emitCount)}]";
+                    order = $" [order:{Interlocked.Increment(ref emitCount)}]";
                 }
 
                 if (LogManager.EmitTimestamp)

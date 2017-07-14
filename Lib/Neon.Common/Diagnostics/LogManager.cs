@@ -129,9 +129,9 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Returns a named logger.
         /// </summary>
-        /// <param name="name">The logger name.</param>
+        /// <param name="name">The logger name (defaults to <c>null</c>).</param>
         /// <returns>The <see cref="ILog"/> instance.</returns>
-        public static ILog GetLogger(string name)
+        public static ILog GetLogger(string name = null)
         {
             return new Logger(name ?? string.Empty);
         }
