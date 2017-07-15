@@ -179,7 +179,8 @@ EOF
 
 chmod 700 /usr/local/bin/update-time
 
-# Edit the NTP [/etc/init.d/ntp] script to call [update-time] before starting NTP.
+# Edit the NTP [/etc/init.d/ntp] script to initialize the hardware clock and
+# call [update-time] before starting NTP.
 
 cat <<"EOF" > /etc/init.d/ntp
 #!/bin/sh
@@ -209,7 +210,6 @@ fi
 if [ -e /var/lib/ntp/ntp.conf.dhcp ]; then
     NTPD_OPTS="$NTPD_OPTS -c /var/lib/ntp/ntp.conf.dhcp"
 fi
-
 
 LOCKFILE=/var/lock/ntpdate
 
@@ -244,10 +244,14 @@ case $1 in
 
         #------------------------------
         # This is the modification.
+
+		log_daemon_msg "Start: Setting hardware clock..." "ntpd"
+		hwclock -w
+		log_daemon_msg "Finished: Setting hardware clock" "ntpd"
         
         log_daemon_msg "Start: Updating current time..." "ntpd"
         /usr/local/bin/update-time --norestart
-        log_daemon_msg "Finished: Updating current time..." "ntpd"
+        log_daemon_msg "Finished: Updating current time" "ntpd"
 
         #------------------------------
 
