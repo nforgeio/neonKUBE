@@ -24,5 +24,5 @@ fi
 . /log-order.sh
 
 if [ "${LOG}" == "true" ] ; then
-    echo "[$(date --utc "+%Y-%m-%dT%H:%M:%S.000+00:00")] [WARN] [order=${LOG_ORDER}] $1"
+    echo "[$(date --utc "+%Y-%m-%dT%H:%M:%S.000+00:00")] [WARN] [order:${LOG_ORDER}] $1"
 fi
