@@ -16,17 +16,21 @@ STOPSIGNAL  SIGTERM
 
 EXPOSE 24224/tcp 24224/udp 9880/tcp
 
-# Download the MAXMIND geolocation database.
-
-RUN mkdir -p /geoip \
-    && wget -nv http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz -O /geoip/database.mmdb.gz
-
-# Install required Ruby gems.
+# Install required Ruby gems and the Nano editor because it's
+# handy for debugging.
 
 RUN /usr/sbin/td-agent-gem install fluent-plugin-elasticsearch --no-document \
     && /usr/sbin/td-agent-gem install fluent-plugin-record-modifier --no-document \
     && /usr/sbin/td-agent-gem install browser --no-document \
-    && /usr/sbin/td-agent-gem install maxminddb --no-document
+    && /usr/sbin/td-agent-gem install maxminddb --no-document \
+    && apt-get update \
+    && apt-get install -yq nano \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+
+# Download the MAXMIND geolocation database.
+
+RUN mkdir -p /geoip \
+    && wget -nv http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz -O /geoip/database.mmdb.gz
 
 # Configure custom scripts, templates and plugins.
 

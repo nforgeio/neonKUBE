@@ -95,22 +95,22 @@ namespace Neon.Diagnostics
                     activityId = $" [activity-id:{activityId}]";
                 }
 
-                var order = string.Empty;
+                var index = string.Empty;
 
-                if (LogManager.EmitOrder)
+                if (LogManager.EmitIndex)
                 {
-                    order = $" [order:{Interlocked.Increment(ref emitCount)}]";
+                    index = $" [index:{Interlocked.Increment(ref emitCount)}]";
                 }
 
                 if (LogManager.EmitTimestamp)
                 {
                     var timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff+00:00");
 
-                    Console.WriteLine($"[{timestamp}] [{level}]{activity}{module}{order} {message}");
+                    Console.WriteLine($"[{timestamp}] [{level}]{activity}{module}{index} {message}");
                 }
                 else
                 {
-                    Console.WriteLine($"[{level}]{activity}{module}{order} {message}");
+                    Console.WriteLine($"[{level}]{activity}{module}{index} {message}");
                 }
             }
         }

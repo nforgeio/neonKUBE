@@ -21,8 +21,8 @@ else
     LOG=true
 fi
 
-. /log-order.sh
+. /log-index.sh
 
 if [ "${LOG}" == "true" ] ; then
-    echo "[$(date --utc "+%Y-%m-%dT%H:%M:%S.000+00:00")] [ERROR] [order:${LOG_ORDER}] $1"
+    echo "[$(date --utc "+%Y-%m-%dT%H:%M:%S.000+00:00")] [ERROR] [index:${LOG_INDEX}] $1"
 fi
