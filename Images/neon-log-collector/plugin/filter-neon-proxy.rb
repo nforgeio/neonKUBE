@@ -1,4 +1,4 @@
-﻿#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # FILE:         filter-neon-proxy.rb
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
@@ -41,7 +41,7 @@ module Fluent
             # fields are separated by the caret (^) character.  HAProxy related messages will
             # prefix the HAProxy message part with:
             #
-            #		"haproxy[#]: "
+            #       "haproxy[#]: "
             #
             # where # is the process ID integer.
 
@@ -99,11 +99,11 @@ module Fluent
 
             # Extract the global event fields.
 
-            time = Time.strptime(fields[3], "%d/%b/%Y:%H:%M:%S.%L");	# HAProxy sample timestamp: 09/Feb/2017:15:40:44.638
+            time = Time.strptime(fields[3], "%d/%b/%Y:%H:%M:%S.%L");    # HAProxy sample timestamp: 09/Feb/2017:15:40:44.638
 
             record["level"]         = "info";
             record["service"]       = fields[2];
-            record["@timestamp"]    = time.strftime("%FT%T.%L%:z");	
+            record["@timestamp"]    = time.strftime("%FT%T.%L%:z"); 
 
             # Extract the proxy common TCP/HTTP traffic fields.
 
@@ -112,7 +112,7 @@ module Fluent
             
             proxy["mode"]           = "tcp";
             proxy["client_ip"]      = fields[4];
-            proxy["route"]          = fields[5].gsub(/.*:/, "");	# Route name appears after the first colon.
+            proxy["route"]          = fields[5].gsub(/.*:/, "");    # Route name appears after the first colon.
             proxy["server"]         = fields[6];
             proxy["server_ip"]      = fields[7];
             proxy["server_port"]    = fields[8];
@@ -177,7 +177,7 @@ module Fluent
 
             if rawHeaders.length > 0
 
-                rawHeaders = rawHeaders[1..rawHeaders.length-2];	# Strip off the leading and trailing "{...}"
+                rawHeaders = rawHeaders[1..rawHeaders.length-2];    # Strip off the leading and trailing "{...}"
                 headers    = rawHeaders.split('|');
 
                 if headers.length > 0
@@ -228,12 +228,12 @@ module Fluent
             #
             # Note that syslog tags will look like: 
             #
-            #		syslog.local7.info
+            #       syslog.local7.info
     
             tag_parts = tag.split('.');
 
             if tag_parts.length < 3
-                return nil;		# Invalid tag
+                return nil;     # Invalid tag
             end
 
             case tag_parts[2].downcase

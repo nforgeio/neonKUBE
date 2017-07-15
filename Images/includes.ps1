@@ -77,3 +77,4 @@ exec { unix-text --recursive .\*.js }
 exec { unix-text --recursive .\*.conf }
 exec { unix-text --recursive .\*.md }
 exec { unix-text --recursive .\*.json }
+exec { unix-text --recursive .\*.rb }

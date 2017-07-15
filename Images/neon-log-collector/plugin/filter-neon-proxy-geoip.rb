@@ -1,4 +1,4 @@
-﻿#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # FILE:         filter-neon-proxy-geoip.rb
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
@@ -11,32 +11,32 @@
 # information will be persisted in the record's [location] field as:
 #
 # "location": {
-# 	  "latitude": 6.2518,
-# 	  "longitude": -75.5636,
+#     "latitude": 6.2518,
+#     "longitude": -75.5636,
 #     "metro_code": 500,
 #     "postal_code": "98072",
-# 	  "time_zone": "America/Bogota",
+#     "time_zone": "America/Bogota",
 #
 #     "continent": {
-# 		"code": "SA",
-# 		"geoname_id": 6255150,
-# 		"name": "South America"
+#       "code": "SA",
+#       "geoname_id": 6255150,
+#       "name": "South America"
 #     },
 #     "country": {
-# 		"geoname_id": 3686110,
-# 		"iso_code": "CO",
-# 		"name": "Colombia"
+#       "geoname_id": 3686110,
+#       "iso_code": "CO",
+#       "name": "Colombia"
 #     },
 #     "city": {
-# 		"geoname_id": 3674962,
-# 		"name": "Medellín"
+#       "geoname_id": 3674962,
+#       "name": "Medellín"
 #     },
 #     "subdivisions": [{
-# 		"geoname_id": 3689815,
-# 		"iso_code": "ANT",
-# 		"name": "Antioquia"
+#       "geoname_id": 3689815,
+#       "iso_code": "ANT",
+#       "name": "Antioquia"
 #     }]
-# }	
+# } 
 
 require 'maxminddb'
 require 'json'

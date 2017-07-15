@@ -1,4 +1,4 @@
-﻿#------------------------------------------------------------------------------
+#------------------------------------------------------------------------------
 # FILE:         filter-neon-log.rb
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
@@ -33,7 +33,7 @@ module Fluent
             # Detect Docker events.
 
             if !record.key?("container_id") || !record.key?("container_name")
-                return record;	# Not from Docker
+                return record;  # Not from Docker
             end
 
             record["service_host"] = "docker";
@@ -93,28 +93,28 @@ logDebug("message", record["message"]);
         end
 
         # This method handles extraction from what looks like a JSON formatted message.
-		#
+        #
         def extractJson(tag, time, record)
 
-		    message = record["message"];
+            message = record["message"];
 
-			begin
-			    json = JSON.parse(message);
-				rescue
-					return record;	# Looks like the message isn't JSON after all.
-				end
-			end
-				
-			record["json"] = json;	# Persist the structured JSON
+            begin
+                json = JSON.parse(message);
+                rescue
+                    return record;  # Looks like the message isn't JSON after all.
+                end
+            end
+                
+            record["json"] = json;  # Persist the structured JSON
 
-			if json.key?("message")
-				record["message"] = json["message"];
-			elsif json.key?("msg")
-				record["message"] = json["msg"];
-			end
+            if json.key?("message")
+                record["message"] = json["message"];
+            elsif json.key?("msg")
+                record["message"] = json["msg"];
+            end
 
-			if json.key?("level")
-				level = json["level"];
+            if json.key?("level")
+                level = json["level"];
                 case level.downcase
                     when "emergency", "emerg"
                         record["level"] = "emergency";
@@ -150,12 +150,12 @@ logDebug("level (from JSON)", record["level"].to_s);
         # may not be embedded within square brackets [...].  The plugin recognizes
         # the following date formats:
         #
-        #		2000-01-22 16:30:22 +0000
-        #		2000-01-22 16:30:22
-        #		2000/01/22 16:30:22
+        #       2000-01-22 16:30:22 +0000
+        #       2000-01-22 16:30:22
+        #       2000/01/22 16:30:22
         #       2000-01-22T16:30:22.999
         #       2000-01-22T16:30:22.999Z
-        #		2000-01-22T16:30:22.999GMT
+        #       2000-01-22T16:30:22.999GMT
         #       2000-01-22T16:30:22+0000
         #       2000-01-22T16:30:22+00:00
         #       2000-01-22T16:30:22.999+00:00
@@ -170,7 +170,7 @@ logDebug("level (from JSON)", record["level"].to_s);
             end
 
             message = record["message"];
-            dateFmt = "%Y-%m-%dT%H:%M:%S.%L%z";	# ISO "T" format with milliseconds
+            dateFmt = "%Y-%m-%dT%H:%M:%S.%L%z"; # ISO "T" format with milliseconds
 
             begin
 
@@ -232,30 +232,30 @@ logDebug("level (from JSON)", record["level"].to_s);
         # This method sets the record's [level] field one of the log level strings below
         # by examining one or more of the record's fields:
         #
-        #		emergency	System is unusable (not emitted by services).
-        #		alert		System is seriously degraded (not emitted by services)..
-        #		critical	Service has failed (maps from fatal for Log4Net oriented application logging).
-        #		error		Service has encountered an error.
-        #		warn		Indicates that an error may occur if actions are not taken.
-        #		notice		Something unusual has occurred but is not an error.
-        #		info		Normal operational messages that require no action.
-        #		debug		Developer/diagnostic information.
-        #		unknown		Log level could not be determined.
+        #       emergency   System is unusable (not emitted by services).
+        #       alert       System is seriously degraded (not emitted by services)..
+        #       critical    Service has failed (maps from fatal for Log4Net oriented application logging).
+        #       error       Service has encountered an error.
+        #       warn        Indicates that an error may occur if actions are not taken.
+        #       notice      Something unusual has occurred but is not an error.
+        #       info        Normal operational messages that require no action.
+        #       debug       Developer/diagnostic information.
+        #       unknown     Log level could not be determined.
         #
         # The current implementation tries the following:
         #
-        #		* If the [PRIORITY] field exists then it is assumed to be a SYSLOG/JOURNAL
-        #		  log level code.
+        #       * If the [PRIORITY] field exists then it is assumed to be a SYSLOG/JOURNAL
+        #         log level code.
         #
-        #		* If the [message] field exists and starts with a pattern like:
+        #       * If the [message] field exists and starts with a pattern like:
         #
-        #				/^\s*\[\s*(.*)\s*\]\s*/
+        #               /^\s*\[\s*(.*)\s*\]\s*/
         #
-        #		  where the matched group is a known log level string, then the
-        #		  level string will be mapped to one of the standard levels.  Note
-        #		  that the entire pattern will be stripped from the [message] field.
+        #         where the matched group is a known log level string, then the
+        #         level string will be mapped to one of the standard levels.  Note
+        #         that the entire pattern will be stripped from the [message] field.
         #
-        #		* [level] will be set to [other] if the level couldn't be determined.
+        #       * [level] will be set to [other] if the level couldn't be determined.
         #
         def extractLogLevel(tag, time, record)
 
@@ -340,7 +340,7 @@ logDebug("level (from JSON)", record["level"].to_s);
 
             # We didn't find a log level.
 
-            record["level"] = "other";	
+            record["level"] = "other";  
 
             return record;
         end
@@ -350,7 +350,7 @@ logDebug("level (from JSON)", record["level"].to_s);
         # supports  the optional activity, module, and order format emitted by the Neon 
         # logging classes, like:
         #
-        #		[activity-id:<id>] [module:<name>] [order:#]
+        #       [activity-id:<id>] [module:<name>] [order:#]
         #
         def extractOtherFields(tag, time, record)
             if ! record.key?("message")
@@ -412,7 +412,7 @@ logDebug("level (from JSON)", record["level"].to_s);
         def logDebug(method, message)
             open('/td.log', 'a') do |f|
               f.puts method + ": " + message
-            end		
+            end     
         end
     end
 end
