@@ -245,9 +245,16 @@ case $1 in
         #------------------------------
         # This is the modification.
 
-		log_daemon_msg "Start: Setting hardware clock..." "ntpd"
-		hwclock -w
-		log_daemon_msg "Finished: Setting hardware clock" "ntpd"
+		# This bit of voodoo disables Hyper-V time synchronization with The
+		# host server.  We don't want this because the cluster is doing its
+		# own time management and time sync will fight us.  This is described
+		# here:
+		#
+		# https://social.msdn.microsoft.com/Forums/en-US/8c0a1026-0b02-405a-848e-628e68229eaf/i-have-a-lot-of-time-has-been-changed-in-the-journal-of-my-linux-boxes?forum=WAVirtualMachinesforWindows
+
+		log_daemon_msg "Start: Disabling Hyper-V time synchronization..." "ntpd"
+		echo 2dd1ce17-079e-403c-b352-a1921ee207ee > /sys/bus/vmbus/drivers/hv_util/unbind
+		log_daemon_msg "Finished: Disabling Hyper-V time synchronization" "ntpd"
         
         log_daemon_msg "Start: Updating current time..." "ntpd"
         /usr/local/bin/update-time --norestart
