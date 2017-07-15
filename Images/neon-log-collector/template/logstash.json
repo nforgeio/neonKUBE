@@ -30,7 +30,7 @@
       "properties": {
         "@timestamp": {
           "type": "date",
-          "format": "epoch_millis||strict_date_optional_time"
+          "format": "strict_date_optional_time||epoch_millis"
         },
         "order": {
           "type": "long"

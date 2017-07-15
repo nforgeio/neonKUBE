@@ -42,160 +42,160 @@ require 'maxminddb'
 require 'json'
 
 module Fluent
-	class NeonProxyGeoIPFilter < Filter
-		Fluent::Plugin.register_filter('neon-proxy-geoip', self)
-	
-		def initialize
-			super
-		end
+    class NeonProxyGeoIPFilter < Filter
+        Fluent::Plugin.register_filter('neon-proxy-geoip', self)
+    
+        def initialize
+            super
+        end
 
-		def configure(conf)
-		super
-		
-			@database_path = '/geoip/database.mmdb';
-			@locale        = 'en';
+        def configure(conf)
+        super
+        
+            @database_path = '/geoip/database.mmdb';
+            @locale        = 'en';
 
-			begin
-				@database = MaxMindDB.new(@database_path);
-			rescue
-				log.warn "Cannot open the [/geoip/database.mmdb] database.";
-				@database = nil;
-			end
-		end
+            begin
+                @database = MaxMindDB.new(@database_path);
+            rescue
+                log.warn "Cannot open the [/geoip/database.mmdb] database.";
+                @database = nil;
+            end
+        end
 
-		def filter(tag, time, record)
+        def filter(tag, time, record)
 
-			if @database.nil? then
-				return record;
-			end
+            if @database.nil? then
+                return record;
+            end
 
-			proxy = record["proxy"];
+            proxy = record["proxy"];
 
-			if proxy.nil? then
-				return record;
-			end
+            if proxy.nil? then
+                return record;
+            end
 
-			ip = proxy["client_ip"];
+            ip = proxy["client_ip"];
 
-			if ip.nil? then
-				return record;
-			end
+            if ip.nil? then
+                return record;
+            end
 
-			begin
-				geoip = @database.lookup(ip);
-			rescue IPAddr::InvalidAddressError => e
-				# Abort the lookup.
-				return record;
-			end
+            begin
+                geoip = @database.lookup(ip);
+            rescue IPAddr::InvalidAddressError => e
+                # Abort the lookup.
+                return record;
+            end
 
-			unless geoip.found? then
-				return record;
-			end
+            unless geoip.found? then
+                return record;
+            end
 
-			location = {};
+            location = {};
 
             unless geoip.location.latitude.nil? then
-				location['latitude'] = geoip.location.latitude;
+                location['latitude'] = geoip.location.latitude;
             end
             unless geoip.location.longitude.nil? then
-				location['longitude'] = geoip.location.longitude;
+                location['longitude'] = geoip.location.longitude;
             end
             unless geoip.location.metro_code.nil? then
-				location['metro_code'] = geoip.location.metro_code;
+                location['metro_code'] = geoip.location.metro_code;
             end
-			unless geoip.postal.code.nil? then
-				location['postal_code'] = geoip.postal.code;
+            unless geoip.postal.code.nil? then
+                location['postal_code'] = geoip.postal.code;
             end
             unless geoip.location.time_zone.nil? then
-				location['time_zone'] = geoip.location.time_zone;
+                location['time_zone'] = geoip.location.time_zone;
             end
 
             continent = {};
 
             unless geoip.continent.code.nil? then
-				continent['code'] = geoip.continent.code;
+                continent['code'] = geoip.continent.code;
             end
             unless geoip.continent.geoname_id.nil? then
-				continent['geoname_id'] = geoip.continent.geoname_id;
+                continent['geoname_id'] = geoip.continent.geoname_id;
             end
             unless geoip.continent.iso_code.nil? then
-				continent['iso_code'] = geoip.continent.iso_code;
+                continent['iso_code'] = geoip.continent.iso_code;
             end
-			continentName = geoip.continent.name(@locale)
+            continentName = geoip.continent.name(@locale)
             unless continentName.nil? then
-				continent['name'] = continentName;
+                continent['name'] = continentName;
             end
             unless continent.empty? then
-				location['continent'] = continent;
+                location['continent'] = continent;
             end
 
             country = {}
 
             unless geoip.country.code.nil? then
-				country['code'] = geoip.country.code;
+                country['code'] = geoip.country.code;
             end
             unless geoip.country.geoname_id.nil? then
-				country['geoname_id'] = geoip.country.geoname_id;
+                country['geoname_id'] = geoip.country.geoname_id;
             end
             unless geoip.country.iso_code.nil? then
-				country['iso_code'] = geoip.country.iso_code;
+                country['iso_code'] = geoip.country.iso_code;
             end
-			countryName = geoip.country.name(@locale);
+            countryName = geoip.country.name(@locale);
             unless countryName.nil? then
-				country['name'] = countryName;
+                country['name'] = countryName;
             end
             unless country.empty? then
-				location['country'] = country;
+                location['country'] = country;
             end
 
             city = {};
 
             unless geoip.city.code.nil? then
-				city['code'] = geoip.city.code;
+                city['code'] = geoip.city.code;
             end
             unless geoip.city.geoname_id.nil? then
-				city['geoname_id'] = geoip.city.geoname_id;
+                city['geoname_id'] = geoip.city.geoname_id;
             end
             unless geoip.city.iso_code.nil? then
-				city['iso_code'] = geoip.city.iso_code;
+                city['iso_code'] = geoip.city.iso_code;
             end
-			cityName = geoip.city.name(@locale);
+            cityName = geoip.city.name(@locale);
             unless cityName.nil? then
-				city['name'] = cityName;
+                city['name'] = cityName;
             end
             unless city.empty? then
-				location['city'] = city;
+                location['city'] = city;
             end
             subdivisions = [];
 
             geoip.subdivisions.each do |subdivision|
 
-				division = {}
-				unless subdivision.code.nil? then
-					division['code'] = subdivision.code;
-				end
-				unless subdivision.geoname_id.nil? then
-					division['geoname_id'] = subdivision.geoname_id;
-				end
-				unless subdivision.iso_code.nil? then
-					division['iso_code'] = subdivision.iso_code;
-				end
-				subdivisionName = subdivision.name(@locale);
-				unless subdivisionName.nil? then
-					division['name'] = subdivisionName;
-				end
-				unless division.empty? then
-					subdivisions.push(division );
-				end
+                division = {}
+                unless subdivision.code.nil? then
+                    division['code'] = subdivision.code;
+                end
+                unless subdivision.geoname_id.nil? then
+                    division['geoname_id'] = subdivision.geoname_id;
+                end
+                unless subdivision.iso_code.nil? then
+                    division['iso_code'] = subdivision.iso_code;
+                end
+                subdivisionName = subdivision.name(@locale);
+                unless subdivisionName.nil? then
+                    division['name'] = subdivisionName;
+                end
+                unless division.empty? then
+                    subdivisions.push(division );
+                end
             end
 
             unless subdivisions.empty? then
-				location['subdivisions'] = subdivisions;
+                location['subdivisions'] = subdivisions;
             end
 
-			record['location'] = location;
+            record['location'] = location;
 
-			return record;
-		end
-	end
+            return record;
+        end
+    end
 end

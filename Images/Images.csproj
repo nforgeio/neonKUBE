@@ -86,10 +86,7 @@
     <None Include="metricbeat\README.md" />
     <None Include="neon-log-collector\plugin\filter-neon-docker.rb" />
     <None Include="neon-log-collector\plugin\filter-neon-proxy-geoip.rb" />
-    <None Include="neon-log-collector\plugin\filter-neon-loglevel.rb" />
-    <None Include="neon-log-collector\plugin\filter-neon-logfields.rb" />
     <None Include="neon-log-collector\plugin\filter-neon-proxy.rb" />
-    <None Include="neon-log-collector\plugin\filter-neon-timestamp.rb" />
     <None Include="neon-log-collector\template\logstash.json" />
     <Content Include="neon-registry-cache\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
