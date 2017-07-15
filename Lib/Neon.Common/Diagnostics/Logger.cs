@@ -51,7 +51,7 @@ namespace Neon.Diagnostics
 
         /// <summary>
         /// Normalizes a log message by escaping any backslashes and replacing any line
-        /// endings with "\n".  This converts multi-line message to a single line.s
+        /// endings with "\n".  This converts multi-line message to a single line.
         /// </summary>
         /// <param name="message">The message.</param>
         /// <returns>The normalized message.</returns>
