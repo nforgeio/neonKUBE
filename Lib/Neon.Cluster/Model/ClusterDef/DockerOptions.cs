@@ -122,7 +122,7 @@ namespace Neon.Cluster
 
                         version = version.Substring(0, version.Length - "-ce".Length);
 
-                        if (new Version(version) >= new System.Version("15.06.0"))
+                        if (new Version(version) >= new System.Version("17.06.0"))
                         {
                             return $"{version}~ce-0~ubuntu";
                         }
