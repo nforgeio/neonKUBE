@@ -47,8 +47,10 @@ rm -f /etc/docker/key.json
 # drive or simply be a physical directory on the OS drive so we'll link
 # the root Docker storage directory [/var/lib/docker] to [/mnt-data/docker]
 
-mkdir -p /mnt-data/docker
-ln -s /mnt-data/docker /var/lib/docker
+if [ ! -d /mnt-data/docker ] ; then
+	mkdir -p /mnt-data/docker
+	ln -s /mnt-data/docker /var/lib/docker
+fi
 
 #--------------------------------------------------------------------------
 # Install Docker
