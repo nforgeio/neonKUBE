@@ -1139,14 +1139,15 @@ $@"docker login \
             }
 
             bootstrapManager.Status = "create swarm";
+            bootstrapManager.DockerCommand(RunOptions.FaultOnError, $"docker swarm init --advertise-addr {bootstrapManager.Metadata.PrivateAddress}:{cluster.Definition.Docker.SwarmPort}");
 
-            var response = bootstrapManager.DockerCommand($"docker swarm init --advertise-addr {bootstrapManager.Metadata.PrivateAddress}:{cluster.Definition.Docker.SwarmPort}");
-
-            clusterLogin.SwarmWorkerToken = ExtractSwarmToken(response.OutputText);
-
-            response = bootstrapManager.DockerCommand($"docker swarm join-token manager");
+            var response = bootstrapManager.DockerCommand(RunOptions.FaultOnError, $"docker swarm join-token manager");
 
             clusterLogin.SwarmManagerToken = ExtractSwarmToken(response.OutputText);
+
+            response = bootstrapManager.DockerCommand(RunOptions.FaultOnError, $"docker swarm join-token worker");
+
+            clusterLogin.SwarmWorkerToken = ExtractSwarmToken(response.OutputText);
 
             // Persist the swarm tokens into the cluster login.
 
@@ -1154,29 +1155,44 @@ $@"docker login \
         }
 
         /// <summary>
-        /// Extracts the Swarm token from a <b>docker swarm init...</b> or <b>docker swarm join-token manager</b>
-        /// commands.  This token will be used when adding additional nodes to the cluster.
+        /// Extracts the Swarm token from a <b>docker swarm join-token [manager|worker]</b> 
+        /// command.  The token returned can be used when adding additional nodes to the cluster.
         /// </summary>
         /// <param name="commandResponse">The command response string.</param>
         /// <returns>The swarm token.</returns>
         private string ExtractSwarmToken(string commandResponse)
         {
-            const string tokenOpt = "--token";
+            const string tokenOpt = "--token ";
 
-            int startPos = commandResponse.IndexOf(tokenOpt);
+            var startPos = commandResponse.IndexOf(tokenOpt);
 
             if (startPos == -1)
             {
                 throw new NeonClusterException("Cannot extract swarm token.");
             }
 
-            startPos += tokenOpt.Length;
-
-            int endPos = commandResponse.IndexOf("\\", startPos);
-
             if (startPos == -1)
             {
-                throw new NeonClusterException("Cannot extract swarm token.");
+                throw new NeonClusterException($"Cannot extract swarm token from:\r\n\r\n{commandResponse}");
+            }
+
+            startPos += tokenOpt.Length;
+
+            // It looks like the format for output has changed.  Older releases
+            // like [17.03-ce] have a backslash to continue the example command.
+            // Newer versions have a space and additional arguments on the same
+            // line.  We're going to handle both.
+
+            var endPos = commandResponse.IndexOf("\\", startPos);
+
+            if (endPos == -1)
+            {
+                endPos = commandResponse.IndexOfAny(new char[] { ' ', '\r', '\n' }, startPos);
+            }
+
+            if (endPos == -1)
+            {
+                throw new NeonClusterException($"Cannot extract swarm token from:\r\n\r\n{commandResponse}");
             }
 
             return commandResponse.Substring(startPos, endPos - startPos).Trim();

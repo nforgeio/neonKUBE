@@ -116,6 +116,7 @@ if [ "${docker_version}" != "" ] ; then
 	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) edge"
 	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) testing"
+	apt-get update
 
 	# Install a specific Docker version.
 	#
@@ -126,8 +127,10 @@ if [ "${docker_version}" != "" ] ; then
 	# $todo(jeff.lill): SECURITY RISK
 	#
 	#	--allow-unauthenticated below is a security risk.
+	#
+	# Docker wouldn't install without this.  Perhaps this will
+	# change in the future.
 
-	apt-get update
 	apt-get install -yq --allow-unauthenticated docker-ce=${docker_version}
 fi
 
