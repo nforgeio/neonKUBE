@@ -551,6 +551,28 @@ OPTIONS:
         /// <param name="node">The target cluster node.</param>
         private void ConfigureCommon(NodeProxy<NodeDefinition> node)
         {
+            //-----------------------------------------------------------------
+            // NOTE: 
+            //
+            // We're going to perform the following steps outside of the
+            // idempotent check to make it easier to debug and modify 
+            // scripts and tools when cluster setup has been partially
+            // completed.  These steps are implicitly idempotent and
+            // complete pretty quickly.
+
+            // Configure the node's environment variables.
+
+            CommonSteps.ConfigureEnvironmentVariables(node, cluster.Definition);
+
+            // Upload the setup and configuration files.
+
+            node.InitializeNeonFolders();
+            node.UploadConfigFiles(cluster.Definition);
+            node.UploadTools(cluster.Definition);
+
+            //-----------------------------------------------------------------
+            // Ensure the following steps are executed only once.
+
             node.InvokeIdempotentAction("setup-common",
                 () =>
                 {
@@ -566,10 +588,6 @@ OPTIONS:
                         CommonSteps.WaitForPackageManager(node);
                     }
 
-                    // Configure the node's environment variables.
-
-                    CommonSteps.ConfigureEnvironmentVariables(node, cluster.Definition);
-
                     // Create the [/mnt-data] folder if it doesn't already exist.  This folder
                     // is where we're going to host the Docker containers and volumes that should
                     // have been initialized to link to any data drives attached to the machine
@@ -580,12 +598,6 @@ OPTIONS:
                     {
                         node.SudoCommand("mkdir -p /mnt-data");
                     }
-
-                    // Upload the setup and configuration files.
-
-                    node.InitializeNeonFolders();
-                    node.UploadConfigFiles(cluster.Definition);
-                    node.UploadTools(cluster.Definition);
 
                     // Configure the APT proxy server early, if there is one.
 
