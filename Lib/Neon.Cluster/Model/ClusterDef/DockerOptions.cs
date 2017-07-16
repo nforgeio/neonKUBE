@@ -85,7 +85,7 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Returns <b>latest</b>, <b>test</b>, or <b>experimental</b> for current releases 
-        /// or the Ubuntu APT package version to be installed.
+        /// or the specific Ubuntu APT package version to be installed.
         /// </summary>
         [JsonIgnore]
         public string PackageVersion
@@ -221,6 +221,30 @@ namespace Neon.Cluster
                 }
             }
 
+            // $todo(jeff.lill): 
+            //
+            // This check doesn't work for non-stable releases now that Docker has implemented
+            // the new stable, edge, testing release channel scheme.  At some point, it would
+            // be interesting to try to figure out another way.
+            //
+            // Probably the best approach would be to actually use [apt-get] to list the 
+            // available versions.  This would look something like:
+            //
+            //      # Configure the stable, edge, and testing repositorties
+            //  
+            //      add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
+            //      add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) edge"
+            //      add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) testing"
+            //      apt-get update
+            //
+            // and then use the following the list the versions:
+            //
+            //      apt-get install -yq --allow-unauthenticated docker-ce=${docker_version}
+            //
+            // I'm doubtful that it's possible to implement this directly in the [neon-cli].
+            // One approach would be to have a service that polls [apt-get] for this a few
+            // times a day and then exposes a REST API that can answer the question.
+#if TODO
             if (uri != null)
             {
                 // Verify that the Docker download actually exists.
@@ -240,6 +264,7 @@ namespace Neon.Cluster
                     }
                 }
             }
+#endif
 
             if (string.IsNullOrEmpty(Registry) || !Uri.TryCreate(Registry, UriKind.Absolute, out uri))
             {
