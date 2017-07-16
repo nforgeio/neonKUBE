@@ -154,7 +154,7 @@ Description=Docker Application Container Engine
 Documentation=https://docs.docker.com
 After=network.target
 After=
-Requires=consul.service
+Requires=
 Before=
 
 [Service]
