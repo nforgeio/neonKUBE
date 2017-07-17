@@ -51,7 +51,7 @@ fi
 
 # Make sure APT-GET has the latest package information.
 
-apt-get update -yq
+apt-get update
 
 # Install the [jq] package.  This tool makes it easy for shell scripts
 # to parse JSON.
