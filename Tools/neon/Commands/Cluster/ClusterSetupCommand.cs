@@ -631,26 +631,6 @@ OPTIONS:
 
                     node.SudoCommand("update-ca-certificates");
 
-                    // $todo(jeff.lill):
-                    //
-                    // I'm disabling this because I'm seeing extreme Docker networking
-                    // instability and it's possible that a recent package update is
-                    // causing this.  Frankly, I'm not sure whether this is even a good
-                    // idea since it may result in nodes running somewhat different versions
-                    // of Linux, especially when we can add nodes to existing clusters.
-                    //
-                    // If I bring this back, it should probably be controlled by a cluster
-                    // option and be disabled by default.  Here's the tracking issue:
-                    //
-                    //      https://github.com/jefflill/NeonForge/issues/103
-#if TODO
-                    // Make sure we have the latest distribution updates.
-
-                    node.Status = "upgrade linux";
-                    node.SudoCommand("apt-get update -yq");
-                    node.SudoCommand("apt-get dist-upgrade -yq");
-#endif
-
                     // Tune Linux for SSDs if enabled.
 
                     node.Status = "run: setup-ssd.sh";
