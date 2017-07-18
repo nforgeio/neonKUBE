@@ -14,6 +14,7 @@
 
 FROM        haproxy:${VERSION}-alpine
 MAINTAINER  jeff@lilltek.com
+STOPSIGNAL  SIGTERM
 
 # Install the [tini] INIT manager.
 
