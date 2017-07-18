@@ -11,7 +11,7 @@
 #
 # USAGE: . /log-index
 
-LOG_INDEX=$(cat /dev/shm/log-index) &> /dev/null
+LOG_INDEX=$(cat /dev/shm/log-index) > /dev/null 2>&1
 
 if [ ! $? ] ; then
     # [log-index] file doesn't exist so initialize it.
