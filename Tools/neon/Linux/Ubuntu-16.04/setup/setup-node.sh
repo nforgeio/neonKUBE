@@ -168,6 +168,23 @@ cat <<EOF > /etc/sysctl.conf
 # Note: This may impact IPv6 TCP sessions too
 #net.ipv4.tcp_syncookies=1
 
+# Docker overlay networks require TCP keepalive packets to be
+# transmitted at least every 15 minutes on idle connections to
+# prevent zombie connections that appear to be alive but don't
+# actually transmit data.  This is described here:
+#
+#	https://github.com/moby/moby/issues/31208
+#
+# We're going to configure TCP connections to begin sending
+# keepalives after 500 minutes of being idle and then every
+# 30 seconds thereafter (regardless of any other traffic).
+# If keepalives are not ACKed after 2.5 minutes, Linux will
+# report the connection as closed to the application layer.
+
+net.ipv4.tcp_keepalive_time = 300
+net.ipv4.tcp_keepalive_intvl = 30
+net.ipv4.tcp_keepalive_probes = 5
+
 ###################################################################
 # Additional settings - these settings can improve the network
 # security of the host and prevent against some network attacks
