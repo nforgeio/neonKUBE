@@ -631,11 +631,25 @@ OPTIONS:
 
                     node.SudoCommand("update-ca-certificates");
 
-                    // Make sure we have the latest packages.
+                    // $todo(jeff.lill):
+                    //
+                    // I'm disabling this because I'm seeing extreme Docker networking
+                    // instability and it's possible that a recent package update is
+                    // causing this.  Frankly, I'm not sure whether this is even a good
+                    // idea since it may result in nodes running somewhat different versions
+                    // of Linux, especially when we can add nodes to existing clusters.
+                    //
+                    // If I bring this back, it should probably be controlled by a cluster
+                    // option and be disabled by default.  Here's the tracking issue:
+                    //
+                    //      https://github.com/jefflill/NeonForge/issues/103
+#if TODO
+                    // Make sure we have the latest distribution updates.
 
-                    node.Status = "update packages";
+                    node.Status = "upgrade linux";
                     node.SudoCommand("apt-get update -yq");
                     node.SudoCommand("apt-get dist-upgrade -yq");
+#endif
 
                     // Tune Linux for SSDs if enabled.
 
@@ -1309,13 +1323,20 @@ $@"docker login \
         /// <param name="manager">The manager node.</param>
         private void CreateClusterNetworks(NodeProxy<NodeDefinition> manager)
         {
+            // $todo(jeff.lill):
+            //
+            // Enable the network encryption when Docker networking seems
+            // to stablize.  Here's the tracking issue:
+            //
+            //      https://github.com/jefflill/NeonForge/issues/102
+
             manager.InvokeIdempotentAction("setup-docker-networks",
                 () =>
                 {
                     manager.DockerCommand(
                         "docker network create",
                             "--driver", "overlay",
-                            "--opt", "encrypt",
+                            //"--opt", "encrypt",
                             "--subnet", cluster.Definition.Network.PublicSubnet,
                             cluster.Definition.Network.PublicAttachable ? "--attachable" : null,
                             NeonClusterConst.ClusterPublicNetwork);
@@ -1323,7 +1344,7 @@ $@"docker login \
                     manager.DockerCommand(
                         "docker network create",
                             "--driver", "overlay",
-                            "--opt", "encrypt",
+                            //"--opt", "encrypt",
                             "--subnet", cluster.Definition.Network.PrivateSubnet,
                             cluster.Definition.Network.PrivateAttachable ? "--attachable" : null,
                             NeonClusterConst.ClusterPrivateNetwork);
