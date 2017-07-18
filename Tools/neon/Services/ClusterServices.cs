@@ -146,18 +146,30 @@ namespace NeonTool
                             LastPort  = NeonHostPorts.ProxyPrivateLast
                         });
 
+                    // $todo(jeff.lill):
+                    //
+                    // Docker mesh routing seems unstable right now on versions 17.03.0-ce
+                    // thru 17.06.0-ce so we're going to temporarily work around this by
+                    // not constaining the PUBLIC and PRIVATE proxies so they'll run on
+                    // all nodes.  Here's the tracking issue:
+                    //
+                    //      https://github.com/jefflill/NeonForge/issues/104
+#if TODO
                     if (cluster.Definition.Workers.Count() > 0)
                     {
                         // Constrain proxies to all worker nodes if there are any.
 
-                        proxyConstraint = "node.role!=manager";
+                        proxyConstraint = "--constraint node.role!=manager";
                     }
                     else
                     {
                         // Constrain proxies to manager nodes nodes if there are no workers.
 
-                        proxyConstraint = "node.role==manager";
+                        proxyConstraint = "--constraint node.role==manager";
                     }
+#else
+                    proxyConstraint = (string)null;
+#endif
 
                     firstManager.Status = "start: neon-proxy-public";
                     firstManager.DockerCommand(
@@ -171,7 +183,7 @@ namespace NeonTool
                             "--env", "DEBUG=false",
                             "--publish", $"{NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}:{NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}",
                             "--secret", "neon-proxy-public-credentials",
-                            "--constraint", proxyConstraint,
+                            proxyConstraint,
                             "--mode", "global",
                             "--restart-delay", "10s",
                             "--network", NeonClusterConst.ClusterPublicNetwork,
@@ -189,7 +201,7 @@ namespace NeonTool
                             "--env", "DEBUG=false",
                             "--publish", $"{NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}:{NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}",
                             "--secret", "neon-proxy-private-credentials",
-                            "--constraint", proxyConstraint,
+                            proxyConstraint,
                             "--mode", "global",
                             "--restart-delay", "10s",
                             "--network", NeonClusterConst.ClusterPrivateNetwork,
