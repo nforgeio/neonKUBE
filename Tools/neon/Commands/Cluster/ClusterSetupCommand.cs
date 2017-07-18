@@ -1171,15 +1171,16 @@ $@"docker login \
             const string tokenOpt = "--token ";
 
             var startPos = commandResponse.IndexOf(tokenOpt);
+            var errorMsg = $"Cannot extract swarm token from:\r\n\r\n{commandResponse}";
 
             if (startPos == -1)
             {
-                throw new NeonClusterException("Cannot extract swarm token.");
+                throw new NeonClusterException(errorMsg);
             }
 
             if (startPos == -1)
             {
-                throw new NeonClusterException($"Cannot extract swarm token from:\r\n\r\n{commandResponse}");
+                throw new NeonClusterException(errorMsg);
             }
 
             startPos += tokenOpt.Length;
