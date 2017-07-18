@@ -196,7 +196,7 @@ module NeonCommon
         end
 
         message = record["message"];
-        dateFmt = "%Y-%m-%dT%H:%M:%S.%L%z"; # ISO "T" format with milliseconds
+        timeFmt = "%Y-%m-%dT%H:%M:%S.%L%z"; # ISO "T" format with milliseconds
 
         begin
 
@@ -235,13 +235,13 @@ module NeonCommon
 
                 # We matched a date so attempt to parse it and update the event.
 
-                record["@timestamp"] = Time.parse(date).strftime(dateFmt);
+                record["@timestamp"] = Time.parse(date).strftime(timeFmt);
                 record["message"]    = message[(match.length..-1)];
             else
 
                 # We couldn't match a date, so record the Fluent ingestion time.
 
-                record["@timestamp"] = Time.at(time).strftime(dateFmt);
+                record["@timestamp"] = Time.at(time).strftime(timeFmt);
             end
 
             return record;
@@ -250,7 +250,7 @@ module NeonCommon
 
             # Handle any parsing errors by recording the Fluentd injestion time.
 
-            record["@timestamp"] = Time.at(time).strftime(dateFmt);
+            record["@timestamp"] = Time.at(time).strftime(timeFmt);
             return record;
         end
     end
@@ -326,5 +326,57 @@ module NeonCommon
         open('/td.log', 'a') do |f|
             f.puts method + ": " + message
         end     
+    end
+
+    # Unescapes a string that may include simple embedded escapes.
+    # This handles escaped single and double quotes, an escapped backslash
+    # and escaped control characters.  It does not handle hex, octal, or escaped
+    # unicode characters.
+    #
+    def unescapeString(input)
+        
+        output = "";
+
+        i = 0;
+        while i < input.length do
+            
+            ch = input[i];
+            if ch == '\\'
+
+                i += 1;
+                if i >= input.length
+                    output = output + ch;
+                    break;
+                end
+
+                ch = input[i];
+
+                case ch
+                    when '0'
+                        ch = '\0';
+                    when 'a'
+                        ch = '\a';
+                    when 'b'
+                        ch = '\b';
+                    when 't'
+                        ch = '\t';
+                    when 'n'
+                        ch = '\n';
+                    when 'v'
+                        ch = '\v';
+                    when 'f'
+                        ch = '\f';
+                    when 'r'
+                        ch = '\r';
+                    when 'e'
+                        ch = '\e';
+                end
+            end
+
+            output = output + ch;
+            i += 1;
+        end
+
+        return output;
     end
 end

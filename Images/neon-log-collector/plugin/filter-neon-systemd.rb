@@ -46,18 +46,177 @@ module Fluent
 
             record["service_host"] = "systemd";
 
-            # Extract the message.
-
-            record["message"] = message;
-
             # Extract the systemd service name.
 
             if systemdUnit =~ /^(?<name>.*).service/i
-                record["service"] = $~["name"];
+
+                service           = $~["name"].downcase;
+                record["service"] = service;
 
 logDebug("**** syslog service", record["service"]);
             else
-                return nil; # Exclude events that aren't coming from a service.
+                return nil; # Exclude events that weren't emitted by a service.
+            end
+
+            # Handle message parsing from specific known services.
+
+            timeFmt = "%Y-%m-%dT%H:%M:%S.%L%z"; # ISO "T" format with milliseconds
+
+            case service
+
+                when "docker"
+
+                    # Docker messages look like:
+                    #
+                    #       time="2017-07-15T19:08:28.226717603Z" level=error msg="Bulk sync to node test-worker-1-682d3a76b041 timed out"
+
+logDebug("*** DOCKER", "");
+                    if message =~ /time="(?<time>.*)"\s*level=(?<level>[^\s]*)\s*msg=(?<msg>.*")$/i
+
+                        time  = $~["time"];
+                        level = $~["level"];
+                        msg   = $~["msg"].strip;
+
+logDebug("docker-raw-time", time);
+logDebug("docker-raw-level", level);
+logDebug("docker-raw-msg", msg);
+
+                        # Extract the time.
+
+                        record["@timestamp"] = Time.parse(time).strftime(timeFmt);
+
+                        # Extract the log level.
+
+                        level = normalizeLevel(level);
+
+                        if level.nil?
+                            level = "other";
+                        end
+logDebug("docker-level", level);
+
+                        record["level"] = level;
+
+                        # Extract the message.  Note that the value extracted via the regex has
+                        # the surrounding quotes and may include escaped characters.  We're going 
+                        # to strip off the outer quotes and convert the escaped characters.
+
+                        record["message"] = unescapeString(msg[1..-1]);
+logDebug("docker-msg", msg);
+
+                        return record;
+                    end
+
+                when "consul"
+
+logDebug("*** CONSUL", "");
+                    if message =~ /\s*(?<time>\d\d\d\d\/\d\d\/\d\d \d\d:\d\d:\d\d)\s+\[(?<level>[^\\]*)\]\s+(?<msg>.*)$/i
+
+                        time  = $~["time"];
+                        level = $~["level"];
+                        msg   = $~["msg"].strip;
+
+logDebug("consul-raw-time", time);
+logDebug("consul-raw-level", level);
+logDebug("consul-raw-msg", msg);
+
+                        # Extract the time.
+
+                        record["@timestamp"] = Time.parse(time).strftime(timeFmt);
+
+                        # Extract the log level.
+
+                        level = normalizeLevel(level);
+
+                        if level.nil?
+                            level = "other";
+                        end
+logDebug("consul-level", level);
+
+                        record["level"] = level;
+
+                        # Extract the message.
+
+                        record["message"] = msg;
+logDebug("consul-message", record["message"]);
+                    end
+                    
+                when "vault"
+
+logDebug("*** VAULT", "");
+                    # Vault appears to be log in two different formats.  The two examples below looks
+                    # like they're describing service status events:
+                    #
+                    # Service status events:
+                    # ----------------------
+                    #
+                    #   ==> Vault server configuration:
+                    #                        Cgo: disabled
+                    #            Cluster Address: https://test-manager-0.neon-vault.cluster:8201
+                    #                 Listener 1: tcp (addr: "0.0.0.0:8200", cluster address: "0.0.0.0:8201", tls: "enabled")
+                    #                  Log Level: info
+                    #                      Mlock: supported: true, enabled: true
+                    #           Redirect Address: https://test-manager-0.neon-vault.cluster:8200
+                    #                    Storage: consul (HA available)
+                    #                    Version: Vault v0.7.2
+                    #                Version Sha: d28dd5a018294562dbc9a18c95554d52b5d12390
+                    #   ==> Vault server started! Log data will stream in below:
+                    #   2017/07/15 19:18:28.663808 [INFO ] core: vault is unsealed
+                    #   2017/07/15 19:18:28.663918 [INFO ] core: entering standby mode
+                    #   2017/07/15 19:18:28.691348 [INFO ] core: acquired lock, enabling active operation
+                    #   2017/07/15 19:18:28.727458 [INFO ] core: post-unseal setup starting
+                    #   2017/07/15 19:18:28.727918 [INFO ] core: loaded wrapping token key
+                    #
+                    # Audit events:
+                    # -------------
+                    #
+                    #   {"time":"2017-07-16T01:37:24Z","type":"response","auth":{"client_token":"","accessor":"","display_name":"approle","policies":["default","neon-cert-reader","neon-hosting-reader"],"metadata":{}}
+                    #   {"time":"2017-07-16T01:42:33Z","type":"request","auth":{"client_token":"","accessor":"","display_name":"approle","policies":["default","neon-cert-reader","neon-hosting-reader"],"metadata":{}},
+                    #   {"time":"2017-07-16T01:42:33Z","type":"response","auth":{"client_token":"","accessor":"","display_name":"approle","policies":["default","neon-cert-reader","neon-hosting-reader"],"metadata":{}}
+                    #   {"time":"2017-07-16T01:42:33Z","type":"request","auth":{"client_token":"","accessor":"","display_name":"approle","policies":["default","neon-cert-reader","neon-hosting-reader"],"metadata":{}},
+                    #
+                    # The current implementation is going to ignore the audit events and only process the service status events.
+                    # We're going to extract the time and log level if they're present otherwise we'll just take the whole (trimmed)
+                    # line as the message.
+
+                    if message =~ /(?<time>\d\d\d\d\/\d\d\/\d\d \d\d:\d\d:\d\d(.\d*)?)\s+\[(?<level>[^\\\s]*)\]\s+(?<msg>.*)$/i
+
+                        time  = $~["time"];
+                        level = $~["level"];
+                        msg   = $~["msg"].strip;
+
+logDebug("vault-raw-time", time);
+logDebug("vault-raw-level", level);
+logDebug("vault-raw-msg", msg);
+
+                        # Extract the time.
+
+                        record["@timestamp"] = Time.parse(time).strftime(timeFmt);
+
+                        # Extract the log level.
+
+                        level = normalizeLevel(level);
+
+                        if level.nil?
+                            level = "other";
+                        end
+logDebug("vault-level", level);
+
+                        record["level"] = level;
+
+                        # Extract the message.
+
+                        record["message"] = msg;
+logDebug("vault-message", record["message"]);
+                    elsif message.length < 2 || message[0] != '{' || message[message.length-1] != '}'
+                        record["level"]   = "info"; # Consider all untagged messages as INFO
+                        record["message"] = message.strip;
+logDebug("vault-message", record["message"]);
+                    else
+                        # $todo(jeff.lill): 
+                        #
+                        # Handle Vault audit events.  Should these go to a different 
+                        # Elasticsearch index?
+                    end
             end
 
             # Identify messages formatted as JSON and handle them specially.

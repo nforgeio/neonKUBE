@@ -94,8 +94,6 @@ module Fluent
                 return nil;
             end
 
-logDebug("message", record["message"]);
-
             return record;
         end
     end
