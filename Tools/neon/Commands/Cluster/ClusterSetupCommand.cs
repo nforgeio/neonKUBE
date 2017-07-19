@@ -1329,7 +1329,7 @@ $@"docker login \
                     manager.DockerCommand(
                         "docker network create",
                             "--driver", "overlay",
-                            //"--opt", "encrypt",
+                            "--opt", "encrypt",
                             "--subnet", cluster.Definition.Network.PublicSubnet,
                             cluster.Definition.Network.PublicAttachable ? "--attachable" : null,
                             NeonClusterConst.ClusterPublicNetwork);
@@ -1337,7 +1337,7 @@ $@"docker login \
                     manager.DockerCommand(
                         "docker network create",
                             "--driver", "overlay",
-                            //"--opt", "encrypt",
+                            "--opt", "encrypt",
                             "--subnet", cluster.Definition.Network.PrivateSubnet,
                             cluster.Definition.Network.PrivateAttachable ? "--attachable" : null,
                             NeonClusterConst.ClusterPrivateNetwork);
