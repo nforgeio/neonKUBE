@@ -244,76 +244,80 @@ OPTIONS:
 
             controller.AddStep("swarm create", n => CreateSwarm(n), n => n == cluster.FirstManager);
             controller.AddStep("swarm join", n => JoinSwarm(n), n => n != cluster.FirstManager);
-            controller.AddStep("networks", n => CreateClusterNetworks(n), n => n == cluster.FirstManager);
-            controller.AddStep("node labels", n => AddNodeLabels(n), n => n == cluster.FirstManager);
 
-            if (cluster.Definition.Docker.RegistryCache)
+            if (!cluster.Definition.BareDocker)
             {
-                var registryCacheConfigurator = new RegistryCache(cluster, clusterLoginPath);
+                controller.AddStep("networks", n => CreateClusterNetworks(n), n => n == cluster.FirstManager);
+                controller.AddStep("node labels", n => AddNodeLabels(n), n => n == cluster.FirstManager);
 
-                controller.AddStep("registry cache", n => registryCacheConfigurator.Configure(n));
-            }
-
-            var managerPulledEvent = new ManualResetEvent(false);
-
-            controller.AddStep("pull images",
-                n =>
+                if (cluster.Definition.Docker.RegistryCache)
                 {
-                    if (cluster.Definition.Docker.RegistryCache)
+                    var registryCacheConfigurator = new RegistryCache(cluster, clusterLoginPath);
+
+                    controller.AddStep("registry cache", n => registryCacheConfigurator.Configure(n));
+                }
+
+                var managerPulledEvent = new ManualResetEvent(false);
+
+                controller.AddStep("pull images",
+                    n =>
                     {
-                        // If the cluster deploys a local registry cache then
-                        // pull images on the first manager first so they get
-                        // loaded into the cluster's register's registry cache 
-                        // and then pull for all of the other nodes.
-                        //
-                        // I'm going to use a bit of thread synchronization so
-                        // this will appear to be a single step to the operator.
+                        if (cluster.Definition.Docker.RegistryCache)
+                        {
+                            // If the cluster deploys a local registry cache then
+                            // pull images on the first manager first so they get
+                            // loaded into the cluster's register's registry cache 
+                            // and then pull for all of the other nodes.
+                            //
+                            // I'm going to use a bit of thread synchronization so
+                            // this will appear to be a single step to the operator.
 
-                        if (n == cluster.FirstManager)
-                        {
+                            if (n == cluster.FirstManager)
+                                {
+                                    PullImages(n);
+                                    managerPulledEvent.Set();
+                                }
+                                else
+                                {
+                                    managerPulledEvent.WaitOne();
+                                    PullImages(n);
+                                }
+                            }
+                            else
+                            {
+                            // Simply pull in parallel if there's no local registry cache.
+
                             PullImages(n);
-                            managerPulledEvent.Set();
-                        }
-                        else
-                        {
-                            managerPulledEvent.WaitOne();
-                            PullImages(n);
-                        }
-                    }
-                    else
+                            }
+                        });
+
+                controller.AddGlobalStep("cluster key/value",
+                    () =>
                     {
-                        // Simply pull in parallel if there's no local registry cache.
+                        NeonClusterHelper.OpenCluster(cluster);
 
-                        PullImages(n);
-                    }
-                });
+                        VaultProxy();
+                        VaultInitialize();
+                        ConsulInitialize();
+                    });
 
-            controller.AddGlobalStep("cluster key/value", 
-                () =>
+                controller.AddGlobalStep("cluster services", () => new ClusterServices(cluster).Configure(cluster.FirstManager));
+
+                if (cluster.Definition.Log.Enabled)
                 {
-                    NeonClusterHelper.OpenCluster(cluster);
+                    controller.AddGlobalStep("log services", () => new LogServices(cluster).Configure(cluster.FirstManager));
+                    controller.AddStep("metricbeat", n => DeployMetricbeat(n));
+                    controller.AddGlobalStep("metricbeat dashboards", () => InstallMetricbeatDashboards(cluster));
+                }
 
-                    VaultProxy();
-                    VaultInitialize();
-                    ConsulInitialize();
-                });
+                controller.AddDelayStep($"cluster stabilize ({Program.WaitSeconds}s)", TimeSpan.FromSeconds(Program.WaitSeconds), "stabilize");
+                controller.AddStep("check managers", n => ClusterDiagnostics.CheckClusterManager(n, cluster.Definition), n => n.Metadata.IsManager);
+                controller.AddStep("check workers", n => ClusterDiagnostics.CheckClusterWorker(n, cluster.Definition), n => n.Metadata.IsWorker);
 
-            controller.AddGlobalStep("cluster services", () => new ClusterServices(cluster).Configure(cluster.FirstManager));
-
-            if (cluster.Definition.Log.Enabled)
-            {
-                controller.AddGlobalStep("log services", () => new LogServices(cluster).Configure(cluster.FirstManager));
-                controller.AddStep("metricbeat", n => DeployMetricbeat(n));
-                controller.AddGlobalStep("metricbeat dashboards", () => InstallMetricbeatDashboards(cluster));
-            }
-
-            controller.AddDelayStep($"cluster stabilize ({Program.WaitSeconds}s)", TimeSpan.FromSeconds(Program.WaitSeconds), "stabilize");
-            controller.AddStep("check managers", n => ClusterDiagnostics.CheckClusterManager(n, cluster.Definition), n => n.Metadata.IsManager);
-            controller.AddStep("check workers", n => ClusterDiagnostics.CheckClusterWorker(n, cluster.Definition), n => n.Metadata.IsWorker);
-
-            if (cluster.Definition.Log.Enabled)
-            {
-                controller.AddGlobalStep("check logging", () => ClusterDiagnostics.CheckLogServices(cluster));
+                if (cluster.Definition.Log.Enabled)
+                {
+                    controller.AddGlobalStep("check logging", () => ClusterDiagnostics.CheckLogServices(cluster));
+                }
             }
 
             // Change the root account's password to something very strong.  
@@ -372,10 +376,10 @@ OPTIONS:
 
             // Update the cluster login file.
 
-            clusterLogin.PartialSetup  = false;
-            clusterLogin.IsRoot = true;
-            clusterLogin.Username      = NeonClusterConst.RootUser;
-            clusterLogin.Definition    = cluster.Definition;
+            clusterLogin.PartialSetup = false;
+            clusterLogin.IsRoot       = true;
+            clusterLogin.Username     = NeonClusterConst.RootUser;
+            clusterLogin.Definition   = cluster.Definition;
             clusterLogin.SshUsername  = Program.Username;
 
             if (cluster.Definition.Vpn.Enabled)
@@ -940,7 +944,7 @@ export CONSUL_HTTP_FULLADDR=http://{NeonHosts.Consul}:{cluster.Definition.Consul
 
             var registries = new JArray();
 
-            if (cluster.Definition.Docker.RegistryCache)
+            if (!cluster.Definition.BareDocker && cluster.Definition.Docker.RegistryCache)
             {
                 foreach (var manager in cluster.Definition.SortedManagers)
                 {
@@ -1077,36 +1081,39 @@ export CONSUL_HTTP_FULLADDR=http://{NeonHosts.Consul}:{cluster.Definition.Consul
                     node.Status = "run: setup-consul-server.sh";
                     node.SudoCommand("setup-consul-server.sh", cluster.Definition.Consul.EncryptionKey);
 
-                    // Bootstrap Consul cluster discovery.
+                    if (!cluster.Definition.BareDocker)
+                    {
+                        // Bootstrap Consul cluster discovery.
 
-                    node.InvokeIdempotentAction("setup-consul-bootstrap",
-                        () =>
-                        {
-                            var discoveryTimer = new PolledTimer(TimeSpan.FromMinutes(2));
-
-                            node.Status = "consul cluster bootstrap";
-
-                            while (true)
+                        node.InvokeIdempotentAction("setup-consul-bootstrap",
+                            () =>
                             {
-                                if (node.SudoCommand($"consul join {managerNodeAddresses}", RunOptions.None).ExitCode == 0)
+                                var discoveryTimer = new PolledTimer(TimeSpan.FromMinutes(2));
+
+                                node.Status = "consul cluster bootstrap";
+
+                                while (true)
                                 {
-                                    break;
+                                    if (node.SudoCommand($"consul join {managerNodeAddresses}", RunOptions.None).ExitCode == 0)
+                                    {
+                                        break;
+                                    }
+
+                                    if (discoveryTimer.HasFired)
+                                    {
+                                        node.Fault($"Unable to form Consul cluster within [{discoveryTimer.Interval}].");
+                                        break;
+                                    }
+
+                                    Thread.Sleep(TimeSpan.FromSeconds(5));
                                 }
+                            });
 
-                                if (discoveryTimer.HasFired)
-                                {
-                                    node.Fault($"Unable to form Consul cluster within [{discoveryTimer.Interval}].");
-                                    break;
-                                }
+                        // Install Vault server.
 
-                                Thread.Sleep(TimeSpan.FromSeconds(5));
-                            }
-                        });
-
-                    // Install Vault server.
-
-                    node.Status = "run: setup-vault-server.sh";
-                    node.SudoCommand("setup-vault-server.sh");
+                        node.Status = "run: setup-vault-server.sh";
+                        node.SudoCommand("setup-vault-server.sh");
+                    }
 
                     // Setup Docker
 
@@ -1235,41 +1242,44 @@ $@"docker login \
 
                     ConfigureVpnReturnRoutes(node);
 
-                    // Setup the Consul proxy and join it to the cluster.
+                    if (!cluster.Definition.BareDocker)
+                    {
+                        // Setup the Consul proxy and join it to the cluster.
 
-                    node.Status = "upload: consul.json";
-                    node.SudoCommand("mkdir -p /etc/consul.d");
-                    node.SudoCommand("chmod 770 /etc/consul.d");
-                    node.UploadText("/etc/consul.d/consul.json", GetConsulConfig(node));
+                        node.Status = "upload: consul.json";
+                        node.SudoCommand("mkdir -p /etc/consul.d");
+                        node.SudoCommand("chmod 770 /etc/consul.d");
+                        node.UploadText("/etc/consul.d/consul.json", GetConsulConfig(node));
 
-                    node.Status = "run: setup-consul-proxy.sh";
-                    node.SudoCommand("setup-consul-proxy.sh", cluster.Definition.Consul.EncryptionKey);
+                        node.Status = "run: setup-consul-proxy.sh";
+                        node.SudoCommand("setup-consul-proxy.sh", cluster.Definition.Consul.EncryptionKey);
 
-                    // Join this node's Consul agent with the master(s).
+                        // Join this node's Consul agent with the master(s).
 
-                    node.InvokeIdempotentAction("setup-consul-join",
-                        () =>
-                        {
-                            var discoveryTimer = new PolledTimer(TimeSpan.FromMinutes(5));
-
-                            node.Status = "join consul cluster";
-
-                            while (true)
+                        node.InvokeIdempotentAction("setup-consul-join",
+                            () =>
                             {
-                                if (node.SudoCommand($"consul join {managerNodeAddresses}", RunOptions.None).ExitCode == 0)
-                                {
-                                    break;
-                                }
+                                var discoveryTimer = new PolledTimer(TimeSpan.FromMinutes(5));
 
-                                if (discoveryTimer.HasFired)
-                                {
-                                    node.Fault($"Unable to join Consul cluster within [{discoveryTimer.Interval}].");
-                                    break;
-                                }
+                                node.Status = "join consul cluster";
 
-                                Thread.Sleep(TimeSpan.FromSeconds(5));
-                            }
-                        });
+                                while (true)
+                                {
+                                    if (node.SudoCommand($"consul join {managerNodeAddresses}", RunOptions.None).ExitCode == 0)
+                                    {
+                                        break;
+                                    }
+
+                                    if (discoveryTimer.HasFired)
+                                    {
+                                        node.Fault($"Unable to join Consul cluster within [{discoveryTimer.Interval}].");
+                                        break;
+                                    }
+
+                                    Thread.Sleep(TimeSpan.FromSeconds(5));
+                                }
+                            });
+                    }
 
                     // Setup Docker.
 
@@ -1297,10 +1307,13 @@ $@"docker login \
                         node.SudoCommand(loginCommand);
                     }
 
-                    // Configure Vault client.
+                    if (!cluster.Definition.BareDocker)
+                    {
+                        // Configure Vault client.
 
-                    node.Status = "run: setup-vault-client.sh";
-                    node.SudoCommand("setup-vault-client.sh");
+                        node.Status = "run: setup-vault-client.sh";
+                        node.SudoCommand("setup-vault-client.sh");
+                    }
 
                     // Cleanup any cached APT files.
 

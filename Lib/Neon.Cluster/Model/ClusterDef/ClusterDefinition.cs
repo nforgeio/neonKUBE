@@ -233,6 +233,15 @@ namespace Neon.Cluster
         public EnvironmentType Environment { get; set; } = EnvironmentType.Other;
 
         /// <summary>
+        /// Optionally specifies that a bare Docker cluster without most of the extra <b>neonCLUSTER</b>
+        /// features should be created.  This is useful for creating test clusters for reporting and
+        /// replicating Docker issues.  This defaults to <c>false</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "BareDocker", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool BareDocker { get; set; } = false;
+
+        /// <summary>
         /// Specifies the NTP time sources to be configured for the cluster.  These are the
         /// FQDNs or IP addresses of the sources.  Reasonable defaults will be chosen if this
         /// is <c>null</c> or empty.

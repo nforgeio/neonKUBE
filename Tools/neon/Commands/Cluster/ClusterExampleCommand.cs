@@ -81,6 +81,10 @@ USAGE:
     //                    proxying and caching access to Ubuntu and Debian APT packages.
     //
     //                    This defaults to [false].
+    //
+    //  BareDocker        Optionally indicates that a basic Docker cluster without
+    //                    most of the extra neonCLUSTER features should be deployed.
+    //                    This defaults to [false].
 
     ""Name"": ""my-cluster"",
     ""Datacenter"": ""Seattle"",
