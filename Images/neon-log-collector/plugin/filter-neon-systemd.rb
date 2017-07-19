@@ -103,6 +103,25 @@ module Fluent
                         level = $~["level"];
                         msg   = $~["msg"].strip;
 
+                        # We're seeing these warnings from Consul:
+                        #
+                        #       dns: QName invalid: neon-consul.
+                        #       dns: QName invalid: neon-vault.
+                        #
+                        # These appear to be innocuous and I don't have any idea
+                        # where these lookups are coming from.  I'm going to mitegate
+                        # this by dropping these specific events here.
+                        #
+                        # This is the tracking issue:
+                        #
+                        #       https://github.com/jefflill/NeonForge/issues/105
+
+                        if msg == "dns: QName invalid: neon-consul." ||
+                           msg == "dns: QName invalid: neon-vault."
+
+                           return nil;
+                        end
+
                         # Extract the time.
 
                         record["@timestamp"] = formatTimestamp(Time.parse(time));
