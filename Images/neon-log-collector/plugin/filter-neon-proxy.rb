@@ -9,6 +9,7 @@
 
 require 'fluent/filter'
 require "browser"
+require_relative 'neon-common'
 
 module Fluent
     class NeonProxyFilter < Filter
@@ -103,7 +104,7 @@ module Fluent
 
             record["level"]         = "info";
             record["service"]       = fields[2];
-            record["@timestamp"]    = time.strftime("%FT%T.%L%:z"); 
+            record["@timestamp"]    = formatTimestamp(time);
 
             # Extract the proxy common TCP/HTTP traffic fields.
 
@@ -112,7 +113,7 @@ module Fluent
             
             proxy["mode"]           = "tcp";
             proxy["client_ip"]      = fields[4];
-            proxy["route"]          = fields[5].gsub(/.*:/, "");    # Route name appears after the first colon.
+            proxy["route"]          = fields[5].gsub(/.*:/, "");        # Route name appears after the first colon.
             proxy["server"]         = fields[6];
             proxy["server_ip"]      = fields[7];
             proxy["server_port"]    = fields[8];

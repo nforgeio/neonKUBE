@@ -235,13 +235,13 @@ module NeonCommon
 
                 # We matched a date so attempt to parse it and update the event.
 
-                record["@timestamp"] = Time.parse(date).strftime(timeFmt);
+                record["@timestamp"] = formatTimestamp(Time.parse(date));
                 record["message"]    = message[(match.length..-1)];
             else
 
                 # We couldn't match a date, so record the Fluent ingestion time.
 
-                record["@timestamp"] = Time.at(time).strftime(timeFmt);
+                record["@timestamp"] = formatTimestamp(Time.at(time));
             end
 
             return record;
@@ -250,7 +250,7 @@ module NeonCommon
 
             # Handle any parsing errors by recording the Fluentd injestion time.
 
-            record["@timestamp"] = Time.at(time).strftime(timeFmt);
+            record["@timestamp"] = formatTimestamp(Time.at(time));
             return record;
         end
     end
@@ -378,5 +378,12 @@ module NeonCommon
         end
 
         return output;
+    end
+
+    # Converts a Time value into a string format suitable for
+    # persisting to Elasticsearch as the [@timestamp] field.
+    #
+    def formatTimestamp(time)
+        return time.strftime("%Y-%m-%dT%H:%M:%S.%L%z"); # ISO "T" format with milliseconds
     end
 end
