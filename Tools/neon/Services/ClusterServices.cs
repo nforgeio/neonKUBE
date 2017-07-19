@@ -130,8 +130,6 @@ namespace NeonTool
 
                     // Initialize the public and private proxies.
 
-                    string proxyConstraint;
-
                     cluster.PublicProxy.UpdateSettings(
                         new ProxySettings()
                         {
@@ -150,11 +148,42 @@ namespace NeonTool
                     //
                     // Docker mesh routing seems unstable right now on versions 17.03.0-ce
                     // thru 17.06.0-ce so we're going to temporarily work around this by
-                    // not constaining the PUBLIC and PRIVATE proxies so they'll run on
-                    // all nodes.  Here's the tracking issue:
+                    // running the PUBLIC, PRIVATE and VAULT proxies on all nodes and 
+                    // publishing the ports to the host (not the mesh).
                     //
                     //      https://github.com/jefflill/NeonForge/issues/104
-#if TODO
+                    //
+                    // Note that this mode feature is documented (somewhat poorly) here:
+                    //
+                    //      https://docs.docker.com/engine/swarm/services/#publish-ports
+
+                    string proxyConstraint;
+
+#if !MESH_NETWORK_WORKS
+                    // The parameterized [service create --publish] option doesn't handle port ranges so we need to 
+                    // specify multiple publish options.
+
+                    var publicPublish = new List<string>();
+
+                    for (int port = NeonHostPorts.ProxyPublicFirst; port <= NeonHostPorts.ProxyPublicLast; port++)
+                    {
+                        publicPublish.Add("--publish");
+                        publicPublish.Add($"mode=host,published={port},target={port}");
+                    }
+
+                    var privatePublish = new List<string>();
+
+                    for (int port = NeonHostPorts.ProxyPrivateFirst; port <= NeonHostPorts.ProxyPrivateLast; port++)
+                    {
+                        privatePublish.Add("--publish");
+                        privatePublish.Add($"mode=host,published={port},target={port}");
+                    }
+
+                    proxyConstraint = (string)null;
+#else
+                    var publicPublish  = $"--pubish {NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}:{NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}";
+                    var privatePublish = $"--pubish {NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}:{NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}";
+
                     if (cluster.Definition.Workers.Count() > 0)
                     {
                         // Constrain proxies to all worker nodes if there are any.
@@ -167,8 +196,6 @@ namespace NeonTool
 
                         proxyConstraint = "--constraint node.role==manager";
                     }
-#else
-                    proxyConstraint = (string)null;
 #endif
 
                     firstManager.Status = "start: neon-proxy-public";
@@ -181,8 +208,8 @@ namespace NeonTool
                             "--env", "VAULT_CREDENTIALS=neon-proxy-public-credentials",
                             "--env", "LOG_LEVEL=INFO",
                             "--env", "DEBUG=false",
-                            "--publish", $"{NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}:{NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}",
                             "--secret", "neon-proxy-public-credentials",
+                            publicPublish,
                             proxyConstraint,
                             "--mode", "global",
                             "--restart-delay", "10s",
@@ -199,8 +226,8 @@ namespace NeonTool
                             "--env", "VAULT_CREDENTIALS=neon-proxy-private-credentials",
                             "--env", "LOG_LEVEL=INFO",
                             "--env", "DEBUG=false",
-                            "--publish", $"{NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}:{NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}",
                             "--secret", "neon-proxy-private-credentials",
+                            privatePublish,
                             proxyConstraint,
                             "--mode", "global",
                             "--restart-delay", "10s",

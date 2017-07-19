@@ -131,6 +131,13 @@ OPTIONS:
 
             cluster = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>, RunOptions.LogOutput | RunOptions.FaultOnError);
 
+            if (cluster.Definition.Vault.DebugSetup)
+            {
+                // Note that we log a warning when this is true for each node in [ConfifureCommon()].
+
+                cluster.VaultRunOptions = RunOptions.FaultOnError;
+            }
+
             // We need to ensure that any necessary VPN connection is opened if we're
             // not provisioning on-premise or not running in the tool container.
 
@@ -559,6 +566,11 @@ OPTIONS:
             // scripts and tools when cluster setup has been partially
             // completed.  These steps are implicitly idempotent and
             // complete pretty quickly.
+
+            if (cluster.Definition.Vault.DebugSetup)
+            {
+                node.Log($"SECURITY WARNING: Cluster definition [{nameof(ClusterDefinition.Vault)}.{nameof(VaultOptions.DebugSetup)}=true] which disables redaction of potentially sensitive VAULT information.  This should never be enabled for production clusters.");
+            }
 
             // Configure the node's environment variables.
 
@@ -1477,6 +1489,19 @@ $@"docker login \
                         sbEndpoints.AppendWithSeparator($"{manager.Name}:{manager.PrivateAddress}:{NetworkPorts.Vault}", ",");
                     }
 
+                    // $todo(jeff.lill):
+                    //
+                    // Docker mesh routing seems unstable right now on versions 17.03.0-ce
+                    // thru 17.06.0-ce so we're going to temporarily work around this by
+                    // running the PUBLIC, PRIVATE and VAULT proxies on all nodes and 
+                    // publishing the ports to the host (not the mesh).
+                    //
+                    //      https://github.com/jefflill/NeonForge/issues/104
+                    //
+                    // Note that this mode feature is documented (somewhat poorly) here:
+                    //
+                    //      https://docs.docker.com/engine/swarm/services/#publish-ports
+
                     // Deploy [neon-proxy-vault] on all manager nodes.
 
                     var steps   = new ConfigStepList();
@@ -1486,14 +1511,19 @@ $@"docker login \
                             "--mode", "global",
                             "--endpoint-mode", "vip",
                             "--network", NeonClusterConst.ClusterPrivateNetwork,
+#if !MESH_NETWORK_WORKS
+                            "--publish", $"mode=host,published={NeonHostPorts.ProxyVault},target={NetworkPorts.Vault}",
+#else
                             "--constraint", $"node.role==manager",
                             "--publish", $"{NeonHostPorts.ProxyVault}:{NetworkPorts.Vault}",
+#endif
                             "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
                             "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                             "--restart-delay", "10s",
                             "neoncluster/neon-proxy-vault");
 
                     steps.Add(command);
+                    steps.Add(CommandStep.CreateSudo(cluster.FirstManager.Name, "sleep 15"));   // $hack(jeff.lill): Fragile: Give Vault proxy a chance to start.
                     steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
 
                     cluster.Configure(steps);
@@ -1544,6 +1574,10 @@ $@"docker login \
                 {
                     manager.SudoCommand($"vault-direct unseal", cluster.VaultRunOptions, clusterLogin.VaultCredentials.UnsealKeys[i]);
                 }
+
+                // $hack(jeff.lill): Fragile: Wait for Vault to unseal and be ready to accept commands.
+
+                Thread.Sleep(TimeSpan.FromSeconds(15));
             }
         }
 
