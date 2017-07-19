@@ -310,7 +310,6 @@ OPTIONS:
                     controller.AddGlobalStep("metricbeat dashboards", () => InstallMetricbeatDashboards(cluster));
                 }
 
-                controller.AddDelayStep($"cluster stabilize ({Program.WaitSeconds}s)", TimeSpan.FromSeconds(Program.WaitSeconds), "stabilize");
                 controller.AddStep("check managers", n => ClusterDiagnostics.CheckClusterManager(n, cluster.Definition), n => n.Metadata.IsManager);
                 controller.AddStep("check workers", n => ClusterDiagnostics.CheckClusterWorker(n, cluster.Definition), n => n.Metadata.IsWorker);
 
