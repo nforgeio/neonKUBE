@@ -272,12 +272,12 @@ namespace Neon.Cluster
         /// <summary>
         /// Specifies the default options to be bitwise ORed with any specific
         /// options passed to a run or sudo execution command when the <see cref="RunOptions.Defaults"/> 
-        /// flag is specified.  This defaults to <see cref="RunOptions.None"/>.
+        /// flag is specified.  This defaults to <see cref="RunOptions.LogOnErrorOnly"/>.
         /// </summary>
         /// <remarks>
         /// Setting this is a good way to specify a global default for flags like <see cref="RunOptions.FaultOnError"/>.
         /// </remarks>
-        public RunOptions DefaultRunOptions { get; set; } = RunOptions.None;
+        public RunOptions DefaultRunOptions { get; set; } = RunOptions.LogOnErrorOnly;
 
         /// <summary>
         /// The PATH to use on the remote server when executing commands in the
@@ -1749,7 +1749,7 @@ echo $? > {cmdFolder}/exit
                     Command        = command,
                     ExitCode       = 1,
                     ProxyIsFaulted = true,
-                    ErrorText      = "** proxy is faulted **"
+                    ErrorText      = "** Cluster NodeProxy is faulted **"
                 };
             }
 
@@ -2126,7 +2126,7 @@ echo $? > {cmdFolder}/exit
 
             // Remove the bundle files.
 
-            SudoCommand($"rm -rf {bundleFolder}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"rm -rf {bundleFolder}", options);
 
             return result;
         }
