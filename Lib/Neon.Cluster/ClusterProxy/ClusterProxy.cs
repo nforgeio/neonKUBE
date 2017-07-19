@@ -229,11 +229,12 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Specifies the <see cref="RunOptions"/> to use when executing cluster Vault
-        /// commands.  This defaults to <see cref="RunOptions.Classified"/> for best
-        /// security but may be changed to <see cref="RunOptions.None"/> when debugging
+        /// commands.  This defaults to <see cref="RunOptions.Classified"/> and
+        /// <see cref="RunOptions.FaultOnError"/> for best security but may be changed
+        /// to just <see cref="RunOptions.FaultOnError"/> when debugging
         /// cluster setup.
         /// </summary>
-        public RunOptions VaultRunOptions { get; set; } = RunOptions.Classified;
+        public RunOptions VaultRunOptions { get; set; } = RunOptions.Classified | RunOptions.FaultOnError;
 
         /// <summary>
         /// Enumerates the cluster manager proxies sorted by name.
