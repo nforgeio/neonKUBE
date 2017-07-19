@@ -38,10 +38,10 @@ Manages the cluster's public and private proxies.
 
 USAGE:
 
+    neon proxy NAME build
     neon proxy NAME get ROUTE
     neon proxy NAME inspect
     neon proxy NAME list|ls
-    neon proxy NAME rebuild
     neon proxy NAME remove|rm ROUTE
     neon proxy NAME put FILE
     neon proxy NAME put -
@@ -58,6 +58,9 @@ ARGUMENTS:
 
 COMMANDS:
 
+    build           - Forces the proxy manager to build the 
+                      proxy configuration.
+
     get             - Displays a specific route.
 
     haproxy         - Outputs the HAProxy configuration.
@@ -66,9 +69,6 @@ COMMANDS:
                       and settings.
 
     list|ls         - Lists the route names.
-
-    rebuild         - Forces the proxy manager to rebuild the 
-                      proxy configuration.
 
     remove|rm       - Removes a route (if it exists).
 
@@ -305,9 +305,9 @@ See the documentation for more proxy route and setting details.
                     }
                     break;
 
-                case "rebuild":
+                case "build":
 
-                    proxyManager.Rebuild();
+                    proxyManager.Build();
                     break;
 
                 case "remove":

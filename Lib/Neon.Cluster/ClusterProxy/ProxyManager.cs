@@ -118,7 +118,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Forces the <b>neon-proxy-manager</b> to regenerate the configuration for the proxy.
         /// </summary>
-        public void Rebuild()
+        public void Build()
         {
             cluster.Consul.KV.PutString($"{proxyManagerPrefix}/proxies/{Name}/hash", Convert.ToBase64String(new byte[16])).Wait();
             cluster.Consul.KV.PutString($"{proxyManagerPrefix}/conf/reload", DateTime.UtcNow).Wait();
