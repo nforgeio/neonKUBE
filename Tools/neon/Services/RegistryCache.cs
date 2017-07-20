@@ -163,6 +163,7 @@ namespace NeonTool
                             "--name", "neon-registry-cache",
                             "--detach",
                             "--restart", "always",
+                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "--publish", $"{NeonHostPorts.RegistryCache}:5000",
                             "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",
                             "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",

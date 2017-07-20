@@ -23,7 +23,7 @@ You may may modify these behaviors by creating a derived image, modifying the `/
 
 # Environment Variables
 
-* **ELASTICSEARCH_URL** (*optional*) is URL of the Elasticsearch cluster where the metrics are to be persisted.  The container will send these to the neonCLUSTER's log Elasticsearch cluster by default.
+* **ELASTICSEARCH_URL** (*optional*) is URL of the Elasticsearch cluster where the metrics are to be persisted.  The container will send these to the neonCLUSTER's Elasticsearch log storage cluster by default.
 
 * **PERIOD** (*optional*) is the interval at which metrics are collected with an "s" or "m" suffix for seconds or minutes.  This defaults to **60s**.
 
@@ -44,6 +44,7 @@ docker run \
     --name neon-log-metricbeat \
     --detach \
     --restart always \
+	--restart-delay 10s \
     --volume=/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro \
     --volume=/proc:/hostfs/proc:ro \
     --volume=/:/hostfs:ro \

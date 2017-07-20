@@ -194,6 +194,24 @@ namespace Neon.Cluster
         public string LogOptions { get; set; } = defaultLogOptions;
 
         /// <summary>
+        /// The seconds Docker should wait before restarting a container or service instance.
+        /// This defaults to 10 seconds.
+        /// </summary>
+        [JsonProperty(PropertyName = "RestartDelaySeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(10)]
+        public int RestartDelaySeconds { get; set; } = 10;
+
+        /// <summary>
+        /// Returns the <see cref="RestartDelaySeconds"/> property converted to a string with
+        /// a seconds unit appended, suitable for passing to a Docker command.
+        /// </summary>
+        [JsonIgnore]
+        public string RestartDelay
+        {
+            get { return $"{RestartDelaySeconds}s"; }
+        }
+
+        /// <summary>
         /// Enables experimental Docker features.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Experimental", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -215,6 +233,11 @@ namespace Neon.Cluster
             Registry         = Registry ?? defaultRegistry;
             RegistryUsername = RegistryUsername ?? string.Empty;
             RegistryPassword = RegistryPassword ?? string.Empty;
+
+            if (RestartDelaySeconds < 0)
+            {
+                RestartDelaySeconds = 0;
+            }
 
             var version = Version.Trim().ToLower();
             Uri uri     = null;

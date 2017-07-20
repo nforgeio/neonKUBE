@@ -1531,7 +1531,8 @@ $@"docker login \
 #endif
                             "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
                             "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
-                            "--restart-delay", "10s",
+                            "--restart", "always",
+                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "neoncluster/neon-proxy-vault");
 
                     steps.Add(command);
@@ -1758,6 +1759,7 @@ $@"docker login \
                             "--name", "neon-log-metricbeat",
                             "--detach",
                             "--restart", "always",
+                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
                             "--volume", "/proc:/hostfs/proc:ro",
                             "--volume", "/:/hostfs:ro",
@@ -1778,7 +1780,7 @@ $@"docker login \
                 {
                     // Note that we're going to add the Metricbeat dashboards to Elasticsearch
                     // even when the Kibana dashboard isn't enabled because it doesn't cost
-                    // much and to make it easy for operators that wish to install Kibana
+                    // much and to make it easier for operators that wish to install Kibana
                     // themselves.
 
                     cluster.FirstManager.Status = "metricbeat dashboards";

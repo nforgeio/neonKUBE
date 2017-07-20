@@ -65,6 +65,7 @@ docker run \
     --name neon-registry-cache \
     --detach \
     --restart always \
+	--restart-delay 10s \
     --publish 5002:5000 \
     --env HOST=<manager-name>.neon-registry-cache.cluster \
     --volume /etc/neon-registry-cache:/etc/neon-registry-cache:ro \

@@ -97,7 +97,8 @@ namespace NeonTool
                             unsealSecretOption,
                             "--constraint", "node.role==manager",
                             "--replicas", 1,
-                            "--restart-delay", "10s",
+                            "--restart", "always",
+                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "neoncluster/neon-cluster-manager");
 
                     //---------------------------------------------------------
@@ -125,7 +126,8 @@ namespace NeonTool
                             "--secret", "neon-proxy-manager-credentials",
                             "--constraint", "node.role==manager",
                             "--replicas", 1,
-                            "--restart-delay", "10s",
+                            "--restart", "always",
+                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "neoncluster/neon-proxy-manager");
 
                     // Initialize the public and private proxies.
@@ -212,7 +214,8 @@ namespace NeonTool
                             publicPublish,
                             proxyConstraint,
                             "--mode", "global",
-                            "--restart-delay", "10s",
+                            "--restart", "always",
+                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "--network", NeonClusterConst.ClusterPublicNetwork,
                             "neoncluster/neon-proxy");
 
@@ -230,7 +233,8 @@ namespace NeonTool
                             privatePublish,
                             proxyConstraint,
                             "--mode", "global",
-                            "--restart-delay", "10s",
+                            "--restart", "always",
+                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "--network", NeonClusterConst.ClusterPrivateNetwork,
                             "neoncluster/neon-proxy");
 

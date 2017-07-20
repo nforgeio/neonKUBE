@@ -67,6 +67,7 @@ docker volume create es-node-2
 
 docker run --detach --name es-node-0 \
     --restart always \
+	--restart-delay 10s \
     --volume es-node-0:/mnt/esdata \
     --env ELASTICSEARCH_CLUSTER=my-cluster \
     --env ELASTICSEARCH_NODE_DATA=true \
@@ -80,6 +81,7 @@ docker run --detach --name es-node-0 \
 
 docker run --detach --name es-node-1 \
     --restart always \
+	--restart-delay 10s \
     --volume es-node-1:/mnt/esdata \
     --env ELASTICSEARCH_CLUSTER=my-cluster \
     --env ELASTICSEARCH_NODE_DATA=true \
@@ -93,6 +95,7 @@ docker run --detach --name es-node-1 \
 
 docker run --detach --name es-node-2 \
     --restart always \
+	--restart-delay 10s \
     --volume es-node-2:/mnt/esdata \
     --env ELASTICSEARCH_CLUSTER=my-cluster \
     --env ELASTICSEARCH_NODE_DATA=true \

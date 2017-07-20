@@ -36,7 +36,7 @@ namespace NeonTool
     /// <remarks>
     /// <para>
     /// neonCLUSTER logging is implemented by deploying <b>Elasticsearch</b>, <b>TD-Agent</b>, and 
-    /// <b>Kibana</b>, <b>metricbeat</b> as well as the neonCLUSTER <b>neon-log-collector</b> service
+    /// <b>Kibana</b>, <b>Metricbeat</b> as well as the neonCLUSTER <b>neon-log-collector</b> service
     /// and <b>neon-log-host</b> containers.
     /// </para>
     /// <para>
@@ -356,6 +356,7 @@ namespace NeonTool
                         "--name", containerName,
                         "--detach",
                         "--restart", "always",
+                        "--restart-delay", cluster.Definition.Docker.RestartDelay,
                         "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
                         "--volume", $"{containerName}:/mnt/esdata",
                         "--env", $"ELASTICSEARCH_CLUSTER={cluster.Definition.Datacenter}.{cluster.Definition.Name}.neon-log-esdata",
@@ -427,7 +428,8 @@ $@"
                     "docker service create",
                         "--name", "neon-log-kibana",
                         "--mode", "global",
-                        "--restart-delay", "10s",
+                        "--restart", "always",
+                        "--restart-delay", cluster.Definition.Docker.RestartDelay,
                         "--endpoint-mode", "vip",
                         "--network", NeonClusterConst.ClusterPrivateNetwork,
                         "--constraint", $"node.role==manager",
@@ -453,7 +455,8 @@ $@"
                     "docker service create",
                         "--name", "neon-log-collector",
                         "--mode", "global",
-                        "--restart-delay", "10s",
+                        "--restart", "always",
+                        "--restart-delay", cluster.Definition.Docker.RestartDelay,
                         "--endpoint-mode", "vip",
                         "--network", $"{NeonClusterConst.ClusterPrivateNetwork}",
                         "--constraint", $"node.role==manager",
@@ -484,6 +487,7 @@ $@"
                     "--name", "neon-log-host",
                     "--detach",
                     "--restart", "always",
+                    "--restart-delay", cluster.Definition.Docker.RestartDelay,
                     "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
                     "--volume", "/var/log:/hostfs/var/log",
                     "--network", "host",

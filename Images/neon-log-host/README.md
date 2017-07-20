@@ -39,6 +39,7 @@ docker run \
     --name neon-log-host \
     --detach \
     --restart always \
+	--restart-delay 10s \
     --volume /etc/neoncluster/env-host:/etc/neoncluster/env-host:ro \
     --volume /var/log:/hostfs/var/log \
     --network host \
@@ -61,6 +62,7 @@ docker run \
     --name neon-log-host \
     --detach \
     --restart always \
+	--restart-delay 10s \
     --volume /etc/neoncluster/env-host:/etc/neoncluster/env-host:ro \
     --volume /var/log:/hostfs/var/log \
     --network host \
