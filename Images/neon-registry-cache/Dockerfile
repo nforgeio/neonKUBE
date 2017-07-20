@@ -5,16 +5,17 @@
 #
 # This is a template of the [neon-registry-cache] definition file.
 #
-# This file cannot be used directly to create an image.  The [build.ps1] script 
-# generates a suitable dockerfile by replacing "${VERSION}" with the desired
-# version and then building the image.
+# ARGUMENTS:
 #
-#   ${VERSION}      - The Docker Registry version (e.g. "2.6.0")
+#   VERSION     - The Docker Registry version (e.g. "2.6.0")
+#
+# REMARKS:
 #
 # The external Registry data volume must be mounted at:
 #
 #       /var/lib/registry
 
+ARG         VERSION
 FROM        registry:${VERSION}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM

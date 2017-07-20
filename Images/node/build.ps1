@@ -18,12 +18,9 @@ $image_root = "$env:NF_ROOT\\Images"
 "* NODE"
 "======================================="
 
-# Build the images.
+# Build the image.
 
-$registry           = "neoncluster/node";
-$dockerTemplatePath = "Dockerfile.template";
-$dockerFilePath     = "Dockerfile";
+$registry = "neoncluster/node"
 
-Exec { copy $dockerTemplatePath $dockerFilePath }
-Exec { docker build -f $dockerFilePath -t "${registry}:latest" . }
-Exec { del $dockerFilePath }
+Exec { docker build -t "${registry}:latest" --build-arg "TINI_VERSION=$tini_version" . }
+

@@ -30,19 +30,13 @@ $registry = "neoncluster/tdagent";
 
 # Build the images.
 
-$registry           = "neoncluster/tdagent";
-$dockerTemplatePath = "Dockerfile.template";
-$dockerFilePath     = "Dockerfile";
+$registry = "neoncluster/tdagent"
 
 # Build the image.
 
-Exec { copy $dockerTemplatePath $dockerFilePath }
-Exec { text replace-var "-VERSION=$version" "-TINI_VERSION=$tini_version" $dockerFilePath }
-Exec { docker build -f $dockerFilePath -t "${registry}:$version" . }
+Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" . }
 
 if ($latest)
 {
 	Exec { docker tag "${registry}:$version" "${registry}:latest"}
 }
-
-Exec { rmdir $dockerFilePath }

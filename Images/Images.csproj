@@ -51,7 +51,7 @@
     </Content>
     <None Include="neon-cluster-manager\build.ps1" />
     <None Include="neon-cluster-manager\docker-entrypoint.sh" />
-    <None Include="neon-cluster-manager\Dockerfile.template">
+    <None Include="neon-cluster-manager\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="neon-cluster-manager\publish.ps1" />
@@ -71,7 +71,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="alpine\build.ps1" />
-    <None Include="alpine\Dockerfile.template">
+    <None Include="alpine\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="alpine\publish.ps1" />
@@ -79,7 +79,7 @@
     <None Include="metricbeat\build.ps1" />
     <None Include="metricbeat\config\metricbeat.yml.sh" />
     <None Include="metricbeat\docker-entrypoint.sh" />
-    <None Include="metricbeat\Dockerfile.template">
+    <None Include="metricbeat\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="metricbeat\publish.ps1" />
@@ -96,7 +96,7 @@
     <None Include="neon-proxy-vault\check-vault.sh" />
     <None Include="neon-registry-cache\build.ps1" />
     <None Include="neon-registry-cache\docker-entrypoint.sh" />
-    <None Include="neon-registry-cache\Dockerfile.template">
+    <None Include="neon-registry-cache\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="neon-registry-cache\publish.ps1" />
@@ -107,11 +107,12 @@
     </Content>
     <None Include="neon-cli\build.ps1" />
     <None Include="neon-cli\docker-entrypoint.sh" />
-    <None Include="neon-cli\Dockerfile.template">
+    <None Include="neon-cli\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="neon-cli\publish.ps1" />
     <None Include="neon-cli\README.md" />
+    <None Include="tdagent\Dockerfile" />
     <None Include="_common\log-debug.sh" />
     <None Include="_common\log-fatal.sh" />
     <None Include="_common\log-info.sh" />
@@ -123,7 +124,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="dotnet\build.ps1" />
-    <None Include="dotnet\Dockerfile.template">
+    <None Include="dotnet\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="dotnet\publish.ps1" />
@@ -135,7 +136,7 @@
     <None Include="_common\log-error.sh" />
     <None Include="neon-proxy-manager\build.ps1" />
     <None Include="neon-proxy-manager\docker-entrypoint.sh" />
-    <None Include="neon-proxy-manager\Dockerfile.template">
+    <None Include="neon-proxy-manager\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="neon-proxy-manager\publish.ps1" />
@@ -146,7 +147,7 @@
     <None Include="neon-proxy\warning-loop.sh" />
     <None Include="haproxy\build.ps1" />
     <None Include="haproxy\docker-entrypoint.sh" />
-    <None Include="haproxy\Dockerfile.template">
+    <None Include="haproxy\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="haproxy\publish.ps1" />
@@ -161,7 +162,7 @@
     <None Include="elasticsearch\docker-entrypoint.sh" />
     <None Include="elasticsearch\publish.ps1" />
     <None Include="elasticsearch\build.ps1" />
-    <None Include="elasticsearch\Dockerfile.template">
+    <None Include="elasticsearch\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <Content Include="neon-proxy\.dockerignore">
@@ -169,7 +170,7 @@
     </Content>
     <None Include="neon-proxy\build.ps1" />
     <None Include="neon-proxy\docker-entrypoint.sh" />
-    <None Include="neon-proxy\Dockerfile.template">
+    <None Include="neon-proxy\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="neon-proxy\publish.ps1" />
@@ -185,13 +186,13 @@
     </Content>
     <None Include="neon-proxy-vault\build.ps1" />
     <None Include="neon-proxy-vault\docker-entrypoint.sh" />
-    <None Include="neon-proxy-vault\Dockerfile.template">
+    <None Include="neon-proxy-vault\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="neon-proxy-vault\publish.ps1" />
     <None Include="node\build.ps1" />
     <None Include="node\docker-entrypoint.sh" />
-    <None Include="node\Dockerfile.template">
+    <None Include="node\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="node\publish.ps1" />
@@ -207,7 +208,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="neon-log-collector\docker-entrypoint.sh" />
-    <None Include="neon-log-collector\Dockerfile.template">
+    <None Include="neon-log-collector\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="neon-log-collector\publish.ps1" />
@@ -219,7 +220,7 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="neon-log-host\docker-entrypoint.sh" />
-    <None Include="neon-log-host\Dockerfile.template">
+    <None Include="neon-log-host\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="neon-log-host\publish.ps1" />
@@ -233,9 +234,6 @@
     <Content Include="tdagent\td-agent.conf">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="tdagent\Dockerfile.template">
-      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
-    </None>
     <None Include="tdagent\publish.ps1" />
     <None Include="tdagent\README.md" />
     <None Include="elasticsearch\config\elasticsearch.yml.sh" />
@@ -247,7 +245,7 @@
     <None Include="kibana\build.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="kibana\Dockerfile.template">
+    <None Include="kibana\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="kibana\docker-entrypoint.sh" />
@@ -257,7 +255,7 @@
     <None Include="ubuntu-16.04\build.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="ubuntu-16.04\Dockerfile.template">
+    <None Include="ubuntu-16.04\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Include="ubuntu-16.04\publish.ps1" />

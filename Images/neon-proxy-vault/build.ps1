@@ -30,14 +30,10 @@ Exec { copy ..\_common\*.* .\_common }
 
 # Build the images.
 
-$registry           = "neoncluster/neon-proxy-vault";
-$dockerTemplatePath = "Dockerfile.template";
-$dockerFilePath     = "Dockerfile";
+$registry = "neoncluster/neon-proxy-vault"
 
-Exec { copy $dockerTemplatePath $dockerFilePath }
-Exec { docker build -f $dockerFilePath -t "${registry}:latest" . }
+Exec { docker build -t "${registry}:latest" . }
 
 # Cleanup
 
-Exec { del $dockerFilePath }
 Exec { Remove-Item -Recurse _common }

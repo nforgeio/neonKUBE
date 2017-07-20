@@ -36,13 +36,9 @@ Exec { copy ..\_common\*.* .\_common }
 
 # Build the image.
 
-$registry           = "neoncluster/neon-log-collector";
-$dockerTemplatePath = "Dockerfile.template";
-$dockerFilePath     = "Dockerfile";
+$registry = "neoncluster/neon-log-collector"
 
-Exec { copy $dockerTemplatePath $dockerFilePath }
-
-Exec { docker build -f $dockerFilePath -t "${registry}:${version}" . }
+Exec { docker build -t "${registry}:${version}" . }
 
 if ($latest)
 {
@@ -51,5 +47,4 @@ if ($latest)
 
 # Cleanup
 
-Exec { del $dockerFilePath }
 Exec { Remove-Item -Recurse _common }

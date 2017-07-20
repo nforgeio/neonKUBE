@@ -4,17 +4,16 @@
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 #
 # Creates an Ubuntu 16.04 image with all current package updates along with some
-# handy utility packages.
+# additinal handy utility packages.
 #
-# This file cannot be used directly to create an image.  The [build.ps1] script 
-# generates a suitable dockerfile by replacing the following symbol references
-# then building the image.
+# ARGUMENTS:
 #
-#   ${TINI_VERSION}     - The version of the Tini INIT manager to install
+#   TINI_VERSION    - The version of the Tini INIT manager to install
 
 FROM        ubuntu:16.04
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
+ARG         TINI_VERSION
 
 # Environment
 

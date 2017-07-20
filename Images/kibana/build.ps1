@@ -30,14 +30,9 @@ $image_root = "$env:NF_ROOT\\Images"
 
 # Build the images.
 
-$registry           = "neoncluster/kibana";
-$dockerTemplatePath = "Dockerfile.template";
-$dockerFilePath     = "Dockerfile";
+$registry = "neoncluster/kibana"
 
-Exec { copy $dockerTemplatePath $dockerFilePath }
-Exec { text replace-var "-VERSION=$version" $dockerFilePath }
-
-Exec { docker build -f $dockerFilePath -t "${registry}:$version" . }
+Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" . }
 
 if ($subversion -ne "-")
 {
@@ -53,5 +48,3 @@ if ($latest)
 {
 	Exec { docker tag "${registry}:$version" "${registry}:latest"}
 }
-
-Exec { del $dockerFilePath }

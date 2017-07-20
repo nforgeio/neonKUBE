@@ -5,16 +5,18 @@
 #
 # Base .NET Core image.
 #
-# This file cannot be used directly to create an image.  The [build.ps1] script 
-# generates a suitable dockerfile by replacing the following symbol references
-# then building the image.
+# This file cannot be used directly to create an image.
 #
-#   ${VERSION}          - The .NET Core image tag (e.g. "1.1.0-runtime")
-#   ${TINI_VERSION}     - The version of the Tini INIT manager to install
+# ARGUMENTS:
+#
+#   VERSION         - The .NET Core image tag (e.g. "1.1.0-runtime")
+#   TINI_VERSION    - The version of the Tini INIT manager to install
 
+ARG         VERSION
 FROM        microsoft/dotnet:${VERSION}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
+ARG         TINI_VERSION
 
 # Add a file to tweak the DNS resolver's [/etc/resolve.conf] settings.
 

@@ -13,11 +13,11 @@
 #
 #   * Elasticsearch X-PACK plugins.
 #
-# This file cannot be used directly to create an image.  The [build.ps1] script 
-# generates a suitable dockerfile by replacing "${VERSION}" with the desired
-# version and then building the image.
+# ARGUMENTS:
 #
-#   ${VERSION}      - The Elasticsearch version (e.g. "5.0.1")
+#   VERSION     - The Elasticsearch version (e.g. "5.0.1")
+#
+# REMARKS:
 #
 # You need to specify the following environment variables when running the 
 # container (these are referenced by the [elasticsearch.yml] configuration file):
@@ -41,8 +41,10 @@
 #
 #       /mnt/esdata
 
+ARG         VERSION
 FROM        elasticsearch:${VERSION}
 MAINTAINER  jeff@lilltek.com
+ARG         VERSION
 
 # NOTE: The first command modifies DNS to query for IPv4 before IPv6.
 

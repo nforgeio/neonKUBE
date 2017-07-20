@@ -6,16 +6,14 @@
 # This is a template of the docker image definition file to be used to generate
 # the Elastic Metricbeats image to be used to monitor neonCLUSTER hosts.
 #
-# This file cannot be used directly to create an image.  The [build.ps1] script 
-# generates a suitable dockerfile by replacing the following symbol references
-# then building the image.
+# ARGUMENTS:
 #
-#   ${VERSION}          - The .NET Core image tag (e.g. "1.1.0-runtime")
-#   ${TINI_VERSION}     - The version of the Tini INIT manager to install
+#   VERSION     - The Metricbeat version (e.g. "5.0.0")
 
 FROM        neoncluster/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
+ARG         VERSION
 
 # Install Metricbeat.
 

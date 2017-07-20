@@ -40,14 +40,9 @@ Exec { copy ..\_common\*.* .\_common }
 
 # Build the images.
 
-$registry           = "neoncluster/neon-registry-cache";
-$dockerTemplatePath = "Dockerfile.template";
-$dockerFilePath     = "Dockerfile";
+$registry = "neoncluster/neon-registry-cache"
 
-Exec { copy $dockerTemplatePath $dockerFilePath }
-Exec { text replace-var "-VERSION=$version" $dockerFilePath }
-
-Exec { docker build -f $dockerFilePath -t "${registry}:$version" . }
+Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" . }
 
 if ($subversion -ne "-")
 {
@@ -65,8 +60,6 @@ if ($latest)
 }
 
 # Cleanup
-
-Exec { del $dockerFilePath }
 
 sleep 5 # Docker sometimes appears to hold references to the files below for a bit.
 

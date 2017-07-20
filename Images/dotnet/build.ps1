@@ -26,20 +26,15 @@ $image_root = "$env:NF_ROOT\\Images"
 
 # Build the images.
 
-$registry           = "neoncluster/dotnet";
-$dockerTemplatePath = "Dockerfile.template";
-$dockerFilePath     = "Dockerfile";
+$registry = "neoncluster/dotnet"
 
 # Build the image.
 
-Exec { copy $dockerTemplatePath $dockerFilePath }
-Exec { text replace-var "-VERSION=$version" "-TINI_VERSION=$tini_version" $dockerFilePath }
-Exec { docker build -f $dockerFilePath -t "${registry}:$version" . }
+Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" --build-arg "TINI_VERSION=$tini_version" . }
 
 if ($latest)
 {
 	Exec { docker tag "${registry}:$version" "${registry}:latest"}
 }
 
-Exec { rmdir $dockerFilePath }
 

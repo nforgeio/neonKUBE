@@ -16,7 +16,7 @@ $src_tools_path    = "$src_path\\Tools"
 #------------------------------------------------------------------------------
 # Global constants.
 
-$tini_version = "v0.13.2"
+$tini_version = "v0.13.2"              # TINI init manager version
 
 #------------------------------------------------------------------------------
 # Executes a command, throwing an exception for non-zero error codes.

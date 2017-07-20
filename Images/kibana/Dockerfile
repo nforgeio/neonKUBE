@@ -6,16 +6,18 @@
 # This is a template of the docker image definition file to be used to generate a
 # Kibana image based on a specific version of the official Kibana image.
 #
-#   ${VERSION}    - The Kibana version (e.g. "5.0.0")
+# ARGUMENTS:
 #
-# This file cannot be used directly to create an image.  The [build.sh] script 
-# generates a suitable dockerfile by replacing "${VERSION}" with the desired
-# version and then building the image.
+#   VERSION     - The Kibana version (e.g. "5.0.0")
+#
+# REMARKS:
 #
 # Kibana listens internally on the default port 5601.
 
+ARG         VERSION
 FROM        kibana:${VERSION}
 MAINTAINER  jeff@lilltek.com
+ARG         VERSION
 
 # Environment
 

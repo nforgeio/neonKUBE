@@ -6,12 +6,11 @@
 # HAProxy image that dynamically loads its configuration from HashiCorp Consul
 # and Vault.
 #
-# This file cannot be used directly to create an image.  The [build.ps1] script 
-# generates a suitable dockerfile by replacing the following symbol references
-# then building the image.
+# ARGUMENTS:
 #
-#   ${VERSION}          - The .NET Core image tag (e.g. "1.1.0-runtime")
+#   VERSION     - HAPROXY version (e.g. "1.6.9")
 
+ARG         VERSION
 FROM        haproxy:${VERSION}-alpine
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM

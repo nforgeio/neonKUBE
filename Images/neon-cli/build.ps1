@@ -43,20 +43,15 @@ $version=$(& dotnet "$pwd\bin\neon.dll" --direct version -n)
 
 # Build the images.
 
-$registry           = "neoncluster/neon-cli";
-$dockerTemplatePath = "Dockerfile.template";
-$dockerFilePath     = "Dockerfile";
+$registry = "neoncluster/neon-cli"
 
-Exec { copy $dockerTemplatePath $dockerFilePath }
-Exec { text replace-var "-VERSION=$version" $dockerFilePath }
-Exec { docker build -f $dockerFilePath -t "${registry}:$version" . }
+Exec { docker build -t "${registry}:$version" . }
 
 if ($latest)
 {
 	Exec { docker tag "${registry}:$version" "${registry}:latest"}
 }
 
-Exec { del $dockerFilePath }
 Exec { rm -r bin }
 
 PushImage "${registry}:$version"

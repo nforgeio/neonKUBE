@@ -36,18 +36,13 @@ Exec { dotnet publish "$src_services_path\\neon-proxy-manager\\neon-proxy-manage
 
 # Build the images.
 
-$registry           = "neoncluster/neon-proxy-manager";
-$dockerTemplatePath = "Dockerfile.template";
-$dockerFilePath     = "Dockerfile";
+$registry = "neoncluster/neon-proxy-manager"
 
-Exec { copy $dockerTemplatePath $dockerFilePath }
-Exec { text replace-var "-VERSION=$version" $dockerFilePath }
-Exec { docker build -f $dockerFilePath -t "${registry}:$version" . }
+Exec { docker build -t "${registry}:$version" . }
 
 if ($latest)
 {
 	Exec { docker tag "${registry}:$version" "${registry}:latest"}
 }
 
-Exec { del $dockerFilePath }
 Exec { rm -r bin }

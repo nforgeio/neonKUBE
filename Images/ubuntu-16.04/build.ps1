@@ -19,11 +19,6 @@ $image_root = "$env:NF_ROOT\\Images"
 "* UBUNTU-16.04"
 "======================================="
 
-$registry           = "neoncluster/ubuntu-16.04";
-$dockerTemplatePath = "Dockerfile.template";
-$dockerFilePath     = "Dockerfile";
+$registry = "neoncluster/ubuntu-16.04"
 
-Exec { copy $dockerTemplatePath $dockerFilePath }
-Exec { text replace-var "-TINI_VERSION=$tini_version" $dockerFilePath }
-Exec { docker build -f $dockerFilePath -t "${registry}:latest" . }
-Exec { del $dockerFilePath }
+Exec { docker build -t "${registry}:latest" --build-arg "TINI_VERSION=$tini_version" . }

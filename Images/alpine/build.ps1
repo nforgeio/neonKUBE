@@ -36,13 +36,9 @@ Exec { copy ..\_common\*.* .\_common }
 
 # Build the images.
 
-$registry           = "neoncluster/alpine";
-$dockerTemplatePath = "Dockerfile.template";
-$dockerFilePath     = "Dockerfile";
+$registry = "neoncluster/alpine"
 
-Exec { copy $dockerTemplatePath $dockerFilePath }
-Exec { text replace-var "-VERSION=$version" "-TINI_VERSION=$tini_version" $dockerFilePath }
-Exec { docker build -f $dockerFilePath -t "${registry}:$version" . }
+Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" --build-arg "TINI_VERSION=$tini_version" . }
 
 if ($latest)
 {
@@ -51,5 +47,4 @@ if ($latest)
 
 # Cleanup
 
-Exec { del $dockerFilePath }
 Exec { Remove-Item -Recurse _common }

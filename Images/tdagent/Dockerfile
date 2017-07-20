@@ -5,16 +5,14 @@
 #
 # Creates the base [neoncluster/tdagent] image used by neonCLUSTER.
 #
-# This file cannot be used directly to create an image.  The [build.ps1] script 
-# generates a suitable dockerfile by replacing the following symbol references
-# then building the image.
+# ARGUMENTS:
 #
-#   ${VERSION}          - The TD-AGENT version (e.g. "2")
-#   ${TINI_VERSION}     - The version of the Tini INIT manager to install
+#   VERSION         - The TD-AGENT version (e.g. "2")
 
 FROM        neoncluster/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
+ARG         VERSION
 
 # Install TD-Agent.
 

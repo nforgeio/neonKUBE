@@ -5,13 +5,11 @@
 #
 # HAProxy image that loads its configuration from a mounted file.
 #
-# This file cannot be used directly to create an image.  The [build.ps1] script 
-# generates a suitable dockerfile by replacing the following symbol references
-# then building the image.
+# ARGUMENTS:
 #
-#   ${VERSION}          - The HAProxy image tag (e.g. "1.6.9")
-#   ${TINI_VERSION}     - The version of the Tini INIT manager to install
+#   VERSION         - The HAProxy image tag (e.g. "1.6.9")
 
+ARG         VERSION
 FROM        haproxy:${VERSION}-alpine
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
