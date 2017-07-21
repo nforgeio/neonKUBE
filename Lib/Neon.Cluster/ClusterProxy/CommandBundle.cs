@@ -47,6 +47,19 @@ namespace Neon.Cluster
     public class CommandBundle : List<CommandFile>
     {
         /// <summary>
+        /// <para>
+        /// This is a meta command line argument that can be added to a command
+        /// to indicate that the following non-command line option is not to be
+        /// considered to be the value for the previous command line option.
+        /// </para>
+        /// <para>
+        /// This is entirely optional but can make <see cref="ToBash(string)"/> 
+        /// formatting a bit nicer.
+        /// </para>
+        /// </summary>
+        public const string ArgBreak = "-!arg-break!-";
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="command">The command.</param>
@@ -141,6 +154,23 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Ensures that a Bash command argument is escaped as necessary.
+        /// </summary>
+        /// <param name="arg">The argument string.</param>
+        /// <returns>The safe argument.</returns>
+        private string SafeArg(string arg)
+        {
+            if (arg.IndexOfAny(new char[] { ' ', '\t', '"' }) != -1)
+            {
+                arg = arg.Replace('\t', ' ');
+                arg = arg.Replace("\"", "\\\"");
+                arg = "\"" + arg + "\"";
+            }
+
+            return arg;
+        }
+
+        /// <summary>
         /// Renders the command and arguments as a Bash compatible command line.
         /// </summary>
         /// <returns>The command line.</returns>
@@ -210,6 +240,92 @@ namespace Neon.Cluster
                     sb.Append(argString);
                 }
             }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// <para>
+        /// Formats the command such that it could be added to a Bash script.
+        /// </para>
+        /// <note>
+        /// This doesn't work if the command has attached files.
+        /// </note>
+        /// </summary>
+        /// <param name="comment">Optional comment text (without a leading <b>#</b>).</param>
+        /// <returns>The command formatted for Bash.</returns>
+        /// <exception cref="NotSupportedException">
+        /// <see cref="ToBash"/> does not support commands with attached files.
+        /// </exception>
+        /// <remarks>
+        /// This can be useful for making copies of cluster configuration commands
+        /// on the server as scripts for sutiations where system operators need
+        /// to manually tweak things.
+        /// </remarks>
+        public string ToBash(string comment = null)
+        {
+            var sb = new StringBuilder();
+
+            // We're going to make this look nice by placing any arguments on
+            // separate lines and trying to pair options and values on the
+            // same line.
+
+            if (!string.IsNullOrWhiteSpace(comment))
+            {
+                sb.AppendLine($"# {comment}");
+                sb.AppendLine();
+            }
+
+            sb.Append(Command);
+
+            var argIndex = 0;
+
+            while (argIndex < Args.Length)
+            {
+                var arg = Args[argIndex++].ToString();
+
+                if (arg == ArgBreak)
+                {
+                    continue;   // Ignore these
+                }
+
+                sb.AppendLine(" \\");
+
+                if (!arg.StartsWith("-"))
+                {
+                    sb.Append($"    {SafeArg(arg)}");
+                    argIndex++;
+                    continue;
+                }
+
+                sb.Append($"    {SafeArg(arg)}");
+
+                // The current argument is a command line option.  If there's
+                // another argument and it's not a command line option, we're
+                // going format it on the same line.
+                //
+                // This is a decent, but not perfect, heuristic because it
+                // treat the first non-option argument as belonging to the
+                // last command line option without a value.
+                //
+                // The workaround is to add a [CommandStep.ArgBreak] string 
+                // to the parameters just before any non-option arguments.
+
+                if (argIndex < Args.Length)
+                {
+                    var nextArg = Args[argIndex].ToString();
+
+                    if (nextArg.StartsWith("-") || nextArg == ArgBreak)
+                    {
+                        continue;
+                    }
+
+                    sb.Append($" {SafeArg(nextArg)}");
+                    argIndex++;
+                }
+            }
+
+            sb.AppendLine();
 
             return sb.ToString();
         }
