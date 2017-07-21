@@ -7,16 +7,19 @@
 # Loads the Docker host node environment variables before launching Elasticsearch
 # so these values can be referenced by the Elasticsearch configuration file.
 
+# Add the root directory to the PATH and set the LOG_LEVEL.
+
+PATH=${PATH}:/
+LOG_LEVEL=INFO
+
 # Load the Docker host node environment variables.
 
 if [ ! -f /etc/neoncluster/env-host ] ; then
-    echo "[FATAL] The [/etc/neoncluster/env-host] file does not exist.  This file must have been generated on the Docker host by the [neon-cli] and be bound to the container." >&2
+    . log-fatal.sh "The [/etc/neoncluster/env-host] file does not exist.  This file must have been generated on the Docker host by the [neon-cli] and be bound to the container."
     exit 1
 fi
 
 . /etc/neoncluster/env-host
-
-LOG_LEVEL=INFO
 
 # Check the environment variables.
 
@@ -48,59 +51,34 @@ if [ "${ELASTICSEARCH_BOOTSTRAP_NODES}" == "" ] ; then
     exit 1
 fi
 
-# Add the root directory to the PATH.
-
-PATH=${PATH}:/
-
-# Enable exit on error.
-
-set -e
-
 # We'll bind HTTP to all network interfaces.
 
 ELASTICSEARCH_HTTP_HOST=0.0.0.0
 
-#------------------------------------------------------------------------------
 # The built-in Elasticsearch configuration environment variable subsititution
-# mechanism has some issues, so we're going to use a scripts to explicitly 
-# subsitute these veriables and generate new config files.
+# mechanism has some issues, so we're going to use a script to explicitly 
+# subsitute these variables and generate new config files.
 
 . /usr/share/elasticsearch/config/elasticsearch.yml.sh
 
-#------------------------------------------------------------------------------
-# This a tweaked version the original script from the base Elasticsearch image:
-
-# Add elasticsearch command if needed
-if [ "${1:0:1}" = '-' ]; then
-    set -- elasticsearch "$@"
-fi
-
 # Ensure that the [/mnt/esdata] folder exists so the container will still
 # function if no external Docker volume was mounted.
+
 mkdir -p /mnt/esdata
 
-# Drop root privileges if we are running elasticsearch
-# allow the container to be started with `--user`
-if [ "$1" = 'elasticsearch' -a "$(id -u)" = '0' ]; then
+# Start Elasticsearch under the [elasticsearch] user because it is
+# not able to run as [root].
 
-    # Change the ownership of /mnt/esdata to elasticsearch
-    chown -R elasticsearch:elasticsearch /mnt/esdata
-
-    . log-info.sh "Starting [Elasticsearch]"
-    . log-info.sh "ELASTICSEARCH_CLUSTER: ${ELASTICSEARCH_CLUSTER}"
-    . log-info.sh "ELASTICSEARCH_NODE_MASTER: ${ELASTICSEARCH_NODE_MASTER}"
-    . log-info.sh "ELASTICSEARCH_NODE_DATA: ${ELASTICSEARCH_NODE_DATA}"
-    . log-info.sh "ELASTICSEARCH_TCP_PORT: ${ELASTICSEARCH_TCP_PORT}"
-    . log-info.sh "ELASTICSEARCH_HTTP_PORT: ${ELASTICSEARCH_HTTP_PORT}"
-    . log-info.sh "ELASTICSEARCH_NODE_COUNT: ${ELASTICSEARCH_NODE_COUNT}"
-    . log-info.sh "ELASTICSEARCH_QUORUM: ${ELASTICSEARCH_QUORUM}"
-    . log-info.sh "ELASTICSEARCH_BOOTSTRAP_NODES: ${ELASTICSEARCH_BOOTSTRAP_NODES}"
-    . log-info.sh "ES_JAVA_OPTS: ${ES_JAVA_OPTS}"
-    
-    set -- gosu elasticsearch "$@"
-fi
-
-# As argument is not related to elasticsearch,
-# then assume that user wants to run his own process,
-# for example a `bash` shell to explore this image
-exec "$@"
+. log-info.sh "Starting [Elasticsearch]"
+. log-info.sh "ELASTICSEARCH_CLUSTER: ${ELASTICSEARCH_CLUSTER}"
+. log-info.sh "ELASTICSEARCH_NODE_MASTER: ${ELASTICSEARCH_NODE_MASTER}"
+. log-info.sh "ELASTICSEARCH_NODE_DATA: ${ELASTICSEARCH_NODE_DATA}"
+. log-info.sh "ELASTICSEARCH_TCP_PORT: ${ELASTICSEARCH_TCP_PORT}"
+. log-info.sh "ELASTICSEARCH_HTTP_PORT: ${ELASTICSEARCH_HTTP_PORT}"
+. log-info.sh "ELASTICSEARCH_NODE_COUNT: ${ELASTICSEARCH_NODE_COUNT}"
+. log-info.sh "ELASTICSEARCH_QUORUM: ${ELASTICSEARCH_QUORUM}"
+. log-info.sh "ELASTICSEARCH_BOOTSTRAP_NODES: ${ELASTICSEARCH_BOOTSTRAP_NODES}"
+. log-info.sh "ES_JAVA_OPTS: ${ES_JAVA_OPTS}"
+   
+chown -R elasticsearch:elasticsearch /mnt/esdata
+gosu elasticsearch elasticsearch

@@ -38,7 +38,7 @@ Exec { copy ..\_common\*.* .\_common }
 
 $registry = "neoncluster/alpine"
 
-Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" --build-arg "TINI_VERSION=$tini_version" . }
+Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" . }
 
 if ($latest)
 {

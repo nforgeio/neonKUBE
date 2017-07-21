@@ -42,7 +42,7 @@ Exec { copy ..\_common\*.* .\_common }
 
 $registry = "neoncluster/kibana"
 
-Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" . }
+Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" --build-arg "TINI_VERSION=$tini_version" . }
 
 if ($subversion -ne "-")
 {

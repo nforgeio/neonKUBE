@@ -45,5 +45,4 @@ RUN chmod 700 /*.sh \
     && chmod 600 /etc/td-agent
 
 #ENTRYPOINT ["sleep", "100000"]
-#ENTRYPOINT ["bash"]
 ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]

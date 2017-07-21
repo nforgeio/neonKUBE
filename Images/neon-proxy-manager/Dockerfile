@@ -18,6 +18,5 @@ RUN chmod 700 /docker-entrypoint.sh \
     && chmod 770 /usr/bin/neon-proxy-manager \
     && chmod 660 /usr/bin/neon-proxy-manager.dotnet/*
 
-#ENTRYPOINT ["bash"]
 #ENTRYPOINT ["sleep", "100000"]
-ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/tini","-g","--","/docker-entrypoint.sh"]

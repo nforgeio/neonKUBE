@@ -8,7 +8,8 @@
 #
 # ARGUMENTS:
 #
-#   VERSION     - The Kibana version (e.g. "5.0.0")
+#   VERSION         - The Kibana version (e.g. "5.0.0")
+#   TINI_VERSION    - The version of the Tini INIT manager to install
 #
 # REMARKS:
 #
@@ -18,10 +19,16 @@ ARG         VERSION
 FROM        kibana:${VERSION}
 MAINTAINER  jeff@lilltek.com
 ARG         VERSION
+ARG         TINI_VERSION
 
 # Environment
 
 ENV DEBIAN_FRONTEND noninteractive
+
+# Install the [tini] INIT manager.
+
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod 700 /tini
 
 # NOTE: The first command modifies DNS to query for IPv4 before IPv6.
 

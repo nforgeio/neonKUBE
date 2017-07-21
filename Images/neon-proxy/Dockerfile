@@ -39,4 +39,4 @@ RUN chmod 700 /*.sh \
 
 #ENTRYPOINT ["sh"]
 #ENTRYPOINT ["sleep", "100000"]
-ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]

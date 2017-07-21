@@ -31,6 +31,6 @@ COPY _common/*.sh           /
 
 RUN chmod 700 /*.sh
 
-#ENTRYPOINT ["bash"]
+#ENTRYPOINT ["sleep", "100000"]
 ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]
 CMD ["service"]

@@ -23,5 +23,5 @@ RUN chmod 700 /*.sh \
     && chmod 600 /etc/td-agent \
     && /usr/sbin/td-agent-gem install fluent-plugin-systemd -v 0.0.4 --no-document
 
-#ENTRYPOINT ["bash"]
+#ENTRYPOINT ["sleep", "100000"]
 ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]

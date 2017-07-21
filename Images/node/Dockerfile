@@ -26,5 +26,5 @@ RUN chmod 700 /docker-entrypoint.sh \
     && chmod 600 /program.js
 
 EXPOSE 80
-#ENTRYPOINT ["sh"]
-ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]
+
+ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]

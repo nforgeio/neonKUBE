@@ -18,5 +18,4 @@ ARG         TINI_VERSION
 
 # Install the [tini] INIT manager.
 
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod 700 /tini
+RUN apk add --update tini

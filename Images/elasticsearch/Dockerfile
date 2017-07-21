@@ -15,7 +15,8 @@
 #
 # ARGUMENTS:
 #
-#   VERSION     - The Elasticsearch version (e.g. "5.0.1")
+#   VERSION         - The Elasticsearch version (e.g. "5.0.1")
+#   TINI_VERSION    - The version of the Tini INIT manager to install
 #
 # REMARKS:
 #
@@ -45,6 +46,12 @@ ARG         VERSION
 FROM        elasticsearch:${VERSION}
 MAINTAINER  jeff@lilltek.com
 ARG         VERSION
+ARG         TINI_VERSION
+
+# Install the [tini] INIT manager.
+
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod 700 /tini
 
 # NOTE: The first command modifies DNS to query for IPv4 before IPv6.
 
@@ -74,7 +81,7 @@ RUN chmod 700 /*.sh \
     && chmod 700 /usr/share/elasticsearch/config \
     && chmod 644 /usr/share/elasticsearch/config/*
 
-# ENTRYPOINT ["bash"]
+#ENTRYPOINT ["sleep", "100000"]
 ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]
 
 

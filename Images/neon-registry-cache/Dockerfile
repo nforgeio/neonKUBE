@@ -7,7 +7,8 @@
 #
 # ARGUMENTS:
 #
-#   VERSION     - The Docker Registry version (e.g. "2.6.0")
+#   VERSION         - The Docker Registry version (e.g. "2.6.0")
+#   TINI_VERSION    - The version of the Tini INIT manager to install
 #
 # REMARKS:
 #
@@ -19,10 +20,12 @@ ARG         VERSION
 FROM        registry:${VERSION}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
+ARG         TINI_VERSION
 
 # Install the [tini] INIT manager.
 
-RUN apk add --update tini
+ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
+RUN chmod 700 /tini
 
 # Install our custom entry point and helper scripts.
 
