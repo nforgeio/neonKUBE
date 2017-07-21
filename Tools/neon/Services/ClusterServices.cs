@@ -97,7 +97,6 @@ namespace NeonTool
                             unsealSecretOption,
                             "--constraint", "node.role==manager",
                             "--replicas", 1,
-                            "--restart", "always",
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "neoncluster/neon-cluster-manager");
 
@@ -126,7 +125,6 @@ namespace NeonTool
                             "--secret", "neon-proxy-manager-credentials",
                             "--constraint", "node.role==manager",
                             "--replicas", 1,
-                            "--restart", "always",
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "neoncluster/neon-proxy-manager");
 
@@ -214,7 +212,6 @@ namespace NeonTool
                             publicPublish,
                             proxyConstraint,
                             "--mode", "global",
-                            "--restart", "always",
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "--network", NeonClusterConst.ClusterPublicNetwork,
                             "neoncluster/neon-proxy");
@@ -233,7 +230,6 @@ namespace NeonTool
                             privatePublish,
                             proxyConstraint,
                             "--mode", "global",
-                            "--restart", "always",
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "--network", NeonClusterConst.ClusterPrivateNetwork,
                             "neoncluster/neon-proxy");

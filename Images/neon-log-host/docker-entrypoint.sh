@@ -36,4 +36,7 @@ PATH=${PATH}:/
 
 # Launch TD-Agent.
 
+LOG_LEVEL=INFO
+
+. log-info.sh "Starting: [neon-log-host]"
 td-agent

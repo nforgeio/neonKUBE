@@ -128,7 +128,6 @@ docker service create --name neon-proxy-manager \
     --secret neon-proxy-manager-credentials \
     --constraint node.role==manager \
     --replicas 1 \
-	--restart always \
     --restart-delay 10s \
     --log-driver fluentd \
     neoncluster/neon-proxy-manager

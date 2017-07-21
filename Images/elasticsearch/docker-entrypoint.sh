@@ -16,6 +16,8 @@ fi
 
 . /etc/neoncluster/env-host
 
+LOG_LEVEL=INFO
+
 # Check the environment variables.
 
 if [ "${ELASTICSEARCH_CLUSTER}" == "" ] ; then
@@ -80,8 +82,20 @@ mkdir -p /mnt/esdata
 # Drop root privileges if we are running elasticsearch
 # allow the container to be started with `--user`
 if [ "$1" = 'elasticsearch' -a "$(id -u)" = '0' ]; then
+
     # Change the ownership of /mnt/esdata to elasticsearch
     chown -R elasticsearch:elasticsearch /mnt/esdata
+
+    . log-info.sh "Starting [Elasticsearch]"
+    . log-info.sh "ELASTICSEARCH_CLUSTER: ${ELASTICSEARCH_CLUSTER}"
+    . log-info.sh "ELASTICSEARCH_NODE_MASTER: ${ELASTICSEARCH_NODE_MASTER}"
+    . log-info.sh "ELASTICSEARCH_NODE_DATA: ${ELASTICSEARCH_NODE_DATA}"
+    . log-info.sh "ELASTICSEARCH_TCP_PORT: ${ELASTICSEARCH_TCP_PORT}"
+    . log-info.sh "ELASTICSEARCH_HTTP_PORT: ${ELASTICSEARCH_HTTP_PORT}"
+    . log-info.sh "ELASTICSEARCH_NODE_COUNT: ${ELASTICSEARCH_NODE_COUNT}"
+    . log-info.sh "ELASTICSEARCH_QUORUM: ${ELASTICSEARCH_QUORUM}"
+    . log-info.sh "ELASTICSEARCH_BOOTSTRAP_NODES: ${ELASTICSEARCH_BOOTSTRAP_NODES}"
+    . log-info.sh "ES_JAVA_OPTS: ${ES_JAVA_OPTS}"
     
     set -- gosu elasticsearch "$@"
 fi

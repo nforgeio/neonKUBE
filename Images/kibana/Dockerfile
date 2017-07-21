@@ -40,7 +40,8 @@ RUN wget -nv https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-${VERSIO
 # Overwrite the base Kibana entrypoint script with our own.
 
 COPY docker-entrypoint.sh   /
-copy kibana.yml.sh          /etc/kibana
+COPY _common/*.sh           /
+COPY kibana.yml.sh          /etc/kibana
 
 # NOTE: The first command modifies DNS to query for IPv4 before IPv6.
 
@@ -48,5 +49,5 @@ RUN sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /
     && chmod 700 /docker-entrypoint.sh \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
-ENTRYPOINT [ "/docker-entrypoint.sh", "kibana" ]
+ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh", "kibana"]
 

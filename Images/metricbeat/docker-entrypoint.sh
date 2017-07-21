@@ -48,14 +48,21 @@ fi
 
 if [ "${1}" == "service" ] ; then
 
+    . log-info "Starting [Metricbeat]"
+    . log-info "ELASTICSEARCH_URL: ${ELASTICSEARCH_URL}"
+    . log-info "PERIOD: ${PERIOD}"
+    . log-info "PROCESSES: ${PROCESSES}"
+    . log-info "LOG_LEVEL: ${LOG_LEVEL}"
+
     # Generate the Metricbeat config file and then start Metricbeat.
 
     /metricbeat.yml.sh
     /metricbeat -e -system.hostfs=/hostfs
 
 elif [ "${1}" == "import-dashboards" ] ; then
+    . log-info.sh "Importing dashboards to: ${ELASTICSEARCH_URL}"
     /scripts/import_dashboards -es ${ELASTICSEARCH_URL}
 else 
-    echo "Invalid command line: $@"
+    . log-error.sh "Invalid command line: $@"
     exit 1
 fi

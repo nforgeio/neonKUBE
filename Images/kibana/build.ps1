@@ -30,6 +30,16 @@ $image_root = "$env:NF_ROOT\\Images"
 
 # Build the images.
 
+# Copy the common scripts.
+
+if (Test-Path _common)
+{
+	Exec { Remove-Item -Recurse _common }
+}
+
+Exec { mkdir _common }
+Exec { copy ..\_common\*.* .\_common }
+
 $registry = "neoncluster/kibana"
 
 Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" . }
@@ -48,3 +58,9 @@ if ($latest)
 {
 	Exec { docker tag "${registry}:$version" "${registry}:latest"}
 }
+
+# Cleanup
+
+sleep 5 # Docker sometimes appears to hold references to the files below for a bit.
+
+Exec { Remove-Item -Recurse _common }

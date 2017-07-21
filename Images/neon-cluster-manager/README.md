@@ -85,7 +85,6 @@ docker service create \
     --secret=neon-cluster-manager-vaultkeys \
     --constraint node.role==manager \
     --replicas 1 \
-	--restart always \
     --restart-delay 10s \
     neoncluster/neon-cluster-manager
 ````

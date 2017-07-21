@@ -17,3 +17,21 @@ You need to specify the following environment variables when running the contain
 **NOTE**: This URL should not include a trailing "/".
 
 Kibana listens internally on the default **port 5601**.
+
+# Deployment
+
+This image is typically deployed as a Docker service like:
+
+````
+docker service create \
+    --name neon-log-kibana \
+    --mode global \
+    --restart-delay 10s \
+    --endpoint-mode vip \
+    --network neon-cluster-private \
+    --constraint "node.role==manager" \
+    --publish 5001:5601 \
+    --mount type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true \
+    --env ELASTICSEARCH_URL=http://neon-log-esdata.cluster:5303 \
+    --log-driver json-file
+````

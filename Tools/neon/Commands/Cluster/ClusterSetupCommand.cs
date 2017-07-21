@@ -1531,7 +1531,6 @@ $@"docker login \
 #endif
                             "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
                             "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
-                            "--restart", "always",
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "neoncluster/neon-proxy-vault");
 
@@ -1759,7 +1758,6 @@ $@"docker login \
                             "--name", "neon-log-metricbeat",
                             "--detach",
                             "--restart", "always",
-                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
                             "--volume", "/proc:/hostfs/proc:ro",
                             "--volume", "/:/hostfs:ro",

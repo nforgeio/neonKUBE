@@ -68,4 +68,5 @@ fi
 
 # Start the registry.
 
+. log-info "Starting: [neon-registry-cache]"
 registry serve registry.yml

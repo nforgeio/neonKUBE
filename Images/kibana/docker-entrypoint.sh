@@ -19,6 +19,8 @@ if [ -f /etc/neoncluster/env-container ] ; then
     . /etc/neoncluster/env-container
 fi
 
+LOG_LEVEL=INFO
+
 # Add the root directory to the PATH.
 
 PATH=${PATH}:/
@@ -40,7 +42,8 @@ fi
 # Run as user "kibana" if the command is "kibana"
 
 if [ "$1" = 'kibana' ]; then  
-    set -- gosu kibana tini -- "$@"
+    . log-info.sh "Starting [Kibana]"
+    set -- gosu kibana "$@"
 fi
-
+    
 exec "$@"
