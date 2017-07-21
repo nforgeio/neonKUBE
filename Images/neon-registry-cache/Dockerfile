@@ -20,12 +20,10 @@ ARG         VERSION
 FROM        registry:${VERSION}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
-ARG         TINI_VERSION
 
 # Install the [tini] INIT manager.
 
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod 700 /tini
+RUN apk add --update tini
 
 # Install our custom entry point and helper scripts.
 
@@ -38,4 +36,4 @@ COPY config/*               /
 RUN chmod 700 /*.sh
 
 #ENTRYPOINT ["/bin/sleep", "10000"]
-ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
