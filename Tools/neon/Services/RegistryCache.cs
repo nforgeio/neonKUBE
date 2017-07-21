@@ -174,6 +174,10 @@ namespace NeonTool
                             "neoncluster/neon-registry-cache");
 
                         node.SudoCommand(runCommand);
+
+                        // Upload a script so it will be easier to manually restart the container.
+
+                        node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-registry-cache.sh"), runCommand.ToBash());
                     });
 
                 node.Status = string.Empty;
