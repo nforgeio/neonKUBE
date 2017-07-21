@@ -371,6 +371,7 @@ namespace NeonTool
                         "--memory-reservation", $"{esContainerRam / NeonHelper.Mega}M",
                         "--memory-swappiness", "0",
                         "--network", "host",
+                        "--log-driver", "json-file",
                         cluster.Definition.Log.EsImage);
 
                 steps.Add(runCommand);
