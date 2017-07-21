@@ -1749,7 +1749,7 @@ echo $? > {cmdFolder}/exit
                     Command        = command,
                     ExitCode       = 1,
                     ProxyIsFaulted = true,
-                    ErrorText      = "** Cluster NodeProxy is faulted **"
+                    ErrorText      = "** Cluster node is faulted **"
                 };
             }
 
