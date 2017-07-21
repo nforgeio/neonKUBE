@@ -194,7 +194,7 @@ module Fluent
 
             # See what we can extract from the [User-Agent] header.
 
-            if ! userAgent.nil?
+            if !userAgent.nil?
             
                 browserInfo = Browser.new(userAgent, accept_language: "en-us");
 

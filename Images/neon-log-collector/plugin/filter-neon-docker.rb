@@ -61,6 +61,8 @@ module Fluent
                 record["service"] = container_name;
             end
 
+            service = record["service"];
+
             # We're going to convert the [container_id] into a short 12-character
             # field named [cid] and the [cid_full] with the full ID.
 
@@ -78,7 +80,7 @@ module Fluent
 
             message = record["message"];
 
-            if ! message.nil? && message.length >= 2 && message[0] == '{' && message[message.length-1] == '}'
+            if !message.nil? && message.length >= 2 && message[0] == '{' && message[message.length-1] == '}'
                 return extractJson(tag, time, record);
             end
 

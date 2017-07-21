@@ -78,13 +78,7 @@ module Fluent
 
                         # Extract the log level.
 
-                        level = normalizeLevel(level);
-
-                        if level.nil?
-                            level = "other";
-                        end
-
-                        record["level"] = level;
+                        record["level"] = normalizeLevel(level);
 
                         # Extract the message.  Note that the value extracted via the regex has
                         # the surrounding quotes and may include escaped characters.  We're going 
@@ -128,13 +122,7 @@ module Fluent
 
                         # Extract the log level.
 
-                        level = normalizeLevel(level);
-
-                        if level.nil?
-                            level = "other";
-                        end
-
-                        record["level"] = level;
+                        record["level"] = normalizeLevel(level);
 
                         # Extract the message.
 
@@ -192,17 +180,12 @@ module Fluent
 
                         # Extract the log level.
 
-                        level = normalizeLevel(level);
-
-                        if level.nil?
-                            level = "other";
-                        end
-
-                        record["level"] = level;
+                        record["level"] = normalizeLevel(level);
 
                         # Extract the message.
 
                         record["message"] = msg;
+
                     elsif message.length < 2 || message[0] != '{' || message[message.length-1] != '}'
 
                         # Consider all other non-JSON events as INFO and
@@ -227,7 +210,7 @@ module Fluent
 
             message = record["message"];
 
-            if ! message.nil? && message.length >= 2 && message[0] == '{' && message[message.length-1] == '}'
+            if !message.nil? && message.length >= 2 && message[0] == '{' && message[message.length-1] == '}'
                 return extractJson(tag, time, record);
             end
 

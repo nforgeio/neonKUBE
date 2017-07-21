@@ -8,9 +8,31 @@
 module NeonCommon
 
     # Attempts to normalize a log level string.  This will return
-    # the standard string or NIL if it could not be recognized.
+    # a standard level or "other".
     #
     def normalizeLevel(level)
+
+        if level.nil?
+            return "other";
+        end
+
+        level = normalizeLevelTest(level);
+
+        if level.nil?
+            return "other";
+        else
+            return level;
+        end
+    end
+
+    # Attempts to normalize a log level string.  This will return
+    # the standard string or NIL if it could not be recognized.
+    #
+    # NOTE: 
+    #
+    # Use [normalizeLevel()] if you wish unrecognized or NIL levels as "other".
+    #
+    def normalizeLevelTest(level)
 
         if level.nil?
             return nil;
@@ -82,9 +104,9 @@ module NeonCommon
                 match = $~["match"];
                 level = $~["level"];
 
-                level = normalizeLevel(level);
+                level = normalizeLevelTest(level);
 
-                if ! level.nil?
+                if !level.nil?
                     record["level"]   = level;
                     record["message"] = message[(match.length..-1)];
                     return record;
@@ -151,14 +173,7 @@ module NeonCommon
         end
 
         if json.key?("level")
-
-            level = normalizeLevel(record["level"]);
-
-            if level.nil?
-                level = "other";
-            end
-
-            record["level"] = level;
+            record["level"] = normalizeLevel(level);
         else
             record["level"] = "other";
         end
@@ -191,7 +206,7 @@ module NeonCommon
     #
     def extractTimestamp(tag, time, record)
 
-        if ! record.key?("message")
+        if !record.key?("message")
             return record;
         end
 
@@ -231,7 +246,7 @@ module NeonCommon
                 match = $~["match"];
             end
 
-            if ! date.nil?
+            if !date.nil?
 
                 # We matched a date so attempt to parse it and update the event.
 
@@ -264,7 +279,7 @@ module NeonCommon
     #
     def extractOtherFields(tag, time, record)
 
-        if ! record.key?("message")
+        if !record.key?("message")
             return record;
         end
 
