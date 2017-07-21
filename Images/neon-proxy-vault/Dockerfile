@@ -19,4 +19,4 @@ RUN chmod 700 /*.sh \
     && apk add --update curl jq
 
 #ENTRYPOINT ["sleep","10000"]
-ENTRYPOINT ["tini", "--", "/docker-entrypoint.sh"]
+ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]

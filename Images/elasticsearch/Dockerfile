@@ -74,8 +74,8 @@ RUN chmod 700 /*.sh \
     && chmod 700 /usr/share/elasticsearch/config \
     && chmod 644 /usr/share/elasticsearch/config/*
 
-#ENTRYPOINT ["/bin/sleep","10000"]
-ENTRYPOINT ["/docker-entrypoint.sh"]
-CMD ["elasticsearch"]
+# ENTRYPOINT ["bash"]
+ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]
+
 
 
