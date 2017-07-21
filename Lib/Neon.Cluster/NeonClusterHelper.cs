@@ -880,12 +880,12 @@ namespace Neon.Cluster
         {
             VerifyConnected();
 
-            if (Cluster.Definition.BareDocker)
+            if (cachedDefinition != null && cachedDefinition.BareDocker)
             {
                 // For bare clusters, just return the local definition because there
                 // is no Consul service running.
 
-                return Cluster.Definition;
+                return cachedDefinition;
             }
 
             using (var consul = OpenConsul())
