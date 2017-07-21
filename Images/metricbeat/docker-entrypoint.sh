@@ -4,6 +4,10 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
+# Add the root directory to the PATH.
+
+PATH=${PATH}:/
+
 # Load the Docker host node environment variables if present.
 
 if [ -f /etc/neoncluster/env-host ] ; then
@@ -15,10 +19,6 @@ fi
 if [ -f /etc/neoncluster/env-container ] ; then
     . /etc/neoncluster/env-container
 fi
-
-# Add the root directory to the PATH.
-
-PATH=${PATH}:/
 
 # Load the neonCLUSTER constants.
 
@@ -48,11 +48,11 @@ fi
 
 if [ "${1}" == "service" ] ; then
 
-    . log-info "Starting [Metricbeat]"
-    . log-info "ELASTICSEARCH_URL: ${ELASTICSEARCH_URL}"
-    . log-info "PERIOD: ${PERIOD}"
-    . log-info "PROCESSES: ${PROCESSES}"
-    . log-info "LOG_LEVEL: ${LOG_LEVEL}"
+    . log-info.sh "Starting [Metricbeat]"
+    . log-info.sh "ELASTICSEARCH_URL: ${ELASTICSEARCH_URL}"
+    . log-info.sh "PERIOD: ${PERIOD}"
+    . log-info.sh "PROCESSES: ${PROCESSES}"
+    . log-info.sh "LOG_LEVEL: ${LOG_LEVEL}"
 
     # Generate the Metricbeat config file and then start Metricbeat.
 

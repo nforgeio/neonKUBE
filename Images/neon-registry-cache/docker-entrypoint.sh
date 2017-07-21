@@ -4,6 +4,8 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
+# Add the root directory to the PATH.
+
 PATH=${PATH}:/
 
 # Verify that cache TLS certificates have been mounted.
@@ -68,5 +70,5 @@ fi
 
 # Start the registry.
 
-. log-info "Starting: [neon-registry-cache]"
+. log-info.sh "Starting: [neon-registry-cache]"
 registry serve registry.yml
