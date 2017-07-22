@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 #
-# Builds an Ubuntu 16.04 image by applying all current package updates to the 
+# Builds the base Ubuntu 16.04 image by applying all current package updates to the 
 # base Ubuntu image and then adds some handy packages.
 #
 # Usage: powershell -file build.ps1

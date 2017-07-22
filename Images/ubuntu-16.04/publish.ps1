@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 #
-# Builds base Ubuntu 16.04 images and pushes them to Docker Hub.
+# Builds the base Ubuntu 16.04 image and pushes it to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
