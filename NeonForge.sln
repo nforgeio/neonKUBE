@@ -28,9 +28,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Repository", "Repository", 
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}"
-	ProjectSection(SolutionItems) = preProject
-		Lib\nuget-version.txt = Lib\nuget-version.txt
-	EndProjectSection
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Neon.Global", "Lib\Neon.Global\Neon.Global.shproj", "{4C0BCA49-F217-436C-877F-40A606989AF4}"
 EndProject
