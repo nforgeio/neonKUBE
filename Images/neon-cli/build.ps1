@@ -41,7 +41,7 @@ Exec { dotnet publish "$src_tools_path\\neon\\neon.csproj" -c Release -o "$pwd\b
 
 $version=$(& dotnet "$pwd\bin\neon.dll" --direct version -n)
 
-# Build the images.
+# Build the image.
 
 $registry = "neoncluster/neon-cli"
 
