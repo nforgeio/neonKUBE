@@ -61,7 +61,7 @@ COMMAND SUMMARY:
     neon consul             ARGS
     neon create key
     neon create password
-    neon db                 ARGS
+    neon dashboard          DASHBOARD
     neon docker             ARGS
     neon download           SOURCE TARGET [NODE]
     neon exec               BASH-CMD
@@ -94,6 +94,7 @@ ARGUMENTS:
     CLUSTER-DEF         - Path to a cluster definition file.  This is
                           optional for some commands when logged in.
     CMD...              - Subcommand and arguments.
+    DASHBOARD           - Identifies a cluster dashboard
     LOGIN-PATH          - Path to a cluster login file including the cluster
                           definition and user credentials.
     NODE                - Identifies a cluster node by name.
@@ -202,6 +203,7 @@ tool requires admin priviledges for direct mode.
                     new CreateCommand(),
                     new CreateKeyCommand(),
                     new CreatePasswordCommand(),
+                    new DashboardCommand(),
                     new DockerCommand(),
                     new DownloadCommand(),
                     new ExecCommand(),
