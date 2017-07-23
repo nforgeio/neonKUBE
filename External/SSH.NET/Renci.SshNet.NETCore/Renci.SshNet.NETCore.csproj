@@ -8,10 +8,13 @@
     <AssemblyOriginatorKeyFile>../Renci.SshNet.snk</AssemblyOriginatorKeyFile>
     <SignAssembly>true</SignAssembly>
     <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
-    <PackageReleaseNotes>This is still very much a work in progress and is not suitable for general usage.</PackageReleaseNotes>
     <PackageId>Neon.SshNet</PackageId>
-    <Version>1.0.1.0-preview</Version>
-    <Description>Temporarily works around a hang in the recent Renci.SshNet package.</Description>
+    <Version>1.0.1.0</Version>
+    <Description>
+      Temporarily works around a hang in a recent Renci.SshNet package.  This is referenced
+      by other NeonForge packages but should probably not be used directly for other projects.
+    </Description>
+    <PackageReleaseNotes>First stable release.</PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="..\Renci.SshNet\**\*.cs" Exclude="..\Renci.SshNet\Properties\AssemblyInfo.cs">
