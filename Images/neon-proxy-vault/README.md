@@ -1,6 +1,4 @@
-**Do not use: Work in progress**
-
-Proxies internal HTTP API requests to the Vault servers running on the cluster manager nodes.
+**DO NOT USE: Work in progress**
 
 # Supported Tags
 

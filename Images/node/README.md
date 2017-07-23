@@ -1,4 +1,4 @@
-**Do not use: Work in progress**
+**DO NOT USE: Work in progress**
 
 Base neonCLUSTER **node.js** image.
 

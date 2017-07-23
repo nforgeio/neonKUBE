@@ -1,12 +1,12 @@
-**Do not use: Work in progress**
-
-Dynamically generates HAProxy configurations from routes and certificates persisted to Consul and Vault for neonCLUSTER proxies based on the [neon-proxy](https://hub.docker.com/r/neoncluster/neon-proxy/) image.
+**DO NOT USE: Work in progress**
 
 # Supported Tags
 
 * `1.0.0, latest`
 
 # Description
+
+This service dynamically generates HAProxy configurations from routes and certificates persisted to Consul and Vault for neonCLUSTER proxies based on the [neon-proxy](https://hub.docker.com/r/neoncluster/neon-proxy/) image.
 
 neonCLUSTERs deploy two general purpose reverse HTTP/TCP proxy services:
 

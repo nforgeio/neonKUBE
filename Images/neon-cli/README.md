@@ -1,6 +1,4 @@
-**Do not use: Work in progress**
-
-Tool for deploying and managing a neonCLUSTER to dedicated servers, Azure, AWS or Google Cloud.
+**DO NOT USE: Work in progress**
 
 # Supported Tags
 

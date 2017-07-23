@@ -1,6 +1,4 @@
-**Do not use: Work in progress**
-
-neonCLUSTER service that normalizes and aggregates cluster log events.
+**DO NOT USE: Work in progress**
 
 # Supported Tags
 

@@ -1,4 +1,4 @@
-**Do not use: Work in progress**
+**DO NOT USE: Work in progress**
 
 HAProxy (Alpine) image that initializes itself with a mounted configuration file.
 
@@ -10,6 +10,10 @@ HAProxy (Alpine) image that initializes itself with a mounted configuration file
 * `1.7.1`
 * `1.7.2`
 * `1.7.8, latest`
+
+# Description
+
+HAProxy (Alpine) image that initializes itself with a mounted configuration file.
 
 # Configuration
 

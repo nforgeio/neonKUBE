@@ -1,6 +1,4 @@
-**Do not use: Work in progress**
-
-Enhances the offical [Alpine](https://hub.docker.com/_/alpine/) image to include some additional packages.
+**DO NOT USE: Work in progress**
 
 # Supported Tags
 
@@ -9,6 +7,10 @@ Enhances the offical [Alpine](https://hub.docker.com/_/alpine/) image to include
 * `3.3`
 * `3.4`
 * `3.5, latest`
+
+# Description
+
+Enhances the offical [Alpine](https://hub.docker.com/_/alpine/) image to include some additional packages.
 
 # Additional Packages
 

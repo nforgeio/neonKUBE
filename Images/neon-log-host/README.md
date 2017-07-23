@@ -1,6 +1,4 @@
-**Do not use: Work in progress**
-
-Deployed as the **neon-log-host** service to all neonCLUSTER nodes to capture host logs.
+**DO NOT USE: Work in progress**
 
 # Supported Tags
 

@@ -1,10 +1,14 @@
-**Do not use: Work in progress**
+**DO NOT USE: Work in progress**
 
 This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a pull-thru registry cache.
 
 # Supported Tags
 
 * `2.6.0, 2.0, 2, latest`
+
+# Description
+
+This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a pull-thru registry cache for a neonCLUSTER that can reduce the network traffic to upstream image registries.
 
 # Environment Variables
 
