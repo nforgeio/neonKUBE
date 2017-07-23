@@ -1,0 +1,4 @@
+build.ps1
+publish.ps1
+Dockerfile.template
+README.md

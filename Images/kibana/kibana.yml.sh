@@ -5,7 +5,9 @@
 #
 # Generates Kibana configuration settings by replacing environment variables.
 
-cat <<EOF > /etc/kibana/kibana.yml
+KIBANA_CONFIG_PATH=/usr/share/kibana/config/kibana.yml
+
+cat <<EOF > ${KIBANA_CONFIG_PATH}
 # Kibana is served by a back end server. This setting specifies the port to use.
 #server.port: 5601
 
@@ -107,4 +109,4 @@ elasticsearch.url: "${ELASTICSEARCH_URL}"
 #ops.interval: 5000
 EOF
 
-chmod 644 /etc/kibana/kibana.yml
+chmod 644 ${KIBANA_CONFIG_PATH}

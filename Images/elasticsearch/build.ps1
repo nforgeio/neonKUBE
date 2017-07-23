@@ -42,7 +42,7 @@ Exec { copy ..\_common\*.* .\_common }
 
 $registry = "neoncluster/elasticsearch"
 
-Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" --build-arg "TINI_VERSION=$tini_version" . }
+Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" . }
 
 if ($subversion -ne "-")
 {

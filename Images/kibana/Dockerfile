@@ -9,33 +9,21 @@
 # ARGUMENTS:
 #
 #   VERSION         - The Kibana version (e.g. "5.0.0")
-#   TINI_VERSION    - The version of the Tini INIT manager to install
 #
 # REMARKS:
 #
 # Kibana listens internally on the default port 5601.
 
-ARG         VERSION
-FROM        kibana:${VERSION}
+FROM        neoncluster/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 ARG         VERSION
-ARG         TINI_VERSION
 
-# Environment
+# Install Kibana
 
-ENV DEBIAN_FRONTEND noninteractive
-
-# Install the [tini] INIT manager.
-
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod 700 /tini
-
-# NOTE: The first command modifies DNS to query for IPv4 before IPv6.
-
-RUN sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf \
-    && apt-get update \
-    && apt-get install -yq wget \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+RUN wget -nv https://artifacts.elastic.co/downloads/kibana/kibana-${VERSION}-linux-x86_64.tar.gz -O /tmp/kibana.tar.gz \
+    && tar -xvzf /tmp/kibana.tar.gz --directory /usr/share/ \
+    && rm /tmp/kibana.tar.gz \
+    && mv /usr/share/kibana-${VERSION}-linux-x86_64 /usr/share/kibana
 
 # Install X-PACK.
 
@@ -48,13 +36,9 @@ RUN wget -nv https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-${VERSIO
 
 COPY docker-entrypoint.sh   /
 COPY _common/*.sh           /
-COPY kibana.yml.sh          /etc/kibana
+COPY kibana.yml.sh          /usr/share/kibana/config
 
 # NOTE: The first command modifies DNS to query for IPv4 before IPv6.
 
-RUN sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf \
-    && chmod 700 /docker-entrypoint.sh \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
-
-ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh", "kibana"]
-
+#ENTRYPOINT ["sleep", "100000"]
+ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]

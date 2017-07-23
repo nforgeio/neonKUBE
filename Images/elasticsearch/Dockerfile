@@ -16,7 +16,6 @@
 # ARGUMENTS:
 #
 #   VERSION         - The Elasticsearch version (e.g. "5.0.1")
-#   TINI_VERSION    - The version of the Tini INIT manager to install
 #
 # REMARKS:
 #
@@ -42,33 +41,30 @@
 #
 #       /mnt/esdata
 
-ARG         VERSION
-FROM        elasticsearch:${VERSION}
+FROM        neoncluster/openjdk:8
 MAINTAINER  jeff@lilltek.com
 ARG         VERSION
-ARG         TINI_VERSION
-
-# Install the [tini] INIT manager.
-
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
-RUN chmod 700 /tini
-
-# NOTE: The first command modifies DNS to query for IPv4 before IPv6.
-
-RUN sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf \
-    && apt-get update \
-    && apt-get install -yq wget \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Overwrite the default Elasticsearch entrypoint to load the Docker host environment 
 # variables from [/etc/neoncluster/node-env] so they can be referenced by the Elasticsearch
 # configuration file.
 
+# Install Elasticsearch to: /usr/share/elasticsearch
+#
+# Note that Elasticsearch cannot run as [root] so we're going to also
+# create the [elasticsearch] user and group.
+
+RUN wget -nv https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-${VERSION}.tar.gz -O /tmp/elasticsearch.tar.gz \
+    && tar -xvzf /tmp/elasticsearch.tar.gz --directory /usr/share/ \
+    && rm /tmp/elasticsearch.tar.gz \
+    && mv /usr/share/elasticsearch-${VERSION} /usr/share/elasticsearch \
+    && addgroup elasticsearch \
+    && adduser --system --ingroup elasticsearch elasticsearch
+
 # Install X-PACK.
 
 RUN wget -nv https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-${VERSION}.zip -O /tmp/x-pack.zip \
-    && cd /usr/share/elasticsearch \
-    && bin/elasticsearch-plugin install --batch file:///tmp/x-pack.zip \
+    && /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch file:///tmp/x-pack.zip \
     && rm /tmp/x-pack.zip
 
 # We're going to override the default configuration files.
@@ -77,12 +73,7 @@ COPY docker-entrypoint.sh   /
 COPY _common/*.sh           /
 COPY config/*               /usr/share/elasticsearch/config/
 
-RUN chmod 700 /*.sh \
-    && chmod 700 /usr/share/elasticsearch/config \
-    && chmod 644 /usr/share/elasticsearch/config/*
+RUN chmod 700 /*.sh
 
 #ENTRYPOINT ["sleep", "100000"]
 ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]
-
-
-

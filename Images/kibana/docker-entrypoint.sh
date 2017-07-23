@@ -29,9 +29,9 @@ fi
 
 # Generate the configuration file.
 
-. /etc/kibana/kibana.yml.sh
+. /usr/share/kibana/config/kibana.yml.sh
 
 # Start Kibana
 
 . log-info.sh "Starting [Kibana]"
-kibana
+/usr/share/kibana/bin/kibana

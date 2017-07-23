@@ -1,16 +1,29 @@
-**Do not use: Work in progress**
+**DO NOT USE: Work in progress**
 
 # Supported Tags
 
-The image tagging scheme mirrors that of the offical [Elasticsearch repository](https://hub.docker.com/r/library/elasticsearch/).
+Images are tagged with the embedded Elasticsearch version.
 
-* `5.2.0, 5.0, 5, latest`
+* `5.2.0`&nbsp;&nbsp;&nbsp;&nbsp;`<-- `last image based on [elasticsearch](https://hub.docker.com/_/elasticsearch/)
+* `5.3.0`&nbsp;&nbsp;&nbsp;&nbsp;`<-- `first image based directly on [openjdk](https://hub.docker.com/_/openjdk/)
+* `5.4.0`
+* `5.5.0, latest`
+
+**IMPORTANT:**
+
+The official [elasticsearch](https://hub.docker.com/_/elasticsearch/) image is being deprecated in favor of images maintained in Elastic's corporate repository.  The original official images were based on [openjdk](https://hub.docker.com/_/openjdk/).  I'm not entirely sure what the new images are based on, but they seem locked down and my custom scripts no longer work.
+
+The `5.2.0` image here is still based on the original Elasticsearch 5.2.0 image.  Later images are based directly on [openjdk](https://hub.docker.com/_/openjdk/) with Elasticsearch downloaded and installed.  The new image layout is very similar to the original official image.
+
+**NOTE:**
+
+Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined system.  You should deploy the same version of each component to your cluster and when it's time to upgrade, always upgrade the Elasticsearch cluster first, followed by the Metricbeat and Kibana.
 
 # Description
 
-This is a template of the docker image definition file to be used to generate a modified Elasticsearch image that can customized by passing environment veriables to the container.
+This image hosts [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html) which is typically deployed to a neonCLUSTER for holding the cluster node/container logs and metrics.  This database combined with Kibana form a powerful tool for cluster operators and developers.
 
-The Elasticsearch **X-PACK plugins** are also installed but are disabled by default.  Derived images may enable these as necessary.
+The Elastic **X-PACK plugins** are also installed but are disabled by default.  Derived images may enable these as necessary.
 
 # Configuration
 

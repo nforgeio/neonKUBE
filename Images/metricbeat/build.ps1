@@ -3,17 +3,13 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 #
-# Builds a neonCLUSTER Metricbear image with the specified version, subversion
-# and majorversion.  The image built will be a slightly modified version of the 
-# Elasticsearch Metricbeat reference image.
+# Builds a neonCLUSTER Metricbear image with the specified version.
 #
 # Usage: powershell -file build.ps1 VERSION [-latest]
 
 param 
 (
 	[parameter(Mandatory=$True,Position=1)][string] $version,                # like: "5.0.0"
-	[parameter(Mandatory=$False,Position=2)][string] $subversion = "-",      # like: "5.0"
-	[parameter(Mandatory=$False,Position=3)][string] $majorversion = "-",    # like: "5"
 	[switch]$latest = $False
 )
 
@@ -43,16 +39,6 @@ Exec { copy ..\_common\*.* .\_common }
 # Build the image
 
 Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" . }
-
-if ($subversion -ne "-")
-{
-	Exec { docker tag "${registry}:$version" "${registry}:$subversion"}
-}
-
-if ($majorversion -ne "-")
-{
-	Exec { docker tag "${registry}:$version" "${registry}:$majorversion"}
-}
 
 if ($latest)
 {

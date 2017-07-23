@@ -63,6 +63,12 @@ function Build
 
 if ($all)
 {
+	# Never rebuild 5.2.0 again so it will remain based on the deprecated Elasticsearch image.
+	#
+	# Build 5.2.0
+
+	Build 5.3.0
+	Build 5.4.0
 }
 
-Build 5.2.0 5.0 5 -latest
+Build 5.5.0 -latest

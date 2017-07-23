@@ -61,6 +61,10 @@ ELASTICSEARCH_HTTP_HOST=0.0.0.0
 
 . /usr/share/elasticsearch/config/elasticsearch.yml.sh
 
+# We need to create this directory for some reason.
+
+mkdir -p /usr/share/elasticsearch/config/scripts
+
 # Ensure that the [/mnt/esdata] folder exists so the container will still
 # function if no external Docker volume was mounted.
 
@@ -80,5 +84,10 @@ mkdir -p /mnt/esdata
 . log-info.sh "ELASTICSEARCH_BOOTSTRAP_NODES: ${ELASTICSEARCH_BOOTSTRAP_NODES}"
 . log-info.sh "ES_JAVA_OPTS: ${ES_JAVA_OPTS}"
    
-chown -R elasticsearch:elasticsearch /mnt/esdata
-gosu elasticsearch elasticsearch
+chown --recursive :elasticsearch /mnt/esdata/
+chmod --recursive 770 /mnt/esdata/
+
+chown --recursive :elasticsearch /usr/share/elasticsearch/
+chmod --recursive 770 /usr/share/elasticsearch/
+
+gosu elasticsearch /usr/share/elasticsearch/bin/elasticsearch

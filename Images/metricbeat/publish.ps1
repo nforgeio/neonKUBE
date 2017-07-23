@@ -27,8 +27,6 @@ function Build
 	param
 	(
 		[parameter(Mandatory=$True, Position=1)][string] $version,	              # like: "5.0.0"
-		[parameter(Mandatory=$False, Position=2)][string] $subversion = "-",      # like: "5.0"
-		[parameter(Mandatory=$False, Position=3)][string] $majorversion = "-",    # like: "5"
 		[switch]$latest = $False
 	)
 
@@ -36,24 +34,14 @@ function Build
 
 	if ($latest)
 	{
-		./build.ps1 -version $version -subversion $subversion -majorversion $majorversion -latest
+		./build.ps1 -version $version -latest
 	}
 	else
 	{
-		./build.ps1 -version $version -subversion $subversion -majorversion $majorversion
+		./build.ps1 -version $version
 	}
 
 	PushImage "${registry}:$version"
-
-	if ($subversion -ne "-") 
-	{
-		PushImage "${registry}:$subversion"
-	}
-
-	if ($majorversion -ne "-")
-	{
-		PushImage "${registry}:$majorversion"
-	}
 
 	if ($latest)
 	{
@@ -63,6 +51,12 @@ function Build
 
 if ($all)
 {
+	# Never rebuild 5.2.0 again so it will remain based on the deprecated Kibana image.
+	#
+	# Build 5.2.0
+
+	Build 5.3.0
+	Build 5.4.0
 }
 
-Build 5.2.0 5.0 5 -latest
+Build 5.5.0 -latest

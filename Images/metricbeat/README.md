@@ -1,14 +1,21 @@
-**Do not use: Work in progress**
+**DO NOT USE: Work in progress**
 
 # Supported Tags
 
-The image tagging scheme mirrors the Elastic Metricbeat [releases](https://www.elastic.co/downloads/past-releases).
+Images are tagged with the embedded Elastic Metricbeat version.
 
-* `5.2.0, 5.0, 5, latest`
+* `5.2.0`
+* `5.3.0`
+* `5.4.0`
+* `5.5.0, latest`
+
+**NOTE:**
+
+Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined system.  You should deploy the same version of each component to your cluster and when it's time to upgrade, always upgrade the Elasticsearch cluster first, followed by the Metricbeat and Kibana.
 
 # Description
 
-This image is used to deploy containers named **neon-log-metricbeat** to each node in a neonCLUSTER.  This deploys an [Elastic Metricbeat](https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-overview.html) that captures and ships Docker node metrics to the cluster's Elasticsearch logs for analysis and viewing via Kibana.
+[Metricbeat](https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-overview.html) is an agent that runs on each cluster node that captures and ships node and container metrics to the cluster Elasticsearch logs for analysis and viewing via Kibana.
 
 By default, this container launches Metricbeat configured to capture the following node metrics:
 

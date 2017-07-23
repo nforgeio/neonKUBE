@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 #
-# Builds all of the supported Kibana images and pushes them to Docker Hub.
+# Builds the base Java OpenJDK-8 image and pushed it to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -20,13 +20,13 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-$registry = "neoncluster/kibana"
+$registry = "neoncluster/openjdk"
 
 function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,	              # like: "5.0.0"
+		[parameter(Mandatory=$True, Position=1)][string] $version,	# like: "8"
 		[switch]$latest = $False
 	)
 
@@ -38,7 +38,7 @@ function Build
 	}
 	else
 	{
-		./build.ps1 -version $version 
+		./build.ps1 -version $version
 	}
 
 	PushImage "${registry}:$version"
@@ -51,12 +51,6 @@ function Build
 
 if ($all)
 {
-	# Never rebuild 5.2.0 again so it will remain based on the deprecated Kibana image.
-	#
-	# Build 5.2.0
-
-	Build 5.3.0
-	Build 5.4.0
 }
 
-Build 5.5.0 -latest
+Build 8 -latest

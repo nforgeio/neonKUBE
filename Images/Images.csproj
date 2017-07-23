@@ -112,6 +112,17 @@
     </None>
     <None Include="neon-cli\publish.ps1" />
     <None Include="neon-cli\README.md" />
+    <Content Include="openjdk\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="openjdk\build.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="openjdk\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="openjdk\publish.ps1" />
+    <None Include="openjdk\README.md" />
     <None Include="tdagent\Dockerfile" />
     <None Include="_common\log-debug.sh" />
     <None Include="_common\log-fatal.sh" />

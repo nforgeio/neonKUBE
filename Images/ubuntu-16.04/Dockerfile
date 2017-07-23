@@ -29,7 +29,7 @@ RUN chmod 700 /tini
 RUN sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /etc/gai.conf \
     && apt-get update \
     && apt-get -yq dist-upgrade \
-    && apt-get install -yq wget unzip jq \
+    && apt-get install -yq wget unzip jq gosu \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 CMD /bin/bash
