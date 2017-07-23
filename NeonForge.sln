@@ -46,9 +46,6 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Couchbase.SyncGateway", "Lib\Neon.Couchbase.SyncGateway\Neon.Couchbase.SyncGateway.csproj", "{7017AF13-9C49-4C31-8304-9354D86E2886}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Tools", "Tools", "{FE7764F7-F5B5-4A92-9BE2-F51690EDF870}"
-	ProjectSection(SolutionItems) = preProject
-		Tools\pub-local.cmd = Tools\pub-local.cmd
-	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "text", "Tools\text\text.csproj", "{C33788B7-D2D0-42F9-A786-6E0419A97731}"
 	ProjectSection(ProjectDependencies) = postProject
