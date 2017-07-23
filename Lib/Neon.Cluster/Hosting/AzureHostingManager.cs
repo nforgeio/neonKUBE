@@ -15,11 +15,11 @@ using Microsoft.Azure.Management.Fluent;
 using Microsoft.Azure.Management.Network.Fluent;
 using Microsoft.Azure.Management.Network.Fluent.LoadBalancer.Definition;
 using Microsoft.Azure.Management.Network.Fluent.Models;
-using Microsoft.Azure.Management.Resource.Fluent.Authentication;
+using Microsoft.Azure.Management.ResourceManager.Fluent.Authentication;
 
 using Neon.Net;
 
-using AzureEnvironment = Microsoft.Azure.Management.Resource.Fluent.AzureEnvironment;
+using AzureEnvironment = Microsoft.Azure.Management.ResourceManager.Fluent.AzureEnvironment;
 
 namespace Neon.Cluster
 {
@@ -168,7 +168,7 @@ namespace Neon.Cluster
             /// <summary>
             /// The node's Azure public IP address or FQDN (or <c>null</c>).
             /// </summary>
-            public IPublicIpAddress PublicAddress { get; set; }
+            public IPublicIPAddress PublicAddress { get; set; }
 
             /// <summary>
             /// The public FQDN or IP address (as a string) to be used to connect to the
@@ -237,8 +237,8 @@ namespace Neon.Cluster
         private IAzure                          azure;
         private string                          pipLbManagerName;
         private string                          pipLbWorkerName;
-        private IPublicIpAddress                pipLbManager;
-        private IPublicIpAddress                pipLbWorker;
+        private IPublicIPAddress                pipLbManager;
+        private IPublicIPAddress                pipLbWorker;
         private string                          subnetNodesName;
         private string                          subnetVpnName;
         private string                          vpnRouteName;
@@ -644,37 +644,37 @@ namespace Neon.Cluster
 
             if (azureOptions.StaticClusterAddress)
             {
-                pipLbManager = azure.PublicIpAddresses
+                pipLbManager = azure.PublicIPAddresses
                     .Define(pipLbManagerName)
                     .WithRegion(azureOptions.Region)
                     .WithExistingResourceGroup(resourceGroup)
-                    .WithStaticIp()
+                    .WithStaticIP()
                     .WithLeafDomainLabel(managerLeafDomainPrefix + azureOptions.DomainLabel)
                     .Create();
 
-                pipLbWorker = azure.PublicIpAddresses
+                pipLbWorker = azure.PublicIPAddresses
                     .Define(pipLbWorkerName)
                     .WithRegion(azureOptions.Region)
                     .WithExistingResourceGroup(resourceGroup)
-                    .WithStaticIp()
+                    .WithStaticIP()
                     .WithLeafDomainLabel(azureOptions.DomainLabel)
                     .Create();
             }
             else
             {
-                pipLbManager = azure.PublicIpAddresses
+                pipLbManager = azure.PublicIPAddresses
                     .Define(pipLbManagerName)
                     .WithRegion(azureOptions.Region)
                     .WithExistingResourceGroup(resourceGroup)
-                    .WithDynamicIp()
+                    .WithDynamicIP()
                     .WithLeafDomainLabel(managerLeafDomainPrefix + azureOptions.DomainLabel)
                     .Create();
 
-                pipLbWorker = azure.PublicIpAddresses
+                pipLbWorker = azure.PublicIPAddresses
                     .Define(pipLbWorkerName)
                     .WithRegion(azureOptions.Region)
                     .WithExistingResourceGroup(resourceGroup)
-                    .WithDynamicIp()
+                    .WithDynamicIP()
                     .WithLeafDomainLabel(azureOptions.DomainLabel)
                     .Create();
             }
@@ -693,21 +693,21 @@ namespace Neon.Cluster
 
             if (azureOptions.PublicNodeAddresses)
             {
-                var nodePipCreators = new List<Microsoft.Azure.Management.Network.Fluent.PublicIpAddress.Definition.IWithCreate>();
+                var nodePipCreators = new List<Microsoft.Azure.Management.Network.Fluent.PublicIPAddress.Definition.IWithCreate>();
 
                 foreach (var azureNode in nodeDictionary.Values)
                 {
-                    var pipCreator = azure.PublicIpAddresses
+                    var pipCreator = azure.PublicIPAddresses
                         .Define($"{publicNamePrefix}{azureNode.Name}")
                         .WithRegion(azureOptions.Region)
                         .WithExistingResourceGroup(resourceGroup)
-                        .WithDynamicIp()
+                        .WithDynamicIP()
                         .WithLeafDomainLabel($"{azureNode.Name}-{azureOptions.DomainLabel}");
 
                     nodePipCreators.Add(pipCreator);
                 }
 
-                var nodePips = azure.PublicIpAddresses.Create(nodePipCreators.ToArray());
+                var nodePips = azure.PublicIPAddresses.Create(nodePipCreators.ToArray());
 
                 foreach (var pip in nodePips)
                 {
@@ -1046,7 +1046,7 @@ namespace Neon.Cluster
                     .WithRegion(azureOptions.Region)
                     .WithExistingResourceGroup(resourceGroup)
                     .DefinePublicFrontend(feConfigName)
-                        .WithExistingPublicIpAddress(pipLbManager)
+                        .WithExistingPublicIPAddress(pipLbManager)
                         .Attach()
                     .DefineBackend(bePoolName)
                         .Attach()
@@ -1158,7 +1158,7 @@ namespace Neon.Cluster
                     // if we don't already have it (e.g. when we're not in the process
                     // of configuring the cluster).
 
-                    pipLbWorker = azure.PublicIpAddresses.GetByGroup(resourceGroup, pipLbWorkerName);
+                    pipLbWorker = azure.PublicIPAddresses.GetByResourceGroup(resourceGroup, pipLbWorkerName);
                 }
 
                 var lbDefWorker = azure.LoadBalancers
@@ -1166,7 +1166,7 @@ namespace Neon.Cluster
                     .WithRegion(azureOptions.Region)
                     .WithExistingResourceGroup(resourceGroup)
                     .DefinePublicFrontend(feConfigName)
-                        .WithExistingPublicIpAddress(pipLbWorker)
+                        .WithExistingPublicIPAddress(pipLbWorker)
                         .Attach()
                     .DefineBackend(bePoolName)
                         .Attach()
@@ -1264,18 +1264,18 @@ namespace Neon.Cluster
                     .WithExistingResourceGroup(resourceGroup)
                     .WithExistingPrimaryNetwork(vnet)
                     .WithSubnet(subnetNodesName)
-                    .WithPrimaryPrivateIpAddressStatic(azureNode.Node.Metadata.PrivateAddress);
+                    .WithPrimaryPrivateIPAddressStatic(azureNode.Node.Metadata.PrivateAddress);
 
                 if (azureOptions.PublicNodeAddresses)
                 {
-                    nodeNicCreator.WithExistingPrimaryPublicIpAddress(azureNode.PublicAddress);
+                    nodeNicCreator.WithExistingPrimaryPublicIPAddress(azureNode.PublicAddress);
                 }
 
                 // NICs in [nodes] subnet need to enable IP forwarding so they'll be
                 // able to route VPN client return packets to the OpenVPN servers 
                 // running as Virtual Appliances on the manager nodes.
 
-                nodeNicCreator.WithIpForwarding();
+                nodeNicCreator.WithIPForwarding();
 
                 // Assign the security groups and load balancing parameters.
 
@@ -1308,7 +1308,7 @@ namespace Neon.Cluster
                             .WithExistingResourceGroup(resourceGroup)
                             .WithExistingPrimaryNetwork(vnet)
                             .WithSubnet(subnetVpnName)
-                            .WithPrimaryPrivateIpAddressStatic(azureNode.Node.Metadata.VpnReturnAddress);
+                            .WithPrimaryPrivateIPAddressStatic(azureNode.Node.Metadata.VpnReturnAddress);
 
                     vpnServerNicCreator
                         .WithExistingNetworkSecurityGroup(nsgVpn);
@@ -1504,7 +1504,7 @@ iface eth1 inet dhcp
 
             AzureConnect();
 
-            lbWorker = azure.LoadBalancers.GetByGroup(resourceGroup, lbWorkerName);
+            lbWorker = azure.LoadBalancers.GetByResourceGroup(resourceGroup, lbWorkerName);
 
             foreach (var item in lbWorker.LoadBalancingRules.Where(r => r.Key.StartsWith("neon-endpoint-")))
             {
