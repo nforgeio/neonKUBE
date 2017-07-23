@@ -33,7 +33,7 @@ USAGE:
 
     neon cluster add        LOGIN-PATH
     neon cluster example
-    neon cluster get        USER@CLUSTER PATH
+    neon cluster get        USER@CLUSTER
     neon cluster health
     neon cluster list
     neon cluster ls
