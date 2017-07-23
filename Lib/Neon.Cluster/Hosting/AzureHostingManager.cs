@@ -823,24 +823,6 @@ namespace Neon.Cluster
                     .WithPriority(3000)
                     .Attach();
 
-                // $todo(jeff.lill)
-                //
-                // Block traffic to the reserved unused port assigned to the dummy
-                // load balancing rule required to workaround:
-                //
-                //      https://github.com/Azure/azure-sdk-for-net/issues/3173
-
-                nsgVpnCreator
-                    .DefineRule("neon-DenyLoadBalancer")
-                    .DenyInbound()
-                    .FromAnyAddress()
-                    .FromAnyPort()
-                    .ToAnyAddress()
-                    .ToPort(NeonHostPorts.ReservedUnused)
-                    .WithAnyProtocol()
-                    .WithPriority(2000)
-                    .Attach();
-
                 nsgVpn = nsgVpnCreator.Create();
             }
 
@@ -914,27 +896,6 @@ namespace Neon.Cluster
                     .WithPriority(3000)
                     .Attach();
 
-                if (endpoints.Count == 0)
-                {
-                    // $todo(jeff.lill)
-                    //
-                    // Block traffic to the reserved unused port assigned to the dummy
-                    // load balancing rule required to workaround:
-                    //
-                    //      https://github.com/Azure/azure-sdk-for-net/issues/3173
-
-                    nsgNodeCreator
-                        .DefineRule("neon-DenyLoadBalancer")
-                        .DenyInbound()
-                        .FromAnyAddress()
-                        .FromAnyPort()
-                        .ToAnyAddress()
-                        .ToPort(NeonHostPorts.ReservedUnused)
-                        .WithAnyProtocol()
-                        .WithPriority(2000)
-                        .Attach();
-                }
-
                 nsgNode = nsgNodeCreator.Create();
             }
         }
@@ -962,41 +923,7 @@ namespace Neon.Cluster
                     .Attach();
             }
 
-            // $todo(jeff.lill):
-            //
-            // The Azure Fluent API that creates the route table appears to have a bug
-            // where it throws an ArgumentException when creating a table with more than
-            // one entry.  We're going to work around this by catching the exception and
-            // using the old autorest API to retrieve the new route and it's ID so we
-            // can add the route to the network created below.  I've reported this here:
-            //
-            //      https://github.com/Azure/azure-sdk-for-net/issues/3171
-
-            string vpnRoutesId;
-
-            try
-            {
-                var vpnRoutes = vpnRoutesDef.Create();
-
-                vpnRoutesId = vpnRoutes.Id;
-            }
-            catch (AggregateException e)
-            {
-                var inner = e.InnerException as AggregateException;
-
-                if (inner != null && inner.InnerException is ArgumentException)
-                {
-                    using (var networkClient = new Microsoft.Azure.Management.Network.NetworkManagementClient(azureCredentials))
-                    {
-                        networkClient.SubscriptionId = azureOptions.SubscriptionId;
-                        vpnRoutesId                  = networkClient.RouteTables.GetWithHttpMessagesAsync(resourceGroup, vpnRouteName).Result.Body.Id;
-                    }
-                }
-                else
-                {
-                    throw;
-                }
-            }
+            var vpnRoutes = vpnRoutesDef.Create();
 
             // Create the virtual network with two subnets:
             //
@@ -1010,7 +937,7 @@ namespace Neon.Cluster
                 .WithAddressSpace(NetworkCidr.Normalize(hostOptions.CloudVNetSubnet))
                 .DefineSubnet(subnetNodesName)
                     .WithAddressPrefix(NetworkCidr.Normalize(hostOptions.NodesSubnet))
-                    .WithExistingRouteTable(vpnRoutesId)
+                    .WithExistingRouteTable(vpnRoutes.Id)
                     .Attach()
                 .DefineSubnet(subnetVpnName)
                     .WithAddressPrefix(NetworkCidr.Normalize(hostOptions.CloudVpnSubnet))
