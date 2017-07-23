@@ -378,5 +378,35 @@ namespace Neon.Common
             return Process.Start(NeonHelper.StripFileScheme(path), args != null ? args : string.Empty);
         }
 #endif
+
+        /// <summary>
+        /// Launches the default browser to display the specified URI.
+        /// </summary>
+        /// <param name="uri">The target URI.</param>
+        public static void OpenBrowser(string uri)
+        {
+            Covenant.Requires<ArgumentNullException>(uri != null);
+
+            if (IsWindows)
+            {
+                Process.Start("cmd", $"/C start {uri}");
+            }
+            else if (IsOSX)
+            {
+                // $todo(jeff.lill): Test this.
+
+                Process.Start("open", uri);
+            }
+            else if (IsLinux)
+            {
+                // $todo(jeff.lill): test this.
+
+                Process.Start("xdg-open", uri);
+            }
+            else
+            {
+                throw new NotImplementedException("Browser launch support is not implemented on the current platform.");
+            }
+        }
     }
 }
