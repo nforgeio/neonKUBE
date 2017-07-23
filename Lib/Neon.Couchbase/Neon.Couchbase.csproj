@@ -4,12 +4,12 @@
     <TargetFramework>netstandard1.5</TargetFramework>
     <RootNamespace>Neon.Couchbase</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>0.0.4.40-preview</Version>
+    <Version>5.0.0</Version>
     <Company>NeonForge, LLC</Company>
     <Product>Neon.Cluster Library</Product>
     <Description>[Work in progress]: Couchbase client extensions.</Description>
-    <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>This is still very much a work in progress and is not suitable for general usage.</PackageReleaseNotes>
+    <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
   </PropertyGroup>

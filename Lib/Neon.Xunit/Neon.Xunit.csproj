@@ -3,12 +3,12 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.4</TargetFramework>
     <RootNamespace>Neon.Stack.Xunit</RootNamespace>
-    <Version>0.0.4.40-preview</Version>
+    <Version>5.0.0</Version>
     <Authors>Jeff Lill</Authors>
     <Company>NeonForge, LLC</Company>
     <Description>[Work in progress]: Xunit related extensions.</Description>
+    <PackageReleaseNotes>First public stable release.</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
-    <PackageReleaseNotes>This is still very much a work in progress and is not suitable for general usage.</PackageReleaseNotes>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
   </PropertyGroup>
