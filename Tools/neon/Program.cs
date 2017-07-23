@@ -75,7 +75,7 @@ COMMAND SUMMARY:
     neon login remove       USER@CLUSTER
     neon login rm           USER@CLUSTER
     neon login status
-    neon node prepare       SERVER1 [SERVER2...]
+    neon node               ARGS
     neon proxy              CMD...
     neon reboot             NODE...
     neon scp                [NODE]
