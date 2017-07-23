@@ -39,10 +39,11 @@ USAGE:
 ARGUMENTS:
 
     VALUE       - identifies the desired value
-    NODE        - optionally identifies a specific node.
+    NODE        - optionally names a specific node.
 
 CLUSTER VALUE IDENTIFIERS:
 
+    nodes                   - lists the cluster nodes (one per line)
     username                - root account username
     password                - root account password
     sshkey-client-pem       - client SSH private key (PEM format)
@@ -51,7 +52,8 @@ CLUSTER VALUE IDENTIFIERS:
 
 NODE VALUE IDENTIFIERS:
 
-    <none defined at this time>
+    ip                      - internal cluster IP address
+    role                    - role: manager or worker
 ";
         /// <inheritdoc/>
         public override string[] Words
@@ -75,6 +77,7 @@ NODE VALUE IDENTIFIERS:
             }
 
             var clusterLogin = Program.ConnectCluster();
+            var cluster      = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>);
 
             if (commandLine.Arguments.Length != 1)
             {
@@ -89,7 +92,7 @@ NODE VALUE IDENTIFIERS:
                 // Node expression.
 
                 var fields   = valueExpr.Split(new char[] { '.' }, 2);
-                var nodeName = fields[0];
+                var nodeName = fields[0].ToLowerInvariant();
                 var value    = fields[1];
 
                 if (string.IsNullOrEmpty(nodeName) || string.IsNullOrEmpty(value))
@@ -98,7 +101,7 @@ NODE VALUE IDENTIFIERS:
                     Program.Exit(1);
                 }
 
-                var node = clusterLogin.Definition.Nodes.SingleOrDefault(n => n.Name == nodeName);
+                var node = cluster.Definition.Nodes.SingleOrDefault(n => n.Name == nodeName);
 
                 if (node == null)
                 {
@@ -108,6 +111,16 @@ NODE VALUE IDENTIFIERS:
 
                 switch (value.ToLowerInvariant())
                 {
+                    case "ip":
+
+                        Console.Write(node.PrivateAddress);
+                        break;
+
+                    case "role":
+
+                        Console.Write(node.Role);
+                        break;
+
                     default:
 
                         Console.Error.WriteLine($"*** ERROR: Unknown value [{value}].");
@@ -123,27 +136,27 @@ NODE VALUE IDENTIFIERS:
                 {
                     case "username":
 
-                        Console.WriteLine(clusterLogin.SshUsername);
+                        Console.Write(clusterLogin.SshUsername);
                         break;
 
                     case "password":
 
-                        Console.WriteLine(clusterLogin.SshPassword);
+                        Console.Write(clusterLogin.SshPassword);
                         break;
 
                     case "sshkey-fingerprint":
 
-                        Console.WriteLine(clusterLogin.SshServerKeyFingerprint);
+                        Console.Write(clusterLogin.SshServerKeyFingerprint);
                         break;
 
                     case "sshkey-client-pem":
 
-                        Console.WriteLine(clusterLogin.SshClientKey.PrivatePEM);
+                        Console.Write(clusterLogin.SshClientKey.PrivatePEM);
                         break;
 
                     case "sshkey-client-ppk":
 
-                        Console.WriteLine(clusterLogin.SshClientKey.PrivatePPK);
+                        Console.Write(clusterLogin.SshClientKey.PrivatePPK);
                         break;
 
                     default:
