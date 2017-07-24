@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterPropertyCommand.cs
+// FILE:	    ClusterGetCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
@@ -24,17 +24,17 @@ namespace NeonTool
     /// <summary>
     /// Implements the <b>cluster property</b> command.
     /// </summary>
-    public class ClusterPropertyCommand : CommandBase
+    public class ClusterGetCommand : CommandBase
     {
         private const string usage = @"
-Reads a specified value from the currently logged in cluster to the
+Writes a specified value from the currently logged in cluster to the
 standard output.  Global cluster values as well as node specific ones
 can be obtained.
 
 USAGE:
 
-    neon cluster property VALUE
-    neon cluster property NODE.VALUE
+    neon cluster get VALUE
+    neon cluster get NODE.VALUE
 
 ARGUMENTS:
 
@@ -43,7 +43,6 @@ ARGUMENTS:
 
 CLUSTER VALUE IDENTIFIERS:
 
-    nodes                   - lists the cluster nodes (one per line)
     username                - root account username
     password                - root account password
     sshkey-client-pem       - client SSH private key (PEM format)
@@ -58,7 +57,7 @@ NODE VALUE IDENTIFIERS:
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "cluster", "property" }; }
+            get { return new string[] { "cluster", "get" }; }
         }
 
         /// <inheritdoc/>

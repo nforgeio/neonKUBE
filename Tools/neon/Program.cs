@@ -54,6 +54,7 @@ COMMAND SUMMARY:
 
     neon cluster add        LOGIN_PATH
     neon cluster example
+    neon cluster get        VALUE-EXPR
     neon cluster prepare    [CLUSTER-DEF]
     neon cluster setup      [CLUSTER-DEF]
     neon cluster verify     [CLUSTER-DEF]
@@ -194,8 +195,8 @@ tool requires admin priviledges for direct mode.
                 {
                     new ClusterCommand(),
                     new ClusterExampleCommand(),
+                    new ClusterGetCommand(),
                     new ClusterPrepareCommand(),
-                    new ClusterPropertyCommand(),
                     new ClusterSetupCommand(),
                     new ClusterVerifyCommand(),
                     new CertCommand(),
