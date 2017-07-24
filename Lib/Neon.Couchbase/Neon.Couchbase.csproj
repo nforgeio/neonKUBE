@@ -1,14 +1,14 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard1.5</TargetFramework>
     <RootNamespace>Neon.Couchbase</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>5.0.0.1</Version>
+    <Version>5.0.1.0</Version>
     <Company>NeonForge, LLC</Company>
     <Product>Neon.Cluster Library</Product>
     <Description>Couchbase client extensions.</Description>
-    <PackageReleaseNotes>Aligning package version: No significant changes.</PackageReleaseNotes>
+    <PackageReleaseNotes>Upgraded to: CouchbaseNetClient.2.4.7</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
@@ -25,7 +25,7 @@
   </PropertyGroup>
 
   <ItemGroup>
-    <PackageReference Include="CouchbaseNetClient" Version="2.4.5" />
+    <PackageReference Include="CouchbaseNetClient" Version="2.4.7" />
     <PackageReference Include="Linq2Couchbase" Version="1.3.2" />
   </ItemGroup>
 
