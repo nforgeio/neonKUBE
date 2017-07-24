@@ -909,6 +909,13 @@ namespace Neon.Cluster
                         // exist without the hash.  In this case, we'll just drop through
                         // and try reading the full definition below.
                     }
+                    catch (Exception e)
+                    {
+                        // This is probably an [HttpRequestException] indicating that we 
+                        // could not contact the cluster Consul.
+
+                        throw new NeonClusterException("Unable to connect cluster.", e);
+                    }
                 }
 
                 var deflated = await consul.KV.GetBytes("neon/cluster/definition.deflate");
