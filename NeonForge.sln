@@ -11,6 +11,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C
 		Doc\Cluster Proxies.docx = Doc\Cluster Proxies.docx
 		Doc\Conventions.docx = Doc\Conventions.docx
 		Doc\neon-cluster-manager.docx = Doc\neon-cluster-manager.docx
+		Doc\PUBLISH.md = Doc\PUBLISH.md
 		Doc\Secrets.docx = Doc\Secrets.docx
 		Doc\Ubuntu-16.04 neonCLUSTER Deploy.docx = Doc\Ubuntu-16.04 neonCLUSTER Deploy.docx
 		Doc\Ubuntu-16.04 neonCLUSTER Template.docx = Doc\Ubuntu-16.04 neonCLUSTER Template.docx
