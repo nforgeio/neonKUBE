@@ -45,7 +45,7 @@ if ($latest)
 	Exec { docker tag "${registry}:$version" "${registry}:latest"}
 }
 
-# Cleanup
+# Clean up
 
 sleep 5 # Docker sometimes appears to hold references to the files below for a bit.
 

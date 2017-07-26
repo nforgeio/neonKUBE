@@ -246,7 +246,7 @@ namespace TestLiteIntegration
 
         public void Dispose()
         {
-            // Cleanup the local databases.
+            // Clean up the local databases.
 
             foreach (var database in localDatabases)
             {

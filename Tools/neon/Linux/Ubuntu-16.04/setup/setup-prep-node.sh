@@ -131,7 +131,7 @@ apt-get dist-upgrade -yq
 #------------------------------------------------------------------------------
 # Clean some things up.
 
-echo "** Cleanup" 1>&2
+echo "** Clean up" 1>&2
 
 # Clear any cached [apt-get] related files.
 

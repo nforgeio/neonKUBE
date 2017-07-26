@@ -18,7 +18,7 @@ namespace Neon.Time
     /// <remarks>
     /// <para>
     /// A common programming pattern is to have background threads check
-    /// periodically for something to do; like resend a message, cleanup
+    /// periodically for something to do; like resend a message, clean up
     /// idle connections, or signal a timeout.  The <see cref="PolledTimer" />
     /// class provides an easy way to encapsulate the interval and next
     /// scheduled time at which these events should happen.

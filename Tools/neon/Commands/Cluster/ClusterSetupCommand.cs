@@ -1147,9 +1147,9 @@ $@"docker login \
                         node.SudoCommand(loginCommand);
                     }
 
-                    // Cleanup any cached APT files.
+                    // Clean up any cached APT files.
 
-                    node.Status = "cleanup";
+                    node.Status = "clean up";
                     node.SudoCommand("apt-get clean -yq");
                     node.SudoCommand("rm -rf /var/lib/apt/lists");
                 });
@@ -1320,9 +1320,9 @@ $@"docker login \
                         node.SudoCommand("setup-vault-client.sh");
                     }
 
-                    // Cleanup any cached APT files.
+                    // Clean up any cached APT files.
 
-                    node.Status = "cleanup";
+                    node.Status = "clean up";
                     node.SudoCommand("apt-get clean -yq");
                     node.SudoCommand("rm -rf /var/lib/apt/lists");
                 });

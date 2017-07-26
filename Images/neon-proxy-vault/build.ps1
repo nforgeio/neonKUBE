@@ -34,6 +34,6 @@ $registry = "neoncluster/neon-proxy-vault"
 
 Exec { docker build -t "${registry}:latest" . }
 
-# Cleanup
+# Clean up
 
 Exec { Remove-Item -Recurse _common }

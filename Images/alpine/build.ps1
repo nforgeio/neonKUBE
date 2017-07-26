@@ -45,6 +45,6 @@ if ($latest)
 	Exec { docker tag "${registry}:$version" "${registry}:latest"}
 }
 
-# Cleanup
+# Clean up
 
 Exec { Remove-Item -Recurse _common }
