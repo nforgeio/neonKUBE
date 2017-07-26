@@ -5,8 +5,6 @@
 #
 # Base .NET Core image.
 #
-# This file cannot be used directly to create an image.
-#
 # ARGUMENTS:
 #
 #   VERSION         - The .NET Core image tag (e.g. "1.1.0-runtime")

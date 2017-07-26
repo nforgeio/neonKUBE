@@ -8,13 +8,11 @@
 # ARGUMENTS:
 #
 #   VERSION         - The HAProxy image tag (e.g. "1.6.9")
-#   TINI_VERSION    - The version of the Tini INIT manager to install
 
 ARG         VERSION
 FROM        alpine:${VERSION}
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
-ARG         TINI_VERSION
 
 # Install the [tini] INIT manager.
 
