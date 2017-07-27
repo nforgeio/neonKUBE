@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# FILE:         Dockerfile.template
+# FILE:         Dockerfile
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 #
@@ -7,7 +7,7 @@
 #
 # ARGUMENTS:
 #
-#       APPNAME     - Name of the application binary/script (e.g "neon")
+#       APPNAME     - Name of the application binary/script (e.g "neon-proxy-manager")
 #                     This makes it easier to clone and reuse this Dockerfile.
 
 FROM        neoncluster/dotnet:1.1.2-runtime
