@@ -34,11 +34,16 @@ if (Test-Path bin)
 Exec { mkdir bin }
 Exec { dotnet publish "$src_services_path\\neon-proxy-manager\\neon-proxy-manager.csproj" -c Release -o "$pwd\bin" }
 
+# Split the build binaries into [__app] (application) and [__dep] dependency subfolders
+# so we can tune the image layers.
+
+Exec { core-layers neon-proxy-manager "$pwd\bin" }
+
 # Build the images.
 
 $registry = "neoncluster/neon-proxy-manager"
 
-Exec { docker build -t "${registry}:$version" . }
+Exec { docker build -t "${registry}:$version"  --build-arg "APPNAME=neon-proxy-manager". }
 
 if ($latest)
 {

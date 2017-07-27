@@ -34,11 +34,16 @@ if (Test-Path bin)
 Exec { mkdir bin }
 Exec { dotnet publish "$src_services_path\\neon-cluster-manager\\neon-cluster-manager.csproj" -c Release -o "$pwd\bin" }
 
+# Split the build binaries into [__app] (application) and [__dep] dependency subfolders
+# so we can tune the image layers.
+
+Exec { core-layers neon-cluster-manager "$pwd\bin" }
+
 # Build the images.
 
 $registry = "neoncluster/neon-cluster-manager"
 
-Exec { docker build -t "${registry}:$version" . }
+Exec { docker build -t "${registry}:$version"  --build-arg "APPNAME=neon-cluster-manager". }
 
 if ($latest)
 {

@@ -121,6 +121,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ToolBin", "ToolBin", "{E9E3
 		ToolBin\nuget-neonforge-public.ps1 = ToolBin\nuget-neonforge-public.ps1
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core-layers", "Tools\core-layers\core-layers.csproj", "{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Test\Test.Neon.Common.shared\Test.Neon.Common.shared.projitems*{21586925-6da1-4898-9eb1-72c27550c528}*SharedItemsImports = 13
@@ -394,6 +396,18 @@ Global
 		{8397201A-C2CC-47A1-BF6C-336B11013E16}.Release|x64.Build.0 = Release|Any CPU
 		{8397201A-C2CC-47A1-BF6C-336B11013E16}.Release|x86.ActiveCfg = Release|Any CPU
 		{8397201A-C2CC-47A1-BF6C-336B11013E16}.Release|x86.Build.0 = Release|Any CPU
+		{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}.Debug|x64.Build.0 = Debug|Any CPU
+		{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}.Debug|x86.Build.0 = Debug|Any CPU
+		{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}.Release|Any CPU.Build.0 = Release|Any CPU
+		{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}.Release|x64.ActiveCfg = Release|Any CPU
+		{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}.Release|x64.Build.0 = Release|Any CPU
+		{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}.Release|x86.ActiveCfg = Release|Any CPU
+		{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -426,5 +440,6 @@ Global
 		{44DCE546-93C5-4872-9F1F-0235E6598AC3} = {A0DF3DBA-C31E-43F9-99EB-DEECB7793539}
 		{7AB3C81C-8F25-4F42-B992-947ACDF34056} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
 		{8397201A-C2CC-47A1-BF6C-336B11013E16} = {DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}
+		{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
 	EndGlobalSection
 EndGlobal

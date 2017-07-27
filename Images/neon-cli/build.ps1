@@ -35,6 +35,11 @@ if (Test-Path bin)
 Exec { mkdir bin }
 Exec { dotnet publish "$src_tools_path\\neon\\neon.csproj" -c Release -o "$pwd\bin" }
 
+# Split the build binaries into [__app] (application) and [__dep] dependency subfolders
+# so we can tune the image layers.
+
+Exec { core-layers neon "$pwd\bin" }
+
 # Invoke the tool to retrieve its version number.  Note that we need
 # to use [--direct] because we haven't published the tool's image
 # to the registry yet.
@@ -45,7 +50,7 @@ $version=$(& dotnet "$pwd\bin\neon.dll" --direct version -n)
 
 $registry = "neoncluster/neon-cli"
 
-Exec { docker build -t "${registry}:$version" . }
+Exec { docker build -t "${registry}:$version" --build-arg "APPNAME=neon" . }
 
 if ($latest)
 {
