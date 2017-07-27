@@ -25,7 +25,10 @@ $image_root = "$env:NF_ROOT\\Images"
 "* NEON-CLI "
 "======================================="
 
-# Build and publish the [neon-cli] binaries to a local [bin] folder.
+$appname  = "neon"
+$registry = "neoncluster/neon-cli"
+
+# Build and publish the app to a local [bin] folder.
 
 if (Test-Path bin)
 {
@@ -33,24 +36,22 @@ if (Test-Path bin)
 }
 
 Exec { mkdir bin }
-Exec { dotnet publish "$src_tools_path\\neon\\neon.csproj" -c Release -o "$pwd\bin" }
+Exec { dotnet publish "$src_tools_path\\$appname\\$appname.csproj" -c Release -o "$pwd\bin" }
 
 # Split the build binaries into [__app] (application) and [__dep] dependency subfolders
 # so we can tune the image layers.
 
-Exec { core-layers neon "$pwd\bin" }
+Exec { core-layers $appname "$pwd\bin" }
 
 # Invoke the tool to retrieve its version number.  Note that we need
 # to use [--direct] because we haven't published the tool's image
 # to the registry yet.
 
-$version=$(& dotnet "$pwd\bin\neon.dll" --direct version -n)
+$version=$(& dotnet "$pwd\bin\$appname.dll" --direct version -n)
 
 # Build the image.
 
-$registry = "neoncluster/neon-cli"
-
-Exec { docker build -t "${registry}:$version" --build-arg "APPNAME=neon" . }
+Exec { docker build -t "${registry}:$version" --build-arg "APPNAME=$appname" . }
 
 if ($latest)
 {

@@ -24,7 +24,10 @@ $image_root = "$env:NF_ROOT\\Images"
 "* NEON-CLUSTER-MANAGER " + $version
 "======================================="
 
-# Build and publish the [neon-cluster-manager] to a local [bin] folder.
+$appname  = "neon-cluster-manager"
+$registry = "neoncluster/$appname"
+
+# Build and publish the app to a local [bin] folder.
 
 if (Test-Path bin)
 {
@@ -32,18 +35,16 @@ if (Test-Path bin)
 }
 
 Exec { mkdir bin }
-Exec { dotnet publish "$src_services_path\\neon-cluster-manager\\neon-cluster-manager.csproj" -c Release -o "$pwd\bin" }
+Exec { dotnet publish "$src_services_path\\$appname\\$appname.csproj" -c Release -o "$pwd\bin" }
 
 # Split the build binaries into [__app] (application) and [__dep] dependency subfolders
 # so we can tune the image layers.
 
-Exec { core-layers neon-cluster-manager "$pwd\bin" }
+Exec { core-layers $appname "$pwd\bin" }
 
 # Build the images.
 
-$registry = "neoncluster/neon-cluster-manager"
-
-Exec { docker build -t "${registry}:$version"  --build-arg "APPNAME=neon-cluster-manager". }
+Exec { docker build -t "${registry}:$version" --build-arg "APPNAME=$appname" . }
 
 if ($latest)
 {
