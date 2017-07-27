@@ -36,9 +36,9 @@ namespace CoreLayers
     /// binaries.
     /// </para>
     /// <para>
-    /// The two folders will be created under <b>PATH</b>.  All <b>*.dll</b> and <b>*.pdb</b>
-    /// files whose file name is not <b>ASSEMBLY</b> will be copied to <b>PATH/__deps</b> and
-    /// all other files will be copied to <b>PATH/__app</b>.
+    /// The two folders will be created under <b>PATH</b>.  All <b>*.dll</b>, <b>*.pdb</b>,
+    /// and <b>*.xml</b> files whose file name is not <b>ASSEMBLY</b> along with the <b>runtimes</b> 
+    /// folder will be copied to <b>PATH/__deps</b>.  All other files will be copied to <b>PATH/__app</b>.
     /// </para>
     /// </remarks>
     public static class Program
@@ -77,29 +77,46 @@ namespace CoreLayers
 
             // Copy the files.
 
+            var runtimesPath = "runtimes" + Path.DirectorySeparatorChar;
+
             foreach (var filePath in Directory.GetFiles(path, "*", SearchOption.AllDirectories))
             {
                 var fileName = Path.GetFileName(filePath);
 
+                string relativePath;
+                string copyPath;
+
                 if (Path.GetExtension(fileName).Equals(".dll", StringComparison.InvariantCultureIgnoreCase) ||
-                    Path.GetExtension(fileName).Equals(".pdb", StringComparison.InvariantCultureIgnoreCase))
+                    Path.GetExtension(fileName).Equals(".pdb", StringComparison.InvariantCultureIgnoreCase) ||
+                    Path.GetExtension(fileName).Equals(".xml", StringComparison.InvariantCultureIgnoreCase))
                 {
                     if (Path.GetDirectoryName(filePath).Equals(path) &&
                         !Path.GetFileNameWithoutExtension(fileName).Equals(assembly, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        // Looks like this is a dependency file.  Note that dependency
-                        // files are NEVER nested in folders below the binary path.
+                        // Looks like this is a simple dependency file.
 
                         File.Copy(filePath, Path.Combine(depPath, fileName));
                         continue;
                     }
                 }
 
+                relativePath = filePath.Substring(path.Length + 1);
+
+                if (relativePath.StartsWith(runtimesPath, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    // Looks like a file in the runtimes folder.
+
+                    copyPath = Path.Combine(depPath, relativePath);
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(copyPath));
+                    File.Copy(filePath, copyPath);
+                    continue;
+                }
+
                 // Look like this is an app file.  Note that app files MAY be nested
                 // in folders below the binary path.
 
-                var relativePath = filePath.Substring(path.Length + 1);
-                var copyPath     = Path.Combine(appPath, relativePath);
+                copyPath = Path.Combine(appPath, relativePath);
 
                 Directory.CreateDirectory(Path.GetDirectoryName(copyPath));
                 File.Copy(filePath, copyPath);
