@@ -1792,7 +1792,7 @@ $@"docker login \
 
                     cluster.FirstManager.DockerCommand(
                         "docker run --rm",
-                            "--name", "neon-log-metricbeat-dash-init",
+                            "--name", "neon-log-metricbeat",
                             "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
                             "neoncluster/metricbeat", "import-dashboards");
                 });

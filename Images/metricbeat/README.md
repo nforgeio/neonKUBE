@@ -61,7 +61,7 @@ docker service create \
 
 # Install the dashboards.
     
-docker run --rm --name neon-log-metricbeat-dash-init \
+docker run --rm --name neon-log-metricbeat \
     --volume=/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro \
     neoncluster/metricbeat import-dashboards
 ````
@@ -84,7 +84,7 @@ docker service update \
 &nbsp;
 and then run this command on a single node to upgrade the dashboards:
 ````
-docker run --rm --name neon-log-metricbeat-dash-init \
+docker run --rm --name neon-log-metricbeat \
     --volume=/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro \
     neoncluster/metricbeat import-dashboards
 ````
