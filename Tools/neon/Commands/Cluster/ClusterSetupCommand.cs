@@ -312,7 +312,7 @@ OPTIONS:
                     // It's a bit weird that I'm not doing these steps in [LogServices.Configure()] 
                     // along with the other cluster configuration.
 
-                    controller.AddGlobalStep("metricbeat", () => DeployMetricbeat(cluster));
+                    controller.AddStep("metricbeat", n => DeployMetricbeat(n));
                     controller.AddGlobalStep("metricbeat dashboards", () => InstallMetricbeatDashboards(cluster));
                 }
 
@@ -1749,26 +1749,25 @@ $@"docker login \
         }
 
         /// <summary>
-        /// Deploys <b>Elastic Metricbeat</b> to the cluster.
+        /// Deploys <b>Elastic Metricbeat</b> to the node.
         /// </summary>
-        /// <param name="cluster">The cluster proxy.</param>
-        private void DeployMetricbeat(ClusterProxy cluster)
+        /// <param name="node">The target cluster node.</param>
+        private void DeployMetricbeat(NodeProxy<NodeDefinition> node)
         {
-            cluster.FirstManager.InvokeIdempotentAction("setup-metricbeat",
+            node.InvokeIdempotentAction("setup-metricbeat",
                 () =>
                 {
-                    cluster.FirstManager.Status = "deploying metricbeat";
+                    node.Status = "deploying metricbeat";
 
-                    cluster.FirstManager.DockerCommand(
-                        "docker service create",
+                    node.DockerCommand(
+                        "docker run",
                             "--name", "neon-log-metricbeat",
-                            "--mode", "global",
-                            "--endpoint-mode", "vip",
-                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                            "--network", NeonClusterConst.ClusterPrivateNetwork,
-                            "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
-                            "--mount", "type=bind,source=/proc,destination=/hostfs/proc,readonly=true",
-                            "--mount", "type=bind,source=/,destination=/hostfs,readonly=true",
+                            "--detach",
+                            "--net", "host",
+                            "--restart", "always",
+                            "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
+                            "--volume", "/proc:/hostfs/proc:ro",
+                            "--volume", "/:/hostfs:ro",
                             "--log-driver", "json-file",
                             "neoncluster/metricbeat");
                 });
@@ -1792,7 +1791,7 @@ $@"docker login \
 
                     cluster.FirstManager.DockerCommand(
                         "docker run --rm",
-                            "--name", "neon-log-metricbeat",
+                            "--name", "neon-log-metricbeat-dash",
                             "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
                             "neoncluster/metricbeat", "import-dashboards");
                 });

@@ -28,6 +28,8 @@ By default, this container launches Metricbeat configured to capture the followi
 
 You may may modify these behaviors by creating a derived image, modifying the `/metricbeat.yml.sh` configuration script and then redeploying the cluster's **neon-log-metricbeat** containers as described below.
 
+NOTE: Although it would be nice to run Metricbeat as a Docker service, that doesn't work because it has to run on the host network.
+
 # Environment Variables
 
 * **ELASTICSEARCH_URL** (*optional*) is URL of the Elasticsearch cluster where the metrics are to be persisted.  The container will send these to the neonCLUSTER's Elasticsearch log storage cluster by default.
@@ -40,28 +42,29 @@ You may may modify these behaviors by creating a derived image, modifying the `/
 
 # Deployment
 
-**metricbeat** is deployed as a service to all cluster nodes.  The container expects some volumes to be mounted and must be run on the host network as explained [here](https://www.elastic.co/guide/en/beats/metricbeat/current/running-in-container.html).
+**metricbeat** is deployed as a container to all cluster nodes.  The container expects some volumes to be mounted and must be run on the host network as explained [here](https://www.elastic.co/guide/en/beats/metricbeat/current/running-in-container.html).
 
 You may also run this image with the `import-dashboards` argument.  This loads the metrics Kibana dashboards into the Elasticsearch log cluster.  
 
 **neon-cli** handles **neon-log-metricbeat** container deployment and dashboard initialization when the cluster is provisioned using the following Docker commands:
 
 ````
-# Deploy the service.
-docker service create \
+# Deploy the container.
+
+docker run \
     --name neon-log-metricbeat \
-    --mode global \
-    --endpoint-mode vip \
-    --restart-delay 10s \
-    --mount type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true \
-    --mount type=bind,source=/proc,destination=/hostfs/proc,readonly=true \
-    --mount type=bind,source=/,destination=/hostfs,readonly=true \
+    --detatch \
+    --net host \
+    --restart always \
+    --volume /etc/neoncluster/env-host:/etc/neoncluster/env-host:ro \
+    --volume /proc:/hostfs/proc:ro \
+    --volume /:/hostfs:ro \
     --log-driver json-file \
     neoncluster/metricbeat
 
 # Install the dashboards.
     
-docker run --rm --name neon-log-metricbeat \
+docker run --rm --name neon-log-metricbeat-dash \
     --volume=/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro \
     neoncluster/metricbeat import-dashboards
 ````
@@ -74,17 +77,27 @@ This image includes the following packages:
 
 # Upgrading
 
-To upgrade to the latest version of Metricbeat:
+To upgrade to the latest version of Metricbeat, run these commands on every cluster node:
 
 ````
-docker service update \
-    --image neoncluster/metricbeat \
-    neon-log-metricbeat
+docker pull neoncluster/metricbeat
+docker rm neon-log-metricbeat
+
+docker run \
+    --name neon-log-metricbeat \
+    --detatch \
+    --net host \
+    --restart always \
+    --volume /etc/neoncluster/env-host:/etc/neoncluster/env-host:ro \
+    --volume /proc:/hostfs/proc:ro \
+    --volume /:/hostfs:ro \
+    --log-driver json-file \
+    neoncluster/metricbeat
 ````
 &nbsp;
 and then run this command on a single node to upgrade the dashboards:
 ````
-docker run --rm --name neon-log-metricbeat \
+docker run --rm --name neon-log-metricbeat-dash \
     --volume=/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro \
     neoncluster/metricbeat import-dashboards
 ````
