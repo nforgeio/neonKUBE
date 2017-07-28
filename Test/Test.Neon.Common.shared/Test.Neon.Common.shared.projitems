@@ -46,6 +46,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Time\Test_GatedTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Time\Test_GoTimeSpan.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Time\Test_PolledTimer.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Time\Test_RecurringTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Time\Test_SysTime.cs" />
   </ItemGroup>
 </Project>
