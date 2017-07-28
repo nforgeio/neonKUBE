@@ -7,6 +7,15 @@
 
 module NeonCommon
 
+    # Logs DEBUG messages to [/td.log]
+    #
+    def logDebug(method, message)
+
+        open('/td.log', 'a') do |f|
+            f.puts method + ": " + message
+        end     
+    end
+
     # Attempts to normalize a log level string.  This will return
     # a standard level or "other".
     #
@@ -16,12 +25,12 @@ module NeonCommon
             return "other";
         end
 
-        level = normalizeLevelTest(level);
+        normalized = normalizeLevelTest(level);
 
-        if level.nil?
+        if normalized.nil?
             return "other";
         else
-            return level;
+            return normalized;
         end
     end
 
@@ -30,7 +39,8 @@ module NeonCommon
     #
     # NOTE: 
     #
-    # Use [normalizeLevel()] if you wish unrecognized or NIL levels as "other".
+    # Use [normalizeLevel()] if you wish unrecognized or NIL levels 
+    # to be returned as "other".
     #
     def normalizeLevelTest(level)
 
@@ -173,7 +183,7 @@ module NeonCommon
         end
 
         if json.key?("level")
-            record["level"] = normalizeLevel(level);
+            record["level"] = normalizeLevel(record["level"]);
         else
             record["level"] = "other";
         end
@@ -332,15 +342,6 @@ module NeonCommon
         end
 
         return record;
-    end
-
-    # Logs DEBUG messages to [/td.log]
-    #
-    def logDebug(method, message)
-
-        open('/td.log', 'a') do |f|
-            f.puts method + ": " + message
-        end     
     end
 
     # Unescapes a string that may include simple embedded escapes.
