@@ -14,6 +14,8 @@ require_relative 'neon-common'
 module Fluent
     class NeonProxyFilter < Filter
 
+        include NeonCommon
+
         Fluent::Plugin.register_filter('neon-proxy', self)
 
         def configure(conf)

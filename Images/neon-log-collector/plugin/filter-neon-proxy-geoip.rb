@@ -40,9 +40,13 @@
 
 require 'maxminddb'
 require 'json'
+require_relative 'neon-common'
 
 module Fluent
     class NeonProxyGeoIPFilter < Filter
+        
+        include NeonCommon
+
         Fluent::Plugin.register_filter('neon-proxy-geoip', self)
     
         def initialize
