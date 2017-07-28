@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:        Covenant.cs
 // CONTRIBUTOR:	JEFFLI
-// COPYRIGHT:   (c) 2005-2015 by Jeffrey Lill. All rights reserved.
+// COPYRIGHT:   Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
 using System;
 using System.Diagnostics;
