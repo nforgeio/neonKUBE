@@ -35,8 +35,8 @@ module Fluent
 
             # Detect Docker events.
             #
-            # Note that I'm explictly excluding takes like [systemd.**]
-            # because there doesn't seem to be a way to specific an inverse
+            # Note that I'm explictly excluding tags like [systemd.**]
+            # because there doesn't seem to be a way to specify an inverse
             # filter in a TD_AGENT config.
 
             if !record.key?("container_id") || !record.key?("container_name") || tag.start_with?("systemd")
