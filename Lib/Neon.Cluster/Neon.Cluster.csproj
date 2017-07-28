@@ -4,11 +4,11 @@
     <TargetFramework>netstandard1.5</TargetFramework>
     <RootNamespace>Neon.Cluster</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>5.0.1.0</Version>
+    <Version>5.0.2.0</Version>
     <Company>NeonForge, LLC</Company>
     <Product>Neon.Cluster Library</Product>
     <Description>Provides NeonCluster management and service capabilities.</Description>
-    <PackageReleaseNotes>Upgraded to: CouchbaseNetClient.2.4.7</PackageReleaseNotes>
+    <PackageReleaseNotes>Aligning package version: No significant changes.</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
