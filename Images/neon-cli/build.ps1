@@ -58,8 +58,6 @@ if ($latest)
 	Exec { docker tag "${registry}:$version" "${registry}:latest"}
 }
 
-Exec { rm -r bin }
-
 PushImage "${registry}:$version"
 
 if ($latest)
@@ -67,3 +65,6 @@ if ($latest)
 	PushImage "${registry}:latest"
 }
 
+# Clean up
+
+Exec { rm -r bin }
