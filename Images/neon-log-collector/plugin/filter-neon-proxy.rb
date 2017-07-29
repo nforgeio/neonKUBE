@@ -9,6 +9,7 @@
 
 require 'fluent/filter'
 require "browser"
+require 'json'
 require_relative 'neon-common'
 
 module Fluent
