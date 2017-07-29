@@ -159,10 +159,10 @@
                 "name": {
                   "type": "keyword"
                 },
-                "platform_name": {
+                "os_name": {
                   "type": "keyword"
                 },
-                "platform_version": {
+                "os_version": {
                   "type": "keyword"
                 },
                 "version": {
