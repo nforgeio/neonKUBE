@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.4</TargetFramework>
     <RootNamespace>Neon.Stack</RootNamespace>
-    <Version>5.0.2.0</Version>
+    <Version>5.0.3.0</Version>
     <Company>NeonForge, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>Useful common code used by NeonForge projects.</Description>
-    <PackageReleaseNotes>Added: Neon.Time.RecurringTimer.</PackageReleaseNotes>
+    <PackageReleaseNotes>Added: CSV classes.</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
