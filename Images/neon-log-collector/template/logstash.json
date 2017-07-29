@@ -83,9 +83,6 @@
                 "code": {
                   "type": "keyword"
                 },
-                "geoname_id": {
-                  "type": "long"
-                },
                 "name": {
                   "type": "keyword"
                 }
@@ -93,10 +90,27 @@
             },
             "country": {
               "properties": {
-                "geoname_id": {
-                  "type": "long"
+                "code": {
+                  "type": "keyword"
                 },
-                "iso_code": {
+                "name": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "county": {
+              "properties": {
+                "code": {
+                  "type": "keyword"
+                },
+                "name": {
+                  "type": "keyword"
+                }
+              }
+            },
+            "state": {
+              "properties": {
+                "code": {
                   "type": "keyword"
                 },
                 "name": {
@@ -106,9 +120,6 @@
             },
             "city": {
               "properties": {
-                "geoname_id": {
-                  "type": "long"
-                },
                 "name": {
                   "type": "keyword"
                 }

@@ -11,31 +11,32 @@
 # information will be persisted in the record's [location] field as:
 #
 # "location": {
-#     "latitude": 6.2518,
-#     "longitude": -75.5636,
+#     "latitude": 45.523,
+#     "longitude": -122.676,
 #     "metro_code": 500,
 #     "postal_code": "98072",
-#     "time_zone": "America/Bogota",
+#     "time_zone": "America/Los_Angeles",
 #
 #     "continent": {
-#       "code": "SA",
-#       "geoname_id": 6255150,
-#       "name": "South America"
+#       "code": "NA",
+#       "name": "North America"
 #     },
 #     "country": {
-#       "geoname_id": 3686110,
-#       "iso_code": "CO",
-#       "name": "Colombia"
+#       "code": "UA",
+#       "name": "United States"
 #     },
 #     "city": {
-#       "geoname_id": 3674962,
-#       "name": "Medellín"
+#       "code": "???"
+#       "name": "Seattle"
 #     },
-#     "subdivisions": [{
-#       "geoname_id": 3689815,
-#       "iso_code": "ANT",
-#       "name": "Antioquia"
-#     }]
+#     "state": {
+#       "code": "WA"
+#       "name": "Washington",
+#     },
+#     "county": {
+#       "code": "???"
+#       "name": "King",
+#     }
 # } 
 
 require 'maxminddb'
@@ -85,6 +86,16 @@ module Fluent
                 return record;
             end
 
+            if ip == "-"
+
+                # Seems like we're seeing a dash (-) instead of a client IP
+                # sometimes and this prevents Elasticsearch from parsing
+                # and persisting the event.  Set IP=0.0.0.0 in these cases
+                # so we'll still have an event we can look at.
+
+                ip = "0.0.0.0";
+            end
+
             begin
                 geoip = @database.lookup(ip);
             rescue IPAddr::InvalidAddressError => e
@@ -119,11 +130,8 @@ module Fluent
             unless geoip.continent.code.nil? then
                 continent['code'] = geoip.continent.code;
             end
-            unless geoip.continent.geoname_id.nil? then
-                continent['geoname_id'] = geoip.continent.geoname_id;
-            end
             unless geoip.continent.iso_code.nil? then
-                continent['iso_code'] = geoip.continent.iso_code;
+                continent['code'] = geoip.continent.iso_code;
             end
             continentName = geoip.continent.name(@locale)
             unless continentName.nil? then
@@ -138,11 +146,8 @@ module Fluent
             unless geoip.country.code.nil? then
                 country['code'] = geoip.country.code;
             end
-            unless geoip.country.geoname_id.nil? then
-                country['geoname_id'] = geoip.country.geoname_id;
-            end
             unless geoip.country.iso_code.nil? then
-                country['iso_code'] = geoip.country.iso_code;
+                country['code'] = geoip.country.iso_code;
             end
             countryName = geoip.country.name(@locale);
             unless countryName.nil? then
@@ -154,14 +159,8 @@ module Fluent
 
             city = {};
 
-            unless geoip.city.code.nil? then
-                city['code'] = geoip.city.code;
-            end
-            unless geoip.city.geoname_id.nil? then
-                city['geoname_id'] = geoip.city.geoname_id;
-            end
             unless geoip.city.iso_code.nil? then
-                city['iso_code'] = geoip.city.iso_code;
+                city['code'] = geoip.city.iso_code;
             end
             cityName = geoip.city.name(@locale);
             unless cityName.nil? then
@@ -170,31 +169,47 @@ module Fluent
             unless city.empty? then
                 location['city'] = city;
             end
-            subdivisions = [];
 
-            geoip.subdivisions.each do |subdivision|
+            # I'm going to assume that the subdivisions are ordered
+            # such that encompassing regions appear first, e.g. that
+            # a state appears before the county within the state.
+            #
+            # I'm only going to go two levels in, assuming that the
+            # first subdivision is the state and the second it the
+            # county (if either are present).
 
-                division = {}
-                unless subdivision.code.nil? then
-                    division['code'] = subdivision.code;
-                end
-                unless subdivision.geoname_id.nil? then
-                    division['geoname_id'] = subdivision.geoname_id;
-                end
+            if geoip.subdivisions.length > 0
+
+                subdivision = geoip.subdivisions[0];
+                state       = {};
+
                 unless subdivision.iso_code.nil? then
-                    division['iso_code'] = subdivision.iso_code;
+                    state['code'] = subdivision.iso_code;
                 end
-                subdivisionName = subdivision.name(@locale);
-                unless subdivisionName.nil? then
-                    division['name'] = subdivisionName;
+                subdivision_name = subdivision.name(@locale);
+                unless subdivision_name.nil? then
+                    state['name'] = subdivision_name;
                 end
-                unless division.empty? then
-                    subdivisions.push(division );
+                unless state.empty? then
+                    location['state'] = state;
                 end
-            end
 
-            unless subdivisions.empty? then
-                location['subdivisions'] = subdivisions;
+                if geoip.subdivisions.length > 1
+
+                    subdivision = geoip.subdivisions[1];
+                    county      = {};
+
+                    unless subdivision.iso_code.nil? then
+                        county['code'] = subdivision.iso_code;
+                    end
+                    subdivision_name = subdivision.name(@locale);
+                    unless subdivision_name.nil? then
+                        county['name'] = subdivision_name;
+                    end
+                    unless county.empty? then
+                        location['county'] = county;
+                    end
+                end
             end
 
             record['location'] = location;
