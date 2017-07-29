@@ -43,4 +43,8 @@
     <PackageReference Update="NETStandard.Library" Version="1.6.1" />
   </ItemGroup>
 
+  <ItemGroup>
+    <Folder Include="Csv\" />
+  </ItemGroup>
+
 </Project>
