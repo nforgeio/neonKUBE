@@ -10,4 +10,4 @@
 
 4. Execute `$/Toolbin/nuget-neonforge-public.cmd` to publish the packages to **Nuget.org**.
 
-5. Check in the project with a comment like: **RELEASED: 1.0.1.0**
+5. Check in the project with a comment like: **RELEASED: 5.0.1.0**
