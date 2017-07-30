@@ -81,13 +81,13 @@ namespace NeonClusterManager
 
                 if (string.IsNullOrEmpty(nodeRole))
                 {
-                    log.Fatal(() => "Container does not appear to be running on a neonCLUSTER.");
+                    log.Critical(() => "Container does not appear to be running on a neonCLUSTER.");
                     Program.Exit(1);
                 }
 
                 if (!string.Equals(nodeRole, NodeRole.Manager, StringComparison.OrdinalIgnoreCase))
                 {
-                    log.Fatal(() => $"[neon-cluster-manager] service is running on a [{nodeRole}] cluster node.  Running on only [{NodeRole.Manager}] nodes are supported.");
+                    log.Critical(() => $"[neon-cluster-manager] service is running on a [{nodeRole}] cluster node.  Running on only [{NodeRole.Manager}] nodes are supported.");
                     Program.Exit(1);
                 }
 
@@ -112,7 +112,7 @@ namespace NeonClusterManager
             }
             catch (Exception e)
             {
-                log.Fatal(e);
+                log.Critical(e);
                 Program.Exit(1);
             }
             finally

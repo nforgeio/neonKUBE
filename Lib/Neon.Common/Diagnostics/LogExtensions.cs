@@ -84,18 +84,18 @@ namespace Neon.Diagnostics
         }
 
         /// <summary>
-        /// Logs a fatal message retrieved via a message function.
+        /// Logs a critical message retrieved via a message function.
         /// </summary>
         /// <param name="log">The log.</param>
         /// <param name="messageFunc">The message function.</param>
         /// <remarks>
         /// This method is intended mostly to enable the efficient use of interpolated C# strings.
         /// </remarks>
-        public static void Fatal(this ILog log, Func<object> messageFunc)
+        public static void Critical(this ILog log, Func<object> messageFunc)
         {
-            if (log.IsFatalEnabled)
+            if (log.IsCriticalEnabled)
             {
-                log.Fatal(messageFunc());
+                log.Critical(messageFunc());
             }
         }
 
@@ -152,15 +152,15 @@ namespace Neon.Diagnostics
         }
 
         /// <summary>
-        /// Logs a fatal exception.
+        /// Logs a critical exception.
         /// </summary>
         /// <param name="log">The log.</param>
         /// <param name="e">The exception.</param>
-        public static void Fatal(this ILog log, Exception e)
+        public static void Critical(this ILog log, Exception e)
         {
-            if (log.IsFatalEnabled)
+            if (log.IsCriticalEnabled)
             {
-                log.Fatal(null, e);
+                log.Critical(null, e);
             }
         }
     }

@@ -7,10 +7,6 @@
 # Loads the Docker host node environment variables before launching TD-Agent
 # so these values can be referenced by the TD-Agent configuration file.
 
-# Initialize the log level.
-
-LOG_LEVEL=INFO
-
 # Add the root directory to the PATH.
 
 PATH=${PATH}:/
@@ -18,7 +14,7 @@ PATH=${PATH}:/
 # Load the Docker host node environment variables.
 
 if [ ! -f /etc/neoncluster/env-host ] ; then
-    . log-fatal.sh "The [/etc/neoncluster/env-host] file does not exist.  This file must have been generated on the Docker host by the [neon-cli] and be bound to the container." >&2
+    . log-critical.sh "The [/etc/neoncluster/env-host] file does not exist.  This file must have been generated on the Docker host by the [neon-cli] and be bound to the container." >&2
     exit 1
 fi
 

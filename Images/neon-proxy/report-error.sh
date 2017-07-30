@@ -44,7 +44,7 @@ if [ "${RESTARTING}" == "true" ] ; then
     warning-loop.sh "HAProxy is running with an out-of-date configuration due to a previous error." &
     exit 0
 else
-    . log-fatal.sh "${message}"
+    . log-critical.sh "${message}"
 
     exit 1
 fi

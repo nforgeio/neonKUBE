@@ -144,14 +144,14 @@ namespace Neon.Diagnostics
         }
 
         /// <summary>
-        /// Logs a <b>fatal</b> message.
+        /// Logs a <b>critical</b> message.
         /// </summary>
         /// <param name="message">The object that will be serialized into the message.</param>
-        public void Fatal(object message)
+        public void Critical(object message)
         {
             if (log != null)
             {
-                log.Fatal(message, Id);
+                log.Critical(message, Id);
             }
         }
 
@@ -164,7 +164,7 @@ namespace Neon.Diagnostics
         {
             if (log != null)
             {
-                log.Fatal(message, e, Id);
+                log.Critical(message, e, Id);
             }
         }
 
@@ -208,15 +208,15 @@ namespace Neon.Diagnostics
         }
 
         /// <summary>
-        /// Logs a <b>fatal</b> message along with exception information.
+        /// Logs a <b>critical</b> message along with exception information.
         /// </summary>
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="e">The exception.</param>
-        public void Fatal(object message, Exception e)
+        public void Critical(object message, Exception e)
         {
             if (log != null)
             {
-                log.Fatal(message, e, Id);
+                log.Critical(message, e, Id);
             }
         }
     }

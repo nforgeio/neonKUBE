@@ -6,10 +6,6 @@
 #
 # Loads the Docker host node environment variables before launching HAProxy.
 
-# Initialize the log level.
-
-LOG_LEVEL=INFO
-
 # Add the root directory to the PATH.
 
 PATH=${PATH}:/
@@ -148,7 +144,7 @@ done
 . log-info.sh "Verifying configuration."
 
 if ! haproxy -c -q -f ${configPath} ; then
-    . log-fatal.sh "Invalid HAProxy configuration."
+    . log-critical.sh "Invalid HAProxy configuration."
     exit 1
 fi
 

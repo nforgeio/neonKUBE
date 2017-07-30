@@ -15,7 +15,7 @@ elif [ "${LOG_LEVEL}" == "WARN" ] ; then
     LOG=true
 elif [ "${LOG_LEVEL}" == "ERROR" ] ; then
     LOG=true
-elif [ "${LOG_LEVEL}" == "FATAL" ] ; then
+elif [ "${LOG_LEVEL}" == "CRITICAL" ] ; then
     LOG=false
 else
     LOG=true

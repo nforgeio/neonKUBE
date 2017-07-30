@@ -40,9 +40,9 @@ namespace Neon.Diagnostics
         bool IsErrorEnabled { get; }
 
         /// <summary>
-        /// Returns <c>true</c> if <b>fatal</b> logging is enabled.
+        /// Returns <c>true</c> if <b>critical</b> logging is enabled.
         /// </summary>
-        bool IsFatalEnabled { get; }
+        bool IsCriticalEnabled { get; }
 
         /// <summary>
         /// Logs a <b>debug</b> message.
@@ -73,11 +73,11 @@ namespace Neon.Diagnostics
         void Error(object message, string activityId = null);
 
         /// <summary>
-        /// Logs a <b>fatal</b> message.
+        /// Logs a <b>critical</b> message.
         /// </summary>
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void Fatal(object message, string activityId = null);
+        void Critical(object message, string activityId = null);
 
         /// <summary>
         /// Logs a <b>debug</b> message along with exception information.
@@ -112,11 +112,11 @@ namespace Neon.Diagnostics
         void Error(object message, Exception e, string activityId = null);
 
         /// <summary>
-        /// Logs a <b>fatal</b> message along with exception information.
+        /// Logs a <b>critical</b> message along with exception information.
         /// </summary>
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void Fatal(object message, Exception e, string activityId = null);
+        void Critical(object message, Exception e, string activityId = null);
     }
 }

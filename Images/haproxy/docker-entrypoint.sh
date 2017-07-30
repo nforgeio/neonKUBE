@@ -6,6 +6,10 @@
 #
 # Loads the Docker host node environment variables before launching HAProxy.
 
+# Add the root directory to the PATH.
+
+PATH=${PATH}:/
+
 # Load the Docker host node environment variables if present.
 
 if [ -f /etc/neoncluster/env-host ] ; then
@@ -17,10 +21,6 @@ fi
 if [ -f /etc/neoncluster/env-container ] ; then
     . /etc/neoncluster/env-container
 fi
-
-# Add the root directory to the PATH.
-
-PATH=${PATH}:/
 
 # Load the neonCLUSTER constants.
 
@@ -55,7 +55,7 @@ lastConfigHash=$(md5sum ${configPath} | awk '{print $1}')
 . log-info.sh "Verifying configuration."
 
 if ! haproxy -c -q -f ${configPath} ; then
-    . log-fatal.sh "Invalid initial HAProxy configuration."
+    . log-critical.sh "Invalid initial HAProxy configuration."
     exit 1
 fi
 

@@ -93,7 +93,7 @@ namespace NeonProxyManager
 
                 if (string.IsNullOrEmpty(vaultCredentialsSecret))
                 {
-                    log.Fatal("[VAULT_CREDENTIALS] environment variable does not exist.");
+                    log.Critical("[VAULT_CREDENTIALS] environment variable does not exist.");
                     Program.Exit(1);
                 }
 
@@ -101,7 +101,7 @@ namespace NeonProxyManager
 
                 if (vaultCredentials == null)
                 {
-                    log.Fatal($"Cannot read Docker secret [{vaultCredentialsSecret}].");
+                    log.Critical($"Cannot read Docker secret [{vaultCredentialsSecret}].");
                     Program.Exit(1);
                 }
 
@@ -128,7 +128,7 @@ namespace NeonProxyManager
             }
             catch (Exception e)
             {
-                log.Fatal(e);
+                log.Critical(e);
                 Program.Exit(1);
             }
             finally

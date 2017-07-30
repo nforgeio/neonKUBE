@@ -7,15 +7,14 @@
 # Loads the Docker host node environment variables before launching Elasticsearch
 # so these values can be referenced by the Elasticsearch configuration file.
 
-# Add the root directory to the PATH and set the LOG_LEVEL.
+# Add the root directory to the PATH.
 
 PATH=${PATH}:/
-LOG_LEVEL=INFO
 
 # Load the Docker host node environment variables.
 
 if [ ! -f /etc/neoncluster/env-host ] ; then
-    . log-fatal.sh "The [/etc/neoncluster/env-host] file does not exist.  This file must have been generated on the Docker host by the [neon-cli] and be bound to the container."
+    . log-critical.sh "The [/etc/neoncluster/env-host] file does not exist.  This file must have been generated on the Docker host by the [neon-cli] and be bound to the container."
     exit 1
 fi
 
@@ -24,12 +23,12 @@ fi
 # Check the environment variables.
 
 if [ "${ELASTICSEARCH_CLUSTER}" == "" ] ; then
-    . log-fatal.sh "ELASTICSEARCH_CLUSTER environment variable is missing."
+    . log-critical.sh "ELASTICSEARCH_CLUSTER environment variable is missing."
     exit 1
 fi
 
 if [ "${ELASTICSEARCH_TCP_PORT}" == "" ] ; then
-    . log-fatal.sh "ELASTICSEARCH_TCP_PORT environment variable is missing."
+    . log-critical.sh "ELASTICSEARCH_TCP_PORT environment variable is missing."
     exit 1
 fi
 
@@ -42,12 +41,12 @@ if [ "${ELASTICSEARCH_NODE_DATA}" == "" ] ; then
 fi
 
 if [ "${ELASTICSEARCH_QUORUM}" == "" ] ; then
-    . log-fatal.sh "ELASTICSEARCH_QUORUM environment variable is missing."
+    . log-critical.sh "ELASTICSEARCH_QUORUM environment variable is missing."
     exit 1
 fi
 
 if [ "${ELASTICSEARCH_BOOTSTRAP_NODES}" == "" ] ; then
-    . log-fatal.sh "ELASTICSEARCH_BOOTSTRAP_NODES environment variable is missing."
+    . log-critical.sh "ELASTICSEARCH_BOOTSTRAP_NODES environment variable is missing."
     exit 1
 fi
 

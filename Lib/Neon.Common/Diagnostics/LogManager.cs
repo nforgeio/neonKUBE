@@ -63,7 +63,7 @@ namespace Neon.Diagnostics
         /// <param name="level">The level string or <c>null</c>.</param>
         /// <remarks>
         /// <para>
-        /// This method recognizes the following case insenstive values: <b>FATAL</b>,
+        /// This method recognizes the following case insenstive values: <b>CRITICAL</b>,
         /// <b>ERROR</b>, <b>WARN</b>, <b>WARNING</b>, <b>INFO</b>, <b>INFORMATION</b>,
         /// <b>DEBUG</b>, or <b>NONE</b>.
         /// </para>
@@ -78,9 +78,9 @@ namespace Neon.Diagnostics
 
             switch (level.ToUpperInvariant())
             {
-                case "FATAL":
+                case "CRITICAL":
 
-                    LogLevel = LogLevel.Fatal;
+                    LogLevel = LogLevel.Critical;
                     break;
 
                 case "ERROR":

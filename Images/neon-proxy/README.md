@@ -45,7 +45,7 @@ All you need to do is pass the **CONFIG_KEY** environment variable as the Consul
 
 * **START_SECONDS** (*optional*) is the time in seconds to give the chance HAProxy to start cleanly before processing configuration changes.  This defaults to 10 seconds.
 
-* **LOG_LEVEL** (*optional*) Specifies the logging level: `FATAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
+* **LOG_LEVEL** (*optional*) Specifies the logging level: `CRITICAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
 * **DEBUG** (*optional*) Set to `true` to enable debug mode.  In this mode, the service will not delete the proxy configuration and certificate after HAProxy loads them into memory so these can be examined for debugging purposes.  HAProxy will also be started in debug mode so that it will emit extensive activity information to standard output. Thid dhould nto be enabled for production..
 

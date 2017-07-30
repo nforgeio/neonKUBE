@@ -32,7 +32,7 @@ namespace Neon.Diagnostics
         public bool IsErrorEnabled { get; internal set; } = LogManager.LogLevel >= LogLevel.Error;
 
         /// <inheritdoc/>
-        public bool IsFatalEnabled { get; internal set; } = LogManager.LogLevel >= LogLevel.Fatal;
+        public bool IsCriticalEnabled { get; internal set; } = LogManager.LogLevel >= LogLevel.Critical;
 
         /// <inheritdoc/>
         public bool IsInfoEnabled { get; internal set; }  = LogManager.LogLevel >= LogLevel.Info;
@@ -194,13 +194,13 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void Fatal(object message, string activityId = null)
+        public void Critical(object message, string activityId = null)
         {
-            if (IsFatalEnabled)
+            if (IsCriticalEnabled)
             {
                 try
                 {
-                    Log("FATAL", message?.ToString());
+                    Log("CRITICAL", message?.ToString());
                 }
                 catch
                 {
@@ -210,19 +210,19 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void Fatal(object message, Exception e, string activityId = null)
+        public void Critical(object message, Exception e, string activityId = null)
         {
-            if (IsFatalEnabled)
+            if (IsCriticalEnabled)
             {
                 try
                 {
                     if (message != null)
                     {
-                        Log("FATAL", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log("CRITICAL", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                     else
                     {
-                        Log("FATAL", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log("CRITICAL", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                 }
                 catch

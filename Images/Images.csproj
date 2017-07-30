@@ -125,7 +125,7 @@
     <None Include="openjdk\README.md" />
     <None Include="tdagent\Dockerfile" />
     <None Include="_common\log-debug.sh" />
-    <None Include="_common\log-fatal.sh" />
+    <None Include="_common\log-critical.sh" />
     <None Include="_common\log-info.sh" />
     <None Include="_artifacts\consul_0.7.1_linux_amd64.zip" />
     <None Include="_artifacts\consul_latest_linux_amd64.zip" />

@@ -16,10 +16,10 @@
 TYPE=""
 
 if [ "${VAULT_CREDENTIALS}" == "" ] ; then
-    . log-fatal.sh "[VAULT_CREDENTIALS] environment variable is not set."
+    . log-critical.sh "[VAULT_CREDENTIALS] environment variable is not set."
     exit 1
 elif [ ! -f "/run/secrets/${VAULT_CREDENTIALS}" ] ; then
-    . log-fatal.sh "[/run/secrets/${VAULT_CREDENTIALS}] file does not exist."
+    . log-critical.sh "[/run/secrets/${VAULT_CREDENTIALS}] file does not exist."
     exit 1
 else
     # Extract the credentials type.
@@ -48,27 +48,27 @@ vault-approle)
     ROLE_ID=$(cat "/run/secrets/${VAULT_CREDENTIALS}" | jq -r '.VaultRoleId')
 
     if [ "${ROLE_ID}" == "" ] ; then
-        . log-fatal.sh "[/run/secrets/${VAULT_CREDENTIALS}] does not include a role ID."
+        . log-critical.sh "[/run/secrets/${VAULT_CREDENTIALS}] does not include a role ID."
         exit 1
     fi
 
     SECRET_ID=$(cat "/run/secrets/${VAULT_CREDENTIALS}" | jq -r '.VaultSecretId')
 
     if [ "${SECRET_ID}" == "" ] ; then
-        . log-fatal.sh "[/run/secrets/${VAULT_CREDENTIALS}] does not include a secret ID."
+        . log-critical.sh "[/run/secrets/${VAULT_CREDENTIALS}] does not include a secret ID."
         exit 1
     fi
 
     export VAULT_TOKEN=$(vault write -format=json auth/approle/login role_id=${ROLE_ID} secret_id=${SECRET_ID} | jq -r '.auth.client_token' )
 
     if [ "${VAULT_TOKEN}" == "" ] ; then
-        . log-fatal.sh "Vault AppRole login failed."
+        . log-critical.sh "Vault AppRole login failed."
         exit 1
     fi
     ;;
 
 *)
-    . log-fatal.sh "Vault credentials type [${TYPE}] is not supported."
+    . log-critical.sh "Vault credentials type [${TYPE}] is not supported."
     exit 1
     ;;
 

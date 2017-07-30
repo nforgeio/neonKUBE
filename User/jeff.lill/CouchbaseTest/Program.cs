@@ -61,7 +61,7 @@ namespace CouchbaseTest
             }
             catch (Exception e)
             {
-                log.Fatal(e);
+                log.Critical(e);
                 Program.Exit(1);
             }
             finally

@@ -82,7 +82,7 @@ namespace Neon.Diagnostics
         public bool IsErrorEnabled => log.IsErrorEnabled;
 
         /// <inheritdoc/>
-        public bool IsFatalEnabled => log.IsFatalEnabled;
+        public bool IsCriticalEnabled => log.IsCriticalEnabled;
 
         /// <inheritdoc/>
         public void Debug(object message, string activityId = null)
@@ -113,10 +113,10 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void Fatal(object message, string activityId = null)
+        public void Critical(object message, string activityId = null)
         {
-            log.Fatal(message, activityId);
-            capture.AppendLine($"[FATAL] {message}");
+            log.Critical(message, activityId);
+            capture.AppendLine($"[CRITICAL] {message}");
         }
 
         /// <inheritdoc/>
@@ -148,10 +148,10 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void Fatal(object message, Exception e, string activityId = null)
+        public void Critical(object message, Exception e, string activityId = null)
         {
-            log.Fatal(message, e, activityId);
-            capture.AppendLine($"[FATAL] {message} {NeonHelper.ExceptionError(e)}");
+            log.Critical(message, e, activityId);
+            capture.AppendLine($"[CRITICAL] {message} {NeonHelper.ExceptionError(e)}");
         }
 
         /// <summary>

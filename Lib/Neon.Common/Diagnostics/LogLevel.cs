@@ -25,9 +25,9 @@ namespace Neon.Diagnostics
         None,
 
         /// <summary>
-        /// A fatal or critical error has been detected.
+        /// A critical or fatal error has been detected.
         /// </summary>
-        Fatal,
+        Critical,
 
         /// <summary>
         /// An error has been detected. 

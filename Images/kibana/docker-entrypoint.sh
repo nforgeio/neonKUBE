@@ -4,10 +4,6 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
-# Initialize the log level.
-
-LOG_LEVEL=INFO
-
 # Add the root directory to the PATH.
 
 PATH=${PATH}:/
@@ -15,7 +11,7 @@ PATH=${PATH}:/
 # Load the Docker host node environment variables.
 
 if [ ! -f /etc/neoncluster/env-host ] ; then
-    . log-fatal.sh "The [/etc/neoncluster/env-host] file does not exist.  This file must have been generated on the Docker host by the [neon-cli] and be bound to the container."
+    . log-critical.sh "The [/etc/neoncluster/env-host] file does not exist.  This file must have been generated on the Docker host by the [neon-cli] and be bound to the container."
     exit 1
 fi
 

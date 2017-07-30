@@ -1,9 +1,9 @@
 #!/bin/sh
 #------------------------------------------------------------------------------
-# Writes a FATAL log message to standard output  if $LOG_LEVEL is set to FATAL
+# Writes a CRITICAL log message to standard output  if $LOG_LEVEL is set to CRITICAL
 # or higher.  INFO is assumed if $LOG_LEVEL is not set.
 #
-# USAGE: . log-fatal.sh MESSAGE
+# USAGE: . log-critical.sh MESSAGE
 
 if [ "${LOG_LEVEL}" == "NONE" ] ; then
     LOG=false
@@ -15,7 +15,7 @@ elif [ "${LOG_LEVEL}" == "WARN" ] ; then
     LOG=true
 elif [ "${LOG_LEVEL}" == "ERROR" ] ; then
     LOG=true
-elif [ "${LOG_LEVEL}" == "FATAL" ] ; then
+elif [ "${LOG_LEVEL}" == "CRITICAL" ] ; then
     LOG=true
 else
     LOG=true
@@ -24,5 +24,5 @@ fi
 . /log-index.sh
 
 if [ "${LOG}" == "true" ] ; then
-    echo "[$(date --utc "+%Y-%m-%dT%H:%M:%S.000+00:00")] [FATAL] [index:${LOG_INDEX}] $1"
+    echo "[$(date --utc "+%Y-%m-%dT%H:%M:%S.000+00:00")] [CRITICAL] [index:${LOG_INDEX}] $1"
 fi

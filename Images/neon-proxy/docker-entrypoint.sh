@@ -6,6 +6,10 @@
 #
 # Loads the Docker host node environment variables before launching HAProxy.
 
+# Add the root directory to the PATH.
+
+PATH=${PATH}:/
+
 # Load the Docker host node environment variables if present.
 
 if [ -f /etc/neoncluster/env-host ] ; then
@@ -18,10 +22,6 @@ if [ -f /etc/neoncluster/env-container ] ; then
     . /etc/neoncluster/env-container
 fi
 
-# Add the root directory to the PATH.
-
-PATH=${PATH}:/
-
 # Load the neonCLUSTER constants.
 
 . /neoncluster.sh
@@ -29,14 +29,14 @@ PATH=${PATH}:/
 # Verify that a CONFIG_KEY was passed.
 
 if [ "${CONFIG_KEY}" == "" ] ; then
-    . log-fatal.sh "CONFIG_KEY environment variable is missing or empty."
+    . log-critical.sh "CONFIG_KEY environment variable is missing or empty."
     exit 1
 fi
 
 # Verify that the key actually exists.
 
 if ! consul kv get ${CONFIG_KEY} > /dev/nul ; then
-    . log-fatal.sh "The [${CONFIG_KEY}] key cannot be retrieved from Consul."
+    . log-critical.sh "The [${CONFIG_KEY}] key cannot be retrieved from Consul."
     exit 1
 fi
 
