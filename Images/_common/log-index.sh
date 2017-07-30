@@ -9,7 +9,7 @@
 # to be tagged with the same order value, but this shouldn't be a problem in
 # real life.
 #
-# USAGE: . /log-index
+# USAGE: . /log-index.sh
 
 LOG_INDEX=$(cat /dev/shm/log-index 2> /dev/null)
 

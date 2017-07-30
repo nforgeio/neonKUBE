@@ -3,7 +3,7 @@
 # Writes an ERROR log message to standard output  if $LOG_LEVEL is set to ERROR
 # or higher.  INFO is assumed if $LOG_LEVEL is not set.
 #
-# USAGE: . log-error MESSAGE
+# USAGE: . log-error.sh MESSAGE
 
 if [ "${LOG_LEVEL}" == "NONE" ] ; then
     LOG=false

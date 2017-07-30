@@ -3,7 +3,7 @@
 # Writes an INFO log message to standard output  if $LOG_LEVEL is set to INFO
 # or higher.  INFO is assumed if $LOG_LEVEL is not set.
 #
-# USAGE: . log-info MESSAGE
+# USAGE: . log-info.sh MESSAGE
 
 if [ "${LOG_LEVEL}" == "NONE" ] ; then
     LOG=false

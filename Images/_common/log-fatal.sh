@@ -3,7 +3,7 @@
 # Writes a FATAL log message to standard output  if $LOG_LEVEL is set to FATAL
 # or higher.  INFO is assumed if $LOG_LEVEL is not set.
 #
-# USAGE: . log-fatal MESSAGE
+# USAGE: . log-fatal.sh MESSAGE
 
 if [ "${LOG_LEVEL}" == "NONE" ] ; then
     LOG=false

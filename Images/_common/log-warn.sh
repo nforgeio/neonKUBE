@@ -3,7 +3,7 @@
 # Writes a WARN log message to standard output  if $LOG_LEVEL is set to WARN
 # or higher.  INFO is assumed if $LOG_LEVEL is not set.
 #
-# USAGE: . log-warn MESSAGE
+# USAGE: . log-warn.sh MESSAGE
 
 if [ "${LOG_LEVEL}" == "NONE" ] ; then
     LOG=false

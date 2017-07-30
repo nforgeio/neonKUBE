@@ -3,7 +3,7 @@
 # Writes a DEBUG log message to standard output if $LOG_LEVEL is set to DEBUG
 # or higher.  INFO is assumed if $LOG_LEVEL is not set.
 #
-# USAGE: . log-debug MESSAGE
+# USAGE: . log-debug.sh MESSAGE
 
 if [ "${LOG_LEVEL}" == "NONE" ] ; then
     LOG=false
