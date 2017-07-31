@@ -64,7 +64,7 @@ namespace Neon.Data
         }
 
         /// <summary>
-        /// Generates an entity key by from the entity ID and entity type.
+        /// Generates an entity key from the entity ID and entity type.
         /// </summary>
         /// <param name="entityId">The entity ID.</param>
         /// <param name="entityType">The entity type.</param>
@@ -84,6 +84,34 @@ namespace Neon.Data
         public static string GetEntityKey(string entityId, string entityType)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(entityId));
+
+            if (string.IsNullOrEmpty(entityType))
+            {
+                return entityId;
+            }
+
+            return $"{entityType}::{entityId}";
+        }
+
+        /// <summary>
+        /// Generates an entity key from the a GUID and entity type.
+        /// </summary>
+        /// <param name="entityType">The entity type.</param>
+        /// <returns>The entity key.</returns>
+        /// <remarks>
+        /// <para>
+        /// Stoke follows a common convention where Couchbase entities are persisted using a
+        /// key formed by appending entity ID to the entity type, separated by a double
+        /// colon (<b>"::"</b>).  This makes entity types available for filtering when
+        /// managing cross datacenter replication.
+        /// </para>
+        /// <para>
+        /// This method concatenates the entity type and ID using a (<b>"::"</b>) separator.
+        /// </para>
+        /// </remarks>
+        public static string GetEntityKey(string entityType)
+        {
+            var entityId = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
 
             if (string.IsNullOrEmpty(entityType))
             {
