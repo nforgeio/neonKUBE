@@ -5,7 +5,7 @@
 
 using System;
 using System.Diagnostics.Contracts;
-using System.Threading;
+using System.Threading.Tasks;
 
 using Neon.Common;
 
@@ -45,6 +45,10 @@ namespace Neon.Time
     /// reset the timer by scheduling the next firing time.  If <i>autoReset=false</i>,
     /// then the timer will remain in the fired state until <see cref="Reset()" /> is
     /// called.
+    /// </para>
+    /// <para>
+    /// Asynchronous applications may find it more convienent to call <see cref="WaitAsync(TimeSpan)"/>
+    /// to wait for the timer to fire.
     /// </para>
     /// <para>
     /// The <see cref="Reset()" />, <see cref="ResetImmediate" />, and <see cref="ResetRandom" /> 
@@ -323,6 +327,24 @@ namespace Neon.Time
 
                     return fired;
                 }
+            }
+        }
+
+        /// <summary>
+        /// Waits aynchronously for the timer to fire.
+        /// </summary>
+        /// <param name="pollInterval">Optional timer polling interval (defaults to <b>15 seconds</b>).</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task WaitAsync(TimeSpan pollInterval = default(TimeSpan))
+        {
+            if (pollInterval <= TimeSpan.Zero)
+            {
+                pollInterval = TimeSpan.FromSeconds(15);
+            }
+
+            while (!HasFired)
+            {
+                await Task.Delay(pollInterval);
             }
         }
 

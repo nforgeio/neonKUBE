@@ -6,8 +6,9 @@
 using System;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Text;
 using System.Reflection;
+using System.Text;
+using System.Threading.Tasks;
 
 namespace Neon.Time
 {
@@ -41,6 +42,10 @@ namespace Neon.Time
     /// This timer auto resets after <see cref="HasFired()" /> returns <c>true</c>.  Note also
     /// that <see cref="HasFired()" /> must be called fairly frequently (on the order of a few minutes or less)
     /// to obtain reasonable accuracy.
+    /// </para>
+    /// <para>
+    /// Asynchronous applications may find it more convienent to call <see cref="WaitAsync(TimeSpan)"/>
+    /// to wait for the timer to fire.
     /// </para>
     /// <para>
     /// The <see cref="Reset()"/> and <see cref="Reset(DateTime)"/> methods may be used to explictly
@@ -298,6 +303,24 @@ namespace Neon.Time
             finally
             {
                 lastPollTime = now;
+            }
+        }
+
+        /// <summary>
+        /// Waits aynchronously for the timer to fire.
+        /// </summary>
+        /// <param name="pollInterval">Optional timer polling interval (defaults to <b>15 seconds</b>).</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public async Task WaitAsync(TimeSpan pollInterval = default(TimeSpan))
+        {
+            if (pollInterval <= TimeSpan.Zero)
+            {
+                pollInterval = TimeSpan.FromSeconds(15);
+            }
+
+            while (!HasFired())
+            {
+                await Task.Delay(pollInterval);
             }
         }
 

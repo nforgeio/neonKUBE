@@ -107,6 +107,18 @@ namespace TestCommon
         }
 
         [Fact]
+        public async Task RecurringTimer_Async()
+        {
+            var timer  = new RecurringTimer(RecurringTimerType.Interval, TimeSpan.FromSeconds(1));
+            var sysNow = SysTime.Now;
+
+            timer.Reset();
+            Assert.False(timer.HasFired());
+            await timer.WaitAsync(TimeSpan.FromMilliseconds(500));
+            Assert.True(SysTime.Now + TimeSpan.FromMilliseconds(50) - sysNow > TimeSpan.FromSeconds(1));
+        }
+
+        [Fact]
         public void RecurringTimer_Parse()
         {
             RecurringTimer timer;
