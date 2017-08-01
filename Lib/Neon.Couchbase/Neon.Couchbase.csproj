@@ -1,10 +1,10 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard1.5</TargetFramework>
     <RootNamespace>Neon.Couchbase</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>5.0.5.0</Version>
+    <Version>5.0.5.1</Version>
     <Company>NeonForge, LLC</Company>
     <Product>Neon.Cluster Library</Product>
     <Description>Couchbase client extensions.</Description>

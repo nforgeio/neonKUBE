@@ -1,13 +1,13 @@
-<Project Sdk="Microsoft.NET.Sdk">
+﻿<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard1.4</TargetFramework>
     <RootNamespace>Neon.Stack</RootNamespace>
-    <Version>5.0.5.0</Version>
+    <Version>5.0.5.1</Version>
     <Company>NeonForge, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>Useful common code used by NeonForge projects.</Description>
-    <PackageReleaseNotes>Renamed FATAL log level to CRITICAL.</PackageReleaseNotes>
+    <PackageReleaseNotes>Renamed FATAL log level to CRITICAL.  PolledTimer and RecurringTimer add WaitAsync().</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
