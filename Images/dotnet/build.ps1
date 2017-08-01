@@ -24,9 +24,17 @@ $image_root = "$env:NF_ROOT\\Images"
 "* DOTNET " + $version
 "======================================="
 
-# Build the images.
-
 $registry = "neoncluster/dotnet"
+
+# Copy the common scripts.
+
+if (Test-Path _common)
+{
+	Exec { Remove-Item -Recurse _common }
+}
+
+Exec { mkdir _common }
+Exec { copy ..\_common\*.* .\_common }
 
 # Build the image.
 
@@ -37,4 +45,6 @@ if ($latest)
 	Exec { docker tag "${registry}:$version" "${registry}:latest"}
 }
 
+# Clean up
 
+Exec { Remove-Item -Recurse _common }

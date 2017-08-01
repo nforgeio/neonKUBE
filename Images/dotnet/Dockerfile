@@ -20,6 +20,10 @@ ARG         TINI_VERSION
 
 COPY resolv.conf.head.sh    /etc/resolv.conf.head
 
+# Copy common scripts to the root.
+
+COPY _common/*.sh           /
+
 # Install the [tini] INIT manager.
 
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini

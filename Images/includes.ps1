@@ -69,7 +69,6 @@ function PushImage
 # converting CRLF line endings to LF and replacing TABs with spaces.
 
 exec { unix-text --recursive $image_root\Dockerfile }
-exec { unix-text --recursive $image_root\*.template }
 exec { unix-text --recursive $image_root\*.sh }
 exec { unix-text --recursive $image_root\*.yml }
 exec { unix-text --recursive .\*.cfg }
