@@ -590,7 +590,7 @@ namespace Neon.Cluster
         /// </exception>
         public static void OpenCluster()
         {
-            log.Info(() => "Connecting to cluster as a service.");
+            log.Info(() => "Connecting to cluster.");
 
             if (Environment.GetEnvironmentVariable("NEON_CLUSTER") == null)
             {
