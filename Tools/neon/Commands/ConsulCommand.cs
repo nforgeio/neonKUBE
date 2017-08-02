@@ -158,28 +158,7 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
 
                         var bundle = new CommandBundle($"cat stdin.dat | {remoteConsulPath} {rightCommandLine}");
 
-                        using (var stdInData = new MemoryStream())
-                        {
-                            using (var stdInStream = Console.OpenStandardInput())
-                            {
-                                var buffer = new byte[8192];
-                                int cb;
-
-                                while (true)
-                                {
-                                    cb = stdInStream.Read(buffer, 0, buffer.Length);
-
-                                    if (cb == 0)
-                                    {
-                                        break;
-                                    }
-
-                                    stdInData.Write(buffer, 0, cb);
-                                }
-                            }
-
-                            bundle.AddFile("stdin.dat", stdInData.ToArray());
-                        }
+                        bundle.AddFile("stdin.dat", NeonHelper.ReadStandardInputBytes());
 
                         var response = node.SudoCommand(bundle, RunOptions.IgnoreRemotePath);
 

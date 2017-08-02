@@ -408,13 +408,7 @@ See the documentation for more proxy route and setting details.
 
                     if (settingsFile == "-")
                     {
-                        using (var input = Console.OpenStandardInput())
-                        {
-                            using (var reader = new StreamReader(input, detectEncodingFromByteOrderMarks: true))
-                            {
-                                settingsJson = reader.ReadToEnd();
-                            }
-                        }
+                        settingsJson = NeonHelper.ReadStandardInputText();
                     }
                     else
                     {

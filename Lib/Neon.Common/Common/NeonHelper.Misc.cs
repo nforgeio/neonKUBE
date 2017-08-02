@@ -1048,5 +1048,51 @@ namespace Neon.Common
         {
             return (TEnum)Enum.Parse(typeof(TEnum), input, ignoreCase);
         }
+
+        /// <summary>
+        /// Reads the <b>standard input</b> file to the end and returns the
+        /// result as a string.
+        /// </summary>
+        /// <returns>The standard input.</returns>
+        public static string ReadStandardInputText()
+        {
+            using (var input = Console.OpenStandardInput())
+            {
+                using (var reader = new StreamReader(input, detectEncodingFromByteOrderMarks: true))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+        }
+
+        /// <summary>
+        /// Reads the <b>standard input</b> file to the end and returns the
+        /// result as bytes.
+        /// </summary>
+        /// <returns>The standard input.</returns>
+        public static byte[] ReadStandardInputBytes()
+        {
+            using (var stdin = Console.OpenStandardInput())
+            {
+                using (var ms = new MemoryStream())
+                {
+                    var buffer = new byte[8192];
+
+                    while (true)
+                    {
+                        var cb = stdin.Read(buffer, 0, buffer.Length);
+
+                        if (cb == 0)
+                        {
+                            break;
+                        }
+
+                        ms.Write(buffer, 0, cb);
+                    }
+
+                    return ms.ToArray();
+                }
+            }
+        }
     }
 }

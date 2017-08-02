@@ -272,27 +272,7 @@ the [neon exec] command.
 
             if (fileArg == "-")
             {
-                using (var stdin = Console.OpenStandardInput())
-                {
-                    using (var ms = new MemoryStream())
-                    {
-                        var buffer = new byte[8192];
-
-                        while (true)
-                        {
-                            var cb = stdin.Read(buffer, 0, buffer.Length);
-
-                            if (cb == 0)
-                            {
-                                break;
-                            }
-
-                            ms.Write(buffer, 0, cb);
-                        }
-
-                        secretData = ms.ToArray();
-                    }
-                }
+                secretData = NeonHelper.ReadStandardInputBytes();
             }
             else
             {

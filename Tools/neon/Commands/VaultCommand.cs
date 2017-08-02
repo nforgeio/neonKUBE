@@ -493,28 +493,7 @@ NOTE: The following Vault commands are not supported:
 
                     if (lastItem == "-")
                     {
-                        using (var stdInData = new MemoryStream())
-                        {
-                            using (var stdInStream = Console.OpenStandardInput())
-                            {
-                                var buffer = new byte[8192];
-                                int cb;
-
-                                while (true)
-                                {
-                                    cb = stdInStream.Read(buffer, 0, buffer.Length);
-
-                                    if (cb == 0)
-                                    {
-                                        break;
-                                    }
-
-                                    stdInData.Write(buffer, 0, cb);
-                                }
-                            }
-
-                            policyText = Encoding.UTF8.GetString(stdInData.ToArray());
-                        }
+                        policyText = NeonHelper.ReadStandardInputText();
                     }
                     else if (lastItem.StartsWith("@"))
                     {
