@@ -57,7 +57,7 @@ namespace Neon.Cluster
         [JsonIgnore]
         public int DefaultHttpsPort
         {
-            get { return FirstPort + 1; }
+            get { return FirstPort + 1; }   // $hack(jeff.lill): Hardcodes the convention
         }
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace Neon.Cluster
         [JsonIgnore]
         public int FirstTcpPort
         {
-            get { return FirstPort + 2; }
+            get { return FirstPort + 2; }   // $hack(jeff.lill): Hardcodes the convention
         }
 
         /// <summary>
