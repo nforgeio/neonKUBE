@@ -58,6 +58,7 @@ COMMAND SUMMARY:
     neon cluster prepare    [CLUSTER-DEF]
     neon cluster setup      [CLUSTER-DEF]
     neon cluster verify     [CLUSTER-DEF]
+    neon couchbase          CMD...
     neon cert               CMD...
     neon consul             ARGS
     neon create key
@@ -199,6 +200,7 @@ tool requires admin priviledges for direct mode.
                     new ClusterPrepareCommand(),
                     new ClusterSetupCommand(),
                     new ClusterVerifyCommand(),
+                    new CouchbaseCommand(),
                     new CertCommand(),
                     new ConsulCommand(),
                     new CreateCommand(),
