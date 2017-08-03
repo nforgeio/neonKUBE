@@ -27,7 +27,7 @@ namespace Neon.Data
         }
 
         /// <inheritdoc/>
-        [JsonProperty(PropertyName = "Type", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Type", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
         public string Type { get; set; }
 
