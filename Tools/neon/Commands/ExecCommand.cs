@@ -44,15 +44,15 @@ OPTIONS:
                       or a plus (+) symbol to target to all nodes.  Executes 
                       on the first cluster manager if no node is specified.
 
-    --text=PATH     - Text file path to be uploaded to the node(s) before
-                      executing the command.  Multiple are allowed.
+    --text=PATH     - Text file to be uploaded to the node(s) before
+                      executing the command.  Multiple files are allowed.
 
-    --data=PATH     - Binary file path to be uploaded to the node(s) before
-                      executing the command.  Multiple are allowed.
+    --data=PATH     - Binary file to be uploaded to the node(s) before
+                      executing the command.  Multiple files are allowed.
 
-    --script=PATH   - Script file path to be uploaded to the node(s).
-                       Uploaded scripts will have 700 permissions.
-                       Multiple are allowed.
+    --script=PATH   - Script file to be uploaded to the node(s).
+                      Uploaded scripts will have 700 permissions.
+                      Multiple files are allowed.
 NOTES:
 
     * Any files specified by [--text, --data, --script] options will be
