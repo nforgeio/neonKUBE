@@ -938,6 +938,37 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Recursively copies the files within one directory to another, creating
+        /// target folders as required.
+        /// </summary>
+        /// <param name="sourceFolder">The source folder.</param>
+        /// <param name="targetFolder">The target folder.</param>
+        /// <remarks>
+        /// <note>
+        /// This method does not currently copy empty folders.
+        /// </note>
+        /// </remarks>
+        public static void CopyFolder(string sourceFolder, string targetFolder)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(sourceFolder));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetFolder));
+
+            sourceFolder = Path.GetFullPath(sourceFolder);
+            targetFolder = Path.GetFullPath(targetFolder);
+
+            Directory.CreateDirectory(targetFolder);
+
+            foreach (var sourceFile in Directory.GetFiles(sourceFolder, "*", SearchOption.AllDirectories))
+            {
+                var relativePath = sourceFile.Substring(sourceFolder.Length + 1);
+                var targetFile   = Path.Combine(targetFolder, relativePath);
+
+                Directory.CreateDirectory(Path.GetDirectoryName(targetFile));
+                File.Copy(sourceFile, targetFile);
+            }
+        }
+
+        /// <summary>
         /// Uses deflate to commpress a string.
         /// </summary>
         /// <param name="input">The input string or <c>null</c>.</param>
