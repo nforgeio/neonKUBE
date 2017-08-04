@@ -385,7 +385,7 @@ namespace Neon.Common
         /// <param name="uri">The target URI.</param>
         public static void OpenBrowser(string uri)
         {
-            Covenant.Requires<ArgumentNullException>(uri != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
             if (IsWindows)
             {
@@ -407,6 +407,44 @@ namespace Neon.Common
             {
                 throw new NotImplementedException("Browser launch support is not implemented on the current platform.");
             }
+        }
+
+        /// <summary>
+        /// Executes a command using the local shell, <b>CMD.EXE</b> for Windows and
+        /// <b>Bash</b> for OSX and Linux.
+        /// </summary>
+        /// <param name="command">The command and arguments to be executed.</param>
+        /// <returns>The process exit code.</returns>
+        public static int ExecuteShell(string command)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
+
+            Process process;
+
+            if (IsWindows)
+            {
+                process = Process.Start("cmd", $"/C {command}");
+            }
+            else if (IsOSX)
+            {
+                // $todo(jeff.lill): Test this.
+
+                process = Process.Start("bash", $"-c '{command}'");
+            }
+            else if (IsLinux)
+            {
+                // $todo(jeff.lill): test this.
+
+                process = Process.Start("bash", $"-c '{command}'");
+            }
+            else
+            {
+                throw new NotImplementedException("Shell launch support is not implemented on the current platform.");
+            }
+
+            process.WaitForExit();
+
+            return process.ExitCode;
         }
     }
 }
