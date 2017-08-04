@@ -82,6 +82,12 @@ COMMANDS:
         }
 
         /// <inheritdoc/>
+        public override string[] ExtendedOptions
+        {
+            get { return new string[] { "--key" }; }
+        }
+
+        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);
