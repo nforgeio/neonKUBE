@@ -53,6 +53,11 @@ namespace NeonTool
         string[] ExtendedOptions { get; }
 
         /// <summary>
+        /// Indicates that unknown command options should be checked against <see cref="ExtendedOptions"/>.
+        /// </summary>
+        bool CheckOptions { get; }
+
+        /// <summary>
         /// Returns <c>true</c> if the command requires server SSH credentials to be
         /// specified on the command line via the <b>-u/--user</b> and <b>-p/--password</b>
         /// options vs. obtaining them from the currently logged in cluster secrets or
@@ -108,6 +113,7 @@ namespace NeonTool
         public string[]     Words { get; }
         public string[]     AltWords { get; }
         public string[]     ExtendedOptions { get; }
+        public bool         CheckOptions { get; }
         public bool         NeedsCommandCredentials { get; }
         public string       SplitItem { get; }
 

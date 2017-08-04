@@ -106,7 +106,7 @@ COMMANDS:
 
             if (commandLine.Arguments.Length == 0)
             {
-                Console.WriteLine("*** ERROR: Expected a TARGET argument like: couchbase://HOST@USER:PASSWORD:BUCKET");
+                Console.WriteLine("*** ERROR: Expected a TARGET argument like: [couchbase://HOST@USER:PASSWORD:BUCKET] or [http(s)://HOST:PORT@USER:PASSWORD:BUCKET]");
                 Program.Exit(1);
             }
 
@@ -116,7 +116,7 @@ COMMANDS:
             //      couchbase://HOST@USER:PASSWORD:BUCKET
 
             var target = commandLine.Arguments[0];
-            var error  = $"*** ERROR: [{target}] is not a valid Couchbase target.";
+            var error  = $"*** ERROR: [{target}] is not a valid Couchbase target.  Expected: [couchbase://HOST@USER:PASSWORD:BUCKET] or [http(s)://HOST:PORT@USER:PASSWORD:BUCKET]";
             var fields = target.Split(new char[] { '@' }, 2);
 
             if (fields.Length != 2)

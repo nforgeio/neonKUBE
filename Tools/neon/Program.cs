@@ -81,6 +81,7 @@ COMMAND SUMMARY:
     neon proxy              CMD...
     neon reboot             NODE...
     neon scp                [NODE]
+    neon shell              -- CMD...
     neon ssh                [NODE]
     neon validate           CLUSTER-DEF
     neon version            [-n]
@@ -222,6 +223,7 @@ tool requires admin priviledges for direct mode.
                     new ProxyCommand(),
                     new RebootCommand(),
                     new ScpCommand(),
+                    new ShellCommand(),
                     new SshCommand(),
                     new UploadCommand(),
                     new VaultCommand(),
@@ -448,33 +450,36 @@ tool requires admin priviledges for direct mode.
 
                 Program.WaitSeconds = waitSeconds;
 
-                // Make sure there are no unexpected command line options.
-
-                validOptions.Add("--help");
-
-                foreach (var optionName in command.ExtendedOptions)
+                if (command.CheckOptions)
                 {
-                    validOptions.Add(optionName);
-                }
+                    // Make sure there are no unexpected command line options.
 
-                foreach (var option in leftCommandLine.Options)
-                {
-                    if (!validOptions.Contains(option.Key))
+                    validOptions.Add("--help");
+
+                    foreach (var optionName in command.ExtendedOptions)
                     {
-                        var commandWords = string.Empty;
+                        validOptions.Add(optionName);
+                    }
 
-                        foreach (var word in command.Words)
+                    foreach (var option in leftCommandLine.Options)
+                    {
+                        if (!validOptions.Contains(option.Key))
                         {
-                            if (commandWords.Length > 0)
+                            var commandWords = string.Empty;
+
+                            foreach (var word in command.Words)
                             {
-                                commandWords += " ";
+                                if (commandWords.Length > 0)
+                                {
+                                    commandWords += " ";
+                                }
+
+                                commandWords += word;
                             }
 
-                            commandWords += word;
+                            Console.WriteLine($"*** ERROR: Command [{commandWords}] does not support [{option.Key}].");
+                            Program.Exit(1);
                         }
-
-                        Console.WriteLine($"*** ERROR: Command [{commandWords}] does not support [{option.Key}].");
-                        Program.Exit(1);
                     }
                 }
 
@@ -622,7 +627,7 @@ tool requires admin priviledges for direct mode.
         }
 
         /// <summary>
-        /// Returns the <see cref="CommandLine"/>.
+        /// Returns the orignal program <see cref="CommandLine"/>.
         /// </summary>
         public static CommandLine CommandLine { get; private set; }
 

@@ -38,6 +38,15 @@ namespace NeonTool
             get { return new string[0]; }
         }
 
+        /// <summary>
+        /// Indicates that unknown command options should be checked against <see cref="ExtendedOptions"/>.
+        /// This defaults to <c>true</c>.
+        /// </summary>
+        public virtual bool CheckOptions
+        {
+            get { return true; }
+        }
+
         /// <inheritdoc/>
         public virtual bool NeedsCommandCredentials
         {
