@@ -345,5 +345,33 @@ namespace TestCommon
             Assert.Equal(TestEnum.Value1, NeonHelper.ParseEnum<TestEnum>("value1", ignoreCase: true));
             Assert.Equal(TestEnum.Value2, NeonHelper.ParseEnum<TestEnum>("VALUE2", ignoreCase: true));
         }
+
+        [Fact]
+        public void CopyFolder()
+        {
+            using (var tempFolder = new TempFolder())
+            {
+                var sourceFolder    = Path.Combine(tempFolder.Path, "source");
+                var sourceSubFolder = Path.Combine(sourceFolder, "subfolder");
+
+                Directory.CreateDirectory(sourceFolder);
+                File.WriteAllText(Path.Combine(sourceFolder, "test1.txt"), "test1");
+                File.WriteAllText(Path.Combine(sourceFolder, "test2.txt"), "test2");
+
+                Directory.CreateDirectory(sourceSubFolder);
+                File.WriteAllText(Path.Combine(sourceSubFolder, "test3.txt"), "test3");
+
+                var targetFolder = Path.Combine(tempFolder.Path, "target");
+
+                NeonHelper.CopyFolder(sourceFolder, targetFolder);
+
+                Assert.True(Directory.Exists(targetFolder));
+                Assert.True(Directory.Exists(Path.Combine(targetFolder, "subfolder")));
+
+                Assert.Equal("test1", File.ReadAllText(Path.Combine(targetFolder, "test1.txt")));
+                Assert.Equal("test2", File.ReadAllText(Path.Combine(targetFolder, "test2.txt")));
+                Assert.Equal("test3", File.ReadAllText(Path.Combine(targetFolder, "subfolder", "test3.txt")));
+            }
+        }
     }
 }
