@@ -115,9 +115,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.RabbitMQ", "Lib\Neon.R
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ToolBin", "ToolBin", "{E9E3D01B-F890-4F0A-88F1-5F87E5D1F198}"
 	ProjectSection(SolutionItems) = preProject
-		ToolBin\nuget-neonforge-local.cmd = ToolBin\nuget-neonforge-local.cmd
 		ToolBin\nuget-neonforge-local.ps1 = ToolBin\nuget-neonforge-local.ps1
-		ToolBin\nuget-neonforge-public.cmd = ToolBin\nuget-neonforge-public.cmd
 		ToolBin\nuget-neonforge-public.ps1 = ToolBin\nuget-neonforge-public.ps1
 	EndProjectSection
 EndProject
