@@ -27,10 +27,10 @@ RUN wget -nv https://artifacts.elastic.co/downloads/kibana/kibana-${VERSION}-lin
 
 # Install X-PACK.
 
-RUN wget -nv https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-${VERSION}.zip -O /tmp/x-pack.zip \
-    && cd /usr/share/kibana \
-    && bin/kibana-plugin install file:///tmp/x-pack.zip \
-    && rm /tmp/x-pack.zip
+# RUN wget -nv https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-${VERSION}.zip -O /tmp/x-pack.zip \
+#    && cd /usr/share/kibana \
+#    && bin/kibana-plugin install file:///tmp/x-pack.zip \
+#    && rm /tmp/x-pack.zip
 
 # Overwrite the base Kibana entrypoint script with our own.
 

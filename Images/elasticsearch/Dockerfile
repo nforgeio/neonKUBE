@@ -63,9 +63,9 @@ RUN wget -nv https://artifacts.elastic.co/downloads/elasticsearch/elasticsearch-
 
 # Install X-PACK.
 
-RUN wget -nv https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-${VERSION}.zip -O /tmp/x-pack.zip \
-    && /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch file:///tmp/x-pack.zip \
-    && rm /tmp/x-pack.zip
+# RUN wget -nv https://artifacts.elastic.co/downloads/packs/x-pack/x-pack-${VERSION}.zip -O /tmp/x-pack.zip \
+#    && /usr/share/elasticsearch/bin/elasticsearch-plugin install --batch file:///tmp/x-pack.zip \
+#    && rm /tmp/x-pack.zip
 
 # We're going to override the default configuration files.
 

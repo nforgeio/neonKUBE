@@ -23,8 +23,6 @@ Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined
 
 This image hosts [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html) which is typically deployed to a neonCLUSTER for holding the cluster node/container logs and metrics.  This database combined with Kibana form a powerful tool for cluster operators and developers.
 
-The Elastic **X-PACK plugins** are also installed but are disabled by default.  Derived images may enable these as necessary.
-
 # Configuration
 
 You need to specify the following environment variables when running the container (these are referenced by the **elasticsearch.yml** configuration file):

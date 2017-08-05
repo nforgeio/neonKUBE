@@ -48,10 +48,10 @@ cluster.name: ${ELASTICSEARCH_CLUSTER}
 
 # -------------------------------- X-Pack Settings ----------------------------
 
-xpack.security.enabled: false
-xpack.monitoring.enabled: false
-xpack.graph.enabled: false
-xpack.watcher.enabled: false
+# xpack.security.enabled: false
+# xpack.monitoring.enabled: false
+# xpack.graph.enabled: false
+# xpack.watcher.enabled: false
 # xpack.reporting.enabled: false
 
 # ------------------------------------ Node ------------------------------------
