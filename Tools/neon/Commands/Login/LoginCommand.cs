@@ -27,7 +27,7 @@ namespace NeonTool
     public class LoginCommand : CommandBase
     {
         private const string usage = @"
-Manages cluster logins fir the current user on the local computer.
+Manages cluster logins for the current user on the local computer.
 
 USAGE:
 
