@@ -60,20 +60,23 @@ ARGUMENTS:
     QUERY-FILE      - Name of a file with a N1QL query.
     JSON            - JSON object being upserted.
     @JSON-FILE      - Name of the file with the JSON object
-                      being upserted.
+                      or array of JSON objects to be upserted.
     -               - The query or JSON will be read from STDIN.
 
 OPTIONS:
 
-    --key           - (optional) key to user for upserts
+    --key           - (optional) key to user for object upserts
     
 COMMANDS:
 
     query       Performs a N1QL query and writes the JSON results
                 to STDOUT.
 
-    upsert      Upserts a JSON object to the database using KEY as
-                the object key if present, using a GUID otherwise. 
+    upsert      Upserts a JSON object to the bucket using KEY as
+                the object key if present or UUID otherwise.  For
+                object arrays, the special [@key] property will
+                be used as the key if present, otherwise the
+                objects will be persisted using a UUID.
 ";
         /// <inheritdoc/>
         public override string[] Words
@@ -198,7 +201,7 @@ COMMANDS:
 
                         if (jsonText == "-")
                         {
-                            // Read the query from STDIN.
+                            // Read the object from STDIN.
 
                             jsonText = NeonHelper.ReadStandardInputText();
                         }
@@ -211,23 +214,85 @@ COMMANDS:
 
                         var jToken  = JsonConvert.DeserializeObject<JToken>(jsonText);
                         var jObject = jToken as JObject;
+                        var jArray  = jToken as JArray;
 
-                        if (jObject == null)
+                        if (jObject == null && jArray == null)
                         {
-                            Console.WriteLine("*** ERROR: JSON argument must be an object.");
+                            Console.WriteLine("*** ERROR: JSON argument must be an object or array of objects.");
                             Program.Exit(1);
                         }
 
                         var key = commandLine.GetOption("--key");
 
-                        if (string.IsNullOrWhiteSpace(key))
+                        if (jObject != null)
                         {
-                            key = EntityHelper.GenerateUuid();
+                            if (string.IsNullOrWhiteSpace(key))
+                            {
+                                key = EntityHelper.GenerateUuid();
+                            }
+
+                            var upsertResult = bucket.Upsert(key, jObject);
+
+                            upsertResult.EnsureSuccess();
                         }
+                        else if (jArray != null)
+                        {
+                            if (key != null)
+                            {
+                                Console.WriteLine("*** WARN: [--key] option is ignored when upserting an array of objects.  Specifiy a [@key] property in each object to customize the key.");
+                            }
 
-                        var upsertResult = bucket.Upsert(key, jObject);
+                            // Verify that the array contains only objects.
 
-                        upsertResult.EnsureSuccess();
+                            foreach (var element in jArray)
+                            {
+                                jObject = element as JObject;
+
+                                if (jObject == null)
+                                {
+                                    Console.WriteLine("*** ERROR: JSON array has one or more elements that is not an object.");
+                                    Program.Exit(1);
+                                }
+                            }
+
+                            // Upsert the objects.
+
+                            foreach (JObject element in jArray)
+                            {
+                                var keyProperty = element.GetValue("@key");
+
+                                if (keyProperty != null)
+                                {
+                                    switch (keyProperty.Type)
+                                    {
+                                        case JTokenType.String:
+                                        case JTokenType.Integer:
+                                        case JTokenType.Float:
+                                        case JTokenType.Guid:
+                                        case JTokenType.Date:
+                                        case JTokenType.Uri:
+
+                                            key = keyProperty.ToString();
+                                            break;
+
+                                        default:
+
+                                            key = EntityHelper.GenerateUuid();
+                                            break;
+                                    }
+
+                                    element.Remove("@key"); // We don't perisit the special key property.
+                                }
+                                else
+                                {
+                                    key = EntityHelper.GenerateUuid();
+                                }
+
+                                var upsertResult = bucket.Upsert(key, jObject);
+
+                                upsertResult.EnsureSuccess();
+                            }
+                        }
                         break;
 
                     default:
