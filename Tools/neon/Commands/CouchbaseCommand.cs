@@ -288,7 +288,7 @@ COMMANDS:
                                     key = EntityHelper.GenerateUuid();
                                 }
 
-                                var upsertResult = bucket.Upsert(key, jObject);
+                                var upsertResult = bucket.Upsert(key, element);
 
                                 upsertResult.EnsureSuccess();
                             }
