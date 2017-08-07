@@ -43,7 +43,9 @@ namespace Neon.Data
     /// <para>
     /// As a convention, many <see cref="IEntity{T}"/> implementations also implement <c>static</c>
     /// <b>GetKey(...)</b> and <b>GetRef(...)</b> methods that return the Couchbase key and
-    /// reference to an entity based on parameters passed.
+    /// reference to an entity based on parameters passed.  Singleton entities (that will have
+    /// only one global instance in Couchbase) typically implement the <c>static</c>
+    /// <b>GetSingletonKey(...)</b> and <b>GetSingletonRef(...)</b> methods instead.
     /// </para>
     /// <para>
     /// Implement the <see cref="Equals(T)"/> method to compare one entity against another.
