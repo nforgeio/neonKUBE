@@ -27,6 +27,12 @@ namespace Neon.Data
         }
 
         /// <inheritdoc/>
+        public virtual string GetRef()
+        {
+            throw new NotSupportedException($"[{this.GetType().FullName}] does not implement [{nameof(GetRef)}].");
+        }
+
+        /// <inheritdoc/>
         [JsonProperty(PropertyName = "Type", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
         public string Type { get; set; }
@@ -35,6 +41,11 @@ namespace Neon.Data
         public virtual bool Equals(T other)
         {
             return NeonHelper.JsonEquals(this, other);
+        }
+
+        /// <inheritdoc/>
+        public virtual void Normalize()
+        {
         }
     }
 }

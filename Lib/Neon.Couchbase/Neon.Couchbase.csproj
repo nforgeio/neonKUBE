@@ -4,11 +4,11 @@
     <TargetFramework>netstandard1.5</TargetFramework>
     <RootNamespace>Neon.Couchbase</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>5.0.5.2</Version>
+    <Version>5.0.5.5</Version>
     <Company>NeonForge, LLC</Company>
     <Product>Neon.Cluster Library</Product>
     <Description>Couchbase client extensions.</Description>
-    <PackageReleaseNotes>Aligning package version: No significant changes.</PackageReleaseNotes>
+    <PackageReleaseNotes>IEntity added GetRef() and Normalize()</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>

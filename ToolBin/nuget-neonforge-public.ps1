@@ -36,3 +36,4 @@ Publish Neon.Couchbase
 Publish Neon.Docker
 Publish Neon.RabbitMQ
 Publish Neon.Xunit
+pause

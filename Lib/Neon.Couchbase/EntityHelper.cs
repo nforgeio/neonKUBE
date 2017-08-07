@@ -4,13 +4,7 @@
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
 using System;
-using System.ComponentModel;
 using System.Diagnostics.Contracts;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using Neon.Common;
 
 namespace Neon.Data
 {
@@ -29,7 +23,7 @@ namespace Neon.Data
         }
 
         /// <summary>
-        /// Extracts the entity ID from an entity key.
+        /// Extracts the entity reference from an entity key.
         /// </summary>
         /// <param name="entityKey">The entity key.</param>
         /// <returns>The entity ID.</returns>
@@ -41,17 +35,17 @@ namespace Neon.Data
         /// managing cross datacenter replication.
         /// </para>
         /// <para>
-        /// This method extracts the string after the last (<b>"::"</b>) as the document ID.
+        /// This method extracts the string after the first (<b>"::"</b>) as the document ID.
         /// </para>
         /// </remarks>
-        public static string GetEntityId(string entityKey)
+        public static string GetEntityRef(string entityKey)
         {
             if (string.IsNullOrEmpty(entityKey))
             {
                 return null;
             }
 
-            var pos = entityKey.LastIndexOf("::");
+            var pos = entityKey.IndexOf("::");
 
             if (pos >= 0)
             {
@@ -64,16 +58,16 @@ namespace Neon.Data
         }
 
         /// <summary>
-        /// Generates an entity key from the entity ID and entity type.
+        /// Generates an entity key from the entity reference and entity type.
         /// </summary>
-        /// <param name="entityId">The entity ID.</param>
+        /// <param name="entityRef">The entity reference.</param>
         /// <param name="entityType">The entity type.</param>
         /// <returns>The entity key.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="entityId"/> is <c>null</c> or empty.</exception>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="entityRef"/> is <c>null</c> or empty.</exception>
         /// <remarks>
         /// <para>
         /// Stoke follows a common convention where Couchbase entities are persisted using a
-        /// key formed by appending entity ID to the entity type, separated by a double
+        /// key formed by appending entity reference to the entity type, separated by a double
         /// colon (<b>"::"</b>).  This makes entity types available for filtering when
         /// managing cross datacenter replication.
         /// </para>
@@ -81,16 +75,16 @@ namespace Neon.Data
         /// This method concatenates the entity type and ID using a (<b>"::"</b>) separator.
         /// </para>
         /// </remarks>
-        public static string GetEntityKey(string entityId, string entityType)
+        public static string GetEntityKey(string entityRef, string entityType)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(entityId));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(entityRef));
 
             if (string.IsNullOrEmpty(entityType))
             {
-                return entityId;
+                return entityRef;
             }
 
-            return $"{entityType}::{entityId}";
+            return $"{entityType}::{entityRef}";
         }
 
         /// <summary>
@@ -119,6 +113,32 @@ namespace Neon.Data
             }
 
             return $"{entityType}::{entityId}";
+        }
+
+        // This is the format used to persist time to Couchbase.  Don't change
+        // this without really knowing what you're doing.
+        private const string couchbaseDateFormat = "yyyy-MM-ddTHH:mm:ss.ffffffZ";
+
+        /// <summary>
+        /// Serializes a <see cref="DateTime"/> into the standard format used
+        /// for persisting to Couchbase.
+        /// </summary>
+        /// <param name="input">The input time.</param>
+        /// <returns>The serialized output.</returns>
+        public static string ToCouchbase(DateTime input)
+        {
+            return input.ToString(couchbaseDateFormat);
+        }
+
+        /// <summary>
+        /// Serializes a <see cref="DateTimeOffset"/> into the standard format used
+        /// for persisting to Couchbase.
+        /// </summary>
+        /// <param name="input">The input time.</param>
+        /// <returns>The serialized output.</returns>
+        public static string ToCouchbase(DateTimeOffset input)
+        {
+            return input.ToString(couchbaseDateFormat);
         }
     }
 }
