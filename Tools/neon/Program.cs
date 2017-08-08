@@ -834,7 +834,7 @@ tool requires admin priviledges for direct mode.
 
             var logWriter = (TextWriter)null;
 
-            if (LogPath != null)
+            if (!string.IsNullOrEmpty(LogPath))
             {
                 logWriter = new StreamWriter(new FileStream(Path.Combine(LogPath, name + ".log"), FileMode.Create, FileAccess.ReadWrite));
             }
