@@ -181,6 +181,7 @@ namespace Neon.Time
         //---------------------------------------------------------------------
         // Instance members
 
+        private object              syncRoot     = new object();
         private DateTime            lastPollTime = DateTime.MaxValue;
         private DateTime            nextFireTime = DateTime.MaxValue;
         private RecurringTimerType  type;
@@ -276,33 +277,36 @@ namespace Neon.Time
         /// Determines if the timer has fired by comparing the current time passed with
         /// the next scheduled firing time.
         /// </summary>
-        /// <param name="now">The current time.</param>
-        public bool HasFired(DateTime now)
+        /// <param name="nowUtc">The current time (UTC).</param>
+        public bool HasFired(DateTime nowUtc)
         {
-            try
+            lock (syncRoot)
             {
-                if (lastPollTime == DateTime.MaxValue)
+                try
                 {
-                    // This is the first time the timer has been called so we're just going
-                    // to compute the next firing time and don't fire the timer.
+                    if (lastPollTime == DateTime.MaxValue)
+                    {
+                        // This is the first time the timer has been called so we're just going
+                        // to compute the next firing time and don't fire the timer.
 
-                    Start(now);
+                        Start(nowUtc);
+                        return false;
+                    }
+
+                    if (nowUtc >= nextFireTime)
+                    {
+                        // Timer has fired.
+
+                        Start(nowUtc);
+                        return true;
+                    }
+
                     return false;
                 }
-
-                if (now >= nextFireTime)
+                finally
                 {
-                    // Timer has fired.
-
-                    Start(now);
-                    return true;
+                    lastPollTime = nowUtc;
                 }
-
-                return false;
-            }
-            finally
-            {
-                lastPollTime = now;
             }
         }
 
@@ -360,7 +364,7 @@ namespace Neon.Time
         /// <summary>
         /// Starts the timer by computing the next firing time after the time passed.
         /// </summary>
-        /// <param name="now">The current time.</param>
+        /// <param name="nowUtc">The current time (UTC).</param>
         /// <remarks>
         /// <para>
         /// Applications may use this method to initalize the timer.  This is useful in situations where
@@ -369,74 +373,85 @@ namespace Neon.Time
         /// not fire for a scheduled event that occurs during this interval.
         /// </para>
         /// </remarks>
-        public void Start(DateTime now)
+        public void Start(DateTime nowUtc)
         {
-            switch (type)
+            lock (syncRoot)
             {
-                case RecurringTimerType.Disabled:
+                switch (type)
+                {
+                    case RecurringTimerType.Disabled:
 
-                    nextFireTime = DateTime.MaxValue;
-                    break;
+                        nextFireTime = DateTime.MaxValue;
+                        break;
 
-                case RecurringTimerType.Minute:
+                    case RecurringTimerType.Minute:
 
-                    nextFireTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, now.Minute, 0);
-                    nextFireTime += TimeSpan.FromMinutes(1);
-                    break;
+                        nextFireTime = new DateTime(nowUtc.Year, nowUtc.Month, nowUtc.Day, nowUtc.Hour, nowUtc.Minute, 0);
+                        nextFireTime += TimeSpan.FromMinutes(1);
+                        break;
 
-                case RecurringTimerType.QuarterHour:
+                    case RecurringTimerType.QuarterHour:
 
-                    nextFireTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, 15 * (now.Minute / 15), 0) + timeOffset;
+                        nextFireTime = new DateTime(nowUtc.Year, nowUtc.Month, nowUtc.Day, nowUtc.Hour, 15 * (nowUtc.Minute / 15), 0) + timeOffset;
 
-                    if (nextFireTime <= now)
-                    {
-                        nextFireTime += TimeSpan.FromMinutes(15);
-                    }
-                    break;
+                        if (nextFireTime <= nowUtc)
+                        {
+                            nextFireTime += TimeSpan.FromMinutes(15);
+                        }
+                        break;
 
-                case RecurringTimerType.Hourly:
+                    case RecurringTimerType.Hourly:
 
-                    nextFireTime = new DateTime(now.Year, now.Month, now.Day, now.Hour, 0, 0) + timeOffset;
+                        nextFireTime = new DateTime(nowUtc.Year, nowUtc.Month, nowUtc.Day, nowUtc.Hour, 0, 0) + timeOffset;
 
-                    if (nextFireTime <= now)
-                    {
-                        nextFireTime += TimeSpan.FromHours(1);
-                    }
-                    break;
+                        if (nextFireTime <= nowUtc)
+                        {
+                            nextFireTime += TimeSpan.FromHours(1);
+                        }
+                        break;
 
-                case RecurringTimerType.Daily:
+                    case RecurringTimerType.Daily:
 
-                    nextFireTime = new DateTime(now.Year, now.Month, now.Day, 0, 0, 0) + timeOffset;
+                        nextFireTime = new DateTime(nowUtc.Year, nowUtc.Month, nowUtc.Day, 0, 0, 0) + timeOffset;
 
-                    if (nextFireTime <= now)
-                    {
-                        nextFireTime += TimeSpan.FromDays(1);
-                    }
-                    break;
+                        if (nextFireTime <= nowUtc)
+                        {
+                            nextFireTime += TimeSpan.FromDays(1);
+                        }
+                        break;
 
-                case RecurringTimerType.Interval:
+                    case RecurringTimerType.Interval:
 
-                    nextFireTime = now + timeOffset;
-                    break;
+                        nextFireTime = nowUtc + timeOffset;
+                        break;
 
-                default:
+                    default:
 
-                    throw new NotImplementedException();
+                        throw new NotImplementedException();
+                }
             }
         }
 
         /// <summary>
         /// Sets the firing time for the timer.
         /// </summary>
-        /// <param name="time">The scheduled time.</param>
+        /// <param name="timeUtc">Optionally specifies the scheduled time (UTC) (defaults to now).</param>
         /// <remarks>
         /// This is useful in situations where it is necessary to special-case a
         /// specific firing time.
         /// </remarks>
-        public void SetFireTime(DateTime time)
+        public void Set(DateTime timeUtc = default(DateTime))
         {
-            nextFireTime = time;
-            lastPollTime = DateTime.MinValue;
+            lock (syncRoot)
+            {
+                if (timeUtc == default(DateTime))
+                {
+                    timeUtc = DateTime.UtcNow;
+                }
+
+                nextFireTime = timeUtc;
+                lastPollTime = DateTime.MinValue;
+            }
         }
 
         /// <summary>

@@ -119,6 +119,24 @@ namespace TestCommon
         }
 
         [Fact]
+        public async Task RecurringTimer_Set()
+        {
+            var timer = new RecurringTimer("Interval:00:00:05");
+
+            Assert.False(timer.HasFired());
+
+            timer.Set();
+            Assert.True(timer.HasFired());
+            Assert.False(timer.HasFired());
+
+            var startUtc = DateTime.UtcNow;
+
+            await timer.WaitAsync(TimeSpan.FromMilliseconds(50));
+
+            Assert.True(DateTime.UtcNow - startUtc >= TimeSpan.FromSeconds(5));
+        }
+
+        [Fact]
         public void RecurringTimer_Parse()
         {
             RecurringTimer timer;
