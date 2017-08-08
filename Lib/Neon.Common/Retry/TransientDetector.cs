@@ -69,6 +69,13 @@ namespace Neon.Retry
                 return true;
             }
 
+            var httpRequestException = e as HttpRequestException;
+
+            if (httpRequestException != null)
+            {
+                return true;
+            }
+
             var aggregateException = e as AggregateException;
 
             if (aggregateException != null)
