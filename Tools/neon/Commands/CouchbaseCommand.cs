@@ -61,7 +61,8 @@ ARGUMENTS:
     JSON            - JSON object being upserted.
     @JSON-FILE      - Name of the file with the JSON object
                       or array of JSON objects to be upserted.
-    -               - The query or JSON will be read from STDIN.
+    -               - Indicates that the query or JSON will be 
+                      read from STDIN.
 
 OPTIONS:
 
