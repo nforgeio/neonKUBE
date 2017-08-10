@@ -3,11 +3,11 @@
   <PropertyGroup>
     <TargetFramework>netstandard1.4</TargetFramework>
     <RootNamespace>Neon.Stack</RootNamespace>
-    <Version>5.0.5.7</Version>
+    <Version>5.0.5.8</Version>
     <Company>NeonForge, LLC</Company>
     <Authors>Jeff Lill</Authors>
-    <Description>Useful common code used by NeonForge projects.</Description>
-    <PackageReleaseNotes>RecurringTimer.SetFireTime() renamed to Set() and also made the time parameter optional.</PackageReleaseNotes>
+    <Description>Handy common code used by NeonForge projects.</Description>
+    <PackageReleaseNotes>RecurringTimer.SetFireTime() renamed to Set() and also made the time parameter optional.  Added InvalidEntityException.</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>

@@ -88,10 +88,10 @@ namespace Neon.Data
         bool Equals(T other);
 
         /// <summary>
-        /// Optionally ensures that the entity properties are properly
-        /// initialized.  The default <see cref="Entity{T}"/> implementation
-        /// does nothing.
+        /// Ensures that the entity properties are properly initialized.  The default 
+        /// <see cref="Entity{T}"/> implementation does nothing.
         /// </summary>
+        /// <exception cref="InvalidEntityException">Thrown if any entity properties are not formatted correctly.</exception>
         void Normalize();
     }
 }
