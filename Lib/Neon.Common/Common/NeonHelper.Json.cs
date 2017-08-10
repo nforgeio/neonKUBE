@@ -21,8 +21,7 @@ namespace Neon.Common
     public static partial class NeonHelper
     {
         /// <summary>
-        /// The global JSON serializer settings.  These settings serialize enumerations as
-        /// non-camel case strings, not integers for better cross language compatibility.
+        /// The global JSON serializer settings.
         /// </summary>
         public static JsonSerializerSettings JsonSerializerSettings { get; set; }
 
