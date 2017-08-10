@@ -4,7 +4,7 @@
     <TargetFramework>netstandard1.5</TargetFramework>
     <RootNamespace>Neon.Cluster</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>5.0.5.8</Version>
+    <Version>5.0.5.9</Version>
     <Company>NeonForge, LLC</Company>
     <Product>Neon.Cluster Library</Product>
     <Description>Provides NeonCluster management and service capabilities.</Description>

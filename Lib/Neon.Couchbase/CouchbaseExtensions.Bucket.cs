@@ -265,7 +265,7 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Attemps to retrieve a key value, returning <c>null</c> if it doesn't exist rather
+        /// Attempts to retrieve a key value, returning <c>null</c> if it doesn't exist rather
         /// than throwing an exception.
         /// </summary>
         /// <typeparam name="T">The value type.</typeparam>
@@ -549,6 +549,48 @@ namespace Couchbase
         }
 
         /// <summary>
+        /// Inserts an entity, throwing an exception if the entity already exists or there
+        /// was another error.
+        /// </summary>
+        /// <typeparam name="TEntity">The entity type.</typeparam>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
+        /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InsertSafeAsync<TEntity>(this IBucket bucket, TEntity entity, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+            where TEntity: class, IEntity
+        {
+            Covenant.Requires<ArgumentNullException>(entity != null);
+
+            var result = await bucket.InsertAsync<TEntity>(entity.GetKey(), entity, replicateTo, persistTo);
+
+            VerifySuccess<TEntity>(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
+        }
+
+        /// <summary>
+        /// Inserts an entity with an expiration TTL, throwing an exception if the key already exists or there
+        /// was another error.  Note that 30 seconds is the maximum expiration TTL supported by the
+        /// server.
+        /// </summary>
+        /// <typeparam name="TEntity">The entity type.</typeparam>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="expiration">The expiration TTL.</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
+        /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task InsertSafeAsync<TEntity>(this IBucket bucket, TEntity entity, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+            where TEntity: class, IEntity
+        {
+            Covenant.Requires<ArgumentNullException>(entity != null);
+
+            var result = await bucket.InsertAsync<TEntity>(entity.GetKey(), entity, expiration, replicateTo, persistTo);
+
+            VerifySuccess<TEntity>(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
+        }
+
+        /// <summary>
         /// Executes a query request, throwing an exception if there were any errors.
         /// </summary>
         /// <typeparam name="T">The result type.</typeparam>
@@ -622,6 +664,23 @@ namespace Couchbase
         public static async Task RemoveSafeAsync(this IBucket bucket, string key, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             var result = await bucket.RemoveAsync(key, replicateTo, persistTo);
+
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
+        }
+
+        /// <summary>
+        /// Removes an entity, throwning an exception if there were any errors.
+        /// </summary>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="entity">The entity to be deleted.</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
+        /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task RemoveSafeAsync(this IBucket bucket, IEntity entity, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+        {
+            Covenant.Requires<ArgumentNullException>(entity != null);
+
+            var result = await bucket.RemoveAsync(entity.GetKey(), replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }
@@ -732,6 +791,81 @@ namespace Couchbase
         }
 
         /// <summary>
+        /// Replaces an entity, throwing an exception if there were any errors.
+        /// </summary>
+        /// <typeparam name="TEntity">The entity type.</typeparam>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="entity">The replacement entity.</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
+        /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task ReplaceSafeAsync<TEntity>(this IBucket bucket, TEntity entity, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+            where TEntity : class, IEntity
+        {
+            Covenant.Requires<ArgumentNullException>(entity != null);
+
+            var result = await bucket.ReplaceAsync<TEntity>(entity.GetKey(), entity, replicateTo, persistTo);
+
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
+        }
+
+        /// <summary>
+        /// Replaces an entity, optionally specifying a CAS value and throwing an exception
+        /// if there were any errors.
+        /// </summary>
+        /// <typeparam name="TEntity">The entity type.</typeparam>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="entity">The replacement entity.</param>
+        /// <param name="cas">The optional CAS value.</param>
+        /// <param name="expiration">Optional expiration TTL.</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
+        /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task ReplaceSafeAsync<TEntity>(this IBucket bucket, TEntity entity, ulong? cas = null, TimeSpan? expiration = null, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+            where TEntity : class, IEntity
+        {
+            Covenant.Requires<ArgumentNullException>(entity != null);
+
+            IOperationResult<TEntity> result;
+
+            var replicateOrPersist = replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero;
+            var key                = entity.GetKey();
+
+            if (cas.HasValue && expiration.HasValue)
+            {
+                result = await bucket.ReplaceAsync<TEntity>(key, entity, cas.Value, expiration.Value, replicateTo, persistTo);
+            }
+            else if (cas.HasValue)
+            {
+                result = await bucket.ReplaceAsync<TEntity>(key, entity, cas.Value, replicateTo, persistTo);
+            }
+            else if (expiration.HasValue)
+            {
+                // $todo(jeff.lill):
+                //
+                // There doesn't appear to be a way to do this in one API call because
+                // there isn't an override that doesn't include a CAS parameter.  Research
+                // whether it's possible to pass something like 0 or -1 as the CAS to
+                // disable CAS behavior.
+
+                var result1 = await bucket.ReplaceAsync<TEntity>(key, entity, replicateTo, persistTo);
+
+                VerifySuccess<TEntity>(result1, replicateOrPersist);
+
+                var result2 = await bucket.TouchAsync(key, expiration.Value);
+
+                VerifySuccess(result2, replicateOrPersist);
+                return;
+            }
+            else
+            {
+                result = await bucket.ReplaceAsync<TEntity>(key, entity, replicateTo, persistTo);
+            }
+
+            VerifySuccess<TEntity>(result, replicateOrPersist);
+        }
+
+        /// <summary>
         /// Touches a key and updates its expiry, throwing an exception if there were errors.
         /// </summary>
         /// <param name="bucket">The bucket.</param>
@@ -746,6 +880,22 @@ namespace Couchbase
         }
 
         /// <summary>
+        /// Touches an entity and updates its expiry, throwing an exception if there were errors.
+        /// </summary>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="expiration"></param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task TouchSafeAsync(this IBucket bucket, IEntity entity, TimeSpan expiration)
+        {
+            Covenant.Requires<ArgumentNullException>(entity != null);
+
+            var result = await bucket.TouchAsync(entity.GetKey(), expiration);
+
+            VerifySuccess(result, replicateOrPersist: false);
+        }
+
+        /// <summary>
         /// Unlocks a key, throwing an exception if there were errors.
         /// </summary>
         /// <param name="bucket">The bucket.</param>
@@ -755,6 +905,22 @@ namespace Couchbase
         public static async Task UnlockSafeAsync(this IBucket bucket, string key, ulong cas)
         {
             var result = await bucket.UnlockAsync(key, cas);
+
+            VerifySuccess(result, replicateOrPersist: false);
+        }
+
+        /// <summary>
+        /// Unlocks an entity, throwing an exception if there were errors.
+        /// </summary>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="cas">The CAS value.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task UnlockSafeAsync(this IBucket bucket, IEntity entity, ulong cas)
+        {
+            Covenant.Requires<ArgumentNullException>(entity != null);
+
+            var result = await bucket.UnlockAsync(entity.GetKey(), cas);
 
             VerifySuccess(result, replicateOrPersist: false);
         }
@@ -793,6 +959,25 @@ namespace Couchbase
         }
 
         /// <summary>
+        /// Inserts or updates an entity, throwing an exception if there are errors.
+        /// </summary>
+        /// <typeparam name="TEntity">The entity type.</typeparam>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
+        /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task UpsertSafeAsync<TEntity>(this IBucket bucket, TEntity entity, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+            where TEntity: class, IEntity
+        {
+            Covenant.Requires<ArgumentNullException>(entity != null);
+
+            var result = await bucket.UpsertAsync<TEntity>(entity.GetKey(), entity, replicateTo, persistTo);
+
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
+        }
+
+        /// <summary>
         /// Inserts or updates a key using a CAS, throwing an exception if there are errors.
         /// </summary>
         /// <typeparam name="T">The value type.</typeparam>
@@ -810,6 +995,28 @@ namespace Couchbase
             // Not so sure about setting [uint.MaxValue] as the expiration here.
 
             var result = await bucket.UpsertAsync<T>(key, value, cas, uint.MaxValue, replicateTo, persistTo);
+
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
+        }
+
+        /// <summary>
+        /// Inserts or updates an entity using a CAS, throwing an exception if there are errors.
+        /// </summary>
+        /// <typeparam name="TEntity">The entity type.</typeparam>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="cas">The CAS.</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
+        /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task UpsertSafeAsync<TEntity>(this IBucket bucket, TEntity entity, ulong cas, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+            where TEntity : class, IEntity
+        {
+            // $todo(jeff.lill):
+            //
+            // Not so sure about setting [uint.MaxValue] as the expiration here.
+
+            var result = await bucket.UpsertAsync<TEntity>(entity.GetKey(), entity, cas, uint.MaxValue, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }
@@ -837,6 +1044,30 @@ namespace Couchbase
         }
 
         /// <summary>
+        /// Inserts or updates an entity setting an expiration, throwing an exception if there are errors.
+        /// </summary>
+        /// <typeparam name="TEntity">The entity type.</typeparam>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="expiration">The expiration.</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
+        /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task UpsertSafeAsync<TEntity>(this IBucket bucket, TEntity entity, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+            where TEntity : class, IEntity
+        {
+            Covenant.Requires<ArgumentNullException>(entity != null);
+
+            // $todo(jeff.lill):
+            //
+            // Not so sure about setting [uint.MaxValue] as the expiration here.
+
+            var result = await bucket.UpsertAsync<TEntity>(entity.GetKey(), entity, expiration, replicateTo, persistTo);
+
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
+        }
+
+        /// <summary>
         /// Inserts or updates a key using a CAS and setting an expiration, throwing an exception if there are errors.
         /// </summary>
         /// <typeparam name="T">The value type.</typeparam>
@@ -851,6 +1082,25 @@ namespace Couchbase
         public static async Task UpsertSafeAsync<T>(this IBucket bucket, string key, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
         {
             var result = await bucket.UpsertAsync<T>(key, value, cas, expiration, replicateTo, persistTo);
+
+            VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
+        }
+
+        /// <summary>
+        /// Inserts or updates an entity using a CAS and setting an expiration, throwing an exception if there are errors.
+        /// </summary>
+        /// <typeparam name="TEntity">The entity type.</typeparam>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="entity">The entity.</param>
+        /// <param name="cas">The CAS.</param>
+        /// <param name="expiration">The expiration.</param>
+        /// <param name="replicateTo">Optional replication factor (defaults to <see cref="ReplicateTo.Zero"/>).</param>
+        /// <param name="persistTo">Optional persistance factor (defaults to <see cref="PersistTo.Zero"/>).</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        public static async Task UpsertSafeAsync<TEntity>(this IBucket bucket, TEntity entity, ulong cas, TimeSpan expiration, ReplicateTo replicateTo = ReplicateTo.Zero, PersistTo persistTo = PersistTo.Zero)
+            where TEntity : class, IEntity
+        {
+            var result = await bucket.UpsertAsync<TEntity>(entity.GetKey(), entity, cas, expiration, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
         }

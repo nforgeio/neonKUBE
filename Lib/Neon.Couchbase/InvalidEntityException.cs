@@ -14,7 +14,7 @@ using Neon.Common;
 namespace Neon.Data
 {
     /// <summary>
-    /// Thrown by <see cref="IEntity{T}.Normalize()"/> implementations when the entity
+    /// Thrown by <see cref="IEntity.Normalize()"/> implementations when the entity
     /// has invalid property values.
     /// </summary>
     public class InvalidEntityException : Exception
