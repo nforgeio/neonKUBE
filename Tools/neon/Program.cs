@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -442,7 +443,7 @@ tool requires admin priviledges for direct mode.
                 var     waitSecondsOption = leftCommandLine.GetOption("--wait");
                 double  waitSeconds;
 
-                if (!double.TryParse(waitSecondsOption, out waitSeconds) || waitSeconds < 0)
+                if (!double.TryParse(waitSecondsOption, NumberStyles.Any, NumberFormatInfo.InvariantInfo, out waitSeconds) || waitSeconds < 0)
                 {
                     Console.Error.WriteLine($"*** ERROR: [--wait={waitSecondsOption}] option is not valid.");
                     Program.Exit(1);

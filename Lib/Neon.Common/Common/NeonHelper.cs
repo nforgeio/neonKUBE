@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -194,7 +195,7 @@ namespace Neon.Common
                 input = input.Substring(0, input.Length - trim);
             }
 
-            if (!double.TryParse(input.Trim(), out var raw))
+            if (!double.TryParse(input.Trim(), NumberStyles.Any, NumberFormatInfo.InvariantInfo, out var raw))
             {
                 return false;
             }

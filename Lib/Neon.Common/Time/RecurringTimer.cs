@@ -4,6 +4,7 @@
 // COPYRIGHT:   Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
 using System;
+using System.Globalization;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Reflection;
@@ -591,11 +592,11 @@ namespace Neon.Time
 
                     try
                     {
-                        minutes = double.Parse(fields[0]);
+                        minutes = double.Parse(fields[0], NumberFormatInfo.InvariantInfo);
 
                         if (fields.Length > 1)
                         {
-                            seconds = double.Parse(fields[1]);
+                            seconds = double.Parse(fields[1], NumberFormatInfo.InvariantInfo);
                         }
 
                         timeOffset = TimeSpan.FromMinutes(minutes) + TimeSpan.FromSeconds(seconds);
@@ -631,11 +632,11 @@ namespace Neon.Time
 
                     try
                     {
-                        minutes = double.Parse(fields[0]);
+                        minutes = double.Parse(fields[0], NumberFormatInfo.InvariantInfo);
 
                         if (fields.Length > 1)
                         {
-                            seconds = double.Parse(fields[1]);
+                            seconds = double.Parse(fields[1], NumberFormatInfo.InvariantInfo);
                         }
 
                         timeOffset = TimeSpan.FromMinutes(minutes) + TimeSpan.FromSeconds(seconds);
@@ -695,9 +696,9 @@ namespace Neon.Time
 
                     try
                     {
-                        hours      = double.Parse(fields[0]);
-                        minutes    = double.Parse(fields[1]);
-                        seconds    = double.Parse(fields[2]);
+                        hours      = double.Parse(fields[0], NumberFormatInfo.InvariantInfo);
+                        minutes    = double.Parse(fields[1], NumberFormatInfo.InvariantInfo);
+                        seconds    = double.Parse(fields[2], NumberFormatInfo.InvariantInfo);
                         timeOffset = TimeSpan.FromHours(hours) + TimeSpan.FromMinutes(minutes) + TimeSpan.FromSeconds(seconds);
                     }
                     catch
