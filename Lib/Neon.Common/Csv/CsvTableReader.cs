@@ -28,8 +28,7 @@ namespace Neon.Csv
     /// <para>
     /// You'll process each data row by calling <see cref="ReadRow" />.  This returns a list
     /// with the next row of data or <c>null</c> if the end of the table has been reached.  You can
-    /// process the row data returned directly or call the <b>Parse()</b> methods to extract column
-    /// data from the current row.  You can also use the <see cref="GetColumn" /> method to
+    /// process the row data returned directly or use the <see cref="GetColumn" /> method to
     /// access a column value on the current row directly.
     /// </para>
     /// <note>
