@@ -125,7 +125,7 @@ namespace Neon.Csv
                             {
                                 if (reader.Peek() == -1)
                                 {
-                                    // At one point I throw a FormatException here because this really is
+                                    // At one point I threw a FormatException here because this really is
                                     // an error (a missing closing quote).  But, it appears that sometimes
                                     // Excel doesn't write the last quote, so we'll just consider this to
                                     // terminate the field.
@@ -140,6 +140,7 @@ namespace Neon.Csv
                                 {
                                     if (reader.Peek() == (int)'"')
                                     {
+                                        reader.Read();
                                         sb.Append('"'); // Escaped quote
                                     }
                                     else
@@ -148,7 +149,9 @@ namespace Neon.Csv
                                     }
                                 }
                                 else
+                                {
                                     sb.Append(ch);
+                                }
                             }
                             break;
 

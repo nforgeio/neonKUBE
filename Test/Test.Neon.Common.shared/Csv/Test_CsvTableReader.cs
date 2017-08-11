@@ -50,7 +50,8 @@ namespace LillTek.Common.Test
             string table =
 @"Col1,Col2,Col3
 10,true,25.20
-no,10";
+no,10
+""Hello """"World""""!"",BAR";
 
             reader = new CsvTableReader(new CsvReader(table));
             Assert.Equal(3, reader.ColumnMap.Count);
@@ -81,6 +82,10 @@ no,10";
             Assert.NotNull(reader.ReadRow());
             Assert.Equal("no", reader["Col1"]);
             Assert.Equal("10", reader["Col2"]);
+
+            Assert.NotNull(reader.ReadRow());
+            Assert.Equal(@"Hello ""World""!", reader["Col1"]);
+            Assert.Equal("BAR", reader["Col2"]);
 
             Assert.Null(reader.ReadRow());
             Assert.Null(reader.ReadRow());
