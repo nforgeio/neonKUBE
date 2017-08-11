@@ -607,7 +607,7 @@ namespace Neon.Cluster
 
             // Compute the hash.
 
-            this.Hash = Convert.ToBase64String(MD5.Create().ComputeHash(NeonHelper.JsonSerialize(clone)));
+            this.Hash = MD5.Create().ComputeHashBase64(NeonHelper.JsonSerialize(clone));
         }
 
         /// <summary>

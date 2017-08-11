@@ -41,7 +41,7 @@ namespace NeonProxyManager
         {
             this.Name        = name;
             this.Certificate = certificate;
-            this.Hash        = Convert.ToBase64String(MD5.Create().ComputeHash(NeonHelper.JsonSerialize(certificate, Formatting.None)));
+            this.Hash        = MD5.Create().ComputeHashBase64(NeonHelper.JsonSerialize(certificate, Formatting.None));
         }
 
         /// <summary>
