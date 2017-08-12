@@ -1,9 +1,9 @@
-﻿<Project Sdk="Microsoft.NET.Sdk">
+<Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
     <TargetFramework>netstandard1.4</TargetFramework>
     <RootNamespace>Neon.Stack</RootNamespace>
-    <Version>5.0.5.11</Version>
+    <Version>5.0.5.12</Version>
     <Company>NeonForge, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>Handy common code used by NeonForge projects.</Description>

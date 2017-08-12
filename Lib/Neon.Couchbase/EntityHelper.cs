@@ -14,12 +14,54 @@ namespace Neon.Data
     public static class EntityHelper
     {
         /// <summary>
-        /// Generates a globally unique ID.
+        /// Generates a URI-safe globally unique ID.
         /// </summary>
         /// <returns>The ID as a string.</returns>
-        public static string GenerateUuid()
+        /// <remarks>
+        /// <note>
+        /// The value returned is a <see cref="Guid"/> converted to base-64 and then
+        /// made URI safe by replacing "=" characters with "-" and "/" to "_" and
+        /// removing any "=" padding charcters.
+        /// </note>
+        /// </remarks>
+        public static string CreateUuid()
         {
-            return Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+            var base64       = Convert.ToBase64String(Guid.NewGuid().ToByteArray());
+            var paddingCount = 0;
+
+            for (int i = base64.Length - 1; i >= 0; i--)
+            {
+                if (base64[i] != '=')
+                {
+                    break;
+                }
+
+                paddingCount++;
+            }
+
+            var converted = new char[base64.Length - paddingCount];
+
+            for (int i = 0; i < converted.Length; i++)
+            {
+                var ch = base64[i];
+
+                switch (ch)
+                {
+                    case '+':
+
+                        ch = '-';
+                        break;
+
+                    case '/':
+
+                        ch = '_';
+                        break;
+                }
+
+                converted[i] = ch;
+            }
+
+            return new string(converted);
         }
 
         /// <summary>

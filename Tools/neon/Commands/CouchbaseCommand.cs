@@ -229,7 +229,7 @@ COMMANDS:
                         {
                             if (string.IsNullOrWhiteSpace(key))
                             {
-                                key = EntityHelper.GenerateUuid();
+                                key = EntityHelper.CreateUuid();
                             }
 
                             var upsertResult = bucket.Upsert(key, jObject);
@@ -278,7 +278,7 @@ COMMANDS:
 
                                         default:
 
-                                            key = EntityHelper.GenerateUuid();
+                                            key = EntityHelper.CreateUuid();
                                             break;
                                     }
 
@@ -286,7 +286,7 @@ COMMANDS:
                                 }
                                 else
                                 {
-                                    key = EntityHelper.GenerateUuid();
+                                    key = EntityHelper.CreateUuid();
                                 }
 
                                 var upsertResult = bucket.Upsert(key, element);
