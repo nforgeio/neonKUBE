@@ -20,9 +20,9 @@ The **neon-proxy-manager** image handles the generation and updating of the prox
 
 # Environment Variables
 
-* **VAULT_CREDENTIALS** (*required*) Names the file within `/run/secrets/` that holds the Vault credentials the proxy manager will need to access TLS certificates.
+* **VAULT_CREDENTIALS** (*required*) - names the file within `/run/secrets/` that holds the Vault credentials the proxy manager will need to access TLS certificates.
 
-* **LOG_LEVEL** (*optional*) Specifies the logging level: `CRITICAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
+* **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
 # Secrets
 
@@ -83,25 +83,25 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`name2: <ProxyRoute json>`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`...`
 
-* **poll-seconds** (*double*) Specifies how often the proxy manager should scan TLS certificates persisted in Vault for expiration checks and updates and also poll the individual proxy definitions for changes.
+* **poll-seconds** (*double*) - how often the proxy manager should scan TLS certificates persisted in Vault for expiration checks and updates and also poll the individual proxy definitions for changes.
 
-* **cert-warn-days** (*double*) Specifies the number of days in advance to begin warning of certificate expirations.
+* **cert-warn-days** (*double*) - number of days in advance to begin warning of certificate expirations.
 
-* **proxies/.../conf** Holds public or private proxy's generated HAProxy configuration as a ZIP archive.
+* **proxies/.../conf** - public or private proxy's generated HAProxy configuration as a ZIP archive.
 
-* **proxies/.../hash** The MD5 hash of the public or private proxy's conf archive combined with the hash of all of the referenced certificates.  This is used by **neon-proxy** instances to detect when the proxy configuration has changed.
+* **proxies/.../hash** - MD5 hash of the public or private proxy's conf archive combined with the hash of all of the referenced certificates.  This is used by **neon-proxy** instances to detect when the proxy configuration has changed.
 
-* **status/...** (*json*) Describes the proxy route status at the time the **neon-proxy-manager** last processed cluster routes for the named proxy.
+* **status/...** (*json*) - proxy route status at the time the **neon-proxy-manager** last processed cluster routes for the named proxy.
 
-* **conf** Root key for proxy settings that need to be monitored for changes.
+* **conf** - root key for proxy settings that need to be monitored for changes.
 
-* **reload** Touched when the neon proxy NAME reload command is executed.  **neon-proxy-manager** monitors this and republishes immediately on a change.
+* **reload** - touched when the neon proxy NAME reload command is executed.  **neon-proxy-manager** monitors this and republishes immediately on a change.
 
-* **cert-update** Touched by the **neon-cli** whenever certificates are modified.  **neon-proxy-manager** monitors this and republishes immediately on a change.
+* **cert-update** - touched by the **neon-cli** whenever certificates are modified.  **neon-proxy-manager** monitors this and republishes immediately on a change.
 
-* **settings** Global per proxy settings for a proxy formatted as JSON.
+* **settings** - global (per proxy) settings for a proxy formatted as JSON.
 
-* **routes** Named per proxy routes formatted as JSON.
+* **routes** - named (per proxy) routes formatted as JSON.
 
 # Vault
 

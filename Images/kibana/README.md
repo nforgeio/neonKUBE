@@ -27,7 +27,7 @@ Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined
 
 You need to specify the following environment variables when running the container (these are referenced by the `elasticsearch.yam` configuration file):
 
-* **ELASTICSEARCH_URL** The URL to the Elasticsearch cluster.
+* **ELASTICSEARCH_URL** - URL to the Elasticsearch cluster.
 
 **NOTE**: This URL should not include a trailing "/".
 

@@ -12,15 +12,15 @@ This image derives from the offical [registry](https://hub.docker.com/_/registry
 
 # Environment Variables
 
-* **HOSTNAME** (*required*) Specifies the host name for this instance.
+* **HOSTNAME** (*required*) - host name for this instance.
 
-* **REGISTRY** (*optional*) The URL of the remote registry being cached.  This defaults to the Docker Public Registry at https://registry-1.docker.io.
+* **REGISTRY** (*optional*) - URL of the remote registry being cached.  This defaults to the Docker Public Registry at https://registry-1.docker.io.
 
-* **USERNAME** (*optional*) User ID used to authenticate with the cache and the remote registry.
+* **USERNAME** (*optional*) - user ID used to authenticate with the cache and the remote registry.
 
-* **PASSWORD** (*optional*) Password used to authenticate with the cache and the remote registry.
+* **PASSWORD** (*optional*) - password used to authenticate with the cache and the remote registry.
 
-* **LOG_LEVEL** (*optional*) The registry logging level, one of: `error`, `warn`, `info`, or `debug`.  This defaults to `info`.
+* **LOG_LEVEL** (*optional*) - registry logging level, one of: `error`, `warn`, `info`, or `debug`.  This defaults to `info`.
 
 # Volumes
 

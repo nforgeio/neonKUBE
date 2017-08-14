@@ -32,13 +32,13 @@ NOTE: Although it would be nice to run Metricbeat as a Docker service, that does
 
 # Environment Variables
 
-* **ELASTICSEARCH_URL** (*optional*) is URL of the Elasticsearch cluster where the metrics are to be persisted.  The container will send these to the neonCLUSTER's Elasticsearch log storage cluster by default.
+* **ELASTICSEARCH_URL** (*optional*) - URL of the Elasticsearch cluster where the metrics are to be persisted.  The container will send these to the neonCLUSTER's Elasticsearch log storage cluster by default.
 
-* **PERIOD** (*optional*) is the interval at which metrics are collected with an "s" or "m" suffix for seconds or minutes.  This defaults to **60s**.
+* **PERIOD** (*optional*) - interval at which metrics are collected with an "s" or "m" suffix for seconds or minutes.  This defaults to **60s**.
 
-* **PROCESSES** (*optional*) is a JSON array specifying the regex's of the process names for which statistics are to be gathered.  This defaults to **['dockerd','consul','vault']**.
+* **PROCESSES** (*optional*) - JSON array specifying the regex's of the process names for which statistics are to be gathered.  This defaults to **['dockerd','consul','vault']**.
 
-* **LOG_LEVEL** (*optional*) specifies the Metricbeat log level.  This may be one of *critical*, *error*, *warning*, *info*, or *debug*.  This defaults to **debug**.
+* **LOG_LEVEL** (*optional*) - Metricbeat log level.  This may be one of *critical*, *error*, *warning*, *info*, or *debug*.  This defaults to **debug**.
 
 # Deployment
 

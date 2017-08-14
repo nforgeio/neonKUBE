@@ -40,7 +40,7 @@ Many (perhaps most) clusters don't need this level of security and operators may
 
 # Environment Variables
 
-* **LOG_LEVEL** (*optional*) Specifies the logging level: `CRITICAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
+* **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
 # Consul Settings
 
@@ -51,9 +51,9 @@ This service reads configuration settings from Consul:
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`node_poll_seconds: 30`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`vault_poll_seconds: 30`
 
-* **node_poll_seconds** (*double*) The number of seconds the service will wait between retrieving the current cluster node information from the manager hosting the service and then updating the definition in Consul if it has changed (defaults to 30 seconds).
+* **node_poll_seconds** (*double*) - seconds the service will wait between retrieving the current cluster node information from the manager hosting the service and then updating the definition in Consul if it has changed (defaults to 30 seconds).
 
-* **vault_poll_seconds** (*double*) The number of seconds the service will wait between Vault seal status checks (defaults to 30 seconds).
+* **vault_poll_seconds** (*double*) - seconds the service will wait between Vault seal status checks (defaults to 30 seconds).
 
 You'll need to restart the containers to pick up any changes.
 

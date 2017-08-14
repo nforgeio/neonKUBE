@@ -37,17 +37,17 @@ All you need to do is pass the **CONFIG_KEY** environment variable as the Consul
 
 # Environment Variables
 
-* **CONFIG_KEY** (*required*) is the Consul key holding the HAProxy ZIP archive configuration.
+* **CONFIG_KEY** (*required*) - Consul key holding the HAProxy ZIP archive configuration.
 
-* **VAULT_CREDENTIALS** (*required*) Names the file within `/run/secrets/` that holds the Vault credentials the proxy will need to access TLS certificates.
+* **VAULT_CREDENTIALS** (*required*) - names the file within `/run/secrets/` that holds the Vault credentials the proxy will need to access TLS certificates.
 
-* **WARN_SECONDS** (*optional*) is the time in seconds between logging warning while HAProxy is running with an out-of-date configuration.  This defaults to 300 (5 minutes).
+* **WARN_SECONDS** (*optional*) - seconds between logging warning while HAProxy is running with an out-of-date configuration.  This defaults to 300 (5 minutes).
 
-* **START_SECONDS** (*optional*) is the time in seconds to give the chance HAProxy to start cleanly before processing configuration changes.  This defaults to 10 seconds.
+* **START_SECONDS** (*optional*) - seconds to give the chance HAProxy to start cleanly before processing configuration changes.  This defaults to 10 seconds.
 
-* **LOG_LEVEL** (*optional*) Specifies the logging level: `CRITICAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
+* **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
-* **DEBUG** (*optional*) Set to `true` to enable debug mode.  In this mode, the service will not delete the proxy configuration and certificate after HAProxy loads them into memory so these can be examined for debugging purposes.  HAProxy will also be started in debug mode so that it will emit extensive activity information to standard output. Thid dhould nto be enabled for production..
+* **DEBUG** (*optional*) - set to `true` to enable debug mode.  In this mode, the service will not delete the proxy configuration and certificate after HAProxy loads them into memory so these can be examined for debugging purposes.  HAProxy will also be started in debug mode so that it will emit extensive activity information to standard output. Thid dhould nto be enabled for production..
 
 # HAProxy ZIP Archive
 
