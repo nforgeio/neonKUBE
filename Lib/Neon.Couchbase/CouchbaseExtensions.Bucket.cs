@@ -612,7 +612,7 @@ namespace Couchbase
         /// </summary>
         /// <typeparam name="T">The result type.</typeparam>
         /// <param name="bucket">The bucket.</param>
-        /// <param name="query">The N1QL query.</param>
+        /// <param name="query">The N1QL query string.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The list of results.</returns>
         public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, string query, CancellationToken cancellationToken = default(CancellationToken))

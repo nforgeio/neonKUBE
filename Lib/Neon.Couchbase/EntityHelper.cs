@@ -4,7 +4,14 @@
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Reflection;
+using System.Text;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 namespace Neon.Data
 {
@@ -13,6 +20,34 @@ namespace Neon.Data
     /// </summary>
     public static class EntityHelper
     {
+        //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// Holds information about an entity's property.
+        /// </summary>
+        private class EntityPropertyInfo
+        {
+            /// <summary>
+            /// The list of public properties as serialized to JSON.
+            /// </summary>
+            public List<string> Properties { get; set; }
+
+            /// <summary>
+            /// The comma separated property names suitable for using in a N1QL
+            /// <c>select</c> statement.
+            /// </summary>
+            public string Select { get; set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
+        /// <summary>
+        /// Caches the entity properties defined for an <see cref="IEntity"/>.
+        /// </summary>
+        private static Dictionary<System.Type, EntityPropertyInfo> entityProperties = new Dictionary<System.Type, EntityPropertyInfo>();
+
         /// <summary>
         /// Generates a URI-safe globally unique ID.
         /// </summary>
@@ -181,6 +216,142 @@ namespace Neon.Data
         public static string ToCouchbase(DateTimeOffset input)
         {
             return input.ToString(couchbaseDateFormat);
+        }
+
+        /// <summary>
+        /// Returns the serializable property information for an entity.
+        /// </summary>
+        /// <typeparam name="TEntity">The entity type.</typeparam>
+        /// <returns>The <see cref="EntityPropertyInfo"/>.</returns>
+        private static EntityPropertyInfo GetEntityPropertyInfo<TEntity>()
+            where TEntity : IEntity
+        {
+            EntityPropertyInfo info;
+
+            // Look for the mapping in the cache.
+
+            lock (entityProperties)
+            {
+                if (entityProperties.TryGetValue(typeof(TEntity), out info))
+                {
+                    return info;
+                }
+            }
+
+            // Reflect the class properties.
+
+            var properties = typeof(TEntity).GetTypeInfo().GetProperties(BindingFlags.Instance | BindingFlags.Public);
+
+            info = new EntityPropertyInfo()
+            {
+                Properties = new List<string>(properties.Length)
+            };
+
+            foreach (var property in properties
+                .OrderBy(p => p.Name))
+            {
+                if (property.GetCustomAttribute(typeof(JsonIgnoreAttribute)) != null)
+                {
+                    continue;   // Ignore properties tagged with [JsonIgnore].
+                }
+
+                var jsonProperty = property.GetCustomAttribute<JsonPropertyAttribute>();
+
+                if (jsonProperty != null)
+                {
+                    // Use the [JsonProperty(PropertyName="xxx")] value.
+
+                    info.Properties.Add(jsonProperty.PropertyName);
+                }
+                else
+                {
+                    // Use the actual property name.  Note that this is fragile because 
+                    // Couchbase may be configured to change the character case when
+                    // serializing entities.
+
+                    info.Properties.Add(property.Name);
+                }
+            }
+
+            if (info.Properties.Count == 0)
+            {
+                throw new NotSupportedException($"[{nameof(TEntity)}] does not have any serializable JSON properties.");
+            }
+
+            // Generate the comma separated list of properties for use 
+            // in N1QL select statements and cache the information.
+
+            var sb = new StringBuilder();
+
+            foreach (var property in info.Properties
+                .OrderBy(p => p))
+            {
+                if (sb.Length > 0)
+                {
+                    sb.Append(", ");
+                }
+
+                sb.Append(property);
+            }
+
+            info.Select = sb.ToString();
+
+            lock (entityProperties)
+            {
+                entityProperties[typeof(TEntity)] = info;
+            }
+
+            return info;
+        }
+
+        /// <summary>
+        /// Returns the names of an entity's properties that will be serialized to JSON.
+        /// </summary>
+        /// <typeparam name="TEntity">The entity type.</typeparam>
+        /// <returns>The set of property names.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method is handy when manually building <b>N1QL</b> query strings when
+        /// you want to return all entity fields but you don't want to use <c>select *</c>
+        /// because this nests each result into a property named for the bucket.
+        /// I'm not entirely sure why Couchbase does this.
+        /// </para>
+        /// <note>
+        /// This method will include all public entity properties that do not have the
+        /// <see cref="JsonIgnoreAttribute"/> and this also honors the property names
+        /// specified by any <see cref="JsonPropertyAttribute"/> attributes.
+        /// </note>
+        /// </remarks>
+        public static IEnumerable<string> GetEntityProperties<TEntity>()
+            where TEntity : IEntity
+        {
+            return GetEntityPropertyInfo<TEntity>().Properties;
+        }
+
+        /// <summary>
+        /// Returns the comma separated names of an entity's properties in a form where 
+        /// they can be easily added to a manually created N1QL statement.
+        /// </summary>
+        /// <typeparam name="TEntity">The entity type.</typeparam>
+        /// <returns>The comma separated list of of property names.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method is handy when manually building <b>N1QL</b> query strings when
+        /// you want to return all entity fields but you don't want to use <c>select *</c>
+        /// because this nests each result into a property named for the bucket.  You may
+        /// use the result to replace the star (<b>*</b>) in the <c>select</c> with the
+        /// explicit property names.
+        /// </para>
+        /// <note>
+        /// This method will include all public entity properties that do not have the
+        /// <see cref="JsonIgnoreAttribute"/> and this also honors the property names
+        /// specified by any <see cref="JsonPropertyAttribute"/> attributes.
+        /// </note>
+        /// </remarks>
+        public static string GetEntitySelectProperties<TEntity>()
+            where TEntity : IEntity
+        {
+            return GetEntityPropertyInfo<TEntity>().Select;
         }
     }
 }
