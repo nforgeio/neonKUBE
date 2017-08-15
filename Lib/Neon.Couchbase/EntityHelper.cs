@@ -291,7 +291,14 @@ namespace Neon.Data
                     sb.Append(", ");
                 }
 
-                sb.Append(property);
+                // We need to quote the property with backticks to 
+                // ensure that property names that are the same as 
+                // N1QL  reserved words will work properly as described
+                // here:
+                //
+                // https://developer.couchbase.com/documentation/server/current/n1ql/n1ql-language-reference/reservedwords.html
+
+                sb.Append($"`{property}`"); 
             }
 
             info.Select = sb.ToString();
