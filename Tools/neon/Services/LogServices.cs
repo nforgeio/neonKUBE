@@ -430,7 +430,7 @@ $@"
                         "--mode", "global",
                         "--endpoint-mode", "vip",
                         "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                        "--network", NeonClusterConst.ClusterPrivateNetwork,
+                        "--network", NeonClusterConst.PrivateNetwork,
                         "--constraint", $"node.role==manager",
                         "--publish", $"{NeonHostPorts.Kibana}:{NetworkPorts.Kibana}",
                         "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
@@ -456,7 +456,7 @@ $@"
                         "--mode", "global",
                         "--restart-delay", cluster.Definition.Docker.RestartDelay,
                         "--endpoint-mode", "vip",
-                        "--network", $"{NeonClusterConst.ClusterPrivateNetwork}",
+                        "--network", $"{NeonClusterConst.PrivateNetwork}",
                         "--constraint", $"node.role==manager",
                         "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
                         "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.

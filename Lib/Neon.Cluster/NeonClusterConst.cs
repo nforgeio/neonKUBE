@@ -39,12 +39,12 @@ namespace Neon.Cluster
         /// <summary>
         /// Name of the standard cluster <b>public</b> overlay network.
         /// </summary>
-        public const string ClusterPublicNetwork = "neon-cluster-public";
+        public const string PublicNetwork = "neon-public";
 
         /// <summary>
         /// Name of the standard cluster <b>private</b> overlay network.
         /// </summary>
-        public const string ClusterPrivateNetwork = "neon-cluster-private";
+        public const string PrivateNetwork = "neon-private";
 
         /// <summary>
         /// IP endpoint of the Docker embedded DNS server.

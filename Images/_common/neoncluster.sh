@@ -172,10 +172,10 @@ export NetworkPorts_RabbitMQAdmin=15672
 export NeonClusterConst_DockerApiInternalEndpoint=tcp://127.0.0.1:${NetworkPorts_Docker}
 
 # Name of the standard cluster public overlay network.
-export NeonClusterConst_ClusterPublicNetwork="neon-cluster-public"
+export NeonClusterConst_ClusterPublicNetwork="neon-public"
 
 # Name of the standard cluster private overlay network.
-export NeonClusterConst_ClusterPrivateNetwork="-neon-cluster-private"
+export NeonClusterConst_ClusterPrivateNetwork="-neon-private"
 
 # IP endpoint of the Docker embedded DNS server.
 export NeonClusterConst_NeonClusterConst_DockerDnsEndpoint="127.0.0.11:53"
@@ -345,7 +345,7 @@ export NeonHosts_RegistryCache=neon-registry-cache.cluster
 
 # The DNS name for the Elasticsearch containers used to store the cluster logs.
 #
-# These are individual containers that attached to the [neon-cluster-private] network,
+# These are individual containers that attached to the [neon-private] network,
 # forming an Elasticsearch cluster that is deployed behind the cluster's <b>private</b> proxy.  A DNS entry
 # is configured in the each Docker node's [hosts] file to reference the node's IP address as well 
 # as in the [/etc/neoncluster/env-host] file that may be mounted into Docker containers and services.

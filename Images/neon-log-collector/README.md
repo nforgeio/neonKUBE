@@ -49,7 +49,7 @@ docker service create \
     --mode global \
     --restart-delay 10s \
     --endpoint-mode vip \
-    --network neon-cluster-private \
+    --network neon-private \
     --constraint node.role==manager \
     --mount type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true \
     --log-driver json-file \

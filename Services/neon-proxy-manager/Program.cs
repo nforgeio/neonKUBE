@@ -608,8 +608,8 @@ resolvers {resolver.Name}
             }
 
             // Enable the HAProxy statistics pages.  These will be available on the 
-            // [NeonClusterConst.HAProxyStatsPort] port on the [neon-cluster-public] or
-            // [neon-cluster-private] network the proxy is serving.
+            // [NeonClusterConst.HAProxyStatsPort] port on the [neon-public] or
+            // [neon-private] network the proxy is serving.
             //
             // HAProxy statistics pages are not intended to be viewed directly by
             // by cluster operators.  Instead, the statistics from multiple HAProxy

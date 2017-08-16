@@ -1350,7 +1350,7 @@ $@"docker login \
                             "--opt", "encrypt",
                             "--subnet", cluster.Definition.Network.PublicSubnet,
                             cluster.Definition.Network.PublicAttachable ? "--attachable" : null,
-                            NeonClusterConst.ClusterPublicNetwork);
+                            NeonClusterConst.PublicNetwork);
 
                     manager.DockerCommand(
                         "docker network create",
@@ -1358,7 +1358,7 @@ $@"docker login \
                             "--opt", "encrypt",
                             "--subnet", cluster.Definition.Network.PrivateSubnet,
                             cluster.Definition.Network.PrivateAttachable ? "--attachable" : null,
-                            NeonClusterConst.ClusterPrivateNetwork);
+                            NeonClusterConst.PrivateNetwork);
                 });
         }
 
@@ -1528,7 +1528,7 @@ $@"docker login \
                             "--name", "neon-proxy-vault",
                             "--mode", "global",
                             "--endpoint-mode", "vip",
-                            "--network", NeonClusterConst.ClusterPrivateNetwork,
+                            "--network", NeonClusterConst.PrivateNetwork,
 #if !MESH_NETWORK_WORKS
                             "--publish", $"mode=host,published={NeonHostPorts.ProxyVault},target={NetworkPorts.Vault}",
 #else

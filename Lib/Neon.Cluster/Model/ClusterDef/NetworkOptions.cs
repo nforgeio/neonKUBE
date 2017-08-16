@@ -29,14 +29,14 @@ namespace Neon.Cluster
     /// </summary>
     /// <remarks>
     /// <para>
-    /// neonCLUSTERs are provisioned with two standard overlay networks: <b>neon-cluster-public</b> and <b>neon-cluster-private</b>.
+    /// neonCLUSTERs are provisioned with two standard overlay networks: <b>neon-public</b> and <b>neon-private</b>.
     /// </para>
     /// <para>
-    /// <b>neon-cluster-public</b> is configured by default on the <b>10.249.0.0/16</b> subnet and is intended to
+    /// <b>neon-public</b> is configured by default on the <b>10.249.0.0/16</b> subnet and is intended to
     /// host public facing service endpoints to be served by the <b>neon-proxy-public</b> proxy service.
     /// </para>
     /// <para>
-    /// <b>neon-cluster-private</b> is configured by default on the <b>10.248.0.0/16</b> subnet and is intended to
+    /// <b>neon-private</b> is configured by default on the <b>10.248.0.0/16</b> subnet and is intended to
     /// host internal service endpoints to be served by the <b>neon-proxy-private</b> proxy service.
     /// </para>
     /// </remarks>
@@ -53,14 +53,14 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// The subnet to be assigned to the built-in <b>neon-cluster-public</b> overlay network.  This defaults to <b>10.249.0.0/16</b>.
+        /// The subnet to be assigned to the built-in <b>neon-public</b> overlay network.  This defaults to <b>10.249.0.0/16</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PublicSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultPublicSubnet)]
         public string PublicSubnet { get; set; } = defaultPublicSubnet;
 
         /// <summary>
-        /// Allow non-Docker swarm mode service containers to attach to the built-in <b>neon-cluster-public</b> cluster 
+        /// Allow non-Docker swarm mode service containers to attach to the built-in <b>neon-public</b> cluster 
         /// overlay network.  This defaults to <b>true</b> for flexibility but you may consider disabling this for
         /// better security.
         /// </summary>
@@ -81,14 +81,14 @@ namespace Neon.Cluster
         public bool PublicAttachable { get; set; } = true;
 
         /// <summary>
-        /// The subnet to be assigned to the built-in <b>neon-cluster-public</b> overlay network.  This defaults to <b>10.248.0.0/16</b>.
+        /// The subnet to be assigned to the built-in <b>neon-public</b> overlay network.  This defaults to <b>10.248.0.0/16</b>.
         /// </summary>
         [JsonProperty(PropertyName = "PrivateSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultPrivateSubnet)]
         public string PrivateSubnet { get; set; } = defaultPrivateSubnet;
 
         /// <summary>
-        /// Allow non-Docker swarm mode service containers to attach to the built-in <b>neon-cluster-private</b> cluster 
+        /// Allow non-Docker swarm mode service containers to attach to the built-in <b>neon-private</b> cluster 
         /// overlay network.  This defaults to <b>true</b> for flexibility but you may consider disabling this for
         /// better security.
         /// </summary>

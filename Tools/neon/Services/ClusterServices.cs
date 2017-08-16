@@ -213,7 +213,7 @@ namespace NeonTool
                             proxyConstraint,
                             "--mode", "global",
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                            "--network", NeonClusterConst.ClusterPublicNetwork,
+                            "--network", NeonClusterConst.PublicNetwork,
                             "neoncluster/neon-proxy");
 
                     firstManager.Status = "start: neon-proxy-private";
@@ -231,7 +231,7 @@ namespace NeonTool
                             proxyConstraint,
                             "--mode", "global",
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                            "--network", NeonClusterConst.ClusterPrivateNetwork,
+                            "--network", NeonClusterConst.PrivateNetwork,
                             "neoncluster/neon-proxy");
 
                     firstManager.Status = string.Empty;

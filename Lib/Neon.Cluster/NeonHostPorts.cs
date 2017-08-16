@@ -42,14 +42,14 @@ namespace Neon.Cluster
     ///     <term><b>5100-5299</b></term>
     ///     <description>
     ///     Reserved for services proxied by the <b>neon-proxy-public</b> service
-    ///     on the <b>neon-cluster-public</b> network.
+    ///     on the <b>neon-public</b> network.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><b>5300-5499</b></term>
     ///     <description>
     ///     Reserved for services proxied by the <b>neon-proxy-private</b> service
-    ///     on the <b>neon-cluster-private</b> network.
+    ///     on the <b>neon-private</b> network.
     ///     </description>
     /// </item>
     /// </list>

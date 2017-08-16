@@ -43,7 +43,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <remarks>
         /// <para>
-        /// These are individual containers that attached to the <see cref="NeonClusterConst.ClusterPrivateNetwork"/>,
+        /// These are individual containers that attached to the <see cref="NeonClusterConst.PrivateNetwork"/>,
         /// forming an Elasticsearch cluster that is deployed behind the cluster's <b>private</b> proxy.  A DNS entry
         /// is configured in the each Docker node's <b>hosts</b> file to reference the node's IP address as well 
         /// as in the <b>/etc/neoncluster/env-host</b> file that may be mounted into Docker containers and services.
