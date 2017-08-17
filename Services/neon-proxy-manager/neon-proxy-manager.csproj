@@ -7,7 +7,14 @@
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DocumentationFile>bin\Debug\netcoreapp1.1\neon-proxy-manager.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\netcoreapp2.0\neon-proxy-manager.xml</DocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netcoreapp2.0\neon-proxy-manager.xml</DocumentationFile>
   </PropertyGroup>
 
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />

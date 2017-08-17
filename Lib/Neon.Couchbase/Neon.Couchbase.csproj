@@ -16,12 +16,12 @@
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
     <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0</DefineConstants>
-    <DocumentationFile>bin\Debug\netstandard1.5\Neon.Couchbase.xml</DocumentationFile>
+    <DocumentationFile>bin\Debug\netstandard2.0\Neon.Couchbase.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DefineConstants>TRACE;DEBUG;RELEASE;NETSTANDARD2_0</DefineConstants>
-    <DocumentationFile>bin\Release\netstandard1.5\Neon.Couchbase.xml</DocumentationFile>
+    <DocumentationFile>bin\Release\netstandard2.0\Neon.Couchbase.xml</DocumentationFile>
   </PropertyGroup>
 
   <ItemGroup>
