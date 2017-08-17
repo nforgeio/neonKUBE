@@ -37,6 +37,4 @@ COPY _common/*.sh           /
 RUN chmod 700 /*.sh \
     && apk add --update bash unzip jq
 
-#ENTRYPOINT ["sh"]
-#ENTRYPOINT ["sleep", "100000"]
 ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]

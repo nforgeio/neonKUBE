@@ -37,5 +37,4 @@ RUN chmod 700 /docker-entrypoint.sh \
     && echo "dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
     && chmod 770 /usr/bin/$APPNAME
 
-#ENTRYPOINT ["sleep", "100000"]
 ENTRYPOINT ["/tini","-g","--","/docker-entrypoint.sh"]

@@ -35,5 +35,4 @@ COPY config/*               /
 
 RUN chmod 700 /*.sh
 
-#ENTRYPOINT ["/bin/sleep", "10000"]
 ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
