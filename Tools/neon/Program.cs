@@ -33,7 +33,7 @@ namespace NeonTool
         /// <summary>
         /// The <b>neon-cli</b> version/tag.
         /// </summary>
-        public const string Version = "1.0.0";
+        public const string Version = "1.1.0";
 
         /// <summary>
         /// Program entry point.
