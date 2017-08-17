@@ -625,7 +625,6 @@ namespace Neon.Cryptography
                 }
             }
 
-Console.WriteLine(info);
             if (Hosts.Count == 0)
             {
                 throw new FormatException("Invalid certificate dump: No host names found.");
