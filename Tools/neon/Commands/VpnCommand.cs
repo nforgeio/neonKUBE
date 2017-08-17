@@ -397,7 +397,7 @@ $@"# client.cnf
 # This configuration file is used by the 'req' command when a certificate is created for [{user}].
 [ req ]
 default_bits            = 2048
-default_md              = sha2
+default_md              = sha256
 encrypt_key             = no
 prompt                  = no
 string_mask             = utf8only
@@ -480,12 +480,6 @@ subjectAltName          = email:nobody@nowhere.com
             // it lists the policy for certification revocation lists. For this small-scale CA, there is no public URL to 
             // download the CRL; I plan to distribute it manually.
 
-            // $todo(jeff.lill):
-            //
-            // I had to change [default_md=sha1] from [sha2] because OpenSSL reported that
-            // [sha2] was not supported.  I need to investigate why [sha2] didn't work and
-            // also whether this is a serious security issue.
-
             var caSignCnf =
 $@"# ca-sign.cnf
 # This configuration file is used by the 'ca' command, to create signed certificates.
@@ -507,7 +501,7 @@ crl                     = $dir/crl.pem          # The current CRL
 RANDFILE                = $dir/.rand            # private random number file
 
 unique_subject          = no                    # allow multiple certificates with same subject.
-default_md              = sha1                  # Use hash algorithm specified in the request
+default_md              = sha256                # Use hash algorithm specified in the request
 default_days            = 365000                # client certificates last about 1000 years
 default_crl_days        = 30                    # How often clients should download the CRL
 
@@ -581,7 +575,7 @@ $@"# ca.cnf
 # This configuration file is used by the 'req' command when the root certificates is created.
 [ req ]
 default_bits            = 2048                  # default strength of client certificates
-default_md              = sha2
+default_md              = sha256
 encrypt_key             = no                    # ""no"" is equivalent to -nodes
 prompt                  = no
 string_mask             = utf8only
@@ -645,7 +639,7 @@ $@"# server.cnf
 # This configuration file is used by the 'req' command when the server certificate is created.
 [ req ]
 default_bits            = 2048
-default_md              = sha2
+default_md              = sha256
 encrypt_key             = no
 prompt                  = no
 string_mask             = utf8only

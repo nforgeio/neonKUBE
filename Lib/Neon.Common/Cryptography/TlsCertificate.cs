@@ -12,6 +12,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Http;
+using System.Security.Cryptography.X509Certificates;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -160,8 +161,7 @@ namespace Neon.Cryptography
 
         /// <summary>
         /// Constructs an instance by parsing the combined site certificate, any intermediate
-        /// certificates followed by the private key
-        /// as PEM encoded text.
+        /// certificates followed by the private key as PEM encoded text.
         /// </summary>
         /// <param name="pemCombined">The certificate(s) followed by the private key text.</param>
         public TlsCertificate(string pemCombined)
@@ -197,7 +197,7 @@ namespace Neon.Cryptography
 
         /// <summary>
         /// Constructs an instance by parsing the certificate and private key PEM encoded
-        /// text as passed.
+        /// text passed.
         /// </summary>
         /// <param name="certPem">The certificate PEM text.</param>
         /// <param name="keyPem">The private key PEM text.</param>
@@ -613,13 +613,19 @@ namespace Neon.Cryptography
 
                         if (trimmed.StartsWith("CN="))
                         {
-                            Hosts.Add(trimmed.Substring(3));
+                            Hosts.Add(trimmed.Substring(3).Trim());
+                            break;
+                        }
+                        else if (trimmed.StartsWith("CN = "))
+                        {
+                            Hosts.Add(trimmed.Substring(5).Trim());
                             break;
                         }
                     }
                 }
             }
 
+Console.WriteLine(info);
             if (Hosts.Count == 0)
             {
                 throw new FormatException("Invalid certificate dump: No host names found.");
