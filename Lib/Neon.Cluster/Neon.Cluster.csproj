@@ -1,26 +1,29 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.5</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Cluster</RootNamespace>
     <Authors>Jeff Lill</Authors>
     <Version>5.0.6.0</Version>
     <Company>NeonForge, LLC</Company>
     <Product>Neon.Cluster Library</Product>
     <Description>Provides NeonCluster management and service capabilities.</Description>
-    <PackageReleaseNotes>Renamed cluster networks to: [neon-public] and [neon-private].</PackageReleaseNotes>
+    <PackageReleaseNotes>Upgraded to .NET Core 2.0</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;NETSTANDARD1_5</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0</DefineConstants>
     <DocumentationFile>bin\Debug\netstandard1.5\Neon.Cluster.xml</DocumentationFile>
+    <AllowUnsafeBlocks>true</AllowUnsafeBlocks>
+    <TreatWarningsAsErrors>false</TreatWarningsAsErrors>
+    <WarningsAsErrors>NU1605</WarningsAsErrors>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;RELEASE;NETSTANDARD1_5</DefineConstants>
+    <DefineConstants>TRACE;RELEASE;NETSTANDARD2_0</DefineConstants>
     <DocumentationFile>bin\Release\netstandard1.5\.xml</DocumentationFile>
   </PropertyGroup>
 
@@ -50,10 +53,6 @@
     <ProjectReference Include="..\Neon.Couchbase\Neon.Couchbase.csproj" />
     <ProjectReference Include="..\Neon.Docker\Neon.Docker.csproj" />
     <ProjectReference Include="..\Neon.RabbitMQ\Neon.RabbitMQ.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <PackageReference Update="NETStandard.Library" Version="1.6.1" />
   </ItemGroup>
 
   <ItemGroup>

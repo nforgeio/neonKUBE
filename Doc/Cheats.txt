@@ -11,7 +11,7 @@ neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel
 neon cluster prepare c:\docker\cluster-azure.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=10
 neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=10 root@azure
 
-neon cluster prepare c:\docker\cluster-large.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=7 --package-cache=http://apt-cache.lilltek.net:3142
+neon cluster prepare c:\docker\cluster-large.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=6 --package-cache=http://apt-cache.lilltek.net:3142
 neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 root@local
 
 neon login rm --force root@test

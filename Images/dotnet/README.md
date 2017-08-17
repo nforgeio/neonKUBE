@@ -8,7 +8,8 @@ neonCLUSTER base image for Microsoft .NET Core Linux containers.
 * `1.0.4-runtime, 1.0-runtime`
 * `1.1.0-runtime`
 * `1.1.1-runtime`
-* `1.1.2-runtime, 1.1-runtime, 1-runtime, latest`
+* `1.1.2-runtime, 1.1-runtime, 1-runtime`
+* `2.0.0-runtime, 2.2-runtime, 2-runtime`
 
 # Details
 

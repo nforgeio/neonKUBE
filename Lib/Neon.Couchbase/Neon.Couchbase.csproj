@@ -1,26 +1,26 @@
 <Project Sdk="Microsoft.NET.Sdk">
 
   <PropertyGroup>
-    <TargetFramework>netstandard1.5</TargetFramework>
+    <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Couchbase</RootNamespace>
     <Authors>Jeff Lill</Authors>
     <Version>5.0.6.0</Version>
     <Company>NeonForge, LLC</Company>
     <Product>Neon.Cluster Library</Product>
     <Description>Couchbase client extensions.</Description>
-    <PackageReleaseNotes>IEntity added GetRef() and Normalize().  Added IEntity bucket extension methods.  Renamed EntityHelper.GenerateUUID() to CreateUUID() and made result URI-safe.  Added EntityHelper.GetEntityProperties() and GetEntitySelectProperties().</PackageReleaseNotes>
+    <PackageReleaseNotes>Upgraded to .NET Core 2.0</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;NETSTANDARD1_5</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;NETSTANDARD2_0</DefineConstants>
     <DocumentationFile>bin\Debug\netstandard1.5\Neon.Couchbase.xml</DocumentationFile>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
-    <DefineConstants>TRACE;DEBUG;NETSTANDARD1_5</DefineConstants>
+    <DefineConstants>TRACE;DEBUG;RELEASE;NETSTANDARD2_0</DefineConstants>
     <DocumentationFile>bin\Release\netstandard1.5\Neon.Couchbase.xml</DocumentationFile>
   </PropertyGroup>
 

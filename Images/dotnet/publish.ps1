@@ -56,8 +56,11 @@ if ($all)
 	Build 1.0.4-runtime
 	Build 1.1.0-runtime
 	Build 1.1.1-runtime
+	Build 1-runtime
+	Build 1.1-runtime
+	Build 1.1.2-runtime
 }
 
-Build 1-runtime
-Build 1.1-runtime
-Build 1.1.2-runtime
+Build 2-runtime
+Build 2.0-runtime
+Build 2.0.0-runtime

@@ -10,7 +10,7 @@
 #       APPNAME     - Name of the application binary/script (e.g "neon-proxy-manager")
 #                     This makes it easier to clone and reuse this Dockerfile.
 
-FROM        neoncluster/dotnet:1.1.2-runtime
+FROM        neoncluster/dotnet:2-runtime
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME

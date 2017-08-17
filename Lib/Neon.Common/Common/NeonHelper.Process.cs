@@ -351,7 +351,7 @@ namespace Neon.Common
             return await Task.Run(() => ExecuteCaptureStreams(path, args, timeout, process));
         }
 
-#if NETSTANDARD1_5
+#if NETSTANDARD2_0
         /// <summary>
         /// Starts a process for an <see cref="Assembly" /> by calling the assembly's <b>main()</b>
         /// entry point method. 
