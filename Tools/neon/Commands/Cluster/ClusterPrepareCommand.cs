@@ -191,7 +191,7 @@ Server Requirements:
 
             var operation = 
                 cluster.Definition.Hosting.Environment == HostingEnvironments.Machine
-                    ? $"Preparing [{cluster.Definition.Name}] servers"
+                    ? $"Preparing [{cluster.Definition.Name}] hosts"
                     : $"STEP 2: Preparing [{cluster.Definition.Name}] virtual machines";
 
             var controller = 
