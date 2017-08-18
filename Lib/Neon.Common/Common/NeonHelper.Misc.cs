@@ -79,7 +79,7 @@ namespace Neon.Common
 
             if (stackTrace && e != null)
             {
-                message += $" [stack:{e.StackTrace}]";
+                message += $" [stack:{new StackTrace(e, skipFrames: 1, fNeedFileInfo: true)}]";
             }
 
             return message;
