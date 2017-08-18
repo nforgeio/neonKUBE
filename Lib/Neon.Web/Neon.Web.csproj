@@ -1,0 +1,22 @@
+<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <Version>6.0.0.3</Version>
+    <Authors>Jeff Lill</Authors>
+    <Company>Jeff Lill</Company>
+    <Product>neonCLUSTER</Product>
+    <Description>Web site and API related classes and enhancements.</Description>
+    <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
+    <PackageReleaseNotes>Initial release.</PackageReleaseNotes>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
+    <DocumentationFile>bin\Debug\netcoreapp2.0\Neon.Web.xml</DocumentationFile>
+  </PropertyGroup>
+
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
+    <DocumentationFile>bin\Release\netcoreapp2.0\Neon.Web.xml</DocumentationFile>
+  </PropertyGroup>
+
+</Project>

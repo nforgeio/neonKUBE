@@ -18,5 +18,6 @@ Publish Neon.Common
 Publish Neon.Couchbase
 Publish Neon.Docker
 Publish Neon.RabbitMQ
+Publish Neon.Web
 Publish Neon.Xunit
 pause

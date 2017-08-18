@@ -3,14 +3,15 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.RabbitMQ</RootNamespace>
-    <Version>6.0.0.2</Version>
+    <Version>6.0.0.3</Version>
     <Company>NeonForge, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>RabbitMQ extensions for NeonForge projects.</Description>
-    <PackageReleaseNotes>Upgraded to .NET Core 2.0</PackageReleaseNotes>
+    <PackageReleaseNotes>Aligning version number.  No signficant changes.</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
+    <Product>neonCLUSTER</Product>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
