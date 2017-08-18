@@ -32,12 +32,12 @@ RUN echo ** NEW LAYER **
 # Note that we used the [core-layers] tool to separate the binary files before
 # building the container.
 
-# Dependencies
+# Dependencies:
 
 COPY bin/__dep              /usr/bin/$APPNAME.dotnet/
 RUN echo ** NEW LAYER **
 
-# App files.
+# App files:
 
 COPY bin/__app              /usr/bin/$APPNAME.dotnet/
 COPY docker-entrypoint.sh   /
