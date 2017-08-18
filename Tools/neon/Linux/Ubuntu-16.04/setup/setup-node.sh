@@ -314,6 +314,96 @@ systemctl daemon-reload
 systemctl restart disable-thp
 
 #------------------------------------------------------------------------------
+# Configure a simple service that sets up IPTABLES rules that forward TCP
+# packets hitting ports 80 and 443 on any of the [eth#] network interfaces
+# to the [neon-proxy-public] on ports 5100 and 5101.
+#
+# This allows the cluster to handle standard HTTP and HTTPS traffic without
+# having to bind to the protected system ports.  This is especially usefuly
+# for deployments with brain-dead consumer quality routers that cannot forward
+# packets to a different port.
+
+# $todo(jeff.lill):
+#
+# For now, this is hardcoded for just ports 80 & 443.  Eventually, it might be
+# handy to make this a cluster configuration setting or perhaps a [neon-cli]
+# command so SMTP or other traffic can also be handled.
+
+# $hack(jeff.lill):
+#
+# I'm hardcoding the [neon-proxy-public] ports 5100 and 5101 here rather than
+# adding a new macro.  Hopefully, these ports will never change again.
+
+cat <<EOF > /usr/local/bin/neon-port-forwarding
+#!/bin/bash
+#------------------------------------------------------------------------------
+# FILE:         neon-port-forwarding
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+#
+# This script runs as a systemd service to configure port 80 and 443 port
+# forwarding rules.  Note that these rules work because [neon-proxy-public]
+# is either running on ever node or we're using the Docker ingress mesh
+# network to route these packets to the proxy instances.
+
+echo "[INFO] Configuring port forwarding rules."
+
+# Use [ip link] and [gawk] to list the interfaces that match "eth#"
+# and then configure the IPTABLES forwarding rules for those interfaces.
+
+for interface in \$( ip link | gawk '/eth[0..9]+:/ { print gensub(/:/, "", "g", \$2) }' ); do
+
+	# Forward port 80 --> 5100
+
+	echo "[INFO] Forwarding [port 80] packets on [\$interface] to [${NEON_NODE_IP}:5100]."
+	iptables -A PREROUTING -t nat -i \$interface -p tcp --dport 80 -j DNAT --to ${NEON_NODE_IP}:5100
+	iptables -A FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5100 -j ACCEPT
+
+	# Forward port 443 --> 5101
+
+	echo "[INFO] Forwarding [port 443] packets on [\$interface] to [${NEON_NODE_IP}:5101]."
+	iptables -A PREROUTING -t nat -i \$interface -p tcp --dport 443 -j DNAT --to ${NEON_NODE_IP}:5101
+	iptables -A FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5101 -j ACCEPT
+done
+
+echo "[INFO] Configuration complete."
+
+# We probably don't need to loop here, but it can't hurt.
+
+echo "[INFO] Sleeping."
+
+while true
+do
+    sleep 3600
+done
+EOF
+
+chmod 700 /usr/local/bin/neon-port-forwarding
+
+# Generate the [neon-port-forwarding] systemd unit.
+
+cat <<EOF > /lib/systemd/system/neon-port-forwarding.service
+# A service that configures the port 80 and 443 port forwarding rules.
+
+[Unit]
+Description=neon-port-forwarding
+Documentation=
+After=wait-for-network.service
+
+[Service]
+ExecStart=/usr/local/bin/neon-port-forwarding
+ExecReload=/bin/kill -s HUP \$MAINPID
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+systemctl enable neon-port-forwarding
+systemctl daemon-reload
+systemctl restart neon-port-forwarding
+
+#------------------------------------------------------------------------------
 # Configure the systemd journal to perist the journal to the file system at
 # [/var/log/journal].  We need this so the node's [tdagent-host] container
 # will be able to access the journal.
