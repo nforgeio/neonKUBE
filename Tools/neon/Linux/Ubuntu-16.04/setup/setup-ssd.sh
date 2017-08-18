@@ -43,7 +43,7 @@ if ${NEON_NODE_SSD} ; then
 
     echo "*** BEGIN: Tuning for SSD" 1>&2
 
-    # This script works by generating the [/usr/local/tune-ssd.sh] script so that it
+    # This script works by generating the [/usr/local/neon-tune-ssd.sh] script so that it
     # configures up to 2 boot and 8 data [sd?] devices to:
     #
     #       * Use the [deadline] scheduler
@@ -57,30 +57,30 @@ if ${NEON_NODE_SSD} ; then
 
     read_ahead_size_kb=64
 
-    # Generate [/usr/local/bin/tune-ssd.sh]
+    # Generate [/usr/local/bin/neon-tune-ssd.sh]
 
-    rm -f /usr/local/bin/tune-ssd.sh
+    rm -f /usr/local/bin/neon-tune-ssd.sh
 
-    echo "# This script is generated during setup by [setup-ssd.sh] to execute"         > /usr/local/bin/tune-ssd.sh
-    echo "# the commands necessary to properly tune any attached SSDs"                 >> /usr/local/bin/tune-ssd.sh
+    echo "# This script is generated during setup by [setup-ssd.sh] to execute"         > /usr/local/bin/neon-tune-ssd.sh
+    echo "# the commands necessary to properly tune any attached SSDs"                 >> /usr/local/bin/neon-tune-ssd.sh
 
     for DEVICE in sda sdb sdc sdd sde sdf sdg sdh sdi sdj
     do
         if [ -d /sys/block/$DEVICE ]; then
-            echo " "                                                                   >> /usr/local/bin/tune-ssd.sh
-            echo "# DEVICE: $DEVICE"                                                   >> /usr/local/bin/tune-ssd.sh
-            echo "# ---------------"                                                   >> /usr/local/bin/tune-ssd.sh
-            echo "echo deadline > /sys/block/$DEVICE/queue/scheduler"                  >> /usr/local/bin/tune-ssd.sh
-            echo "echo 0 > /sys/block/$DEVICE/queue/rotational"                        >> /usr/local/bin/tune-ssd.sh
-            echo "echo ${read_ahead_size_kb} > /sys/block/$DEVICE/queue/read_ahead_kb" >> /usr/local/bin/tune-ssd.sh
+            echo " "                                                                   >> /usr/local/bin/neon-tune-ssd.sh
+            echo "# DEVICE: $DEVICE"                                                   >> /usr/local/bin/neon-tune-ssd.sh
+            echo "# ---------------"                                                   >> /usr/local/bin/neon-tune-ssd.sh
+            echo "echo deadline > /sys/block/$DEVICE/queue/scheduler"                  >> /usr/local/bin/neon-tune-ssd.sh
+            echo "echo 0 > /sys/block/$DEVICE/queue/rotational"                        >> /usr/local/bin/neon-tune-ssd.sh
+            echo "echo ${read_ahead_size_kb} > /sys/block/$DEVICE/queue/read_ahead_kb" >> /usr/local/bin/neon-tune-ssd.sh
         fi
     done
 
-    chmod 700 /usr/local/bin/tune-ssd.sh
+    chmod 700 /usr/local/bin/neon-tune-ssd.sh
 
-    # Configure and start the [tune-ssd] systemd service.
+    # Configure and start the [neon-tune-ssd] systemd service.
 
-    cat <<EOF > /lib/systemd/system/tune-ssd.service
+    cat <<EOF > /lib/systemd/system/neon-tune-ssd.service
 [Unit]
 Description=SSD Tuning Service
 Documentation=
@@ -89,14 +89,15 @@ Requires=
 
 [Service]
 Type=oneshot
-ExecStart=/bin/bash /usr/local/bin/tune-ssd.sh
+ExecStart=/bin/bash /usr/local/bin/neon-tune-ssd.sh
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-    systemctl enable tune-ssd
-    systemctl start tune-ssd
+    systemctl enable neon-tune-ssd
+	systemctl daemon-reload
+    systemctl start neon-tune-ssd
 
     echo "*** END: Tuning for SSD" 1>&2
 else

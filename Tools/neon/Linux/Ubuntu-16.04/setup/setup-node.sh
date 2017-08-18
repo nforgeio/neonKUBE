@@ -295,11 +295,11 @@ EOF
 # Databases are generally not compatible with transparent huge pages.  It appears
 # that the best way to disable this is with a simple service.
 
-cat <<EOF > /lib/systemd/system/disable-thp.service
+cat <<EOF > /lib/systemd/system/neon-disable-thp.service
 # Disables transparent home pages.
 
 [Unit]
-Description=Disables transparent home pages (THP)
+Description=Disable transparent home pages (THP)
 
 [Service]
 Type=simple
@@ -309,9 +309,9 @@ ExecStart=/bin/sh -c "echo 'never' > /sys/kernel/mm/transparent_hugepage/enabled
 WantedBy=multi-user.target
 EOF
 
-systemctl enable disable-thp
+systemctl enable neon-disable-thp
 systemctl daemon-reload
-systemctl restart disable-thp
+systemctl restart neon-disable-thp
 
 #------------------------------------------------------------------------------
 # Configure a simple service that sets up IPTABLES rules that forward TCP
@@ -465,10 +465,10 @@ EOF
 # Install a simple service script that periodically shreds and deletes the 
 # the root account's [.bash-history] file as a security measure.
 
-cat <<EOF > /usr/local/bin/security-cleaner
+cat <<EOF > /usr/local/bin/neon-security-cleaner
 #!/bin/bash
 #------------------------------------------------------------------------------
-# FILE:         security-cleaner
+# FILE:         neon-security-cleaner
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 #
@@ -504,22 +504,22 @@ do
 done
 EOF
 
-chmod 700 /usr/local/bin/security-cleaner
+chmod 700 /usr/local/bin/neon-security-cleaner
 
-# Generate the [security-cleaner] systemd unit.
+# Generate the [neon-security-cleaner] systemd unit.
 
-cat <<EOF > /lib/systemd/system/security-cleaner.service
+cat <<EOF > /lib/systemd/system/neon-security-cleaner.service
 # A service that periodically shreds the root's Bash history
 # as a security measure.
 
 [Unit]
-Description=security-cleaner
+Description=neon-security-cleaner
 Documentation=
 After=local-fs.target
 Requires=local-fs.target
 
 [Service]
-ExecStart=/usr/local/bin/security-cleaner
+ExecStart=/usr/local/bin/neon-security-cleaner
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 
@@ -527,9 +527,9 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-systemctl enable security-cleaner
+systemctl enable neon-security-cleaner
 systemctl daemon-reload
-systemctl restart security-cleaner
+systemctl restart neon-security-cleaner
 
 #------------------------------------------------------------------------------
 # Add the Neon tools folder to the [sudo] PATH.
