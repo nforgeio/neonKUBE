@@ -73,6 +73,9 @@ namespace Neon.Diagnostics
         public bool IsDebugEnabled => log.IsDebugEnabled;
 
         /// <inheritdoc/>
+        public bool IsSInfoEnabled => log.IsSInfoEnabled;
+
+        /// <inheritdoc/>
         public bool IsInfoEnabled => log.IsInfoEnabled;
 
         /// <inheritdoc/>
@@ -82,6 +85,9 @@ namespace Neon.Diagnostics
         public bool IsErrorEnabled => log.IsErrorEnabled;
 
         /// <inheritdoc/>
+        public bool IsSErrorEnabled => log.IsSErrorEnabled;
+
+        /// <inheritdoc/>
         public bool IsCriticalEnabled => log.IsCriticalEnabled;
 
         /// <inheritdoc/>
@@ -89,6 +95,13 @@ namespace Neon.Diagnostics
         {
             log.Debug(message, activityId);
             capture.AppendLine($"[DEBUG] {message}");
+        }
+
+        /// <inheritdoc/>
+        public void SInfo(object message, string activityId = null)
+        {
+            log.SInfo(message, activityId);
+            capture.AppendLine($"[SINFO] {message}");
         }
 
         /// <inheritdoc/>
@@ -113,6 +126,13 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
+        public void SError(object message, string activityId = null)
+        {
+            log.SError(message, activityId);
+            capture.AppendLine($"[SERROR] {message}");
+        }
+
+        /// <inheritdoc/>
         public void Critical(object message, string activityId = null)
         {
             log.Critical(message, activityId);
@@ -124,6 +144,13 @@ namespace Neon.Diagnostics
         {
             log.Debug(message, e, activityId);
             capture.AppendLine($"[DEBUG] {message} {NeonHelper.ExceptionError(e)}");
+        }
+
+        /// <inheritdoc/>
+        public void SInfo(object message, Exception e, string activityId = null)
+        {
+            log.SInfo(message, e, activityId);
+            capture.AppendLine($"[SINFO] {message} {NeonHelper.ExceptionError(e)}");
         }
 
         /// <inheritdoc/>
@@ -145,6 +172,13 @@ namespace Neon.Diagnostics
         {
             log.Error(message, e, activityId);
             capture.AppendLine($"[ERROR] {message} {NeonHelper.ExceptionError(e)}");
+        }
+
+        /// <inheritdoc/>
+        public void SError(object message, Exception e, string activityId = null)
+        {
+            log.SError(message, e, activityId);
+            capture.AppendLine($"[SERROR] {message} {NeonHelper.ExceptionError(e)}");
         }
 
         /// <inheritdoc/>

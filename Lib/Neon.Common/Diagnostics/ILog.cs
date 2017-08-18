@@ -25,6 +25,11 @@ namespace Neon.Diagnostics
         bool IsDebugEnabled { get; }
 
         /// <summary>
+        /// Returns <c>true</c> if <b>sinfo</b> logging is enabled.
+        /// </summary>
+        bool IsSInfoEnabled { get; }
+
+        /// <summary>
         /// Returns <c>true</c> if <b>info</b> logging is enabled.
         /// </summary>
         bool IsInfoEnabled { get; }
@@ -40,6 +45,11 @@ namespace Neon.Diagnostics
         bool IsErrorEnabled { get; }
 
         /// <summary>
+        /// Returns <c>true</c> if <b>serror</b> logging is enabled.
+        /// </summary>
+        bool IsSErrorEnabled { get; }
+
+        /// <summary>
         /// Returns <c>true</c> if <b>critical</b> logging is enabled.
         /// </summary>
         bool IsCriticalEnabled { get; }
@@ -50,6 +60,13 @@ namespace Neon.Diagnostics
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="activityId">The optional activity ID.</param>
         void Debug(object message, string activityId = null);
+
+        /// <summary>
+        /// Logs an <b>sinfo</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">The optional activity ID.</param>
+        void SInfo(object message, string activityId = null);
 
         /// <summary>
         /// Logs an <b>info</b> message.
@@ -64,6 +81,13 @@ namespace Neon.Diagnostics
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="activityId">The optional activity ID.</param>
         void Warn(object message, string activityId = null);
+
+        /// <summary>
+        /// Logs an <b>serror</b> message.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="activityId">The optional activity ID.</param>
+        void SError(object message, string activityId = null);
 
         /// <summary>
         /// Logs an <b>error</b> message.
@@ -88,6 +112,14 @@ namespace Neon.Diagnostics
         void Debug(object message, Exception e, string activityId = null);
 
         /// <summary>
+        /// Logs an <b>sinfo</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">The optional activity ID.</param>
+        void SInfo(object message, Exception e, string activityId = null);
+
+        /// <summary>
         /// Logs an <b>info</b> message along with exception information.
         /// </summary>
         /// <param name="message">The object that will be serialized into the message.</param>
@@ -110,6 +142,14 @@ namespace Neon.Diagnostics
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
         void Error(object message, Exception e, string activityId = null);
+
+        /// <summary>
+        /// Logs an <b>serror</b> message along with exception information.
+        /// </summary>
+        /// <param name="message">The object that will be serialized into the message.</param>
+        /// <param name="e">The exception.</param>
+        /// <param name="activityId">The optional activity ID.</param>
+        void SError(object message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs a <b>critical</b> message along with exception information.

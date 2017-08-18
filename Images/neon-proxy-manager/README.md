@@ -23,7 +23,7 @@ The **neon-proxy-manager** image handles the generation and updating of the prox
 
 * **VAULT_CREDENTIALS** (*required*) - names the file within `/run/secrets/` that holds the Vault credentials the proxy manager will need to access TLS certificates.
 
-* **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
+* **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
 # Secrets
 

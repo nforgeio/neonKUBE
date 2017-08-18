@@ -64,8 +64,8 @@ namespace Neon.Diagnostics
         /// <remarks>
         /// <para>
         /// This method recognizes the following case insenstive values: <b>CRITICAL</b>,
-        /// <b>ERROR</b>, <b>WARN</b>, <b>WARNING</b>, <b>INFO</b>, <b>INFORMATION</b>,
-        /// <b>DEBUG</b>, or <b>NONE</b>.
+        /// <b>SERROR</b>, <b>ERROR</b>, <b>WARN</b>, <b>WARNING</b>, <b>INFO</b>, <b>SINFO</b>,
+        /// <b>INFORMATION</b>, <b>DEBUG</b>, or <b>NONE</b>.
         /// </para>
         /// <note>
         /// <b>INFO</b> will be assumed if the parameter doesn't match any of the
@@ -81,6 +81,11 @@ namespace Neon.Diagnostics
                 case "CRITICAL":
 
                     LogLevel = LogLevel.Critical;
+                    break;
+
+                case "SERROR":
+
+                    LogLevel = LogLevel.SError;
                     break;
 
                 case "ERROR":
@@ -99,6 +104,11 @@ namespace Neon.Diagnostics
                 case "INFORMATION":
 
                     LogLevel = LogLevel.Info;
+                    break;
+
+                case "SINFO":
+
+                    LogLevel = LogLevel.SInfo;
                     break;
 
                 case "DEBUG":

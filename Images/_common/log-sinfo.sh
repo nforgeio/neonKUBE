@@ -1,9 +1,9 @@
-#!/bin/sh
+﻿#!/bin/sh
 #------------------------------------------------------------------------------
-# Writes an ERROR log message to standard output  if $LOG_LEVEL is set to ERROR
+# Writes an SINFO log message to standard output  if $LOG_LEVEL is set to SINFO
 # or higher.  INFO is assumed if $LOG_LEVEL is not set.
 #
-# USAGE: . log-error.sh MESSAGE
+# USAGE: . log-sinfo.sh MESSAGE
 
 case "${LOG_LEVEL}" in
 	"NONE")
@@ -16,13 +16,13 @@ case "${LOG_LEVEL}" in
 		LOG=true
 		;;
 	"INFO")
-		LOG=true
+		LOG=false
 		;;
 	"WARN")
-		LOG=true
+		LOG=false
 		;;
 	"ERROR")
-		LOG=true
+		LOG=false
 		;;
 	"SERROR")
 		LOG=false
@@ -38,5 +38,5 @@ done
 . /log-index.sh
 
 if [ "${LOG}" == "true" ] ; then
-    echo "[$(date --utc "+%Y-%m-%dT%H:%M:%S.000+00:00")] [ERROR] [index:${LOG_INDEX}] $1"
+    echo "[$(date --utc "+%Y-%m-%dT%H:%M:%S.000+00:00")] [SINFO] [index:${LOG_INDEX}] $1"
 fi

@@ -41,7 +41,7 @@ Many (perhaps most) clusters don't need this level of security and operators may
 
 # Environment Variables
 
-* **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `ERROR`, `WARN`, `INFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
+* **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
 # Consul Settings
 

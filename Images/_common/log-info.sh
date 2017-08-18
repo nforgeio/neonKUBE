@@ -5,21 +5,35 @@
 #
 # USAGE: . log-info.sh MESSAGE
 
-if [ "${LOG_LEVEL}" == "NONE" ] ; then
-    LOG=false
-elif [ "${LOG_LEVEL}" == "DEBUG" ] ; then
-    LOG=true
-elif [ "${LOG_LEVEL}" == "INFO" ] ; then
-    LOG=true
-elif [ "${LOG_LEVEL}" == "WARN" ] ; then
-    LOG=false
-elif [ "${LOG_LEVEL}" == "ERROR" ] ; then
-    LOG=false
-elif [ "${LOG_LEVEL}" == "CRITICAL" ] ; then
-    LOG=false
-else
-    LOG=true
-fi
+case "${LOG_LEVEL}" in
+	"NONE")
+		LOG=false
+		;;
+	"DEBUG")
+		LOG=true
+		;;
+	"SINFO")
+		LOG=true
+		;;
+	"INFO")
+		LOG=true
+		;;
+	"WARN")
+		LOG=false
+		;;
+	"ERROR")
+		LOG=false
+		;;
+	"SERROR")
+		LOG=false
+		;;
+	"CRITICAL")
+		LOG=false
+		;;
+	*)
+		LOG=false
+		;;
+done
 
 . /log-index.sh
 

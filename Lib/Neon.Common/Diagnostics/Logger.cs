@@ -32,10 +32,16 @@ namespace Neon.Diagnostics
         public bool IsErrorEnabled { get; internal set; } = LogManager.LogLevel >= LogLevel.Error;
 
         /// <inheritdoc/>
+        public bool IsSErrorEnabled { get; internal set; } = LogManager.LogLevel >= LogLevel.SError;
+
+        /// <inheritdoc/>
         public bool IsCriticalEnabled { get; internal set; } = LogManager.LogLevel >= LogLevel.Critical;
 
         /// <inheritdoc/>
         public bool IsInfoEnabled { get; internal set; }  = LogManager.LogLevel >= LogLevel.Info;
+
+        /// <inheritdoc/>
+        public bool IsSInfoEnabled { get; internal set; } = LogManager.LogLevel >= LogLevel.SInfo;
 
         /// <inheritdoc/>
         public bool IsWarnEnabled { get; internal set; }  = LogManager.LogLevel >= LogLevel.Warn;
@@ -194,6 +200,45 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
+        public void SError(object message, string activityId = null)
+        {
+            if (IsErrorEnabled)
+            {
+                try
+                {
+                    Log("SERROR", message?.ToString());
+                }
+                catch
+                {
+                    // Doesn't make sense to handle this.
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public void SError(object message, Exception e, string activityId = null)
+        {
+            if (IsSErrorEnabled)
+            {
+                try
+                {
+                    if (message != null)
+                    {
+                        Log("SERROR", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                    }
+                    else
+                    {
+                        Log("SERROR", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                    }
+                }
+                catch
+                {
+                    // Doesn't make sense to handle this.
+                }
+            }
+        }
+
+        /// <inheritdoc/>
         public void Critical(object message, string activityId = null)
         {
             if (IsCriticalEnabled)
@@ -262,6 +307,45 @@ namespace Neon.Diagnostics
                     else
                     {
                         Log("INFO", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                    }
+                }
+                catch
+                {
+                    // Doesn't make sense to handle this.
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public void SInfo(object message, string activityId = null)
+        {
+            if (IsInfoEnabled)
+            {
+                try
+                {
+                    Log("SINFO", message?.ToString());
+                }
+                catch
+                {
+                    // Doesn't make sense to handle this.
+                }
+            }
+        }
+
+        /// <inheritdoc/>
+        public void SInfo(object message, Exception e, string activityId = null)
+        {
+            if (IsInfoEnabled)
+            {
+                try
+                {
+                    if (message != null)
+                    {
+                        Log("SINFO", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                    }
+                    else
+                    {
+                        Log("SINFO", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                 }
                 catch
