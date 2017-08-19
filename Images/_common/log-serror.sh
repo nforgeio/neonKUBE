@@ -1,4 +1,4 @@
-﻿#!/bin/sh
+#!/bin/sh
 #------------------------------------------------------------------------------
 # Writes an SERROR log message to standard output  if $LOG_LEVEL is set to SERROR
 # or higher.  INFO is assumed if $LOG_LEVEL is not set.
@@ -6,33 +6,33 @@
 # USAGE: . log-serror.sh MESSAGE
 
 case "${LOG_LEVEL}" in
-	"NONE")
-		LOG=false
-		;;
-	"DEBUG")
-		LOG=true
-		;;
-	"SINFO")
-		LOG=true
-		;;
-	"INFO")
-		LOG=true
-		;;
-	"WARN")
-		LOG=true
-		;;
-	"ERROR")
-		LOG=true
-		;;
-	"SERROR")
-		LOG=true
-		;;
-	"CRITICAL")
-		LOG=false
-		;;
-	*)
-		LOG=false
-		;;
+    "NONE")
+        LOG=false
+        ;;
+    "DEBUG")
+        LOG=true
+        ;;
+    "SINFO")
+        LOG=true
+        ;;
+    "INFO")
+        LOG=true
+        ;;
+    "WARN")
+        LOG=true
+        ;;
+    "ERROR")
+        LOG=true
+        ;;
+    "SERROR")
+        LOG=true
+        ;;
+    "CRITICAL")
+        LOG=false
+        ;;
+    *)
+        LOG=false
+        ;;
 done
 
 . /log-index.sh

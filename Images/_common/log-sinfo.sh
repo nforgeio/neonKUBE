@@ -1,4 +1,4 @@
-﻿#!/bin/sh
+#!/bin/sh
 #------------------------------------------------------------------------------
 # Writes an SINFO log message to standard output  if $LOG_LEVEL is set to SINFO
 # or higher.  INFO is assumed if $LOG_LEVEL is not set.
@@ -6,33 +6,33 @@
 # USAGE: . log-sinfo.sh MESSAGE
 
 case "${LOG_LEVEL}" in
-	"NONE")
-		LOG=false
-		;;
-	"DEBUG")
-		LOG=true
-		;;
-	"SINFO")
-		LOG=true
-		;;
-	"INFO")
-		LOG=false
-		;;
-	"WARN")
-		LOG=false
-		;;
-	"ERROR")
-		LOG=false
-		;;
-	"SERROR")
-		LOG=false
-		;;
-	"CRITICAL")
-		LOG=false
-		;;
-	*)
-		LOG=false
-		;;
+    "NONE")
+        LOG=false
+        ;;
+    "DEBUG")
+        LOG=true
+        ;;
+    "SINFO")
+        LOG=true
+        ;;
+    "INFO")
+        LOG=false
+        ;;
+    "WARN")
+        LOG=false
+        ;;
+    "ERROR")
+        LOG=false
+        ;;
+    "SERROR")
+        LOG=false
+        ;;
+    "CRITICAL")
+        LOG=false
+        ;;
+    *)
+        LOG=false
+        ;;
 done
 
 . /log-index.sh

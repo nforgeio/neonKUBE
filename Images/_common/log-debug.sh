@@ -6,33 +6,33 @@
 # USAGE: . log-debug.sh MESSAGE
 
 case "${LOG_LEVEL}" in
-	"NONE")
-		LOG=false
-		;;
-	"DEBUG")
-		LOG=true
-		;;
-	"SINFO")
-		LOG=false
-		;;
-	"INFO")
-		LOG=false
-		;;
-	"WARN")
-		LOG=false
-		;;
-	"ERROR")
-		LOG=false
-		;;
-	"SERROR")
-		LOG=false
-		;;
-	"CRITICAL")
-		LOG=false
-		;;
-	*)
-		LOG=false
-		;;
+    "NONE")
+        LOG=false
+        ;;
+    "DEBUG")
+        LOG=true
+        ;;
+    "SINFO")
+        LOG=false
+        ;;
+    "INFO")
+        LOG=false
+        ;;
+    "WARN")
+        LOG=false
+        ;;
+    "ERROR")
+        LOG=false
+        ;;
+    "SERROR")
+        LOG=false
+        ;;
+    "CRITICAL")
+        LOG=false
+        ;;
+    *)
+        LOG=false
+        ;;
 done
 
 . /log-index.sh
