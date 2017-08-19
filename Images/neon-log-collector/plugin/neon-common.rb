@@ -57,12 +57,16 @@ module NeonCommon
                 return "critical";
             when "error", "err"
                 return "error";
+            when "serror"
+                return "serror";
             when "warn", "warning"
                 return "warn";
             when "notice"
                 return "notice";
             when "info", "information"
                 return "info";
+            when "sinfo"
+                return "sinfo";
             when "debug", "trace"
                 return "debug";
         end
@@ -76,10 +80,12 @@ module NeonCommon
     #       emergency   System is unusable (not emitted by services).
     #       alert       System is seriously degraded (not emitted by services)..
     #       critical    Service has failed (maps from fatal for Log4Net oriented application logging).
+    #       serror      Service has encountered a security related error
     #       error       Service has encountered an error.
     #       warn        Indicates that an error may occur if actions are not taken.
     #       notice      Something unusual has occurred but is not an error.
     #       info        Normal operational messages that require no action.
+    #       sinfo       Normal operational security messages that require no action.
     #       debug       Developer/diagnostic information.
     #       unknown     Log level could not be determined.
     #
