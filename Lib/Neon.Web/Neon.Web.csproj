@@ -2,11 +2,11 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <Version>6.0.0.3</Version>
+    <Version>6.0.0.5</Version>
     <Authors>Jeff Lill</Authors>
     <Company>Jeff Lill</Company>
     <Product>neonCLUSTER</Product>
-    <Description>Web site and API related classes and enhancements.</Description>
+    <Description>Website and API related classes and enhancements.</Description>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>Initial release.</PackageReleaseNotes>
   </PropertyGroup>
@@ -18,5 +18,14 @@
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|AnyCPU'">
     <DocumentationFile>bin\Release\netcoreapp2.0\Neon.Web.xml</DocumentationFile>
   </PropertyGroup>
+
+  <ItemGroup>
+    <PackageReference Include="Microsoft.AspNetCore" Version="2.0.0" />
+    <PackageReference Include="Microsoft.AspNetCore.Mvc" Version="2.0.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+  </ItemGroup>
 
 </Project>

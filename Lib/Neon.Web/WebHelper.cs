@@ -8,10 +8,13 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Threading;
 
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Mvc;
+
 using Neon.Common;
 using Neon.Diagnostics;
 
-namespace Neon.AspNetCore
+namespace Neon.Web
 {
     /// <summary>
     /// Utility methods for <b>AspNetCore</b> applications.
@@ -29,6 +32,15 @@ namespace Neon.AspNetCore
             // the main executable is located.
 
             Directory.SetCurrentDirectory(AppContext.BaseDirectory);
+        }
+
+        /// <summary>
+        /// Generates an opaque globally unique activity ID.
+        /// </summary>
+        /// <returns>The activity ID string.</returns>
+        public static string GenerateActivityId()
+        {
+            return NeonHelper.UrlTokenEncode(Guid.NewGuid().ToByteArray());
         }
     }
 }

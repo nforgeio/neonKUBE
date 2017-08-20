@@ -1,0 +1,254 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:	    NeonController.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+
+using System;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Threading;
+
+using Microsoft.AspNetCore;
+using Microsoft.AspNetCore.Mvc;
+
+using Neon.Common;
+using Neon.Diagnostics;
+using Neon.Net;
+
+namespace Neon.Web
+{
+    /// <summary>
+    /// Enhances the base <see cref="Controller"/> class to simplify and enhance WebAPI service logging.
+    /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This class provides two logging related enhancements.  First, <see cref="NeonController"/>
+    /// implements <see cref="ILog"/> so that all of the standard logging methods are directly
+    /// available in the context of the derived controller.  Events will be logged with the module
+    /// string set to <b>"Web-"</b> prefixing the name of the controller.
+    /// </para>
+    /// <para>
+    /// The <see cref="ActivityId"/> property can also be used to easily correlate operations that
+    /// span multiple systems and services.  An activity is a globally unique string that can be
+    /// used to creelate a parent operation with any decendent operations.  For example, a parent
+    /// operation such as <b>get-weather</b> may need to call several other web services to 
+    /// <b>get-current-weather</b>, <b>get-forecast</b>, <b>get-weather-alerts</b>,... and these
+    /// child services may need to call other services.  The essential idea here is to generate 
+    /// an activity ID for the parent operation, recursively pass this to any child operations and
+    /// then include the activity ID in any logged errors or warnings.
+    /// </para>
+    /// <para>
+    /// This can be very useful operationally for diagnosing problems.  A typical scanario is:
+    /// a parent operation fails and an error is logged and the operator can then review the
+    /// logs with the activity across all systems and services to disgnose exactly what happened.
+    /// </para>
+    /// <para>
+    /// The Neon framework and <b>neonCLUSTER</b> have built-in mechanisms to make this easy.
+    /// <see cref="ILog"/> logging methods include <b>activityId</b> as first class parameters
+    /// and the neonCLUSTER pipeline implicitly process and persist <b>activity-id</b> fields
+    /// from event streams.  
+    /// </para>
+    /// <para>
+    /// The <b>neon-proxy-public</b> and <b>neon-proxy-private</b> services are also aware
+    /// of activity IDs and will include these in the HTTP traffic logs and also generate
+    /// new activity IDs for inbound requests that don't already have them.  This value will
+    /// be available as the <see cref="ActivityId"/> property.
+    /// </para>
+    /// <para>
+    /// To enable cross system/service activity correlation, you'll need to include the 
+    /// <see cref="ActivityId"/> as the <b>X-Activity-ID</b> header in requests made to
+    /// those systems.  The <see cref="JsonClient"/> includes built-in methods that make 
+    /// this easy.
+    /// </para>
+    /// </remarks>
+    public abstract class NeonController : Controller
+    {
+        private ILog        log;
+        private string      activityId;
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public NeonController()
+        {
+        }
+
+        /// <summary>
+        /// <b>Internal use only:</b> Return's the request's <b>X-Activity-ID</b> header
+        /// value or <c>null</c>.  Application services should use <see cref="ActivityId"/>
+        /// which guarantees that a valid activity ID will be returned.
+        /// </summary>
+        [FromHeader(Name = "X-Activity-ID")]
+        public string InternalActivityId { get; set; }
+
+        /// <summary>
+        /// Returns the opaque globally unique activity ID for the current operation.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Activity IDs can be used to correlate information like logs operations across 
+        /// multiple systems by high-level operation.  For example, a user request to and
+        /// API service may need to be satisified by multiple API requests to other APIs
+        /// or services
+        /// </para>
+        /// <para>
+        /// Neon uses the HTTP <b>X-Activity-ID</b> header to correlate requests.  This
+        /// is an opaque globally unique string.  This is generated automatically by 
+        /// <b>neon-proxy-public</b> and <b>neon-proxy-private</b> for inbound HTTP
+        /// requests that don't already have this header value.
+        /// </para>
+        /// <para>
+        /// This property always returns a valid activity ID.  This will be the activity
+        /// ID header included in the request or a newly generated ID.
+        /// </para>
+        /// </remarks>
+        public string ActivityId
+        {
+            get
+            {
+                if (!string.IsNullOrEmpty(activityId))
+                {
+                    return activityId;
+                }
+
+                // Lazy generate the activity ID if necessary.
+
+                if (string.IsNullOrEmpty(InternalActivityId))
+                {
+                    activityId = WebHelper.GenerateActivityId();
+                }
+                else
+                {
+                    activityId = InternalActivityId;
+                }
+
+                return activityId;
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // ILog implementation.
+
+        /// <summary>
+        /// Returns the logger to use for this instance.
+        /// </summary>
+        /// <returns>The logger.</returns>
+        private ILog GetLogger()
+        {
+            // Lazy load the logger for better performance in the common case
+            // where nothing is logged for a request.
+
+            if (log != null)
+            {
+                return log;
+            }
+
+            return log = LogManager.GetLogger("Web-" + base.ControllerContext.ActionDescriptor.ControllerName);
+        }
+
+        /// <inheritdoc/>
+        public bool IsDebugEnabled => GetLogger().IsDebugEnabled;
+
+        /// <inheritdoc/>
+        public bool IsSInfoEnabled => GetLogger().IsSInfoEnabled;
+
+        /// <inheritdoc/>
+        public bool IsInfoEnabled => GetLogger().IsInfoEnabled;
+
+        /// <inheritdoc/>
+        public bool IsWarnEnabled => GetLogger().IsWarnEnabled;
+
+        /// <inheritdoc/>
+        public bool IsErrorEnabled => GetLogger().IsErrorEnabled;
+
+        /// <inheritdoc/>
+        public bool IsSErrorEnabled => GetLogger().IsSErrorEnabled;
+
+        /// <inheritdoc/>
+        public bool IsCriticalEnabled => GetLogger().IsCriticalEnabled;
+
+        /// <inheritdoc/>
+        public void Critical(object message, string activityId = null)
+        {
+            GetLogger().Critical(message, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void Critical(object message, Exception e, string activityId = null)
+        {
+            GetLogger().Critical(message, e, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void Debug(object message, string activityId = null)
+        {
+            GetLogger().Debug(message, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void Debug(object message, Exception e, string activityId = null)
+        {
+            GetLogger().Debug(message, e, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void Error(object message, string activityId = null)
+        {
+            GetLogger().Error(message, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void Error(object message, Exception e, string activityId = null)
+        {
+            GetLogger().Error(message, e, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void Info(object message, string activityId = null)
+        {
+            GetLogger().Info(message, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void Info(object message, Exception e, string activityId = null)
+        {
+            GetLogger().Info(message, e, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void SError(object message, string activityId = null)
+        {
+            GetLogger().SError(message, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void SError(object message, Exception e, string activityId = null)
+        {
+            GetLogger().SError(message, e, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void SInfo(object message, string activityId = null)
+        {
+            GetLogger().SInfo(message, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void SInfo(object message, Exception e, string activityId = null)
+        {
+            GetLogger().SInfo(message, e, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void Warn(object message, string activityId = null)
+        {
+            GetLogger().Warn(message, activityId ?? this.ActivityId);
+        }
+
+        /// <inheritdoc/>
+        public void Warn(object message, Exception e, string activityId = null)
+        {
+            GetLogger().Warn(message, e, activityId ?? this.ActivityId);
+        }
+    }
+}
