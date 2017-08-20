@@ -19,8 +19,9 @@ namespace Neon.Diagnostics
     /// </summary>
     public static class LogManager
     {
-        private static bool         initialized = false;
-        private static LogLevel     logLevel;
+        private static Dictionary<string, ILog> nameToLogger = new Dictionary<string, ILog>();
+        private static bool                     initialized = false;
+        private static LogLevel                 logLevel;
 
         /// <summary>
         /// Initializes the manager.
@@ -137,13 +138,34 @@ namespace Neon.Diagnostics
         public static bool EmitIndex { get; set; } = true;
 
         /// <summary>
+        /// Returns the logger for the existing name.
+        /// </summary>
+        /// <param name="name">The case sensitive logger name.</param>
+        /// <returns>The <see cref="ILog"/> instance.</returns>
+        private static ILog InternalGetLogger(string name)
+        {
+            name = name ?? string.Empty;
+
+            lock (nameToLogger)
+            {
+                if (!nameToLogger.TryGetValue(name, out var logger))
+                {
+                    logger = new Logger(name);
+                    nameToLogger.Add(name, new Logger(name));
+                }
+
+                return logger;
+            }
+        }
+
+        /// <summary>
         /// Returns a named logger.
         /// </summary>
-        /// <param name="name">The logger name (defaults to <c>null</c>).</param>
+        /// <param name="name">The case sensitive logger name (defaults to <c>null</c>).</param>
         /// <returns>The <see cref="ILog"/> instance.</returns>
         public static ILog GetLogger(string name = null)
         {
-            return new Logger(name ?? string.Empty);
+            return InternalGetLogger(name);
         }
 
         /// <summary>
@@ -154,7 +176,7 @@ namespace Neon.Diagnostics
         /// <returns>The <see cref="ILog"/> instance.</returns>
         public static ILog GetLogger(Type type)
         {
-            return new Logger(type.FullName);
+            return InternalGetLogger(type.FullName);
         }
 
         /// <summary>
@@ -165,7 +187,7 @@ namespace Neon.Diagnostics
         /// <returns>The <see cref="ILog"/> instance.</returns>
         public static ILog GetLogger<T>()
         {
-            return new Logger(typeof(T).FullName);
+            return InternalGetLogger(typeof(T).FullName);
         }
     }
 }
