@@ -63,9 +63,9 @@ namespace NeonProxyManager
         /// <param name="args">Command line arguments.</param>
         public static void Main(string[] args)
         {
-            LogManager.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
-            log = LogManager.GetLogger("main");
-            log.Info(() => $"Starting [{serviceName}]");
+            LogManager.Default.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
+            log = LogManager.Default.GetLogger(typeof(Program));
+            log.LogInfo(() => $"Starting [{serviceName}]");
 
             terminator = new ProcessTerminator(log);
 
@@ -93,7 +93,7 @@ namespace NeonProxyManager
 
                 if (string.IsNullOrEmpty(vaultCredentialsSecret))
                 {
-                    log.Critical("[VAULT_CREDENTIALS] environment variable does not exist.");
+                    log.LogCritical("[VAULT_CREDENTIALS] environment variable does not exist.");
                     Program.Exit(1);
                 }
 
@@ -101,17 +101,17 @@ namespace NeonProxyManager
 
                 if (vaultCredentials == null)
                 {
-                    log.Critical($"Cannot read Docker secret [{vaultCredentialsSecret}].");
+                    log.LogCritical($"Cannot read Docker secret [{vaultCredentialsSecret}].");
                     Program.Exit(1);
                 }
 
                 // Open the cluster data services and then start the main service task.
 
-                log.Info(() => $"Opening Vault");
+                log.LogInfo(() => $"Opening Vault");
 
                 using (vault = NeonClusterHelper.OpenVault(vaultCredentials))
                 {
-                    log.Info(() => $"Opening Consul");
+                    log.LogInfo(() => $"Opening Consul");
 
                     using (consul = NeonClusterHelper.OpenConsul())
                     {
@@ -128,7 +128,7 @@ namespace NeonProxyManager
             }
             catch (Exception e)
             {
-                log.Critical(e);
+                log.LogCritical(e);
                 Program.Exit(1);
             }
             finally
@@ -146,7 +146,7 @@ namespace NeonProxyManager
         /// <param name="exitCode">The exit code.</param>
         public static void Exit(int exitCode)
         {
-            log.Info(() => $"Exiting: [{serviceName}]");
+            log.LogInfo(() => $"Exiting: [{serviceName}]");
             terminator.ReadyToExit();
             Environment.Exit(exitCode);
         }
@@ -164,21 +164,21 @@ namespace NeonProxyManager
 
             if (!await consul.KV.Exists(pollSecondsKey))
             {
-                log.Info($"Persisting setting [{pollSecondsKey}=120.0]");
+                log.LogInfo($"Persisting setting [{pollSecondsKey}=120.0]");
                 await consul.KV.PutDouble(pollSecondsKey, 300.0);
             }
 
             if (!await consul.KV.Exists(certWarnDaysKey))
             {
-                log.Info($"Persisting setting [{certWarnDaysKey}=30.0]");
+                log.LogInfo($"Persisting setting [{certWarnDaysKey}=30.0]");
                 await consul.KV.PutDouble(certWarnDaysKey, 30.0);
             }
 
             pollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(pollSecondsKey));
             certWarnTime = TimeSpan.FromDays(await consul.KV.GetDouble(certWarnDaysKey));
 
-            log.Info(() => $"Using setting [{pollSecondsKey}={pollInterval}]");
-            log.Info(() => $"Using setting [{certWarnDaysKey}={certWarnTime}]");
+            log.LogInfo(() => $"Using setting [{pollSecondsKey}={pollInterval}]");
+            log.LogInfo(() => $"Using setting [{certWarnDaysKey}={certWarnTime}]");
 
             // The implementation is pretty straight forward: We're going to watch
             // the [neon/service/neon-proxy-manager/conf/] prefix for changes 
@@ -207,11 +207,11 @@ namespace NeonProxyManager
                     {
                         if (monitorTask.Wait(terminator.Timeout))
                         {
-                            log.Info(() => "Tasks stopped gracefully.");
+                            log.LogInfo(() => "Tasks stopped gracefully.");
                         }
                         else
                         {
-                            log.Warn(() => $"Tasks did not stop within [{terminator.Timeout}].");
+                            log.LogWarn(() => $"Tasks did not stop within [{terminator.Timeout}].");
                         }
                     }
                 });
@@ -221,7 +221,7 @@ namespace NeonProxyManager
             monitorTask = Task.Run(
                 async () =>
                 {
-                    log.Info("Starting [Monitor] task.");
+                    log.LogInfo("Starting [Monitor] task.");
 
                     var initialPoll = true;
 
@@ -229,7 +229,7 @@ namespace NeonProxyManager
                     {
                         if (terminator.CancellationToken.IsCancellationRequested)
                         {
-                            log.Info(() => "Poll Terminating");
+                            log.LogInfo(() => "Poll Terminating");
                             return;
                         }
 
@@ -237,26 +237,26 @@ namespace NeonProxyManager
 
                         try
                         {
-                            log.Info(() => "Watching for routing changes.");
+                            log.LogInfo(() => "Watching for routing changes.");
 
                             await consul.KV.WatchPrefix(proxyConf + "/",
                                 async () =>
                                 {
                                     if (initialPoll)
                                     {
-                                        log.Info("Proxy startup poll.");
+                                        log.LogInfo("Proxy startup poll.");
                                         initialPoll = false;
                                     }
                                     else
                                     {
-                                        log.Info("Potential proxy or certificate change detected.");
+                                        log.LogInfo("Potential proxy or certificate change detected.");
                                     }
 
                                     // Load and check the cluster certificates.
 
                                     var clusterCerts = new ClusterCerts();
 
-                                    log.Info(() => "Reading cluster certificates.");
+                                    log.LogInfo(() => "Reading cluster certificates.");
 
                                     try
                                     {
@@ -268,11 +268,11 @@ namespace NeonProxyManager
 
                                             if (!certInfo.Certificate.IsValidDate(utcNow))
                                             {
-                                                log.Error(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] expired at [{certInfo.Certificate.ValidUntil.Value}].");
+                                                log.LogError(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] expired at [{certInfo.Certificate.ValidUntil.Value}].");
                                             }
                                             else if (!certInfo.Certificate.IsValidDate(utcNow + certWarnTime))
                                             {
-                                                log.Warn(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] will expire in [{(certInfo.Certificate.ValidUntil.Value - utcNow).TotalDays}] days at [{certInfo.Certificate.ValidUntil}].");
+                                                log.LogWarn(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] will expire in [{(certInfo.Certificate.ValidUntil.Value - utcNow).TotalDays}] days at [{certInfo.Certificate.ValidUntil}].");
                                             }
 
                                             clusterCerts.Add(certInfo);
@@ -280,8 +280,8 @@ namespace NeonProxyManager
                                     }
                                     catch (Exception e)
                                     {
-                                        log.Error("Unable to load certificates from Vault.", e);
-                                        log.Error("Aborting proxy configuration.");
+                                        log.LogError("Unable to load certificates from Vault.", e);
+                                        log.LogError("Aborting proxy configuration.");
                                         return;
                                     }
 
@@ -312,12 +312,12 @@ namespace NeonProxyManager
                         }
                         catch (TaskCanceledException)
                         {
-                            log.Info(() => "Cancelling [Monitor] task.");
+                            log.LogInfo(() => "Cancelling [Monitor] task.");
                             return;
                         }
                         catch (Exception e)
                         {
-                            log.Error(e);
+                            log.LogError(e);
                         }
 
                         if (exit)
@@ -368,7 +368,7 @@ namespace NeonProxyManager
             var configError      = false;
             var log              = new LogRecorder(Program.log);
 
-            log.Info(() => $"Rebuilding proxy [{proxyDisplayName}].");
+            log.LogInfo(() => $"Rebuilding proxy [{proxyDisplayName}].");
 
             // We need to track which certificates are actually referenced by proxy routes.
 
@@ -418,11 +418,11 @@ namespace NeonProxyManager
                         LastPort  = lastProxyPort
                     };
 
-                    log.Info(() => $"Updating proxy [{proxyDisplayName}] settings.");
+                    log.LogInfo(() => $"Updating proxy [{proxyDisplayName}] settings.");
                     await consul.KV.PutString($"{proxyPrefix}/settings", NeonHelper.JsonSerialize(settings, Formatting.None), cancellationToken);
                 }
 
-                log.Info(() => $"Reading [{proxyDisplayName}] routes.");
+                log.LogInfo(() => $"Reading [{proxyDisplayName}] routes.");
 
                 var result = await consul.KV.List($"{proxyPrefix}/routes/", cancellationToken);
 
@@ -440,7 +440,7 @@ namespace NeonProxyManager
             {
                 // Warn and exit for (presumably transient) Consul errors.
 
-                log.Warn($"Consul request failure for proxy [{proxyDisplayName}].", e);
+                log.LogWarn($"Consul request failure for proxy [{proxyDisplayName}].", e);
                 return (Routes: routes, Status: log.ToString(), Published: false);
             }
 
@@ -541,7 +541,7 @@ namespace NeonProxyManager
 
             if (validationContext.HasErrors)
             {
-                log.Error(validationContext.GetErrors());
+                log.LogError(validationContext.GetErrors());
                 return (Routes: routes, log.ToString(), Published: false);
             }
 
@@ -655,7 +655,7 @@ backend haproxy_stats
 
                     if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
                     {
-                        log.Error(() => $"TCP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"TCP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
                     }
                     else
@@ -691,7 +691,7 @@ backend haproxy_stats
 
                     if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
                     {
-                        log.Error(() => $"HTTP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
                         continue;
                     }
@@ -700,7 +700,7 @@ backend haproxy_stats
 
                     if (publicHttpHostPortPathToRoute.TryGetValue(hostPort, out conflictRoute))
                     {
-                        log.Error(() => $"HTTP route [{route.Name}] has a public Internet facing hostname/port [{hostPort}] conflict with HTTP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP route [{route.Name}] has a public Internet facing hostname/port [{hostPort}] conflict with HTTP route [{conflictRoute.Name}].");
                         configError = true;
                         continue;
                     }
@@ -727,7 +727,7 @@ backend haproxy_stats
 
                     if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
                     {
-                        log.Error(() => $"HTTP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
                         continue;
                     }
@@ -738,7 +738,7 @@ backend haproxy_stats
                     if (publicHttpHostPortPathToRoute.TryGetValue($"{frontend.Host}:{frontend.ProxyPort}:{allPrefix}", out conflictRoute) ||
                         publicHttpHostPortPathToRoute.TryGetValue(hostPortPath, out conflictRoute))
                     {
-                        log.Error(() => $"HTTP route [{route.Name}] has a public Internet facing hostname/port/path [{hostPortPath}] conflict with HTTP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP route [{route.Name}] has a public Internet facing hostname/port/path [{hostPortPath}] conflict with HTTP route [{conflictRoute.Name}].");
                         configError = true;
                         continue;
                     }
@@ -763,7 +763,7 @@ backend haproxy_stats
 
                     if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
                     {
-                        log.Error(() => $"TCP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"TCP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
                     }
                     else
@@ -796,7 +796,7 @@ backend haproxy_stats
 
                     if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
                     {
-                        log.Error(() => $"HTTP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
                         continue;
                     }
@@ -806,7 +806,7 @@ backend haproxy_stats
 
                     if (haHttpProxyHostPortPathToRoute.TryGetValue(hostPortPath, out conflictRoute))
                     {
-                        log.Error(() => $"HTTP route [{route.Name}] has an HAProxy frontend hostname/port/path [{hostPortPath}] conflict with HTTP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP route [{route.Name}] has an HAProxy frontend hostname/port/path [{hostPortPath}] conflict with HTTP route [{conflictRoute.Name}].");
                         configError = true;
                     }
                     else
@@ -832,7 +832,7 @@ backend haproxy_stats
 
                     if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
                     {
-                        log.Error(() => $"HTTP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
                         continue;
                     }
@@ -843,7 +843,7 @@ backend haproxy_stats
                     if (haHttpProxyHostPortPathToRoute.TryGetValue($"{frontend.Host}:{frontend.ProxyPort}:{allPrefix}", out conflictRoute) ||
                         haHttpProxyHostPortPathToRoute.TryGetValue(hostPortPath, out conflictRoute))
                     {
-                        log.Error(() => $"HTTP route [{route.Name}] has an HAProxy frontend hostname/port/path [{hostPortPath}] conflict with HTTP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP route [{route.Name}] has an HAProxy frontend hostname/port/path [{hostPortPath}] conflict with HTTP route [{conflictRoute.Name}].");
                         configError = true;
                     }
                     else
@@ -1002,7 +1002,7 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
 
                             if (conflictRoute != null)
                             {
-                                log.Warn(() => $"HTTP route [{httpRoute.Name}] defines a frontend for host/port [{frontend.Host}/{frontend.ProxyPort}] which conflicts with route [{conflictRoute.Name}].  This frontend will be ignored.");
+                                log.LogWarn(() => $"HTTP route [{httpRoute.Name}] defines a frontend for host/port [{frontend.Host}/{frontend.ProxyPort}] which conflicts with route [{conflictRoute.Name}].  This frontend will be ignored.");
                             }
                         }
                         else
@@ -1025,14 +1025,14 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
 
                             if (!clusterCerts.TryGetValue(frontend.CertName, out certInfo))
                             {
-                                log.Error(() => $"Route [{httpRoute.Name}] references [{frontend.CertName}] which does not exist.");
+                                log.LogError(() => $"Route [{httpRoute.Name}] references [{frontend.CertName}] which does not exist.");
                                 configError = true;
                                 continue;
                             }
 
                             if (!certInfo.Certificate.IsValidHost(frontend.Host))
                             {
-                                log.Error(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] does not cover host [{frontend.Host}] for a route [{httpRoute.Name}] frontend.");
+                                log.LogError(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] does not cover host [{frontend.Host}] for a route [{httpRoute.Name}] frontend.");
                             }
 
                             certInfo.WasReferenced = true;
@@ -1043,12 +1043,12 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
                         {
                             if (frontend.Tls)
                             {
-                                log.Error(() => $"Route [{httpRoute.Name}] specifies a TLS frontend on port [{frontend.ProxyPort}] that conflict with non-TLS frontends on the same port.");
+                                log.LogError(() => $"Route [{httpRoute.Name}] specifies a TLS frontend on port [{frontend.ProxyPort}] that conflict with non-TLS frontends on the same port.");
                                 configError = true;
                             }
                             else
                             {
-                                log.Error(() => $"Route [{httpRoute.Name}] specifies a non-TLS frontend on port [{frontend.ProxyPort}] that conflict with TLS frontends on the same port.");
+                                log.LogError(() => $"Route [{httpRoute.Name}] specifies a non-TLS frontend on port [{frontend.ProxyPort}] that conflict with TLS frontends on the same port.");
                                 configError = true;
                             }
                         }
@@ -1229,7 +1229,7 @@ backend http:{httpRoute.Name}
 
             if (configError)
             {
-                log.Error("Proxy configuration aborted due to one or more errors.");
+                log.LogError("Proxy configuration aborted due to one or more errors.");
                 return (Routes: routes, log.ToString(), Published: false);
             }
 
@@ -1316,7 +1316,7 @@ backend http:{httpRoute.Name}
 
                 if (publish)
                 {
-                    log.Info(() => $"Updating proxy [{proxyDisplayName}] configuration: [routes={routes.Count}] [hash={combinedHash}]");
+                    log.LogInfo(() => $"Updating proxy [{proxyDisplayName}] configuration: [routes={routes.Count}] [hash={combinedHash}]");
 
                     // Write the hash and configuration out as a transaction so we'll 
                     // be sure they match (don't get out of sync).  We don't need to
@@ -1337,14 +1337,14 @@ backend http:{httpRoute.Name}
                 }
                 else
                 {
-                    log.Info(() => $"No changes detected for proxy [{proxyDisplayName}].");
+                    log.LogInfo(() => $"No changes detected for proxy [{proxyDisplayName}].");
                 }
             }
             catch (Exception e)
             {
                 // Warn and exit for Consul errors.
 
-                log.Warn("Consul request failure.", e);
+                log.LogWarn("Consul request failure.", e);
                 return (Routes: routes, log.ToString(), Published: false);
             }
 
@@ -1454,19 +1454,19 @@ backend http:{httpRoute.Name}
 
                 if (!changed)
                 {
-                    log.Info(() => $"Public cluster load balancer configuration matches current routes. [endpoint-count={publicEndpoints.Count}]");
+                    log.LogInfo(() => $"Public cluster load balancer configuration matches current routes. [endpoint-count={publicEndpoints.Count}]");
                     return;
                 }
 
                 // The endpoints have changed so update the cluster.
 
-                log.Info(() => $"Updating: public cluster load balancer and security. [endpoint-count={publicEndpoints.Count}]");
+                log.LogInfo(() => $"Updating: public cluster load balancer and security. [endpoint-count={publicEndpoints.Count}]");
                 hostingManager.UpdatePublicEndpoints(latestEndpoints);
-                log.Info(() => $"Update Completed: public cluster load balancer and security. [endpoint-count={publicEndpoints.Count}]");
+                log.LogInfo(() => $"Update Completed: public cluster load balancer and security. [endpoint-count={publicEndpoints.Count}]");
             }
             catch (Exception e)
             {
-                log.Error($"Unable to update cluster load balancer and/or network security configuration.", e);
+                log.LogError($"Unable to update cluster load balancer and/or network security configuration.", e);
             }
         }
     }

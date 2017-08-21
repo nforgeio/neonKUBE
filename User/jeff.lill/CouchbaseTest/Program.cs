@@ -38,9 +38,9 @@ namespace CouchbaseTest
         /// <param name="args">Command line arguments.</param>
         public static void Main(string[] args)
         {
-            LogManager.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
-            log = LogManager.GetLogger("main");
-            log.Info(() => $"Starting [{serviceName}]");
+            LogManager.Default.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
+            log = LogManager.Default.GetLogger(typeof(Program));
+            log.LogInfo(() => $"Starting [{serviceName}]");
 
             terminator = new ProcessTerminator(log);
 
@@ -61,7 +61,7 @@ namespace CouchbaseTest
             }
             catch (Exception e)
             {
-                log.Critical(e);
+                log.LogCritical(e);
                 Program.Exit(1);
             }
             finally
@@ -79,7 +79,7 @@ namespace CouchbaseTest
         /// <param name="exitCode">The exit code.</param>
         public static void Exit(int exitCode)
         {
-            log.Info(() => $"Exiting: [{serviceName}]");
+            log.LogInfo(() => $"Exiting: [{serviceName}]");
             terminator.ReadyToExit();
             Environment.Exit(exitCode);
         }
@@ -136,7 +136,7 @@ namespace CouchbaseTest
             }
             catch (Exception e)
             {
-                log.Error(e);
+                log.LogError(e);
             }
         }
     }

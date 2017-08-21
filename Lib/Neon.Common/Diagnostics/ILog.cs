@@ -59,49 +59,49 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void Debug(object message, string activityId = null);
+        void LogDebug(object message, string activityId = null);
 
         /// <summary>
         /// Logs an <b>sinfo</b> message.
         /// </summary>
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void SInfo(object message, string activityId = null);
+        void LogSInfo(object message, string activityId = null);
 
         /// <summary>
         /// Logs an <b>info</b> message.
         /// </summary>
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void Info(object message, string activityId = null);
+        void LogInfo(object message, string activityId = null);
 
         /// <summary>
         /// Logs a <b>warn</b> message.
         /// </summary>
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void Warn(object message, string activityId = null);
+        void LogWarn(object message, string activityId = null);
 
         /// <summary>
         /// Logs an <b>serror</b> message.
         /// </summary>
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void SError(object message, string activityId = null);
+        void LogSError(object message, string activityId = null);
 
         /// <summary>
         /// Logs an <b>error</b> message.
         /// </summary>
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void Error(object message, string activityId = null);
+        void LogError(object message, string activityId = null);
 
         /// <summary>
         /// Logs a <b>critical</b> message.
         /// </summary>
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void Critical(object message, string activityId = null);
+        void LogCritical(object message, string activityId = null);
 
         /// <summary>
         /// Logs a <b>debug</b> message along with exception information.
@@ -109,7 +109,7 @@ namespace Neon.Diagnostics
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void Debug(object message, Exception e, string activityId = null);
+        void LogDebug(object message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs an <b>sinfo</b> message along with exception information.
@@ -117,7 +117,7 @@ namespace Neon.Diagnostics
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void SInfo(object message, Exception e, string activityId = null);
+        void LogSInfo(object message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs an <b>info</b> message along with exception information.
@@ -125,7 +125,7 @@ namespace Neon.Diagnostics
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void Info(object message, Exception e, string activityId = null);
+        void LogInfo(object message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs a <b>warn</b> message along with exception information.
@@ -133,7 +133,7 @@ namespace Neon.Diagnostics
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void Warn(object message, Exception e, string activityId = null);
+        void LogWarn(object message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs an <b>error</b> message along with exception information.
@@ -141,7 +141,7 @@ namespace Neon.Diagnostics
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void Error(object message, Exception e, string activityId = null);
+        void LogError(object message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs an <b>serror</b> message along with exception information.
@@ -149,7 +149,7 @@ namespace Neon.Diagnostics
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void SError(object message, Exception e, string activityId = null);
+        void LogSError(object message, Exception e, string activityId = null);
 
         /// <summary>
         /// Logs a <b>critical</b> message along with exception information.
@@ -157,6 +157,6 @@ namespace Neon.Diagnostics
         /// <param name="message">The object that will be serialized into the message.</param>
         /// <param name="e">The exception.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        void Critical(object message, Exception e, string activityId = null);
+        void LogCritical(object message, Exception e, string activityId = null);
     }
 }

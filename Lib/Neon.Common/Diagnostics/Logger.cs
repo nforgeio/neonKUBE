@@ -13,46 +13,91 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 using Neon.Common;
 
 namespace Neon.Diagnostics
 {
     /// <summary>
-    /// A general purpose implementation of <see cref="ILog"/> .
+    /// A general purpose implementation of <see cref="ILog"/> and <see cref="ILogger"/>.
     /// </summary>
-    internal class Logger : ILog
+    internal class Logger : ILog, ILogger
     {
+        private ILogManager logManager;
         private string      name;
         private long        emitCount;
 
         /// <inheritdoc/>
-        public bool IsDebugEnabled { get; internal set; } = LogManager.LogLevel >= LogLevel.Debug;
+        public bool IsDebugEnabled => logManager.LogLevel >= LogLevel.Debug;
 
         /// <inheritdoc/>
-        public bool IsErrorEnabled { get; internal set; } = LogManager.LogLevel >= LogLevel.Error;
+        public bool IsErrorEnabled => logManager.LogLevel >= LogLevel.Error;
 
         /// <inheritdoc/>
-        public bool IsSErrorEnabled { get; internal set; } = LogManager.LogLevel >= LogLevel.SError;
+        public bool IsSErrorEnabled => logManager.LogLevel >= LogLevel.SError;
 
         /// <inheritdoc/>
-        public bool IsCriticalEnabled { get; internal set; } = LogManager.LogLevel >= LogLevel.Critical;
+        public bool IsCriticalEnabled => logManager.LogLevel >= LogLevel.Critical;
 
         /// <inheritdoc/>
-        public bool IsInfoEnabled { get; internal set; }  = LogManager.LogLevel >= LogLevel.Info;
+        public bool IsInfoEnabled => logManager.LogLevel >= LogLevel.Info;
 
         /// <inheritdoc/>
-        public bool IsSInfoEnabled { get; internal set; } = LogManager.LogLevel >= LogLevel.SInfo;
+        public bool IsSInfoEnabled => logManager.LogLevel >= LogLevel.SInfo;
 
         /// <inheritdoc/>
-        public bool IsWarnEnabled { get; internal set; }  = LogManager.LogLevel >= LogLevel.Warn;
+        public bool IsWarnEnabled => logManager.LogLevel >= LogLevel.Warn;
 
         /// <summary>
         /// Constructs a named instance.
         /// </summary>
+        /// <param name="logManager">The parent log manager.</param>
         /// <param name="name">The instance name or <c>null</c>.</param>
-        public Logger(string name = null)
+        public Logger(ILogManager logManager, string name = null)
         {
-            this.name = name ?? string.Empty;
+            Covenant.Requires<ArgumentNullException>(logManager != null);
+
+            this.logManager = logManager;
+            this.name       = name ?? string.Empty;
+        }
+
+        /// <summary>
+        /// Indicates whether logging is enabled for a specific log level.
+        /// </summary>
+        /// <param name="logLevel">The log level.</param>
+        /// <returns><c>true</c> if logging is enabled for <paramref name="logLevel"/>.</returns>
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            // Map into Neon log levels.
+
+            switch (logLevel)
+            {
+                case LogLevel.Debug:
+
+                    return IsDebugEnabled;
+
+                case LogLevel.Info:
+
+                    return IsInfoEnabled;
+
+                case LogLevel.Warn:
+
+                    return IsWarnEnabled;
+
+                case LogLevel.Error:
+
+                    return IsErrorEnabled;
+
+                case LogLevel.Critical:
+
+                    return IsCriticalEnabled;
+
+                case LogLevel.None:
+                default:
+
+                    return false;
+            }
         }
 
         /// <summary>
@@ -103,12 +148,12 @@ namespace Neon.Diagnostics
 
                 var index = string.Empty;
 
-                if (LogManager.EmitIndex)
+                if (logManager.EmitIndex)
                 {
                     index = $" [index:{Interlocked.Increment(ref emitCount)}]";
                 }
 
-                if (LogManager.EmitTimestamp)
+                if (logManager.EmitTimestamp)
                 {
                     var timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff+00:00");
 
@@ -122,7 +167,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void Debug(object message, string activityId = null)
+        public void LogDebug(object message, string activityId = null)
         {
             if (IsDebugEnabled)
             {
@@ -138,7 +183,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void Debug(object message, Exception e, string activityId = null)
+        public void LogDebug(object message, Exception e, string activityId = null)
         {
             if (IsDebugEnabled)
             {
@@ -161,7 +206,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void Error(object message, string activityId = null)
+        public void LogError(object message, string activityId = null)
         {
             if (IsErrorEnabled)
             {
@@ -177,7 +222,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void Error(object message, Exception e, string activityId = null)
+        public void LogError(object message, Exception e, string activityId = null)
         {
             if (IsErrorEnabled)
             {
@@ -200,7 +245,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void SError(object message, string activityId = null)
+        public void LogSError(object message, string activityId = null)
         {
             if (IsErrorEnabled)
             {
@@ -216,7 +261,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void SError(object message, Exception e, string activityId = null)
+        public void LogSError(object message, Exception e, string activityId = null)
         {
             if (IsSErrorEnabled)
             {
@@ -239,7 +284,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void Critical(object message, string activityId = null)
+        public void LogCritical(object message, string activityId = null)
         {
             if (IsCriticalEnabled)
             {
@@ -255,7 +300,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void Critical(object message, Exception e, string activityId = null)
+        public void LogCritical(object message, Exception e, string activityId = null)
         {
             if (IsCriticalEnabled)
             {
@@ -278,7 +323,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void Info(object message, string activityId = null)
+        public void LogInfo(object message, string activityId = null)
         {
             if (IsInfoEnabled)
             {
@@ -294,7 +339,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void Info(object message, Exception e, string activityId = null)
+        public void LogInfo(object message, Exception e, string activityId = null)
         {
             if (IsInfoEnabled)
             {
@@ -317,7 +362,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void SInfo(object message, string activityId = null)
+        public void LogSInfo(object message, string activityId = null)
         {
             if (IsInfoEnabled)
             {
@@ -333,7 +378,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void SInfo(object message, Exception e, string activityId = null)
+        public void LogSInfo(object message, Exception e, string activityId = null)
         {
             if (IsInfoEnabled)
             {
@@ -356,7 +401,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void Warn(object message, string activityId = null)
+        public void LogWarn(object message, string activityId = null)
         {
             if (IsWarnEnabled)
             {
@@ -372,7 +417,7 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public void Warn(object message, Exception e, string activityId = null)
+        public void LogWarn(object message, Exception e, string activityId = null)
         {
             if (IsWarnEnabled)
             {
@@ -392,6 +437,181 @@ namespace Neon.Diagnostics
                     // Doesn't make sense to handle this.
                 }
             }
+        }
+
+        //---------------------------------------------------------------------
+        // ILogger implementation
+        //
+        // We're implementing this so that Neon logging will be compatible with 
+        // non-Neon components.
+
+        /// <summary>
+        /// Do-nothing disposable returned by <see cref="BeginScope{TState}(TState)"/>.
+        /// </summary>
+        public sealed class Scope : IDisposable
+        {
+            /// <summary>
+            /// Internal connstructor.
+            /// </summary>
+            internal Scope()
+            {
+            }
+
+            /// <inheritdoc/>
+            public void Dispose()
+            {
+            }
+        }
+
+        private static Scope scopeGlobal = new Scope(); // This can be static because it doesn't actually do anything.
+
+        /// <summary>
+        /// Converts a Microsoft log level into the corresponding Neon level.
+        /// </summary>
+        /// <param name="logLevel">The Microsoft log level.</param>
+        /// <returns>The Neon <see cref="LogLevel"/>.</returns>
+        private static LogLevel ToNeonLevel(Microsoft.Extensions.Logging.LogLevel logLevel)
+        {
+            switch (logLevel)
+            {
+                default:
+                case Microsoft.Extensions.Logging.LogLevel.None:
+
+                    return LogLevel.None;
+
+                case Microsoft.Extensions.Logging.LogLevel.Debug:
+                case Microsoft.Extensions.Logging.LogLevel.Trace:
+
+                    return LogLevel.Debug;
+
+                case Microsoft.Extensions.Logging.LogLevel.Information:
+
+                    return LogLevel.Info;
+
+                case Microsoft.Extensions.Logging.LogLevel.Warning:
+
+                    return LogLevel.Warn;
+
+                case Microsoft.Extensions.Logging.LogLevel.Error:
+
+                    return LogLevel.Error;
+
+                case Microsoft.Extensions.Logging.LogLevel.Critical:
+
+                    return LogLevel.Critical;
+            }
+        }
+
+        /// <inheritdoc/>
+        public void Log<TState>(Microsoft.Extensions.Logging.LogLevel logLevel, EventId eventId, TState state, Exception exception, Func<TState, Exception, string> formatter)
+        {
+            // It appears that formatters are not supposed to generate anything for
+            // exceptions, so we don't have to do anything special.
+            //
+            //      https://github.com/aspnet/Logging/issues/442
+
+            var message = formatter(state, null) ?? string.Empty;
+
+            switch (ToNeonLevel(logLevel))
+            {
+                case LogLevel.Critical:
+
+                    if (exception == null)
+                    {
+                        LogCritical(message);
+                    }
+                    else
+                    {
+                        LogCritical(message, exception);
+                    }
+                    break;
+
+                case LogLevel.Debug:
+
+                    if (exception == null)
+                    {
+                        LogDebug(message);
+                    }
+                    else
+                    {
+                        LogDebug(message, exception);
+                    }
+                    break;
+
+                case LogLevel.Error:
+
+                    if (exception == null)
+                    {
+                        LogError(message);
+                    }
+                    else
+                    {
+                        LogError(message, exception);
+                    }
+                    break;
+
+                case LogLevel.Info:
+
+                    if (exception == null)
+                    {
+                        LogInfo(message);
+                    }
+                    else
+                    {
+                        LogInfo(message, exception);
+                    }
+                    break;
+
+                case LogLevel.SError:
+
+                    if (exception == null)
+                    {
+                        LogSError(message);
+                    }
+                    else
+                    {
+                        LogSError(message, exception);
+                    }
+                    break;
+
+                case LogLevel.SInfo:
+
+                    if (exception == null)
+                    {
+                        LogSInfo(message);
+                    }
+                    else
+                    {
+                        LogSInfo(message, exception);
+                    }
+                    break;
+
+                case LogLevel.Warn:
+
+                    if (exception == null)
+                    {
+                        LogWarn(message);
+                    }
+                    else
+                    {
+                        LogWarn(message, exception);
+                    }
+                    break;
+            }
+        }
+
+        /// <inheritdoc/>
+        public bool IsEnabled(Microsoft.Extensions.Logging.LogLevel logLevel)
+        {
+            return IsEnabled(ToNeonLevel(logLevel));
+        }
+
+        /// <inheritdoc/>
+        public IDisposable BeginScope<TState>(TState state)
+        {
+            // We're not doing anything special for this right now.
+
+            return scopeGlobal;
         }
     }
 }

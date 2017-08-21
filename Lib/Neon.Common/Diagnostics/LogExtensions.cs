@@ -27,11 +27,11 @@ namespace Neon.Diagnostics
         /// <remarks>
         /// This method is intended mostly to enable the efficient use of interpolated C# strings.
         /// </remarks>
-        public static void Debug(this ILog log, Func<object> messageFunc)
+        public static void LogDebug(this ILog log, Func<object> messageFunc)
         {
             if (log.IsDebugEnabled)
             {
-                log.Debug(messageFunc());
+                log.LogDebug(messageFunc());
             }
         }
 
@@ -43,11 +43,11 @@ namespace Neon.Diagnostics
         /// <remarks>
         /// This method is intended mostly to enable the efficient use of interpolated C# strings.
         /// </remarks>
-        public static void Info(this ILog log, Func<object> messageFunc)
+        public static void LogInfo(this ILog log, Func<object> messageFunc)
         {
             if (log.IsInfoEnabled)
             {
-                log.Info(messageFunc());
+                log.LogInfo(messageFunc());
             }
         }
 
@@ -59,11 +59,11 @@ namespace Neon.Diagnostics
         /// <remarks>
         /// This method is intended mostly to enable the efficient use of interpolated C# strings.
         /// </remarks>
-        public static void Warn(this ILog log, Func<object> messageFunc)
+        public static void LogWarn(this ILog log, Func<object> messageFunc)
         {
             if (log.IsWarnEnabled)
             {
-                log.Warn(messageFunc());
+                log.LogWarn(messageFunc());
             }
         }
 
@@ -75,11 +75,11 @@ namespace Neon.Diagnostics
         /// <remarks>
         /// This method is intended mostly to enable the efficient use of interpolated C# strings.
         /// </remarks>
-        public static void Error(this ILog log, Func<object> messageFunc)
+        public static void LogError(this ILog log, Func<object> messageFunc)
         {
             if (log.IsErrorEnabled)
             {
-                log.Error(messageFunc());
+                log.LogError(messageFunc());
             }
         }
 
@@ -91,11 +91,11 @@ namespace Neon.Diagnostics
         /// <remarks>
         /// This method is intended mostly to enable the efficient use of interpolated C# strings.
         /// </remarks>
-        public static void Critical(this ILog log, Func<object> messageFunc)
+        public static void LogCritical(this ILog log, Func<object> messageFunc)
         {
             if (log.IsCriticalEnabled)
             {
-                log.Critical(messageFunc());
+                log.LogCritical(messageFunc());
             }
         }
 
@@ -104,11 +104,11 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="log">The log.</param>
         /// <param name="e">The exception.</param>
-        public static void Debug(this ILog log, Exception e)
+        public static void LogDebug(this ILog log, Exception e)
         {
             if (log.IsDebugEnabled)
             {
-                log.Debug(null, e);
+                log.LogDebug(null, e);
             }
         }
 
@@ -117,11 +117,11 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="log">The log.</param>
         /// <param name="e">The exception.</param>
-        public static void Info(this ILog log, Exception e)
+        public static void LogInfo(this ILog log, Exception e)
         {
             if (log.IsInfoEnabled)
             {
-                log.Info(null, e);
+                log.LogInfo(null, e);
             }
         }
 
@@ -130,11 +130,11 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="log">The log.</param>
         /// <param name="e">The exception.</param>
-        public static void Warn(this ILog log, Exception e)
+        public static void LogWarn(this ILog log, Exception e)
         {
             if (log.IsWarnEnabled)
             {
-                log.Warn(null, e);
+                log.LogWarn(null, e);
             }
         }
 
@@ -143,11 +143,11 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="log">The log.</param>
         /// <param name="e">The exception.</param>
-        public static void Error(this ILog log, Exception e)
+        public static void LogError(this ILog log, Exception e)
         {
             if (log.IsErrorEnabled)
             {
-                log.Error(null, e);
+                log.LogError(null, e);
             }
         }
 
@@ -156,11 +156,11 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="log">The log.</param>
         /// <param name="e">The exception.</param>
-        public static void Critical(this ILog log, Exception e)
+        public static void LogCritical(this ILog log, Exception e)
         {
             if (log.IsCriticalEnabled)
             {
-                log.Critical(null, e);
+                log.LogCritical(null, e);
             }
         }
     }

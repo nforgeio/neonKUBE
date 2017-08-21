@@ -24,15 +24,9 @@ namespace Neon.Time
     /// </remarks>
     public sealed class GatedTimer : IDisposable
     {
-        //---------------------------------------------------------------------
-        // Static members
-
-        private static ILog logger = LogManager.GetLogger<GatedTimer>();
-
-        //---------------------------------------------------------------------
-        // Instance members
-
         private object          syncLock = new object();
+        private ILog            logger   = LogManager.Default.GetLogger<GatedTimer>();
+
         private Timer           timer;          // The underlying timer
         private TimeSpan        dueTime;        // Time to wait before firing the first event
         private TimeSpan        period;         // Time to wait between firing events
@@ -163,7 +157,7 @@ namespace Neon.Time
             }
             catch (Exception e)
             {
-                logger.Error(e);
+                logger.LogError(e);
             }
 
             lock (syncLock)

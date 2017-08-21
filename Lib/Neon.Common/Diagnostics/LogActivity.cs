@@ -103,7 +103,7 @@ namespace Neon.Diagnostics
         {
             if (log != null)
             {
-                log.Debug(message, Id);
+                log.LogDebug(message, Id);
             }
         }
 
@@ -115,7 +115,7 @@ namespace Neon.Diagnostics
         {
             if (log != null)
             {
-                log.Info(message, Id);
+                log.LogInfo(message, Id);
             }
         }
 
@@ -127,7 +127,7 @@ namespace Neon.Diagnostics
         {
             if (log != null)
             {
-                log.Warn(message, Id);
+                log.LogWarn(message, Id);
             }
         }
 
@@ -139,7 +139,7 @@ namespace Neon.Diagnostics
         {
             if (log != null)
             {
-                log.Error(message, Id);
+                log.LogError(message, Id);
             }
         }
 
@@ -151,7 +151,7 @@ namespace Neon.Diagnostics
         {
             if (log != null)
             {
-                log.Critical(message, Id);
+                log.LogCritical(message, Id);
             }
         }
 
@@ -164,7 +164,7 @@ namespace Neon.Diagnostics
         {
             if (log != null)
             {
-                log.Critical(message, e, Id);
+                log.LogCritical(message, e, Id);
             }
         }
 
@@ -177,7 +177,7 @@ namespace Neon.Diagnostics
         {
             if (log != null)
             {
-                log.Info(message, e, Id);
+                log.LogInfo(message, e, Id);
             }
         }
 
@@ -190,7 +190,7 @@ namespace Neon.Diagnostics
         {
             if (log != null)
             {
-                log.Warn(message, e, Id);
+                log.LogWarn(message, e, Id);
             }
         }
 
@@ -203,7 +203,7 @@ namespace Neon.Diagnostics
         {
             if (log != null)
             {
-                log.Error(message, e, Id);
+                log.LogError(message, e, Id);
             }
         }
 
@@ -216,7 +216,7 @@ namespace Neon.Diagnostics
         {
             if (log != null)
             {
-                log.Critical(message, e, Id);
+                log.LogCritical(message, e, Id);
             }
         }
     }

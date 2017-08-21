@@ -143,7 +143,7 @@ namespace Neon.Web
                 return log;
             }
 
-            return log = LogManager.GetLogger("Web-" + base.ControllerContext.ActionDescriptor.ControllerName);
+            return log = LogManager.Default.GetLogger("Web-" + base.ControllerContext.ActionDescriptor.ControllerName);
         }
 
         /// <inheritdoc/>
@@ -170,85 +170,85 @@ namespace Neon.Web
         /// <inheritdoc/>
         public void Critical(object message, string activityId = null)
         {
-            GetLogger().Critical(message, activityId ?? this.ActivityId);
+            GetLogger().LogCritical(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         public void Critical(object message, Exception e, string activityId = null)
         {
-            GetLogger().Critical(message, e, activityId ?? this.ActivityId);
+            GetLogger().LogCritical(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         public void Debug(object message, string activityId = null)
         {
-            GetLogger().Debug(message, activityId ?? this.ActivityId);
+            GetLogger().LogDebug(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         public void Debug(object message, Exception e, string activityId = null)
         {
-            GetLogger().Debug(message, e, activityId ?? this.ActivityId);
+            GetLogger().LogDebug(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         public void Error(object message, string activityId = null)
         {
-            GetLogger().Error(message, activityId ?? this.ActivityId);
+            GetLogger().LogError(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         public void Error(object message, Exception e, string activityId = null)
         {
-            GetLogger().Error(message, e, activityId ?? this.ActivityId);
+            GetLogger().LogError(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         public void Info(object message, string activityId = null)
         {
-            GetLogger().Info(message, activityId ?? this.ActivityId);
+            GetLogger().LogInfo(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         public void Info(object message, Exception e, string activityId = null)
         {
-            GetLogger().Info(message, e, activityId ?? this.ActivityId);
+            GetLogger().LogInfo(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         public void SError(object message, string activityId = null)
         {
-            GetLogger().SError(message, activityId ?? this.ActivityId);
+            GetLogger().LogSError(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         public void SError(object message, Exception e, string activityId = null)
         {
-            GetLogger().SError(message, e, activityId ?? this.ActivityId);
+            GetLogger().LogSError(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         public void SInfo(object message, string activityId = null)
         {
-            GetLogger().SInfo(message, activityId ?? this.ActivityId);
+            GetLogger().LogSInfo(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         public void SInfo(object message, Exception e, string activityId = null)
         {
-            GetLogger().SInfo(message, e, activityId ?? this.ActivityId);
+            GetLogger().LogSInfo(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         public void Warn(object message, string activityId = null)
         {
-            GetLogger().Warn(message, activityId ?? this.ActivityId);
+            GetLogger().LogWarn(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
         public void Warn(object message, Exception e, string activityId = null)
         {
-            GetLogger().Warn(message, e, activityId ?? this.ActivityId);
+            GetLogger().LogWarn(message, e, activityId ?? this.ActivityId);
         }
     }
 }

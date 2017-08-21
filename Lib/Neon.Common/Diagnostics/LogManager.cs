@@ -12,51 +12,47 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.Logging;
+
 namespace Neon.Diagnostics
 {
     /// <summary>
     /// Global class used to manage application logging.
     /// </summary>
-    public static class LogManager
+    public class LogManager : ILogManager
     {
-        private static Dictionary<string, ILog> nameToLogger = new Dictionary<string, ILog>();
-        private static bool                     initialized = false;
-        private static LogLevel                 logLevel;
+        //---------------------------------------------------------------------
+        // Static members
 
         /// <summary>
-        /// Initializes the manager.
+        /// The default <see cref="ILogManager"/> that can be used by applications that don't
+        /// use dependency injection.  This defaults to an instance of <see cref="LogManager"/>
+        /// but can be set to something else for unit tests or early in application startup.
         /// </summary>
-        private static void Initialize()
+        public static ILogManager Default { get; set; } = new LogManager();
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        private Dictionary<string, ILog> nameToLogger = new Dictionary<string, ILog>();
+        private LogLevel logLevel = LogLevel.Info;
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        /// <param name="parseLogLevel">Indicates that the <b>LOG-LEVEL</b> environment variable should be parsed (defaults to <c>true</c>).</param>
+        public LogManager(bool parseLogLevel = true)
         {
-            if (!Enum.TryParse<LogLevel>(Environment.GetEnvironmentVariable("LOG_LEVEL"), true, out logLevel))
+            if (parseLogLevel && !Enum.TryParse<LogLevel>(Environment.GetEnvironmentVariable("LOG_LEVEL"), true, out logLevel))
             {
                 logLevel = LogLevel.Info;
             }
-
-            initialized = true;
         }
 
         /// <summary>
         /// Specifies the level of events to be actually recorded.
         /// </summary>
-        public static LogLevel LogLevel
-        {
-            get
-            {
-                if (!initialized)
-                {
-                    Initialize();
-                }
-
-                return logLevel;
-            }
-
-            set
-            {
-                logLevel    = value;
-                initialized = true;
-            }
-        }
+        public LogLevel LogLevel { get; set; }
 
         /// <summary>
         /// Sets the log level by safely parsing a string.
@@ -73,7 +69,7 @@ namespace Neon.Diagnostics
         /// values listed above.
         /// </note>
         /// </remarks>
-        public static void SetLogLevel(string level)
+        public void SetLogLevel(string level)
         {
             level = level ?? "INFO";
 
@@ -127,7 +123,7 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Controls whether timestamps are emitted.  This defaults to <c>true</c>.
         /// </summary>
-        public static bool EmitTimestamp { get; set; } = true;
+        public bool EmitTimestamp { get; set; } = true;
 
         /// <summary>
         /// Controls whether the <b>index</b> field is emitted.  This is a counter start
@@ -135,14 +131,14 @@ namespace Neon.Diagnostics
         /// emitted to help reconstruct exactly what happened when the system time resolution
         /// isn't fine enough.  This defaults to <c>true</c>.
         /// </summary>
-        public static bool EmitIndex { get; set; } = true;
+        public bool EmitIndex { get; set; } = true;
 
         /// <summary>
         /// Returns the logger for the existing name.
         /// </summary>
         /// <param name="name">The case sensitive logger name.</param>
         /// <returns>The <see cref="ILog"/> instance.</returns>
-        private static ILog InternalGetLogger(string name)
+        private ILog InternalGetLogger(string name)
         {
             name = name ?? string.Empty;
 
@@ -150,8 +146,8 @@ namespace Neon.Diagnostics
             {
                 if (!nameToLogger.TryGetValue(name, out var logger))
                 {
-                    logger = new Logger(name);
-                    nameToLogger.Add(name, new Logger(name));
+                    logger = new Logger(this, name);
+                    nameToLogger.Add(name, logger);
                 }
 
                 return logger;
@@ -163,7 +159,7 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="name">The case sensitive logger name (defaults to <c>null</c>).</param>
         /// <returns>The <see cref="ILog"/> instance.</returns>
-        public static ILog GetLogger(string name = null)
+        public ILog GetLogger(string name = null)
         {
             return InternalGetLogger(name);
         }
@@ -174,7 +170,7 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="type">The type.</param>
         /// <returns>The <see cref="ILog"/> instance.</returns>
-        public static ILog GetLogger(Type type)
+        public ILog GetLogger(Type type)
         {
             return InternalGetLogger(type.FullName);
         }
@@ -185,9 +181,38 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <typeparam name="T">The type.</typeparam>
         /// <returns>The <see cref="ILog"/> instance.</returns>
-        public static ILog GetLogger<T>()
+        public ILog GetLogger<T>()
         {
             return InternalGetLogger(typeof(T).FullName);
+        }
+
+        //---------------------------------------------------------------------
+        // ILoggerProvider implementation
+
+        /// <inheritdoc/>
+        public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases all associated resources.
+        /// </summary>
+        /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                // Actually dispose any disposable members here if we add
+                // any in the future.
+            }
+        }
+
+        /// <inheritdoc/>
+        public ILogger CreateLogger(string categoryName)
+        {
+            return (ILogger)GetLogger(categoryName);
         }
     }
 }

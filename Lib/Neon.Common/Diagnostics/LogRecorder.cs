@@ -91,100 +91,100 @@ namespace Neon.Diagnostics
         public bool IsCriticalEnabled => log.IsCriticalEnabled;
 
         /// <inheritdoc/>
-        public void Debug(object message, string activityId = null)
+        public void LogDebug(object message, string activityId = null)
         {
-            log.Debug(message, activityId);
+            log.LogDebug(message, activityId);
             capture.AppendLine($"[DEBUG] {message}");
         }
 
         /// <inheritdoc/>
-        public void SInfo(object message, string activityId = null)
+        public void LogSInfo(object message, string activityId = null)
         {
-            log.SInfo(message, activityId);
+            log.LogSInfo(message, activityId);
             capture.AppendLine($"[SINFO] {message}");
         }
 
         /// <inheritdoc/>
-        public void Info(object message, string activityId = null)
+        public void LogInfo(object message, string activityId = null)
         {
-            log.Info(message, activityId);
+            log.LogInfo(message, activityId);
             capture.AppendLine($"[INFO] {message}");
         }
 
         /// <inheritdoc/>
-        public void Warn(object message, string activityId = null)
+        public void LogWarn(object message, string activityId = null)
         {
-            log.Warn(message, activityId);
+            log.LogWarn(message, activityId);
             capture.AppendLine($"[WARN]: {message}");
         }
 
         /// <inheritdoc/>
-        public void Error(object message, string activityId = null)
+        public void LogError(object message, string activityId = null)
         {
-            log.Error(message, activityId);
+            log.LogError(message, activityId);
             capture.AppendLine($"[ERROR] {message}");
         }
 
         /// <inheritdoc/>
-        public void SError(object message, string activityId = null)
+        public void LogSError(object message, string activityId = null)
         {
-            log.SError(message, activityId);
+            log.LogSError(message, activityId);
             capture.AppendLine($"[SERROR] {message}");
         }
 
         /// <inheritdoc/>
-        public void Critical(object message, string activityId = null)
+        public void LogCritical(object message, string activityId = null)
         {
-            log.Critical(message, activityId);
+            log.LogCritical(message, activityId);
             capture.AppendLine($"[CRITICAL] {message}");
         }
 
         /// <inheritdoc/>
-        public void Debug(object message, Exception e, string activityId = null)
+        public void LogDebug(object message, Exception e, string activityId = null)
         {
-            log.Debug(message, e, activityId);
+            log.LogDebug(message, e, activityId);
             capture.AppendLine($"[DEBUG] {message} {NeonHelper.ExceptionError(e)}");
         }
 
         /// <inheritdoc/>
-        public void SInfo(object message, Exception e, string activityId = null)
+        public void LogSInfo(object message, Exception e, string activityId = null)
         {
-            log.SInfo(message, e, activityId);
+            log.LogSInfo(message, e, activityId);
             capture.AppendLine($"[SINFO] {message} {NeonHelper.ExceptionError(e)}");
         }
 
         /// <inheritdoc/>
-        public void Info(object message, Exception e, string activityId = null)
+        public void LogInfo(object message, Exception e, string activityId = null)
         {
-            log.Info(message, e, activityId);
+            log.LogInfo(message, e, activityId);
             capture.AppendLine($"[INFO] {message} {NeonHelper.ExceptionError(e)}");
         }
 
         /// <inheritdoc/>
-        public void Warn(object message, Exception e, string activityId = null)
+        public void LogWarn(object message, Exception e, string activityId = null)
         {
-            log.Warn(message, e, activityId);
+            log.LogWarn(message, e, activityId);
             capture.AppendLine($"[WARN] {message} {NeonHelper.ExceptionError(e)}");
         }
 
         /// <inheritdoc/>
-        public void Error(object message, Exception e, string activityId = null)
+        public void LogError(object message, Exception e, string activityId = null)
         {
-            log.Error(message, e, activityId);
+            log.LogError(message, e, activityId);
             capture.AppendLine($"[ERROR] {message} {NeonHelper.ExceptionError(e)}");
         }
 
         /// <inheritdoc/>
-        public void SError(object message, Exception e, string activityId = null)
+        public void LogSError(object message, Exception e, string activityId = null)
         {
-            log.SError(message, e, activityId);
+            log.LogSError(message, e, activityId);
             capture.AppendLine($"[SERROR] {message} {NeonHelper.ExceptionError(e)}");
         }
 
         /// <inheritdoc/>
-        public void Critical(object message, Exception e, string activityId = null)
+        public void LogCritical(object message, Exception e, string activityId = null)
         {
-            log.Critical(message, e, activityId);
+            log.LogCritical(message, e, activityId);
             capture.AppendLine($"[CRITICAL] {message} {NeonHelper.ExceptionError(e)}");
         }
 

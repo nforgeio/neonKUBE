@@ -28,6 +28,11 @@ using Neon.Diagnostics;
 using Neon.Docker;
 using Neon.Net;
 
+// $todo(jeff.lill): 
+//
+// This class being static doesn't support dependency injection.  I'm not sure it's
+// worth changing this now.  Perhaps when we start doing more cluster unit testing.
+
 namespace Neon.Cluster
 {
     /// <summary>
@@ -35,15 +40,36 @@ namespace Neon.Cluster
     /// </summary>
     public static partial class NeonClusterHelper
     {
-        private static ILog                         log = LogManager.GetLogger(typeof(NeonClusterHelper));
-        private static Dictionary<string, string>   secrets;
-        private static bool                         externalConnection;
+        //---------------------------------------------------------------------
+        // Private types
 
+        /// <summary>
+        /// Low-level Windows APIs.
+        /// </summary>
         private static class Windows
         {
             [DllImport("advapi32.dll", CharSet = CharSet.Ansi, SetLastError = true)]
             [return: MarshalAs(UnmanagedType.Bool)]
             public static extern bool EncryptFile(string filename);
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
+        private static ILog                         log = LogManager.Default.GetLogger(typeof(NeonClusterHelper));
+        private static Dictionary<string, string>   secrets;
+        private static bool                         externalConnection;
+
+        /// <summary>
+        /// Explicitly sets the class <see cref="ILog"/> implementation.  This defaults to
+        /// a reasonable value.
+        /// </summary>
+        /// <param name="log"></param>
+        public static void SetLogger(ILog log)
+        {
+            Covenant.Requires<ArgumentNullException>(log != null);
+
+            NeonClusterHelper.log = log;
         }
 
         /// <summary>
@@ -528,7 +554,7 @@ namespace Neon.Cluster
                 }
             }
 
-            log.Info(() => $"Connecting to cluster [{ClusterLogin}].");
+            log.LogInfo(() => $"Connecting to cluster [{ClusterLogin}].");
 
             OpenCluster(
                 new Cluster.ClusterProxy(ClusterLogin,
@@ -565,7 +591,7 @@ namespace Neon.Cluster
                 return NeonClusterHelper.Cluster;
             }
 
-            log.Info(() => $"Connecting to [{login.Username}@{login.ClusterName}].");
+            log.LogInfo(() => $"Connecting to [{login.Username}@{login.ClusterName}].");
 
             ClusterLogin       = login;
             externalConnection = true;
@@ -603,7 +629,7 @@ namespace Neon.Cluster
         /// </exception>
         public static void OpenCluster()
         {
-            log.Info(() => "Connecting to cluster.");
+            log.LogInfo(() => "Connecting to cluster.");
 
             if (Environment.GetEnvironmentVariable("NEON_CLUSTER") == null)
             {
@@ -701,7 +727,7 @@ namespace Neon.Cluster
             IsConnected        = false;
             externalConnection = false;
 
-            log.Info("Emulating cluster close.");
+            log.LogInfo("Emulating cluster close.");
 
             NeonHelper.ModifyHostsFile();
         }

@@ -13,6 +13,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
+
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -88,6 +90,38 @@ namespace Neon.Common
         /// presence of the <b>DEV_WORKSTATION</b> environment variable.
         /// </summary>
         private static bool? isDevWorkstation;
+
+        /// <summary>
+        /// The default root dependency injection container used by Neon class libraries.
+        /// </summary>
+        public static ServiceCollection DependencyContainer { get; set; }
+
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static NeonHelper()
+        {
+            // Dependency injection initialization:
+
+            DependencyContainer = new ServiceCollection();
+
+            // JSON initialization:
+
+            JsonSerializerSettings = new JsonSerializerSettings();
+            JsonSerializerSettings.Converters.Add(
+                new StringEnumConverter(false)
+                {
+                    AllowIntegerValues = false
+                });
+
+            // Serialize dates as UTC like: 2012-07-27T18:51:45.53403Z
+            //
+            // The nice thing about this is that Couchbase and other NoSQL database will
+            // be able to do date range queries out-of-the-box.
+
+            JsonSerializerSettings.DateFormatHandling = DateFormatHandling.IsoDateFormat;
+            JsonSerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+        }
 
         /// <summary>
         /// Returns <c>true</c> if the application was built as 64-bit.

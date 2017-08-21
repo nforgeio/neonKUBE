@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Cluster</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>6.0.0.5</Version>
+    <Version>6.0.0.9</Version>
     <Company>Jeff Lill</Company>
     <Product>neonCLUSTER</Product>
     <Description>Provides NeonCluster management and service capabilities.</Description>
@@ -37,6 +37,7 @@
     <PackageReference Include="Microsoft.Azure.Management.Network" Version="12.0.0-preview" />
     <PackageReference Include="Microsoft.Azure.Management.ResourceManager" Version="1.6.0-preview" />
     <PackageReference Include="Microsoft.Azure.Management.ResourceManager.Fluent" Version="1.1.3" />
+    <PackageReference Include="Microsoft.Extensions.Logging.Abstractions" Version="2.0.0" />
     <PackageReference Include="Neon.SshNet" Version="1.0.1" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
     <PackageReference Include="RabbitMQ.Client" Version="5.0.1" />

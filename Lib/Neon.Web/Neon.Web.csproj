@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <Version>6.0.0.5</Version>
+    <Version>6.0.0.9</Version>
     <Authors>Jeff Lill</Authors>
     <Company>Jeff Lill</Company>
     <Product>neonCLUSTER</Product>

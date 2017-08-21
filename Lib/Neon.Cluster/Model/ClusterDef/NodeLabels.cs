@@ -59,15 +59,8 @@ namespace Neon.Cluster
     /// </remarks>
     public class NodeLabels
     {
-        //---------------------------------------------------------------------
-        // Static members
-
-        private ILog log = LogManager.GetLogger<NodeLabels>();
-
-        //---------------------------------------------------------------------
-        // Instance members
-
-        private NodeDefinition node;    // The parent node
+        private ILog            log = LogManager.Default.GetLogger<NodeLabels>();
+        private NodeDefinition  node;    // The parent node
 
         /// <summary>
         /// Constructor.
@@ -530,7 +523,7 @@ namespace Neon.Cluster
             }
             catch (Exception e)
             {
-                log.Warn(() => $"[node={node.Name}]: [{e.GetType().Name}] parsing [{label.Key}={label.Value}");
+                log.LogWarn(() => $"[node={node.Name}]: [{e.GetType().Name}] parsing [{label.Key}={label.Value}");
             }
         }
 

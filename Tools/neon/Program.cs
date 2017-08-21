@@ -139,7 +139,7 @@ tool requires admin priviledges for direct mode.
 ";
             // Disable any logging that might be performed by library classes.
 
-            LogManager.LogLevel = LogLevel.None;
+            LogManager.Default.LogLevel = LogLevel.None;
 
             // Configure the encrypted user-specific application data folder and initialize
             // the subfolders.

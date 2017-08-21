@@ -10,10 +10,7 @@
     <PublicSign Condition=" '$(OS)' != 'Windows_NT' ">true</PublicSign>
     <PackageId>Neon.SshNet</PackageId>
     <Version>1.0.1.0</Version>
-    <Description>
-      Temporarily works around a hang in a recent Renci.SshNet package.  This is referenced
-      by other NeonForge packages but should probably not be used directly for other projects.
-    </Description>
+    <Description>Temporarily works around a hang in a recent Renci.SshNet package.  This is referenced by other NeonForge packages but should probably not be used directly for other projects.</Description>
     <PackageReleaseNotes>First stable release.</PackageReleaseNotes>
   </PropertyGroup>
   <ItemGroup>

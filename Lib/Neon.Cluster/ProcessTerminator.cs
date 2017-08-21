@@ -86,7 +86,7 @@ namespace Neon.Cluster
                         return;
                     }
 
-                    log?.Info(() => $"SIGTERM received: Stopping process [timeout={Timeout}]]");
+                    log?.LogInfo(() => $"SIGTERM received: Stopping process [timeout={Timeout}]]");
 
                     cts.Cancel();
 
@@ -101,12 +101,12 @@ namespace Neon.Cluster
                     try
                     {
                         NeonHelper.WaitFor(() => readyToExit, Timeout);
-                        log?.Info(() => "Process stopped gracefully.");
+                        log?.LogInfo(() => "Process stopped gracefully.");
                         Environment.Exit(0);
                     }
                     catch (TimeoutException)
                     {
-                        log?.Warn(() => $"Process did not stop within [{timeout}].");
+                        log?.LogWarn(() => $"Process did not stop within [{timeout}].");
                     }
                 };
         }
