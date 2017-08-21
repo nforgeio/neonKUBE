@@ -12,7 +12,10 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
+
+using Neon.Common;
 
 namespace Neon.Diagnostics
 {
@@ -25,17 +28,42 @@ namespace Neon.Diagnostics
         // Static members
 
         /// <summary>
+        /// <para>
         /// The default <see cref="ILogManager"/> that can be used by applications that don't
         /// use dependency injection.  This defaults to an instance of <see cref="LogManager"/>
         /// but can be set to something else for unit tests or early in application startup.
+        /// </para>
+        /// <para>
+        /// Applications that do use dependency injection can obtain this by default via
+        /// <see cref="NeonHelper.ServiceContainer"/>.
+        /// </para>
         /// </summary>
-        public static ILogManager Default { get; set; } = new LogManager();
+        public static ILogManager Default
+        {
+            get { return NeonHelper.ServiceContainer.GetService<ILogManager>(); }
+
+            set
+            {
+                // Ensure that updates to the default manager will also be reflected in 
+                // the dependency services so users won't be surprised.
+
+                NeonHelper.ServiceContainer.AddSingleton<ILogManager>(value);
+            }
+        }
+        
+        /// <summary>
+        /// Static constructor.
+        /// </summary>
+        static LogManager()
+        {
+            Default = new LogManager();
+        }
 
         //---------------------------------------------------------------------
         // Instance members
 
-        private Dictionary<string, ILog> nameToLogger = new Dictionary<string, ILog>();
-        private LogLevel logLevel = LogLevel.Info;
+        private Dictionary<string, ILog>    nameToLogger = new Dictionary<string, ILog>();
+        private LogLevel                    logLevel     = LogLevel.Info;
 
         /// <summary>
         /// Default constructor.

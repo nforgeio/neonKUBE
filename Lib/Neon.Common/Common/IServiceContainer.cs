@@ -20,7 +20,6 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Diagnostics;
-using System.Collections;
 
 namespace Neon.Common
 {
@@ -36,7 +35,7 @@ namespace Neon.Common
     /// </note>
     /// </summary>
     /// <threadsafety instance="true"/>
-    public interface IServicesContainer : IServiceCollection, IServiceProvider
+    public interface IServiceContainer : IServiceCollection, IServiceProvider
     {
     }
 }

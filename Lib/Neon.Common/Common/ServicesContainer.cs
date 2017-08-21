@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ServicesContainer.cs
+// FILE:	    ServiceContainer.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
@@ -26,7 +26,8 @@ namespace Neon.Common
 {
     /// <summary>
     /// This class combines the capabilities of a <see cref="IServiceCollection"/> and
-    /// <see cref="IServiceProvider"/> into a single object by implementing <see cref="IServicesContainer"/>.
+    /// <see cref="IServiceProvider"/> into a single object that implements the
+    /// combined <see cref="IServiceContainer"/> interface.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -55,7 +56,7 @@ namespace Neon.Common
     /// </note>
     /// </remarks>
     /// <threadsafety instance="true"/>
-    public class ServicesContainer : IServicesContainer
+    public class ServiceContainer : IServiceContainer
     {
         private object                  syncRoot = new object();
         private ServiceCollection       services = new ServiceCollection();
@@ -71,7 +72,7 @@ namespace Neon.Common
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ServicesContainer()
+        public ServiceContainer()
         {
         }
 

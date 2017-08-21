@@ -3,11 +3,13 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Stack</RootNamespace>
-    <Version>6.0.0.9</Version>
+    <Version>6.0.0.10</Version>
     <Company>NeonForge, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>Handy common code used by NeonForge projects.</Description>
-    <PackageReleaseNotes>**BREAKING** Renamed ILog logging methods.  Default ILog now includes file/line numbers in stack traces.</PackageReleaseNotes>
+    <PackageReleaseNotes>**BREAKING** Renamed ILog logging methods.\r\n
+Added NeonHelper.ServicesContainer and the ServicesContainer class.\r\n
+Default ILog now includes file/line numbers in stack traces.</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>

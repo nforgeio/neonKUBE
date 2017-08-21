@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.3
+VisualStudioVersion = 15.0.26730.8
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C4-490A-9519-4702DF7A4E15}"
 	ProjectSection(SolutionItems) = preProject
@@ -121,7 +121,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "ToolBin", "ToolBin", "{E9E3
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core-layers", "Tools\core-layers\core-layers.csproj", "{F22F7C21-909E-4BB6-8B22-CEFF63FEC66D}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Web", "Lib\Neon.Web\Neon.Web.csproj", "{856207D6-F230-47A3-BF50-3D0451FEC3ED}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Web", "Lib\Neon.Web\Neon.Web.csproj", "{856207D6-F230-47A3-BF50-3D0451FEC3ED}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

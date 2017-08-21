@@ -58,7 +58,7 @@ namespace TestCommon
         [Fact]
         public void Empty()
         {
-            var services = new ServicesContainer();
+            var services = new ServiceContainer();
 
             Assert.Equal(0, services.Count);
             Assert.False(services.IsReadOnly);
@@ -69,7 +69,7 @@ namespace TestCommon
         [Fact]
         public void Singelton()
         {
-            var services = new ServicesContainer();
+            var services = new ServiceContainer();
             var service1 = new Service1();
             var service2 = new Service2();
 
@@ -85,12 +85,14 @@ namespace TestCommon
             Assert.Null(services.GetService<IService3>());
 
             Assert.Throws<InvalidOperationException>(() => services.GetRequiredService<IService3>());
+
+            services.GetService<IService1>();
         }
 
         [Fact]
         public void Transient()
         {
-            var services = new ServicesContainer();
+            var services = new ServiceContainer();
             var service1 = new Service1();
             var service2 = new Service2();
 
@@ -115,7 +117,7 @@ namespace TestCommon
         [Fact]
         public void Replace()
         {
-            var services = new ServicesContainer();
+            var services = new ServiceContainer();
             var serviceA = new Service1();
             var serviceB = new Service1();
             var service2 = new Service2();
@@ -143,7 +145,7 @@ namespace TestCommon
         [Fact]
         public void Snapshot()
         {
-            var services = new ServicesContainer();
+            var services = new ServiceContainer();
             var service1 = new Service1();
             var service2 = new Service2();
             var service3 = new Service3();

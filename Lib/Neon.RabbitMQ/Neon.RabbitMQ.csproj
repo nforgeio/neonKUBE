@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.RabbitMQ</RootNamespace>
-    <Version>6.0.0.9</Version>
+    <Version>6.0.0.10</Version>
     <Company>NeonForge, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>RabbitMQ extensions for NeonForge projects.</Description>
