@@ -92,9 +92,25 @@ namespace Neon.Common
         private static bool? isDevWorkstation;
 
         /// <summary>
-        /// The default root dependency injection container used by Neon class libraries.
+        /// The root dependency injection container used by Neon class libraries. 
+        /// and applications.
         /// </summary>
-        public static ServiceCollection DependencyContainer { get; set; }
+        /// <remarks>
+        /// <para>
+        /// This instance implements both the <see cref="IServicesContainer"/> and <see cref="IServiceProvider"/>
+        /// interfaces and supports adding, removing, and locating services over the lifetime
+        /// of the application.  This is more flexible than the default Microsoft injection
+        /// pattern, where services are added to an <see cref="IServicesContainer"/> at startup
+        /// and then a read-only snapshot is taken via a <b>BuildServiceProvider()</b> call
+        /// that is used throughout the remaining application lifespan.
+        /// </para>
+        /// <para>
+        /// This is implemented by a <see cref="ServiceCollection"/> by default.  It is possible
+        /// to replace this very early during application initialization but the default 
+        /// implementation should suffice for most purposes.
+        /// </para>
+        /// </remarks>
+        public static IServiceCollection ServicesContainer { get; set; }
 
         /// <summary>
         /// Static constructor.
@@ -103,7 +119,7 @@ namespace Neon.Common
         {
             // Dependency injection initialization:
 
-            DependencyContainer = new ServiceCollection();
+            ServicesContainer = new ServiceCollection();
 
             // JSON initialization:
 
