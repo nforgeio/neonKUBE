@@ -11,10 +11,11 @@ using System.Threading;
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.DependencyInjection;
+using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 using Neon.Diagnostics;
-using Microsoft.Extensions.Logging;
 
 namespace Neon.Web
 {
@@ -71,7 +72,7 @@ namespace Neon.Web
         /// </remarks>
         public static IApplicationBuilder UseNeon(this IApplicationBuilder app, ILoggerFactory loggerFactory)
         {
-            loggerFactory.AddProvider(LogManager.Default);  // $todo(jeff.lill): Need this via dependency injection.
+            loggerFactory.AddProvider(NeonHelper.ServiceContainer.GetService<ILoggerProvider>());
 
             return app;
         }

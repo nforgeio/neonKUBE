@@ -48,6 +48,7 @@ namespace Neon.Diagnostics
                 // the dependency services so users won't be surprised.
 
                 NeonHelper.ServiceContainer.AddSingleton<ILogManager>(value);
+                NeonHelper.ServiceContainer.AddSingleton<ILoggerProvider>(value);
             }
         }
         
