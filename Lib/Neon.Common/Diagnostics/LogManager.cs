@@ -66,6 +66,13 @@ namespace Neon.Diagnostics
         private Dictionary<string, ILog>    nameToLogger = new Dictionary<string, ILog>();
         private LogLevel                    logLevel     = LogLevel.Info;
 
+        // $todo(jeff.lill)
+        //
+        // Using [nameToLogger] to implement threadsafety via a [Monitor] may introduce
+        // some performance overhead for ASP.NET sites with lots of traffic.  It
+        // may be worth investigating whether a [SpinLock] might be better or perhaps
+        // even reimplementing this using a concurrent collection.
+
         /// <summary>
         /// Default constructor.
         /// </summary>
