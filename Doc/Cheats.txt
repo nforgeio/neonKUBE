@@ -1,4 +1,7 @@
 #------------------------------------------------------------------------------
+# Cheats for JEFF home environment.
+
+#------------------------------------------------------------------------------
 # [neon]: Ubuntu 16.04
 
 neon cluster health -u=spot -p=WagTheDog! c:\docker\cluster-small.json
