@@ -248,12 +248,22 @@ ClientAliveCountMax 20
             sb.AppendLine($"NEON_CLUSTER={clusterDefinition.Name}");
             sb.AppendLine($"NEON_DATACENTER={clusterDefinition.Datacenter.ToLowerInvariant()}");
             sb.AppendLine($"NEON_ENVIRONMENT={clusterDefinition.Environment.ToString().ToLowerInvariant()}");
-            sb.AppendLine($"NEON_HOSTING={clusterDefinition.Hosting.Environment.ToString().ToLowerInvariant()}");
+
+            if (clusterDefinition.Hosting != null)
+            {
+                sb.AppendLine($"NEON_HOSTING={clusterDefinition.Hosting.Environment.ToString().ToLowerInvariant()}");
+            }
+
             sb.AppendLine($"NEON_NODE_NAME={node.Name}");
-            sb.AppendLine($"NEON_NODE_ROLE={node.Metadata.Role}");
-            sb.AppendLine($"NEON_NODE_IP={node.Metadata.PrivateAddress}");
-            sb.AppendLine($"NEON_NODE_SSD={node.Metadata.Labels.StorageSSD.ToString().ToLowerInvariant()}");
-            sb.AppendLine($"NEON_NODE_SWAP={node.Metadata.Labels.ComputeSwap.ToString().ToLowerInvariant()}");
+
+            if (node.Metadata != null)
+            {
+                sb.AppendLine($"NEON_NODE_ROLE={node.Metadata.Role}");
+                sb.AppendLine($"NEON_NODE_IP={node.Metadata.PrivateAddress}");
+                sb.AppendLine($"NEON_NODE_SSD={node.Metadata.Labels.StorageSSD.ToString().ToLowerInvariant()}");
+                sb.AppendLine($"NEON_NODE_SWAP={node.Metadata.Labels.ComputeSwap.ToString().ToLowerInvariant()}");
+            }
+
             sb.AppendLine($"NEON_APT_CACHE={clusterDefinition.PackageCache ?? string.Empty}");
 
             // Append Consul and Vault addresses.
@@ -271,19 +281,22 @@ ClientAliveCountMax 20
 
             sb.AppendLine($"VAULT_ADDR={clusterDefinition.Vault.Uri}");
 
-            if (node.Metadata.IsManager)
+            if (node.Metadata != null)
             {
-                // Manager hosts may use the [VAULT_DIRECT_ADDR] environment variable to 
-                // access Vault without going through the [neon-proxy-vault] proxy.  This
-                // points to the Vault instance running locally.
-                //
-                // This is useful when configuring Vault.
+                if (node.Metadata.IsManager)
+                {
+                    // Manager hosts may use the [VAULT_DIRECT_ADDR] environment variable to 
+                    // access Vault without going through the [neon-proxy-vault] proxy.  This
+                    // points to the Vault instance running locally.
+                    //
+                    // This is useful when configuring Vault.
 
-                sb.AppendLine($"VAULT_DIRECT_ADDR={clusterDefinition.Vault.GetDirectUri(node.Name)}");
-            }
-            else
-            {
-                sb.AppendLine($"VAULT_DIRECT_ADDR=");
+                    sb.AppendLine($"VAULT_DIRECT_ADDR={clusterDefinition.Vault.GetDirectUri(node.Name)}");
+                }
+                else
+                {
+                    sb.AppendLine($"VAULT_DIRECT_ADDR=");
+                }
             }
 
             // Upload the new environment to the server.
