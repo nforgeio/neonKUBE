@@ -25,7 +25,8 @@ namespace Neon.Diagnostics
     internal class NeonLogger : INeonLogger, ILogger
     {
         private ILogManager logManager;
-        private string      name;
+        private string      categoryName;
+        private bool        infoAsDebug;
         private long        emitCount;
 
         /// <inheritdoc/>
@@ -53,15 +54,37 @@ namespace Neon.Diagnostics
         /// Constructs a named instance.
         /// </summary>
         /// <param name="logManager">The parent log manager or <c>null</c>.</param>
-        /// <param name="name">The instance name or <c>null</c>.</param>
+        /// <param name="categoryName">Identifies the event category or <c>null</c>.</param>
+        /// <param name="noisyAspNet">Enables normal (noisy) logging of ASP.NET <b>INFO</b> events (see note in remarks).</param>
         /// <remarks>
+        /// <para>
         /// The instances returned will log nothing if <paramref name="logManager"/>
         /// is passed as <c>null</c>.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// ASP.NET is super noisy, logging three or four <b>INFO</b> events per request.  There
+        /// doesn't appear to an easy way to change this behavior, I'd really like to recategorize
+        /// these as <b>DEBUG</b> to reduce pressure on the logs.
+        /// </para>
+        /// <para>
+        /// We accomplish this by default when <paramref name="noisyAspNet"/> is passed as
+        /// <c>false</c>.  This is used to signal that the instance should perform special 
+        /// ASP.NET level filtering.
+        /// </para>
+        /// </note>
         /// </remarks>
-        public NeonLogger(ILogManager logManager, string name = null)
+        public NeonLogger(ILogManager logManager, string categoryName = null, bool noisyAspNet = false)
         {
-            this.logManager = logManager ?? LogManager.Disabled;
-            this.name       = name ?? string.Empty;
+            this.logManager   = logManager ?? LogManager.Disabled;
+            this.categoryName = categoryName ?? string.Empty;
+
+            // $hack(jeff.lill):
+            //
+            // We're going to assume that ASP.NET related loggers are always
+            // prefixed by: [Microsoft.AspNetCore]
+
+            this.infoAsDebug = !noisyAspNet && categoryName != null && categoryName.StartsWith("Microsoft.AspNetCore");
         }
 
         /// <inheritdoc/>
@@ -121,20 +144,44 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Logs an event.
         /// </summary>
-        /// <param name="level">The event level.</param>
+        /// <param name="logLevel">The event level.</param>
         /// <param name="message">The event message.</param>
         /// <param name="activityId">The optional activity ID.</param>
-        private void Log(string level, string message, string activityId = null)
+        private void Log(LogLevel logLevel, string message, string activityId = null)
         {
+            if (infoAsDebug && logLevel == LogLevel.Info)
+            {
+                if (!IsDebugEnabled)
+                {
+                    return;
+                }
+
+                logLevel = LogLevel.Debug;
+            }
+
+            var level = string.Empty;
+
+            switch (logLevel)
+            {
+                case LogLevel.Critical: level = "CRITICAL"; break;
+                case LogLevel.Debug:    level = "DEBUG"; break;
+                case LogLevel.Error:    level = "ERROR"; break;
+                case LogLevel.Info:     level = "INFO"; break;
+                case LogLevel.None:     level = "NONE"; break;
+                case LogLevel.SError:   level = "SERROR"; break;
+                case LogLevel.SInfo:    level = "SINFO"; break;
+                case LogLevel.Warn:     level = "WARN"; break;
+            }
+
             message = Normalize(message);
 
-            lock (name)
+            lock (categoryName)
             {
                 var module = string.Empty;
 
-                if (!string.IsNullOrEmpty(name))
+                if (!string.IsNullOrEmpty(categoryName))
                 {
-                    module = $" [module:{name}]";
+                    module = $" [module:{categoryName}]";
                 }
 
                 var activity = string.Empty;
@@ -171,7 +218,7 @@ namespace Neon.Diagnostics
             {
                 try
                 {
-                    Log("DEBUG", message?.ToString());
+                    Log(LogLevel.Debug, message?.ToString());
                 }
                 catch
                 {
@@ -189,11 +236,11 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log("DEBUG", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Debug, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                     else
                     {
-                        Log("DEBUG", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Debug, $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                 }
                 catch
@@ -210,7 +257,7 @@ namespace Neon.Diagnostics
             {
                 try
                 {
-                    Log("ERROR", message?.ToString());
+                    Log(LogLevel.Error, message?.ToString());
                 }
                 catch
                 {
@@ -228,11 +275,11 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log("ERROR", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Error, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                     else
                     {
-                        Log("ERROR", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Error, $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                 }
                 catch
@@ -249,7 +296,7 @@ namespace Neon.Diagnostics
             {
                 try
                 {
-                    Log("SERROR", message?.ToString());
+                    Log(LogLevel.SError, message?.ToString());
                 }
                 catch
                 {
@@ -267,11 +314,11 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log("SERROR", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.SError, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                     else
                     {
-                        Log("SERROR", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.SError, $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                 }
                 catch
@@ -288,7 +335,7 @@ namespace Neon.Diagnostics
             {
                 try
                 {
-                    Log("CRITICAL", message?.ToString());
+                    Log(LogLevel.Critical, message?.ToString());
                 }
                 catch
                 {
@@ -306,11 +353,11 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log("CRITICAL", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Critical, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                     else
                     {
-                        Log("CRITICAL", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Critical, $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                 }
                 catch
@@ -327,7 +374,7 @@ namespace Neon.Diagnostics
             {
                 try
                 {
-                    Log("INFO", message?.ToString());
+                    Log(LogLevel.Info, message?.ToString());
                 }
                 catch
                 {
@@ -345,11 +392,11 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log("INFO", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Info, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                     else
                     {
-                        Log("INFO", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Info, $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                 }
                 catch
@@ -366,7 +413,7 @@ namespace Neon.Diagnostics
             {
                 try
                 {
-                    Log("SINFO", message?.ToString());
+                    Log(LogLevel.SInfo, message?.ToString());
                 }
                 catch
                 {
@@ -384,11 +431,11 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log("SINFO", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.SInfo, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                     else
                     {
-                        Log("SINFO", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.SInfo, $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                 }
                 catch
@@ -405,7 +452,7 @@ namespace Neon.Diagnostics
             {
                 try
                 {
-                    Log("WARN", message?.ToString());
+                    Log(LogLevel.Warn, message?.ToString());
                 }
                 catch
                 {
@@ -423,11 +470,11 @@ namespace Neon.Diagnostics
                 {
                     if (message != null)
                     {
-                        Log("WARN", $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Warn, $"{message} {NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                     else
                     {
-                        Log("WARN", $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
+                        Log(LogLevel.Warn, $"{NeonHelper.ExceptionError(e, stackTrace: true)}");
                     }
                 }
                 catch

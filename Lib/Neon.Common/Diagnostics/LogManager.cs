@@ -224,33 +224,19 @@ namespace Neon.Diagnostics
             }
         }
 
-        /// <summary>
-        /// Returns a named logger.
-        /// </summary>
-        /// <param name="name">The case sensitive logger name (defaults to <c>null</c>).</param>
-        /// <returns>The <see cref="INeonLogger"/> instance.</returns>
-        public INeonLogger GetLogger(string name = null)
+        /// <inheritdoc/>
+        public INeonLogger GetLogger(string categoryName = null)
         {
-            return InternalGetLogger(name);
+            return InternalGetLogger(categoryName);
         }
 
-        /// <summary>
-        /// Returns a logger to be associated with a specific type.  This method
-        /// supports both <c>static</c> and normal types.
-        /// </summary>
-        /// <param name="type">The type.</param>
-        /// <returns>The <see cref="INeonLogger"/> instance.</returns>
+        /// <inheritdoc/>
         public INeonLogger GetLogger(Type type)
         {
             return InternalGetLogger(type.FullName);
         }
 
-        /// <summary>
-        /// Returns a logger to be associated with a specific type.  This
-        /// method works only for non-<c>static</c> types.
-        /// </summary>
-        /// <typeparam name="T">The type.</typeparam>
-        /// <returns>The <see cref="INeonLogger"/> instance.</returns>
+        /// <inheritdoc/>
         public INeonLogger GetLogger<T>()
         {
             return InternalGetLogger(typeof(T).FullName);

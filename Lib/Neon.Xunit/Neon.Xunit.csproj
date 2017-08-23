@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Stack.Xunit</RootNamespace>
-    <Version>6.0.0.15</Version>
+    <Version>6.0.0.20</Version>
     <Authors>Jeff Lill</Authors>
     <Company>NeonForge, LLC</Company>
     <Description>Xunit related extensions.</Description>
