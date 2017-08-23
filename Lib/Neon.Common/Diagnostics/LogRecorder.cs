@@ -18,27 +18,27 @@ namespace Neon.Diagnostics
 {
     /// <summary>
     /// Simple class that can be used to capture log entries while also passing them
-    /// through to a base <see cref="ILog"/> implementation.
+    /// through to a base <see cref="INeonLogger"/> implementation.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// Instantiate by passing a base <see cref="ILog"/> implementation to the constructor.
+    /// Instantiate by passing a base <see cref="INeonLogger"/> implementation to the constructor.
     /// All of the logging properties and methods calls to this class will pass through
     /// to the base implementation and enabled log methods will also be collected by the
     /// instance.  Use <see cref="ToString"/> to return the captured text and <see cref="Clear"/>
     /// to clear it.
     /// </para>
     /// </remarks>
-    public class LogRecorder : ILog
+    public class LogRecorder : INeonLogger
     {
-        private ILog            log;
+        private INeonLogger     log;
         private StringBuilder   capture;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="log">The inderlying <see cref="ILog"/> implementation.</param>
-        public LogRecorder(ILog log)
+        /// <param name="log">The inderlying <see cref="INeonLogger"/> implementation.</param>
+        public LogRecorder(INeonLogger log)
         {
             Covenant.Requires<ArgumentNullException>(log != null);
 
@@ -89,6 +89,12 @@ namespace Neon.Diagnostics
 
         /// <inheritdoc/>
         public bool IsCriticalEnabled => log.IsCriticalEnabled;
+
+        /// <inheritdoc/>
+        public bool IsEnabled(LogLevel logLevel)
+        {
+            return log.IsEnabled(logLevel);
+        }
 
         /// <inheritdoc/>
         public void LogDebug(object message, string activityId = null)
@@ -190,7 +196,7 @@ namespace Neon.Diagnostics
 
         /// <summary>
         /// Logs a line of text directly to the log recorder without also logging it to
-        /// to the underlying <see cref="ILog"/> implementation.
+        /// to the underlying <see cref="INeonLogger"/> implementation.
         /// </summary>
         /// <param name="message">The optional message to be recorded.</param>
         public void Record(string message = null)

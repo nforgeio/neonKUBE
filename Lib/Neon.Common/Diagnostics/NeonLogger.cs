@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Logger.cs
+// FILE:	    NeonLogger.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
@@ -20,9 +20,9 @@ using Neon.Common;
 namespace Neon.Diagnostics
 {
     /// <summary>
-    /// A general purpose implementation of <see cref="ILog"/> and <see cref="ILogger"/>.
+    /// A general purpose implementation of <see cref="INeonLogger"/> and <see cref="ILogger"/>.
     /// </summary>
-    internal class Logger : ILog, ILogger
+    internal class NeonLogger : INeonLogger, ILogger
     {
         private ILogManager logManager;
         private string      name;
@@ -52,21 +52,19 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Constructs a named instance.
         /// </summary>
-        /// <param name="logManager">The parent log manager.</param>
+        /// <param name="logManager">The parent log manager or <c>null</c>.</param>
         /// <param name="name">The instance name or <c>null</c>.</param>
-        public Logger(ILogManager logManager, string name = null)
+        /// <remarks>
+        /// The instances returned will log nothing if <paramref name="logManager"/>
+        /// is passed as <c>null</c>.
+        /// </remarks>
+        public NeonLogger(ILogManager logManager, string name = null)
         {
-            Covenant.Requires<ArgumentNullException>(logManager != null);
-
-            this.logManager = logManager;
+            this.logManager = logManager ?? LogManager.Disabled;
             this.name       = name ?? string.Empty;
         }
 
-        /// <summary>
-        /// Indicates whether logging is enabled for a specific log level.
-        /// </summary>
-        /// <param name="logLevel">The log level.</param>
-        /// <returns><c>true</c> if logging is enabled for <paramref name="logLevel"/>.</returns>
+        /// <inheritdoc/>
         public bool IsEnabled(LogLevel logLevel)
         {
             // Map into Neon log levels.

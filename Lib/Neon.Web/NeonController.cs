@@ -23,14 +23,14 @@ namespace Neon.Web
     /// <remarks>
     /// <para>
     /// This class provides two logging related enhancements.  First, <see cref="NeonController"/>
-    /// implements <see cref="ILog"/> so that all of the standard logging methods are directly
+    /// implements <see cref="INeonLogger"/> so that all of the standard logging methods are directly
     /// available in the context of the derived controller.  Events will be logged with the module
-    /// string set to <b>"Web-"</b> prefixing the name of the controller.
+    /// set to <b>"Web-"</b> prefixing the name of the controller.
     /// </para>
     /// <para>
     /// The <see cref="ActivityId"/> property can also be used to easily correlate operations that
     /// span multiple systems and services.  An activity is a globally unique string that can be
-    /// used to creelate a parent operation with any decendent operations.  For example, a parent
+    /// used to corelate a parent operation with any decendent operations.  For example, a parent
     /// operation such as <b>get-weather</b> may need to call several other web services to 
     /// <b>get-current-weather</b>, <b>get-forecast</b>, <b>get-weather-alerts</b>,... and these
     /// child services may need to call other services.  The essential idea here is to generate 
@@ -44,7 +44,7 @@ namespace Neon.Web
     /// </para>
     /// <para>
     /// The Neon framework and <b>neonCLUSTER</b> have built-in mechanisms to make this easy.
-    /// <see cref="ILog"/> logging methods include <b>activityId</b> as first class parameters
+    /// <see cref="INeonLogger"/> logging methods include <b>activityId</b> as first class parameters
     /// and the neonCLUSTER pipeline implicitly process and persist <b>activity-id</b> fields
     /// from event streams.  
     /// </para>
@@ -63,8 +63,8 @@ namespace Neon.Web
     /// </remarks>
     public abstract class NeonController : Controller
     {
-        private ILog        log;
-        private string      activityId;
+        private INeonLogger     log;
+        private string          activityId;
 
         /// <summary>
         /// Default constructor.
@@ -133,7 +133,7 @@ namespace Neon.Web
         /// Returns the logger to use for this instance.
         /// </summary>
         /// <returns>The logger.</returns>
-        private ILog GetLogger()
+        private INeonLogger GetLogger()
         {
             // Lazy load the logger for better performance in the common case
             // where nothing is logged for a request.
@@ -142,6 +142,24 @@ namespace Neon.Web
             {
                 return log;
             }
+
+            // $todo(jeff.lill):
+            //
+            // I should be getting either an [ILogProvider] or [ILogManager] dynamically via 
+            // dependency injection rather than hardcoding a call to [LogManager.Default]
+            // and then getting an [INeonLogger] from that or wrapping an [ILogger] with
+            // a [NeonLoggerShim].
+            //
+            // I'm not entirely sure how to accomplish this.  I believe the only way is
+            // to add a [ILogProvider] parameter to this class' constructor (as well as
+            // that of any derived classes) and then inspect the actual instance type
+            // passed and then decide whether we need a [NeonLoggerShim] or not.
+            //
+            // It would be unforunate though to require derived classes to have to handle
+            // this.  An alternative might be use property injection, but I don't think
+            // the ASP.NET pipeline supports that.
+            //
+            // See the TODO in [LogManager.cs] for more information.
 
             return log = LogManager.Default.GetLogger("Web-" + base.ControllerContext.ActionDescriptor.ControllerName);
         }

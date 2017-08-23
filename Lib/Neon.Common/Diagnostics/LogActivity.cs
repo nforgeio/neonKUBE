@@ -40,8 +40,8 @@ namespace Neon.Diagnostics
     /// services add unique activity IDs to requests if an ID is not already present.
     /// </para>
     /// <para>
-    /// To use this type, call the static <see cref="Create(ILog)"/> method to create a new activity
-    /// or <see cref="From(string, ILog)"/> to associate an instance with an existing activity.
+    /// To use this type, call the static <see cref="Create(INeonLogger)"/> method to create a new activity
+    /// or <see cref="From(string, INeonLogger)"/> to associate an instance with an existing activity.
     /// Then use the various logging methods to emit log events what will include the activity ID.
     /// </para>
     /// </remarks>
@@ -59,9 +59,9 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Creates a log activity with a new globally unique ID.
         /// </summary>
-        /// <param name="log">The optional associated <see cref="ILog"/>.</param>
+        /// <param name="log">The optional associated <see cref="INeonLogger"/>.</param>
         /// <returns>The created <see cref="LogActivity"/>.</returns>
-        public static LogActivity Create(ILog log = null)
+        public static LogActivity Create(INeonLogger log = null)
         {
             return new LogActivity()
             {
@@ -74,9 +74,9 @@ namespace Neon.Diagnostics
         /// Creates a log activity with the ID specified.
         /// </summary>
         /// <param name="activityId">The activity ID or <c>null</c>,</param>
-        /// <param name="log">The optional associated <see cref="ILog"/>.</param>
+        /// <param name="log">The optional associated <see cref="INeonLogger"/>.</param>
         /// <returns>The created <see cref="LogActivity"/>.</returns>
-        public static LogActivity From(string activityId, ILog log = null)
+        public static LogActivity From(string activityId, INeonLogger log = null)
         {
             return new LogActivity()
             {
@@ -88,7 +88,7 @@ namespace Neon.Diagnostics
         //---------------------------------------------------------------------
         // Instance members
 
-        private ILog    log;
+        private INeonLogger    log;
 
         /// <summary>
         /// Returns the activity ID.

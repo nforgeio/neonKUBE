@@ -56,16 +56,16 @@ namespace Neon.Cluster
         //---------------------------------------------------------------------
         // Implementation
 
-        private static ILog                         log = LogManager.Default.GetLogger(typeof(NeonClusterHelper));
+        private static INeonLogger                  log = LogManager.Default.GetLogger(typeof(NeonClusterHelper));
         private static Dictionary<string, string>   secrets;
         private static bool                         externalConnection;
 
         /// <summary>
-        /// Explicitly sets the class <see cref="ILog"/> implementation.  This defaults to
+        /// Explicitly sets the class <see cref="INeonLogger"/> implementation.  This defaults to
         /// a reasonable value.
         /// </summary>
         /// <param name="log"></param>
-        public static void SetLogger(ILog log)
+        public static void SetLogger(INeonLogger log)
         {
             Covenant.Requires<ArgumentNullException>(log != null);
 

@@ -30,7 +30,7 @@ namespace CouchbaseTest
         private const string serviceName = "couchbase-test";
 
         private static ProcessTerminator    terminator;
-        private static ILog                 log;
+        private static INeonLogger          log;
 
         /// <summary>
         /// Application entry point.

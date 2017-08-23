@@ -52,7 +52,7 @@ namespace Neon.Cluster
     /// </remarks>
     public sealed class ProcessTerminator
     {
-        private ILog                        log;
+        private INeonLogger                 log;
         private CancellationTokenSource     cts;
         private bool                        readyToExit;
         private List<Action>                handlers;
@@ -60,9 +60,9 @@ namespace Neon.Cluster
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="log">The optional <see cref="ILog"/> used for logging.</param>
+        /// <param name="log">The optional <see cref="INeonLogger"/> used for logging.</param>
         /// <param name="timeout">The optional termination timeout (defaults to 10 seconds).</param>
-        public ProcessTerminator(ILog log = null, TimeSpan timeout = default(TimeSpan))
+        public ProcessTerminator(INeonLogger log = null, TimeSpan timeout = default(TimeSpan))
         {
             this.log = log;
 

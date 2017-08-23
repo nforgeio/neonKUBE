@@ -59,7 +59,7 @@ namespace Neon.Cluster
     /// </remarks>
     public class NodeLabels
     {
-        private ILog            log = LogManager.Default.GetLogger<NodeLabels>();
+        private INeonLogger     log = LogManager.Default.GetLogger<NodeLabels>();
         private NodeDefinition  node;    // The parent node
 
         /// <summary>

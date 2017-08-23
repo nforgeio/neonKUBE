@@ -41,7 +41,7 @@ namespace NeonClusterManager
         private static readonly string clusterDefKey       = "neon/cluster/definition.deflate";
 
         private static ProcessTerminator        terminator;
-        private static ILog                     log;
+        private static INeonLogger              log;
         private static ConsulClient             consul;
         private static DockerClient             docker;
         private static VaultCredentials         vaultCredentials;

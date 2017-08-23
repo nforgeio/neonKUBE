@@ -22,7 +22,7 @@ namespace Neon.Web
     /// <summary>
     /// Utility methods for <b>AspNetCore</b> applications.
     /// </summary>
-    public static class WebHelper
+    public static partial class WebHelper
     {
         /// <summary>
         /// Performs common web app initialization including setting the correct
@@ -44,37 +44,6 @@ namespace Neon.Web
         public static string GenerateActivityId()
         {
             return NeonHelper.UrlTokenEncode(Guid.NewGuid().ToByteArray());
-        }
-
-        //---------------------------------------------------------------------
-        // IApplicationBuilder extensions
-
-        /// <summary>
-        /// Adds default Neon functionality to the <see cref="IApplicationBuilder"/>
-        /// HTTP request pipeline.
-        /// </summary>
-        /// <param name="app">The application pipeline builder.</param>
-        /// <param name="loggerFactory">The application logger factory.</param>
-        /// <returns>The <pararef name="app"/></returns>
-        /// <remarks>
-        /// <para>
-        /// This method adds the following capabilities:
-        /// </para>
-        /// <list type="bullet">
-        ///     <item>
-        ///     Sets the pipeline's <see cref="IApplicationBuilder.ApplicationServices"/> dependency injection
-        ///     container to <see cref="NeonHelper.ServiceContainer"/>, the default Neon root container.
-        ///     </item>
-        ///     <item>
-        ///     Adds a handler that logs unhandled exceptions.
-        ///     </item>
-        /// </list>
-        /// </remarks>
-        public static IApplicationBuilder UseNeon(this IApplicationBuilder app, ILoggerFactory loggerFactory)
-        {
-            loggerFactory.AddProvider(NeonHelper.ServiceContainer.GetService<ILoggerProvider>());
-
-            return app;
         }
     }
 }

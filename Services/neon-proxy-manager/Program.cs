@@ -49,7 +49,7 @@ namespace NeonProxyManager
 
         private static TimeSpan                 delayTime = TimeSpan.FromSeconds(5);
         private static ProcessTerminator        terminator;
-        private static ILog                     log;
+        private static INeonLogger              log;
         private static VaultClient              vault;
         private static ConsulClient             consul;
         private static TimeSpan                 pollInterval;

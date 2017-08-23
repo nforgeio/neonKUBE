@@ -17,6 +17,31 @@ using Microsoft.Extensions.Logging;
 
 using Neon.Common;
 
+// $todo(jeff.lill):
+//
+// The logging model is a little wonky, especially for dependency injection purists.
+// [LogManager] exposes the static [Default] property that is a shortcut that returns
+// the [ILogManager] service registered in [NeonHelper.ServiceContainer].  This isn't
+// too horrible, but it does assume that applications are in fact using this global
+// property.
+//
+// [NeonHelper.ServiceContainer] may be set to a custom value, but developers will
+// need to implement [ServiceContainer] which is non-standard and is unlikely to be
+// compatible with other dependency injection implementations.
+//
+// I got to this point because I started out with my own logging scheme which has
+// somewhat different capabilites than is supported by the Microsoft logging abstractions
+// and I still like my scheme.  I've started to unify/bridge the two schemes by having 
+// [INeonLogger] implement [ILogger] and ith [NeonLoggerShim] wrapping an [ILogger] 
+// such that it behaves like an [INeonLogger].
+//
+// This is a bit of a mess, probably mostly for unit testing.  Right now this is
+// a particular problem in the [NeonController] implementation which has some
+// unforunate hardcoding.
+//
+// I'm going to revisit this when I start implementing unit tests with dependency 
+// injection.
+
 namespace Neon.Diagnostics
 {
     /// <summary>
@@ -51,20 +76,29 @@ namespace Neon.Diagnostics
                 NeonHelper.ServiceContainer.AddSingleton<ILoggerProvider>(value);
             }
         }
+
+        /// <summary>
+        /// Returns a <b>log-nothing</b> log manager.
+        /// </summary>
+        public static ILogManager Disabled { get; private set; }
         
         /// <summary>
         /// Static constructor.
         /// </summary>
         static LogManager()
         {
-            Default = new LogManager();
+            Default  = new LogManager();
+            Disabled = new LogManager(parseLogLevel: false)
+            {
+                LogLevel = LogLevel.None
+            };
         }
 
         //---------------------------------------------------------------------
         // Instance members
 
-        private Dictionary<string, ILog>    nameToLogger = new Dictionary<string, ILog>();
-        private LogLevel                    logLevel     = LogLevel.Info;
+        private Dictionary<string, INeonLogger> nameToLogger = new Dictionary<string, INeonLogger>();
+        private LogLevel                        logLevel     = LogLevel.Info;
 
         // $todo(jeff.lill)
         //
@@ -173,8 +207,8 @@ namespace Neon.Diagnostics
         /// Returns the logger for the existing name.
         /// </summary>
         /// <param name="name">The case sensitive logger name.</param>
-        /// <returns>The <see cref="ILog"/> instance.</returns>
-        private ILog InternalGetLogger(string name)
+        /// <returns>The <see cref="INeonLogger"/> instance.</returns>
+        private INeonLogger InternalGetLogger(string name)
         {
             name = name ?? string.Empty;
 
@@ -182,7 +216,7 @@ namespace Neon.Diagnostics
             {
                 if (!nameToLogger.TryGetValue(name, out var logger))
                 {
-                    logger = new Logger(this, name);
+                    logger = new NeonLogger(this, name);
                     nameToLogger.Add(name, logger);
                 }
 
@@ -194,8 +228,8 @@ namespace Neon.Diagnostics
         /// Returns a named logger.
         /// </summary>
         /// <param name="name">The case sensitive logger name (defaults to <c>null</c>).</param>
-        /// <returns>The <see cref="ILog"/> instance.</returns>
-        public ILog GetLogger(string name = null)
+        /// <returns>The <see cref="INeonLogger"/> instance.</returns>
+        public INeonLogger GetLogger(string name = null)
         {
             return InternalGetLogger(name);
         }
@@ -205,8 +239,8 @@ namespace Neon.Diagnostics
         /// supports both <c>static</c> and normal types.
         /// </summary>
         /// <param name="type">The type.</param>
-        /// <returns>The <see cref="ILog"/> instance.</returns>
-        public ILog GetLogger(Type type)
+        /// <returns>The <see cref="INeonLogger"/> instance.</returns>
+        public INeonLogger GetLogger(Type type)
         {
             return InternalGetLogger(type.FullName);
         }
@@ -216,8 +250,8 @@ namespace Neon.Diagnostics
         /// method works only for non-<c>static</c> types.
         /// </summary>
         /// <typeparam name="T">The type.</typeparam>
-        /// <returns>The <see cref="ILog"/> instance.</returns>
-        public ILog GetLogger<T>()
+        /// <returns>The <see cref="INeonLogger"/> instance.</returns>
+        public INeonLogger GetLogger<T>()
         {
             return InternalGetLogger(typeof(T).FullName);
         }

@@ -15,7 +15,7 @@ using System.Threading.Tasks;
 namespace Neon.Diagnostics
 {
     /// <summary>
-    /// Extends the <see cref="ILog"/> types.
+    /// Extends the <see cref="INeonLogger"/> types.
     /// </summary>
     public static class LogExtensions
     {
@@ -27,7 +27,7 @@ namespace Neon.Diagnostics
         /// <remarks>
         /// This method is intended mostly to enable the efficient use of interpolated C# strings.
         /// </remarks>
-        public static void LogDebug(this ILog log, Func<object> messageFunc)
+        public static void LogDebug(this INeonLogger log, Func<object> messageFunc)
         {
             if (log.IsDebugEnabled)
             {
@@ -43,7 +43,7 @@ namespace Neon.Diagnostics
         /// <remarks>
         /// This method is intended mostly to enable the efficient use of interpolated C# strings.
         /// </remarks>
-        public static void LogInfo(this ILog log, Func<object> messageFunc)
+        public static void LogInfo(this INeonLogger log, Func<object> messageFunc)
         {
             if (log.IsInfoEnabled)
             {
@@ -59,7 +59,7 @@ namespace Neon.Diagnostics
         /// <remarks>
         /// This method is intended mostly to enable the efficient use of interpolated C# strings.
         /// </remarks>
-        public static void LogWarn(this ILog log, Func<object> messageFunc)
+        public static void LogWarn(this INeonLogger log, Func<object> messageFunc)
         {
             if (log.IsWarnEnabled)
             {
@@ -75,7 +75,7 @@ namespace Neon.Diagnostics
         /// <remarks>
         /// This method is intended mostly to enable the efficient use of interpolated C# strings.
         /// </remarks>
-        public static void LogError(this ILog log, Func<object> messageFunc)
+        public static void LogError(this INeonLogger log, Func<object> messageFunc)
         {
             if (log.IsErrorEnabled)
             {
@@ -91,7 +91,7 @@ namespace Neon.Diagnostics
         /// <remarks>
         /// This method is intended mostly to enable the efficient use of interpolated C# strings.
         /// </remarks>
-        public static void LogCritical(this ILog log, Func<object> messageFunc)
+        public static void LogCritical(this INeonLogger log, Func<object> messageFunc)
         {
             if (log.IsCriticalEnabled)
             {
@@ -104,7 +104,7 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="log">The log.</param>
         /// <param name="e">The exception.</param>
-        public static void LogDebug(this ILog log, Exception e)
+        public static void LogDebug(this INeonLogger log, Exception e)
         {
             if (log.IsDebugEnabled)
             {
@@ -117,7 +117,7 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="log">The log.</param>
         /// <param name="e">The exception.</param>
-        public static void LogInfo(this ILog log, Exception e)
+        public static void LogInfo(this INeonLogger log, Exception e)
         {
             if (log.IsInfoEnabled)
             {
@@ -130,7 +130,7 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="log">The log.</param>
         /// <param name="e">The exception.</param>
-        public static void LogWarn(this ILog log, Exception e)
+        public static void LogWarn(this INeonLogger log, Exception e)
         {
             if (log.IsWarnEnabled)
             {
@@ -143,7 +143,7 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="log">The log.</param>
         /// <param name="e">The exception.</param>
-        public static void LogError(this ILog log, Exception e)
+        public static void LogError(this INeonLogger log, Exception e)
         {
             if (log.IsErrorEnabled)
             {
@@ -156,7 +156,7 @@ namespace Neon.Diagnostics
         /// </summary>
         /// <param name="log">The log.</param>
         /// <param name="e">The exception.</param>
-        public static void LogCritical(this ILog log, Exception e)
+        public static void LogCritical(this INeonLogger log, Exception e)
         {
             if (log.IsCriticalEnabled)
             {

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ILog.cs
+// FILE:	    INeonLogger.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
@@ -17,7 +17,7 @@ namespace Neon.Diagnostics
     /// <summary>
     /// Defines the methods and properties for a diagnostics logger. 
     /// </summary>
-    public interface ILog
+    public interface INeonLogger
     {
         /// <summary>
         /// Returns <c>true</c> if <b>debug</b> logging is enabled.
@@ -53,6 +53,13 @@ namespace Neon.Diagnostics
         /// Returns <c>true</c> if <b>critical</b> logging is enabled.
         /// </summary>
         bool IsCriticalEnabled { get; }
+
+        /// <summary>
+        /// Indicates whether logging is enabled for a specific log level.
+        /// </summary>
+        /// <param name="logLevel">The log level.</param>
+        /// <returns><c>true</c> if logging is enabled for <paramref name="logLevel"/>.</returns>
+        bool IsEnabled(LogLevel logLevel);
 
         /// <summary>
         /// Logs a <b>debug</b> message.
