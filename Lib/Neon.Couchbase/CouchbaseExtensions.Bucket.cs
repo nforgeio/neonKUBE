@@ -190,6 +190,21 @@ namespace Couchbase
         }
 
         /// <summary>
+        /// Performs a small read operation to verify that the database connection 
+        /// is healthy.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="CouchbaseResponseException">Thrown if the operation failed.</exception>
+        public static async Task CheckAsync(this IBucket bucket)
+        {
+            // Note that it doesn't matter if this key actually exists 
+            // in the database.  We're just verifying that the database
+            // handle the operation.
+
+            await bucket.FindSafeAsync<string>("neon-healthcheck");
+        }
+
+        /// <summary>
         /// Appends a byte array to a key, throwing an exception on failures.
         /// </summary>
         /// <param name="bucket">The bucket.</param>
