@@ -84,7 +84,7 @@ namespace Neon.Diagnostics
             // We're going to assume that ASP.NET related loggers are always
             // prefixed by: [Microsoft.AspNetCore]
 
-            this.infoAsDebug = !noisyAspNet && categoryName != null && categoryName.StartsWith("Microsoft.AspNetCore");
+            this.infoAsDebug = !noisyAspNet && categoryName != null && categoryName.StartsWith("Microsoft.AspNetCore.");
         }
 
         /// <inheritdoc/>
