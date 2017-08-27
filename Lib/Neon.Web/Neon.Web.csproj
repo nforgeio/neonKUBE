@@ -8,7 +8,7 @@
     <Product>neonCLUSTER</Product>
     <Description>Website and API related classes and enhancements.</Description>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
-    <PackageReleaseNotes>Initial release.</PackageReleaseNotes>
+    <PackageReleaseNotes>Aligning version number.  No signficant changes.</PackageReleaseNotes>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
