@@ -837,8 +837,8 @@ export CONSUL_HTTP_FULLADDR=http://{NeonHosts.Consul}:{cluster.Definition.Consul
         private string GetConsulConfig(NodeProxy<NodeDefinition> node)
         {
             var consulTlsDisabled = true;   // $todo(jeff.lill): Remove this once we support Consul TLS.
-
-            var consulConf = new JObject();
+            var consulDef         = node.Cluster.Definition.Consul;
+            var consulConf        = new JObject();
 
             consulConf.Add("log_level", "info");
             consulConf.Add("datacenter", cluster.Definition.Datacenter);
@@ -873,8 +873,26 @@ export CONSUL_HTTP_FULLADDR=http://{NeonHosts.Consul}:{cluster.Definition.Consul
             {
                 recursors.Add(nameserver);
             }
-
+        
             consulConf.Add("recursors", recursors);
+
+            var dnsConfig  = new JObject();
+            var serviceTtl = new JObject();
+
+            if (consulDef.DnsMaxStale > 0)
+            {
+                dnsConfig.Add("allow_stale", true);
+                dnsConfig.Add("max_stale", $"{consulDef.DnsMaxStale}s");
+            }
+            else
+            {
+                dnsConfig.Add("allow_stale", false);
+                dnsConfig.Add("max_stale", "0s");
+            }
+
+            serviceTtl.Add("*", $"{consulDef.DnsTTL}s");
+            dnsConfig.Add("service_ttl", serviceTtl);
+            consulConf.Add("dns_config", dnsConfig);
 
             if (node.Metadata.IsManager)
             {

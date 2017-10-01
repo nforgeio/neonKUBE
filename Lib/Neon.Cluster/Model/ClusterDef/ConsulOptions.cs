@@ -70,6 +70,30 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// The time-to-live (TTL) in seconds returned for Consul DNS query responses.
+        /// This defaults to <b>5 seconds</b> for better scalability.
+        /// </summary>
+        [JsonProperty(PropertyName = "DnsTTL", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(5)]
+        public int DnsTTL { get; set; } = 5;
+
+        /// <summary>
+        /// Controls whether potentially stale DNS responses can be served by non-leader 
+        /// Consul nodes.  Specify <b>0</b> if only the leader is allowed to generate
+        /// DNS responses, otherwise specify the maximum number of seconds non-leaders
+        /// will return stale responses.  This defaults to an essentially infinite
+        /// value (about 10 years).
+        /// </summary>
+        /// <remarks>
+        /// The default value allows for stale DNS responses to be returned indefinitely
+        /// when Consul loses its quorum or a leader is not present.  This can help 
+        /// allow a cluster to continue to function during a partial Consul outage.
+        /// </remarks>
+        [JsonProperty(PropertyName = "DnsMaxStale", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(315360000)]
+        public int DnsMaxStale { get; set; } = 315360000;
+
+        /// <summary>
         /// Validates the options definition and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -93,6 +117,16 @@ namespace Neon.Cluster
             if (string.IsNullOrEmpty(EncryptionKey))
             {
                 EncryptionKey = Convert.ToBase64String(NeonHelper.RandBytes(16));
+            }
+
+            if (DnsTTL < 0)
+            {
+                throw new ClusterDefinitionException($"[{nameof(DnsTTL)}={DnsTTL}] is not valid.");
+            }
+
+            if (DnsMaxStale < 0)
+            {
+                throw new ClusterDefinitionException($"[{nameof(DnsMaxStale)}={DnsMaxStale}] is not valid.");
             }
 
             ClusterDefinition.VerifyEncryptionKey(EncryptionKey);
