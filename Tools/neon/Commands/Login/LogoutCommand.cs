@@ -71,10 +71,10 @@ USAGE:
                 return;
             }
 
-            CurrentClusterLogin.Delete();
-
-            Console.WriteLine("You are now logged out.");
+            Console.WriteLine($"Logging out of [{clusterLogin.ClusterName}].");
             Console.WriteLine("");
+
+            CurrentClusterLogin.Delete();
         }
 
         /// <inheritdoc/>
