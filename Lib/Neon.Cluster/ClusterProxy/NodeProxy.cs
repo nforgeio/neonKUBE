@@ -950,11 +950,11 @@ namespace Neon.Cluster
         /// Determines whether a directory exists on the remote server.
         /// </summary>
         /// <param name="path">The directory path.</param>
-        /// <param name="options">Optional command execution options.</param>
+        /// <param name="runOptions">Optional command execution options.</param>
         /// <returns><c>true</c> if the directory exists.</returns>
-        public bool DirectoryExists(string path, RunOptions options = RunOptions.None)
+        public bool DirectoryExists(string path, RunOptions runOptions = RunOptions.None)
         {
-            var response = SudoCommand($"if [ -d \"{path}\" ] ; then exit 0; else exit 1; fi", options);
+            var response = SudoCommand($"if [ -d \"{path}\" ] ; then exit 0; else exit 1; fi", runOptions);
 
             return response.ExitCode == 0;
         }
@@ -963,11 +963,11 @@ namespace Neon.Cluster
         /// Determines whether a file exists on the remote server.
         /// </summary>
         /// <param name="path">The file path.</param>
-        /// <param name="options">Optional command execution options.</param>
+        /// <param name="runOptions">Optional command execution options.</param>
         /// <returns><c>true</c> if the file exists.</returns>
-        public bool FileExists(string path, RunOptions options = RunOptions.None)
+        public bool FileExists(string path, RunOptions runOptions = RunOptions.None)
         {
-            var response = SudoCommand($"if [ -f \"{path}\" ] ; then exit 0; else exit 1; fi", options);
+            var response = SudoCommand($"if [ -f \"{path}\" ] ; then exit 0; else exit 1; fi", runOptions);
 
             return response.ExitCode == 0;
         }
@@ -977,7 +977,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="path">The target path on the Linux server.</param>
         /// <param name="input">The input stream.</param>
-        /// <param name="userPermissions">Indicates that the operation should be performed with user-level permissions.</param>
+        /// <param name="userPermissions">Optionally indicates that the operation should be performed with user-level permissions.</param>
         /// <remarks>
         /// <note>
         /// <para>
@@ -1308,9 +1308,10 @@ mono {scriptPath}.mono $@
         /// in the user's home folder.
         /// </summary>
         /// <param name="bundle">The bundle.</param>
+        /// <param name="runOptions">The command execution options.</param>
         /// <param name="userPermissions">Indicates whether the upload should be performed with user or root permissions.</param>
         /// <returns>The path to the folder where the bundle was unpacked.</returns>
-        private string UploadBundle(CommandBundle bundle, bool userPermissions)
+        private string UploadBundle(CommandBundle bundle, RunOptions runOptions, bool userPermissions)
         {
             Covenant.Requires<ArgumentNullException>(bundle != null);
 
@@ -1332,7 +1333,30 @@ mono {scriptPath}.mono $@
 
                         if (data == null && file.Text != null)
                         {
+                            LogLine($"*** START TEXT FILE: {file.Path}");
+
+                            if ((runOptions & RunOptions.Classified) != 0)
+                            {
+                                LogLine(Redacted);
+                            }
+                            else
+                            {
+                                using (var reader = new StringReader(file.Text))
+                                {
+                                    foreach (var line in reader.Lines())
+                                    {
+                                        LogLine(line);
+                                    }
+                                }
+                            }
+
+                            LogLine("*** END TEXT FILE");
+
                             data = Encoding.UTF8.GetBytes(file.Text);
+                        }
+                        else
+                        {
+                            LogLine($"*** BINARY FILE [length={data.Length}]: {file.Path}");
                         }
 
                         zip.Add(new StaticBytesDataSource(data), file.Path);
@@ -1361,6 +1385,25 @@ mono {scriptPath}.mono $@
                     sb.AppendLineLinux(FormatCommand(bundle.Command, bundle.Args));
 
                     zip.Add(new StaticStringDataSource(sb.ToString()), "__run.sh");
+
+                    LogLine($"*** START TEXT FILE: __run.sh");
+
+                    if ((runOptions & RunOptions.Classified) != 0)
+                    {
+                        LogLine(Redacted);
+                    }
+                    else
+                    {
+                        using (var reader = new StringReader(sb.ToString()))
+                        {
+                            foreach (var line in reader.Lines())
+                            {
+                                LogLine(line);
+                            }
+                        }
+                    }
+
+                    LogLine("*** END TEXT FILE");
 
                     // Commit the changes to the ZIP stream.
 
@@ -1684,10 +1727,10 @@ echo $? > {cmdFolder}/exit
         }
 
         /// <summary>
-        /// Runs a shell command on the Linux server with <see cref="RunOptions"/>s.
+        /// Runs a shell command on the Linux server with <see cref="RunOptions"/>.
         /// </summary>
         /// <param name="command">The command.</param>
-        /// <param name="options">The execution options.</param>
+        /// <param name="runOptions">The execution options.</param>
         /// <param name="args">The optional command arguments.</param>
         /// <returns>The <see cref="CommandResponse"/>.</returns>
         /// <remarks>
@@ -1700,7 +1743,7 @@ echo $? > {cmdFolder}/exit
         /// Any <c>null</c> arguments will be ignored.
         /// </note>
         /// <para>
-        /// The <paramref name="options"/> flags control how this command functions.
+        /// The <paramref name="runOptions"/> flags control how this command functions.
         /// If <see cref="RunOptions.FaultOnError"/> is set, then commands that return
         /// a non-zero exit code will put the server into the faulted state by setting
         /// <see cref="IsFaulted"/>=<c>true</c>.  This means that <see cref="IsReady"/> will 
@@ -1711,7 +1754,7 @@ echo $? > {cmdFolder}/exit
         /// be logged only for non-zero exit codes.
         /// </para>
         /// </remarks>
-        public CommandResponse RunCommand(string command, RunOptions options, params object[] args)
+        public CommandResponse RunCommand(string command, RunOptions runOptions, params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
 
@@ -1724,23 +1767,23 @@ echo $? > {cmdFolder}/exit
 
             command = FormatCommand(command, args);
 
-            if (!string.IsNullOrWhiteSpace(RemotePath) && (options & RunOptions.IgnoreRemotePath) == 0)
+            if (!string.IsNullOrWhiteSpace(RemotePath) && (runOptions & RunOptions.IgnoreRemotePath) == 0)
             {
                 command = $"export PATH={RemotePath} && {command}";
             }
 
-            if ((options & RunOptions.Defaults) != 0)
+            if ((runOptions & RunOptions.Defaults) != 0)
             {
-                options |= DefaultRunOptions;
+                runOptions |= DefaultRunOptions;
             }
 
-            var runWhenFaulted = (options & RunOptions.RunWhenFaulted) != 0;
-            var logOnErrorOnly = (options & RunOptions.LogOnErrorOnly) != 0 && (options & RunOptions.LogOutput) == 0;
-            var faultOnError   = (options & RunOptions.FaultOnError) != 0;
-            var binaryOutput   = (options & RunOptions.BinaryOutput) != 0;
-            var isClassified   = (options & RunOptions.Classified) != 0;
-            var logBundle      = (options & RunOptions.LogBundle) != 0;
-            var shutdown       = (options & RunOptions.Shutdown) != 0;
+            var runWhenFaulted = (runOptions & RunOptions.RunWhenFaulted) != 0;
+            var logOnErrorOnly = (runOptions & RunOptions.LogOnErrorOnly) != 0 && (runOptions & RunOptions.LogOutput) == 0;
+            var faultOnError   = (runOptions & RunOptions.FaultOnError) != 0;
+            var binaryOutput   = (runOptions & RunOptions.BinaryOutput) != 0;
+            var isClassified   = (runOptions & RunOptions.Classified) != 0;
+            var logBundle      = (runOptions & RunOptions.LogBundle) != 0;
+            var shutdown       = (runOptions & RunOptions.Shutdown) != 0;
 
             if (IsFaulted && !runWhenFaulted)
             {
@@ -1837,14 +1880,14 @@ echo $? > {cmdFolder}/exit
 
             var logEnabled = commandResult.ExitCode != 0 || !logOnErrorOnly;
 
-            if ((commandResult.ExitCode != 0 && logOnErrorOnly) || (options & RunOptions.LogOutput) != 0)
+            if ((commandResult.ExitCode != 0 && logOnErrorOnly) || (runOptions & RunOptions.LogOutput) != 0)
             {
                 if (!startLogged)
                 {
                     LogLine($"START: {commandToLog}");
                 }
 
-                if ((options & RunOptions.LogOutput) != 0)
+                if ((runOptions & RunOptions.LogOutput) != 0)
                 {
                     if (binaryOutput)
                     {
@@ -1870,7 +1913,7 @@ echo $? > {cmdFolder}/exit
                 }
             }
 
-            if (commandResult.ExitCode != 0 || !logOnErrorOnly || (options & RunOptions.LogOutput) != 0)
+            if (commandResult.ExitCode != 0 || !logOnErrorOnly || (runOptions & RunOptions.LogOutput) != 0)
             {
                 if (isClassified)
                 {
@@ -1922,7 +1965,7 @@ echo $? > {cmdFolder}/exit
         /// Runs a <see cref="CommandBundle"/> with user permissioins on the remote machine.
         /// </summary>
         /// <param name="bundle">The bundle.</param>
-        /// <param name="options">The execution options (defaults to <see cref="RunOptions.Defaults"/>).</param>
+        /// <param name="runOptions">The execution options (defaults to <see cref="RunOptions.Defaults"/>).</param>
         /// <returns>The <see cref="CommandResponse"/>.</returns>
         /// <remarks>
         /// <note>
@@ -1951,7 +1994,7 @@ echo $? > {cmdFolder}/exit
         /// as its text or binary data.  You may also indicate whether each file is to be marked as executable.
         /// </para>
         /// <note>
-        /// <paramref name="options"/> is set to <see cref="RunOptions.Defaults"/> by default.  This means
+        /// <paramref name="runOptions"/> is set to <see cref="RunOptions.Defaults"/> by default.  This means
         /// that the flags specified by <see cref="DefaultRunOptions"/> will be be used.  This is a 
         /// good way to specify a global default for flags like <see cref="RunOptions.FaultOnError"/>.
         /// </note>
@@ -1959,7 +2002,7 @@ echo $? > {cmdFolder}/exit
         /// This command requires that the <b>unzip</b> package be installed on the host.
         /// </note>
         /// </remarks>
-        public CommandResponse RunCommand(CommandBundle bundle, RunOptions options = RunOptions.Defaults)
+        public CommandResponse RunCommand(CommandBundle bundle, RunOptions runOptions = RunOptions.Defaults)
         {
             Covenant.Requires<ArgumentNullException>(bundle != null);
 
@@ -1967,7 +2010,7 @@ echo $? > {cmdFolder}/exit
             // executed and then disable this at the lower level, which would have 
             // logged the execution of the "__run.sh" script.
 
-            if ((options & RunOptions.Classified) != 0)
+            if ((runOptions & RunOptions.Classified) != 0)
             {
                 LogLine($"START-BUNDLE: {Redacted}");
             }
@@ -1978,8 +2021,8 @@ echo $? > {cmdFolder}/exit
 
             // Upload and extract the bundle and then run the "__run.sh" script.
 
-            var bundleFolder = UploadBundle(bundle, userPermissions: true);
-            var result       = RunCommand($"cd {bundleFolder} && ./__run.sh", options | RunOptions.LogBundle);
+            var bundleFolder = UploadBundle(bundle, runOptions, userPermissions: true);
+            var result       = RunCommand($"cd {bundleFolder} && ./__run.sh", runOptions | RunOptions.LogBundle);
 
             // Remove the bundle files.
 
@@ -2019,10 +2062,10 @@ echo $? > {cmdFolder}/exit
         }
 
         /// <summary>
-        /// Runs a shell command on the Linux server under <b>sudo</b> with <see cref="RunOptions"/>s.
+        /// Runs a shell command on the Linux server under <b>sudo</b> with <see cref="RunOptions"/>.
         /// </summary>
         /// <param name="command">The command.</param>
-        /// <param name="options">The execution options.</param>
+        /// <param name="runOptions">The execution options.</param>
         /// <param name="args">The optional command arguments.</param>
         /// <returns>The <see cref="CommandResponse"/>.</returns>
         /// <remarks>
@@ -2032,7 +2075,7 @@ echo $? > {cmdFolder}/exit
         /// command, try uploading and executing a <see cref="CommandBundle"/> instead.
         /// </note>
         /// <para>
-        /// The <paramref name="options"/> flags control how this command functions.
+        /// The <paramref name="runOptions"/> flags control how this command functions.
         /// If <see cref="RunOptions.FaultOnError"/> is set, then commands that return
         /// a non-zero exit code will put the server into the faulted state by setting
         /// <see cref="IsFaulted"/>=<c>true</c>.  This means that <see cref="IsReady"/> will 
@@ -2048,25 +2091,25 @@ echo $? > {cmdFolder}/exit
         /// Any <c>null</c> arguments will be ignored.
         /// </note>
         /// </remarks>
-        public CommandResponse SudoCommand(string command, RunOptions options, params object[] args)
+        public CommandResponse SudoCommand(string command, RunOptions runOptions, params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
 
             command = FormatCommand(command, args);
 
-            if (!string.IsNullOrWhiteSpace(RemotePath) && (options & RunOptions.IgnoreRemotePath) == 0)
+            if (!string.IsNullOrWhiteSpace(RemotePath) && (runOptions & RunOptions.IgnoreRemotePath) == 0)
             {
                 command = $"export PATH={RemotePath} && {command}";
             }
 
-            return RunCommand($"sudo bash -c '{command}'", options | RunOptions.IgnoreRemotePath);
+            return RunCommand($"sudo bash -c '{command}'", runOptions | RunOptions.IgnoreRemotePath);
         }
 
         /// <summary>
         /// Runs a <see cref="CommandBundle"/> under <b>sudo</b> on the remote machine.
         /// </summary>
         /// <param name="bundle">The bundle.</param>
-        /// <param name="options">The execution options (defaults to <see cref="RunOptions.Defaults"/>).</param>
+        /// <param name="runOptions">The execution options (defaults to <see cref="RunOptions.Defaults"/>).</param>
         /// <returns>The <see cref="CommandResponse"/>.</returns>
         /// <remarks>
         /// <para>
@@ -2091,7 +2134,7 @@ echo $? > {cmdFolder}/exit
         /// as its text or binary data.  You may also indicate whether each file is to be marked as executable.
         /// </para>
         /// <note>
-        /// <paramref name="options"/> is set to <see cref="RunOptions.Defaults"/> by default.  This means
+        /// <paramref name="runOptions"/> is set to <see cref="RunOptions.Defaults"/> by default.  This means
         /// that the flags specified by <see cref="DefaultRunOptions"/> will be be used.  This is a 
         /// good way to specify a global default for flags like <see cref="RunOptions.FaultOnError"/>.
         /// </note>
@@ -2102,7 +2145,7 @@ echo $? > {cmdFolder}/exit
         /// Any <c>null</c> arguments will be ignored.
         /// </note>
         /// </remarks>
-        public CommandResponse SudoCommand(CommandBundle bundle, RunOptions options = RunOptions.Defaults)
+        public CommandResponse SudoCommand(CommandBundle bundle, RunOptions runOptions = RunOptions.Defaults)
         {
             Covenant.Requires<ArgumentNullException>(bundle != null);
 
@@ -2110,7 +2153,7 @@ echo $? > {cmdFolder}/exit
             // executed and then disable this at the lower level, which would have 
             // logged the execution of the "__run.sh" script.
 
-            if ((options & RunOptions.Classified) != 0)
+            if ((runOptions & RunOptions.Classified) != 0)
             {
                 LogLine($"START-BUNDLE: {Redacted}");
             }
@@ -2121,12 +2164,12 @@ echo $? > {cmdFolder}/exit
 
             // Upload and extract the bundle and then run the "__run.sh" script.
 
-            var bundleFolder = UploadBundle(bundle, userPermissions: false);
-            var result       = SudoCommand($"cd {bundleFolder} && /bin/bash ./__run.sh", options | RunOptions.LogBundle);
+            var bundleFolder = UploadBundle(bundle, runOptions, userPermissions: false);
+            var result       = SudoCommand($"cd {bundleFolder} && /bin/bash ./__run.sh", runOptions | RunOptions.LogBundle);
 
             // Remove the bundle files.
 
-            SudoCommand($"rm -rf {bundleFolder}", options);
+            SudoCommand($"rm -rf {bundleFolder}", runOptions);
 
             return result;
         }
@@ -2136,7 +2179,7 @@ echo $? > {cmdFolder}/exit
         /// while attempting to handle transient errors.
         /// </summary>
         /// <param name="command">The Linux command.</param>
-        /// <param name="options">The execution options.</param>
+        /// <param name="runOptions">The execution options.</param>
         /// <param name="args">The command arguments.</param>
         /// <remarks>
         /// <para>
@@ -2149,7 +2192,7 @@ echo $? > {cmdFolder}/exit
         /// <b>docker</b> client program name.
         /// </note>
         /// </remarks>
-        public CommandResponse DockerCommand(RunOptions options, string command, params object[] args)
+        public CommandResponse DockerCommand(RunOptions runOptions, string command, params object[] args)
         {
             // $todo(jeff.lill): Hardcoding transient handling for now.
 
@@ -2161,7 +2204,7 @@ echo $? > {cmdFolder}/exit
 
             while (attempt++ < maxAttempts)
             {
-                response = SudoCommand(command, options, args);
+                response = SudoCommand(command, runOptions, args);
 
                 if (response.ExitCode == 0)
                 {
