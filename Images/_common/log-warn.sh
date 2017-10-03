@@ -33,7 +33,7 @@ case "${LOG_LEVEL}" in
     *)
         LOG=false
         ;;
-done
+esac
 
 . /log-index.sh
 
