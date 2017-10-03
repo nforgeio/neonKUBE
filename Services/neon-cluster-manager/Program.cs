@@ -195,11 +195,11 @@ namespace NeonClusterManager
 
             // $hack(jeff.lill):
             //
-            // We need to start a vault poller for the vault instance running on each manager
+            // We need to start a vault poller for the Vault instance running on each manager
             // node.  We're going to construct the direct Vault URIs by parsing the Vault
             // host names from the [hosts] file.  The Vault host names will look like:
             //
-            //      *.neon-vault.cluster
+            //      *.neon-vault.service.cluster
 
             var vaultUris = new List<string>();
 
@@ -247,7 +247,7 @@ namespace NeonClusterManager
 
                         var hostname = extract.Substring(hostPos);
 
-                        if (hostname.EndsWith(".neon-vault.cluster", StringComparison.OrdinalIgnoreCase))
+                        if (hostname.EndsWith(".neon-vault.service.cluster", StringComparison.OrdinalIgnoreCase))
                         {
                             vaultUris.Add($"https://{hostname}:{NetworkPorts.Vault}");
                         }

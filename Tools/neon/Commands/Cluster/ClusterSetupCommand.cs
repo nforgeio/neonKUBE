@@ -706,15 +706,6 @@ OPTIONS:
             var sbHosts = new StringBuilder();
 
             sbHosts.AppendLine();
-            sbHosts.AppendLine("# Internal cluster node mappings:");
-            sbHosts.AppendLine();
-
-            foreach (var clusterNode in cluster.Nodes)
-            {
-                sbHosts.AppendLine($"{GetHostsFormattedAddress(clusterNode)} {clusterNode.Name}.{NeonHosts.ClusterNode}");
-            }
-
-            sbHosts.AppendLine();
             sbHosts.AppendLine("# Internal cluster Consul mappings:");
             sbHosts.AppendLine();
 
@@ -820,7 +811,6 @@ export CONSUL_HTTP_ADDR={NeonHosts.Consul}:{cluster.Definition.Consul.Port}
 export CONSUL_HTTP_FULLADDR=http://{NeonHosts.Consul}:{cluster.Definition.Consul.Port}
 
 # Append internal cluster DNS mappings to the container's [/etc/hosts] file.
-
 ");
             sbEnvHost.AppendLine($"cat <<EOF >> /etc/hosts");
             sbEnvHost.AppendLine(GetClusterHostMappings(node));
@@ -889,6 +879,8 @@ export CONSUL_HTTP_FULLADDR=http://{NeonHosts.Consul}:{cluster.Definition.Consul
                 dnsConfig.Add("allow_stale", false);
                 dnsConfig.Add("max_stale", "0s");
             }
+
+            dnsConfig.Add("node_ttl", $"{consulDef.DnsTTL}s");
 
             serviceTtl.Add("*", $"{consulDef.DnsTTL}s");
             dnsConfig.Add("service_ttl", serviceTtl);

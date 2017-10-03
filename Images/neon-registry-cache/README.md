@@ -40,7 +40,7 @@ This configuration makes a NeonCluser self-bootstrapping where even this **neon-
 
 The neonCLUSTER **neon-cli** handles the deployment of Docker pull-thru Registry caches to the cluster manager nodes unless disabled in the cluster definition.  The tool performs the following steps (documented [here](https://docs.docker.com/registry/insecure/):
 
-1. Generates a self-signed certificate for each cluster manager with the certificate hosts matching **<MANAGER-NAME>.neon-registry-cache.cluster** , where *<MANAGER-NAME>* is the name of the manager node.
+1. Generates a self-signed certificate for each cluster manager with the certificate hosts matching **<MANAGER-NAME>.neon-registry-cache.service.cluster** , where *<MANAGER-NAME>* is the name of the manager node.
 
 2. Copies the generated certificates to every cluster node as **/etc/docker/certs.d/<hostname>:5002/ca.crt**.
 
@@ -70,7 +70,7 @@ docker run \
     --detach \
     --restart always \
     --publish 5002:5000 \
-    --env HOST=<MANAGER-NAME>.neon-registry-cache.cluster \
+    --env HOST=<MANAGER-NAME>.neon-registry-cache.service.cluster \
     --volume /etc/neon-registry-cache:/etc/neon-registry-cache:ro \
     --volume neon-registry-cache:/var/lib/neon-registry-cache \
     neoncluster/neon-registry-cache

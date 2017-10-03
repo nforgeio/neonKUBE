@@ -29,14 +29,15 @@ namespace Neon.Cluster
     public static class NeonHosts
     {
         /// <summary>
-        /// The base DNS name for the internal cluster node references.
+        /// The base DNS name for the internal cluster node references.  Note that the
+        /// Consul DNS actually resolves these.
         /// </summary>
-        public const string ClusterNode = "neon-node.cluster";
+        public const string ClusterNode = "node.cluster";
 
         /// <summary>
         /// The base DNS name for the internal cluster Docker registry cache instances deployed on the manager nodes.
         /// </summary>
-        public const string RegistryCache = "neon-registry-cache.cluster";
+        public const string RegistryCache = "neon-registry-cache.service.cluster";
 
         /// <summary>
         /// The DNS name for the Elasticsearch containers used to store the cluster logs.
@@ -53,15 +54,15 @@ namespace Neon.Cluster
         /// will be routed to the <b>neon-proxy-private</b> service via the Docker ingress network.
         /// </para>
         /// </remarks>
-        public const string LogEsData = "neon-log-esdata.cluster";
+        public const string LogEsData = "neon-log-esdata.service.cluster";
 
         /// <summary>
-        /// The DNS name used to access for the cluster's HashiCorp Consul service.
+        /// The DNS name used to access the cluster's HashiCorp Consul service.
         /// </summary>
-        public const string Consul = "neon-consul.cluster";
+        public const string Consul = "neon-consul.service.cluster";
 
         /// <summary>
-        /// The DNS name for the cluster's HashiCorp Vault proxy.
+        /// The DNS name for the cluster's HashiCorp Vault service.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -70,10 +71,10 @@ namespace Neon.Cluster
         /// </para>
         /// <para>
         /// This is also the base name for the manager node specific endpoints like
-        /// <b><i>manager-name</i>.neon-vault.cluster</b>, which are used by <b>neon-proxy-vault</b>
+        /// <b><i>manager-name</i>.neon-vault.service.cluster</b>, which are used by <b>neon-proxy-vault</b>
         /// to check instance health.
         /// </para>
         /// </remarks>
-        public const string Vault = "neon-vault.cluster";
+        public const string Vault = "neon-vault.service.cluster";
     }
 }

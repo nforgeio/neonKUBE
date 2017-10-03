@@ -90,7 +90,7 @@ namespace NeonTool
                 File.WriteAllText(clusterLoginPath, NeonHelper.JsonSerialize(cluster.ClusterLogin, Formatting.Indented));
             }
 
-            // Generate the [<manager>.neon-registry-cache.cluster] DNS mappings
+            // Generate the [<manager>.neon-registry-cache.service.cluster] DNS mappings
             // to be appended to the [/etc/hosts] file on all nodes.
 
             var sb = new StringBuilder();

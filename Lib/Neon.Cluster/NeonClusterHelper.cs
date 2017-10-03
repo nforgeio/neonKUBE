@@ -656,8 +656,7 @@ namespace Neon.Cluster
             }
 
             IsConnected = true;
-
-            Cluster = cluster;
+            Cluster     = cluster;
 
             if (ClusterLogin == null)
             {
