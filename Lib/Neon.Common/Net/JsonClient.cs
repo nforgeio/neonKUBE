@@ -178,6 +178,23 @@ namespace Neon.Net
         }
 
         /// <summary>
+        /// Converts a relative URI into an absolute URI if necessary.
+        /// </summary>
+        /// <param name="uri">The URI.</param>
+        /// <returns>The absolute URI.</returns>
+        private string AbsoluteUri(string uri)
+        {
+            if (string.IsNullOrEmpty(uri) || uri[0] == '/')
+            {
+                return new Uri(BaseAddress, uri).ToString();
+            }
+            else
+            {
+                return uri;
+            }
+        }
+
+        /// <summary>
         /// Formats the URI by appending query arguments as required.
         /// </summary>
         /// <param name="uri">The base URI.</param>
@@ -187,7 +204,7 @@ namespace Neon.Net
         {
             if (args == null || args.Count == 0)
             {
-                return uri;
+                return AbsoluteUri(uri);
             }
 
             var sb    = new StringBuilder(uri);
@@ -223,7 +240,7 @@ namespace Neon.Net
                 sb.Append($"{arg.Key}={Uri.EscapeDataString(value)}");
             }
 
-            return sb.ToString();
+            return AbsoluteUri(sb.ToString());
         }
 
         /// <summary>
@@ -275,8 +292,9 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var httpResponse = await client.GetAsync(FormatUri(uri, args), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
+                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                     jsonResponse.EnsureSuccess();
 
@@ -311,8 +329,9 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var httpResponse = await client.GetAsync(FormatUri(uri, args), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
+                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                     jsonResponse.EnsureSuccess();
 
@@ -352,8 +371,9 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var httpResponse = await client.GetAsync(FormatUri(uri, args), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
+                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                     jsonResponse.EnsureSuccess();
 
@@ -386,9 +406,10 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var response = await client.GetAsync(FormatUri(uri, args), cancellationToken, activity);
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
 
-                    return new JsonResponse(response, await response.Content.ReadAsStringAsync());
+                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                 });
         }
 
@@ -421,9 +442,10 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var response = await client.GetAsync(FormatUri(uri, args), cancellationToken, activity);
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
 
-                    return new JsonResponse(response, await response.Content.ReadAsStringAsync());
+                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                 });
         }
 
@@ -454,8 +476,9 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var httpResponse = await client.PutAsync(FormatUri(uri, args), CreateJsonContent(document), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                     jsonResponse.EnsureSuccess();
 
@@ -491,8 +514,9 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var httpResponse = await client.PutAsync(FormatUri(uri, args), CreateJsonContent(document), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                     jsonResponse.EnsureSuccess();
 
@@ -533,8 +557,9 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var httpResponse = await client.PutAsync(FormatUri(uri, args), CreateJsonContent(document), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                     jsonResponse.EnsureSuccess();
 
@@ -568,9 +593,10 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var response = await client.PutAsync(FormatUri(uri, args), CreateJsonContent(document), cancellationToken, activity);
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.PutAsync(FormatUri(uri, args), CreateJsonContent(document), cancellationToken, activity);
 
-                    return new JsonResponse(response, await response.Content.ReadAsStringAsync());
+                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                 });
         }
 
@@ -604,9 +630,10 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var response = await client.PutAsync(FormatUri(uri, args), CreateJsonContent(document), cancellationToken, activity);
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
 
-                    return new JsonResponse(response, await response.Content.ReadAsStringAsync());
+                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                 });
         }
 
@@ -638,8 +665,9 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var httpResponse = await client.PostAsync(FormatUri(uri, args), CreateJsonContent(document), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                     jsonResponse.EnsureSuccess();
 
@@ -676,8 +704,9 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var httpResponse = await client.PostAsync(FormatUri(uri, args), CreateJsonContent(document), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                     jsonResponse.EnsureSuccess();
 
@@ -719,8 +748,9 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var httpResponse = await client.PostAsync(FormatUri(uri, args), CreateJsonContent(document), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                     jsonResponse.EnsureSuccess();
 
@@ -755,9 +785,10 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var response = await client.PostAsync(FormatUri(uri, args), CreateJsonContent(document), cancellationToken, activity);
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
 
-                    return new JsonResponse(response, await response.Content.ReadAsStringAsync());
+                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                 });
         }
 
@@ -792,9 +823,10 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var response = await client.PostAsync(FormatUri(uri, args), CreateJsonContent(document), cancellationToken, activity);
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
 
-                    return new JsonResponse(response, await response.Content.ReadAsStringAsync());
+                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                 });
         }
 
@@ -824,8 +856,9 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var httpResponse = await client.DeleteAsync(FormatUri(uri, args), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
+                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                     jsonResponse.EnsureSuccess();
 
@@ -860,8 +893,9 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var httpResponse = await client.DeleteAsync(FormatUri(uri, args), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
+                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                     jsonResponse.EnsureSuccess();
 
@@ -901,8 +935,9 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var httpResponse = await client.DeleteAsync(FormatUri(uri, args), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
+                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
 
                     jsonResponse.EnsureSuccess();
 
@@ -935,9 +970,10 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var response = await client.DeleteAsync(FormatUri(uri, args), cancellationToken, activity);
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
 
-                    return new JsonResponse(response, await response.Content.ReadAsStringAsync());
+                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                 });
         }
 
@@ -970,9 +1006,10 @@ namespace Neon.Net
                         throw new ObjectDisposedException(nameof(JsonClient));
                     }
 
-                    var response = await client.DeleteAsync(FormatUri(uri, args), cancellationToken, activity);
+                    var requestUri   = FormatUri(uri, args);
+                    var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
 
-                    return new JsonResponse(response, await response.Content.ReadAsStringAsync());
+                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                 });
         }
     }

@@ -20,6 +20,9 @@ namespace Neon.Net
     /// </summary>
     public class HttpException : HttpRequestException
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         private static string GetReasonString(string reasonPhrase)
         {
             if (string.IsNullOrEmpty(reasonPhrase))
@@ -30,15 +33,30 @@ namespace Neon.Net
             return $", reason=[{reasonPhrase}]";
         }
 
+        private static string GetUriString(string uri)
+        {
+            if (string.IsNullOrEmpty(uri))
+            {
+                return string.Empty;
+            }
+
+            return $", uri=[{uri}]";
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="statusCode">The HTTP response status code.</param>
         /// <param name="reasonPhrase">The HTTP response peason phrase (or <c>null</c>).</param>
-        public HttpException(HttpStatusCode statusCode, string reasonPhrase = null)
-            : base($"[status={(int)statusCode}{GetReasonString(reasonPhrase)}]: {statusCode}")
+        /// <param name="requestUri">The optional URL.</param>
+        public HttpException(HttpStatusCode statusCode, string reasonPhrase = null, string requestUri = null)
+            : base($"[status={(int)statusCode}{GetReasonString(reasonPhrase)}{GetUriString(requestUri)}]: {statusCode}")
         {
             this.StatusCode   = statusCode;
+            this.RequestUri   = requestUri;
             this.ReasonPhrase = reasonPhrase ?? string.Empty;
         }
 
@@ -46,6 +64,11 @@ namespace Neon.Net
         /// Returns the HTTP response status code.
         /// </summary>
         public HttpStatusCode StatusCode { get; private set; }
+
+        /// <summary>
+        /// Returns the request URI.
+        /// </summary>
+        public string RequestUri { get; private set; }
 
         /// <summary>
         /// Returns the HTTP response status message.

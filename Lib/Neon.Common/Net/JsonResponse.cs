@@ -34,10 +34,12 @@ namespace Neon.Net
         /// <summary>
         /// Constructs a <see cref="JsonResponse"/> from a lower level <see cref="HttpResponseMessage"/>.
         /// </summary>
-        /// <param name="httpRespose">The lower-level response.</param>
+        /// <param name="requestUri">The request URI.</param>
+        /// <param name="httpRespose">The low-level response.</param>
         /// <param name="responseText">The response text.</param>
-        public JsonResponse(HttpResponseMessage httpRespose, string responseText)
+        public JsonResponse(string requestUri, HttpResponseMessage httpRespose, string responseText)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(requestUri));
             Covenant.Requires<ArgumentNullException>(httpRespose != null);
 
             // $note(jeff.lill):
@@ -52,6 +54,7 @@ namespace Neon.Net
                                   httpRespose.Content.Headers.ContentType.MediaType.Equals("text/json", StringComparison.OrdinalIgnoreCase)
                               );
 
+            this.RequestUri   = requestUri;
             this.HttpResponse = httpRespose;
 
             if (httpRespose.Content.Headers.ContentType != null
@@ -62,6 +65,11 @@ namespace Neon.Net
                 this.JsonText = responseText;
             }
         }
+
+        /// <summary>
+        /// Returns the request URI.
+        /// </summary>
+        public string RequestUri { get; private set; }
 
         /// <summary>
         /// Returns the low-level HTTP response.
@@ -130,7 +138,7 @@ namespace Neon.Net
         {
             if (!IsSuccess)
             {
-                throw new HttpException(HttpResponse.StatusCode, HttpResponse.ReasonPhrase);
+                throw new HttpException(HttpResponse.StatusCode, HttpResponse.ReasonPhrase, RequestUri);
             }
         }
     }

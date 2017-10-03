@@ -207,7 +207,8 @@ namespace Neon.Cluster
             // We need to make an unsafe call because Vault will return [503-Service Unavailable] when not 
             // initialized or sealed.
 
-            var jsonResponse = await jsonClient.GetUnsafeAsync($"/{vaultApiVersion}/sys/health", cancellationToken: cancellationToken);
+            var requestUri   = $"/{vaultApiVersion}/sys/health";
+            var jsonResponse = await jsonClient.GetUnsafeAsync(requestUri, cancellationToken: cancellationToken);
 
             try
             {
@@ -223,7 +224,7 @@ namespace Neon.Cluster
             }
             catch
             {
-                throw new HttpException(jsonResponse.StatusCode, "Unable to parse the status response.");
+                throw new HttpException(jsonResponse.StatusCode, "Unable to parse the status response.", requestUri);
             }
         }
 
