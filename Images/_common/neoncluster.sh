@@ -337,12 +337,8 @@ export NeonSysLogFacility_ProxyNumbe=23
 # Defines the DNS host names used by built-in node level applications as well
 # as Docker containers and services.
 
-# The base DNS name for the internal cluster node references.  Note that the
-# Consul DNS actually resolves these.
-export NeonHosts_ClusterNode=node.cluster
-
 # The base DNS name for the internal cluster Docker registry cache instances deployed on the manager nodes.
-export NeonHosts_RegistryCache=neon-registry-cache.service.cluster
+export NeonHosts_RegistryCache=neon-registry-cache.cluster
 
 # The DNS name for the Elasticsearch containers used to store the cluster logs.
 #
@@ -353,10 +349,10 @@ export NeonHosts_RegistryCache=neon-registry-cache.service.cluster
 #
 # HTTP traffic should be directed to the [NeonHostPorts_ProxyPrivateHttpLogEsData] port which will be
 # routed to the [neon-proxy-private] service via the Docker ingress network.
-export NeonHosts_LogEsData=neon-log-esdata.service.cluster
+export NeonHosts_LogEsData=neon-log-esdata.cluster
 
 # The DNS name used to access for the cluster's HashiCorp Consul service.
-export NeonHosts_Vault=neon-consul.service.cluster
+export NeonHosts_Vault=neon-consul.cluster
 
 # The DNS name for the cluster's HashiCorp Vault proxy.
 #
@@ -364,9 +360,9 @@ export NeonHosts_Vault=neon-consul.service.cluster
 # which provides for failover.
 #
 # This is also the base name for the manager node specific endpoints like
-# <manager-name>.neon-vault.service.cluster, which are used by [neon-proxy-vault]
+# <manager-name>.neon-vault.cluster, which are used by [neon-proxy-vault]
 # to check instance health.
-export NeonHosts_Vault=neon-vault.service.cluster
+export NeonHosts_Vault=neon-vault.cluster
 
 #------------------------------------------------------------------------------
 # LogSources:

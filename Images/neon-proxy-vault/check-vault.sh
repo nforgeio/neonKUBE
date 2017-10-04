@@ -17,7 +17,7 @@
 # This script actually ignores these and uses the backend name passed in the
 # HAPROXY_SERVER_NAME as the hostname of the instance and HAPROXY_SERVER_PORT
 # as the service port.  HAPROXY_SERVER_NAME is set to an host name like
-# [manage-0.neon-vault.service.cluster] in the HAProxy config file.
+# [manage-0.neon-vault.cluster] in the HAProxy config file.
 #
 # The script returns 0 if the endpoint is ready, non-zero if it's unavailable or sealed.
 #

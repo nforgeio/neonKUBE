@@ -141,11 +141,11 @@ module Fluent
                     #
                     #   ==> Vault server configuration:
                     #                        Cgo: disabled
-                    #            Cluster Address: https://test-manager-0.neon-vault.service.cluster:8201
+                    #            Cluster Address: https://test-manager-0.neon-vault.cluster:8201
                     #                 Listener 1: tcp (addr: "0.0.0.0:8200", cluster address: "0.0.0.0:8201", tls: "enabled")
                     #                  Log Level: info
                     #                      Mlock: supported: true, enabled: true
-                    #           Redirect Address: https://test-manager-0.neon-vault.service.cluster:8200
+                    #           Redirect Address: https://test-manager-0.neon-vault.cluster:8200
                     #                    Storage: consul (HA available)
                     #                    Version: Vault v0.7.2
                     #                Version Sha: d28dd5a018294562dbc9a18c95554d52b5d12390

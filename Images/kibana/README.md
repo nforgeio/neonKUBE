@@ -47,6 +47,6 @@ docker service create \
     --constraint "node.role==manager" \
     --publish 5001:5601 \
     --mount type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true \
-    --env ELASTICSEARCH_URL=http://neon-log-esdata.service.cluster:5303 \
+    --env ELASTICSEARCH_URL=http://neon-log-esdata.cluster:5303 \
     --log-driver json-file
 ````
