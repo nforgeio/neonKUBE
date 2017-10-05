@@ -41,7 +41,6 @@ namespace NeonTool
     {
         private ClusterProxy    cluster;
         private string          clusterLoginPath;
-        private string          managerDnsMappings;
 
         /// <summary>
         /// Constructor.
@@ -89,22 +88,6 @@ namespace NeonTool
 
                 File.WriteAllText(clusterLoginPath, NeonHelper.JsonSerialize(cluster.ClusterLogin, Formatting.Indented));
             }
-
-            // Generate the [<manager>.neon-registry-cache.cluster] DNS mappings
-            // to be appended to the [/etc/hosts] file on all nodes.
-
-            var sb = new StringBuilder();
-
-            sb.AppendLineLinux();
-            sb.AppendLineLinux("# Map the registry cache instances running on the managers.");
-            sb.AppendLineLinux();
-
-            foreach (var manager in cluster.Definition.SortedManagers)
-            {
-                sb.AppendLineLinux($"{manager.PrivateAddress} {GetCacheHost(manager)}");
-            }
-
-            managerDnsMappings = sb.ToString();
         }
 
         /// <summary>
@@ -182,20 +165,6 @@ namespace NeonTool
 
                 node.Status = string.Empty;
             }
-
-            // Append the manager DNS mappings to the [/etc/hosts] files for
-            // every cluster node.
-
-            node.InvokeIdempotentAction("setup-registrycache-manager-dns",
-                () =>
-                {
-                    node.Status = "update: /etc/hosts";
-
-                    var bundle = new CommandBundle("cat mappings.txt >> /etc/hosts");
-
-                    bundle.AddFile("mappings.txt", managerDnsMappings);
-                    node.SudoCommand(bundle);
-                });
 
             // Upload the cache certificates to every cluster node at:
             //

@@ -757,9 +757,6 @@ OPTIONS:
 $@"
 127.0.0.1	    localhost
 127.0.1.1	    {node.Name}
-
-# The following lines are desirable for IPv6 capable hosts:
-
 ::1             localhost ip6-localhost ip6-loopback
 ff02::1         ip6-allnodes
 ff02::2         ip6-allrouters
@@ -841,7 +838,7 @@ export CONSUL_HTTP_FULLADDR=http://{NeonHosts.Consul}:{cluster.Definition.Consul
 
             ports.Add("http", consulTlsDisabled ? 8500 : -1);
             ports.Add("https", consulTlsDisabled ? -1 : 8500);
-            ports.Add("dns", 53);
+            ports.Add("dns", 8600);     // This is the default Consul DNS port.
 
             consulConf.Add("ports", ports);
 
