@@ -183,7 +183,7 @@ export NeonClusterConst_NeonClusterConst_DockerDnsEndpoint="127.0.0.11:53"
 # The name of the reserved Vault transit key.
 export NeonClusterConst_VaultTransitKey="neon-transitkey"
 
-# The port exposed by the <b>neon-proxy-public</b> and <b>neon-proxy-private</b>
+# The port exposed by the [neon-proxy-public] and [neon-proxy-private]
 # HAProxy service that server the proxy statistics pages.
 export NeonClusterConst_HAProxyStatsPort=1936
 
@@ -232,9 +232,14 @@ export NeonHostPorts_LogEsDataHttp=5004
 # log repository containers for internal inter-node communication.
 export NeonHostPorts_LogEsDataTcp=5005
 
-# The UDP port exposed by the <b>neon-log-host</b> containers that receives
+# The UDP port exposed by the [neon-log-host] containers that receives
 # SYSLOG events from the HAProxy based services and perhaps other sources.
 export NeonHostPorts_LogHostSysLog=5006
+
+# The HTTP port that the [neon-dns] service exposes on every node that
+# local PowerDNS Server instances will be configured to query for via the
+# remote backend.
+export NeonHostPorts_NeonDns=5007
 
 # This port is reserved and must not be assigned to any service.  This is
 # currently referenced by the manager load balancer rule for Azure deployments
@@ -304,7 +309,7 @@ export NeonHostPorts_ProxyPrivateHttps=5301
 # the nodes to the [neon-log-collector] service.
 export NeonHostPorts_ProxyPrivateTcpLogCollector=5302
 
-# The <b>neon-proxy-private</b> service port for routing internal HTTP traffic
+# The [neon-proxy-private] service port for routing internal HTTP traffic
 # to the logging Elasticsearch cluster.
 export NeonHostPorts_ProxyPrivateHttpLogEsData=5303
 
@@ -343,7 +348,7 @@ export NeonHosts_RegistryCache=neon-registry-cache.cluster
 # The DNS name for the Elasticsearch containers used to store the cluster logs.
 #
 # These are individual containers that attached to the [neon-private] network,
-# forming an Elasticsearch cluster that is deployed behind the cluster's <b>private</b> proxy.  A DNS entry
+# forming an Elasticsearch cluster that is deployed behind the cluster's [private] proxy.  A DNS entry
 # is configured in the each Docker node's [hosts] file to reference the node's IP address as well 
 # as in the [/etc/neoncluster/env-host] file that may be mounted into Docker containers and services.
 #
