@@ -5,7 +5,7 @@
 #
 # NOTE: This script must be run under sudo.
 #
-# NOTE: Variables formatted like $<name> will be expanded by [node-conf]
+# NOTE: Variables formatted like $<name> will be expanded by [neon-cli]
 #       using a [PreprocessReader].
 #
 # The Linux by default doesn't update the system clocks very often (perhaps as 

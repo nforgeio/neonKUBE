@@ -6,7 +6,7 @@
 #
 # NOTE: This script must be run under [sudo].
 #
-# NOTE: Variables formatted like $<name> will be expanded by [node-conf]
+# NOTE: Variables formatted like $<name> will be expanded by [neon-cli]
 #       using a [PreprocessReader].
 
 # $todo(jeff.lill):
