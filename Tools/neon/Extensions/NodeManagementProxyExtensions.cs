@@ -280,7 +280,7 @@ namespace NeonTool
                 consulOptions += "-ui";
             }
 
-            // Define the Consul upstream nameserver JSON array.
+            // Define the network upstream nameserver JSON array.
 
             var nameservers = "[ ]";
 
@@ -327,6 +327,8 @@ namespace NeonTool
             SetBashVariable(preprocessReader, "ntp.manager.sources", managerTimeSources);
             SetBashVariable(preprocessReader, "ntp.worker.sources", workerTimeSources);
 
+            SetBashVariable(preprocessReader, "net.nameservers", nameservers);
+
             SetBashVariable(preprocessReader, "docker.version", clusterDefinition.Docker.PackageVersion);
 
             SetBashVariable(preprocessReader, "consul.version", clusterDefinition.Consul.Version);
@@ -336,7 +338,6 @@ namespace NeonTool
             SetBashVariable(preprocessReader, "consul.hostname", NeonHosts.Consul);
             SetBashVariable(preprocessReader, "consul.port", clusterDefinition.Consul.Port);
             SetBashVariable(preprocessReader, "consul.tlsdisabled", true);
-            SetBashVariable(preprocessReader, "consul.nameservers", nameservers);
 
             SetBashVariable(preprocessReader, "vault.version", clusterDefinition.Vault.Version);
 

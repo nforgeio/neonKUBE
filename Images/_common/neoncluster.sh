@@ -236,11 +236,6 @@ export NeonHostPorts_LogEsDataTcp=5005
 # SYSLOG events from the HAProxy based services and perhaps other sources.
 export NeonHostPorts_LogHostSysLog=5006
 
-# The HTTP port that the [neon-dns] service exposes on every node that
-# local PowerDNS Server instances will be configured to query for via the
-# remote backend.
-export NeonHostPorts_NeonDns=5007
-
 # This port is reserved and must not be assigned to any service.  This is
 # currently referenced by the manager load balancer rule for Azure deployments
 # and it must not actually host a service.  See the [AzureHostingManager]

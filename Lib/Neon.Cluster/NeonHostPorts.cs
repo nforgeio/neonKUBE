@@ -109,13 +109,6 @@ namespace Neon.Cluster
         public const int LogHostSysLog = 5006;
 
         /// <summary>
-        /// The HTTP port that the <b>neon-dns</b> service exposes on every node that
-        /// local PowerDNS Server instances will be configured to query for via the
-        /// remote backend.
-        /// </summary>
-        public const int NeonDns = 5007;
-
-        /// <summary>
         /// This port is reserved and must not be assigned to any service.  This is
         /// currently referenced by the manager load balancer rule for Azure deployments
         /// and it must not actually host a service.  See the <b>AzureHostingManager</b>

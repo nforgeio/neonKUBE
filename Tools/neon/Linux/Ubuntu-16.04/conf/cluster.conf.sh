@@ -95,6 +95,10 @@ $<nodes.managers>
 export NEON_NTP_MANAGER_SOURCES=( $<ntp.manager.sources> )
 export NEON_NTP_WORKER_SOURCES=( $<ntp.worker.sources> )
 
+# Network settings
+
+export NEON_NET_NAMESERVERS=$<net.nameservers>
+
 # Docker settings
 
 export NEON_DOCKER_VERSION=$<docker.version>
@@ -108,7 +112,7 @@ export NEON_CONSUL_FULLADDRESS=$<consul.fulladdress>
 export NEON_CONSUL_HOSTNAME=$<consul.hostname>
 export NEON_CONSUL_PORT=$<consul.port>
 export NEON_CONSUL_TLS_DISABLED=$<consul.tlsdisabled>
-export NEON_CONSUL_NAMESERVERS=$<consul.nameservers>
+
 
 # Vault settings
 
@@ -147,8 +151,7 @@ if $summary ; then
     echo "NEON_SECRETS_FOLDER                = ${NEON_SECRETS_FOLDER}" 1>&2
     echo "NEON_SCRIPTS_FOLDER                = ${NEON_SCRIPTS_FOLDER}" 1>&2
     echo "NEON_ARCHIVE_FOLDER                = ${NEON_ARCHIVE_FOLDER}" 1>&2
-    echo "NEON_exec_FOLDER                   = ${NEON_EXEC_FOLDER}" 1>&2
-    echo "PATH                               = ${PATH}" 1>&2
+    echo "NEON_EXEC_FOLDER                   = ${NEON_EXEC_FOLDER}" 1>&2
     echo 1>&2
     echo "NEON_MANAGER_COUNT                 = ${NEON_MANAGER_COUNT}" 1>&2
 $<nodes.manager.summary>
@@ -159,6 +162,8 @@ $<nodes.manager.summary>
     echo "NEON_NTP_MANAGER_SOURCES           = ${NEON_NTP_MANAGER_SOURCES}" 1>&2
     echo "NEON_NTP_WORKER_SOURCES            = ${NEON_NTP_WORKER_SOURCES}" 1>&2
     echo 1>&2
+    echo "NEON_NET_NAMESERVERS               = ${NEON_NET_NAMESERVERS}" 1>&2
+    echo 1>&2
     echo "NEON_DOCKER_VERSION                = ${NEON_DOCKER_VERSION}" 1>&2
     echo 1>&2
     echo "NEON_CONSUL_VERSION                = ${NEON_CONSUL_VERSION}" 1>&2
@@ -168,7 +173,6 @@ $<nodes.manager.summary>
     echo "NEON_CONSUL_HOSTNAME               = ${NEON_CONSUL_HOSTNAME}" 1>&2
     echo "NEON_CONSUL_PORT                   = ${NEON_CONSUL_PORT}" 1>&2
     echo "NEON_CONSUL_TLS_DISABLED           = ${NEON_CONSUL_TLS_DISABLED}" 1>&2
-    echo "NEON_CONSUL_NAMESERVERS            = ${NEON_CONSUL_NAMESERVERS}" 1>&2
     echo 1>&2 
     echo "NEON_VAULT_VERSION                 = ${NEON_VAULT_VERSION}" 1>&2
     echo "NEON_VAULT_DOWNLOAD                = ${NEON_VAULT_DOWNLOAD}" 1>&2
@@ -181,6 +185,7 @@ $<nodes.manager.summary>
     echo 1>&2
     echo "NEON_LOG_ENABLED                   = ${NEON_LOG_ENABLED}" 1>&2
     echo 1>&2
+    echo "PATH                               = ${PATH}" 1>&2
 fi
 
 #------------------------------------------------------------------------------

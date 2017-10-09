@@ -53,10 +53,13 @@ fi
 
 apt-get update
 
-# Install the [jq] package.  This tool makes it easy for shell scripts
-# to parse JSON.
+# Install some common packages:
+#
+#	jq			JSON parser (useful for shell scripts)
+#	aptitude	Apt related utilities
+#	gdebi-core	Installs .deb packages AND their dependencies
 
-apt-get install -yq jq
+apt-get install -yq jq aptitude gdebi-core
 
 # Configure the host name.
 #
