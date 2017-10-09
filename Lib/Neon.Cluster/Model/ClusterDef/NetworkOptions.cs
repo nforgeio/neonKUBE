@@ -44,6 +44,8 @@ namespace Neon.Cluster
     {
         private const string defaultPublicSubnet  = "10.249.0.0/16";
         private const string defaultPrivateSubnet = "10.248.0.0/16";
+        private const string defaultPdnsServerUri = "https://jefflill.github.io/neoncluster/binaries/ubuntu/pdns-server_4.1.0~rc1-1pdns.xenial_amd64.deb";
+        private const string defaultPdnsDistUri   = "https://jefflill.github.io/neoncluster/binaries/ubuntu/dnsdist_1.2.0-1pdns.xenial_amd64.deb";
 
         /// <summary>
         /// Default constructor.
@@ -131,6 +133,22 @@ namespace Neon.Cluster
         public string[] Nameservers { get; set; } = null;
 
         /// <summary>
+        /// URI for the <a href="https://www.powerdns.com/auth.html">PowerDNS Authoritative Server</a> package 
+        /// to use for provisioning cluster DNS services.  This defaults to a known good release.
+        /// </summary>
+        [JsonProperty(PropertyName = "PdnsServerUri", Required = Required.Default)]
+        [DefaultValue(defaultPdnsServerUri)]
+        public string PdnsServerUri { get; set; } = defaultPdnsServerUri;
+
+        /// <summary>
+        /// URI for the <a href="https://dnsdist.org/">PowerDNS Load Balancer</a> package 
+        /// to use for provisioning cluster DNS services.  This defaults to a known good release.
+        /// </summary>
+        [JsonProperty(PropertyName = "PdnsDistUri", Required = Required.Default)]
+        [DefaultValue(defaultPdnsDistUri)]
+        public string PdnsDistUri { get; set; } = defaultPdnsDistUri;
+
+        /// <summary>
         /// Validates the options definition and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -167,6 +185,20 @@ namespace Neon.Cluster
                 {
                     throw new ClusterDefinitionException($"[{nameserver}] is not a valid [{nameof(NetworkOptions)}.{nameof(Nameservers)}] IP address.");
                 }
+            }
+
+            PdnsServerUri = PdnsServerUri ?? defaultPdnsServerUri;
+            
+            if (!Uri.TryCreate(PdnsServerUri, UriKind.Absolute, out var uri1))
+            {
+                throw new ClusterDefinitionException($"[{nameof(PdnsServerUri)}={PdnsServerUri}] is not a valid URI.");
+            }
+
+            PdnsDistUri = PdnsDistUri ?? defaultPdnsDistUri;
+
+            if (!Uri.TryCreate(PdnsServerUri, UriKind.Absolute, out var uri2))
+            {
+                throw new ClusterDefinitionException($"[{nameof(PdnsDistUri)}={PdnsDistUri}] is not a valid URI.");
             }
         }
     }

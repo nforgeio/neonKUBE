@@ -6,7 +6,7 @@
 #
 # NOTE: This script must be run under [sudo].
 #
-# NOTE: Variables formatted like $<name> will be expanded by [node-conf]
+# NOTE: Variables formatted like $<name> will be expanded by [neon-cli]
 #       using a [PreprocessReader].
 #
 # This script continues the configuration of a node VM by assigning its
@@ -356,17 +356,17 @@ echo "[INFO] Configuring port forwarding rules."
 
 for interface in \$( ip link | gawk '/eth[0..9]+:/ { print gensub(/:/, "", "g", \$2) }' ); do
 
-	# Forward port 80 --> 5100
+    # Forward port 80 --> 5100
 
-	echo "[INFO] Forwarding [port 80] packets on [\$interface] to [${NEON_NODE_IP}:5100]."
-	iptables -A PREROUTING -t nat -i \$interface -p tcp --dport 80 -j DNAT --to ${NEON_NODE_IP}:5100
-	iptables -A FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5100 -j ACCEPT
+    echo "[INFO] Forwarding [port 80] packets on [\$interface] to [${NEON_NODE_IP}:5100]."
+    iptables -A PREROUTING -t nat -i \$interface -p tcp --dport 80 -j DNAT --to ${NEON_NODE_IP}:5100
+    iptables -A FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5100 -j ACCEPT
 
-	# Forward port 443 --> 5101
+    # Forward port 443 --> 5101
 
-	echo "[INFO] Forwarding [port 443] packets on [\$interface] to [${NEON_NODE_IP}:5101]."
-	iptables -A PREROUTING -t nat -i \$interface -p tcp --dport 443 -j DNAT --to ${NEON_NODE_IP}:5101
-	iptables -A FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5101 -j ACCEPT
+    echo "[INFO] Forwarding [port 443] packets on [\$interface] to [${NEON_NODE_IP}:5101]."
+    iptables -A PREROUTING -t nat -i \$interface -p tcp --dport 443 -j DNAT --to ${NEON_NODE_IP}:5101
+    iptables -A FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5101 -j ACCEPT
 done
 
 echo "[INFO] Configuration complete."
@@ -533,6 +533,211 @@ EOF
 systemctl enable neon-security-cleaner
 systemctl daemon-reload
 systemctl restart neon-security-cleaner
+
+#------------------------------------------------------------------------------
+# Configure the node's DNS resolver.
+
+# Install PowerDNS Authoritative Server and configure it to listen on port 54
+# (the defunct Xerox XNS port) and configure it to use the BIND backend to
+# perform static lookups.  We're going to provision an some temporary BIND
+# config and ZONE  files for now (for script testing) and upload the production
+# files later on in the setup process.
+
+curl -4fsSLv ${CURL_RETRY} $<net.pdnsserveruri> -o /tmp/pdns-server.deb
+gdebi --non-interactive /tmp/pdns-server.deb
+rm /tmp/pdns-server.deb
+systemctl stop pdns
+
+mkdir -p /etc/powerdns/pdns.d
+rm -f /etc/powerdns/pdns.d/*
+
+mkdir -p /etc/powerdns/zones
+rm -f /etc/powerdns/zones/*
+
+cat <<EOF > /etc/powerdns/bindbackend.conf
+###############################################################################
+# PowerDNS Server BIND backend configuration.
+
+options {
+    allow-query { any; };
+    allow-query-cache { any; };
+};
+
+zone "cluster" { 
+    type master; 
+    file "/etc/powerdns/zones/cluster.zone"; 
+    allow-query { any; };
+    allow-query-cache { any; };
+};
+
+zone "neon-registry-cache.cluster" { 
+    type master; 
+    file "/etc/powerdns/zones/neon-registry-cache.cluster.zone"; 
+    allow-query { any; };
+    allow-query-cache { any; };
+};
+
+zone "neon-vault.cluster" { 
+    type master; 
+    file "/etc/powerdns/zones/neon-vault.cluster.zone"; 
+    allow-query { any; };
+    allow-query-cache { any; };
+};
+EOF
+
+cat <<EOF > /etc/powerdns/zones/cluster.zone
+;##############################################################################
+; Zone file for the [.cluster] TLD.
+
+\$ORIGIN cluster.
+\$TTL 1h
+
+@ 1D IN  SOA ns1.cluster. hostmaster.cluster. (
+					2017100900 ; serial
+					3H ; refresh
+					15 ; retry
+					1w ; expire
+					3h ; nxdomain ttl
+					)
+
+neon-consul         IN 	A 	${NEON_NODE_IP}
+neon-log-esdata		IN  A   ${NEON_NODE_IP}
+EOF
+
+cat <<EOF > /etc/powerdns/zones/neon-registry-cache.cluster.zone
+;##############################################################################
+; Zone file for the [neon-registry-cache.cluster] domain.
+
+\$ORIGIN neon-registry-cache.cluster.
+\$TTL 1h
+
+@ 1D IN  SOA ns1.cluster. hostmaster.cluster. (
+					2017100900 ; serial
+					3H ; refresh
+					15 ; retry
+					1w ; expire
+					3h ; nxdomain ttl
+					)
+
+manage-0 		IN  A 		${NEON_NODE_IP}
+EOF
+
+cat <<EOF > /etc/powerdns/zones/neon-vault.cluster.zone
+;##############################################################################
+; Zone file for the [neon-vault.cluster] domain.
+
+\$ORIGIN neon-vault.cluster.
+\$TTL 1h
+
+@ 1D IN  SOA ns1.cluster. hostmaster.cluster. (
+                 2017100900 ; serial
+                 3H ; refresh
+                 15 ; retry
+                 1w ; expire
+                 3h ; nxdomain ttl
+                 )
+
+@        		IN  A		${NEON_NODE_IP}
+manage-0		IN  A		${NEON_NODE_IP}
+EOF
+
+cat <<EOF > /etc/powerdns/pdns.d/neoncluster.pdns.conf
+###############################################################################
+# neonCLUSTER custom PowerDNS Authoritative Server configuration
+
+#################################
+# The PowerDNS [dnsdist] load balancer listens on port 53 so we're
+# going to confugure the PowerDNS Server to run on the defunct Xerox 
+# XNS port 54.
+#
+local-port=54
+
+#################################
+# Bind to the loopback address only.  Direct external access is 
+# not required.
+#
+local-address=127.0.0.1
+
+#################################
+# Bind backend settings.
+launch+=bind
+bind-config=/etc/powerdns/bindbackend.conf
+bind-check-interval=60
+
+#################################
+# disable-syslog	Disable logging to syslog, useful when running inside a supervisor that logs stdout
+#
+disable-syslog=yes
+
+# \$todo(jeff.lill): DELETE THESE DEBUG SETTINGS!
+
+loglevel=5
+log-dns-details=yes
+log-dns-queries=yes
+EOF
+
+# Set PowerDNS related config file permissions.
+
+chmod -R 775 /etc/powerdns
+
+# Install the PowerDNS [dnsdist] load balancer and configure it to listen on 
+# port 53 on all network interfaces.  This acts as the immediate upstream DNS
+# for this host node as well as any containers running on this node.  It is
+# also possible to make this an upstream DNS server for machines that are not
+# part of the neonCLUSTER.  Typically, external servers would target the 
+# cluster manager nodes.
+
+curl -4fsSLv ${CURL_RETRY} $<net.pdnsdisturi> -o /tmp/dnsdist.deb
+gdebi --non-interactive /tmp/dnsdist.deb
+rm /tmp/dnsdist.deb
+systemctl stop dnsdist
+
+mkdir -p /etc/dnsdist
+
+# Convert the upstream nameserver IP addresses into a comma separated list 
+# of string suitable for initializing a Lua table.
+
+NAMESERVERS=""
+for address in "${NEON_NET_NAMESERVERS[@]}"
+do
+    if [ "${NAMESERVERS}" != "" ] ; then
+		NAMESERVERS+=","
+	fi
+
+	NAMESERVERS+=\"${address}\"
+done
+
+# [dnsdist] configuration file.  Note that this is is a Lua script.
+
+cat <<EOF > /etc/dnsdist/dnsdist.conf
+--#############################################################################
+-- PowerDNS [dnsdist] configuration file (Lau language)
+
+-- Listen on the standard DNS port 53 on all interfaces.  Enable TCP.
+
+addLocal('0.0.0.0:53', { doTCP=true, reusePort=true })
+
+-- Restrict requests to allow only hosts on a private subnet.
+
+addACL('10.0.0.0/8')
+addACL('172.16.0.0/12')
+addACL('192.168.0.0/16')
+
+-- Add the upstream DNS servers first and then add the local PowerDNS Authortative
+-- Server last.  This ordering is required by the custom server policy Functions
+-- below so it will be able to forward [*.cluster] related questions on to the
+-- local DNS and other requests to the upstream servers.
+
+upstreamServers = { $NAMESERVERS };
+
+for i = 1, #upstreamServers Do
+   address = upstreamServers[i] + ":53";
+   newServer({ address=address, name=address,  });
+end
+
+EOF
+
+chmod -R 775 /etc/dnsdist
 
 #------------------------------------------------------------------------------
 # Add the Neon tools folder to the [sudo] PATH.

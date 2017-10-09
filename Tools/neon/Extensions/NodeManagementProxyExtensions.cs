@@ -328,6 +328,8 @@ namespace NeonTool
             SetBashVariable(preprocessReader, "ntp.worker.sources", workerTimeSources);
 
             SetBashVariable(preprocessReader, "net.nameservers", nameservers);
+            SetBashVariable(preprocessReader, "net.pdnsserveruri", clusterDefinition.Network.PdnsServerUri);
+            SetBashVariable(preprocessReader, "net.pdnsdisturi", clusterDefinition.Network.PdnsDistUri);
 
             SetBashVariable(preprocessReader, "docker.version", clusterDefinition.Docker.PackageVersion);
 

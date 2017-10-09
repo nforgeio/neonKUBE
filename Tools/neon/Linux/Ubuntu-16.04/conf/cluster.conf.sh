@@ -8,7 +8,7 @@
 # WARNING: This script is generated and managed by the [neon-cli] and
 #          MUST NOT BE MODIFIED by hand unless you really know what you're doing.
 #
-# NOTE: Variables formatted like $<name> will be expanded by [node-conf]
+# NOTE: Variables formatted like $<name> will be expanded by [neon-cli]
 #       using a [PreprocessReader].
 #
 # This script defines the current configuration of the neonCLUSTER as is
