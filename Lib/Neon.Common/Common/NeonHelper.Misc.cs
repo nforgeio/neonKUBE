@@ -223,6 +223,14 @@ namespace Neon.Common
                         {
                             var spaceCount = tabStop - (position % tabStop);
 
+                            if (spaceCount <= 0)
+                            {
+                                // If the current position is on a tabstop then we
+                                // need to inject a full TAB worth of spaces.
+
+                                spaceCount = tabStop;
+                            }
+
                             for (int i = 0; i < spaceCount; i++)
                             {
                                 sb.Append(' ');
