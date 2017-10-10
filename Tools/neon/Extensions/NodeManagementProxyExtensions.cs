@@ -329,7 +329,7 @@ namespace NeonTool
 
             SetBashVariable(preprocessReader, "net.nameservers", nameservers);
             SetBashVariable(preprocessReader, "net.pdnsserveruri", clusterDefinition.Network.PdnsServerUri);
-            SetBashVariable(preprocessReader, "net.pdnsdisturi", clusterDefinition.Network.PdnsDistUri);
+            SetBashVariable(preprocessReader, "net.net.pdnsrecursoruri", clusterDefinition.Network.PdnsRecursorUri);
 
             SetBashVariable(preprocessReader, "docker.version", clusterDefinition.Docker.PackageVersion);
 

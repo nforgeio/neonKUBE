@@ -535,13 +535,20 @@ systemctl daemon-reload
 systemctl restart neon-security-cleaner
 
 #------------------------------------------------------------------------------
-# Configure the node's DNS resolver.
+# Configure the PowerDNS Recursor.
 
-# Install PowerDNS Authoritative Server and configure it to listen on port 54
-# (the defunct Xerox XNS port) and configure it to use the BIND backend to
-# perform static lookups.  We're going to provision an some temporary BIND
-# config and ZONE  files for now (for script testing) and upload the production
-# files later on in the setup process.
+curl -4fsSLv ${CURL_RETRY} $<net.pdnsrecursoruri> -o /tmp/pdns-recursor.deb
+gdebi --non-interactive /tmp/pdns-recursor.deb
+rm /tmp/pdns-recursor.deb
+systemctl stop pdns-recursor
+
+#------------------------------------------------------------------------------
+# Configure the PowerDNS Authoritative Server.
+
+# Install PowerDNS Authoritative Server and configure it to listen on 127.0.0.1:53
+# and configure it to use the BIND backend to perform static lookups.  We're going to 
+# provision an some temporary BIND config and ZONE files for now (for script testing)
+# and upload the production files later on in the setup process.
 
 curl -4fsSLv ${CURL_RETRY} $<net.pdnsserveruri> -o /tmp/pdns-server.deb
 gdebi --non-interactive /tmp/pdns-server.deb
@@ -646,11 +653,10 @@ cat <<EOF > /etc/powerdns/pdns.d/neoncluster.pdns.conf
 # neonCLUSTER custom PowerDNS Authoritative Server configuration
 
 #################################
-# The PowerDNS [dnsdist] load balancer listens on port 53 so we're
-# going to confugure the PowerDNS Server to run on the defunct Xerox 
-# XNS port 54.
+# Listening on port 127.0.0.1:53.  This will avoid port conflicts with the
+# pdns-recursor which will be bound to the node's private IP address.
 #
-local-port=54
+local-port=53
 
 #################################
 # Bind to the loopback address only.  Direct external access is 
@@ -679,65 +685,6 @@ EOF
 # Set PowerDNS related config file permissions.
 
 chmod -R 775 /etc/powerdns
-
-# Install the PowerDNS [dnsdist] load balancer and configure it to listen on 
-# port 53 on all network interfaces.  This acts as the immediate upstream DNS
-# for this host node as well as any containers running on this node.  It is
-# also possible to make this an upstream DNS server for machines that are not
-# part of the neonCLUSTER.  Typically, external servers would target the 
-# cluster manager nodes.
-
-curl -4fsSLv ${CURL_RETRY} $<net.pdnsdisturi> -o /tmp/dnsdist.deb
-gdebi --non-interactive /tmp/dnsdist.deb
-rm /tmp/dnsdist.deb
-systemctl stop dnsdist
-
-mkdir -p /etc/dnsdist
-
-# Convert the upstream nameserver IP addresses into a comma separated list 
-# of string suitable for initializing a Lua table.
-
-NAMESERVERS=""
-for address in "${NEON_NET_NAMESERVERS[@]}"
-do
-    if [ "${NAMESERVERS}" != "" ] ; then
-		NAMESERVERS+=","
-	fi
-
-	NAMESERVERS+=\"${address}\"
-done
-
-# [dnsdist] configuration file.  Note that this is is a Lua script.
-
-cat <<EOF > /etc/dnsdist/dnsdist.conf
---#############################################################################
--- PowerDNS [dnsdist] configuration file (Lau language)
-
--- Listen on the standard DNS port 53 on all interfaces.  Enable TCP.
-
-addLocal('0.0.0.0:53', { doTCP=true, reusePort=true })
-
--- Restrict requests to allow only hosts on a private subnet.
-
-addACL('10.0.0.0/8')
-addACL('172.16.0.0/12')
-addACL('192.168.0.0/16')
-
--- Add the upstream DNS servers first and then add the local PowerDNS Authortative
--- Server last.  This ordering is required by the custom server policy Functions
--- below so it will be able to forward [*.cluster] related questions on to the
--- local DNS and other requests to the upstream servers.
-
-upstreamServers = { $NAMESERVERS };
-
-for i = 1, #upstreamServers Do
-   address = upstreamServers[i] + ":53";
-   newServer({ address=address, name=address,  });
-end
-
-EOF
-
-chmod -R 775 /etc/dnsdist
 
 #------------------------------------------------------------------------------
 # Add the Neon tools folder to the [sudo] PATH.

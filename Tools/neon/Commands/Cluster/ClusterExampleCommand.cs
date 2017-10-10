@@ -270,9 +270,9 @@ USAGE:
         //                        be installed on all cluster nodes.  This defaults to
         //                        a known good release.
         //
-        //  PdnsDistUri           URI for the PowerDNS load balancer package to
-        //                        be installed on all cluster nodes.  This defaults to
-        //                        a known good release.
+        //  PdnsRecursorUri       URI for the PowerDNS Recursor package to be installed 
+        //                        on all cluster nodes.  This defaults to a known good 
+        //                        release.
     },
 
     // Options describing the default overlay network created for the 
