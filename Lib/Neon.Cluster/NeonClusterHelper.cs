@@ -632,7 +632,15 @@ namespace Neon.Cluster
 
             if (Environment.GetEnvironmentVariable("NEON_CLUSTER") == null)
             {
-                throw new InvalidOperationException("Current process does not appear to be running as a cluster container with the [/etc/neoncluster/env-host] file mapped in.");
+                // It looks like the host node's [/etc/neoncluster/env-host] script was not
+                // mapped into the current container/process and executed to initialize 
+                // important cluster service environment variables.  We'll go ahead and
+                // set the important ones here.
+
+                Environment.SetEnvironmentVariable("VAULT_ADDR", $"https://neon-vault.cluster:{NeonHostPorts.ProxyVault}");
+                Environment.SetEnvironmentVariable("VAULT_DIRECT_ADDR", $"https://manage-0.neon-vault.cluster:{NetworkPorts.Vault}");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"neon-consul.cluster:{NetworkPorts.Consul}");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://neon-consul.cluster:{NetworkPorts.Consul}");
             }
 
             IsConnected        = true;
@@ -694,7 +702,8 @@ namespace Neon.Cluster
             Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"{NeonHosts.Consul}:{clusterDefinition.Consul.Port}");
             Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{NeonHosts.Consul}:{clusterDefinition.Consul.Port}");
 
-            // Modify the DNS resolver hosts file.
+            // Temporarily modify the local DNS resolver hosts file so we'll be able
+            // resolve common cluster host names.
 
             var hosts = new Dictionary<string, IPAddress>();
 
