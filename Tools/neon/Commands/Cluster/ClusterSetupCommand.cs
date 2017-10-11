@@ -695,57 +695,6 @@ OPTIONS:
         }
 
         /// <summary>
-        /// Generates the custom portion of the <b>/etc/hosts</b> file to be configured
-        /// for a cluster node or in a container via the <b>/etc/neoncluster/env-host</b>
-        /// script.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        /// <returns>The host definitions.</returns>
-        private string GetClusterHostMappings(NodeProxy<NodeDefinition> node)
-        {
-            var sbHosts = new StringBuilder();
-
-            sbHosts.AppendLine();
-            sbHosts.AppendLine("# Internal cluster Consul mappings:");
-            sbHosts.AppendLine();
-
-            sbHosts.AppendLine($"{GetHostsFormattedAddress(node)} {NeonHosts.Consul}");
-
-            sbHosts.AppendLine();
-            sbHosts.AppendLine("# Internal cluster Vault mappings:");
-            sbHosts.AppendLine();
-            sbHosts.AppendLine($"{GetHostsFormattedAddress(node)} {NeonHosts.Vault}");
-
-            foreach (var manager in cluster.Managers)
-            {
-                sbHosts.AppendLine($"{GetHostsFormattedAddress(manager)} {manager.Name}.{NeonHosts.Vault}");
-            }
-
-            if (cluster.Definition.Docker.RegistryCache)
-            {
-                sbHosts.AppendLine();
-                sbHosts.AppendLine("# Internal cluster registry cache related mappings:");
-                sbHosts.AppendLine();
-
-                foreach (var manager in cluster.Managers)
-                {
-                    sbHosts.AppendLine($"{GetHostsFormattedAddress(manager)} {manager.Name}.{NeonHosts.RegistryCache}");
-                }
-            }
-
-            if (cluster.Definition.Log.Enabled)
-            {
-                sbHosts.AppendLine();
-                sbHosts.AppendLine("# Internal cluster log pipeline related mappings:");
-                sbHosts.AppendLine();
-
-                sbHosts.AppendLine($"{GetHostsFormattedAddress(node)} {NeonHosts.LogEsData}");
-            }
-
-            return sbHosts.ToString();
-        }
-
-        /// <summary>
         /// Generates and uploads the <b>/etc/hosts</b> file for a node.
         /// </summary>
         /// <param name="node">The target node.</param>
@@ -761,8 +710,6 @@ $@"
 ff02::1         ip6-allnodes
 ff02::2         ip6-allrouters
 ");
-            sbHosts.Append(GetClusterHostMappings(node));
-
             node.UploadText("/etc/hosts", sbHosts.ToString(), 4, Encoding.UTF8);
         }
 
@@ -806,12 +753,7 @@ export VAULT_ADDR={cluster.Definition.Vault.Uri}
 {vaultDirectLine}
 export CONSUL_HTTP_ADDR={NeonHosts.Consul}:{cluster.Definition.Consul.Port}
 export CONSUL_HTTP_FULLADDR=http://{NeonHosts.Consul}:{cluster.Definition.Consul.Port}
-
-# Append internal cluster DNS mappings to the container's [/etc/hosts] file.
 ");
-            sbEnvHost.AppendLine($"cat <<EOF >> /etc/hosts");
-            sbEnvHost.AppendLine(GetClusterHostMappings(node));
-            sbEnvHost.AppendLine("EOF");
 
             node.UploadText($"{NodeHostFolders.Config}/env-host", sbEnvHost.ToString(), 4, Encoding.UTF8);
         }
