@@ -280,25 +280,23 @@ namespace NeonTool
                 consulOptions += "-ui";
             }
 
-            // Define the network upstream nameserver JSON array.
+            // Format the network upstream nameservers as semicolon separated
+            // to be compatible with the PowerDNS Recursor [forward-zones-recurse]
+            // configuration setting.
 
-            var nameservers = "[ ]";
+            var nameservers = string.Empty;
 
             if (clusterDefinition.Network?.Nameservers != null) // $hack(jeff.lill): [Network] will be null if we're just preparing servers, not doing full setup.
             {
-                nameservers = "[";
-
                 for (int i = 0; i < clusterDefinition.Network.Nameservers.Length; i++)
                 {
                     if (i > 0)
                     {
-                        nameservers += ",";
+                        nameservers += ";";
                     }
 
-                    nameservers += $"\"{clusterDefinition.Network.Nameservers[i].Trim()}\"";
+                    nameservers += clusterDefinition.Network.Nameservers[i].Trim();
                 }
-
-                nameservers += "]";
             }
 
             // Set the variables.
@@ -329,7 +327,7 @@ namespace NeonTool
 
             SetBashVariable(preprocessReader, "net.nameservers", nameservers);
             SetBashVariable(preprocessReader, "net.pdnsserveruri", clusterDefinition.Network.PdnsServerUri);
-            SetBashVariable(preprocessReader, "net.net.pdnsrecursoruri", clusterDefinition.Network.PdnsRecursorUri);
+            SetBashVariable(preprocessReader, "net.pdnsrecursoruri", clusterDefinition.Network.PdnsRecursorUri);
 
             SetBashVariable(preprocessReader, "docker.version", clusterDefinition.Docker.PackageVersion);
 

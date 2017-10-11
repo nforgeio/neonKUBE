@@ -121,35 +121,6 @@ sed -i '/\s*-encrypt\s.*/d' /lib/systemd/system/consul.service
 systemctl daemon-reload
 
 #------------------------------------------------------------------------------
-# $todo(jeff.lill): Delete this
-#
-# At one point in the past, we configured Consul as the cluster DNS.  The theory
-# was that we'd take advantage of its service registration feature to provide a
-# basic programable DNS so we could avoid having to modify local [/etc/hosts]
-# files on nodes and containers.
-#
-# After looking more closely at the Consul DNS model, I've decided to back This
-# out in favor of using PowerDNS and a custom Consul-backed extension.  I'm
-# going to comment out this code for now, just in case I change my mind later.
-
-	#------------------------------------------------------------------------------
-	# Configure the local DNS resolver to override any DHCP or other interface
-	# specific settings and just query the the Consul DNS servers on the cluster
-	# manager nodes.  Note that we're going to enable nameserver rotation so
-	# we'll spread the load over multiple managers.
-
-	# echo "" > /etc/resolvconf/interface-order
-
-	# echo "options rotate" > /etc/resolvconf/resolv.conf.d/base
-
-	# for address in "${NEON_MANAGER_ADDRESSES[@]}"
-	# do
-	# 	echo "nameserver ${address}" >> /etc/resolvconf/resolv.conf.d/base
-	# done
-
-	# resolvconf -u
-
-#------------------------------------------------------------------------------
 
 # Indicate that the script has completed.
 

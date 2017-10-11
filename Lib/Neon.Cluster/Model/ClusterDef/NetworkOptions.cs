@@ -194,11 +194,11 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"[{nameof(PdnsServerUri)}={PdnsServerUri}] is not a valid URI.");
             }
 
-            PdnsDistUri = PdnsDistUri ?? defaultPdnsRecursorUri;
+            PdnsRecursorUri = PdnsRecursorUri ?? defaultPdnsRecursorUri;
 
             if (!Uri.TryCreate(PdnsServerUri, UriKind.Absolute, out var uri2))
             {
-                throw new ClusterDefinitionException($"[{nameof(PdnsDistUri)}={PdnsDistUri}] is not a valid URI.");
+                throw new ClusterDefinitionException($"[{nameof(PdnsRecursorUri)}={PdnsRecursorUri}] is not a valid URI.");
             }
         }
     }

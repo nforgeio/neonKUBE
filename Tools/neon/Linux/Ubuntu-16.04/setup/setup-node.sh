@@ -542,149 +542,87 @@ gdebi --non-interactive /tmp/pdns-recursor.deb
 rm /tmp/pdns-recursor.deb
 systemctl stop pdns-recursor
 
-#------------------------------------------------------------------------------
-# Configure the PowerDNS Authoritative Server.
+# Backup the configuration file installed by the package.
 
-# Install PowerDNS Authoritative Server and configure it to listen on 127.0.0.1:53
-# and configure it to use the BIND backend to perform static lookups.  We're going to 
-# provision an some temporary BIND config and ZONE files for now (for script testing)
-# and upload the production files later on in the setup process.
+cp /etc/powerdns/recursor.conf /etc/powerdns/recursor.conf.backup
 
-curl -4fsSLv ${CURL_RETRY} $<net.pdnsserveruri> -o /tmp/pdns-server.deb
-gdebi --non-interactive /tmp/pdns-server.deb
-rm /tmp/pdns-server.deb
-systemctl stop pdns
+# Generate the recursor's hosts file.
 
-mkdir -p /etc/powerdns/pdns.d
-rm -f /etc/powerdns/pdns.d/*
+cat <<EOF > /etc/powerdns/hosts
+# PowerDNS Recursor authoritatively answers for these hosts.
 
-mkdir -p /etc/powerdns/zones
-rm -f /etc/powerdns/zones/*
+${NEON_NODE_IP}		neon-consul.cluster
+${NEON_NODE_IP}		neon-log-esdata.cluster
 
-cat <<EOF > /etc/powerdns/bindbackend.conf
+${NEON_NODE_IP}		neon-registry-cache.cluster
+${NEON_NODE_IP}		manage-0.neon-registry-cache.cluster
+
+${NEON_NODE_IP}		neon-vault.cluster
+${NEON_NODE_IP}		manage-0.neon-vault.cluster
+EOF
+
+# Generate the custom settings and then append them onto the end of the
+# default settings installed with by the recursor package.
+
+cat <<EOF >> /etc/powerdns/recursor.custom.conf
 ###############################################################################
-# PowerDNS Server BIND backend configuration.
-
-options {
-    allow-query { any; };
-    allow-query-cache { any; };
-};
-
-zone "cluster" { 
-    type master; 
-    file "/etc/powerdns/zones/cluster.zone"; 
-    allow-query { any; };
-    allow-query-cache { any; };
-};
-
-zone "neon-registry-cache.cluster" { 
-    type master; 
-    file "/etc/powerdns/zones/neon-registry-cache.cluster.zone"; 
-    allow-query { any; };
-    allow-query-cache { any; };
-};
-
-zone "neon-vault.cluster" { 
-    type master; 
-    file "/etc/powerdns/zones/neon-vault.cluster.zone"; 
-    allow-query { any; };
-    allow-query-cache { any; };
-};
-EOF
-
-cat <<EOF > /etc/powerdns/zones/cluster.zone
-;##############################################################################
-; Zone file for the [.cluster] TLD.
-
-\$ORIGIN cluster.
-\$TTL 1h
-
-@ 1D IN  SOA ns1.cluster. hostmaster.cluster. (
-					2017100900 ; serial
-					3H ; refresh
-					15 ; retry
-					1w ; expire
-					3h ; nxdomain ttl
-					)
-
-neon-consul         IN 	A 	${NEON_NODE_IP}
-neon-log-esdata		IN  A   ${NEON_NODE_IP}
-EOF
-
-cat <<EOF > /etc/powerdns/zones/neon-registry-cache.cluster.zone
-;##############################################################################
-; Zone file for the [neon-registry-cache.cluster] domain.
-
-\$ORIGIN neon-registry-cache.cluster.
-\$TTL 1h
-
-@ 1D IN  SOA ns1.cluster. hostmaster.cluster. (
-					2017100900 ; serial
-					3H ; refresh
-					15 ; retry
-					1w ; expire
-					3h ; nxdomain ttl
-					)
-
-manage-0 		IN  A 		${NEON_NODE_IP}
-EOF
-
-cat <<EOF > /etc/powerdns/zones/neon-vault.cluster.zone
-;##############################################################################
-; Zone file for the [neon-vault.cluster] domain.
-
-\$ORIGIN neon-vault.cluster.
-\$TTL 1h
-
-@ 1D IN  SOA ns1.cluster. hostmaster.cluster. (
-                 2017100900 ; serial
-                 3H ; refresh
-                 15 ; retry
-                 1w ; expire
-                 3h ; nxdomain ttl
-                 )
-
-@        		IN  A		${NEON_NODE_IP}
-manage-0		IN  A		${NEON_NODE_IP}
-EOF
-
-cat <<EOF > /etc/powerdns/pdns.d/neoncluster.pdns.conf
-###############################################################################
-# neonCLUSTER custom PowerDNS Authoritative Server configuration
+# neonCLUSTER custom PowerDNS Recursor Server configuration overrides to be
+# appended unto the end of the [recursor.conf] file installed by the PowerDNS
+# Recursor package.
 
 #################################
-# Listening on port 127.0.0.1:53.  This will avoid port conflicts with the
-# pdns-recursor which will be bound to the node's private IP address.
+# Allow requests only from well-known Internet private subnets as well as
+# the local  loopback interfaces.
+allow-from=10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8
+
+################################
+# Authoritatively answer from the recursor [hosts] file.
 #
-local-port=53
+etc-hosts-file=/etc/powerdns/hosts
+export-etc-hosts=yes
+
+################################
+# Configure recursion to the upstream DNS servers.
+forward-zones-recurse=.=${NEON_NET_NAMESERVERS}
 
 #################################
-# Bind to the loopback address only.  Direct external access is 
-# not required.
+# Bind to all network interfaces.
 #
-local-address=127.0.0.1
+local-address=0.0.0.0
 
 #################################
-# Bind backend settings.
-launch+=bind
-bind-config=/etc/powerdns/bindbackend.conf
-bind-check-interval=60
+# Cache responses for a maximum of 5 minutes (potentially overriding
+# the TTL returned in the original answer).
+#
+max-cache-ttl=300
 
 #################################
 # disable-syslog	Disable logging to syslog, useful when running inside a supervisor that logs stdout
 #
 disable-syslog=yes
 
-# \$todo(jeff.lill): DELETE THESE DEBUG SETTINGS!
-
-loglevel=5
-log-dns-details=yes
-log-dns-queries=yes
+#################################
+# Debugging related settings.  Be sure to comment these out for production clusters.
+# loglevel=6
+# quiet=no
 EOF
 
-# Set PowerDNS related config file permissions.
+cat /etc/powerdns/recursor.custom.conf >> /etc/powerdns/recursor.conf
+
+# Set PowerDNS related config file permissions and then restart the 
+# service to pick up the new config.
 
 chmod -R 775 /etc/powerdns
+systemctl start pdns-recursor
+sleep 5		# Give the recursor some time to start.
+
+# Configure the local DNS resolver to override any DHCP or other interface
+# specific settings and just query the PowerDNS Recursor running locally
+# on the this host node.
+
+echo "" > /etc/resolvconf/interface-order
+echo "nameserver ${NEON_NODE_IP}" >> /etc/resolvconf/resolv.conf.d/base
+resolvconf -u
 
 #------------------------------------------------------------------------------
 # Add the Neon tools folder to the [sudo] PATH.
