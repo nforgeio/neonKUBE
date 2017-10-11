@@ -580,7 +580,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Simulates running the current application within the cluster.
+        /// Simulates connecting the current application to the to the cluster.
         /// </summary>
         /// <param name="login">The cluster login information.</param>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
@@ -614,13 +614,12 @@ namespace Neon.Cluster
 
         /// <summary>
         /// <para>
-        /// Indicates that <see cref="NeonClusterHelper"/> should consider the current
-        /// application to be connected to the cluster.
+        /// Connects the current application to the to the cluster.
         /// </para>
         /// <note>
         /// This should only be called by services that are actually deployed in running 
         /// cluster containers that have mapped in the cluster node environment variables
-        /// and host DNS mappings from <b>/etc/neoncluster/host-env</b>.
+        /// and host DNS mappings from <b>/etc/neoncluster/env-host</b>.
         /// </note>
         /// </summary>
         /// <exception cref="InvalidOperationException">
@@ -633,7 +632,7 @@ namespace Neon.Cluster
 
             if (Environment.GetEnvironmentVariable("NEON_CLUSTER") == null)
             {
-                throw new InvalidOperationException("Current process does not appear to be running as a cluster container with the [/etc/neoncluster/host-env] file mapped in.");
+                throw new InvalidOperationException("Current process does not appear to be running as a cluster container with the [/etc/neoncluster/env-host] file mapped in.");
             }
 
             IsConnected        = true;
