@@ -35,10 +35,11 @@ namespace NeonClusterManager
     {
         private const string serviceName = "neon-cluster-manager";
 
-        private static readonly string serviceRootKey      = "neon/service/neon-proxy-manager";
-        private static readonly string nodePollSecondsKey  = $"{serviceRootKey}/node_poll_seconds";
-        private static readonly string vaultPollSecondsKey = $"{serviceRootKey}/vault_poll_seconds";
-        private static readonly string clusterDefKey       = "neon/cluster/definition.deflate";
+        private static readonly string serviceRootKey        = "neon/service/neon-cluster-manager";
+        private static readonly string nodePollSecondsKey    = $"{serviceRootKey}/node_poll_seconds";
+        private static readonly string vaultPollSecondsKey   = $"{serviceRootKey}/vault_poll_seconds";
+        private static readonly string managerPollSecondsKey = $"{serviceRootKey}/manager_poll_seconds";
+        private static readonly string clusterDefKey         = "neon/cluster/definition.deflate";
 
         private static ProcessTerminator        terminator;
         private static INeonLogger              log;
@@ -47,7 +48,9 @@ namespace NeonClusterManager
         private static VaultCredentials         vaultCredentials;
         private static TimeSpan                 nodePollInterval;
         private static TimeSpan                 vaultPollInterval;
+        private static TimeSpan                 managerPollInterval;
         private static ClusterDefinition        cachedClusterDefinition;
+        private static List<string>             vaultUris;
 
         /// <summary>
         /// Application entry point.
@@ -158,11 +161,19 @@ namespace NeonClusterManager
                 await consul.KV.PutDouble(vaultPollSecondsKey, 30.0);
             }
 
-            nodePollInterval  = TimeSpan.FromSeconds(await consul.KV.GetDouble(nodePollSecondsKey));
-            vaultPollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(vaultPollSecondsKey));
+            if (!await consul.KV.Exists(managerPollSecondsKey))
+            {
+                log.LogInfo($"Persisting setting [{managerPollSecondsKey}=1800.0]");
+                await consul.KV.PutDouble(managerPollSecondsKey, 1800);
+            }
 
-            log.LogInfo(() => $"Using setting [{nodePollSecondsKey}={nodePollInterval}]");
-            log.LogInfo(() => $"Using setting [{vaultPollSecondsKey}={vaultPollInterval}]");
+            nodePollInterval    = TimeSpan.FromSeconds(await consul.KV.GetDouble(nodePollSecondsKey));
+            vaultPollInterval   = TimeSpan.FromSeconds(await consul.KV.GetDouble(vaultPollSecondsKey));
+            managerPollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(managerPollSecondsKey));
+
+            log.LogInfo(() => $"Using setting [{nodePollSecondsKey}={nodePollInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{vaultPollSecondsKey}={vaultPollInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{managerPollSecondsKey}={managerPollInterval.TotalSeconds}]");
 
             // Parse the Vault credentials from the [neon-cluster-manager-vaultkeys] 
             // secret, if it exists.
@@ -191,74 +202,26 @@ namespace NeonClusterManager
 
             var tasks = new List<Task>();
 
-            tasks.Add(NodePoller());
+            tasks.Add(NodePollerAsync());
 
-            // $hack(jeff.lill):
-            //
             // We need to start a vault poller for the Vault instance running on each manager
-            // node.  We're going to construct the direct Vault URIs by parsing the Vault
-            // host names from the [hosts] file.  The Vault host names will look like:
-            //
-            //      *.neon-vault.cluster
+            // node.  We're going to construct the direct Vault URIs by querying Docker for
+            // the current cluster nodes and looking for the managers.
 
-            var vaultUris = new List<string>();
-
-            if (NeonHelper.IsWindows)
-            {
-                // Assume that we're running in development mode if we're on Windows.
-
-                vaultUris.Add(Environment.GetEnvironmentVariable("VAULT_DIRECT"));
-            }
-            else
-            {
-                using (var reader = new StreamReader(new FileStream("/etc/hosts", FileMode.Open, FileAccess.Read)))
-                {
-                    foreach (var line in reader.Lines())
-                    {
-                        var extract = line.Trim();
-
-                        // Strip out any comments.
-
-                        var commentPos = line.IndexOf('#');
-
-                        if (commentPos != -1)
-                        {
-                            extract = extract.Substring(0, commentPos).Trim();
-                        }
-
-                        if (string.IsNullOrEmpty(extract))
-                        {
-                            continue;   // Ignore blank lines
-                        }
-
-                        // Extract the hostname
-
-                        var hostPos = 0;
-
-                        while (hostPos < extract.Length && !char.IsLetter(extract[hostPos]))
-                        {
-                            hostPos++;
-                        }
-
-                        if (hostPos >= extract.Length)
-                        {
-                            continue;   // Ignore malformed DNS entries.
-                        }
-
-                        var hostname = extract.Substring(hostPos);
-
-                        if (hostname.EndsWith(".neon-vault.cluster", StringComparison.OrdinalIgnoreCase))
-                        {
-                            vaultUris.Add($"https://{hostname}:{NetworkPorts.Vault}");
-                        }
-                    }
-                }
-            }
+            vaultUris = await GetVaultUrisAsync();
 
             foreach (var uri in vaultUris)
             {
-                tasks.Add(VaultPoller(uri));
+                tasks.Add(VaultPollerAsync(uri));
             }
+
+            // Start a task that periodically checks for changes to the set of cluster managers 
+            // (e.g. if a manager is added or removed).  This task will cause the service to exit
+            // so it can be restarted automatically by Docker to respond to the change.
+
+            tasks.Add(ManagerPollerAsync());
+
+            // Wait for all tasks to exit cleanly for a normal shutdown.
 
             await NeonHelper.WaitAllAsync(tasks);
 
@@ -266,11 +229,38 @@ namespace NeonClusterManager
         }
 
         /// <summary>
+        /// Returns the list of URIs targeting Vault on each current manager node.
+        /// </summary>
+        /// <returns>The Vault URIs.</returns>
+        private static async Task<List<string>> GetVaultUrisAsync()
+        {
+            var vaultUris = new List<string>();
+
+            if (NeonHelper.IsWindows)
+            {
+                // Assume that we're running in development mode if we're on Windows.
+
+                vaultUris.Add(Environment.GetEnvironmentVariable("VAULT_DIRECT_ADDR"));
+                return vaultUris;
+            }
+
+            var clusterNodes = await docker.NodeListAsync();
+
+            foreach (var managerNode in clusterNodes.Where(n => n.Role == "manager")
+                .OrderBy(n => n.Hostname))
+            {
+                vaultUris.Add($"https://{managerNode.Hostname}.neon-vault.cluster:{NetworkPorts.Vault}");
+            }
+
+            return vaultUris;
+        }
+
+        /// <summary>
         /// Handles polling of Docker swarm about the cluster nodes and updating the cluster
-        /// definition and hash as changes are detected.
+        /// definition and hash when changes are detected.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task NodePoller()
+        private static async Task NodePollerAsync()
         {
             while (true)
             {
@@ -354,7 +344,7 @@ namespace NeonClusterManager
         /// </summary>
         /// <param name="vaultUri">The URI for the Vault instance being managed.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task VaultPoller(string vaultUri)
+        private static async Task VaultPollerAsync(string vaultUri)
         {
             // Each cluster manager instance is only going to manage the Vault instance
             // running on the same host manager node.
@@ -466,6 +456,71 @@ namespace NeonClusterManager
 
                     await Task.Delay(vaultPollInterval, terminator.CancellationToken);
                 }
+            }
+        }
+
+        /// <summary>
+        /// Handles detection of changes to the cluster's manager nodes.  The process will
+        /// be terminated when manager nodes are added or removed so that Docker will restart
+        /// the service to begin handling the changes.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private static async Task ManagerPollerAsync()
+        {
+            while (true)
+            {
+                // We don't need to poll that often because cluster managers
+                // will rarely change.
+
+                await Task.Delay(managerPollInterval);
+
+                try
+                {
+                    if (terminator.CancellationToken.IsCancellationRequested)
+                    {
+                        log.LogDebug(() => "Manager: terminating.");
+                        return;
+                    }
+
+                    log.LogDebug(() => "Manager: polling for cluster manager changes.");
+
+                    var latestVaultUris = await GetVaultUrisAsync();
+                    var changed         = vaultUris.Count != latestVaultUris.Count;
+
+                    if (!changed)
+                    {
+                        for (int i = 0; i < vaultUris.Count; i++)
+                        {
+                            if (vaultUris[i] != latestVaultUris[i])
+                            {
+                                changed = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (changed)
+                    {
+                        log.LogInfo("Manager: detected one or more cluster manager node changes.");
+                        log.LogInfo("Manager: exiting the service so that Docker will restart it to pick up the manager node changes.");
+                        terminator.Exit();
+                    }
+                    else
+                    {
+                        log.LogDebug(() => "Manager: no manager changes detected.");
+                    }
+                }
+                catch (OperationCanceledException)
+                {
+                    log.LogDebug(() => "Manager: terminating.");
+                    return;
+                }
+                catch (Exception e)
+                {
+                    log.LogError($"Manager", e);
+                }
+
+                await Task.Delay(vaultPollInterval, terminator.CancellationToken);
             }
         }
     }
