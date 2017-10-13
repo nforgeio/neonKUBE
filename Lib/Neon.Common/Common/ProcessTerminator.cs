@@ -16,9 +16,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.Diagnostics;
 
-using Renci.SshNet;
-
-namespace Neon.Cluster
+namespace Neon.Common
 {
     /// <summary>
     /// Gracefully handles SIGTERM signals sent to a process to terminate itself.
@@ -48,6 +46,10 @@ namespace Neon.Cluster
     /// any activities and saved state so that the process will be terminated immediately.
     /// Otherwise, the process will be terminated when the parent process' timeout
     /// is finally exceeded.
+    /// </para>
+    /// <para>
+    /// Applications can also call <see cref="Exit(int)"/> to proactively signal that
+    /// the process should terminate gracefully.
     /// </para>
     /// </remarks>
     public sealed class ProcessTerminator
