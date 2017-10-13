@@ -4,11 +4,13 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Cluster</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>6.0.1.0</Version>
+    <Version>6.0.2.0</Version>
     <Company>Jeff Lill</Company>
     <Product>neonCLUSTER</Product>
     <Description>Provides NeonCluster management and service capabilities.</Description>
-    <PackageReleaseNotes>Aligning version number.  No signficant changes.</PackageReleaseNotes>
+    <PackageReleaseNotes>* [BREAKING] Relocated ProcessorTerminator to Neon.Common.
+* [BREAKING] Use PowerDNS Recursor instead of [/etc/hosts] and [/etc/neoncluster/env-host] to resolve host related names on host nodes and containers.  Consul is no longer configured as the DNS.  Existing clusters must be redeployed.
+* Updated to public Couchbase packages (they fixed a Linq2Couchbase bug).</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
@@ -31,8 +33,8 @@
 
   <ItemGroup>
     <PackageReference Include="Consul" Version="0.7.2.3" />
-    <PackageReference Include="CouchbaseNetClient" Version="2.4.8" />
-    <PackageReference Include="Linq2Couchbase" Version="1.3.2.1" />
+    <PackageReference Include="CouchbaseNetClient" Version="2.5.1" />
+    <PackageReference Include="Linq2Couchbase" Version="1.3.3" />
     <PackageReference Include="Microsoft.Azure.Management.Fluent" Version="1.1.3" />
     <PackageReference Include="Microsoft.Azure.Management.Network" Version="12.0.0-preview" />
     <PackageReference Include="Microsoft.Azure.Management.ResourceManager" Version="1.6.0-preview" />
