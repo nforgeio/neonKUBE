@@ -79,35 +79,7 @@ namespace Neon.Cluster
             AssemblyLoadContext.Default.Unloading +=
                 context =>
                 {
-                    if (readyToExit)
-                    {
-                        // Application has already indicated that it has terminated.
-
-                        return;
-                    }
-
-                    log?.LogInfo(() => $"SIGTERM received: Stopping process [timeout={Timeout}]]");
-
-                    cts.Cancel();
-
-                    lock (handlers)
-                    {
-                        foreach (var handler in handlers)
-                        {
-                            new Thread(new ThreadStart(handler)).Start();
-                        }
-                    }
-
-                    try
-                    {
-                        NeonHelper.WaitFor(() => readyToExit, Timeout);
-                        log?.LogInfo(() => "Process stopped gracefully.");
-                        Environment.Exit(0);
-                    }
-                    catch (TimeoutException)
-                    {
-                        log?.LogWarn(() => $"Process did not stop within [{timeout}].");
-                    }
+                    ExitInternal();
                 };
         }
 
@@ -149,6 +121,62 @@ namespace Neon.Cluster
         public void ReadyToExit()
         {
             readyToExit = true;
+        }
+
+        /// <summary>
+        /// Cleanly terminates the current process (for internal use).
+        /// </summary>
+        /// <param name="exitCode">Optional process exit code (defaults to <b>0</b>).</param>
+        private void ExitInternal(int exitCode = 0)
+        {
+            if (readyToExit)
+            {
+                // Application has already indicated that it has terminated.
+
+                return;
+            }
+
+            log?.LogInfo(() => $"SIGTERM received: Stopping process [timeout={Timeout}]]");
+
+            cts.Cancel();
+
+            lock (handlers)
+            {
+                foreach (var handler in handlers)
+                {
+                    new Thread(new ThreadStart(handler)).Start();
+                }
+            }
+
+            try
+            {
+                NeonHelper.WaitFor(() => readyToExit, Timeout);
+                log?.LogInfo(() => "Process stopped gracefully.");
+            }
+            catch (TimeoutException)
+            {
+                log?.LogWarn(() => $"Process did not stop within [{Timeout}].");
+            }
+
+            Environment.Exit(exitCode);
+        }
+
+        /// <summary>
+        /// Cleanly terminates the current process.
+        /// </summary>
+        /// <param name="exitCode">Optional process exit code (defaults to <b>0</b>).</param>
+        public void Exit(int exitCode = 0)
+        {
+            if (readyToExit)
+            {
+                // Application has already indicated that it has terminated so we don't
+                // need to go through the normal shutdown sequence.
+
+                Environment.Exit(exitCode);
+                return;
+            }
+
+            ExitInternal(exitCode);
         }
     }
 }
