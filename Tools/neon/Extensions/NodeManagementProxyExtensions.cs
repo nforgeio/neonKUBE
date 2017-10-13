@@ -101,6 +101,80 @@ namespace NeonTool
         }
 
         /// <summary>
+        /// Returns the IP address for a node suitable for including in the
+        /// <b>/etc/hosts</b> file.  
+        /// </summary>
+        /// <param name="nodeDefinition">The target node definition.</param>
+        /// <returns>
+        /// The IP address, left adjusted with necessary spaces so that the
+        /// host definitions will align nicely.
+        /// </returns>
+        private static string GetHostsFormattedAddress(NodeDefinition nodeDefinition)
+        {
+            const string ip4Max = "255.255.255.255";
+
+            var address = nodeDefinition.PrivateAddress.ToString();
+
+            if (address.Length < ip4Max.Length)
+            {
+                address += new string(' ', ip4Max.Length - address.Length);
+            }
+
+            return address;
+        }
+
+        /// <summary>
+        /// Generates the PowerDNS Recursor hosts file for a node.  This will be uploaded
+        /// to <b>/etc/powerdns/hosts</b>.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="nodeDefinition">The target node definition.</param>
+        /// <returns>The host definitions.</returns>
+        private static string GetPowerDnsHosts(ClusterDefinition clusterDefinition, NodeDefinition nodeDefinition)
+        {
+            var sbHosts = new StringBuilder();
+
+            sbHosts.AppendLineLinux("# PowerDNS Recursor authoritatively answers [*.cluster] hosts.");
+            sbHosts.AppendLineLinux("# on the local node using these mappings.");
+            sbHosts.AppendLineLinux();
+
+            sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {NeonHosts.Consul}");
+
+            sbHosts.AppendLineLinux();
+            sbHosts.AppendLineLinux("# Internal cluster Vault mappings:");
+            sbHosts.AppendLineLinux();
+            sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {NeonHosts.Vault}");
+
+            foreach (var manager in clusterDefinition.Managers)
+            {
+                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{NeonHosts.Vault}");
+            }
+
+            if (clusterDefinition.Docker.RegistryCache)
+            {
+                sbHosts.AppendLineLinux();
+                sbHosts.AppendLineLinux("# Internal cluster registry cache related mappings:");
+                sbHosts.AppendLineLinux();
+
+                foreach (var manager in clusterDefinition.Managers)
+                {
+                    sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(manager)} {manager.Name}.{NeonHosts.RegistryCache}");
+                }
+            }
+
+            if (clusterDefinition.Log.Enabled)
+            {
+                sbHosts.AppendLineLinux();
+                sbHosts.AppendLineLinux("# Internal cluster log pipeline related mappings:");
+                sbHosts.AppendLineLinux();
+
+                sbHosts.AppendLineLinux($"{GetHostsFormattedAddress(nodeDefinition)} {NeonHosts.LogEsData}");
+            }
+
+            return sbHosts.ToString();
+        }
+
+        /// <summary>
         /// Sets cluster definition related variables for a <see cref="PreprocessReader"/>.
         /// </summary>
         /// <param name="preprocessReader">The reader.</param>
@@ -326,8 +400,9 @@ namespace NeonTool
             SetBashVariable(preprocessReader, "ntp.worker.sources", workerTimeSources);
 
             SetBashVariable(preprocessReader, "net.nameservers", nameservers);
-            SetBashVariable(preprocessReader, "net.pdnsserveruri", clusterDefinition.Network.PdnsServerUri);
-            SetBashVariable(preprocessReader, "net.pdnsrecursoruri", clusterDefinition.Network.PdnsRecursorUri);
+            SetBashVariable(preprocessReader, "net.powerdns.server.uri", clusterDefinition.Network.PdnsServerUri);
+            SetBashVariable(preprocessReader, "net.powerdns.recursor.uri", clusterDefinition.Network.PdnsRecursorUri);
+            preprocessReader.Set("net.powerdns.recursor.hosts", GetPowerDnsHosts(clusterDefinition, nodeDefinition));
 
             SetBashVariable(preprocessReader, "docker.version", clusterDefinition.Docker.PackageVersion);
 

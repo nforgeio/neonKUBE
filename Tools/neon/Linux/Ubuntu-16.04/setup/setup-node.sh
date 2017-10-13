@@ -537,7 +537,7 @@ systemctl restart neon-security-cleaner
 #------------------------------------------------------------------------------
 # Configure the PowerDNS Recursor.
 
-curl -4fsSLv ${CURL_RETRY} $<net.pdnsrecursoruri> -o /tmp/pdns-recursor.deb
+curl -4fsSLv ${CURL_RETRY} $<net.powerdns.recursor.uri> -o /tmp/pdns-recursor.deb
 gdebi --non-interactive /tmp/pdns-recursor.deb
 rm /tmp/pdns-recursor.deb
 systemctl stop pdns-recursor
@@ -546,19 +546,13 @@ systemctl stop pdns-recursor
 
 cp /etc/powerdns/recursor.conf /etc/powerdns/recursor.conf.backup
 
-# Generate the recursor's hosts file.
+# Generate [/etc/powerdns/hosts] file that the PowerDNS Recursor
+# will use to authoritatively answer local cluster questions.  Note
+# that the $<net.powerdns.recursor.hosts> macro is initialized to 
+# the host entries for this specific node.
 
 cat <<EOF > /etc/powerdns/hosts
-# PowerDNS Recursor authoritatively answers for these hosts.
-
-${NEON_NODE_IP}		neon-consul.cluster
-${NEON_NODE_IP}		neon-log-esdata.cluster
-
-${NEON_NODE_IP}		neon-registry-cache.cluster
-${NEON_NODE_IP}		manage-0.neon-registry-cache.cluster
-
-${NEON_NODE_IP}		neon-vault.cluster
-${NEON_NODE_IP}		manage-0.neon-vault.cluster
+$<net.powerdns.recursor.hosts>
 EOF
 
 # Generate the custom settings and then append them onto the end of the

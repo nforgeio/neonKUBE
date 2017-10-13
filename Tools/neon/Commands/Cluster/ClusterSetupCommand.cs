@@ -672,29 +672,6 @@ OPTIONS:
         }
 
         /// <summary>
-        /// Returns the IP address for a node suitable for including in the
-        /// <b>/etc/hosts</b> file.  
-        /// </summary>
-        /// <param name="node">The cluster node.</param>
-        /// <returns>
-        /// The IP address, left adjusted with necessary spaces so that the
-        /// host definitions will align nicely.
-        /// </returns>
-        private string GetHostsFormattedAddress(NodeProxy<NodeDefinition> node)
-        {
-            const string ip4Max = "255.255.255.255";
-
-            var address = node.Metadata.PrivateAddress.ToString();
-
-            if (address.Length < ip4Max.Length)
-            {
-                address += new string(' ', ip4Max.Length - address.Length);
-            }
-
-            return address;
-        }
-
-        /// <summary>
         /// Generates and uploads the <b>/etc/hosts</b> file for a node.
         /// </summary>
         /// <param name="node">The target node.</param>
