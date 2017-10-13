@@ -177,8 +177,8 @@ namespace NeonProxyManager
             pollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(pollSecondsKey));
             certWarnTime = TimeSpan.FromDays(await consul.KV.GetDouble(certWarnDaysKey));
 
-            log.LogInfo(() => $"Using setting [{pollSecondsKey}={pollInterval}]");
-            log.LogInfo(() => $"Using setting [{certWarnDaysKey}={certWarnTime}]");
+            log.LogInfo(() => $"Using setting [{pollSecondsKey}={pollInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{certWarnDaysKey}={certWarnTime.TotalSeconds}]");
 
             // The implementation is pretty straight forward: We're going to watch
             // the [neon/service/neon-proxy-manager/conf/] prefix for changes 
