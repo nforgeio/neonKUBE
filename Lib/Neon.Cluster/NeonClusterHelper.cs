@@ -464,7 +464,7 @@ namespace Neon.Cluster
         public static ClusterProxy Cluster { get; private set; } = null;
 
         /// <summary>
-        /// Attempts to simulate running the current application within the currently logged-in
+        /// Simulates running the current application within the currently logged-in
         /// neonCLUSTER for external tools as well as for development and debugging purposes.
         /// </summary>
         /// <param name="secrets">Optional emulated Docker secrets.</param>

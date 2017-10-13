@@ -89,7 +89,7 @@ namespace Neon.Docker
         public DateTimeOffset UpdatedAt { get; private set; }
 
         /// <summary>
-        /// Returns the node role.
+        /// Returns the node role (currently one of <b>"manager"</b> or <b>"worker"</b>).
         /// </summary>
         public string Role { get; private set; }
 
