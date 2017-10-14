@@ -846,6 +846,22 @@ export CONSUL_HTTP_FULLADDR=http://{NeonHosts.Consul}:{cluster.Definition.Consul
 
             logOptions.Add("tag", "");
             logOptions.Add("fluentd-async-connect", "true");
+
+            // The default Docker behavior is to attempt to connect to Fluentd
+            // when Docker starts a maximum of 10 times at 1 second intervals
+            // before permanantly giving up.  I've see this unfortunate behavior
+            // happen after a cluster reboot.  The solution is to set the number
+            // retries to a very large number (1B * 1s > 11K years).
+
+            logOptions.Add("fluentd-max-retries", "1000000000");
+
+            // Be default, the Fluentd log driver buffers container stdout to
+            // RAM up to the container's limit.  This could cause RAM to seriously
+            // bloat if the log pipeline stalls.  We're going to have Docker limit
+            // containers to 5MB RAM buffer before logging to disk.
+
+            logOptions.Add("fluentd-buffer-limit", $"{5 * 1024 * 1024}");
+
             settings.Add("log-opts", logOptions);
 
             switch (Program.OSProperties.StorageDriver)
@@ -1467,7 +1483,7 @@ $@"docker login \
                             "neoncluster/neon-proxy-vault");
 
                     steps.Add(command);
-                    steps.Add(CommandStep.CreateSudo(cluster.FirstManager.Name, "sleep 15"));   // $hack(jeff.lill): Fragile: Give Vault proxy a chance to start.
+                    steps.Add(CommandStep.CreateSudo(cluster.FirstManager.Name, "sleep 15"));  // $hack(jeff.lill): Fragile: Give Vault proxy a chance to start.
                     steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
 
                     cluster.Configure(steps);
