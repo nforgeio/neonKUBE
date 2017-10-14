@@ -10,6 +10,7 @@ using System.Threading;
 
 using Microsoft.AspNetCore;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Logging;
@@ -69,6 +70,19 @@ namespace Neon.Web
             loggerFactory.AddProvider(app.ApplicationServices.GetService<ILoggerProvider>());
 
             return app;
+        }
+
+        //---------------------------------------------------------------------
+        // Microsoft.AspNetCore.Http.HttpRequest extensions.
+
+        /// <summary>
+        /// Returns the full URI for an <see cref="HttpRequest"/> (not including the port number).
+        /// </summary>
+        /// <param name="request">The request.</param>
+        /// <returns>The fully qualified URI including any query parameters.</returns>
+        public static string GetUri(this HttpRequest request)
+        {
+            return $"{request.Scheme}://{request.Host}{request.Path}{request.QueryString}";
         }
     }
 }
