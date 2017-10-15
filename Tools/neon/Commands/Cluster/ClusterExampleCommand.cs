@@ -525,25 +525,25 @@ USAGE:
         // Describe the worker cluster nodes by leaving [Manager=false].
         // Swarm will schedule containers to run on these nodes.
 
-        ""node-0"": {
+        ""worker-0"": {
             ""PrivateAddress"": ""10.0.1.40"",
             ""Labels"": {
                 ""StorageSSD"": true
             }
         },
-        ""node-1"": {
+        ""worker-1"": {
             ""PrivateAddress"": ""10.0.1.41"",
             ""Labels"": {
                 ""StorageSSD"": true
             }
         },
-        ""node-2"": {
+        ""worker-2"": {
             ""PrivateAddress"": ""10.0.1.42"",
             ""Labels"": {
                 ""StorageSSD"": true
             }
         },
-        ""node-3"": {
+        ""worker-3"": {
             ""PrivateAddress"": ""10.0.1.43"",
             ""Labels"": {
                 ""StorageSSD"": true
