@@ -358,19 +358,26 @@ namespace NeonTool
             // to be compatible with the PowerDNS Recursor [forward-zones-recurse]
             // configuration setting.
 
+            if (clusterDefinition.Network?.Nameservers == null)
+            {
+                // $hack(jeff.lill): 
+                //
+                // [Network] will be null if we're just preparing servers, not doing full setup
+                // so we'll set this to the defaults to avoid null references below.
+
+                clusterDefinition.Network = new NetworkOptions();
+            }
+
             var nameservers = string.Empty;
 
-            if (clusterDefinition.Network?.Nameservers != null) // $hack(jeff.lill): [Network] will be null if we're just preparing servers, not doing full setup.
+            for (int i = 0; i < clusterDefinition.Network.Nameservers.Length; i++)
             {
-                for (int i = 0; i < clusterDefinition.Network.Nameservers.Length; i++)
+                if (i > 0)
                 {
-                    if (i > 0)
-                    {
-                        nameservers += ";";
-                    }
-
-                    nameservers += clusterDefinition.Network.Nameservers[i].Trim();
+                    nameservers += ";";
                 }
+
+                nameservers += clusterDefinition.Network.Nameservers[i].Trim();
             }
 
             // Set the variables.
@@ -399,10 +406,75 @@ namespace NeonTool
             SetBashVariable(preprocessReader, "ntp.manager.sources", managerTimeSources);
             SetBashVariable(preprocessReader, "ntp.worker.sources", workerTimeSources);
 
-            SetBashVariable(preprocessReader, "net.nameservers", nameservers);
-            SetBashVariable(preprocessReader, "net.powerdns.server.uri", clusterDefinition.Network.PdnsServerUri);
-            SetBashVariable(preprocessReader, "net.powerdns.recursor.uri", clusterDefinition.Network.PdnsRecursorUri);
+            SetBashVariable(preprocessReader, "net.dynamicdns.enabled", (clusterDefinition.Network.DynamicDns && nodeDefinition.IsManager) ? "true" : "false");
+            SetBashVariable(preprocessReader, "net.powerdns.port", NeonHostPorts.PowerDNS);
+            SetBashVariable(preprocessReader, "net.dynamicdns.port", NeonHostPorts.DynamicDNS);
+
+            if (clusterDefinition.Network.DynamicDns)
+            {
+                var forwardZones = string.Empty;
+
+                foreach (var manager in clusterDefinition.Managers)
+                {
+                    if (forwardZones.Length > 0)
+                    {
+                        forwardZones += ';';
+                    }
+
+                    forwardZones += $"{manager.PrivateAddress}:{NeonHostPorts.PowerDNS}";
+                }
+
+                preprocessReader.Set("net.dynamic.forwardzones", $"forward-zones=cluster={forwardZones}");
+            }
+            else
+            {
+                // Don't configure any PowerDNS Recursor forward zones if the cluster
+                // Dynamic DNS is disabled.
+
+                preprocessReader.Set("net.dynamic.forwardzones", string.Empty);
+            }
+
+            if (clusterDefinition.Network.DynamicDns)
+            {
+                // When we're deploying the Dynamic DNS, the manager nodes will use the 
+                // configured name servers as the cluster's upstream DNS and the worker
+                // nodes will be configured to query the name servers.
+
+                if (nodeDefinition.IsManager)
+                {
+                    preprocessReader.Set("net.nameservers", nameservers);
+                }
+                else
+                {
+                    var managerNameservers = string.Empty;
+
+                    foreach (var manager in clusterDefinition.Managers)
+                    {
+                        if (managerNameservers.Length > 0)
+                        {
+                            managerNameservers += ";";
+                        }
+
+                        managerNameservers += manager.PrivateAddress.ToString();
+                    }
+
+                    preprocessReader.Set("net.nameservers", managerNameservers);
+                }
+            }
+            else
+            {
+                // All servers use the configured upstream nameservers when we're not
+                // deploying the Dynamic DNS.
+
+                preprocessReader.Set("net.nameservers", nameservers);
+            }
+
+            SetBashVariable(preprocessReader, "net.powerdns.server.package.uri", clusterDefinition.Network.PdnsServerPackageUri);
+            SetBashVariable(preprocessReader, "net.powerdns.backend.remote.package.uri", clusterDefinition.Network.PdnsBackendRemotePackageUri);
+            SetBashVariable(preprocessReader, "net.powerdns.recursor.package.uri", clusterDefinition.Network.PdnsRecursorPackageUri);
             preprocessReader.Set("net.powerdns.recursor.hosts", GetPowerDnsHosts(clusterDefinition, nodeDefinition));
+            preprocessReader.Set("net.powerdns.port", NeonHostPorts.PowerDNS);
+            preprocessReader.Set("net.dynamicdns.port", NeonHostPorts.DynamicDNS);
 
             SetBashVariable(preprocessReader, "docker.version", clusterDefinition.Docker.PackageVersion);
 

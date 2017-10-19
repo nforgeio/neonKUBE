@@ -535,9 +535,93 @@ systemctl daemon-reload
 systemctl restart neon-security-cleaner
 
 #------------------------------------------------------------------------------
+# Configure the PowerDNS Authoritative Server on the manager nodes if Dynamic
+# DNS is enabled for the cluster.
+
+if [ "$<net.dynamicdns.enabled>" ] ; then
+
+	# Download the PowerDNS server.
+
+	curl -4fsSLv ${CURL_RETRY} $<net.powerdns.server.package.uri> -o /tmp/pdns-server.deb
+	gdebi --non-interactive /tmp/pdns-server.deb
+	rm /tmp/pdns-server.deb
+
+	# Install the PowerDNS REMOTE backend.
+
+	curl -4fsSLv ${CURL_RETRY} $<net.powerdns.backend.remote.package.uri> -o /tmp/pdns-backend-remote.deb
+	gdebi --non-interactive /tmp/pdns-backend-remote.deb
+	rm /tmp/pdns-backend-remote.deb
+
+	# Stop the service while we configure it and install the recursor.
+
+	systemctl stop pdns
+
+	# Backup the configuration file installed by the package.
+
+	cp /etc/powerdns/pdns.conf /etc/powerdns/pdns.conf.backup
+
+	# Remove any sample local configuration files installed by the package and
+	# then add our custom file.
+
+	rm -f /etc/powerdns/bindbackend.conf
+	rm -f /etc/powerdns/pdns.d/*
+
+	cat <<EOF > /etc/powerdns/pdns.d/pdns.local.conf
+###############################################################################
+# neonCLUSTER custom PowerDNS Authortative Server configuration overrides.
+
+#################################
+# local-address		Listen for requests on this interface and port.
+# local-port	
+#
+local-address=127.0.0.1
+local-port=$<net.powerdns.port>
+
+#################################
+# remote-connection-string	Enable the PowerDNS REMOTE backend to use HTTP to
+#                           query the local [neon-dns] listening on the host 
+#                           network.
+#
+launch=remote
+remote-connection-string=http:url=http://127.0.0.1:$<net.dynamicdns.port>,timeout=2000
+
+#################################
+# no-shuffle	Set this to prevent random shuffling of answers.  The [neon-dns]
+#               backend service optionally handles this for specific hostnames.
+#
+no-shuffle=yes
+
+#################################
+# negquery-cache-ttl	Seconds to store negative query results in the QueryCache
+#
+negquery-cache-ttl=5
+
+#################################
+# query-cache-ttl	Seconds to store query results in the QueryCache
+#
+query-cache-ttl=5
+
+#################################
+# WARNING: Be sure to comment these out for production clusters.
+#
+# Debugging related settings.
+#
+loglevel=5
+log-dns-details=yes
+log-dns-queries=yes
+EOF
+
+	# Set PowerDNS related config file permissions.  Note that we're not
+	# going to restart the [pdns] service until after we install the recursor
+	# to avoid default configuration conflicts.
+
+	chmod -R 775 /etc/powerdns
+fi
+
+#------------------------------------------------------------------------------
 # Configure the PowerDNS Recursor.
 
-curl -4fsSLv ${CURL_RETRY} $<net.powerdns.recursor.uri> -o /tmp/pdns-recursor.deb
+curl -4fsSLv ${CURL_RETRY} $<net.powerdns.recursor.package.uri> -o /tmp/pdns-recursor.deb
 gdebi --non-interactive /tmp/pdns-recursor.deb
 rm /tmp/pdns-recursor.deb
 systemctl stop pdns-recursor
@@ -555,10 +639,10 @@ cat <<EOF > /etc/powerdns/hosts
 $<net.powerdns.recursor.hosts>
 EOF
 
-# Generate the custom settings and then append them onto the end of the
+# Generate the custom local settings and then append them onto the end of the
 # default settings installed with by the recursor package.
 
-cat <<EOF >> /etc/powerdns/recursor.custom.conf
+cat <<EOF > /etc/powerdns/recursor.local.conf
 ###############################################################################
 # neonCLUSTER custom PowerDNS Recursor Server configuration overrides to be
 # appended unto the end of the [recursor.conf] file installed by the PowerDNS
@@ -566,7 +650,7 @@ cat <<EOF >> /etc/powerdns/recursor.custom.conf
 
 #################################
 # Allow requests only from well-known Internet private subnets as well as
-# the local  loopback interfaces.
+# the local loopback interfaces.
 allow-from=10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16, 127.0.0.0/8
 
 ################################
@@ -577,7 +661,14 @@ export-etc-hosts=yes
 
 ################################
 # Configure recursion to the upstream DNS servers.
-forward-zones-recurse=.=${NEON_NET_NAMESERVERS}
+forward-zones-recurse=.=$<net.nameservers>
+
+#################################
+# forward-zones		If the cluster enables Dynamic DNS, we need to specify the 
+#                   forward requests for the [*.cluster] and [*.node.cluster] domains
+#					to the PowerDNS Authoritative Servers running on the master nodes.
+#
+forward-zones=cluster=10.0.0.30:$<net.dynamicdns.port>
 
 #################################
 # Bind to all network interfaces.
@@ -591,24 +682,39 @@ local-address=0.0.0.0
 max-cache-ttl=300
 
 #################################
+# max-negative-ttl	maximum number of seconds to keep a negative cached entry in memory
+#
+# max-negative-ttl=30
+
+#################################
 # disable-syslog	Disable logging to syslog, useful when running inside a supervisor that logs stdout
 #
 disable-syslog=yes
 
 #################################
+# WARNING: Be sure to comment these out for production clusters.
+#
 # Debugging related settings.  Be sure to comment these out for production clusters.
+#
 # loglevel=6
 # quiet=no
 EOF
 
-cat /etc/powerdns/recursor.custom.conf >> /etc/powerdns/recursor.conf
+cat /etc/powerdns/recursor.local.conf >> /etc/powerdns/recursor.conf
 
 # Set PowerDNS related config file permissions and then restart the 
-# service to pick up the new config.
+# recursor to pick up the new config.
 
 chmod -R 775 /etc/powerdns
+
+# Restart the PowerDNS server and recursor services.
+
+if [ "$<net.dynamicdns.enabled>" ] ; then
+	systemctl start pdns
+fi
+
 systemctl start pdns-recursor
-sleep 5		# Give the recursor some time to start.
+sleep 5		# Give the services some time to start.
 
 # Configure the local DNS resolver to override any DHCP or other interface
 # specific settings and just query the PowerDNS Recursor running locally

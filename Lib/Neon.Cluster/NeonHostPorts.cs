@@ -109,6 +109,20 @@ namespace Neon.Cluster
         public const int LogHostSysLog = 5006;
 
         /// <summary>
+        /// The port where the PowerDNS Authoritative Server listens if the
+        /// cluster's Dynamic DNS feature is enabled.  These servers are deployed
+        /// to the manager nodes if enabled.
+        /// </summary>
+        public const int PowerDNS = 5007;
+
+        /// <summary>
+        /// The port where the <b>neon-dns</b> service listens on the manager
+        /// node host network for dynamic DNS HTTP requests if the cluster's 
+        /// Dynamic DNS feature is enabled.
+        /// </summary>
+        public const int DynamicDNS = 5008;
+
+        /// <summary>
         /// This port is reserved and must not be assigned to any service.  This is
         /// currently referenced by the manager load balancer rule for Azure deployments
         /// and it must not actually host a service.  See the <b>AzureHostingManager</b>

@@ -245,34 +245,43 @@ USAGE:
 
     ""network"": {
         
-        //  PublicSubnet          IP subnet assigned to the standard public cluster
-        //                        overlay network.  This defaults to [10.249.0.0/16].
+        //  PublicSubnet                IP subnet assigned to the standard public cluster
+        //                              overlay network.  This defaults to [10.249.0.0/16].
         //
-        //  PublicAttachable      Allow non-Docker swarm mode service containers to 
-        //                        attach to the standard public cluster overlay network.
-        //                        This defaults to [true] for flexibility but you may 
-        //                        consider disabling this for better security.
+        //  PublicAttachable            Allow non-Docker swarm mode service containers to 
+        //                              attach to the standard public cluster overlay network.
+        //                              This defaults to [true] for flexibility but you may 
+        //                              consider disabling this for better security.
         //
-        //  PrivateSubnet         IP subnet assigned to the standard private cluster
-        //                        overlay network.  This defaults to [10.248.0.0/16].
+        //  PrivateSubnet               IP subnet assigned to the standard private cluster
+        //                              overlay network.  This defaults to [10.248.0.0/16].
         //
-        //  PrivateAttachable     Allow non-Docker swarm mode service containers to 
-        //                        attach to the standard private cluster overlay network.
-        //                        This defaults to [true] for flexibility but you may 
-        //                        consider disabling this for better security.
+        //  PrivateAttachable           Allow non-Docker swarm mode service containers to 
+        //                              attach to the standard private cluster overlay network.
+        //                              This defaults to [true] for flexibility but you may 
+        //                              consider disabling this for better security.
         //
-        //  Nameservers           The IP addresses of the upstream DNS nameservers to be 
-        //                        used by the cluster.  This defaults to the Google Public
-        //                        DNS servers: [ ""8.8.8.8"", ""8.8.4.4"" ] when the
-        //                        property is NULL or empty.
+        //  Nameservers                 The IP addresses of the upstream DNS nameservers to be 
+        //                              used by the cluster.  This defaults to the Google Public
+        //                              DNS servers: [ ""8.8.8.8"", ""8.8.4.4"" ] when the
+        //                              property is NULL or empty.
         //
-        //  PdnsServerUri         URI for the PowerDNS Authoritative Server package to
-        //                        be installed on all cluster nodes.  This defaults to
-        //                        a known good release.
+        //  PdnsServerPackageUri         URI for the PowerDNS Authoritative Server package to
+        //                              be installed on manager nodes.  This defaults to
+        //                              a known good release.
         //
-        //  PdnsRecursorUri       URI for the PowerDNS Recursor package to be installed 
-        //                        on all cluster nodes.  This defaults to a known good 
-        //                        release.
+        //  PdnsBackendRemotePackageUri URI for the PowerDNS Authoritative Server remote
+        //                              backend package to be installed on manager nodes.  
+        //                              This defaults to a known good release.
+        //
+        // IMNPORTANT: [PdnsServerPackageUri] and [PdnsBackendRemotePackageUri] must come from
+        //             the same PowerDNS build.
+        //
+        //  PdnsRecursorPackageUri      URI for the PowerDNS Recursor package to be installed 
+        //                              on all cluster nodes.  This defaults to a known good 
+        //                              release.
+        //
+        //  DynamicDns                  Enables the dynamic DNS services.  This defaults to [true].
     },
 
     // Options describing the default overlay network created for the 

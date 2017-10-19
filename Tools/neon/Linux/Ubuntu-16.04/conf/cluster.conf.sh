@@ -95,10 +95,6 @@ $<nodes.managers>
 export NEON_NTP_MANAGER_SOURCES=( $<ntp.manager.sources> )
 export NEON_NTP_WORKER_SOURCES=( $<ntp.worker.sources> )
 
-# Network settings
-
-export NEON_NET_NAMESERVERS=$<net.nameservers>
-
 # Docker settings
 
 export NEON_DOCKER_VERSION=$<docker.version>
@@ -161,8 +157,6 @@ $<nodes.manager.summary>
     echo 1>&2
     echo "NEON_NTP_MANAGER_SOURCES           = ${NEON_NTP_MANAGER_SOURCES}" 1>&2
     echo "NEON_NTP_WORKER_SOURCES            = ${NEON_NTP_WORKER_SOURCES}" 1>&2
-    echo 1>&2
-    echo "NEON_NET_NAMESERVERS               = ${NEON_NET_NAMESERVERS}" 1>&2
     echo 1>&2
     echo "NEON_DOCKER_VERSION                = ${NEON_DOCKER_VERSION}" 1>&2
     echo 1>&2
