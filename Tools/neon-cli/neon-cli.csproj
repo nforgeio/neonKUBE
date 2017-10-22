@@ -1,0 +1,147 @@
+﻿<Project Sdk="Microsoft.NET.Sdk">
+
+  <PropertyGroup>
+    <OutputType>Exe</OutputType>
+    <TargetFramework>netcoreapp2.0</TargetFramework>
+    <RootNamespace>NeonCli</RootNamespace>
+    <AssemblyName>neon</AssemblyName>
+  </PropertyGroup>
+
+  <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
+
+  <ItemGroup>
+    <None Remove=".rnd" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <PackageReference Include="System.ValueTuple" Version="4.4.0" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <ProjectReference Include="..\..\Lib\Neon.Cluster\Neon.Cluster.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+  </ItemGroup>
+
+  <ItemGroup>
+    <None Update="Linux\Ubuntu-16.04\conf\cluster.conf.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\conf\cluster.conf.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-apt-proxy.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-apt-proxy.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-apt-ready.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-consul-proxy.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-consul-proxy.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-consul-server.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-consul-server.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-disk.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-docker.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-docker.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-dotnet.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-environment.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-environment.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-exists.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-exists.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-node.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-node.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-ntp.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-ntp.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-prep-node.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-prep-node.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-ssd.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-ssd.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-utility.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-utility.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-vault-client.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-vault-client.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-vault-server.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-vault-server.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\tools\docker-volume-create.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\tools\docker-volume-create.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\tools\docker-volume-exists.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\tools\docker-volume-exists.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\tools\docker-volume-rm.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Linux\Ubuntu-16.04\tools\docker-volume-rm.sh.txt">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+  </ItemGroup>
+
+  <Target Name="PreBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="unix-text --recursive &quot;--recursive $(ProjectDir)Linux\*.sh.txt&quot;" />
+  </Target>
+
+  <Target Name="PostBuild" AfterTargets="PostBuildEvent">
+    <Exec Command="pubcore &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot;" />
+  </Target>
+
+</Project>

@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.26730.16
+VisualStudioVersion = 15.0.27004.2005
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C4-490A-9519-4702DF7A4E15}"
 	ProjectSection(SolutionItems) = preProject
@@ -85,7 +85,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "entity-gen", "Tools\entity-
 		{756FB86B-29BC-4C6B-A19B-A624A9E9D367} = {756FB86B-29BC-4C6B-A19B-A624A9E9D367}
 	EndProjectSection
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon", "Tools\neon\neon.csproj", "{7EC9D996-B464-4493-BF68-8A4A95AA3C83}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-cli", "Tools\neon-cli\neon-cli.csproj", "{7EC9D996-B464-4493-BF68-8A4A95AA3C83}"
 	ProjectSection(ProjectDependencies) = postProject
 		{756FB86B-29BC-4C6B-A19B-A624A9E9D367} = {756FB86B-29BC-4C6B-A19B-A624A9E9D367}
 		{66229C6D-EC7E-4340-8BC0-6C9E6EF830C6} = {66229C6D-EC7E-4340-8BC0-6C9E6EF830C6}
