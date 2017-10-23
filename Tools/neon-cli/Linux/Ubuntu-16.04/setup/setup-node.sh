@@ -568,18 +568,20 @@ if [ "$<net.dynamicdns.enabled>" ] ; then
 
 	cat <<EOF > /etc/powerdns/pdns.d/pdns.local.conf
 ###############################################################################
-# neonCLUSTER custom PowerDNS Authortative Server configuration overrides.
+# neonCLUSTER custom PowerDNS Authoritative Server configuration overrides.
 
 #################################
 # local-address		Listen for requests on this interface and port.
+# local-ipv6
 # local-port	
 #
 local-address=127.0.0.1
+local-ipv6=::1
 local-port=$<net.powerdns.port>
 
 #################################
-# remote-connection-string	Enable the PowerDNS REMOTE backend to use HTTP to
-#                           query the local [neon-dns] listening on the host 
+# launch					Enable the PowerDNS REMOTE backend to use HTTP to
+# remote-connection-string	query the local [neon-dns] listening on the host
 #                           network.
 #
 launch=remote
@@ -597,9 +599,14 @@ no-shuffle=yes
 negquery-cache-ttl=5
 
 #################################
-# query-cache-ttl	Seconds to store query results in the QueryCache
+# query-cache-ttl		Max seconds to store query results in the QueryCache
 #
-query-cache-ttl=5
+query-cache-ttl=60
+
+#################################
+# disable-syslog		We don't need this because we're capturing the systemd logs.
+#
+disable-syslog=yes
 
 #################################
 # WARNING: Be sure to comment these out for production clusters.
@@ -668,7 +675,7 @@ forward-zones-recurse=.=$<net.nameservers>
 #                   forward requests for the [*.cluster] and [*.node.cluster] domains
 #					to the PowerDNS Authoritative Servers running on the master nodes.
 #
-forward-zones=cluster=10.0.0.30:$<net.dynamicdns.port>
+forward-zones=cluster=127.0.0.1:$<net.powerdns.port>
 
 #################################
 # Bind to all network interfaces.

@@ -407,8 +407,6 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "ntp.worker.sources", workerTimeSources);
 
             SetBashVariable(preprocessReader, "net.dynamicdns.enabled", (clusterDefinition.Network.DynamicDns && nodeDefinition.IsManager) ? "true" : "false");
-            SetBashVariable(preprocessReader, "net.powerdns.port", NeonHostPorts.PowerDNS);
-            SetBashVariable(preprocessReader, "net.dynamicdns.port", NeonHostPorts.DynamicDNS);
 
             if (clusterDefinition.Network.DynamicDns)
             {

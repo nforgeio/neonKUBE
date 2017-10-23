@@ -175,7 +175,7 @@ namespace Neon.Cluster
         public string PdnsRecursorPackageUri { get; set; } = defaultPdnsRecursorPackagePackageUri;
 
         /// <summary>
-        /// Enables the deployment of the PowerDNS Authortative server to the cluster manager nodes
+        /// Enables the deployment of the PowerDNS Authoritative server to the cluster manager nodes
         /// along with the <b>neon-dns</b> and <b>neon-dns-health</b> services to provide dynamic
         /// DNS capabilities to the cluster.  Worker nodes will be configured to use the managers
         /// as their upstream DNS servers.  This defaults to <c>true</c>.
