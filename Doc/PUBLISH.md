@@ -6,7 +6,8 @@
 
 2. Open the **Properties** each of the library projects and update the **Release notes**.
 
-3. Update `$/nuget-version.txt` with the new package version.
+3. Update `$/nuget-version.txt` (or `GitHub/nuget-version.txt` in the solution) with the 
+   new package version.
 
 4. Execute `$/Toolbin/nuget-neonforge-public.cmd` to publish the packages to **Nuget.org**.
 
