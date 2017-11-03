@@ -9,6 +9,8 @@
 3. Update `$/nuget-version.txt` (or `GitHub/nuget-version.txt` in the solution) with the 
    new package version.
 
-4. Execute `$/Toolbin/nuget-neonforge-public.cmd` to publish the packages to **Nuget.org**.
+4. Manually rebuild the entire solution.
 
-5. Check in the project with a comment like: **RELEASED: 5.0.1.0**
+5. Execute `$/Toolbin/nuget-neonforge-public.cmd` to publish the packages to **Nuget.org**.
+
+6. Check in the project with a comment like: **RELEASED: 5.0.1.0**
