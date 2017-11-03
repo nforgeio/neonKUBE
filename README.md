@@ -76,13 +76,13 @@ Follow steps below to configure a development or test workstation.
 
   * Open **Windows Explorer**
   * Navigate to the directory holding the cloned repository
-  * **Right-click** on **buildenv.cmd** and then **Run as administorator**
+  * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
   * Close the DOS window when the script is finished
 
 13. Confirm that the solution builds:
 
   * Run **Visual Studio** as **administrator**
-  * Open **$/Stoke.sln** (where **$** is the repo directory path)
+  * Open **$/NeonForge.sln** (where **$** is the repo directory path)
   * Select **Build/Rebuild** Solution
 
 14. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
