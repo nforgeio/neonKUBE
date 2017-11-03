@@ -8,9 +8,7 @@
     <Company>Jeff Lill</Company>
     <Product>neonCLUSTER</Product>
     <Description>Provides NeonCluster management and service capabilities.</Description>
-    <PackageReleaseNotes>* [BREAKING] Relocated ProcessorTerminator to Neon.Common.
-* [BREAKING] Use PowerDNS Recursor instead of [/etc/hosts] and [/etc/neoncluster/env-host] to resolve host related names on host nodes and containers.  Consul is no longer configured as the DNS.  Existing clusters must be redeployed.
-* Updated to public Couchbase packages (they fixed a Linq2Couchbase bug).</PackageReleaseNotes>
+    <PackageReleaseNotes>Aligning version number.  No signficant changes.</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
