@@ -36,7 +36,7 @@ namespace CouchbaseTest
         /// Application entry point.
         /// </summary>
         /// <param name="args">Command line arguments.</param>
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             LogManager.Default.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
             log = LogManager.Default.GetLogger(typeof(Program));
@@ -57,7 +57,7 @@ namespace CouchbaseTest
                     NeonClusterHelper.OpenCluster();
                 }
 
-                Task.Run(() => RunAsync()).Wait();
+                await RunAsync();
             }
             catch (Exception e)
             {

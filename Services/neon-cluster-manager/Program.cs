@@ -56,7 +56,7 @@ namespace NeonClusterManager
         /// Application entry point.
         /// </summary>
         /// <param name="args">Command line arguments.</param>
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             LogManager.Default.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
             log = LogManager.Default.GetLogger(typeof(Program));
@@ -102,15 +102,7 @@ namespace NeonClusterManager
                 {
                     log.LogDebug(() => $"Opening Docker");
 
-                    using (docker = NeonClusterHelper.OpenDocker())
-                    {
-                        Task.Run(
-                            async () =>
-                            {
-                                await RunAsync();
-
-                            }).Wait();
-                    }
+                    await RunAsync();
                 }
             }
             catch (Exception e)
