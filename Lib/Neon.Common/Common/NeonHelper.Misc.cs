@@ -456,7 +456,7 @@ namespace Neon.Common
         /// <param name="timeout">The optional timeout.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <exception cref="TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
-        public static async Task WaitAllAsync(IEnumerable<Task> tasks, TimeSpan? timeout = null, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task WaitAllAsync(IEnumerable<Task> tasks, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
         {
             // There isn't a super clean way to implement this other than polling.
 

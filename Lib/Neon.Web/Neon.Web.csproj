@@ -9,6 +9,7 @@
     <Description>Website and API related classes and enhancements.</Description>
     <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>Aligning version number.  No signficant changes.</PackageReleaseNotes>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
