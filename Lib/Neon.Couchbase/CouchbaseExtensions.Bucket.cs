@@ -247,7 +247,7 @@ namespace Couchbase
         /// <param name="initial">The initial value to use if the key doesn't already exist (defaults to <b>1</b>).</param>
         /// <param name="expiration">The expiration TTL (defaults to none).</param>
         /// <returns>The operation result.</returns>
-        public static async Task<IOperationResult<ulong>> DecrementSafeAsync(this IBucket bucket, string key, ulong delta = 1, ulong initial = 1, TimeSpan expiration = default(TimeSpan))
+        public static async Task<IOperationResult<ulong>> DecrementSafeAsync(this IBucket bucket, string key, ulong delta = 1, ulong initial = 1, TimeSpan expiration = default)
         {
             IOperationResult<ulong> result;
 
@@ -333,7 +333,7 @@ namespace Couchbase
         /// <param name="key">The key.</param>
         /// <param name="expiration">The interval after which the document will be locked.  This defaults to 15 seconds and the maximum supported by the server is 30 seconds.</param>
         /// <returns>The operation result.</returns>
-        public static async Task<IOperationResult<T>> GetAndLockSafeAsync<T>(this IBucket bucket, string key, TimeSpan expiration = default(TimeSpan))
+        public static async Task<IOperationResult<T>> GetAndLockSafeAsync<T>(this IBucket bucket, string key, TimeSpan expiration = default)
         {
             if (expiration <= TimeSpan.Zero)
             {
@@ -470,7 +470,7 @@ namespace Couchbase
         /// <param name="initial">The initial value to use if the key doesn't already exist (defaults to <b>1</b>).</param>
         /// <param name="expiration">The expiration TTL (defaults to none).</param>
         /// <returns>The operation result.</returns>
-        public static async Task<IOperationResult<ulong>> IncrementSafeAsync(this IBucket bucket, string key, ulong delta = 1, ulong initial = 1, TimeSpan expiration = default(TimeSpan))
+        public static async Task<IOperationResult<ulong>> IncrementSafeAsync(this IBucket bucket, string key, ulong delta = 1, ulong initial = 1, TimeSpan expiration = default)
         {
             IOperationResult<ulong> result;
 
@@ -613,7 +613,7 @@ namespace Couchbase
         /// <param name="queryRequest">The query request.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The list of results.</returns>
-        public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, IQueryRequest queryRequest, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, IQueryRequest queryRequest, CancellationToken cancellationToken = default)
         {
             var result = await bucket.QueryAsync<T>(queryRequest, cancellationToken);
 
@@ -630,7 +630,7 @@ namespace Couchbase
         /// <param name="query">The N1QL query string.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The list of results.</returns>
-        public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, string query, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<List<T>> QuerySafeAsync<T>(this IBucket bucket, string query, CancellationToken cancellationToken = default)
         {
             return await QuerySafeAsync<T>(bucket, new QueryRequest(query), cancellationToken);
         }

@@ -64,7 +64,7 @@ namespace Neon.Common
         /// </summary>
         /// <param name="log">The optional <see cref="INeonLogger"/> used for logging.</param>
         /// <param name="timeout">The optional termination timeout (defaults to 10 seconds).</param>
-        public ProcessTerminator(INeonLogger log = null, TimeSpan timeout = default(TimeSpan))
+        public ProcessTerminator(INeonLogger log = null, TimeSpan timeout = default)
         {
             this.log = log;
 

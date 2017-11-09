@@ -36,7 +36,7 @@ namespace Consul
         /// <param name="key">The key.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns><c>true</c> if the key exists.</returns>
-        public static async Task<bool> Exists(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<bool> Exists(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key));
 
@@ -51,7 +51,7 @@ namespace Consul
         /// <param name="value">The value.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns><c>true</c> on success.</returns>
-        public static async Task<bool> PutBytes(this IKVEndpoint kv, string key, byte[] value, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<bool> PutBytes(this IKVEndpoint kv, string key, byte[] value, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key));
 
@@ -74,7 +74,7 @@ namespace Consul
         /// This method writes an empty string for <c>null</c> values and writes
         /// the <see cref="object.ToString()"/> results otherwise.
         /// </remarks>
-        public static async Task<bool> PutString(this IKVEndpoint kv, string key, object value, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<bool> PutString(this IKVEndpoint kv, string key, object value, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key));
 
@@ -98,7 +98,7 @@ namespace Consul
         /// <param name="value">The value.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns><c>true</c> on success.</returns>
-        public static async Task<bool> PutBool(this IKVEndpoint kv, string key, bool value, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<bool> PutBool(this IKVEndpoint kv, string key, bool value, CancellationToken cancellationToken = default)
         {
             return await PutString(kv, key, value ? "true" : "false", cancellationToken);
         }
@@ -111,7 +111,7 @@ namespace Consul
         /// <param name="value">The value.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns><c>true</c> on success.</returns>
-        public static async Task<bool> PutInt(this IKVEndpoint kv, string key, int value, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<bool> PutInt(this IKVEndpoint kv, string key, int value, CancellationToken cancellationToken = default)
         {
             return await PutString(kv, key, value.ToString(), cancellationToken);
         }
@@ -124,7 +124,7 @@ namespace Consul
         /// <param name="value">The value.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns><c>true</c> on success.</returns>
-        public static async Task<bool> PutLong(this IKVEndpoint kv, string key, long value, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<bool> PutLong(this IKVEndpoint kv, string key, long value, CancellationToken cancellationToken = default)
         {
             return await PutString(kv, key, value.ToString(), cancellationToken);
         }
@@ -137,7 +137,7 @@ namespace Consul
         /// <param name="value">The value.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns><c>true</c> on success.</returns>
-        public static async Task<bool> PutDouble(this IKVEndpoint kv, string key, double value, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<bool> PutDouble(this IKVEndpoint kv, string key, double value, CancellationToken cancellationToken = default)
         {
             return await PutString(kv, key, value.ToString("R", NumberFormatInfo.InvariantInfo), cancellationToken);
         }
@@ -151,7 +151,7 @@ namespace Consul
         /// <param name="formatting">Optional JSON formatting (defaults to <b>None</b>).</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns><c>true</c> on success.</returns>
-        public static async Task<bool> PutObject(this IKVEndpoint kv, string key, object value, Formatting formatting = Formatting.None, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<bool> PutObject(this IKVEndpoint kv, string key, object value, Formatting formatting = Formatting.None, CancellationToken cancellationToken = default)
         {
             return await PutString(kv, key, NeonHelper.JsonSerialize(value, formatting), cancellationToken);
         }
@@ -164,7 +164,7 @@ namespace Consul
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The byte array value.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if <paramref name="key"/> could not be found.</exception>
-        public static async Task<byte[]> GetBytes(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<byte[]> GetBytes(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key));
 
@@ -186,7 +186,7 @@ namespace Consul
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The string value.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if <paramref name="key"/> could not be found.</exception>
-        public static async Task<string> GetString(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<string> GetString(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key));
 
@@ -209,7 +209,7 @@ namespace Consul
         /// <returns>The parsed value.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if <paramref name="key"/> could not be found.</exception>
         /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
-        public static async Task<bool> GetBool(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<bool> GetBool(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
         {
             var input = await GetString(kv, key, cancellationToken);
 
@@ -242,7 +242,7 @@ namespace Consul
         /// <returns>The parsed value.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if <paramref name="key"/> could not be found.</exception>
         /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
-        public static async Task<int> GetInt(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<int> GetInt(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
         {
             var input = await GetString(kv, key, cancellationToken);
 
@@ -265,7 +265,7 @@ namespace Consul
         /// <returns>The parsed value.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if <paramref name="key"/> could not be found.</exception>
         /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
-        public static async Task<long> GetLong(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<long> GetLong(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
         {
             var input = await GetString(kv, key, cancellationToken);
 
@@ -288,7 +288,7 @@ namespace Consul
         /// <returns>The parsed value.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if <paramref name="key"/> could not be found.</exception>
         /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
-        public static async Task<double> GetDouble(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<double> GetDouble(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
         {
             var input = await GetString(kv, key, cancellationToken);
 
@@ -312,7 +312,7 @@ namespace Consul
         /// <returns>The parsed <typeparamref name="T"/>.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if <paramref name="key"/> could not be found.</exception>
         /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
-        public static async Task<T> GetObject<T>(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<T> GetObject<T>(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
             where T : new()
         {
             var input = await GetString(kv, key, cancellationToken);
@@ -392,7 +392,7 @@ namespace Consul
         ///     TimeSpan.FromSeconds(30));
         /// </code> 
         /// </remarks>
-        public static async Task WatchKey(this IKVEndpoint kv, string key, Func<byte[], Task> action, bool throwOnError = false, TimeSpan timeout = default(TimeSpan), CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task WatchKey(this IKVEndpoint kv, string key, Func<byte[], Task> action, bool throwOnError = false, TimeSpan timeout = default, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key));
             Covenant.Requires<ArgumentException>(!key.EndsWith("/"));
@@ -500,7 +500,7 @@ namespace Consul
         ///     TimeSpan.FromSeconds(30));
         /// </code> 
         /// </remarks>
-        public static async Task WatchPrefix(this IKVEndpoint kv, string keyPrefix, Func<Task> action, bool throwOnError = false, TimeSpan timeout = default(TimeSpan), CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task WatchPrefix(this IKVEndpoint kv, string keyPrefix, Func<Task> action, bool throwOnError = false, TimeSpan timeout = default, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyPrefix));
             Covenant.Requires<ArgumentException>(keyPrefix.EndsWith("/"));

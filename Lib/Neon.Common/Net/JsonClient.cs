@@ -277,8 +277,8 @@ namespace Neon.Net
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task<JsonResponse> GetAsync(string uri, ArgDictionary args = null, 
-                                                 CancellationToken cancellationToken = default(CancellationToken),
-                                                 LogActivity activity = default(LogActivity))
+                                                 CancellationToken cancellationToken = default,
+                                                 LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -314,8 +314,8 @@ namespace Neon.Net
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task<TResult> GetAsync<TResult>(string uri, ArgDictionary args = null, 
-                                                     CancellationToken cancellationToken = default(CancellationToken), 
-                                                     LogActivity activity = default(LogActivity))
+                                                     CancellationToken cancellationToken = default, 
+                                                     LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -354,8 +354,8 @@ namespace Neon.Net
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task<JsonResponse> GetAsync(IRetryPolicy retryPolicy, string uri, ArgDictionary args = null, 
-                                                 CancellationToken cancellationToken = default(CancellationToken), 
-                                                 LogActivity activity = default(LogActivity))
+                                                 CancellationToken cancellationToken = default, 
+                                                 LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -391,8 +391,8 @@ namespace Neon.Net
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> GetUnsafeAsync(string uri, ArgDictionary args = null,
-                                                       CancellationToken cancellationToken = default(CancellationToken), 
-                                                       LogActivity activity = default(LogActivity))
+                                                       CancellationToken cancellationToken = default, 
+                                                       LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -425,8 +425,8 @@ namespace Neon.Net
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> GetUnsafeAsync(IRetryPolicy retryPolicy, string uri, ArgDictionary args = null, 
-                                                       CancellationToken cancellationToken = default(CancellationToken), 
-                                                       LogActivity activity = default(LogActivity))
+                                                       CancellationToken cancellationToken = default, 
+                                                       LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -461,8 +461,8 @@ namespace Neon.Net
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task<JsonResponse> PutAsync(string uri, object document, ArgDictionary args = null, 
-                                                 CancellationToken cancellationToken = default(CancellationToken), 
-                                                 LogActivity activity = default(LogActivity))
+                                                 CancellationToken cancellationToken = default, 
+                                                 LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -499,8 +499,8 @@ namespace Neon.Net
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task<TResult> PutAsync<TResult>(string uri, object document, ArgDictionary args = null, 
-                                                     CancellationToken cancellationToken = default(CancellationToken), 
-                                                     LogActivity activity = default(LogActivity))
+                                                     CancellationToken cancellationToken = default, 
+                                                     LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -540,8 +540,8 @@ namespace Neon.Net
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task<JsonResponse> PutAsync(IRetryPolicy retryPolicy, string uri, object document, 
-                                                 ArgDictionary args = null, CancellationToken cancellationToken = default(CancellationToken), 
-                                                 LogActivity activity = default(LogActivity))
+                                                 ArgDictionary args = null, CancellationToken cancellationToken = default, 
+                                                 LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -578,8 +578,8 @@ namespace Neon.Net
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> PutUnsafeAsync(string uri, object document, ArgDictionary args = null, 
-                                                       CancellationToken cancellationToken = default(CancellationToken), 
-                                                       LogActivity activity = default(LogActivity))
+                                                       CancellationToken cancellationToken = default, 
+                                                       LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -613,8 +613,8 @@ namespace Neon.Net
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> PutUnsafeAsync(IRetryPolicy retryPolicy, string uri, object document, ArgDictionary args = null, 
-                                                       CancellationToken cancellationToken = default(CancellationToken), 
-                                                       LogActivity activity = default(LogActivity))
+                                                       CancellationToken cancellationToken = default, 
+                                                       LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -649,8 +649,8 @@ namespace Neon.Net
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task<JsonResponse> PostAsync(string uri, object document, ArgDictionary args = null, 
-                                                  CancellationToken cancellationToken = default(CancellationToken), 
-                                                  LogActivity activity = default(LogActivity))
+                                                  CancellationToken cancellationToken = default, 
+                                                  LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
             Covenant.Requires<ArgumentNullException>(document != null);
@@ -688,8 +688,8 @@ namespace Neon.Net
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task<TResult> PostAsync<TResult>(string uri, object document, ArgDictionary args = null, 
-                                                      CancellationToken cancellationToken = default(CancellationToken), 
-                                                      LogActivity activity = default(LogActivity))
+                                                      CancellationToken cancellationToken = default, 
+                                                      LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
             Covenant.Requires<ArgumentNullException>(document != null);
@@ -730,8 +730,8 @@ namespace Neon.Net
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task<JsonResponse> PostAsync(IRetryPolicy retryPolicy, string uri, object document, ArgDictionary args = null, 
-                                                  CancellationToken cancellationToken = default(CancellationToken), 
-                                                  LogActivity activity = default(LogActivity))
+                                                  CancellationToken cancellationToken = default, 
+                                                  LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
             Covenant.Requires<ArgumentNullException>(document != null);
@@ -769,8 +769,8 @@ namespace Neon.Net
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> PostUnsafeAsync(string uri, object document, ArgDictionary args = null, 
-                                                        CancellationToken cancellationToken = default(CancellationToken), 
-                                                        LogActivity activity = default(LogActivity))
+                                                        CancellationToken cancellationToken = default, 
+                                                        LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
             Covenant.Requires<ArgumentNullException>(document != null);
@@ -805,8 +805,8 @@ namespace Neon.Net
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> PostUnsafeAsync(IRetryPolicy retryPolicy, string uri, object document, ArgDictionary args = null, 
-                                                        CancellationToken cancellationToken = default(CancellationToken), 
-                                                        LogActivity activity = default(LogActivity))
+                                                        CancellationToken cancellationToken = default, 
+                                                        LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
             Covenant.Requires<ArgumentNullException>(document != null);
@@ -841,8 +841,8 @@ namespace Neon.Net
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task<JsonResponse> DeleteAsync(string uri, ArgDictionary args = null, 
-                                                    CancellationToken cancellationToken = default(CancellationToken),
-                                                    LogActivity activity = default(LogActivity))
+                                                    CancellationToken cancellationToken = default,
+                                                    LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -878,8 +878,8 @@ namespace Neon.Net
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task<TResult> DeleteAsync<TResult>(string uri, ArgDictionary args = null, 
-                                                        CancellationToken cancellationToken = default(CancellationToken), 
-                                                        LogActivity activity = default(LogActivity))
+                                                        CancellationToken cancellationToken = default, 
+                                                        LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -918,8 +918,8 @@ namespace Neon.Net
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         /// <exception cref="HttpException">Thrown when the server responds with an HTTP error status code.</exception>
         public async Task<JsonResponse> DeleteAsync(IRetryPolicy retryPolicy, string uri, ArgDictionary args = null, 
-                                                    CancellationToken cancellationToken = default(CancellationToken), 
-                                                    LogActivity activity = default(LogActivity))
+                                                    CancellationToken cancellationToken = default, 
+                                                    LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -955,8 +955,8 @@ namespace Neon.Net
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> DeleteUnsafeAsync(string uri, ArgDictionary args = null, 
-                                                          CancellationToken cancellationToken = default(CancellationToken), 
-                                                          LogActivity activity = default(LogActivity))
+                                                          CancellationToken cancellationToken = default, 
+                                                          LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 
@@ -989,8 +989,8 @@ namespace Neon.Net
         /// <returns>The <see cref="JsonResponse"/>.</returns>
         /// <exception cref="SocketException">Thrown for network connectivity issues.</exception>
         public async Task<JsonResponse> DeleteUnsafeAsync(IRetryPolicy retryPolicy, string uri, ArgDictionary args = null, 
-                                                          CancellationToken cancellationToken = default(CancellationToken), 
-                                                          LogActivity activity = default(LogActivity))
+                                                          CancellationToken cancellationToken = default, 
+                                                          LogActivity activity = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
 

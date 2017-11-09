@@ -922,7 +922,7 @@ namespace Neon.Cluster
         /// locally within the cluster login and where the cluster definition changes infrequently.
         /// </para>
         /// </remarks>
-        public static async Task<ClusterDefinition> GetClusterDefinitionAsync(ClusterDefinition cachedDefinition = null, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<ClusterDefinition> GetClusterDefinitionAsync(ClusterDefinition cachedDefinition = null, CancellationToken cancellationToken = default)
         {
             VerifyConnected();
 
@@ -977,7 +977,7 @@ namespace Neon.Cluster
         /// <param name="definition">The cluster definition.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <exception cref="InvalidOperationException">Thrown if no cluster is connected.</exception>
-        public async static Task PutClusterDefinitionAsync(ClusterDefinition definition, CancellationToken cancellationToken = default(CancellationToken))
+        public async static Task PutClusterDefinitionAsync(ClusterDefinition definition, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(definition != null);
 
@@ -1312,7 +1312,7 @@ namespace Neon.Cluster
         /// <param name="secretName">The local container name for the Docker secret.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The <see cref="Couchbase.Cluster"/>.</returns>
-        public static async Task<Couchbase.Cluster> OpenCouchbaseClusterAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<Couchbase.Cluster> OpenCouchbaseClusterAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default)
         {
             VerifyConnected();
 
@@ -1345,7 +1345,7 @@ namespace Neon.Cluster
         /// <param name="secretName">The local container name for the Docker secret.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The <see cref="Couchbase.Core.IBucket"/>.</returns>
-        public static async Task<Couchbase.Core.IBucket> OpenCouchbaseBucketAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<Couchbase.Core.IBucket> OpenCouchbaseBucketAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default)
         {
             VerifyConnected();
 
@@ -1378,7 +1378,7 @@ namespace Neon.Cluster
         /// <param name="secretName">The local container name for the Docker secret.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The <see cref="RabbitMQ.Client.IConnection"/>.</returns>
-        public static async Task<RabbitMQ.Client.IConnection> OpenRabbitMQAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default(CancellationToken))
+        public static async Task<RabbitMQ.Client.IConnection> OpenRabbitMQAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default)
         {
             VerifyConnected();
 

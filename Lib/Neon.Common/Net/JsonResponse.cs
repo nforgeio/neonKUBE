@@ -107,7 +107,7 @@ namespace Neon.Net
         {
             if (JsonText == null)
             {
-                return default(TResult);
+                return default;
             }
 
             return NeonHelper.JsonDeserialize<TResult>(JsonText);
