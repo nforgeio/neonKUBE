@@ -61,7 +61,7 @@ namespace NeonProxyManager
         /// Application entry point.
         /// </summary>
         /// <param name="args">Command line arguments.</param>
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             LogManager.Default.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
             log = LogManager.Default.GetLogger(typeof(Program));
@@ -115,13 +115,7 @@ namespace NeonProxyManager
 
                     using (consul = NeonClusterHelper.OpenConsul())
                     {
-                        Task.Run(
-                            async () =>
-                            {
-                                await RunAsync();
-
-                            }).Wait();
-
+                        await RunAsync();
                         terminator.ReadyToExit();
                     }
                 }

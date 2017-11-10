@@ -202,7 +202,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The <see cref="VaultStatus"/>.</returns>
-        public async Task<VaultStatus> GetHealthAsync(CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<VaultStatus> GetHealthAsync(CancellationToken cancellationToken = default)
         {
             // We need to make an unsafe call because Vault will return [503-Service Unavailable] when not 
             // initialized or sealed.
@@ -234,7 +234,7 @@ namespace Neon.Cluster
         /// <param name="credentials">The Vault credentials.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task UnsealAsync(VaultCredentials credentials, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task UnsealAsync(VaultCredentials credentials, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(credentials != null);
 
@@ -252,7 +252,7 @@ namespace Neon.Cluster
         /// <param name="path">The object path.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The result as a <c>dynamic</c> object.</returns>
-        public async Task<dynamic> ReadDynamicAsync(string path, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<dynamic> ReadDynamicAsync(string path, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
@@ -268,7 +268,7 @@ namespace Neon.Cluster
         /// <param name="path">The object path.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The result as a <c>dynamic</c> object.</returns>
-        public async Task<T> ReadJsonAsync<T>(string path, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<T> ReadJsonAsync<T>(string path, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
@@ -287,7 +287,7 @@ namespace Neon.Cluster
         /// <param name="value">The pbject value to be written or <c>null</c>.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The result as a <c>dynamic</c> object.</returns>
-        public async Task<dynamic> WriteJsonAsync(string path, object value, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<dynamic> WriteJsonAsync(string path, object value, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
             Covenant.Requires<ArgumentNullException>(value != null);
@@ -303,7 +303,7 @@ namespace Neon.Cluster
         /// <param name="bytes">The value to be written or <c>null</c>.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The result as a <c>dynamic</c> object.</returns>
-        public async Task<dynamic> WriteBytesAsync(string path, byte[] bytes, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<dynamic> WriteBytesAsync(string path, byte[] bytes, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
             Covenant.Requires<ArgumentNullException>(bytes != null);
@@ -321,7 +321,7 @@ namespace Neon.Cluster
         /// <param name="path">The object path.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The byte array.</returns>
-        public async Task<byte[]> ReadBytesAsync(string path, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<byte[]> ReadBytesAsync(string path, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
@@ -337,7 +337,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="path">The object path.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        public async Task DeleteAsync(string path, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task DeleteAsync(string path, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
@@ -363,7 +363,7 @@ namespace Neon.Cluster
         /// <param name="path">The vault path, with or without a trailing forward slash (<b>/</b>).</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>A string list.</returns>
-        public async Task<IEnumerable<string>> ListAsync(string path, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<IEnumerable<string>> ListAsync(string path, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
@@ -394,7 +394,7 @@ namespace Neon.Cluster
         /// <param name="roleName">The role name.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The <see cref="ClusterCredentials"/>.</returns>
-        public async Task<ClusterCredentials> GetAppRoleCredentialsAsync(string roleName, CancellationToken cancellationToken = default(CancellationToken))
+        public async Task<ClusterCredentials> GetAppRoleCredentialsAsync(string roleName, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(roleName));
 

@@ -381,7 +381,7 @@ namespace Neon.DynamicData
 
             if (jProperty == null)
             {
-                jProperty = new JProperty(propertyMapper.JsonName, default(TValue));
+                jProperty = new JProperty(propertyMapper.JsonName, default);
 
                 JObject.Add(jProperty);
             }
@@ -414,7 +414,7 @@ namespace Neon.DynamicData
 
             if (jProperty == null)
             {
-                jProperty = new JProperty(propertyMapper.JsonName, default(TEntity));
+                jProperty = new JProperty(propertyMapper.JsonName, default);
 
                 JObject.Add(jProperty);
             }
@@ -447,7 +447,7 @@ namespace Neon.DynamicData
 
             if (jProperty == null)
             {
-                jProperty = new JProperty(propertyMapper.JsonName, default(TEntity));
+                jProperty = new JProperty(propertyMapper.JsonName, default);
 
                 JObject.Add(jProperty);
             }
@@ -479,7 +479,7 @@ namespace Neon.DynamicData
 
             if (jProperty == null)
             {
-                jProperty = new JProperty(propertyMapper.JsonName, default(TItem));
+                jProperty = new JProperty(propertyMapper.JsonName, default);
 
                 JObject.Add(jProperty);
             }
@@ -512,7 +512,7 @@ namespace Neon.DynamicData
 
             if (jProperty == null)
             {
-                jProperty = new JProperty(propertyMapper.JsonName, default(TEntity));
+                jProperty = new JProperty(propertyMapper.JsonName, default);
 
                 JObject.Add(jProperty);
             }
@@ -545,7 +545,7 @@ namespace Neon.DynamicData
 
             if (jProperty == null)
             {
-                jProperty = new JProperty(propertyMapper.JsonName, default(TEntity));
+                jProperty = new JProperty(propertyMapper.JsonName, default);
 
                 JObject.Add(jProperty);
             }
@@ -578,7 +578,7 @@ namespace Neon.DynamicData
 
             if (jProperty == null)
             {
-                jProperty = new JProperty(propertyMapper.JsonName, default(TDocument));
+                jProperty = new JProperty(propertyMapper.JsonName, default);
 
                 JObject.Add(jProperty);
             }
@@ -611,7 +611,7 @@ namespace Neon.DynamicData
 
             if (jProperty == null)
             {
-                jProperty = new JProperty(propertyMapper.JsonName, default(TDocument));
+                jProperty = new JProperty(propertyMapper.JsonName, default);
 
                 JObject.Add(jProperty);
             }

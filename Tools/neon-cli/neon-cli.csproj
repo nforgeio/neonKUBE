@@ -5,6 +5,7 @@
     <TargetFramework>netcoreapp2.0</TargetFramework>
     <RootNamespace>NeonCli</RootNamespace>
     <AssemblyName>neon</AssemblyName>
+    <LangVersion>latest</LangVersion>
   </PropertyGroup>
 
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />

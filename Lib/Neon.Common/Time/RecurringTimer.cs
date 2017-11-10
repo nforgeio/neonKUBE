@@ -316,7 +316,7 @@ namespace Neon.Time
         /// </summary>
         /// <param name="pollInterval">Optional timer polling interval (defaults to <b>15 seconds</b>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task WaitAsync(TimeSpan pollInterval = default(TimeSpan))
+        public async Task WaitAsync(TimeSpan pollInterval = default)
         {
             if (pollInterval <= TimeSpan.Zero)
             {
@@ -441,11 +441,11 @@ namespace Neon.Time
         /// This is useful in situations where it is necessary to special-case a
         /// specific firing time.
         /// </remarks>
-        public void Set(DateTime timeUtc = default(DateTime))
+        public void Set(DateTime timeUtc = default)
         {
             lock (syncRoot)
             {
-                if (timeUtc == default(DateTime))
+                if (timeUtc == default)
                 {
                     timeUtc = DateTime.UtcNow;
                 }

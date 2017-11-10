@@ -335,7 +335,7 @@ namespace Neon.Time
         /// </summary>
         /// <param name="pollInterval">Optional timer polling interval (defaults to <b>15 seconds</b>).</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        public async Task WaitAsync(TimeSpan pollInterval = default(TimeSpan))
+        public async Task WaitAsync(TimeSpan pollInterval = default)
         {
             if (pollInterval <= TimeSpan.Zero)
             {

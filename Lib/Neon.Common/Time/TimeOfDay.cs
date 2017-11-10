@@ -34,7 +34,7 @@ namespace Neon.Time
             int         seconds;
             TimeSpan    offset;
 
-            timeOfDay = default(TimeOfDay);
+            timeOfDay = default;
 
             if (value == null)
             {

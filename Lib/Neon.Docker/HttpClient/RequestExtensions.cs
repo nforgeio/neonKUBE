@@ -92,6 +92,7 @@ namespace Microsoft.Net.Http.Client
             {
                 return (T)obj;
             }
+
             return default(T);
         }
 
