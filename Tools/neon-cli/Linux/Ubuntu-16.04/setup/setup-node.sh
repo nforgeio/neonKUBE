@@ -714,7 +714,7 @@ cat /etc/powerdns/recursor.local.conf >> /etc/powerdns/recursor.conf
 
 chmod -R 775 /etc/powerdns
 
-# Restart the PowerDNS server and recursor services.
+# Restart the PowerDNS server and recursor services to pick up the new configs.
 
 if [ "$<net.dynamicdns.enabled>" ] ; then
 	systemctl start pdns
