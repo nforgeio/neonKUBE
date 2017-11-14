@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27004.2005
+VisualStudioVersion = 15.0.27004.2008
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C4-490A-9519-4702DF7A4E15}"
 	ProjectSection(SolutionItems) = preProject
@@ -25,7 +25,6 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 		buildenv.cmd = buildenv.cmd
 		nuget-version.txt = nuget-version.txt
 		README.md = README.md
-		Setup-Build.docx = Setup-Build.docx
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Lib", "Lib", "{DBDA1B94-CCD1-48E4-AA0A-FDB5B18AF069}"
@@ -123,7 +122,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "core-layers", "Tools\core-l
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Web", "Lib\Neon.Web\Neon.Web.csproj", "{856207D6-F230-47A3-BF50-3D0451FEC3ED}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "neon-dns", "Services\neon-dns\neon-dns.csproj", "{1DFCDE84-A05A-4547-AC81-A0166B40F0F9}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-dns", "Services\neon-dns\neon-dns.csproj", "{1DFCDE84-A05A-4547-AC81-A0166B40F0F9}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

@@ -103,15 +103,17 @@ Follow steps below to configure a development or test workstation.
 
   * Restart Visual Studio and/or any command windows to pick up the change.
 
-16. Install OpenVPN from: [here](https://openvpn.net/index.php/open-source/downloads.html)
+16. Install **OpenVPN** from: [here](https://openvpn.net/index.php/open-source/downloads.html)
 
-17. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
+17. Install **7-Zip* via the MSI **(alternative MSI installer) 7-Zip for 64-bit Windows x64 (Intel 64 or AMD64)** from: [here](http://www.7-zip.org/download.html)
 
-18. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+18. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
 
-19. *Optional*: Install Chrome **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
+19. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-20. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+20. *Optional*: Install Chrome **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
+
+21. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
 ## Cloud Environments
 
