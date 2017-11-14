@@ -16,6 +16,7 @@ Follow steps below to configure a development or test workstation.
   * Click the **Options** icon on the right and select **Change folder and search options**.
   * Click the **View** tab in the popup dialog.
   * Select the **Show hidden files, folders, and drives** radio button.
+  * Uncheck the **Hide extensions for known file types** check box.
 
 3. Some versions of Skype listen for inbound connections on ports **80** and **443**.  This will interfere with services we'll want to test locally.  You need to disable this:
 
@@ -26,11 +27,9 @@ Follow steps below to configure a development or test workstation.
     ![Skype Connections](./README/SkypeConnections.png)
   * **Restart Skype**
 
-4. Install **Visual Studio Community Edition 15.4.1** from [here](https://www.visualstudio.com/downloads/).  Do a full install to ensure that you have everything.  This an overkill, but it may help prevent build problems in the future.
+4. Install **Visual Studio Community Edition 15.4+** from [here](https://www.visualstudio.com/downloads/).  Do a full install to ensure that you have everything.  This an overkill, but it may help prevent build problems in the future.
 
   * Select **all workloads** on the first panel
-  * Select **individual components**
-  * Click to select **all components**
   * Click **Install** (and take a coffee break)
 
 5. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run NeonForge applications and services, **Visual Studio must be running with elevated privileges**.
@@ -38,12 +37,13 @@ Follow steps below to configure a development or test workstation.
 7. Install **Docker for Windows** from [here](https://www.docker.com/products/docker#/windows).
 
   * Use the **Stable** channel unless you have a specific need for bleeding edge features
+  * If you don't already have Docker Hub credentials create an account: [here](https://hub.docker.com/)
   * **Right-click** the Docker icon in the system tray and select **Settings...*
 
     ![System Tray](./README/DockerSysTray.png)
-  * Select the **Shared Drives** tab and **share** the drive with the project source code
+  * Select the **Shared Drives** tab and **share** the drive where you'll locate the project source code (**probably C:**).
   * You'll need to enter your workstation **credentials**
-  * Configure **Windows Defender** to exclude the **C:\ProgramData\Docker** directory from checks (to prevent crashes on Windows boot).
+  * **Right-click** the Docker icon in the tray again and sign in with your Docker hub credentials.
 
 8. Test your Docker configuration.
 
