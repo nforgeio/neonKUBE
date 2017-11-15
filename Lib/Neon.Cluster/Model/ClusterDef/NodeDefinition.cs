@@ -234,12 +234,12 @@ namespace Neon.Cluster
 
             if (Name == null)
             {
-                throw new ClusterDefinitionException($"The [{nameof(Name)}] property is required.");
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}] property is required.");
             }
 
             if (!ClusterDefinition.IsValidName(Name))
             {
-                throw new ClusterDefinitionException($"The [{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
             if (clusterDefinition.Hosting.Environment == HostingEnvironments.Machine)

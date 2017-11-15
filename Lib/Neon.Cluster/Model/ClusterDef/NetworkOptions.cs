@@ -197,17 +197,17 @@ namespace Neon.Cluster
 
             if (!NetworkCidr.TryParse(PublicSubnet, out var cidr))
             {
-                throw new ClusterDefinitionException($"Invalid [{nameof(PublicSubnet)}={PublicSubnet}].");
+                throw new ClusterDefinitionException($"Invalid [{nameof(NetworkOptions)}.{nameof(PublicSubnet)}={PublicSubnet}].");
             }
 
             if (!NetworkCidr.TryParse(PrivateSubnet, out cidr))
             {
-                throw new ClusterDefinitionException($"Invalid [{nameof(PrivateSubnet)}={PrivateSubnet}].");
+                throw new ClusterDefinitionException($"Invalid [{nameof(NetworkOptions)}.{nameof(PrivateSubnet)}={PrivateSubnet}].");
             }
 
             if (PublicSubnet == PrivateSubnet)
             {
-                throw new ClusterDefinitionException($"[{nameof(PublicSubnet)}] cannot be the same as [{nameof(PrivateSubnet)}] .");
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PublicSubnet)}] cannot be the same as [{nameof(PrivateSubnet)}] .");
             }
 
             if (Nameservers == null || Nameservers.Length == 0)
@@ -227,21 +227,21 @@ namespace Neon.Cluster
 
             if (!Uri.TryCreate(PdnsServerPackageUri, UriKind.Absolute, out var uri1))
             {
-                throw new ClusterDefinitionException($"[{nameof(PdnsServerPackageUri)}={PdnsServerPackageUri}] is not a valid URI.");
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PdnsServerPackageUri)}={PdnsServerPackageUri}] is not a valid URI.");
             }
 
             PdnsBackendRemotePackageUri = PdnsBackendRemotePackageUri ?? defaultPdnsBackendRemotePackageUri;
 
             if (!Uri.TryCreate(PdnsBackendRemotePackageUri, UriKind.Absolute, out var uri2))
             {
-                throw new ClusterDefinitionException($"[{nameof(PdnsBackendRemotePackageUri)}={PdnsBackendRemotePackageUri}] is not a valid URI.");
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PdnsBackendRemotePackageUri)}={PdnsBackendRemotePackageUri}] is not a valid URI.");
             }
 
             PdnsRecursorPackageUri = PdnsRecursorPackageUri ?? defaultPdnsRecursorPackagePackageUri;
 
             if (!Uri.TryCreate(PdnsServerPackageUri, UriKind.Absolute, out var uri3))
             {
-                throw new ClusterDefinitionException($"[{nameof(PdnsRecursorPackageUri)}={PdnsRecursorPackageUri}] is not a valid URI.");
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PdnsRecursorPackageUri)}={PdnsRecursorPackageUri}] is not a valid URI.");
             }
         }
     }

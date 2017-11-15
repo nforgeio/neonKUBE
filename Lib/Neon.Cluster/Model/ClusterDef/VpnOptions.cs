@@ -114,12 +114,12 @@ namespace Neon.Cluster
 
             if (ServerAddressCount <= 0 || ServerAddressCount % 16 != 0)
             {
-                throw new ClusterDefinitionException($"VPN [{nameof(ServerAddressCount)}={ServerAddressCount}] is not a positive multiple of 16.");
+                throw new ClusterDefinitionException($"[{nameof(VpnOptions)}.{nameof(ServerAddressCount)}={ServerAddressCount}] is not a positive multiple of 16.");
             }
 
             if (ServerAddressCount > 65536)
             {
-                throw new ClusterDefinitionException($"VPN [{nameof(ServerAddressCount)}={ServerAddressCount}] exceeds the maximum possible value [65536].");
+                throw new ClusterDefinitionException($"[{nameof(VpnOptions)}.{nameof(ServerAddressCount)}={ServerAddressCount}] exceeds the maximum possible value [65536].");
             }
 
             if (string.IsNullOrEmpty(CertOrganization))
@@ -129,7 +129,7 @@ namespace Neon.Cluster
 
             if (string.IsNullOrEmpty(CertCountryCode) || CertCountryCode.Length != 2)
             {
-                throw new ClusterDefinitionException($"VPN [{nameof(CertCountryCode)}] most be set to a two character country code.");
+                throw new ClusterDefinitionException($"[{nameof(VpnOptions)}.{nameof(CertCountryCode)}] most be set to a two character country code.");
             }
         }
     }

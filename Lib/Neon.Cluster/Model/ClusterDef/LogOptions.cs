@@ -163,32 +163,32 @@ namespace Neon.Cluster
 
             if (string.IsNullOrWhiteSpace(EsImage))
             {
-                throw new ClusterDefinitionException($"Missing [{nameof(EsImage)} setting.");
+                throw new ClusterDefinitionException($"Missing [{nameof(LogOptions)}.{nameof(EsImage)} setting.");
             }
 
             if (EsShards <= 0)
             {
-                throw new ClusterDefinitionException($"Invalid [{nameof(EsShards)}={EsShards}]: This must be >= 1.");
+                throw new ClusterDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(EsShards)}={EsShards}]: This must be >= 1.");
             }
 
             if (EsReplicas <= 0)
             {
-                throw new ClusterDefinitionException($"Invalid [{nameof(EsReplicas)}={EsReplicas}]: This must be >= 1.");
+                throw new ClusterDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(EsReplicas)}={EsReplicas}]: This must be >= 1.");
             }
 
             if (string.IsNullOrWhiteSpace(KibanaImage))
             {
-                throw new ClusterDefinitionException($"Missing [{nameof(KibanaImage)} setting.");
+                throw new ClusterDefinitionException($"Missing [{nameof(LogOptions)}.{nameof(KibanaImage)} setting.");
             }
 
             if (string.IsNullOrWhiteSpace(HostImage))
             {
-                throw new ClusterDefinitionException($"Invalid [{nameof(HostImage)}={HostImage}].");
+                throw new ClusterDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(HostImage)}={HostImage}].");
             }
 
             if (string.IsNullOrWhiteSpace(CollectorImage))
             {
-                throw new ClusterDefinitionException($"Invalid [{nameof(CollectorImage)}={CollectorImage}].");
+                throw new ClusterDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(CollectorImage)}={CollectorImage}].");
             }
         }
     }

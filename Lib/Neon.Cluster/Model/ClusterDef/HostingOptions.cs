@@ -337,12 +337,12 @@ namespace Neon.Cluster
 
                 if (!NetworkCidr.TryParse(CloudAddressSpace, out var cloudAddressSpaceCidr))
                 {
-                    throw new ClusterDefinitionException($"Hosting [{nameof(CloudAddressSpace)}={CloudAddressSpace}] is not a valid IPv4 subnet.");
+                    throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(CloudAddressSpace)}={CloudAddressSpace}] is not a valid IPv4 subnet.");
                 }
 
                 if (cloudAddressSpaceCidr.PrefixLength != 21)
                 {
-                    throw new ClusterDefinitionException($"Hosting [{nameof(CloudAddressSpace)}={CloudAddressSpace}] prefix length is not valid.  Only [/21] subnets are currently supported.");
+                    throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(CloudAddressSpace)}={CloudAddressSpace}] prefix length is not valid.  Only [/21] subnets are currently supported.");
                 }
 
                 // Compute [NodeSubnet] by splitting [ClusterSubnet] in quarters and taking the
@@ -358,7 +358,7 @@ namespace Neon.Cluster
 
                 if (clusterDefinition.Nodes.Count() > nodeSubnetCidr.AddressCount - 4)
                 {
-                    throw new ClusterDefinitionException($"Hosting [{nameof(NodesSubnet)}={NodesSubnet}] subnet not large enough for the [{clusterDefinition.Nodes.Count()}] node addresses.");
+                    throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] subnet not large enough for the [{clusterDefinition.Nodes.Count()}] node addresses.");
                 }
 
                 // Verify/Compute VPN properties.
@@ -398,7 +398,7 @@ namespace Neon.Cluster
                     {
                         if (string.IsNullOrEmpty(ManagerRouterAddress))
                         {
-                            throw new ClusterDefinitionException($"Hosting [{nameof(ManagerRouterAddress)}] is required for on-premise deployments that enable VPN.  Set the public IP address or FQDN of your cluster router.");
+                            throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(ManagerRouterAddress)}] is required for on-premise deployments that enable VPN.  Set the public IP address or FQDN of your cluster router.");
                         }
                     }
 
@@ -406,24 +406,24 @@ namespace Neon.Cluster
 
                     if (!NetworkCidr.TryParse(VpnReturnSubnet, out var vpnReturnCidr))
                     {
-                        throw new ClusterDefinitionException($"Hosting [{nameof(VpnReturnSubnet)}={VpnReturnSubnet}] is not a valid subnet.");
+                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(VpnReturnSubnet)}={VpnReturnSubnet}] is not a valid subnet.");
                     }
 
                     if (vpnReturnCidr.PrefixLength > 23)
                     {
-                        throw new ClusterDefinitionException($"Hosting [{nameof(VpnReturnSubnet)}={VpnReturnSubnet}] is too small.  The subnet prefix length cannot be longer than [23].");
+                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(VpnReturnSubnet)}={VpnReturnSubnet}] is too small.  The subnet prefix length cannot be longer than [23].");
                     }
 
                     // Verify [NodesSubnet].
 
                     if (!NetworkCidr.TryParse(NodesSubnet, out var nodesSubnetCidr))
                     {
-                        throw new ClusterDefinitionException($"Hosting [{nameof(NodesSubnet)}={NodesSubnet}] is not a valid IPv4 subnet.");
+                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] is not a valid IPv4 subnet.");
                     }
 
                     if (nodesSubnetCidr.Overlaps(vpnReturnCidr))
                     {
-                        throw new ClusterDefinitionException($"Hosting [{nameof(NodesSubnet)}={NodesSubnet}] and [{nameof(VpnReturnSubnet)}={VpnReturnSubnet}] overlap.");
+                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] and [{nameof(VpnReturnSubnet)}={VpnReturnSubnet}] overlap.");
                     }
                 }
             }
@@ -436,7 +436,7 @@ namespace Neon.Cluster
                 {
                     if (!IPAddress.TryParse(dnsServer, out var address) || address.AddressFamily != AddressFamily.InterNetwork)
                     {
-                        throw new ClusterDefinitionException($"Azure hosting [{nameof(DnsServers)}={dnsServer}] is not a valid IPv4 address.");
+                        throw new ClusterDefinitionException($"Azure hosting [{nameof(HostingOptions)}.{nameof(DnsServers)}={dnsServer}] is not a valid IPv4 address.");
                     }
                 }
             }
@@ -448,9 +448,9 @@ namespace Neon.Cluster
         /// </summary>
         public void ClearSecrets()
         {
-            Aws       = null;
-            Azure     = null;
-            Google    = null;
+            Aws     = null;
+            Azure   = null;
+            Google  = null;
             Machine = null;
         }
     }

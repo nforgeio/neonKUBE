@@ -106,12 +106,12 @@ namespace Neon.Cluster
 
             if (!System.Version.TryParse(Version, out var version))
             {
-                throw new ClusterDefinitionException($"Invalid version [{nameof(Version)}={Version}].");
+                throw new ClusterDefinitionException($"Invalid version [{nameof(ConsulOptions)}.{nameof(Version)}={Version}].");
             }
 
             if (version < minVersion)
             {
-                throw new ClusterDefinitionException($"Minumim acceptable [{nameof(Version)}={minVersion}].");
+                throw new ClusterDefinitionException($"Minumim acceptable [{nameof(ConsulOptions)}.{nameof(Version)}={minVersion}].");
             }
 
             if (string.IsNullOrEmpty(EncryptionKey))
@@ -121,12 +121,12 @@ namespace Neon.Cluster
 
             if (DnsTTL < 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(DnsTTL)}={DnsTTL}] is not valid.");
+                throw new ClusterDefinitionException($"[{nameof(ConsulOptions)}.{nameof(DnsTTL)}={DnsTTL}] is not valid.");
             }
 
             if (DnsMaxStale < 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(DnsMaxStale)}={DnsMaxStale}] is not valid.");
+                throw new ClusterDefinitionException($"[{nameof(ConsulOptions)}.{nameof(DnsMaxStale)}={DnsMaxStale}] is not valid.");
             }
 
             ClusterDefinition.VerifyEncryptionKey(EncryptionKey);
