@@ -255,7 +255,7 @@ namespace Neon.Cluster
 
                 if (!version.EndsWith("-ce"))
                 {
-                    throw new ClusterDefinitionException($"Version [{nameof(DockerOptions)}.{Version}] does not specify a Docker community edition.  neonCLUSTER only supports Docker Community Edition at this time.");
+                    throw new ClusterDefinitionException($"[{nameof(DockerOptions)}.{Version}] does not specify a Docker community edition.  neonCLUSTER only supports Docker Community Edition at this time.");
                 }
             }
 
