@@ -1,7 +1,7 @@
 ﻿# NeonForge
 The NeonForge, LLC technology stack.
 ## Workstation Requirements
-* Windows 10 (64-bit)
+* Windows 10 Professional (64-bit) with at least 16GB RAM
 * Visual Studio Community Edition
 
 Note that the build environment currently assumes that only one Windows user will be acting as a developer on any given workstation.  Developers cannot share a computer.
@@ -16,6 +16,7 @@ Follow steps below to configure a development or test workstation.
   * Click the **Options** icon on the right and select **Change folder and search options**.
   * Click the **View** tab in the popup dialog.
   * Select the **Show hidden files, folders, and drives** radio button.
+  * Uncheck the **Hide extensions for known types** check box.
 
 3. Some versions of Skype listen for inbound connections on ports **80** and **443**.  This will interfere with services we'll want to test locally.  You need to disable this:
 
@@ -72,20 +73,9 @@ Follow steps below to configure a development or test workstation.
 
 11. **Close** any running instances of **Visual Studio**
 
-12. Configure the build **environment variables**:
+12. Install **7-Zip - .msi 64-bit x64 (alternative MSI installer) 7-Zip for 64-bit Windows x64 (Intel 64 or AMD64)** from: [here](http://7-zip.org/download.html)
 
-  * Open **Windows Explorer**
-  * Navigate to the directory holding the cloned repository
-  * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
-  * Close the DOS window when the script is finished
-
-13. Confirm that the solution builds:
-
-  * Run **Visual Studio** as **administrator**
-  * Open **$/NeonForge.sln** (where **$** is the repo directory path)
-  * Select **Build/Rebuild** Solution
-
-14. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+13. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
   * Install both **WinSCP** and **PuTTY** from [here](http://winscp.net/eng/download.php) (PuTTY is near the bottom of the page)
   * Run **WinSCP* and enable **hidden file display** [WinSCP Hidden Files](/README/WinSCPHiddenFile.png)
@@ -94,7 +84,20 @@ Follow steps below to configure a development or test workstation.
   
     ![WinSCP Hidden Files](./README/WinSCPHiddenFiles.png)
 
-15. Configure the NeonForge Nuget cli API key (so that batch publishing scripts will work).
+14. Configure the build **environment variables**:
+
+  * Open **Windows Explorer**
+  * Navigate to the directory holding the cloned repository
+  * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
+  * Close the DOS window when the script is finished
+
+15. Confirm that the solution builds:
+
+  * Run **Visual Studio** as **administrator**
+  * Open **$/NeonForge.sln** (where **$** is the repo root directory)
+  * Select **Build/Rebuild** Solution
+
+16. Configure the NeonForge Nuget CLI API key (so that batch publishing scripts will work).
 
   * Obtain the API key from another developer (or follow these [instructions](https://docs.microsoft.com/en-us/nuget/create-packages/publish-a-package) to get your API key from Nuget.org).
   * Run this DOS command, passing the key:
@@ -103,15 +106,15 @@ Follow steps below to configure a development or test workstation.
 
   * Restart Visual Studio and/or any command windows to pick up the change.
 
-16. Install OpenVPN from: [here](https://openvpn.net/index.php/open-source/downloads.html)
+17. Install **OpenVPN** from (using the Windows Installer): [here](https://openvpn.net/index.php/open-source/downloads.html)
 
-17. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
+18. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
 
-18. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+19. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-19. *Optional*: Install Chrome **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
+20. *Optional*: In Chrome, install the **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
 
-20. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+21. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
 ## Cloud Environments
 
