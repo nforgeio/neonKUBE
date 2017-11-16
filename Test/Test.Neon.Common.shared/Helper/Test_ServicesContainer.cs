@@ -60,9 +60,9 @@ namespace TestCommon
         {
             var services = new ServiceContainer();
 
-            Assert.Equal(0, services.Count);
+            Assert.Empty(services);
             Assert.False(services.IsReadOnly);
-            Assert.False(services.Contains(new ServiceDescriptor(typeof(IService1), new Service1())));
+            Assert.DoesNotContain(new ServiceDescriptor(typeof(IService1), new Service1()), services);
             Assert.NotNull(services.CreateScope());
         }
 
@@ -73,7 +73,7 @@ namespace TestCommon
             var service1 = new Service1();
             var service2 = new Service2();
 
-            Assert.Equal(0, services.Count);
+            Assert.Empty(services);
 
             services.AddSingleton<IService1>(service1);
             services.AddSingleton<IService2>(service2);
@@ -96,7 +96,7 @@ namespace TestCommon
             var service1 = new Service1();
             var service2 = new Service2();
 
-            Assert.Equal(0, services.Count);
+            Assert.Empty(services);
 
             services.AddTransient<IService1>(provider => new Service1());
             services.AddTransient<IService2>(provider => new Service2());
@@ -122,7 +122,7 @@ namespace TestCommon
             var serviceB = new Service1();
             var service2 = new Service2();
 
-            Assert.Equal(0, services.Count);
+            Assert.Empty(services);
 
             services.AddSingleton<IService1>(serviceA);
             services.AddSingleton<IService2>(service2);
@@ -151,7 +151,7 @@ namespace TestCommon
             var service3 = new Service3();
             var snapshot = services.BuildServiceProvider();
 
-            Assert.Equal(0, services.Count);
+            Assert.Empty(services);
 
             services.AddSingleton<IService1>(service1);
             services.AddSingleton<IService2>(service2);

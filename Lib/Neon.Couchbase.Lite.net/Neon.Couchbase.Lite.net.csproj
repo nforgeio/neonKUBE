@@ -36,11 +36,11 @@
     <DocumentationFile>bin\Release\Neon.Stack.Couchbase.Lite.Net462.xml</DocumentationFile>
   </PropertyGroup>
   <ItemGroup>
-    <Reference Include="Couchbase.Lite, Version=1.4.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Couchbase.Lite.1.4.0\lib\net45\Couchbase.Lite.dll</HintPath>
+    <Reference Include="Couchbase.Lite, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Couchbase.Lite.1.4.1\lib\net45\Couchbase.Lite.dll</HintPath>
     </Reference>
-    <Reference Include="Couchbase.Lite.Storage.SystemSQLite, Version=1.4.0.0, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Couchbase.Lite.Storage.SystemSQLite.1.4.0\lib\net45\Couchbase.Lite.Storage.SystemSQLite.dll</HintPath>
+    <Reference Include="Couchbase.Lite.Storage.SystemSQLite, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Couchbase.Lite.Storage.SystemSQLite.1.4.1\lib\net45\Couchbase.Lite.Storage.SystemSQLite.dll</HintPath>
     </Reference>
     <Reference Include="ICSharpCode.SharpZipLib.Portable, Version=0.86.0.51803, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\SharpZipLib.Portable.0.86.0.0003\lib\portable-net45+netcore45+wp8+win8+wpa81+MonoTouch+MonoAndroid+Xamarin.iOS10\ICSharpCode.SharpZipLib.Portable.dll</HintPath>
@@ -57,8 +57,8 @@
     <Reference Include="SQLitePCLPlugin_esqlite3, Version=0.0.0.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\SQLitePCL.plugin.sqlite3.net45.0.9.3\lib\net45\SQLitePCLPlugin_esqlite3.dll</HintPath>
     </Reference>
-    <Reference Include="Stateless, Version=3.0.0.0, Culture=neutral, PublicKeyToken=93038f0927583c9a, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Stateless.3.1.0\lib\net45\Stateless.dll</HintPath>
+    <Reference Include="Stateless, Version=4.0.0.0, Culture=neutral, PublicKeyToken=93038f0927583c9a, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Stateless.4.0.0\lib\net45\Stateless.dll</HintPath>
     </Reference>
     <Reference Include="System" />
     <Reference Include="System.Core" />
@@ -68,8 +68,8 @@
     <Reference Include="System.Data" />
     <Reference Include="System.Net.Http" />
     <Reference Include="System.Xml" />
-    <Reference Include="websocket-sharp, Version=1.0.2.37453, Culture=neutral, processorArchitecture=MSIL">
-      <HintPath>..\..\packages\Couchbase.Lite.1.4.0\lib\net45\websocket-sharp.dll</HintPath>
+    <Reference Include="websocket-sharp, Version=1.0.2.22794, Culture=neutral, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Couchbase.Lite.1.4.1\lib\net45\websocket-sharp.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>

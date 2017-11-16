@@ -274,6 +274,14 @@ namespace Neon.Net
         }
 
         /// <summary>
+        /// Returns the first usable IP address in the subnet.
+        /// </summary>
+        public IPAddress FirstUsableAddress
+        {
+            get { return NetHelper.AddressIncrement(FirstAddress); }
+        }
+
+        /// <summary>
         /// Returns the last IP address in the subnet.
         /// </summary>
         public IPAddress LastAddress

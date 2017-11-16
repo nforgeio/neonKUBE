@@ -98,7 +98,7 @@ namespace TestCommon
         }
 
         [Fact]
-        public new void ToString()
+        public void Stringify()
         {
             Assert.Equal("0", GoTimeSpan.Zero.ToString());
             Assert.Equal("-2562047h47m16s854ms775us808ns", GoTimeSpan.MinValue.ToString());

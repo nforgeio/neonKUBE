@@ -146,6 +146,7 @@ tool requires admin priviledges for direct mode.
 
             ClusterRootFolder  = NeonClusterHelper.GetClusterRootFolder();
             ClusterLoginFolder = NeonClusterHelper.GetClusterLoginFolder();
+            ClusterSetupFolder = NeonClusterHelper.GetClusterSetupFolder();
             CurrentClusterPath = NeonClusterHelper.CurrentClusterPath;
 
             // We're going to special case the temp folder and locate this within the [/dev/shm] 
@@ -700,6 +701,11 @@ tool requires admin priviledges for direct mode.
         /// Returns the path to the (hopefully) encrypted or tmpfs based temporary folder.
         /// </summary>
         public static string ClusterTempFolder { get; private set; }
+
+        /// <summary>
+        /// Returns the path to the cluster setup folder.
+        /// </summary>
+        public static string ClusterSetupFolder { get; private set; }
 
         /// <summary>
         /// Returns the path to the login information for the named cluster.

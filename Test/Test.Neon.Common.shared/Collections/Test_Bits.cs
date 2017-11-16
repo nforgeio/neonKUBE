@@ -332,7 +332,7 @@ namespace TestCommon
 
             input = new byte[0];
             bits = new Bits(input, 0);
-            Assert.Equal(0, input.Length);
+            Assert.Empty(input);
             Assert.Equal("", bits.ToString());
             Assert.Equal(input, bits.ToBytes());
 

@@ -212,6 +212,20 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Returns the path to the current user's cluster setup folder, creating
+        /// the directory if it doesn't already exist.
+        /// </summary>
+        /// <returns>The path to the nenCLUSTER setup folder.</returns>
+        public static string GetClusterSetupFolder()
+        {
+            var path = Path.Combine(GetClusterRootFolder(), "setup");
+
+            Directory.CreateDirectory(path);
+
+            return path;
+        }
+
+        /// <summary>
         /// Returns the cluster login for the currently logged in cluster and
         /// establishes a cluster connection.
         /// </summary>

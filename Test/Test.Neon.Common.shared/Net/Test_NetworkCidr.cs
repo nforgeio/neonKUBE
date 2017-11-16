@@ -185,6 +185,7 @@ namespace TestCommon
             var subnet = NetworkCidr.Parse("127.0.0.0/24");
 
             Assert.Equal("127.0.0.0", subnet.FirstAddress.ToString());
+            Assert.Equal("127.0.0.1", subnet.FirstUsableAddress.ToString());
             Assert.Equal("127.0.0.255", subnet.LastAddress.ToString());
             Assert.Equal("127.0.1.0", subnet.NextAddress.ToString());
 

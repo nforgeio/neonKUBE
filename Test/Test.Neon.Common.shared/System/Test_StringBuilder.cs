@@ -27,8 +27,8 @@ namespace TestCommon
 
             sb.AppendLineLinux("this is a test");
 
-            Assert.True(sb.ToString().Contains("\n"));
-            Assert.False(sb.ToString().Contains("\r"));
+            Assert.Contains("\n", sb.ToString());
+            Assert.DoesNotContain("\r", sb.ToString());
         }
 
         [Fact]

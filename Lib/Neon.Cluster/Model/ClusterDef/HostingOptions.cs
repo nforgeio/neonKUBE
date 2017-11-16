@@ -106,7 +106,7 @@ namespace Neon.Cluster
         /// to the worker nodes.
         /// </para>
         /// <para>
-        /// This is not required for in-premise deployments.
+        /// This is not required for on-premise deployments.
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "WorkerRouterAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
@@ -205,8 +205,8 @@ namespace Neon.Cluster
         /// a NIC attached to this subnet.
         /// </para>
         /// <note>
-        /// This property is ignored for the <see cref="HostingEnvironments.Machine"/> provider and is
-        /// computed automatically by the <b>neon</b> tool when provisioning in a cloud environment.
+        /// This property must be configured the <see cref="HostingEnvironments.Machine"/> provider and 
+        /// is computed automatically by the <b>neon</b> tool when provisioning in a cloud environment.
         /// </note>
         /// <note>
         /// For on-premise clusters, the statically assigned IP addresses assigned 
@@ -256,14 +256,6 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "VpnReturnSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaulVpnReturnSubnet)]
         public string VpnReturnSubnet { get; set; } = defaulVpnReturnSubnet;
-
-        /// <summary>
-        /// Specifies the DNS servers.  This defaults to the DNS services configured
-        /// for the local hosting environment.
-        /// </summary>
-        [JsonProperty(PropertyName = "DnsServers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public List<string> DnsServers { get; set; } = new List<string>();
 
         /// <summary>
         /// Validates the options definition and also ensures that all <c>null</c> properties are
@@ -424,19 +416,6 @@ namespace Neon.Cluster
                     if (nodesSubnetCidr.Overlaps(vpnReturnCidr))
                     {
                         throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] and [{nameof(VpnReturnSubnet)}={VpnReturnSubnet}] overlap.");
-                    }
-                }
-            }
-
-            // Verify [DnsServers].
-
-            if (DnsServers != null)
-            {
-                foreach (var dnsServer in DnsServers)
-                {
-                    if (!IPAddress.TryParse(dnsServer, out var address) || address.AddressFamily != AddressFamily.InterNetwork)
-                    {
-                        throw new ClusterDefinitionException($"Azure hosting [{nameof(HostingOptions)}.{nameof(DnsServers)}={dnsServer}] is not a valid IPv4 address.");
                     }
                 }
             }

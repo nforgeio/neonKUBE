@@ -30,7 +30,7 @@ namespace TestCommon
 
             var json = NeonHelper.JsonSerialize(before);
 
-            Assert.True(json.StartsWith("{"));
+            Assert.StartsWith("{", json);
 
             var after = NeonHelper.JsonDeserialize<TestClass>(json);
 

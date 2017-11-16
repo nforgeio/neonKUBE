@@ -31,7 +31,7 @@ namespace TestCommon
                 }
             }
 
-            Assert.Equal(0, lines.Count);
+            Assert.Empty(lines);
         }
 
         [Fact]
@@ -47,7 +47,7 @@ namespace TestCommon
                 }
             }
 
-            Assert.Equal(1, lines.Count);
+            Assert.Single(lines);
             Assert.Equal(string.Empty, lines[0]);
         }
 

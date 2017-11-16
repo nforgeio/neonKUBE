@@ -278,7 +278,7 @@ namespace TestCommon
             {
                 var password = NeonHelper.GetRandomPassword(20);
 
-                Assert.False(existing.Contains(password));
+                Assert.DoesNotContain(password, existing);
 
                 existing.Add(password);
             }

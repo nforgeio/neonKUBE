@@ -131,7 +131,7 @@ namespace TestCommon
                         });
                 });
 
-            Assert.Equal(1, times.Count);
+            Assert.Single(times);
         }
 
         [Fact]
@@ -152,7 +152,7 @@ namespace TestCommon
                         });
                 });
 
-            Assert.Equal(1, times.Count);
+            Assert.Single(times);
         }
 
         [Fact]
@@ -231,7 +231,7 @@ namespace TestCommon
                     success = true;
                 });
 
-            Assert.Equal(1, times.Count);
+            Assert.Single(times);
             Assert.True(success);
         }
 
@@ -250,7 +250,7 @@ namespace TestCommon
                     return "WOOHOO!";
                 });
 
-            Assert.Equal(1, times.Count);
+            Assert.Single(times);
             Assert.Equal("WOOHOO!", success);
         }
 

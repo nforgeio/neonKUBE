@@ -23,7 +23,7 @@ namespace LillTek.Common.Test
             string table = "";
 
             reader = new CsvTableReader(new CsvReader(table));
-            Assert.Equal(0, reader.ColumnMap.Count);
+            Assert.Empty(reader.ColumnMap);
             Assert.Null(reader.ReadRow());
             Assert.Null(reader.ReadRow());
         }

@@ -318,11 +318,11 @@ namespace TestCommon
             blocks = new BlockArray();
             blocks.ExtendTo(1);
             Assert.Equal(blocks.BlockSize, blocks.Size);
-            Assert.Equal(1, blocks.GetBlocks().Length);
+            Assert.Single(blocks.GetBlocks());
 
             blocks.ExtendTo(blocks.BlockSize / 2);
             Assert.Equal(blocks.BlockSize, blocks.Size);
-            Assert.Equal(1, blocks.GetBlocks().Length);
+            Assert.Single(blocks.GetBlocks());
             Assert.Equal(blocks.BlockSize, blocks.GetBlocks()[0].Length);
 
             blocks.ExtendTo(blocks.BlockSize + 1);
@@ -340,21 +340,21 @@ namespace TestCommon
             blocks = new BlockArray();
             blocks.TruncateTo(0);
             Assert.Equal(0, blocks.Size);
-            Assert.Equal(0, blocks.GetBlocks().Length);
+            Assert.Empty(blocks.GetBlocks());
 
             blocks.ExtendTo(1);
             blocks.TruncateTo(1);
             Assert.Equal(blocks.BlockSize, blocks.Size);
-            Assert.Equal(1, blocks.GetBlocks().Length);
+            Assert.Single(blocks.GetBlocks());
 
             blocks.TruncateTo(1000000);
             blocks.TruncateTo(1);
             Assert.Equal(blocks.BlockSize, blocks.Size);
-            Assert.Equal(1, blocks.GetBlocks().Length);
+            Assert.Single(blocks.GetBlocks());
 
             blocks.TruncateTo(0);
             Assert.Equal(0, blocks.Size);
-            Assert.Equal(0, blocks.GetBlocks().Length);
+            Assert.Empty(blocks.GetBlocks());
 
             blocks.ExtendTo(blocks.BlockSize * 4);
             blocks.GetBlocks()[0].Buffer[0] = 0;
@@ -378,7 +378,7 @@ namespace TestCommon
 
             blocks.TruncateTo(blocks.BlockSize);
             Assert.Equal(blocks.BlockSize, blocks.Size);
-            Assert.Equal(1, blocks.GetBlocks().Length);
+            Assert.Single(blocks.GetBlocks());
             Assert.Equal(0, blocks.GetBlocks()[0].Buffer[0]);
         }
 

@@ -22,6 +22,7 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
+using Neon.Cluster.HyperV;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
@@ -71,7 +72,53 @@ namespace Neon.Cluster
                 }
             }
 
+            if (cluster.Definition.Hosting.Machine.DeployVMs)
+            {
+                DeployVMs();
+            }
+
             return true;
+        }
+
+        /// <summary>
+        /// Handles the deployment of the cluster virtual machines.
+        /// </summary>
+        private void DeployVMs()
+        {
+            if (NeonHelper.IsWindows)
+            {
+                DeployWindowsVMs();
+            }
+            else if (NeonHelper.IsOSX)
+            {
+                DeployOsxVMs();
+            }
+            else
+            {
+                throw new NotSupportedException("neonCLUSTER virtual machines may only be deployed on Windows or Macintosh OSX.");
+            }
+        }
+
+        /// <summary>
+        /// Handles the deploymenmt of the cluster virtual machines on 
+        /// Windows Hyper-V.
+        /// </summary>
+        private void DeployWindowsVMs()
+        {
+            using (var hyperv = new HyperVClient())
+            {
+            }
+        }
+
+        /// <summary>
+        /// Handles the deploymenmt of the cluster virtual machines on 
+        /// Macintosh OSX.
+        /// </summary>
+        private void DeployOsxVMs()
+        {
+            // $todo(jeff.lill): Implement this.
+
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>

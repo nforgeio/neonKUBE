@@ -267,8 +267,8 @@ namespace TestCommon
             commandLine = new CommandLine(new string[] { "--" });
             split = commandLine.Split();
 
-            Assert.Equal(0, split.Left.Items.Length);
-            Assert.Equal(0, split.Right.Items.Length);
+            Assert.Empty(split.Left.Items);
+            Assert.Empty(split.Right.Items);
         }
     }
 }
