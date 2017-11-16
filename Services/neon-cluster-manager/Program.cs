@@ -102,7 +102,10 @@ namespace NeonClusterManager
                 {
                     log.LogDebug(() => $"Opening Docker");
 
-                    await RunAsync();
+                    using (docker = NeonClusterHelper.OpenDocker())
+                    {
+                        await RunAsync();
+                    }
                 }
             }
             catch (Exception e)
