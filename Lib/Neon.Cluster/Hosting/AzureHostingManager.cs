@@ -229,6 +229,7 @@ namespace Neon.Cluster
 
         private ClusterProxy                    cluster;
         private HostingOptions                  hostOptions;
+        private NetworkOptions                  networkOptions;
         private AzureOptions                    azureOptions;
         private Dictionary<string, AzureNode>   nodeDictionary;
         private string                          clusterName;
@@ -266,11 +267,12 @@ namespace Neon.Cluster
         /// <param name="cluster">The cluster being managed.</param>
         public AzureHostingManager(ClusterProxy cluster)
         {
-            this.cluster       = cluster;
-            this.clusterName   = cluster.Definition.Name;
-            this.hostOptions   = cluster.Definition.Hosting;
-            this.azureOptions  = hostOptions.Azure;
-            this.resourceGroup = azureOptions.ResourceGroup;
+            this.cluster        = cluster;
+            this.clusterName    = cluster.Definition.Name;
+            this.hostOptions    = cluster.Definition.Hosting;
+            this.networkOptions = cluster.Definition.Network;
+            this.azureOptions   = hostOptions.Azure;
+            this.resourceGroup  = azureOptions.ResourceGroup;
 
             // Generate the Azure asset names for the cluster.
 
@@ -498,7 +500,7 @@ namespace Neon.Cluster
             // subnet.
 
             var allocatedAddresses = new HashSet<string>();
-            var subnet             = NetworkCidr.Parse(hostOptions.NodesSubnet);
+            var subnet             = NetworkCidr.Parse(networkOptions.NodesSubnet);
 
             for (int i = 0; i < 4; i++)
             {
@@ -561,7 +563,7 @@ namespace Neon.Cluster
             //-----------------------------------------------------------------
             // Assign IP addresses for the manager VPN server NICs.
 
-            var vpnServerSubnet = NetworkCidr.Parse(cluster.Definition.Hosting.CloudVpnSubnet);
+            var vpnServerSubnet = NetworkCidr.Parse(networkOptions.CloudVpnSubnet);
 
             nextAddress = NetHelper.AddressIncrement(vpnServerSubnet.Address, 4);
 
@@ -679,8 +681,8 @@ namespace Neon.Cluster
                     .Create();
             }
 
-            cluster.Definition.Hosting.ManagerRouterAddress = pipLbManager.Fqdn;
-            cluster.Definition.Hosting.WorkerRouterAddress  = pipLbWorker.Fqdn;
+            cluster.Definition.Network.ManagerRouterAddress = pipLbManager.Fqdn;
+            cluster.Definition.Network.WorkerRouterAddress  = pipLbWorker.Fqdn;
 
             //-----------------------------------------------------------------
             // Create dynamic public addresses for individual node VMs if requested.
@@ -783,7 +785,7 @@ namespace Neon.Cluster
                 nsgVpnCreator
                     .DefineRule($"neon-AllowNodesInbound")
                     .AllowInbound()
-                    .FromAddress(cluster.Definition.Hosting.NodesSubnet)
+                    .FromAddress(networkOptions.NodesSubnet)
                     .FromAnyPort()
                     .ToAnyAddress()
                     .ToAnyPort()
@@ -934,13 +936,13 @@ namespace Neon.Cluster
                 .Define(vnetName)
                 .WithRegion(azureOptions.Region)
                 .WithExistingResourceGroup(resourceGroup)
-                .WithAddressSpace(NetworkCidr.Normalize(hostOptions.CloudVNetSubnet))
+                .WithAddressSpace(NetworkCidr.Normalize(networkOptions.CloudVNetSubnet))
                 .DefineSubnet(subnetNodesName)
-                    .WithAddressPrefix(NetworkCidr.Normalize(hostOptions.NodesSubnet))
+                    .WithAddressPrefix(NetworkCidr.Normalize(networkOptions.NodesSubnet))
                     .WithExistingRouteTable(vpnRoutes.Id)
                     .Attach()
                 .DefineSubnet(subnetVpnName)
-                    .WithAddressPrefix(NetworkCidr.Normalize(hostOptions.CloudVpnSubnet))
+                    .WithAddressPrefix(NetworkCidr.Normalize(networkOptions.CloudVpnSubnet))
                     .Attach();
 
             vnet = vnetCreator.Create();

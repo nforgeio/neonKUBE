@@ -104,12 +104,6 @@ USAGE:
 
         ""Provider"": ""machine"",
 
-        // This property is required for on-premise clusters that enable
-        // the VPN and should be set to the public IP address or FQDN of
-        // the cluster router.
-
-        //""ManagerRouter"": ""myrouter.mydomain.com"",
-
         // Hosting environment specific options.
 
         // ""Aws"": { ... }
@@ -274,7 +268,7 @@ USAGE:
         //                              backend package to be installed on manager nodes.  
         //                              This defaults to a known good release.
         //
-        // IMNPORTANT: [PdnsServerPackageUri] and [PdnsBackendRemotePackageUri] must come from
+        //  IMPORTANT: [PdnsServerPackageUri] and [PdnsBackendRemotePackageUri] must come from
         //             the same PowerDNS build.
         //
         //  PdnsRecursorPackageUri      URI for the PowerDNS Recursor package to be installed 

@@ -40,23 +40,6 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Indicates that host IP addresses are to be configured explicitly as static values.
-        /// This defaults to <c>true</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "StaticIP", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(true)]
-        public bool StaticIP { get; set; } = true;
-
-        /// <summary>
-        /// Specifies the default network gateway to be configured for hosts when <see cref="StaticIP"/> is set to <c>true</c>.
-        /// This defaults to the first usable address in the <see cref="HostingOptions.NodesSubnet"/>.  For example, for the
-        /// <b>10.0.0.0/24</b> subnet, this will be set to <b>10.0.0.1</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "Gateway", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string Gateway { get; set; } = null;
-
-        /// <summary>
         /// Indicates whether cluster host virtual machines are to be deployed on the current computer
         /// or whether the VMs or servers already exist and are ready to be configured.  This defaults
         /// to <c>true</c>.
@@ -86,57 +69,21 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
-            if (DeployVMs && !StaticIP)
+            if (DeployVMs && !clusterDefinition.Network.StaticIP)
             {
-                throw new ClusterDefinitionException($"[{nameof(MachineOptions)}.{nameof(StaticIP)}] must be [true] when [{nameof(MachineOptions)}.{nameof(DeployVMs)}=true]");
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.StaticIP)}] must be [true] when [{nameof(MachineOptions)}.{nameof(DeployVMs)}=true]");
             }
 
-            if (StaticIP)
+            if (DeployVMs)
             {
-                if (string.IsNullOrEmpty(clusterDefinition.Hosting.NodesSubnet))
+                if (string.IsNullOrEmpty(HostVhdxUri))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(HostingOptions.NodesSubnet)}] is required when [{nameof(MachineOptions)}.{nameof(StaticIP)}=true]");
+                    throw new ClusterDefinitionException($"[{nameof(MachineOptions)}.{nameof(HostVhdxUri)}] is required if [{nameof(MachineOptions)}.{nameof(DeployVMs)}=true].");
                 }
 
-                if (!NetworkCidr.TryParse(clusterDefinition.Hosting.NodesSubnet, out var subnet))
+                if (!Uri.TryCreate(HostVhdxUri, UriKind.Absolute, out Uri uri))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(HostingOptions.NodesSubnet)}={clusterDefinition.Hosting.NodesSubnet}] is not a valid IPv4 subnet.");
-                }
-
-                if (string.IsNullOrEmpty(Gateway))
-                {
-                    // Default to the first valid address of the cluster nodes subnet 
-                    // if this isn't already set.
-
-                    Gateway = subnet.FirstUsableAddress.ToString();
-                }
-
-                if (string.IsNullOrEmpty(Gateway))
-                {
-                    throw new ClusterDefinitionException($"[{nameof(MachineOptions)}.{nameof(Gateway)}] is required when [{nameof(MachineOptions)}.{nameof(StaticIP)}=true]");
-                }
-
-                if (!IPAddress.TryParse(Gateway, out var gateway) || gateway.AddressFamily != AddressFamily.InterNetwork)
-                {
-                    throw new ClusterDefinitionException($"[{nameof(MachineOptions)}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
-                }
-
-                if (!subnet.Contains(gateway))
-                {
-                    throw new ClusterDefinitionException($"[{nameof(MachineOptions)}.{nameof(Gateway)}={Gateway}] address is not within the [{nameof(HostingOptions)}.{nameof(HostingOptions.NodesSubnet)}={clusterDefinition.Hosting.NodesSubnet}] subnet.");
-                }
-
-                if (DeployVMs)
-                {
-                    if (string.IsNullOrEmpty(HostVhdxUri))
-                    {
-                        throw new ClusterDefinitionException($"[{nameof(MachineOptions)}.{nameof(HostVhdxUri)}] is required if [{nameof(MachineOptions)}.{nameof(DeployVMs)}=true].");
-                    }
-
-                    if (!Uri.TryCreate(HostVhdxUri, UriKind.Absolute, out Uri uri))
-                    {
-                        throw new ClusterDefinitionException($"[{nameof(MachineOptions)}.{nameof(HostVhdxUri)}={HostVhdxUri}] is required if [{nameof(MachineOptions)}.{nameof(DeployVMs)}=true].");
-                    }
+                    throw new ClusterDefinitionException($"[{nameof(MachineOptions)}.{nameof(HostVhdxUri)}={HostVhdxUri}] is required if [{nameof(MachineOptions)}.{nameof(DeployVMs)}=true].");
                 }
             }
         }

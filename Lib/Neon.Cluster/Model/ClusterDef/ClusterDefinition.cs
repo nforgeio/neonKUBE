@@ -502,14 +502,14 @@ namespace Neon.Cluster
             NetworkCidr nodesSubnet     = null;
             NetworkCidr vpnReturnSubnet = null;
 
-            if (Hosting.NodesSubnet != null)
+            if (Network.NodesSubnet != null)
             {
-                nodesSubnet = NetworkCidr.Parse(Hosting.NodesSubnet);
+                nodesSubnet = NetworkCidr.Parse(Network.NodesSubnet);
             }
 
             if (Vpn.Enabled)
             {
-                vpnReturnSubnet = NetworkCidr.Parse(Hosting.VpnReturnSubnet);
+                vpnReturnSubnet = NetworkCidr.Parse(Network.VpnReturnSubnet);
             }
 
             var addressToNode = new Dictionary<string, NodeDefinition>();
@@ -538,12 +538,12 @@ namespace Neon.Cluster
 
                     if (vpnReturnSubnet != null && vpnReturnSubnet.Contains(address))
                     {
-                        throw new ClusterDefinitionException($"Node [name={node.Name}] has private IP address [{node.PrivateAddress}] within the hosting [{nameof(Hosting.VpnReturnSubnet)}={Hosting.VpnReturnSubnet}].");
+                        throw new ClusterDefinitionException($"Node [name={node.Name}] has private IP address [{node.PrivateAddress}] within the hosting [{nameof(Network.VpnReturnSubnet)}={Network.VpnReturnSubnet}].");
                     }
 
                     if (nodesSubnet != null && !nodesSubnet.Contains(address))
                     {
-                        throw new ClusterDefinitionException($"Node [name={node.Name}] has private IP address [{node.PrivateAddress}] that is not within the hosting [{nameof(Hosting.NodesSubnet)}={Hosting.NodesSubnet}].");
+                        throw new ClusterDefinitionException($"Node [name={node.Name}] has private IP address [{node.PrivateAddress}] that is not within the hosting [{nameof(Network.NodesSubnet)}={Network.NodesSubnet}].");
                     }
                 }
                 else if (Hosting.Environment == HostingEnvironments.Machine)
