@@ -260,6 +260,9 @@ USAGE:
         //                              DNS servers: [ ""8.8.8.8"", ""8.8.4.4"" ] when the
         //                              property is NULL or empty.
         //
+        //  IMPORTANT: [PdnsServerPackageUri] and [PdnsBackendRemotePackageUri] must come from
+        //             the same PowerDNS build.
+        //
         //  PdnsServerPackageUri         URI for the PowerDNS Authoritative Server package to
         //                              be installed on manager nodes.  This defaults to
         //                              a known good release.
@@ -268,8 +271,6 @@ USAGE:
         //                              backend package to be installed on manager nodes.  
         //                              This defaults to a known good release.
         //
-        //  IMPORTANT: [PdnsServerPackageUri] and [PdnsBackendRemotePackageUri] must come from
-        //             the same PowerDNS build.
         //
         //  PdnsRecursorPackageUri      URI for the PowerDNS Recursor package to be installed 
         //                              on all cluster nodes.  This defaults to a known good 
