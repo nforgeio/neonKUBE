@@ -29,7 +29,7 @@ namespace Neon.Cluster
     public class VpnOptions
     {
         /// <summary>
-        /// The approximate number of IP addresses from the <see cref="HostingOptions.CloudVpnSubnet"/> to allocate
+        /// The approximate number of IP addresses from the <see cref="NetworkOptions.CloudVpnSubnet"/> to allocate
         /// to the OpenVPN server running on each manager node.  This is currently hardcoded to <b>64</b>.
         /// </summary>
         public const int ServerAddressCount = 64;
