@@ -115,7 +115,7 @@ namespace Neon.Cluster
         /// at <b>/neoncluster</b>.  Otherwise, we'll return a suitable path within the 
         /// current user's home directory.
         /// </remarks>
-        public static string GetClusterRootFolder(bool ignoreNeonToolContainerVar = false)
+        public static string GetRootFolder(bool ignoreNeonToolContainerVar = false)
         {
             if (!ignoreNeonToolContainerVar && InToolContainer)
             {
@@ -154,9 +154,9 @@ namespace Neon.Cluster
         /// Returns the root path where the [neon shell CMD ...] will copy secrets and run the command.
         /// </summary>
         /// <returns>The folder path.</returns>
-        public static string GetClusterShellFolder()
+        public static string GetShellFolder()
         {
-            var path = Path.Combine(GetClusterRootFolder(), "shell");
+            var path = Path.Combine(GetRootFolder(), "shell");
 
             Directory.CreateDirectory(path);
 
@@ -180,9 +180,9 @@ namespace Neon.Cluster
         /// to be currently logged in.
         /// </para>
         /// </remarks>
-        public static string GetClusterLoginFolder()
+        public static string GetLoginFolder()
         {
-            var path = Path.Combine(GetClusterRootFolder(), "logins");
+            var path = Path.Combine(GetRootFolder(), "logins");
 
             Directory.CreateDirectory(path);
 
@@ -192,9 +192,9 @@ namespace Neon.Cluster
         /// <summary>
         /// Returns the path to the file indicating which cluster is currently logged in.
         /// </summary>
-        public static string CurrentClusterPath
+        public static string CurrentPath
         {
-            get { return Path.Combine(GetClusterLoginFolder(), ".current"); }
+            get { return Path.Combine(GetLoginFolder(), ".current"); }
         }
 
         /// <summary>
@@ -203,12 +203,12 @@ namespace Neon.Cluster
         /// <param name="username">The operator's user name.</param>
         /// <param name="clusterName">The cluster name.</param>
         /// <returns>The path to the cluster's credentials file.</returns>
-        public static string GetClusterLoginPath(string username, string clusterName)
+        public static string GetLoginPath(string username, string clusterName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
 
-            return Path.Combine(GetClusterLoginFolder(), $"{username}@{clusterName}.login.json");
+            return Path.Combine(GetLoginFolder(), $"{username}@{clusterName}.login.json");
         }
 
         /// <summary>
@@ -216,9 +216,9 @@ namespace Neon.Cluster
         /// the directory if it doesn't already exist.
         /// </summary>
         /// <returns>The path to the nenCLUSTER setup folder.</returns>
-        public static string GetClusterSetupFolder()
+        public static string GetSetupFolder()
         {
-            var path = Path.Combine(GetClusterRootFolder(), "setup");
+            var path = Path.Combine(GetRootFolder(), "setup");
 
             Directory.CreateDirectory(path);
 
@@ -230,9 +230,9 @@ namespace Neon.Cluster
         /// virtual hard driver template file.
         /// </summary>
         /// <returns>The path to the nenCLUSTER setup folder.</returns>
-        public static string ClusterVHDXPath
+        public static string DefaultVHDXPath
         {
-            get { return Path.Combine(GetClusterSetupFolder(), "default.vhdx"); }
+            get { return Path.Combine(GetSetupFolder(), "default.vhdx"); }
         }
 
         /// <summary>
@@ -251,22 +251,22 @@ namespace Neon.Cluster
         /// the cluster itself or the cached copy.
         /// </note>
         /// </remarks>
-        public static ClusterLogin GetClusterLogin(bool noConnect = false)
+        public static ClusterLogin GetLogin(bool noConnect = false)
         {
-            if (File.Exists(CurrentClusterPath))
+            if (File.Exists(CurrentPath))
             {
                 var current = CurrentClusterLogin.Load();
                 var login   = NeonClusterHelper.SplitLogin(current.Login);
 
                 if (!login.IsOK)
                 {
-                    File.Delete(CurrentClusterPath);
+                    File.Delete(CurrentPath);
                     return null;
                 }
 
                 var username         = login.Username;
                 var clusterName      = login.ClusterName;
-                var clusterLoginPath = GetClusterLoginPath(username, clusterName);
+                var clusterLoginPath = GetLoginPath(username, clusterName);
 
                 if (File.Exists(clusterLoginPath))
                 {
@@ -281,7 +281,7 @@ namespace Neon.Cluster
 
                     OpenCluster(clusterLogin);
 
-                    var clusterDefinition = GetLiveClusterDefinition(username, clusterName);
+                    var clusterDefinition = GetLiveDefinition(username, clusterName);
 
                     clusterLogin.Definition.NodeDefinitions = clusterDefinition.NodeDefinitions;
 
@@ -291,7 +291,7 @@ namespace Neon.Cluster
                 {
                     // The referenced cluster file doesn't exist so quietly remove the ".current" file.
 
-                    File.Delete(CurrentClusterPath);
+                    File.Delete(CurrentPath);
                 }
             }
 
@@ -309,7 +309,7 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
 
-            return Path.Combine(GetClusterLoginFolder(), $"{username}@{clusterName}.def.json");
+            return Path.Combine(GetLoginFolder(), $"{username}@{clusterName}.def.json");
         }
 
         /// <summary>
@@ -319,9 +319,9 @@ namespace Neon.Cluster
         /// <param name="username">The operator's user name.</param>
         /// <param name="clusterName">The cluster name.</param>
         /// <returns>The current cluster definition or <c>null</c>.</returns>
-        public static ClusterDefinition GetLiveClusterDefinition(string username, string clusterName)
+        public static ClusterDefinition GetLiveDefinition(string username, string clusterName)
         {
-            var clusterLoginPath = GetClusterLoginPath(username, clusterName);
+            var clusterLoginPath = GetLoginPath(username, clusterName);
 
             if (!File.Exists(clusterLoginPath))
             {
@@ -362,7 +362,7 @@ namespace Neon.Cluster
                 }
             }
 
-            var clusterDefinition = GetClusterDefinitionAsync(cachedDefinition).Result;
+            var clusterDefinition = GetDefinitionAsync(cachedDefinition).Result;
 
             if (!object.ReferenceEquals(clusterDefinition, cachedDefinition))
             {
@@ -406,7 +406,7 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
 
-            var path         = Path.Combine(GetClusterLoginFolder(), $"{username}@{clusterName}.login.json");
+            var path         = Path.Combine(GetLoginFolder(), $"{username}@{clusterName}.login.json");
             var clusterLogin = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(path));
 
             clusterLogin.Path = path;
@@ -570,7 +570,7 @@ namespace Neon.Cluster
             }
             else
             {
-                ClusterLogin = NeonClusterHelper.GetClusterLogin();
+                ClusterLogin = NeonClusterHelper.GetLogin();
 
                 if (ClusterLogin == null)
                 {
@@ -946,7 +946,7 @@ namespace Neon.Cluster
         /// locally within the cluster login and where the cluster definition changes infrequently.
         /// </para>
         /// </remarks>
-        public static async Task<ClusterDefinition> GetClusterDefinitionAsync(ClusterDefinition cachedDefinition = null, CancellationToken cancellationToken = default)
+        public static async Task<ClusterDefinition> GetDefinitionAsync(ClusterDefinition cachedDefinition = null, CancellationToken cancellationToken = default)
         {
             VerifyConnected();
 
@@ -1001,7 +1001,7 @@ namespace Neon.Cluster
         /// <param name="definition">The cluster definition.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <exception cref="InvalidOperationException">Thrown if no cluster is connected.</exception>
-        public async static Task PutClusterDefinitionAsync(ClusterDefinition definition, CancellationToken cancellationToken = default)
+        public async static Task PutDefinitionAsync(ClusterDefinition definition, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(definition != null);
 
@@ -1336,7 +1336,7 @@ namespace Neon.Cluster
         /// <param name="secretName">The local container name for the Docker secret.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The <see cref="Couchbase.Cluster"/>.</returns>
-        public static async Task<Couchbase.Cluster> OpenCouchbaseClusterAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default)
+        public static async Task<Couchbase.Cluster> OpenCouchbaseAsync(string connectionKey, string secretName, CancellationToken cancellationToken = default)
         {
             VerifyConnected();
 

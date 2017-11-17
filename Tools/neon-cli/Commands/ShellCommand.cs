@@ -116,7 +116,7 @@ The shell will be CMD.EXE for Windows and Bash for OSX and Linux.
             }
 
             var orgDirectory = Directory.GetCurrentDirectory();
-            var shellFolder  = Path.Combine(NeonClusterHelper.GetClusterShellFolder(), Guid.NewGuid().ToString("D"));
+            var shellFolder  = Path.Combine(NeonClusterHelper.GetShellFolder(), Guid.NewGuid().ToString("D"));
             var exitCode     = 1;
 
             try

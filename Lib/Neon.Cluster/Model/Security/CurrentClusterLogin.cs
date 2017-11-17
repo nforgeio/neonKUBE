@@ -39,14 +39,14 @@ namespace Neon.Cluster
         /// <returns>The current login information or <c>null</c> if the operator is not logged in.</returns>
         public static CurrentClusterLogin Load()
         {
-            if (!File.Exists(NeonClusterHelper.CurrentClusterPath))
+            if (!File.Exists(NeonClusterHelper.CurrentPath))
             {
                 return null;    // Not logged in.
             }
 
             try
             {
-                return NeonHelper.JsonDeserialize<CurrentClusterLogin>(File.ReadAllText(NeonClusterHelper.CurrentClusterPath));
+                return NeonHelper.JsonDeserialize<CurrentClusterLogin>(File.ReadAllText(NeonClusterHelper.CurrentPath));
             }
             catch
             {
@@ -62,9 +62,9 @@ namespace Neon.Cluster
         /// </summary>
         public static void Delete()
         {
-            if (File.Exists(NeonClusterHelper.CurrentClusterPath))
+            if (File.Exists(NeonClusterHelper.CurrentPath))
             {
-                File.Delete(NeonClusterHelper.CurrentClusterPath);
+                File.Delete(NeonClusterHelper.CurrentPath);
             }
         }
 
@@ -109,7 +109,7 @@ namespace Neon.Cluster
         /// </summary>
         public void Save()
         {
-            File.WriteAllText(NeonClusterHelper.CurrentClusterPath, NeonHelper.JsonSerialize(this, Formatting.Indented));
+            File.WriteAllText(NeonClusterHelper.CurrentPath, NeonHelper.JsonSerialize(this, Formatting.Indented));
         }
     }
 }

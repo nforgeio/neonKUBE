@@ -272,7 +272,7 @@ namespace NeonClusterManager
                     // Retrieve the current cluster definition from Consul if we don't already
                     // have it or if it's changed from what we've cached.
 
-                    cachedClusterDefinition = await NeonClusterHelper.GetClusterDefinitionAsync(cachedClusterDefinition, terminator.CancellationToken);
+                    cachedClusterDefinition = await NeonClusterHelper.GetDefinitionAsync(cachedClusterDefinition, terminator.CancellationToken);
 
                     // Retrieve the swarm nodes from Docker.
 
@@ -303,7 +303,7 @@ namespace NeonClusterManager
                     {
                         log.LogInfo(() => "NodePoller: Changed cluster definition.  Updating Consul.");
 
-                        await NeonClusterHelper.PutClusterDefinitionAsync(currentClusterDefinition, terminator.CancellationToken);
+                        await NeonClusterHelper.PutDefinitionAsync(currentClusterDefinition, terminator.CancellationToken);
 
                         cachedClusterDefinition = currentClusterDefinition;
                     }

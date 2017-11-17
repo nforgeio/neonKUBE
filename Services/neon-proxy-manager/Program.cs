@@ -1360,7 +1360,7 @@ backend http:{httpRoute.Name}
                 // this with the cluster definition loaded from Consul to create
                 // a cluster proxy.
 
-                cachedClusterDefinition         = await NeonClusterHelper.GetClusterDefinitionAsync(cachedClusterDefinition, cancellationToken);
+                cachedClusterDefinition         = await NeonClusterHelper.GetDefinitionAsync(cachedClusterDefinition, cancellationToken);
                 cachedClusterDefinition.Hosting = await vault.ReadJsonAsync<HostingOptions>("neon-secret/hosting/options", cancellationToken);
 
                 var cluster = new ClusterProxy(cachedClusterDefinition);

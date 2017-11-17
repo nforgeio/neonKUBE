@@ -138,7 +138,7 @@ namespace Neon.Cluster
             }
             else
             {
-                return Path.Combine(NeonClusterHelper.GetClusterRootFolder(), "vpn");
+                return Path.Combine(NeonClusterHelper.GetRootFolder(), "vpn");
             }
         }
 

@@ -144,10 +144,10 @@ tool requires admin priviledges for direct mode.
             // Configure the encrypted user-specific application data folder and initialize
             // the subfolders.
 
-            ClusterRootFolder  = NeonClusterHelper.GetClusterRootFolder();
-            ClusterLoginFolder = NeonClusterHelper.GetClusterLoginFolder();
-            ClusterSetupFolder = NeonClusterHelper.GetClusterSetupFolder();
-            CurrentClusterPath = NeonClusterHelper.CurrentClusterPath;
+            ClusterRootFolder  = NeonClusterHelper.GetRootFolder();
+            ClusterLoginFolder = NeonClusterHelper.GetLoginFolder();
+            ClusterSetupFolder = NeonClusterHelper.GetSetupFolder();
+            CurrentClusterPath = NeonClusterHelper.CurrentPath;
 
             // We're going to special case the temp folder and locate this within the [/dev/shm] 
             // tmpfs based RAM drive if we're running in the tool container.
@@ -311,7 +311,7 @@ tool requires admin priviledges for direct mode.
 
                     using (var shim = new DockerShim(CommandLine))
                     {
-                        var secretsRoot = NeonClusterHelper.GetClusterRootFolder(ignoreNeonToolContainerVar: true);
+                        var secretsRoot = NeonClusterHelper.GetRootFolder(ignoreNeonToolContainerVar: true);
 
                         ClusterLogin = GetClusterLogin();
 
@@ -728,7 +728,7 @@ tool requires admin priviledges for direct mode.
         /// <returns>The current cluster login or <c>null</c>.</returns>
         public static ClusterLogin GetClusterLogin(bool isRequired = false)
         {
-            var clusterLogin = NeonClusterHelper.GetClusterLogin(!isRequired);
+            var clusterLogin = NeonClusterHelper.GetLogin(!isRequired);
 
             if (isRequired && clusterLogin == null)
             {
@@ -766,7 +766,7 @@ tool requires admin priviledges for direct mode.
                 throw new Exception($"Cluster login [{clusterLogin.LoginName}] does not reference a fully configured cluster.  Use the [neon cluster setup...] command to complete cluster configuration.");
             }
 
-            NeonClusterHelper.OpenRemoteCluster(loginPath: NeonClusterHelper.GetClusterLoginPath(NeonClusterConst.RootUser, Program.ClusterLogin.ClusterName));
+            NeonClusterHelper.OpenRemoteCluster(loginPath: NeonClusterHelper.GetLoginPath(NeonClusterConst.RootUser, Program.ClusterLogin.ClusterName));
 
             // Note that we never try to connect the VPN from within the
             // [neon-cli] container.  Its expected that the VPN is always

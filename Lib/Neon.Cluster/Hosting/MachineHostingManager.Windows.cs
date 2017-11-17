@@ -33,7 +33,7 @@ namespace Neon.Cluster
 {
     public partial class MachineHostingManager : HostingManager
     {
-        private string vmDriveTemplatePath = NeonClusterHelper.ClusterVHDXPath;
+        private string vmDriveTemplatePath = NeonClusterHelper.DefaultVHDXPath;
         private string vmDriveFolder;
 
         /// <summary>
