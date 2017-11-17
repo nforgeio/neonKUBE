@@ -271,6 +271,16 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Looks for the <see cref="NodeProxy{TMetadata}"/> instance for a named node.
+        /// </summary>
+        /// <param name="nodeName">The node name.</param>
+        /// <returns>The node proxy instance or <c>null</c> if the named node does not exist.</returns>
+        public NodeProxy<NodeDefinition> FindNode(string nodeName)
+        {
+            return Nodes.SingleOrDefault(n => string.Compare(n.Name, nodeName, StringComparison.OrdinalIgnoreCase) == 0);
+        }
+
+        /// <summary>
         /// Performs cluster configuration steps.
         /// </summary>
         /// <param name="steps">The configuration steps.</param>

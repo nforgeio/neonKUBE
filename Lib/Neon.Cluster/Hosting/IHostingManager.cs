@@ -41,8 +41,13 @@ namespace Neon.Cluster
         /// Creates and initializes the cluster resources such as the virtual machines,
         /// networks, load balancers, network security groups, public IP addresses etc.
         /// </summary>
+        /// <param name="force">
+        /// Indicates that any existing resources (such as virtual machines) 
+        /// are to be replaced or overwritten during privisioning.  The actual interpretation
+        /// of this parameter is specific to each hosting manager implementation.
+        /// </param>
         /// <returns><c>true</c> if the operation was successful.</returns>
-        bool Provision();
+        bool Provision(bool force);
 
         /// <summary>
         /// Returns the FQDN or IP address (as a string) and the port to use

@@ -40,6 +40,13 @@ ARGUMENTS:
 
 OPTIONS:
 
+    --force                     - Optionally specifies that existing resources
+                                  (such as virtual machines) are to be 
+                                  overwritten or replaced.  The actual 
+                                  interpretation of this is specific to 
+                                  the hosting enviroment.  This defaults
+                                  to [false].
+
     --package-cache=CACHE-URI   - Optionally specifies an APT Package cache
                                   server to improve setup performance.
 
@@ -61,6 +68,7 @@ Server Requirements:
         private string          packageCacheUri;
         private VpnCaFiles      vpnCaFiles;
         private VpnCredentials  vpnCredentials;
+        private bool            force;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -71,7 +79,7 @@ Server Requirements:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--package-cache", "--unclassified" }; }
+            get { return new string[] { "--force", "--package-cache", "--unclassified" }; }
         }
 
         /// <inheritdoc/>
@@ -104,6 +112,7 @@ Server Requirements:
             }
 
             clusterDefPath = commandLine.Arguments[0];
+            force          = commandLine.GetFlag("--force");
 
             ClusterDefinition.ValidateFile(clusterDefPath);
 
@@ -158,7 +167,7 @@ Server Requirements:
             // such as virtual machines, networks, load balancers, public IP addresses, security
             // groups,... as required for the environment.
 
-            if (!@hostingManager.Provision())
+            if (!@hostingManager.Provision(force))
             {
                 Program.Exit(1);
             }

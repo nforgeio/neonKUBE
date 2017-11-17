@@ -58,7 +58,7 @@ namespace Neon.Cluster
         }
 
         /// <inheritdoc/>
-        public override bool Provision()
+        public override bool Provision(bool force )
         {
             throw new NotImplementedException("$todo(jeff.lill): Implement this.");
         }

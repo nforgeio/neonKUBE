@@ -4,6 +4,7 @@
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
 using System;
+using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Dynamic;
@@ -51,6 +52,8 @@ namespace Neon.Cluster.HyperV
         //---------------------------------------------------------------------
         // Implementation
 
+        private const int PowershellBufferWidth = 16192;
+
         /// <summary>
         /// Default constructor to be used to execute local PowerShell commands.
         /// </summary>
@@ -60,8 +63,6 @@ namespace Neon.Cluster.HyperV
             {
                 throw new NotSupportedException($"{nameof(HyperVClient)} is only supported on Windows.");
             }
-
-            // var result = NeonHelper.ExecuteCaptureStreams("powershell ");
         }
 
         /// <summary>
@@ -79,7 +80,7 @@ namespace Neon.Cluster.HyperV
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            // Nothing to dispose in the current implementation.
+            // Nothing to dispose for the current implementation.
         }
 
         /// <summary>
@@ -98,15 +99,47 @@ namespace Neon.Cluster.HyperV
 
                 // Load the environment variables.
 
-                foreach (KeyValuePair<string, string> item in Environment.GetEnvironmentVariables().Values)
+                foreach (DictionaryEntry item in Environment.GetEnvironmentVariables())
                 {
-                    reader.Set(item.Key, item.Value);
+                    // $hack(jeff.lill):
+                    //
+                    // Some common Windows enmvironment variables names include characters
+                    // like parens that are not compatible with PreprocessReader.  We're
+                    // just going to catch the exceptions and ignore these.
+
+                    var key = (string)item.Key;
+
+                    if (PreprocessReader.VariableValidationRegex.IsMatch(key))
+                    {
+                        reader.Set(key, (string)item.Value);
+                    }
                 }
 
-                // Perform the replacements.
+                // Perform the substitutions.
 
                 return reader.ReadToEnd();
             }
+        }
+
+        /// <summary>
+        /// Executes a PowerShell command that returns a simple string result.
+        /// </summary>
+        /// <param name="command">The command string.</param>
+        /// <param name="noEnvironmentVars">
+        /// Optionally disables that environment variable subsitution (defaults to <c>false</c>).
+        /// </param>
+        /// <returns>The list of <c>dynamic</c> objects parsed from the command response.</returns>
+        /// <exception cref="HyperVException">Thrown if the command failed.</exception>
+        public string Execute(string command, bool noEnvironmentVars = false)
+        {
+            var result = NeonHelper.ExecuteCaptureStreams("powershell.exe", $"{command} | Out-String -Width {PowershellBufferWidth}");
+
+            if (result.ExitCode != 0)
+            {
+                throw new HyperVException(result.AllText);
+            }
+
+            return result.AllText;
         }
 
         /// <summary>
@@ -128,9 +161,16 @@ namespace Neon.Cluster.HyperV
             if (!noEnvironmentVars)
             {
                 command = ExpandEnvironmentVars(command);
+
+                // $hack(jeff.lill):
+                //
+                // ExpandEnvironmentVars() appends a CRLF to the end of the 
+                // string, so we'll remove that here.
+
+                command = command.TrimEnd();
             }
 
-            var result = NeonHelper.ExecuteCaptureStreams("powershell.exe", command);
+            var result = NeonHelper.ExecuteCaptureStreams("powershell.exe", $"{command} | Out-String -Width {PowershellBufferWidth} | Format-Table");
 
             if (result.ExitCode != 0)
             {
@@ -155,9 +195,9 @@ namespace Neon.Cluster.HyperV
 
                     column.Start = pos;
 
-                    // Skip over the underlines.
+                    // Skip over the underlines for the current column.
 
-                    while (columnUnderlines[pos] == '-')
+                    while (pos < columnUnderlines.Length && columnUnderlines[pos] == '-')
                     {
                         pos++;
                     }
@@ -170,6 +210,14 @@ namespace Neon.Cluster.HyperV
                     }
 
                     column.Width = pos - column.Start;
+
+                    if (pos < columnUnderlines.Length)
+                    {
+                        // Reduce the column width by one if this isn't the last column
+                        // to ignore the space seperating columns.
+
+                        column.Width--;
+                    }
 
                     columns.Add(column);
                 }

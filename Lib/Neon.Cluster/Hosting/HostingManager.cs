@@ -124,7 +124,7 @@ namespace Neon.Cluster
         public double WaitSeconds { get; set; } = 0.0;
 
         /// <inheritdoc/>
-        public abstract bool Provision();
+        public abstract bool Provision(bool force);
 
         /// <inheritdoc/>
         public abstract (string Address, int Port) GetSshEndpoint(string nodeName);

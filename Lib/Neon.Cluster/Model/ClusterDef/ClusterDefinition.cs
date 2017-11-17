@@ -414,11 +414,11 @@ namespace Neon.Cluster
             Log       = Log ?? new LogOptions();
             Dashboard = Dashboard ?? new DashboardOptions();
 
+            Network.Validate(this);
             Hosting.Validate(this);
             Vpn.Validate(this);
             HostAuth.Validate(this);
             Docker.Validate(this);
-            Network.Validate(this);
             Consul.Validate(this);
             Vault.Validate(this);
             Log.Validate(this);
@@ -466,7 +466,7 @@ namespace Neon.Cluster
                 {
                     // Verify that the cache server is running.
 
-                    using (var client = new HttpClient())
+                    using (var client = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) })
                     {
                         try
                         {

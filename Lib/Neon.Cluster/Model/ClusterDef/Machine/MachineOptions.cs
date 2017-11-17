@@ -49,6 +49,23 @@ namespace Neon.Cluster
         public bool DeployVMs { get; set; } = true;
 
         /// <summary>
+        /// Path to the folder where vitual machine hard drive folders are to be persisted.
+        /// This defaults to the default folder for Windows or Macintosh.
+        /// </summary>
+        [JsonProperty(PropertyName = "VMDriveFolder", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string VMDriveFolder { get; set; } = null;
+
+        /// <summary>
+        /// Specifies the amount of memory to allocate to each cluster virtual machine when <see cref="DeployVMs"/>
+        /// is specified.  This is specified as a string that can be an integer byte count or an integer with
+        /// units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>2GB</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "VMMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue("2GB")]
+        public string VMMemory { get; set; } = "2GB";
+
+        /// <summary>
         /// URI to the zipped VHDX image with the base Docker host operating system.  This defaults to
         /// <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.vhdx.zip</b>
         /// which is the latest supported Ubuntu 16.04 image.  This must be set if <see cref="DeployVMs"/>

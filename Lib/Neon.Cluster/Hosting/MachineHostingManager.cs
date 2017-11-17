@@ -22,7 +22,6 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using Neon.Cluster.HyperV;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
@@ -34,7 +33,7 @@ namespace Neon.Cluster
     /// <summary>
     /// Manages cluster provisioning directly on bare metal or virtual machines.
     /// </summary>
-    public class MachineHostingManager : HostingManager
+    public partial class MachineHostingManager : HostingManager
     {
         private ClusterProxy cluster;
 
@@ -59,7 +58,7 @@ namespace Neon.Cluster
         }
 
         /// <inheritdoc/>
-        public override bool Provision()
+        public override bool Provision(bool force)
         {
             // If a public address isn't explicitly specified, we'll assume that the
             // tool is running inside the network and can access the private address.
@@ -74,7 +73,7 @@ namespace Neon.Cluster
 
             if (cluster.Definition.Hosting.Machine.DeployVMs)
             {
-                DeployVMs();
+                DeployVMs(force);
             }
 
             return true;
@@ -83,42 +82,21 @@ namespace Neon.Cluster
         /// <summary>
         /// Handles the deployment of the cluster virtual machines.
         /// </summary>
-        private void DeployVMs()
+        /// <param name="force">Specifies whether any existing named VMs are to be stopped and overwritten.</param>
+        private void DeployVMs(bool force)
         {
             if (NeonHelper.IsWindows)
             {
-                DeployWindowsVMs();
+                DeployWindowsVMs(force);
             }
             else if (NeonHelper.IsOSX)
             {
-                DeployOsxVMs();
+                DeployOsxVMs(force);
             }
             else
             {
                 throw new NotSupportedException("neonCLUSTER virtual machines may only be deployed on Windows or Macintosh OSX.");
             }
-        }
-
-        /// <summary>
-        /// Handles the deploymenmt of the cluster virtual machines on 
-        /// Windows Hyper-V.
-        /// </summary>
-        private void DeployWindowsVMs()
-        {
-            using (var hyperv = new HyperVClient())
-            {
-            }
-        }
-
-        /// <summary>
-        /// Handles the deploymenmt of the cluster virtual machines on 
-        /// Macintosh OSX.
-        /// </summary>
-        private void DeployOsxVMs()
-        {
-            // $todo(jeff.lill): Implement this.
-
-            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>
