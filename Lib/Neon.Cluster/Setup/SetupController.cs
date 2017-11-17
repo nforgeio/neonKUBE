@@ -48,7 +48,6 @@ namespace Neon.Cluster
         //---------------------------------------------------------------------
         // Implementation
 
-        private string                                      operationSummary;
         private List<NodeProxy<NodeDefinition>>             nodes;
         private List<Step>                                  steps;
         private bool                                        error;
@@ -85,12 +84,18 @@ namespace Neon.Cluster
                 summary += name;
             }
 
-            this.operationSummary = summary;
+            this.OperationSummary = summary;
             this.nodes            = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
             this.steps            = new List<Step>();
             this.sbDisplay        = new StringBuilder();
             this.lastDisplay      = string.Empty;
         }
+
+        /// <summary>
+        /// Text describing the operation.  This is initialized by the constructor buy may be
+        /// updated during the course of performing a setup operation.
+        /// </summary>
+        public string OperationSummary { get; set; } = string.Empty;
 
         /// <summary>
         /// Specifies whether the class should print setup status to the console.
@@ -483,7 +488,7 @@ namespace Neon.Cluster
             sbDisplay.Clear();
 
             sbDisplay.AppendLine();
-            sbDisplay.AppendLine($" {operationSummary}");
+            sbDisplay.AppendLine($" {OperationSummary}");
             sbDisplay.AppendLine();
 
             sbDisplay.AppendLine();
