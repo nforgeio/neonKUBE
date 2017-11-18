@@ -88,6 +88,8 @@ COMMAND SUMMARY:
     neon version            [-n]
     neon upload             SOURCE TARGET [NODE...]
     neon vault              ARGS
+    neon zip create         SOURCE ARCHIVE
+    neon zip extract        ARCHIVE FOLDER
 
 ARGUMENTS:
 
@@ -230,7 +232,8 @@ tool requires admin priviledges for direct mode.
                     new UploadCommand(),
                     new VaultCommand(),
                     new VersionCommand(),
-                    new VpnCommand()
+                    new VpnCommand(),
+                    new ZipCommand()
                 };
 
                 // Determine whether we're running in direct mode or shimming to a Docker container.
