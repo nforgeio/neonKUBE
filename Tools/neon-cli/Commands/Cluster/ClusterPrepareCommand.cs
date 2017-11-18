@@ -167,7 +167,7 @@ Server Requirements:
             // such as virtual machines, networks, load balancers, public IP addresses, security
             // groups,... as required for the environment.
 
-            if (!@hostingManager.Provision(force))
+            if (!hostingManager.Provision(force))
             {
                 Program.Exit(1);
             }
@@ -198,10 +198,7 @@ Server Requirements:
             // and configure OpenVPN on the manager nodes so that cluster setup will be
             // able to reach the nodes on all ports.
 
-            var operation = 
-                cluster.Definition.Hosting.Environment == HostingEnvironments.Machine
-                    ? $"Preparing [{cluster.Definition.Name}] hosts"
-                    : $"STEP 2: Preparing [{cluster.Definition.Name}] virtual machines";
+            var operation  = $"Preparing [{cluster.Definition.Name}] hosts";
 
             var controller = 
                 new SetupController(operation, cluster.Nodes)

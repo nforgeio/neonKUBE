@@ -124,6 +124,12 @@ namespace Neon.Cluster
         public double WaitSeconds { get; set; } = 0.0;
 
         /// <inheritdoc/>
+        public virtual bool IsProvisionNOP
+        {
+            get { return false; }
+        }
+
+        /// <inheritdoc/>
         public abstract bool Provision(bool force);
 
         /// <inheritdoc/>

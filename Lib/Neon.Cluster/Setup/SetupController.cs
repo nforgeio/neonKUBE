@@ -48,8 +48,11 @@ namespace Neon.Cluster
         //---------------------------------------------------------------------
         // Implementation
 
+        private string                                      operationTitle;
+        private string                                      operationStatus;
         private List<NodeProxy<NodeDefinition>>             nodes;
         private List<Step>                                  steps;
+        private Step                                        currentStep;
         private bool                                        error;
         private bool                                        hasNodeSteps;
         private StringBuilder                               sbDisplay;
@@ -58,44 +61,39 @@ namespace Neon.Cluster
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="operationSummary">Summarizes the high-level operation being performed.</param>
+        /// <param name="operationTitle">Summarizes the high-level operation being performed.</param>
         /// <param name="nodes">The node proxies for the cluster nodes being manipulated.</param>
-        public SetupController(string operationSummary, IEnumerable<NodeProxy<NodeDefinition>> nodes)
-            : this(new string[] { operationSummary }, nodes)
+        public SetupController(string operationTitle, IEnumerable<NodeProxy<NodeDefinition>> nodes)
+            : this(new string[] { operationTitle }, nodes)
         {
         }
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="operationSummary">Summarizes the high-level operation being performed.</param>
+        /// <param name="operationTitle">Summarizes the high-level operation being performed.</param>
         /// <param name="nodes">The node proxies for the cluster nodes being manipulated.</param>
-        public SetupController(string[] operationSummary, IEnumerable<NodeProxy<NodeDefinition>> nodes)
+        public SetupController(string[] operationTitle, IEnumerable<NodeProxy<NodeDefinition>> nodes)
         {
-            var summary = string.Empty;
+            var title = string.Empty;
 
-            foreach (var name in operationSummary)
+            foreach (var name in operationTitle)
             {
-                if (summary.Length > 0)
+                if (title.Length > 0)
                 {
-                    summary += ' ';
+                    title += ' ';
                 }
 
-                summary += name;
+                title += name;
             }
 
-            this.OperationSummary = summary;
-            this.nodes            = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
-            this.steps            = new List<Step>();
-            this.sbDisplay        = new StringBuilder();
-            this.lastDisplay      = string.Empty;
+            this.operationTitle  = title;
+            this.operationStatus = string.Empty;
+            this.nodes           = nodes.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase).ToList();
+            this.steps           = new List<Step>();
+            this.sbDisplay       = new StringBuilder();
+            this.lastDisplay     = string.Empty;
         }
-
-        /// <summary>
-        /// Text describing the operation.  This is initialized by the constructor buy may be
-        /// updated during the course of performing a setup operation.
-        /// </summary>
-        public string OperationSummary { get; set; } = string.Empty;
 
         /// <summary>
         /// Specifies whether the class should print setup status to the console.
@@ -255,9 +253,18 @@ namespace Neon.Cluster
             {
                 foreach (var step in steps)
                 {
-                    if (!PerformStep(step))
+                    currentStep = step;
+
+                    try
                     {
-                        break;
+                        if (!PerformStep(step))
+                        {
+                            break;
+                        }
+                    }
+                    finally
+                    {
+                        currentStep = null;
                     }
                 }
 
@@ -286,6 +293,15 @@ namespace Neon.Cluster
                     }
                 }
             }
+        }
+
+        /// <summary>
+        /// Sets the optation status text.
+        /// </summary>
+        /// <param name="status">The optional operation status text to be displayed below the operation title.</param>
+        public void SetOperationStatus(string status = null)
+        {
+            operationStatus = status ?? string.Empty;
         }
 
         /// <summary>
@@ -393,7 +409,7 @@ namespace Neon.Cluster
                     break;
                 }
 
-                 Thread.Sleep(TimeSpan.FromMilliseconds(100));
+                Thread.Sleep(TimeSpan.FromMilliseconds(100));
             }
 
             error = stepNodes.FirstOrDefault(n => n.IsFaulted) != null;
@@ -488,7 +504,9 @@ namespace Neon.Cluster
             sbDisplay.Clear();
 
             sbDisplay.AppendLine();
-            sbDisplay.AppendLine($" {OperationSummary}");
+            sbDisplay.AppendLine($" {operationTitle}");
+            sbDisplay.AppendLine($" {new string('-', operationTitle.Length)}");
+            sbDisplay.AppendLine($" {operationStatus}");
             sbDisplay.AppendLine();
 
             sbDisplay.AppendLine();

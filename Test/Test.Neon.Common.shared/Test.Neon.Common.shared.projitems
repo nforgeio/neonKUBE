@@ -24,6 +24,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)Helper\Test_Helper.Misc.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helper\Test_LinuxPermissions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helper\Test_WeakEventController.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)IO\Test_TempFile.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\Test_BlockStream.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\Test_LinuxPath.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)IO\Test_PreprocessReader.cs" />

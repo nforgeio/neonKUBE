@@ -157,7 +157,7 @@ namespace Neon.Cluster.HyperV
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             CheckDisposed();
 
-            if (FindVM(name))
+            if (VMExists(name))
             {
                 throw new HyperVException($"Virtual machine [{name}] already exists.");
             }
@@ -240,11 +240,11 @@ namespace Neon.Cluster.HyperV
         }
 
         /// <summary>
-        /// Determines whether a named virtual machine if it exists.
+        /// Determines whether a named virtual machine exists.
         /// </summary>
         /// <param name="name">The machine name.</param>
         /// <returns><c>true</c> if the machine exists.</returns>
-        public bool FindVM(string name)
+        public bool VMExists(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             CheckDisposed();

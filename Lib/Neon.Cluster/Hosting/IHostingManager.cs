@@ -38,6 +38,11 @@ namespace Neon.Cluster
     public interface IHostingManager : IDisposable
     {
         /// <summary>
+        /// Returns <c>true</c> if the provisioning operation actually does nothing.
+        /// </summary>
+        bool IsProvisionNOP { get; }
+
+        /// <summary>
         /// Creates and initializes the cluster resources such as the virtual machines,
         /// networks, load balancers, network security groups, public IP addresses etc.
         /// </summary>

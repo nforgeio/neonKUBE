@@ -132,14 +132,19 @@ namespace Neon.Cluster.HyperV
         /// <exception cref="HyperVException">Thrown if the command failed.</exception>
         public string Execute(string command, bool noEnvironmentVars = false)
         {
-            var result = NeonHelper.ExecuteCaptureStreams("powershell.exe", $"{command} | Out-String -Width {PowershellBufferWidth}");
-
-            if (result.ExitCode != 0)
+            using (var file = new TempFile(suffix: ".ps1"))
             {
-                throw new HyperVException(result.AllText);
-            }
+                File.WriteAllText(file.Path, $"{command} | Out-String -Width {PowershellBufferWidth}");
 
-            return result.AllText;
+                var result = NeonHelper.ExecuteCaptureStreams("powershell.exe", $"-file \"{file.Path}\"");
+
+                if (result.ExitCode != 0)
+                {
+                    throw new HyperVException(result.AllText);
+                }
+
+                return result.AllText;
+            }
         }
 
         /// <summary>
@@ -170,88 +175,93 @@ namespace Neon.Cluster.HyperV
                 command = command.TrimEnd();
             }
 
-            var result = NeonHelper.ExecuteCaptureStreams("powershell.exe", $"{command} | Out-String -Width {PowershellBufferWidth} | Format-Table");
-
-            if (result.ExitCode != 0)
+            using (var file = new TempFile(suffix: ".ps1"))
             {
-                throw new HyperVException(result.AllText);
-            }
+                File.WriteAllText(file.Path, $"{command} | Out-String -Width {PowershellBufferWidth} | Format-Table");
 
-            // Parse the output text as a table.
+                var result = NeonHelper.ExecuteCaptureStreams("powershell.exe", $"-file \"{file.Path}\"");
 
-            using (var reader = new StringReader(result.OutputText))
-            {
-                var columnTitles     = reader.ReadLine();   // Line with the column titles
-                var columnUnderlines = reader.ReadLine();   // Line with the "----" underlines
-                var columns          = new List<Column>();
-
-                // Parse the underlines to determine the column positions.
-
-                var pos = 0;
-
-                while (pos < columnUnderlines.Length)
+                if (result.ExitCode != 0)
                 {
-                    var column = new Column();
-
-                    column.Start = pos;
-
-                    // Skip over the underlines for the current column.
-
-                    while (pos < columnUnderlines.Length && columnUnderlines[pos] == '-')
-                    {
-                        pos++;
-                    }
-
-                    // Skip over the whitespace between the underlines.
-
-                    while (pos < columnUnderlines.Length && columnUnderlines[pos] == ' ')
-                    {
-                        pos++;
-                    }
-
-                    column.Width = pos - column.Start;
-
-                    if (pos < columnUnderlines.Length)
-                    {
-                        // Reduce the column width by one if this isn't the last column
-                        // to ignore the space seperating columns.
-
-                        column.Width--;
-                    }
-
-                    columns.Add(column);
+                    throw new HyperVException(result.AllText);
                 }
 
-                // Extract the column titles.
+                // Parse the output text as a table.
 
-                foreach (var column in columns)
+                using (var reader = new StringReader(result.OutputText))
                 {
-                    column.Title = columnTitles.Substring(column.Start, column.Width).Trim();
-                }
+                    var columnTitles     = reader.ReadLine();   // Line with the column titles
+                    var columnUnderlines = reader.ReadLine();   // Line with the "----" column underlines
+                    var columns          = new List<Column>();
 
-                // Parse the data lines.
+                    // Parse the underlines to determine the column positions.
 
-                var items = new List<dynamic>();
+                    var pos = 0;
 
-                for (var line = reader.ReadLine(); line != null; line = reader.ReadLine())
-                {
-                    if (line.Length == 0)
+                    while (pos < columnUnderlines.Length)
                     {
-                        continue;   // Ignore blank lines.
+                        var column = new Column();
+
+                        column.Start = pos;
+
+                        // Skip over the underlines for the current column.
+
+                        while (pos < columnUnderlines.Length && columnUnderlines[pos] == '-')
+                        {
+                            pos++;
+                        }
+
+                        // Skip over the whitespace between the underlines.
+
+                        while (pos < columnUnderlines.Length && columnUnderlines[pos] == ' ')
+                        {
+                            pos++;
+                        }
+
+                        column.Width = pos - column.Start;
+
+                        if (pos < columnUnderlines.Length)
+                        {
+                            // Reduce the column width by one if this isn't the last column
+                            // to ignore the space seperating columns.
+
+                            column.Width--;
+                        }
+
+                        columns.Add(column);
                     }
 
-                    var item           = new ExpandoObject();
-                    var itemDictionary = (IDictionary<string, object>)item;
+                    // Extract the column titles.
 
                     foreach (var column in columns)
                     {
-                        itemDictionary.Add(column.Title, line.Substring(column.Start, column.Width).TrimEnd());
+                        column.Title = columnTitles.Substring(column.Start, column.Width).Trim();
                     }
 
-                    items.Add(item);
-                }
+                    // Parse the data lines.
 
-                return items;
+                    var items = new List<dynamic>();
+
+                    for (var line = reader.ReadLine(); line != null; line = reader.ReadLine())
+                    {
+                        if (line.Length == 0)
+                        {
+                            continue;   // Ignore blank lines.
+                        }
+
+                        var item = new ExpandoObject();
+                        var itemDictionary = (IDictionary<string, object>)item;
+
+                        foreach (var column in columns)
+                        {
+                            itemDictionary.Add(column.Title, line.Substring(column.Start, column.Width).TrimEnd());
+                        }
+
+                        items.Add(item);
+                    }
+
+                    return items;
+                }
             }
         }
     }

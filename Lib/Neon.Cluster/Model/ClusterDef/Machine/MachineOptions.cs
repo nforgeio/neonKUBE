@@ -66,10 +66,17 @@ namespace Neon.Cluster
         public string VMMemory { get; set; } = "2GB";
 
         /// <summary>
+        /// <para>
         /// URI to the zipped VHDX image with the base Docker host operating system.  This defaults to
         /// <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.vhdx.zip</b>
         /// which is the latest supported Ubuntu 16.04 image.  This must be set if <see cref="DeployVMs"/>
         /// is <c>true</c>.
+        /// </para>
+        /// <note>
+        /// Production cluster definitions should be configured with VHDX image with a specific version
+        /// of the host operating system to ensure that cluster nodes are provisioned with the same
+        /// operating system version.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "HostVhdxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultHostVhdxUri)]

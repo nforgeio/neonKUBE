@@ -35,7 +35,8 @@ namespace Neon.Cluster
     /// </summary>
     public partial class MachineHostingManager : HostingManager
     {
-        private ClusterProxy cluster;
+        private ClusterProxy        cluster;
+        private SetupController     controller;
 
         /// <summary>
         /// Constructor.
@@ -58,8 +59,21 @@ namespace Neon.Cluster
         }
 
         /// <inheritdoc/>
+        public override bool IsProvisionNOP
+        {
+            get { return !cluster.Definition.Hosting.Machine.DeployVMs; }
+        }
+
+        /// <inheritdoc/>
         public override bool Provision(bool force)
         {
+            if (IsProvisionNOP)
+            {
+                // There's nothing to do here.
+
+                return true;
+            }
+
             // If a public address isn't explicitly specified, we'll assume that the
             // tool is running inside the network and can access the private address.
 
@@ -71,9 +85,21 @@ namespace Neon.Cluster
                 }
             }
 
-            if (cluster.Definition.Hosting.Machine.DeployVMs)
+            // Initialize and perform the setup operations.
+
+            controller = new SetupController($"Provisioning [{cluster.Definition.Name}]", cluster.Nodes)
             {
-                DeployVMs(force);
+                ShowStatus     = this.ShowStatus,
+                ShowNodeStatus = false,
+                MaxParallel    = this.MaxParallel
+            };
+
+            controller.AddGlobalStep("Configure VMs", () => DeployVMs(force));
+
+            if (!controller.Run())
+            {
+                Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
+                return false;
             }
 
             return true;

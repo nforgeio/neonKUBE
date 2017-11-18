@@ -226,16 +226,6 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns the path to the current user's cluster virtual machine 
-        /// virtual hard driver template file.
-        /// </summary>
-        /// <returns>The path to the nenCLUSTER setup folder.</returns>
-        public static string DefaultVHDXPath
-        {
-            get { return Path.Combine(GetSetupFolder(), "default.vhdx"); }
-        }
-
-        /// <summary>
         /// Returns the cluster login for the currently logged in cluster and
         /// establishes a cluster connection.
         /// </summary>

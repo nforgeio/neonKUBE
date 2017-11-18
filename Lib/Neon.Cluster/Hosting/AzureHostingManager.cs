@@ -448,7 +448,7 @@ namespace Neon.Cluster
 
             // Perform the provisioning operations.
 
-            var operation  = $"STEP 1: Provisioning [{cluster.Definition.Name}] on Azure [{azureOptions.Region}/{resourceGroup}]";
+            var operation  = $"Provisioning [{cluster.Definition.Name}] on Azure [{azureOptions.Region}/{resourceGroup}]";
             var controller = new SetupController(operation, cluster.Nodes)
             {
                 ShowStatus     = this.ShowStatus,
