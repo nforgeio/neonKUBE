@@ -28,9 +28,11 @@ namespace Neon.Cluster
     /// </summary>
     public class ClusterProxy : IDisposable
     {
-        private object          syncRoot = new object();
-        private VaultClient     vaultClient;
-        private ConsulClient    consulClient;
+        private object                                                      syncRoot = new object();
+        private VaultClient                                                 vaultClient;
+        private ConsulClient                                                consulClient;
+        private RunOptions                                                  defaultRunOptions;
+        private Func<string, string, IPAddress, NodeProxy<NodeDefinition>>  nodeProxyCreator;
 
         /// <summary>
         /// Constructs a cluster proxy from a cluster login.
@@ -98,27 +100,16 @@ namespace Neon.Cluster
                     };
             }
 
-            this.Definition   = clusterDefinition;
-            this.ClusterLogin = new ClusterLogin();
+            this.Definition        = clusterDefinition;
+            this.ClusterLogin      = new ClusterLogin();
+            this.defaultRunOptions = defaultRunOptions;
+            this.nodeProxyCreator  = nodeProxyCreator;
+            this.DockerSecret      = new DockerSecretsManager(this);
+            this.Certificate       = new CertiticateManager(this);
+            this.PublicProxy       = new ProxyManager(this, "public");
+            this.PrivateProxy      = new ProxyManager(this, "private");
 
-            var nodes = new List<NodeProxy<NodeDefinition>>();
-
-            foreach (var nodeDefinition in Definition.SortedNodes)
-            {
-                var node = nodeProxyCreator(nodeDefinition.Name, nodeDefinition.PublicAddress, IPAddress.Parse(nodeDefinition.PrivateAddress ?? "0.0.0.0"));
-
-                node.Cluster           = this;
-                node.DefaultRunOptions = defaultRunOptions;
-                node.Metadata          = nodeDefinition;
-                nodes.Add(node);
-            }
-
-            this.Nodes        = nodes;
-            this.FirstManager = Nodes.Where(n => n.Metadata.IsManager).OrderBy(n => n.Name).First();
-            this.DockerSecret = new DockerSecretsManager(this);
-            this.Certificate  = new CertiticateManager(this);
-            this.PublicProxy  = new ProxyManager(this, "public");
-            this.PrivateProxy = new ProxyManager(this, "private");
+            CreateNodes();
         }
 
         /// <summary>
@@ -250,6 +241,29 @@ namespace Neon.Cluster
         public IEnumerable<NodeProxy<NodeDefinition>> Workers
         {
             get { return Nodes.Where(n => !n.Metadata.IsManager).OrderBy(n => n.Name); }
+        }
+
+        /// <summary>
+        /// Initializes or reinitializes the <see cref="Nodes"/> list.  This is called during
+        /// construction and also in rare situations where the node proxies need to be 
+        /// recreated (e.g. after configuring node static IP addresses).
+        /// </summary>
+        public void CreateNodes()
+        {
+            var nodes = new List<NodeProxy<NodeDefinition>>();
+
+            foreach (var nodeDefinition in Definition.SortedNodes)
+            {
+                var node = nodeProxyCreator(nodeDefinition.Name, nodeDefinition.PublicAddress, IPAddress.Parse(nodeDefinition.PrivateAddress ?? "0.0.0.0"));
+
+                node.Cluster           = this;
+                node.DefaultRunOptions = defaultRunOptions;
+                node.Metadata          = nodeDefinition;
+                nodes.Add(node);
+            }
+
+            this.Nodes        = nodes;
+            this.FirstManager = Nodes.Where(n => n.Metadata.IsManager).OrderBy(n => n.Name).First();
         }
 
         /// <summary>

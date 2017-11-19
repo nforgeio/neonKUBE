@@ -24,15 +24,12 @@ neon login rm --force root@test
 neon cluster prepare c:\docker\cluster-test.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=6 --package-cache=http://apt-cache.lilltek.net:3142
 neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 root@test
 
-# Create host VHDX template zip files that will be compatible with the [neon] tool.
+# Create host VHDX template zip files that will be compatible with the [neon-cli] tool.
 
 set FOLDER=C:\Docker\vhdx
 
 neon zip create %FOLDER%\ubuntu-14.04-prep.vhdx %FOLDER%\ubuntu-14.04-prep.vhdx.zip
-
-neon zip create %FOLDER%\ubuntu-16.04.1-prep.vhdx %FOLDER%\ubuntu-16.04.1-prep.vhdx.zip
 neon zip create %FOLDER%\ubuntu-16.04.3-prep.vhdx %FOLDER%\ubuntu-16.04.3-prep.vhdx.zip
-
 copy ubuntu-16.04.3-prep.vhdx.zip ubuntu-16.04.latest-prep.vhdx.zip
 
 #------------------------------------------------------------------------------

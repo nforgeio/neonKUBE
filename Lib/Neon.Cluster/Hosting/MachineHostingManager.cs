@@ -94,7 +94,7 @@ namespace Neon.Cluster
                 MaxParallel    = this.MaxParallel
             };
 
-            controller.AddGlobalStep("Configure VMs", () => DeployVMs(force));
+            controller.AddGlobalStep("Configure virtual machines", () => DeployVMs(force));
 
             if (!controller.Run())
             {

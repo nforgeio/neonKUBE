@@ -72,6 +72,8 @@ ARGS:
                 Program.Exit(1);
             }
 
+            Console.WriteLine();
+
             switch (commandLine.Arguments.First())
             {
                 case "create":

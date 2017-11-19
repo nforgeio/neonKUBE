@@ -132,9 +132,18 @@ namespace Neon.Cluster
         {
             lock (syncLock)
             {
-                Disconnect();
+                if (!isDisposed)
+                {
+                    Disconnect();
 
-                isDisposed = true;
+                    if (logWriter != null)
+                    {
+                        logWriter.Dispose();
+                        logWriter = null;
+                    }
+
+                    isDisposed = true;
+                }
             }
         }
 

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    VirtualMachine.cs
+// FILE:	    VirtualSwitch.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
 
@@ -17,18 +17,18 @@ using Neon.Common;
 namespace Neon.Cluster.HyperV
 {
     /// <summary>
-    /// Describes the state of a Hyper-V based virtual machine.
+    /// Describes the a Hyper-V virtual network switch.
     /// </summary>
-    public class VirtualMachine
+    public class VirtualSwitch
     {
         /// <summary>
-        /// The machine name.
+        /// The switch name.
         /// </summary>
         public string Name { get; set; }
 
         /// <summary>
-        /// The current machine state.
+        /// The switch type.
         /// </summary>
-        public VirtualMachineState State { get; set; }
+        public VirtualSwitchType Type { get; set; }
     }
 }
