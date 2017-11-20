@@ -55,7 +55,6 @@ REM Configure the PATH
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_TOOLBIN%\OpenSSL"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_ROOT%\.nuget"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%DOTNETPATH%"
-%NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files\7-Zip"
 %NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\PuTTY"
 %NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\WinSCP"
 

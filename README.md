@@ -76,9 +76,7 @@ Follow steps below to configure a development or test workstation.
 
 13. **Close** any running instances of **Visual Studio**
 
-14. Install **7-Zip - .msi 64-bit x64 (alternative MSI installer) 7-Zip for 64-bit Windows x64 (Intel 64 or AMD64)** from: [here](http://7-zip.org/download.html)
-
-15. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+14. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
   * Install both **WinSCP** and **PuTTY** from [here](http://winscp.net/eng/download.php) (PuTTY is near the bottom of the page)
   * Run **WinSCP* and enable **hidden file display** [WinSCP Hidden Files](/README/WinSCPHiddenFile.png)
@@ -87,12 +85,21 @@ Follow steps below to configure a development or test workstation.
   
     ![WinSCP Hidden Files](./README/WinSCPHiddenFiles.png)
 
-16. Configure the build **environment variables**:
+15. Configure the build **environment variables**:
 
-  * Open **Windows Explorer**
+  * Open **File Explorer**
   * Navigate to the directory holding the cloned repository
   * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
   * Close the DOS window when the script is finished
+
+16. Configure the NeonForge Nuget CLI API key (so that batch publishing scripts will work).
+
+  * Obtain the API key from another developer (or follow these [instructions](https://docs.microsoft.com/en-us/nuget/create-packages/publish-a-package) to get your API key from Nuget.org).
+  * Run this DOS command passing the key:
+
+  `setx NF_NUGET_API_KEY <API-KEY> /M`
+
+  * Restart Visual Studio and/or any command windows to pick up the change.
 
 17. Confirm that the solution builds:
 
@@ -100,24 +107,15 @@ Follow steps below to configure a development or test workstation.
   * Open **$/NeonForge.sln** (where **$** is the repo root directory)
   * Select **Build/Rebuild** Solution
 
-18. Configure the NeonForge Nuget CLI API key (so that batch publishing scripts will work).
+18. Install **OpenVPN** from (using the Windows Installer): [here](https://openvpn.net/index.php/open-source/downloads.html)
 
-  * Obtain the API key from another developer (or follow these [instructions](https://docs.microsoft.com/en-us/nuget/create-packages/publish-a-package) to get your API key from Nuget.org).
-  * Run this DOS command, passing the key:
+19. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
 
-  `setx NF_NUGET_API_KEY <API-KEY> /M`
+20. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-  * Restart Visual Studio and/or any command windows to pick up the change.
+21. *Optional*: In Chrome, install the **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
 
-19. Install **OpenVPN** from (using the Windows Installer): [here](https://openvpn.net/index.php/open-source/downloads.html)
-
-20. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
-
-21. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
-
-22. *Optional*: In Chrome, install the **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
-
-23. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+22. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
 ## Cloud Environments
 
