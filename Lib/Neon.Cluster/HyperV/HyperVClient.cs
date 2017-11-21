@@ -344,6 +344,16 @@ namespace Neon.Cluster.HyperV
         }
 
         /// <summary>
+        /// Adds a virtual ethernet switch.
+        /// </summary>
+        /// <param name="switchName">The switch name.</param>
+        /// <param name="switchType">The switch type.</param>
+        public void AddVMSwitch(string switchName, VirtualSwitchType switchType)
+        {
+
+        }
+
+        /// <summary>
         /// Returns the virtual network adapters attached to the name virtual machine.
         /// </summary>
         /// <param name="machineName">The machine name.</param>
