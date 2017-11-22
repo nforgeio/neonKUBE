@@ -344,13 +344,35 @@ namespace Neon.Cluster.HyperV
         }
 
         /// <summary>
-        /// Adds a virtual ethernet switch.
+        /// Adds a virtual ethernet switch to Hyper-V with external connectivity
+        /// to the ethernet adapter named <b>Ethernet</b>.
         /// </summary>
-        /// <param name="switchName">The switch name.</param>
-        /// <param name="switchType">The switch type.</param>
-        public void AddVMSwitch(string switchName, VirtualSwitchType switchType)
+        /// <param name="switchName">The new switch name.</param>
+        public void NewVMExternalSwitch(string switchName)
         {
+            // $todo(jeff.lill):
+            //
+            // This may be fragile because it assumes that an ethernet adapter
+            // named "Ethernet" exists and is actually the correct adapter.
 
+            var adapters             = powershell.ExecuteTable($"Get-NetAdapter");
+            var interfaceDescription = (string)null;
+
+            foreach (dynamic adapter in adapters)
+            {
+                if (((string)adapter.Name).Equals("Ethernet", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    interfaceDescription = adapter.InterfaceDescription;
+                    break;
+                }
+            }
+
+            if (interfaceDescription == null)
+            {
+                throw new HyperVException($"Cannot create the [{switchName}] virtual external switch because the [Ethernet] network adapter doesn't exist.");
+            }
+
+            powershell.Execute($"New-VMSwitch -Name \"{switchName}\" -NetAdapterInterfaceDescription \"{interfaceDescription}\"");
         }
 
         /// <summary>

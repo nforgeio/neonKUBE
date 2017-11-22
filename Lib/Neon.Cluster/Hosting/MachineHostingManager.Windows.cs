@@ -228,6 +228,23 @@ namespace Neon.Cluster
 
             using (var hyperv = new HyperVClient())
             {
+                // We're going to create the [neonCLUSTER] external switch if it doesn't
+                // already exist and attach the VMs to this switch.
+
+                controller.SetOperationStatus("Scanning virtual switches");
+
+                var switches   = hyperv.ListVMSwitches();
+                var neonSwitch = switches.FirstOrDefault(s => s.Name.Equals("neonCLUSTER", StringComparison.InvariantCultureIgnoreCase));
+
+                if (neonSwitch == null)
+                {
+                    hyperv.NewVMExternalSwitch("neonCLUSTER");
+                }
+                else if (neonSwitch.Type != VirtualSwitchType.External)
+                {
+                    throw new HyperVException($"Virtual switch [{neonSwitch.Name}] has type [{neonSwitch.Type}] which is not supported.  Change the switch type to [{VirtualSwitchType.External}].");
+                }
+
                 // Ensure that the cluster virtual machines exist and are stopped,
                 // taking care to issue a warning if any machines already exist 
                 // and we're not doing [force] mode.
@@ -293,18 +310,6 @@ namespace Neon.Cluster
                 if (!string.IsNullOrEmpty(conflicts))
                 {
                     throw new HyperVException($"[{conflicts}] virtual machine(s) already exist and connot be automatically replaced unless you specify [--force].");
-                }
-
-                // We're going to attach the virtual machines to the first external virtual switch.
-
-                controller.SetOperationStatus("Scanning virtual switches");
-
-                var switches       = hyperv.ListVMSwitches();
-                var externalSwitch = switches.FirstOrDefault(s => s.Type == VirtualSwitchType.External);
-
-                if (externalSwitch == null)
-                {
-                    throw new HyperVException("Hyper-V does not have an EXTERNAL virtual switch.  Please add an EXTERNAL switch and try again.");
                 }
 
                 // The cluster virtual machines are either stopped or don't exist at this point.
@@ -373,10 +378,12 @@ namespace Neon.Cluster
                         }
                     }
 
+                    // Create the virtual machine if it doesn't already exist.
+
                     if (!hyperv.VMExists(nodeDefinition.Name))
                     {
                         controller.SetOperationStatus($"Configuring [{nodeDefinition.Name}]: creating virtual machine");
-                        hyperv.AddVM(nodeDefinition.Name, memoryBytes: cluster.Definition.Hosting.Machine.VMMemory, drivePath: drivePath, switchName: externalSwitch.Name);
+                        hyperv.AddVM(nodeDefinition.Name, memoryBytes: cluster.Definition.Hosting.Machine.VMMemory, drivePath: drivePath, switchName: neonSwitch.Name);
                     }
 
                     controller.SetOperationStatus($"Configuring [{nodeDefinition.Name}]: starting virtual machine");
@@ -469,7 +476,7 @@ nameserver 8.8.4.4
 
                 // Recreate the node proxies because we disposed them above.
                 // We need to do this so subsequent prepare steps will be
-                // able to connect to the nodes.
+                // able to connect to the nodes via the correct addresses.
 
                 cluster.CreateNodes();
             }
