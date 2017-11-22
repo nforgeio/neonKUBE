@@ -124,7 +124,7 @@ namespace Neon.Cluster
 
             if (NeonHelper.IsWindows)
             {
-                var path = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "NeonForge", "neoncluster");
+                var path = Path.Combine(Environment.GetEnvironmentVariable("LOCALAPPDATA"), "neonFORGE", "neoncluster");
 
                 Directory.CreateDirectory(path);
 
