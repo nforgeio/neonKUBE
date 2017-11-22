@@ -62,6 +62,8 @@ namespace Neon.Cluster
         //---------------------------------------------------------------------
         // Implementation
 
+        private const string virtualSwitchName = "neonCLUSTER";
+
         private string driveTemplatePath;
         private string vmDriveFolder;
 
@@ -234,11 +236,11 @@ namespace Neon.Cluster
                 controller.SetOperationStatus("Scanning virtual switches");
 
                 var switches   = hyperv.ListVMSwitches();
-                var neonSwitch = switches.FirstOrDefault(s => s.Name.Equals("neonCLUSTER", StringComparison.InvariantCultureIgnoreCase));
+                var neonSwitch = switches.FirstOrDefault(s => s.Name.Equals(virtualSwitchName, StringComparison.InvariantCultureIgnoreCase));
 
                 if (neonSwitch == null)
                 {
-                    hyperv.NewVMExternalSwitch("neonCLUSTER");
+                    hyperv.NewVMExternalSwitch(virtualSwitchName);
                 }
                 else if (neonSwitch.Type != VirtualSwitchType.External)
                 {
@@ -383,7 +385,7 @@ namespace Neon.Cluster
                     if (!hyperv.VMExists(nodeDefinition.Name))
                     {
                         controller.SetOperationStatus($"Configuring [{nodeDefinition.Name}]: creating virtual machine");
-                        hyperv.AddVM(nodeDefinition.Name, memoryBytes: cluster.Definition.Hosting.Machine.VMMemory, drivePath: drivePath, switchName: neonSwitch.Name);
+                        hyperv.AddVM(nodeDefinition.Name, memoryBytes: cluster.Definition.Hosting.Machine.VMMemory, drivePath: drivePath, switchName: virtualSwitchName);
                     }
 
                     controller.SetOperationStatus($"Configuring [{nodeDefinition.Name}]: starting virtual machine");

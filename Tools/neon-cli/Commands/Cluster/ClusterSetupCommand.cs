@@ -622,11 +622,8 @@ OPTIONS:
 
                     // Configure the APT proxy server early, if there is one.
 
-                    if (!string.IsNullOrEmpty(cluster.Definition.PackageCache))
-                    {
-                        node.Status = "run: setup-apt-proxy.sh";
-                        node.SudoCommand("setup-apt-proxy.sh");
-                    }
+                    node.Status = "run: setup-apt-proxy.sh";
+                    node.SudoCommand("setup-apt-proxy.sh");
 
                     // Perform basic node setup including changing the host name.
 

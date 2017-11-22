@@ -27,10 +27,9 @@ neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel
 # Create host VHDX template zip files that will be compatible with the [neon-cli] tool.
 
 set FOLDER=C:\Docker\vhdx
-
-neon zip create %FOLDER%\ubuntu-14.04-prep.vhdx %FOLDER%\ubuntu-14.04-prep.vhdx.zip
+REM neon zip create %FOLDER%\ubuntu-14.04-prep.vhdx %FOLDER%\ubuntu-14.04-prep.vhdx.zip
 neon zip create %FOLDER%\ubuntu-16.04.3-prep.vhdx %FOLDER%\ubuntu-16.04.3-prep.vhdx.zip
-copy ubuntu-16.04.3-prep.vhdx.zip ubuntu-16.04.latest-prep.vhdx.zip
+copy %FOLDER%\ubuntu-16.04.3-prep.vhdx.zip %FOLDER%\ubuntu-16.04.latest-prep.vhdx.zip
 
 #------------------------------------------------------------------------------
 # RabbitMQ

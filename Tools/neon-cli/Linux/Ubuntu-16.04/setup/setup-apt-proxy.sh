@@ -44,5 +44,7 @@ if [ "${NEON_APT_CACHE}" != "" ] ; then
 
 Acquire::http::proxy "${NEON_APT_CACHE}";
 EOF
-
+else
+    cat <<EOF > /etc/apt/apt.conf.d/02proxy
+EOF
 fi
