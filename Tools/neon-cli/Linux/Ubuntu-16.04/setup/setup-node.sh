@@ -728,7 +728,7 @@ sleep 5		# Give the services some time to start.
 # on the this host node.
 
 echo "" > /etc/resolvconf/interface-order
-echo "nameserver ${NEON_NODE_IP}" >> /etc/resolvconf/resolv.conf.d/base
+echo "nameserver ${NEON_NODE_IP}" > /etc/resolvconf/resolv.conf.d/base
 resolvconf -u
 
 #------------------------------------------------------------------------------

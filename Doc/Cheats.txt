@@ -11,7 +11,7 @@ neon cluster validate c:\docker\sample.json
 neon cluster prepare c:\docker\cluster-small.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 --package-cache=http://apt-cache.lilltek.net:3142
 neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 root@local --unclassified
 
-neon cluster prepare c:\docker\cluster-work.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4
+neon cluster prepare c:\docker\cluster-work.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 --force
 neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 root@local --unclassified
 
 neon cluster prepare c:\docker\cluster-azure.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=6
