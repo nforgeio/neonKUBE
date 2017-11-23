@@ -54,7 +54,7 @@ Follow steps below to configure a development or test workstation.
   * Open a **DOS** command window.
   * Run this command: `docker pull alpine`
 
-11. If the previous step failed with a **Network Timeout**, you'll need to update Docker's network settings:
+11. If the previous step failed with a **Network Timeout** or another error, you'll need to update Docker's network settings:
 
   * **Right-click** the Docker again in the system tray and select **Settings...*
   * Click **Network** on the left, select Fixed DNS Server and then **Apply**
