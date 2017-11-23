@@ -311,11 +311,12 @@ ClientAliveCountMax 20
         /// <param name="node">The target cluster node.</param>
         /// <param name="clusterDefinition">The optional cluster definition.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
+        /// <param name="upgrade">Optionally applies all pending host operating system updates.</param>
         /// <returns>
         /// <c>true</c> if the method waited for the package manager to become
         /// ready before returning.
         /// </returns>
-        public static bool PrepareNode(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition = null, bool shutdown = false)
+        public static bool PrepareNode(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition = null, bool shutdown = false, bool upgrade = false)
         {
             var waitedForPackageManager = false;
 
@@ -341,6 +342,14 @@ ClientAliveCountMax 20
             {
                 node.Status = "run: setup-apt-proxy.sh";
                 node.SudoCommand("setup-apt-proxy.sh");
+            }
+
+            if (upgrade)
+            {
+                node.Status = "upgrade packages";
+
+                node.SudoCommand("apt-get update");
+                node.SudoCommand("apt-get upgrade -yq --allow-unauthenticated");
             }
 
             node.InvokeIdempotentAction("setup-prep-node",
