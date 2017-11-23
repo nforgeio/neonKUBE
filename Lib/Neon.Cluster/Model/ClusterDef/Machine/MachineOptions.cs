@@ -59,11 +59,18 @@ namespace Neon.Cluster
         /// <summary>
         /// Specifies the amount of memory to allocate to each cluster virtual machine when <see cref="DeployVMs"/>
         /// is specified.  This is specified as a string that can be an integer byte count or an integer with
-        /// units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>2GB</b>.
+        /// units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>4GB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VMMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue("2GB")]
-        public string VMMemory { get; set; } = "2GB";
+        [DefaultValue("4GB")]
+        public string VMMemory { get; set; } = "4GB";
+
+        /// <summary>
+        /// The number of virtual processors tom assign to each virtual machine.
+        /// </summary>
+        [JsonProperty(PropertyName = "VMProcessors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(4)]
+        public int VMProcessors { get; set; } = 4;
 
         /// <summary>
         /// <para>

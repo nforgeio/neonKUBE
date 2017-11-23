@@ -37,6 +37,7 @@ namespace Neon.Cluster
     {
         private ClusterProxy        cluster;
         private SetupController     controller;
+        private bool                forceVmOverwrite;
 
         /// <summary>
         /// Constructor.
@@ -67,6 +68,8 @@ namespace Neon.Cluster
         /// <inheritdoc/>
         public override bool Provision(bool force)
         {
+            this.forceVmOverwrite = force;
+
             if (IsProvisionNOP)
             {
                 // There's nothing to do here.
@@ -87,14 +90,28 @@ namespace Neon.Cluster
 
             // Initialize and perform the setup operations.
 
-            controller = new SetupController($"Provisioning [{cluster.Definition.Name}]", cluster.Nodes)
+            controller = new SetupController($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
             {
-                ShowStatus     = this.ShowStatus,
-                ShowNodeStatus = false,
-                MaxParallel    = this.MaxParallel
+                ShowStatus  = this.ShowStatus,
+                MaxParallel = 1     // We're only going to prepare one VM at a time.
             };
 
-            controller.AddGlobalStep("Configure virtual machines", () => DeployVMs(force));
+            if (NeonHelper.IsWindows)
+            {
+                controller.AddGlobalStep("prepare hypervisor", () => PrepareHyperV());
+                controller.AddStep("create virtual machines", n => ProvisionHyperVMachine(n));
+                controller.AddGlobalStep(string.Empty, () => FinishHyperV(), quiet: true);
+            }
+            else if (NeonHelper.IsOSX)
+            {
+                controller.AddGlobalStep("prepare hypervisor", () => PrepareVirtualBox());
+                controller.AddStep("create virtual machines", n => ProvisionVirtualBoxMachine(n));
+                controller.AddGlobalStep(string.Empty, () => FinishVirtualBox(), quiet: true);
+            }
+            else
+            {
+                throw new NotSupportedException("neonCLUSTER virtual machines may only be deployed on Windows or Macintosh OSX.");
+            }
 
             if (!controller.Run())
             {
@@ -106,18 +123,18 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Handles the deployment of the cluster virtual machines.
+        /// Performs any required initialization before host nodes can be provisioned.
         /// </summary>
         /// <param name="force">Specifies whether any existing named VMs are to be stopped and overwritten.</param>
-        private void DeployVMs(bool force)
+        private void PrepareVirtualization(bool force)
         {
             if (NeonHelper.IsWindows)
             {
-                DeployWindowsVMs(force);
+                PrepareHyperV();
             }
             else if (NeonHelper.IsOSX)
             {
-                DeployOsxVMs(force);
+                PrepareVirtualBox();
             }
             else
             {

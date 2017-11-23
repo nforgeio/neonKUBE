@@ -36,12 +36,31 @@ namespace Neon.Cluster
         /// Handles the deploymenmt of the cluster virtual machines on 
         /// Macintosh OSX.
         /// </summary>
-        /// <param name = "force" > Specifies whether any existing named VMs are to be stopped and overwritten.</param>
-        private void DeployOsxVMs(bool force)
+        private void PrepareVirtualBox()
         {
             // $todo(jeff.lill): Implement this.
 
             throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Perform any necessary global post VirtualBox provisioning steps.
+        /// </summary>
+        private void FinishVirtualBox()
+        {
+            // Recreate the node proxies because we disposed them above.
+            // We need to do this so subsequent prepare steps will be
+            // able to connect to the nodes via the correct addresses.
+
+            cluster.CreateNodes();
+        }
+
+        /// <summary>
+        /// Creates node virtual machine in Hyper-V.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        private void ProvisionVirtualBoxMachine(NodeProxy<NodeDefinition> node)
+        {
         }
     }
 }

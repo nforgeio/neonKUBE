@@ -133,14 +133,16 @@ namespace Neon.Cluster.HyperV
         /// Creates a virtual machine. 
         /// </summary>
         /// <param name="machineName">The machine name.</param>
-        /// <param name="memoryBytes">
+        /// <param name="memorySize">
         /// A string specifying the memory size.  This can be an integer byte count or an integer with
         /// units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>2GB</b>.
         /// </param>
+        /// <param name="processorCount">
+        /// The number of virutal processors to assign to the machine.  This defaults to <b>4</b>.</param>
         /// <param name="drivePath">
-        /// The path where the virtual hard drive will be located.  Pass <c>null</c> to 
-        /// have Hyper-V create the drive file or specify a path to the existing drive file
-        /// to be used.
+        /// Optionbally specifies the path where the virtual hard drive will be located.  Pass 
+        /// <c>null</c> to  have Hyper-V create the drive file or specify a path to the existing 
+        /// drive file to be used.
         /// </param>
         /// <param name="templateDrivePath">
         /// If this is specified and <paramref name="drivePath"/> is not <c>null</c> then
@@ -148,7 +150,7 @@ namespace Neon.Cluster.HyperV
         /// to <paramref name="drivePath"/> before creating the machine.
         /// </param>
         /// <param name="switchName">Optional name of the virtual switch.</param>
-        public void AddVM(string machineName, string memoryBytes = "2GB", string drivePath = null, string templateDrivePath = null, string switchName = null)
+        public void AddVM(string machineName, string memorySize = "2GB", int processorCount = 4, string drivePath = null, string templateDrivePath = null, string switchName = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
             CheckDisposed();
@@ -167,7 +169,7 @@ namespace Neon.Cluster.HyperV
 
             // Create the virtual machine.
 
-            var command = $"New-VM -Name \"{machineName}\" -MemoryStartupBytes {memoryBytes} -Generation 1";
+            var command = $"New-VM -Name \"{machineName}\" -MemoryStartupBytes {memorySize} -Generation 1";
 
             if (!string.IsNullOrEmpty(drivePath))
             {
@@ -180,6 +182,10 @@ namespace Neon.Cluster.HyperV
             }
 
             powershell.Execute(command);
+
+            // We need to configure the VM's processor count and min/max memory settings.
+
+            powershell.Execute($"Set-VM -Name \"{machineName}\" -ProcessorCount {processorCount} -MemoryMinimumBytes {memorySize} -MemoryMaximumBytes {memorySize}");
         }
 
         /// <summary>
@@ -196,7 +202,7 @@ namespace Neon.Cluster.HyperV
 
             // Remove the machine along with any of of its virtual hard drive files.
 
-            powershell.Execute($"Remove-VM -Name \"{machineName}\"");
+            powershell.Execute($"Remove-VM -Name \"{machineName}\" -Force");
 
             foreach (var drivePath in drives)
             {

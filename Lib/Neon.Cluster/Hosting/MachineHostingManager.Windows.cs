@@ -68,11 +68,9 @@ namespace Neon.Cluster
         private string vmDriveFolder;
 
         /// <summary>
-        /// Handles the deployment of the cluster virtual machines on 
-        /// Windows Hyper-V.
+        /// Performs any required Hyper-V initialization before host nodes can be provisioned.
         /// </summary>
-        /// <param name="force">Specifies whether any existing named VMs are to be stopped and overwritten.</param>
-        private void DeployWindowsVMs(bool force)
+        private void PrepareHyperV()
         {
             // Determine where we're going to place the VM hard drive files and
             // ensure that the directory exists.
@@ -226,7 +224,7 @@ namespace Neon.Cluster
                 controller.SetOperationStatus();
             }
 
-            // Provision the VMs in Hyper-V.
+            // Handle any necessary Hyper-V initialization.
 
             using (var hyperv = new HyperVClient())
             {
@@ -263,12 +261,13 @@ namespace Neon.Cluster
 
                     if (isClusterVM)
                     {
-                        if (force)
+                        if (forceVmOverwrite)
                         {
                             if (machine.State != VirtualMachineState.Off)
                             {
-                                controller.SetOperationStatus($"Stopping [{machine.Name}]");
+                                cluster.GetNode(machine.Name).Status = "stopping vm";
                                 hyperv.StopVM(machine.Name);
+                                cluster.GetNode(machine.Name).Status = string.Empty;
                             }
 
                             // The named machine already exists.  For force mode, we're going to stop and
@@ -286,8 +285,9 @@ namespace Neon.Cluster
                             {
                                 // Remove the machine and recreate it below.
 
-                                controller.SetOperationStatus($"Removing [{machine.Name}]");
+                                cluster.GetNode(machine.Name).Status = "deleting vm";
                                 hyperv.RemoveVM(machine.Name);
+                                cluster.GetNode(machine.Name).Status = string.Empty;
                             }
                             else
                             {
@@ -314,121 +314,124 @@ namespace Neon.Cluster
                     throw new HyperVException($"[{conflicts}] virtual machine(s) already exist and connot be automatically replaced unless you specify [--force].");
                 }
 
-                // The cluster virtual machines are either stopped or don't exist at this point.
-                // All we need to is to replace any existing hard drive with the template VHDX 
-                // or create VMs that don't exist.
+                controller.SetOperationStatus();
+            }
+        }
 
-                foreach (var nodeDefinition in cluster.Definition.Nodes)
+        /// <summary>
+        /// Creates node virtual machine in Hyper-V.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        private void ProvisionHyperVMachine(NodeProxy<NodeDefinition> node)
+        {
+            using (var hyperv = new HyperVClient())
+            {
+                // Extract the template file contents to the virtual machine's
+                // virtual hard drive file.
+
+                var drivePath = Path.Combine(vmDriveFolder, $"{node.Name}.vhdx");
+
+                using (var zip = new ZipFile(driveTemplatePath))
                 {
-                    controller.SetOperationStatus($"Configuring [{nodeDefinition.Name}]");
-
-                    // Extract the template file contents to the virtual machine's
-                    // virtual hard drive file.
-
-                    var drivePath = Path.Combine(vmDriveFolder, $"{nodeDefinition.Name}.vhdx");
-
-                    using (var zip = new ZipFile(driveTemplatePath))
+                    if (zip.Count != 1)
                     {
-                        if (zip.Count != 1)
+                        throw new ArgumentException($"[{driveTemplatePath}] ZIP archive includes more than one file.");
+                    }
+
+                    ZipEntry entry = null;
+
+                    foreach (ZipEntry item in zip)
+                    {
+                        entry = item;
+                        break;
+                    }
+
+                    if (!entry.IsFile)
+                    {
+                        throw new ArgumentException($"[{driveTemplatePath}] ZIP archive includes entry [{entry.Name}] that is not a file.");
+                    }
+
+                    if (!entry.Name.EndsWith(".vhdx", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        throw new ArgumentException($"[{driveTemplatePath}] ZIP archive includes a file that's not named like [*.vhdx].");
+                    }
+
+                    node.Status = $"creating drive...";
+
+                    using (var input = zip.GetInputStream(entry))
+                    {
+                        using (var output = new FileStream(drivePath, FileMode.Create, FileAccess.ReadWrite))
                         {
-                            throw new ArgumentException($"[{driveTemplatePath}] ZIP archive includes more than one file.");
-                        }
+                            var buffer = new byte[64 * 1024];
+                            int cb;
 
-                        ZipEntry entry = null;
-
-                        foreach (ZipEntry item in zip)
-                        {
-                            entry = item;
-                            break;
-                        }
-
-                        if (!entry.IsFile)
-                        {
-                            throw new ArgumentException($"[{driveTemplatePath}] ZIP archive includes entry [{entry.Name}] that's not a file.");
-                        }
-
-                        if (!entry.Name.EndsWith(".vhdx", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            throw new ArgumentException($"[{driveTemplatePath}] ZIP archive includes a file that's not named like [*.vhdx].");
-                        }
-
-                        controller.SetOperationStatus($"Configuring [{nodeDefinition.Name}]: creating virtual drive: [{drivePath}]...");
-
-                        using (var input = zip.GetInputStream(entry))
-                        {
-                            using (var output = new FileStream(drivePath, FileMode.Create, FileAccess.ReadWrite))
+                            while (true)
                             {
-                                var buffer = new byte[64 * 1024];
-                                int cb;
+                                cb = input.Read(buffer, 0, buffer.Length);
 
-                                while (true)
+                                if (cb == 0)
                                 {
-                                    cb = input.Read(buffer, 0, buffer.Length);
-
-                                    if (cb == 0)
-                                    {
-                                        break;
-                                    }
-
-                                    output.Write(buffer, 0, cb);
-
-                                    var percentComplete = (int)(((double)output.Length / (double)entry.Size) * 100.0);
-
-                                    controller.SetOperationStatus($"Configuring [{nodeDefinition.Name}]: [{percentComplete}%] creating virtual drive: [{drivePath}]...");
+                                    break;
                                 }
+
+                                output.Write(buffer, 0, cb);
+
+                                var percentComplete = (int)(((double)output.Length / (double)entry.Size) * 100.0);
+
+                                node.Status = $"[{percentComplete}%] creating drive...";
                             }
                         }
                     }
+                }
 
-                    // Create the virtual machine if it doesn't already exist.
+                // Create the virtual machine if it doesn't already exist.
 
-                    if (!hyperv.VMExists(nodeDefinition.Name))
+                if (!hyperv.VMExists(node.Name))
+                {
+                    node.Status = $"creating virtual machine";
+                    hyperv.AddVM(node.Name, memorySize: cluster.Definition.Hosting.Machine.VMMemory, drivePath: drivePath, switchName: virtualSwitchName);
+                }
+
+                node.Status = $"starting virtual machine";
+                hyperv.StartVM(node.Name);
+
+                // Retrive the virtual machine's network adapters (there should only be one) 
+                // to obtain the IP address we'll use to SSH into the machine and configure
+                // it's static IP.
+
+                node.Status = $"fetch temporary IP address";
+
+                var adapters = hyperv.ListVMNetworkAdapters(node.Name, waitForAddresses: true);
+                var adapter  = adapters.FirstOrDefault();
+                var address  = adapter.Addresses.First();
+                var subnet   = NetworkCidr.Parse(cluster.Definition.Network.NodesSubnet);
+                var gateway  = cluster.Definition.Network.Gateway;
+
+                if (adapter == null)
+                {
+                    throw new HyperVException($"Virtual machine [{node.Name}] has no network adapters.");
+                }
+
+                // We're going to temporarily set the node to the current VM address
+                // so we can connect via SSH.
+
+                var nodeAddress = node.PrivateAddress;
+
+                try
+                {
+                    node.PrivateAddress = address;
+
+                    using (var nodeProxy = cluster.GetNode(node.Name))
                     {
-                        controller.SetOperationStatus($"Configuring [{nodeDefinition.Name}]: creating virtual machine");
-                        hyperv.AddVM(nodeDefinition.Name, memoryBytes: cluster.Definition.Hosting.Machine.VMMemory, drivePath: drivePath, switchName: virtualSwitchName);
-                    }
+                        node.Status = $"connecting";
+                        nodeProxy.Connect();
 
-                    controller.SetOperationStatus($"Configuring [{nodeDefinition.Name}]: starting virtual machine");
-                    hyperv.StartVM(nodeDefinition.Name);
+                        // Replace the [/etc/network/interfaces] file to configure the static
+                        // IP and then reboot to reinitialize networking subsystem.
 
-                    // Retrive the virtual machine's network adapters (there should only be one) 
-                    // to obtain the IP address we'll use to SSH into the machine and configure
-                    // it's static IP.
+                        node.Status = $"setting ip address [{nodeAddress}]";
 
-                    controller.SetOperationStatus($"Configuring [{nodeDefinition.Name}]: obtaining temporary IP address");
-
-                    var adapters = hyperv.ListVMNetworkAdapters(nodeDefinition.Name, waitForAddresses: true);
-                    var adapter  = adapters.FirstOrDefault();
-                    var address  = adapter.Addresses.First();
-                    var subnet   = NetworkCidr.Parse(cluster.Definition.Network.NodesSubnet);
-                    var gateway  = cluster.Definition.Network.Gateway;
-
-                    if (adapter == null)
-                    {
-                        throw new HyperVException($"Virtual machine [{nodeDefinition.Name}] has no network adapters.");
-                    }
-
-                    // We're going to temporarily set the node to the current VM address
-                    // so we can connect via SSH.
-
-                    var node        = cluster.GetNode(nodeDefinition.Name);
-                    var nodeAddress = node.PrivateAddress;
-
-                    try
-                    {
-                        node.PrivateAddress = address;
-
-                        using (var nodeProxy = cluster.GetNode(nodeDefinition.Name))
-                        {
-                            controller.SetOperationStatus($"Connecting to [{nodeDefinition.Name}]");
-                            nodeProxy.Connect();
-
-                            // Replace the [/etc/network/interfaces] file to configure the static
-                            // IP and then reboot to reinitialize networking subsystem.
-
-                            controller.SetOperationStatus($"Configuring [{nodeDefinition.Name}] IP address [{nodeAddress}]");
-
-                            var interfacesText =
+                        var interfacesText =
 $@"# This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
 
@@ -446,42 +449,45 @@ netmask {subnet.Mask}
 gateway {gateway}
 broadcast {subnet.LastAddress}
 ";
-                            nodeProxy.UploadText("/etc/network/interfaces", interfacesText);
+                        nodeProxy.UploadText("/etc/network/interfaces", interfacesText);
 
-                            // Temporarily configure the public Google DNS servers as
-                            // the name servers so DNS will work after we reboot with
-                            // the static IP.  Note that cluster setup will eventually
-                            // configure the name servers specified in the cluster
-                            // definition.
+                        // Temporarily configure the public Google DNS servers as
+                        // the name servers so DNS will work after we reboot with
+                        // the static IP.  Note that cluster setup will eventually
+                        // configure the name servers specified in the cluster
+                        // definition.
 
-                            var resolvBaseText =
+                        var resolvBaseText =
 $@"nameserver 8.8.8.8
 nameserver 8.8.4.4
 ";
-                            nodeProxy.UploadText("/etc/resolvconf/resolv.conf.d/base", resolvBaseText);
+                        nodeProxy.UploadText("/etc/resolvconf/resolv.conf.d/base", resolvBaseText);
 
-                            // Reboot to pick up the changes.
+                        // Reboot to pick up the changes.
 
-                            controller.SetOperationStatus($"Rebooting [{nodeDefinition.Name}]");
-                            nodeProxy.Reboot(wait: false);
-                        }
-                    }
-                    finally
-                    {
-                        // Restore the node's IP address.
-
-                        node.PrivateAddress = nodeAddress;
+                        node.Status = $"rebooting";
+                        nodeProxy.Reboot(wait: false);
                     }
                 }
+                finally
+                {
+                    // Restore the node's IP address.
 
-                controller.SetOperationStatus();
-
-                // Recreate the node proxies because we disposed them above.
-                // We need to do this so subsequent prepare steps will be
-                // able to connect to the nodes via the correct addresses.
-
-                cluster.CreateNodes();
+                    node.PrivateAddress = nodeAddress;
+                }
             }
+        }
+
+        /// <summary>
+        /// Perform any necessary global post Hyper-V provisioning steps.
+        /// </summary>
+        private void FinishHyperV()
+        {
+            // Recreate the node proxies because we disposed them above.
+            // We need to do this so subsequent prepare steps will be
+            // able to connect to the nodes via the correct addresses.
+
+            cluster.CreateNodes();
         }
     }
 }
