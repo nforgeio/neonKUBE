@@ -127,7 +127,7 @@ ARGS:
                 using (var zip = ZipFile.Create(zipPath))
                 {
                     zip.BeginUpdate();
-                    zip.Add(sourcePath);
+                    zip.Add(sourcePath, Path.GetFileName(sourcePath));
                     zip.CommitUpdate();
                 }
             }
