@@ -137,6 +137,10 @@ namespace Neon.Cluster.HyperV
         /// A string specifying the memory size.  This can be an integer byte count or an integer with
         /// units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>2GB</b>.
         /// </param>
+        /// <param name="minimumMemorySize">
+        /// Optionally specifies the minimum memory size.  This defaults to <c>null</c> which will
+        /// set this to <paramref name="memorySize"/>.
+        /// </param>
         /// <param name="processorCount">
         /// The number of virutal processors to assign to the machine.  This defaults to <b>4</b>.</param>
         /// <param name="drivePath">
@@ -150,10 +154,15 @@ namespace Neon.Cluster.HyperV
         /// to <paramref name="drivePath"/> before creating the machine.
         /// </param>
         /// <param name="switchName">Optional name of the virtual switch.</param>
-        public void AddVM(string machineName, string memorySize = "2GB", int processorCount = 4, string drivePath = null, string templateDrivePath = null, string switchName = null)
+        public void AddVM(string machineName, string memorySize = "2GB", string minimumMemorySize = null, int processorCount = 4, string drivePath = null, string templateDrivePath = null, string switchName = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
             CheckDisposed();
+
+            if (string.IsNullOrEmpty(minimumMemorySize))
+            {
+                minimumMemorySize = memorySize;
+            }
 
             if (VMExists(machineName))
             {
@@ -169,7 +178,7 @@ namespace Neon.Cluster.HyperV
 
             // Create the virtual machine.
 
-            var command = $"New-VM -Name \"{machineName}\" -MemoryStartupBytes {memorySize} -Generation 1";
+            var command = $"New-VM -Name \"{machineName}\" -MemoryStartupBytes {minimumMemorySize} -Generation 1";
 
             if (!string.IsNullOrEmpty(drivePath))
             {
@@ -185,7 +194,7 @@ namespace Neon.Cluster.HyperV
 
             // We need to configure the VM's processor count and min/max memory settings.
 
-            powershell.Execute($"Set-VM -Name \"{machineName}\" -ProcessorCount {processorCount} -MemoryMinimumBytes {memorySize} -MemoryMaximumBytes {memorySize}");
+            powershell.Execute($"Set-VM -Name \"{machineName}\" -ProcessorCount {processorCount} -MemoryMinimumBytes {minimumMemorySize} -MemoryMaximumBytes {memorySize}");
         }
 
         /// <summary>
