@@ -358,6 +358,13 @@ namespace Neon.Cluster
 
                     node.Status = $"creating drive...";
 
+                    // $hack(jeff.lill): Update console at 2 sec intervals to avoid annoying flicker
+
+                    var updateInterval = TimeSpan.FromSeconds(2);
+                    var stopwatch      = new Stopwatch();
+
+                    stopwatch.Start();
+
                     using (var input = zip.GetInputStream(entry))
                     {
                         using (var output = new FileStream(drivePath, FileMode.Create, FileAccess.ReadWrite))
@@ -378,7 +385,11 @@ namespace Neon.Cluster
 
                                 var percentComplete = (int)(((double)output.Length / (double)entry.Size) * 100.0);
 
-                                node.Status = $"[{percentComplete}%] creating drive...";
+                                if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
+                                {
+                                    node.Status = $"[{percentComplete}%] creating drive...";
+                                    stopwatch.Restart();
+                                }
                             }
                         }
                     }
