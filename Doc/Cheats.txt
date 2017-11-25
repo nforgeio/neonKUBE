@@ -8,10 +8,10 @@ neon cluster health -u=neon -p=neon0000 c:\docker\cluster-small.json
 neon node prepare --package-cache=http://apt-cache.lilltek.net:3142 10.0.1.30 10.0.1.40 10.0.1.41 10.0.1.42 --max-parallel=4 -u=neon -p=neon0000 --log=c:\docker\neon.log
 neon cluster validate c:\docker\sample.json
  
-neon cluster prepare c:\docker\cluster-small.json -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=4 --force --upgrade
+neon cluster prepare c:\docker\cluster-small.json -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=4 --force
 neon cluster setup -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=4 root@local --unclassified
 
-neon cluster prepare c:\docker\cluster-work.json -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=4 --force --upgrade
+neon cluster prepare c:\docker\cluster-work.json -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=4 --force
 neon cluster setup -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=4 root@local --unclassified
 
 neon cluster prepare c:\docker\cluster-azure.json -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=6
