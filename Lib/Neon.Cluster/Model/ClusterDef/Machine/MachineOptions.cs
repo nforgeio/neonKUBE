@@ -30,8 +30,9 @@ namespace Neon.Cluster
     /// </summary>
     public class MachineOptions
     {
-        private const string defaultHostVhdxUri = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.vhdx.zip";
-        private const string defaultVMMemory    = "4GB";
+        private const string defaultHostVhdxUri     = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.vhdx.zip";
+        private const string defaultVMMemory        = "4GB";
+        private const string defaultVMMinimumMemory = "2GB";
 
         /// <summary>
         /// Default constructor.
@@ -70,11 +71,11 @@ namespace Neon.Cluster
         /// Specifies the minimum amount of memory to allocate to each cluster virtual machine when <see cref="DeployVMs"/>
         /// is specified.  This is specified as a string that can be an integer byte count or an integer with
         /// units like <b>512MB</b> or <b>2GB</b> or may be set to <c>null</c> to set the same value as <see cref="VMMemory"/>.
-        /// This defaults to <c>null</c>.
+        /// This defaults to <c>2GB</c>, which is half of the default value of <see cref="VMMemory"/> which is <b>4GB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VMMinimumMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string VMMinimumMemory { get; set; } = null;
+        public string VMMinimumMemory { get; set; } = defaultVMMinimumMemory;
 
         /// <summary>
         /// The number of virtual processors tom assign to each virtual machine.
