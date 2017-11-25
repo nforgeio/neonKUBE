@@ -499,7 +499,7 @@ USAGE:
         // maximum of five.  A majority of these must be healthy for the 
         // cluster as a whole to function.
 
-        ""manage-0"": {
+        ""manager-0"": {
             ""PrivateAddress"": ""10.0.1.30"",
             ""Role"": ""manager"",
             ""Labels"": {
@@ -510,14 +510,14 @@ USAGE:
                 }
             }
         },
-        ""manage-1"": {
+        ""manager-1"": {
             ""PrivateAddress"": ""10.0.1.31"",
             ""Role"": ""manager"",
             ""Labels"": {
                 ""StorageSSD"": true
             }
         },
-        ""manage-2"": {
+        ""manager-2"": {
             ""PrivateAddress"": ""10.0.1.30"",
             ""Role"": ""manager"",
             ""Labels"": {
