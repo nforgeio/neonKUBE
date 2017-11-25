@@ -74,7 +74,7 @@ namespace Neon.Cluster
         /// This defaults to <c>2GB</c>, which is half of the default value of <see cref="VMMemory"/> which is <b>4GB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VMMinimumMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
+        [DefaultValue(defaultVMMinimumMemory)]
         public string VMMinimumMemory { get; set; } = defaultVMMinimumMemory;
 
         /// <summary>
@@ -154,7 +154,7 @@ namespace Neon.Cluster
             {
                 var count = memorySize.Substring(0, memorySize.Length - 2);
 
-                if (!int.TryParse(memorySize, out int size) || size <= 0)
+                if (!int.TryParse(count, out int size) || size <= 0)
                 {
                     throw new ClusterDefinitionException($"[{nameof(MachineOptions)}.{propertyName}={memorySize}] is not valid.");
                 }

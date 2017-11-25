@@ -126,6 +126,12 @@ namespace Neon.Cluster
 
                 case HostingEnvironments.Machine:
 
+                    if (Machine == null)
+                    {
+                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Machine)}] must be initialized when cloud provider is [{Environment}].");
+                    }
+
+                    Machine.Validate(clusterDefinition);
                     break;
 
                 default:

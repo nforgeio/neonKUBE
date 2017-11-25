@@ -417,7 +417,12 @@ namespace Neon.Cluster
                 if (!hyperv.VMExists(node.Name))
                 {
                     node.Status = $"create virtual machine";
-                    hyperv.AddVM(node.Name, memorySize: cluster.Definition.Hosting.Machine.VMMemory, drivePath: drivePath, switchName: virtualSwitchName);
+                    hyperv.AddVM(
+                        node.Name,
+                        memorySize: cluster.Definition.Hosting.Machine.VMMemory, 
+                        minimumMemorySize: cluster.Definition.Hosting.Machine.VMMinimumMemory, 
+                        drivePath: drivePath, 
+                        switchName: virtualSwitchName);
                 }
 
                 node.Status = $"start virtual machine";
@@ -427,7 +432,7 @@ namespace Neon.Cluster
                 // to obtain the IP address we'll use to SSH into the machine and configure
                 // it's static IP.
 
-                node.Status = $"fetch temporary IP address";
+                node.Status = $"fetch current IP";
 
                 var adapters = hyperv.ListVMNetworkAdapters(node.Name, waitForAddresses: true);
                 var adapter  = adapters.FirstOrDefault();
