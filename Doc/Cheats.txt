@@ -4,25 +4,25 @@
 #------------------------------------------------------------------------------
 # [neon]: Ubuntu 16.04
 
-neon cluster health -u=spot -p=WagTheDog! c:\docker\cluster-small.json
-neon node prepare --package-cache=http://apt-cache.lilltek.net:3142 10.0.1.30 10.0.1.40 10.0.1.41 10.0.1.42 --max-parallel=4 -u=spot -p=WagTheDog! --log=c:\docker\neon.log
+neon cluster health -u=neon -p=neon0000 c:\docker\cluster-small.json
+neon node prepare --package-cache=http://apt-cache.lilltek.net:3142 10.0.1.30 10.0.1.40 10.0.1.41 10.0.1.42 --max-parallel=4 -u=neon -p=neon0000 --log=c:\docker\neon.log
 neon cluster validate c:\docker\sample.json
  
-neon cluster prepare c:\docker\cluster-small.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 --force --upgrade
-neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 root@local --unclassified
+neon cluster prepare c:\docker\cluster-small.json -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=4 --force --upgrade
+neon cluster setup -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=4 root@local --unclassified
 
-neon cluster prepare c:\docker\cluster-work.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 --force --upgrade
-neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 root@local --unclassified
+neon cluster prepare c:\docker\cluster-work.json -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=4 --force --upgrade
+neon cluster setup -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=4 root@local --unclassified
 
-neon cluster prepare c:\docker\cluster-azure.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=6
-neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=6 root@azure
+neon cluster prepare c:\docker\cluster-azure.json -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=6
+neon cluster setup -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=6 root@azure
 
-neon cluster prepare c:\docker\cluster-large.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=6 --package-cache=http://apt-cache.lilltek.net:3142
-neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=6 root@local
+neon cluster prepare c:\docker\cluster-large.json -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=6 --package-cache=http://apt-cache.lilltek.net:3142
+neon cluster setup -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=6 root@local
 
 neon login rm --force root@test
-neon cluster prepare c:\docker\cluster-test.json -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=6 --package-cache=http://apt-cache.lilltek.net:3142
-neon cluster setup -u=spot -p=WagTheDog! --log=c:\docker\neon.log --max-parallel=4 root@test
+neon cluster prepare c:\docker\cluster-test.json -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=6 --package-cache=http://apt-cache.lilltek.net:3142
+neon cluster setup -u=neon -p=neon0000 --log=c:\docker\neon.log --max-parallel=4 root@test
 
 # Create host VHDX template zip files that will be compatible with the [neon-cli] tool.
 
