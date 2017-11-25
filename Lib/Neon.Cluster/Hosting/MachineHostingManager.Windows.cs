@@ -265,7 +265,7 @@ namespace Neon.Cluster
                         {
                             if (machine.State != VirtualMachineState.Off)
                             {
-                                cluster.GetNode(machine.Name).Status = "stopping vm";
+                                cluster.GetNode(machine.Name).Status = "stop virtual machine";
                                 hyperv.StopVM(machine.Name);
                                 cluster.GetNode(machine.Name).Status = string.Empty;
                             }
@@ -285,7 +285,7 @@ namespace Neon.Cluster
                             {
                                 // Remove the machine and recreate it below.
 
-                                cluster.GetNode(machine.Name).Status = "deleting vm";
+                                cluster.GetNode(machine.Name).Status = "delete virtual machine";
                                 hyperv.RemoveVM(machine.Name);
                                 cluster.GetNode(machine.Name).Status = string.Empty;
                             }
@@ -319,11 +319,28 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Creates node virtual machine in Hyper-V.
+        /// Creates a Hyper-V virtual machine for a cluster node.
         /// </summary>
         /// <param name="node">The target node.</param>
         private void ProvisionHyperVMachine(NodeProxy<NodeDefinition> node)
         {
+            // $todo(jeff.lill):
+            //
+            // This code currently assumes that the VM will use DHCP to obtain
+            // its initial network configuration so the code can SSH into the
+            // node to configure a static IP.
+            //
+            // It appears that it is possible to inject an IP address, but
+            // I wasn't able to get this to work (perhaps Windows Server is
+            // required.  Here's a link discussing this:
+            //
+            //  http://www.itprotoday.com/virtualization/modify-ip-configuration-vm-hyper-v-host
+            //
+            // An alternative technique might be to update [/etc/network/interfaces]
+            // remotely via PowerShell as described here:
+            //
+            //  https://www.altaro.com/hyper-v/transfer-files-linux-hyper-v-guest/
+
             using (var hyperv = new HyperVClient())
             {
                 // Extract the template file contents to the virtual machine's
@@ -356,7 +373,7 @@ namespace Neon.Cluster
                         throw new ArgumentException($"[{driveTemplatePath}] ZIP archive includes a file that's not named like [*.vhdx].");
                     }
 
-                    node.Status = $"creating drive...";
+                    node.Status = $"create drive...";
 
                     // $hack(jeff.lill): Update console at 2 sec intervals to avoid annoying flicker
 
@@ -387,7 +404,7 @@ namespace Neon.Cluster
 
                                 if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
                                 {
-                                    node.Status = $"[{percentComplete}%] creating drive...";
+                                    node.Status = $"[{percentComplete}%] create drive...";
                                     stopwatch.Restart();
                                 }
                             }
@@ -399,11 +416,11 @@ namespace Neon.Cluster
 
                 if (!hyperv.VMExists(node.Name))
                 {
-                    node.Status = $"creating virtual machine";
+                    node.Status = $"create virtual machine";
                     hyperv.AddVM(node.Name, memorySize: cluster.Definition.Hosting.Machine.VMMemory, drivePath: drivePath, switchName: virtualSwitchName);
                 }
 
-                node.Status = $"starting virtual machine";
+                node.Status = $"start virtual machine";
                 hyperv.StartVM(node.Name);
 
                 // Retrive the virtual machine's network adapters (there should only be one) 
@@ -440,7 +457,7 @@ namespace Neon.Cluster
                         // Replace the [/etc/network/interfaces] file to configure the static
                         // IP and then reboot to reinitialize networking subsystem.
 
-                        node.Status = $"setting ip address [{nodeAddress}]";
+                        node.Status = $"set static ip address [{nodeAddress}]";
 
                         var interfacesText =
 $@"# This file describes the network interfaces available on your system
