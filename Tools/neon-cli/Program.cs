@@ -992,14 +992,15 @@ tool requires admin priviledges for direct mode.
                 throw new NotImplementedException("Not implemented for non-Windows platforms.");
             }
 
-            var pemKeyPath = Path.Combine(Program.ClusterTempFolder, Guid.NewGuid().ToString("D"));
-            var ppkKeyPath = Path.Combine(Program.ClusterTempFolder, Guid.NewGuid().ToString("D"));
+            var programPath = "winscp.com";
+            var pemKeyPath  = Path.Combine(Program.ClusterTempFolder, Guid.NewGuid().ToString("D"));
+            var ppkKeyPath  = Path.Combine(Program.ClusterTempFolder, Guid.NewGuid().ToString("D"));
 
             try
             {
                 File.WriteAllText(pemKeyPath, pemKey);
 
-                var result = NeonHelper.ExecuteCaptureStreams("winscp.com", $@"/keygen ""{pemKeyPath}"" /comment=""{cluster.Definition.Name} Key"" /output=""{ppkKeyPath}""");
+                var result = NeonHelper.ExecuteCaptureStreams(programPath, $@"/keygen ""{pemKeyPath}"" /comment=""{cluster.Definition.Name} Key"" /output=""{ppkKeyPath}""");
 
                 if (result.ExitCode != 0)
                 {
@@ -1009,6 +1010,11 @@ tool requires admin priviledges for direct mode.
                 }
 
                 return File.ReadAllText(ppkKeyPath);
+            }
+            catch (Win32Exception)
+            {
+                Console.WriteLine($"*** ERROR: Cannot launch [{programPath}].");
+                throw;
             }
             finally
             {
