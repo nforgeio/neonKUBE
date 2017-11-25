@@ -144,17 +144,26 @@ namespace Neon.Cluster.HyperV
         /// <param name="processorCount">
         /// The number of virutal processors to assign to the machine.  This defaults to <b>4</b>.</param>
         /// <param name="drivePath">
-        /// Optionbally specifies the path where the virtual hard drive will be located.  Pass 
+        /// Optionally specifies the path where the virtual hard drive will be located.  Pass 
         /// <c>null</c> to  have Hyper-V create the drive file or specify a path to the existing 
         /// drive file to be used.
         /// </param>
+        /// <param name="checkpointDrive">Optionally enables drive checkpoints.  This defaults to <c>false</c>.</param>
         /// <param name="templateDrivePath">
         /// If this is specified and <paramref name="drivePath"/> is not <c>null</c> then
         /// the hard drive template at <paramref name="templateDrivePath"/> will be copied
         /// to <paramref name="drivePath"/> before creating the machine.
         /// </param>
         /// <param name="switchName">Optional name of the virtual switch.</param>
-        public void AddVM(string machineName, string memorySize = "2GB", string minimumMemorySize = null, int processorCount = 4, string drivePath = null, string templateDrivePath = null, string switchName = null)
+        public void AddVM(
+            string  machineName, 
+            string  memorySize = "2GB", 
+            string  minimumMemorySize = null, 
+            int     processorCount = 4, 
+            string  drivePath = null,
+            bool    checkpointDrive = false,
+            string  templateDrivePath = null, 
+            string  switchName = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
             CheckDisposed();
@@ -195,6 +204,14 @@ namespace Neon.Cluster.HyperV
             // We need to configure the VM's processor count and min/max memory settings.
 
             powershell.Execute($"Set-VM -Name \"{machineName}\" -ProcessorCount {processorCount} -MemoryMinimumBytes {minimumMemorySize} -MemoryMaximumBytes {memorySize}");
+
+            // Builds of Windows 10 since the August 2017 Creators Update enable automatic
+            // virtual drive checkpointing (which is annoying).
+
+            if (!checkpointDrive)
+            {
+                powershell.Execute($"Set-VM -CheckpointType Disabled -AutomaticCheckpointsEnabled 0 -Name \"{machineName}\"");
+            }
         }
 
         /// <summary>
