@@ -69,7 +69,6 @@ COMMAND SUMMARY:
     neon download           SOURCE TARGET [NODE]
     neon exec               BASH-CMD
     neon get                [VALUE-EXPR]
-    neon key                CLUSTER
     neon login              [--vpn] USER@CLUSTER
     neon login export       USER@CLUSTER
     neon login import       PATH
