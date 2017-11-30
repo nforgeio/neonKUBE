@@ -258,13 +258,13 @@ namespace Neon.Cluster
         public string[] TimeSources { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the HTTP URL including the port (generally <b>3142</b>) of the local cluster
-        /// server used for proxying and caching access to Ubuntu and Debian APT packages.
+        /// Optionally specifies an custom HTTP URL including the port (generally <b>3142</b>) of a 
+        /// <b>apt-cacher-ng</b> server to replace the package caches deployed to the manager nodes.
         /// </summary>
         /// <remarks>
         /// <para>
         /// A package cache will greatly reduce the Internet network traffic required to deploy a
-        /// cluster, especially large clusters.
+        /// cluster, especially for large clusters.
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "PackageCache", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
