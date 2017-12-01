@@ -54,7 +54,7 @@ OPTIONS:
                                   This is useful for debugging cluster setup 
                                   issues.  Do not use for production clusters.
 
-    --upgrade                   - Applies any pending Linux distribution
+    --upgrade                   - Applies any available Linux distribution
                                   package updates.
 
 Server Requirements:

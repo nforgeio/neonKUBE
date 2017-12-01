@@ -45,7 +45,7 @@ OPTIONS:
     --package-cache=CACHE-URI   - Optionally specifies an APT Package cache
                                   server to improve setup performance.
 
-    --upgrade                   - Applies any pending Linux distribution
+    --upgrade                   - Applies any available Linux distribution
                                   package updates.
 
 Server Requirements:
