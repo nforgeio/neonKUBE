@@ -37,8 +37,9 @@ namespace Neon.Cluster
         // Static members
 
         private const string defaultDatacenter = "DATACENTER";
+        private readonly string[] defaultTimeSources = new string[] { "pool.ntp.org" };
 
-        internal static Regex NameRegex { get; private set; }    = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
+        internal static Regex NameRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
         internal static Regex DnsHostRegex { get; private set; } = new Regex(@"^([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])(\.([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9]))*$", RegexOptions.IgnoreCase);
 
         /// <summary>
@@ -243,8 +244,7 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Specifies the NTP time sources to be configured for the cluster.  These are the
-        /// FQDNs or IP addresses of the sources.  Reasonable defaults will be chosen if this
-        /// is <c>null</c> or empty.
+        /// FQDNs or IP addresses of the sources.  This defaults to <b>pool.ntp.org</b>.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -423,6 +423,11 @@ namespace Neon.Cluster
             Vault.Validate(this);
             Log.Validate(this);
             Dashboard.Validate(this);
+
+            if (TimeSources == null || TimeSources.Length == 0 || TimeSources.Count(ts => string.IsNullOrWhiteSpace(ts)) > 0)
+            {
+                TimeSources = new string[] { "pool.ntp.org" };
+            }
 
             if (NodeDefinitions == null || NodeDefinitions.Count == 0)
             {
