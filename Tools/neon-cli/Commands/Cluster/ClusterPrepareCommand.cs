@@ -50,7 +50,7 @@ OPTIONS:
     --package-cache=CACHE-URI   - Optionally specifies an APT Package cache
                                   server to improve setup performance.
 
-    --unclassified              - Runs Vault commands without redacting logs.
+    --unredacted                - Runs Vault commands without redacting logs.
                                   This is useful for debugging cluster setup 
                                   issues.  Do not use for production clusters.
 
@@ -83,7 +83,7 @@ Server Requirements:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--force", "--package-cache", "--unclassified", "--upgrade" }; }
+            get { return new string[] { "--force", "--package-cache", "--unredacted", "--upgrade" }; }
         }
 
         /// <inheritdoc/>
@@ -131,7 +131,7 @@ Server Requirements:
 
             // Configure global options.
 
-            if (commandLine.HasOption("--unclassified"))
+            if (commandLine.HasOption("--unredacted"))
             {
                 cluster.VaultRunOptions = RunOptions.None;
             }

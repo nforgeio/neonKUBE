@@ -1344,7 +1344,7 @@ mono {scriptPath}.mono $@
                         {
                             LogLine($"*** START TEXT FILE: {file.Path}");
 
-                            if ((runOptions & RunOptions.Classified) != 0)
+                            if ((runOptions & RunOptions.Redact) != 0)
                             {
                                 LogLine(Redacted);
                             }
@@ -1397,7 +1397,7 @@ mono {scriptPath}.mono $@
 
                     LogLine($"*** START TEXT FILE: __run.sh");
 
-                    if ((runOptions & RunOptions.Classified) != 0)
+                    if ((runOptions & RunOptions.Redact) != 0)
                     {
                         LogLine(Redacted);
                     }
@@ -1790,7 +1790,7 @@ echo $? > {cmdFolder}/exit
             var logOnErrorOnly = (runOptions & RunOptions.LogOnErrorOnly) != 0 && (runOptions & RunOptions.LogOutput) == 0;
             var faultOnError   = (runOptions & RunOptions.FaultOnError) != 0;
             var binaryOutput   = (runOptions & RunOptions.BinaryOutput) != 0;
-            var isClassified   = (runOptions & RunOptions.Classified) != 0;
+            var redact         = (runOptions & RunOptions.Redact) != 0;
             var logBundle      = (runOptions & RunOptions.LogBundle) != 0;
             var shutdown       = (runOptions & RunOptions.Shutdown) != 0;
 
@@ -1812,7 +1812,7 @@ echo $? > {cmdFolder}/exit
 
             var commandToLog = command.Replace($"export PATH={RemotePath} && ", string.Empty);
 
-            if (isClassified)
+            if (redact)
             {
                 // Redact everything after the commmand word.
 
@@ -1904,7 +1904,7 @@ echo $? > {cmdFolder}/exit
                     }
                     else
                     {
-                        if (isClassified)
+                        if (redact)
                         {
                             LogLine("    " + Redacted);
                         }
@@ -1924,7 +1924,7 @@ echo $? > {cmdFolder}/exit
 
             if (commandResult.ExitCode != 0 || !logOnErrorOnly || (runOptions & RunOptions.LogOutput) != 0)
             {
-                if (isClassified)
+                if (redact)
                 {
                     LogLine("STDERR");
                     LogLine("    " + Redacted);
@@ -2019,7 +2019,7 @@ echo $? > {cmdFolder}/exit
             // executed and then disable this at the lower level, which would have 
             // logged the execution of the "__run.sh" script.
 
-            if ((runOptions & RunOptions.Classified) != 0)
+            if ((runOptions & RunOptions.Redact) != 0)
             {
                 LogLine($"START-BUNDLE: {Redacted}");
             }
@@ -2162,7 +2162,7 @@ echo $? > {cmdFolder}/exit
             // executed and then disable this at the lower level, which would have 
             // logged the execution of the "__run.sh" script.
 
-            if ((runOptions & RunOptions.Classified) != 0)
+            if ((runOptions & RunOptions.Redact) != 0)
             {
                 LogLine($"START-BUNDLE: {Redacted}");
             }

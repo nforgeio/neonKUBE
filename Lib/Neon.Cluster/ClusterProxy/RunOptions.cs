@@ -65,7 +65,7 @@ namespace Neon.Cluster
         /// and/or results.  Only limited information about commands run with this
         /// flag will be logged.
         /// </summary>
-        Classified = 0x00000020,
+        Redact = 0x00000020,
 
         /// <summary>
         /// Logs command output only if the command returns a non-zero exit code.

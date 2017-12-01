@@ -87,7 +87,7 @@ namespace NeonCli
                     }
 
                     cluster.FirstManager.Status = "start: neon-cluster-manager";
-                    cluster.FirstManager.DockerCommand(RunOptions.Classified,
+                    cluster.FirstManager.DockerCommand(RunOptions.Redact,
                         "docker service create",
                             "--name", "neon-cluster-manager",
                             "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",

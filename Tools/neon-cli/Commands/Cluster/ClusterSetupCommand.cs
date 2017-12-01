@@ -51,7 +51,7 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --unclassified  - Runs Vault commands without redacting logs.  This
+    --unredacted    - Runs Vault commands without redacting logs.  This
                       is useful for debugging cluster setup issues.  Do
                       not use for production clusters.
 ";
@@ -72,7 +72,7 @@ OPTIONS:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--unclassified" }; }
+            get { return new string[] { "--unredacted" }; }
         }
 
         /// <inheritdoc/>
@@ -173,7 +173,7 @@ OPTIONS:
 
             // Configure global options.
 
-            if (commandLine.HasOption("--unclassified"))
+            if (commandLine.HasOption("--unredacted"))
             {
                 cluster.VaultRunOptions = RunOptions.None;
             }
@@ -1414,13 +1414,13 @@ $@"docker login \
 
                     if (node.Metadata.IsManager)
                     {
-                        node.DockerCommand(RunOptions.Classified, $"docker swarm join --token {clusterLogin.SwarmManagerToken} {cluster.FirstManager.Metadata.PrivateAddress}:2377");
+                        node.DockerCommand(RunOptions.Redact, $"docker swarm join --token {clusterLogin.SwarmManagerToken} {cluster.FirstManager.Metadata.PrivateAddress}:2377");
                     }
                     else
                     {
                         // Must be a worker node.
 
-                        node.DockerCommand(RunOptions.Classified, $"docker swarm join --token {clusterLogin.SwarmWorkerToken} {cluster.FirstManager.Metadata.PrivateAddress}:2377");
+                        node.DockerCommand(RunOptions.Redact, $"docker swarm join --token {clusterLogin.SwarmWorkerToken} {cluster.FirstManager.Metadata.PrivateAddress}:2377");
                     }
                 });
 

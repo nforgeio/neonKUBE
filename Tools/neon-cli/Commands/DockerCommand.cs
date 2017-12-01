@@ -288,7 +288,7 @@ the [neon exec] command.
 
             bundle.AddFile("secret.data", secretData);
 
-            var response = node.SudoCommand(bundle, RunOptions.Classified);
+            var response = node.SudoCommand(bundle, RunOptions.Redact);
 
             Console.Write(response.AllText);
             Program.Exit(response.ExitCode);
