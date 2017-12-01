@@ -57,7 +57,7 @@ apt-get update
 #
 #	jq			JSON parser (useful for shell scripts)
 #	aptitude	Apt related utilities
-#	gdebi-core	Installs .deb packages AND their dependencies
+#	gdebi-core	Installs .deb package files AND their dependencies
 
 apt-get install -yq jq aptitude gdebi-core
 

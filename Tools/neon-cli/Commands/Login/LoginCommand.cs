@@ -91,7 +91,7 @@ ARGUMENTS:
 
             if (!login.IsOK)
             {
-                Console.WriteLine($"*** ERROR: Invalid username and cluster [{commandLine.Arguments[0]}].  Expected something like: USER@CLUSTER");
+                Console.WriteLine($"*** ERROR: Invalid username/cluster [{commandLine.Arguments[0]}].  Expected something like: USER@CLUSTER");
                 Program.Exit(1);
             }
 

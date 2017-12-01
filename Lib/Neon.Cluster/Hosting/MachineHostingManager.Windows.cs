@@ -135,7 +135,7 @@ namespace Neon.Cluster
 
             if (!driveTemplateIsCurrent)
             {
-                controller.SetOperationStatus($"Downloading VHDX: [{cluster.Definition.Hosting.Machine.HostVhdxUri}]");
+                controller.SetOperationStatus($"Download Template VHDX: [{cluster.Definition.Hosting.Machine.HostVhdxUri}]");
 
                 Task.Run(
                     async () =>
@@ -432,7 +432,7 @@ namespace Neon.Cluster
                 // to obtain the IP address we'll use to SSH into the machine and configure
                 // it's static IP.
 
-                node.Status = $"fetch current IP";
+                node.Status = $"fetch current ip";
 
                 var adapters = hyperv.ListVMNetworkAdapters(node.Name, waitForAddresses: true);
                 var adapter  = adapters.FirstOrDefault();
