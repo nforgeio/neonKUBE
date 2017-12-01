@@ -109,24 +109,10 @@ net.ipv4.ip_forward=1
 EOF
 
 #------------------------------------------------------------------------------
-# Install some useful packages.
-
-apt-get install -yq supervisor
-
-#------------------------------------------------------------------------------
 # Update the APT package index and install some common packages.
 
 apt-get update -yq
 apt-get install -yq unzip curl nano sysstat dstat iotop iptraf apache2-utils daemon
-
-#------------------------------------------------------------------------------
-# Ensure that we have the latest packages including any 
-# security updates.
-
-echo "** Upgrading packages" 1>&2
-
-apt-get update -yq
-apt-get dist-upgrade -yq
 
 #------------------------------------------------------------------------------
 # Clean some things up.
