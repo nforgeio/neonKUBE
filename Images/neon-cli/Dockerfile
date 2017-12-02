@@ -10,10 +10,12 @@
 #       APPNAME     - Name of the application binary/script (e.g "neon")
 #                     This makes it easier to clone and reuse this Dockerfile.
 
-FROM        neoncluster/dotnet:2-runtime
+FROM        neoncluster/ubuntu-16.04-dotnet:2.0.0
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         APPNAME
+
+# The environment variable indicates to [neon-cli] that it's running in a container.
 
 ENV NEON_TOOL_CONTAINER=1
 
@@ -23,7 +25,16 @@ RUN apt-get update \
     && apt-get install -yq openvpn \
     && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
-RUN echo ** NEW LAYER **
+# [neon-cli] implements commands that integrate Ansible and since Ansible
+# only runs on Linux, we're going to integrate it into this image.
+#
+#   http://docs.ansible.com/ansible/latest/intro_installation.html#latest-releases-via-apt-ubuntu
+
+RUN apt-get update \
+    && apt-get install -yq software-properties-common \
+    && apt-add-repository ppa:ansible/ansible \
+    && apt-get update \
+    && apt-get install -yq ansible
 
 # Add the application files in two layers.  The first will contain the dependencies
 # and the second will contain the application files.  This should result in more
@@ -31,6 +42,8 @@ RUN echo ** NEW LAYER **
 #
 # Note that we used the [core-layers] tool to separate the binary files before
 # building the container.
+
+RUN echo ** NEW LAYER **
 
 # Dependencies:
 
