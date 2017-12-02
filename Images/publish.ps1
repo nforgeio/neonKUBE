@@ -49,6 +49,7 @@ function Publish
 # may depend on earlier ones.
 
 Publish "$image_root\\ubuntu-16.04"
+Publish "$image_root\\ubuntu-16.04-dotnet"
 Publish "$image_root\\alpine"
 Publish "$image_root\\dotnet"
 Publish "$image_root\\openjdk"

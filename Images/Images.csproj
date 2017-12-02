@@ -125,6 +125,17 @@
     <None Include="openjdk\publish.ps1" />
     <None Include="openjdk\README.md" />
     <None Include="tdagent\Dockerfile" />
+    <Content Include="ubuntu-16.04-dotnet\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="ubuntu-16.04-dotnet\build.ps1">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ubuntu-16.04-dotnet\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="ubuntu-16.04-dotnet\publish.ps1" />
+    <None Include="ubuntu-16.04-dotnet\README.md" />
     <None Include="_common\log-debug.sh" />
     <None Include="_common\log-critical.sh" />
     <None Include="_common\log-info.sh" />
