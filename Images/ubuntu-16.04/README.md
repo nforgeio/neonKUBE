@@ -14,5 +14,6 @@ This image includes updates to the official Ubuntu image and adds the following 
 * [wget](https://www.gnu.org/software/wget/) is a tool for downloading files, etc.
 * [curl](https://curl.haxx.se/) is another file download tool.
 * [jq](https://stedolan.github.io/jq/) a JSON parser
-* [gosu](https://github.com/tianon/gosu) runs command as a.
+* [gosu](https://github.com/tianon/gosu) runs command as a specific user.
+* **apt-transport-https** adds support for retrieving APT packages via HTTPS.
 * **unzip** archive utilities
