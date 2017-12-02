@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         warning-loop.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 #
 # This script is used to ensure that the container periodically logs warnings
 # when it could not be reconfigured and is running with out-of-date settings.

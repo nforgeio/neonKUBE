@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         docker-volume-exists.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 #
 # Determines whether a named local volume exists.  The exit code will be 0
 # if the volume exists, 1 otherwise.

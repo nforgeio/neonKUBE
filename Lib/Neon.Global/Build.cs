@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Build.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -24,7 +24,7 @@ namespace Neon
         /// <summary>
         /// The copyright statement to be included in all assemblies.
         /// </summary>
-        public const string Copyright = "Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.  All rights reserved.";
+        public const string Copyright = "Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.  All rights reserved.";
 
         /// <summary>
         /// The product statement to be included in all assemblies.

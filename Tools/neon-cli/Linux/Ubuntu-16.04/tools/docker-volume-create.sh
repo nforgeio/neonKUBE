@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         docker-volume-create.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 #
 # Creates a local named Docker volume if it doesn't already exist.  Pass the
 # volume name as the first paramater and then pass up to 8 additional --level

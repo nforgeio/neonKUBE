@@ -1,5 +1,5 @@
-﻿# NeonForge
-The NeonForge, LLC technology stack.
+﻿# neonFORGE
+The neonFORGE, LLC technology stack.
 ## Workstation Requirements
 * Windows 10 Professional (64-bit) with at least 16GB RAM
 * Visual Studio Community Edition
@@ -36,7 +36,7 @@ Follow steps below to configure a development or test workstation.
   * Click to select **all components**
   * Click **Install** (and take a coffee break)
 
-6. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run NeonForge applications and services, **Visual Studio must be running with elevated privileges**.
+6. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonFORGE applications and services, **Visual Studio must be running with elevated privileges**.
 7. Install .NET Framework 4.7 Developer Pack from: [here](https://www.microsoft.com/net/download/thank-you/net47-developer-pack)
 8. Install **Git for Windows** with defaults from [here](https://git-scm.com/download/win).
 9. Install **Docker for Windows** from [here](https://www.docker.com/products/docker#/windows).
@@ -64,9 +64,9 @@ Follow steps below to configure a development or test workstation.
 12. **Clone** the source repository on your workstation:
 
   * Create an individual Github account [here](https://github.com/join?source=header-home) if you don't already have one
-  * Have one of the NeonForge repository administrators **grant you access** to the repository
+  * Have one of the neonFORGE repository administrators **grant you access** to the repository
   * Go to [GitHub](http://github.com) and log into your account
-  * Go to the NeonForge [repository](https://github.com/jefflill/NeonForge).
+  * Go to the neonFORGE [repository](https://github.com/jefflill/neonFORGE).
   * Click the *green* **Clone or download** button and select **Open in Visual Studio**
   * A *Launch Application* dialog will appear.  Select **Microsoft Visual Studio Protocol Handler Selector** and click **Open Link**
   * Choose or enter the directory where the repository will be cloned.  This defaults to a user-specific folder.  I typically change this to a global folder to keep the file paths short.
@@ -92,7 +92,7 @@ Follow steps below to configure a development or test workstation.
   * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
   * Close the DOS window when the script is finished
 
-16. Configure the NeonForge Nuget CLI API key (so that batch publishing scripts will work).
+16. Configure the neonFORGE Nuget CLI API key (so that batch publishing scripts will work).
 
   * Obtain the API key from another developer (or follow these [instructions](https://docs.microsoft.com/en-us/nuget/create-packages/publish-a-package) to get your API key from Nuget.org).
   * Run this DOS command passing the key:
@@ -104,7 +104,7 @@ Follow steps below to configure a development or test workstation.
 17. Confirm that the solution builds:
 
   * Run **Visual Studio** as **administrator**
-  * Open **$/NeonForge.sln** (where **$** is the repo root directory)
+  * Open **$/neonFORGE.sln** (where **$** is the repo root directory)
   * Select **Build/Rebuild** Solution
 
 18. Install **OpenVPN** from (using the Windows Installer): [here](https://openvpn.net/index.php/open-source/downloads.html)

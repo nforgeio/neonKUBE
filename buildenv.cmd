@@ -1,5 +1,5 @@
 @echo on
-REM Configures the environment variables required to build NeonForge projects.
+REM Configures the environment variables required to build neonFORGE projects.
 REM 
 REM 	buildenv [ <source folder> ]
 REM
@@ -16,8 +16,8 @@ set NF_ROOT=%NF_ROOT:~0,-2%
 
 if not [%1]==[] set NF_ROOT=%1
 
-if exist %NF_ROOT%\NeonForge.sln goto goodPath
-echo The [%NF_ROOT%\NeonForge.sln] file does not exist.  Please pass the path
+if exist %NF_ROOT%\neonFORGE.sln goto goodPath
+echo The [%NF_ROOT%\neonFORGE.sln] file does not exist.  Please pass the path
 echo to the Neon solution folder.
 goto done
 

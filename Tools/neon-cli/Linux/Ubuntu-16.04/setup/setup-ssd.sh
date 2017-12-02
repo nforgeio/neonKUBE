@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         setup-ssd.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 #
 # NOTE: This script must be run under [sudo].
 #

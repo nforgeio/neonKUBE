@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         setup-node.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 #
 # NOTE: This script must be run under [sudo].
 #
@@ -342,7 +342,7 @@ cat <<EOF > /usr/local/bin/neon-port-forwarding
 #------------------------------------------------------------------------------
 # FILE:         neon-port-forwarding
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 #
 # This script runs as a systemd service to configure port 80 and 443 port
 # forwarding rules.  Note that these rules work because [neon-proxy-public]
@@ -420,7 +420,7 @@ cat <<EOF >> /etc/systemd/journald.conf
 #------------------------------------------------------------------------------
 # FILE:         journald.conf
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 #
 # Configure the systemd journal to perist the journal to the file system at
 # [/var/log/journal].  We need this so the node's [tdagent-host] service
@@ -473,7 +473,7 @@ cat <<EOF > /usr/local/bin/neon-security-cleaner
 #------------------------------------------------------------------------------
 # FILE:         neon-security-cleaner
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 #
 # This script runs as a systemd service to periodically shred and remove the
 # root account's [.bash_history] file as a security measure.  This will help 

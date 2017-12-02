@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         docker-volume-rm.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 #
 # Removes a named local Docker volume if it exists.
 #

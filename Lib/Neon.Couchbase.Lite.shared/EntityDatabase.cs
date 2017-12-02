@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    EntityDatabase.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2017 by NeonForge, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 
 using System;
 using System.Collections.Generic;
@@ -52,7 +52,7 @@ namespace Couchbase.Lite
         //---------------------------------------------------------------------
         // Static members
 
-        internal const string NotCompatibleError = "Neon Couchbase Lite extension doesn't support the current Couchbase Lite file system layout.  Please submit an issue to: https://github.com/NeonForge/issues";
+        internal const string NotCompatibleError = "Neon Couchbase Lite extension doesn't support the current Couchbase Lite file system layout.  Please submit an issue to: https://github.com/neonFORGE/issues";
 
         private static object syncRoot = new object();
 
