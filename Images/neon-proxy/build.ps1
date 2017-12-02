@@ -69,7 +69,8 @@ if ($latest)
 
 # Clean up
 
-sleep 5 # Docker sometimes appears to hold references to the files below for a bit.
+sleep 5 # Docker sometimes appears to hold references to files we need
+		# to delete so wait for a bit.
 
 Exec { Remove-Item -Recurse _common }
 Exec { Remove-Item -Recurse vault-binaries }
