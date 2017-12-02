@@ -5,7 +5,7 @@
 #
 # Builds a neonCLUSTER Kibana image with the specified version.
 #
-# Usage: powershell -file build.ps1 VERSION [SUBVERSION] [MAJORVERSION] [-latest]
+# Usage: powershell -file build.ps1 VERSION [-latest]
 
 param 
 (
