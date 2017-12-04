@@ -190,6 +190,32 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Returns the path to the root folder containing the Ansible related files.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        public static string GetAnsibleFolder()
+        {
+            var path = Path.Combine(GetRootFolder(), "ansible");
+
+            Directory.CreateDirectory(path);
+
+            return path;
+        }
+
+        /// <summary>
+        /// Returns the path to the root folder containing the Ansible password files.
+        /// </summary>
+        /// <returns>The folder path.</returns>
+        public static string GetAnsiblePasswordFolder()
+        {
+            var path = Path.Combine(GetRootFolder(), "ansible", "passwords");
+
+            Directory.CreateDirectory(path);
+
+            return path;
+        }
+
+        /// <summary>
         /// Returns the path to the file indicating which cluster is currently logged in.
         /// </summary>
         public static string CurrentPath
