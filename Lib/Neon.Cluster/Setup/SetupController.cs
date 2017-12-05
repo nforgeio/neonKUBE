@@ -546,6 +546,20 @@ namespace Neon.Cluster
             {
                 if (nodes.First().Metadata != null)
                 {
+                    if (nodes.Exists(n => n.Metadata.IsExternal))
+                    {
+                        sbDisplay.AppendLine();
+                        sbDisplay.AppendLine();
+                        sbDisplay.AppendLine(" External:");
+                        sbDisplay.AppendLine(underline);
+                        sbDisplay.AppendLine();
+
+                        foreach (var node in nodes.Where(n => n.Metadata.IsExternal))
+                        {
+                            sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
+                        }
+                    }
+
                     if (nodes.Exists(n => n.Metadata.IsManager))
                     {
                         sbDisplay.AppendLine();
@@ -569,6 +583,20 @@ namespace Neon.Cluster
                         sbDisplay.AppendLine();
 
                         foreach (var node in nodes.Where(n => n.Metadata.IsWorker))
+                        {
+                            sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
+                        }
+                    }
+
+                    if (nodes.Exists(n => n.Metadata.IsExternal))
+                    {
+                        sbDisplay.AppendLine();
+                        sbDisplay.AppendLine();
+                        sbDisplay.AppendLine(" External:");
+                        sbDisplay.AppendLine(underline);
+                        sbDisplay.AppendLine();
+
+                        foreach (var node in nodes.Where(n => n.Metadata.IsExternal))
                         {
                             sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
                         }

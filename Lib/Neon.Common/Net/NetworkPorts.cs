@@ -250,6 +250,11 @@ namespace Neon.Net
         /// </summary>
         public const int RabbitMQAdmin = 15672;
 
+        /// <summary>
+        /// <b>apt-cacher-ng</b> Debian/Ubuntu package proxy port.
+        /// </summary>
+        public const int AppCacherNg = 3142;
+
         private static Dictionary<string, int> wellKnownMap;
 
         private struct Map
@@ -316,7 +321,8 @@ namespace Neon.Net
                 new Map("CouchbaseSyncGatewayPublic", CouchbaseSyncGatewayPublic),
                 new Map("OpenVPN", OpenVPN),
                 new Map("AMQP", AMQP),
-                new Map("RabbitMQAdmin", RabbitMQAdmin)
+                new Map("RabbitMQAdmin", RabbitMQAdmin),
+                new Map("aptcacherng", AppCacherNg)
             };
 
         wellKnownMap = new Dictionary<string, int>(StringComparer.OrdinalIgnoreCase);

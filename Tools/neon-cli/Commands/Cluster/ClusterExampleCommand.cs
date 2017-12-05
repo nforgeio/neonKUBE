@@ -76,11 +76,12 @@ USAGE:
     //                    strings.  Reasonable defaults will be used if
     //                    not specified.
     //
-    //  PackageProxy      Optionally specifies the HTTP URL including the port 
-    //                    (generally [3142]) of the local cluster server used for 
-    //                    proxying and caching access to Ubuntu and Debian APT packages.
-    //
-    //                    This defaults to [false].
+    //  PackageProxy      Optionally specifies zero or more comma separated 
+    //                    HTTP URL including the port (generally [3142]) of
+    //                    the servers to be used for proxying and caching 
+    //                    Ubuntu and Debian APT packages.  This defaults to 
+    //                    proxies running on the cluster managers if empty
+    //                    (the default).
     //
     //  BareDocker        Optionally indicates that a basic Docker cluster without
     //                    most of the extra neonCLUSTER features should be deployed.

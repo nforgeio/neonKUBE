@@ -264,7 +264,7 @@ ClientAliveCountMax 20
                 sb.AppendLine($"NEON_NODE_SWAP={node.Metadata.Labels.ComputeSwap.ToString().ToLowerInvariant()}");
             }
 
-            sb.AppendLine($"NEON_APT_CACHE={clusterDefinition.PackageCache ?? string.Empty}");
+            sb.AppendLine($"NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(clusterDefinition)}");
 
             // Append Consul and Vault addresses.
 
@@ -338,7 +338,9 @@ ClientAliveCountMax 20
                 ConfigureEnvironmentVariables(node, clusterDefinition);
             }
 
-            if (clusterDefinition != null && !string.IsNullOrEmpty(clusterDefinition.PackageCache))
+            node.SudoCommand("apt-get update");
+
+            if (clusterDefinition != null && !string.IsNullOrEmpty(clusterDefinition.PackageProxy))
             {
                 node.Status = "run: setup-apt-proxy.sh";
                 node.SudoCommand("setup-apt-proxy.sh");
@@ -348,7 +350,6 @@ ClientAliveCountMax 20
             {
                 node.Status = "upgrade packages";
 
-                node.SudoCommand("apt-get update");
                 node.SudoCommand("apt-get upgrade -yq --allow-unauthenticated");
             }
 
