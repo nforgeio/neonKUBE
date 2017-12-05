@@ -25,8 +25,8 @@ ENV NEON_TOOL_CONTAINER=1
 ENV EDITOR=/bin/nano
 
 RUN  apt-get update \
-	&& apt-get install -yq nano \
-	&& rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    && apt-get install -yq nano \
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Install OpenVPN in it's own layer.
 
@@ -44,7 +44,7 @@ RUN apt-get update \
     && apt-add-repository ppa:ansible/ansible \
     && apt-get update \
     && apt-get install -yq ansible \
-	&& rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
 
 # Add the application files in two layers.  The first will contain the dependencies
 # and the second will contain the application files.  This should result in more
