@@ -432,7 +432,7 @@ namespace Neon.Cluster
                 // to obtain the IP address we'll use to SSH into the machine and configure
                 // it's static IP.
 
-                node.Status = $"fetch current ip";
+                node.Status = $"get current ip";
 
                 var adapters = hyperv.ListVMNetworkAdapters(node.Name, waitForAddresses: true);
                 var adapter  = adapters.FirstOrDefault();
@@ -462,7 +462,7 @@ namespace Neon.Cluster
                         // Replace the [/etc/network/interfaces] file to configure the static
                         // IP and then reboot to reinitialize networking subsystem.
 
-                        node.Status = $"set static ip address [{nodeAddress}]";
+                        node.Status = $"set static ip [{nodeAddress}]";
 
                         var interfacesText =
 $@"# This file describes the network interfaces available on your system

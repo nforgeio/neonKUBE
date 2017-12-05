@@ -214,7 +214,7 @@ Server Requirements:
 
             if (!string.IsNullOrEmpty(packageCacheUri))
             {
-                cluster.Definition.PackageCache = packageCacheUri;
+                cluster.Definition.PackageProxy = packageCacheUri;
             }
 
             // Prepare the nodes.

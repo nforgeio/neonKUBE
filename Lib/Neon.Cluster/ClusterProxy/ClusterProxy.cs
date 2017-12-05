@@ -228,7 +228,7 @@ namespace Neon.Cluster
         public RunOptions VaultRunOptions { get; set; } = RunOptions.Redact | RunOptions.FaultOnError;
 
         /// <summary>
-        /// Enumerates the cluster manager proxies sorted by name.
+        /// Enumerates the cluster manager node proxies sorted in ascending order by name.
         /// </summary>
         public IEnumerable<NodeProxy<NodeDefinition>> Managers
         {
@@ -236,11 +236,19 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Enumerates the cluster worker proxies sorted by name.
+        /// Enumerates the cluster worker node proxies sorted in ascending order by name.
         /// </summary>
         public IEnumerable<NodeProxy<NodeDefinition>> Workers
         {
-            get { return Nodes.Where(n => !n.Metadata.IsManager).OrderBy(n => n.Name); }
+            get { return Nodes.Where(n => !n.Metadata.IsWorker).OrderBy(n => n.Name); }
+        }
+
+        /// <summary>
+        /// Enumerates the cluster external node proxies sorted in ascending order by name.
+        /// </summary>
+        public IEnumerable<NodeProxy<NodeDefinition>> External
+        {
+            get { return Nodes.Where(n => !n.Metadata.IsExternal).OrderBy(n => n.Name); }
         }
 
         /// <summary>

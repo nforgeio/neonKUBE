@@ -231,6 +231,20 @@ OPTIONS:
 
             controller.AddStep("manager config", n => ConfigureManager(n), n => n.Metadata.IsManager);
 
+            // Configure the external nodes.
+
+            if (cluster.Definition.External.Count() > 0)
+            {
+                controller.AddStep("external config",
+                    n =>
+                    {
+                        ConfigureCommon(n);
+                        n.InvokeIdempotentAction("setup-common-restart", () => RebootAndWait(n));
+                        ConfigureExternal(n);
+                    },
+                    n => n.Metadata.IsExternal);
+            }
+
             // Configure the workers.
 
             controller.AddStep("worker config", 
@@ -620,7 +634,7 @@ OPTIONS:
                         node.SudoCommand("mkdir -p /mnt-data");
                     }
 
-                    // Configure the APT proxy server early, if there is one.
+                    // Configure the APT proxy server settings early.
 
                     node.Status = "run: setup-apt-proxy.sh";
                     node.SudoCommand("setup-apt-proxy.sh");
@@ -639,17 +653,20 @@ OPTIONS:
 
                     // Install the Vault certificate.
 
-                    node.UploadText($"/usr/local/share/ca-certificates/{NeonHosts.Vault}.crt", clusterLogin.VaultCertificate.Cert);
-                    node.SudoCommand("mkdir -p /etc/vault");
-                    node.UploadText($"/etc/vault/vault.crt", clusterLogin.VaultCertificate.Cert);
-                    node.UploadText($"/etc/vault/vault.key", clusterLogin.VaultCertificate.Key);
-                    node.SudoCommand("chmod 600 /etc/vault/*");
+                    if (!node.Metadata.IsExternal)
+                    {
+                        node.UploadText($"/usr/local/share/ca-certificates/{NeonHosts.Vault}.crt", clusterLogin.VaultCertificate.Cert);
+                        node.SudoCommand("mkdir -p /etc/vault");
+                        node.UploadText($"/etc/vault/vault.crt", clusterLogin.VaultCertificate.Cert);
+                        node.UploadText($"/etc/vault/vault.key", clusterLogin.VaultCertificate.Key);
+                        node.SudoCommand("chmod 600 /etc/vault/*");
 
-                    // $todo(jeff.lill): Install the Consul certificate.
+                        // $todo(jeff.lill): Install the Consul certificate once we support Consul TLS.
 
-                    node.SudoCommand("update-ca-certificates");
+                        node.SudoCommand("update-ca-certificates");
+                    }
 
-                    // Tune Linux for SSDs if enabled.
+                    // Tune Linux for SSDs, if enabled.
 
                     node.Status = "run: setup-ssd.sh";
                     node.SudoCommand("setup-ssd.sh");
@@ -701,7 +718,11 @@ ff02::2         ip6-allrouters
                 vaultDirectLine = $"export VAULT_DIRECT_ADDR={cluster.Definition.Vault.GetDirectUri(node.Name)}";
             }
 
-            sbEnvHost.AppendLine(
+            if (!node.Metadata.IsExternal)
+            {
+                // Upload the full [/etc/neoncluster/env-host] file for Docker Swarm nodes.
+
+                sbEnvHost.AppendLine(
 $@"#------------------------------------------------------------------------------
 # FILE:         /etc/neoncluster/env-host
 # CONTRIBUTOR:  Jeff Lill
@@ -721,13 +742,41 @@ export NEON_NODE_NAME={node.Name}
 export NEON_NODE_ROLE={node.Metadata.Role}
 export NEON_NODE_IP={node.Metadata.PrivateAddress}
 export NEON_NODE_SSD={node.Metadata.Labels.StorageSSD.ToString().ToLowerInvariant()}
-export NEON_APT_CACHE={cluster.Definition.PackageCache ?? string.Empty}
+export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Definition)}
 
 export VAULT_ADDR={cluster.Definition.Vault.Uri}
 {vaultDirectLine}
 export CONSUL_HTTP_ADDR={NeonHosts.Consul}:{cluster.Definition.Consul.Port}
 export CONSUL_HTTP_FULLADDR=http://{NeonHosts.Consul}:{cluster.Definition.Consul.Port}
 ");
+            }
+            else
+            {
+                // Upload a more limited [/etc/neoncluster/env-host] file for external nodes.
+
+                sbEnvHost.AppendLine(
+$@"#------------------------------------------------------------------------------
+# FILE:         /etc/neoncluster/env-host
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
+#
+# This script can be mounted into containers that required extended knowledge
+# about the cluster and host node.  This will be mounted to [/etc/neoncluster/env-host]
+# such that the container entrypoint script can execute it.
+
+# Define the cluster and Docker host related environment variables.
+
+export NEON_CLUSTER={cluster.Definition.Name}
+export NEON_DATACENTER={cluster.Definition.Datacenter}
+export NEON_ENVIRONMENT={cluster.Definition.Environment}
+export NEON_HOSTING={cluster.Definition.Hosting.Environment.ToString().ToLowerInvariant()}
+export NEON_NODE_NAME={node.Name}
+export NEON_NODE_ROLE={node.Metadata.Role}
+export NEON_NODE_IP={node.Metadata.PrivateAddress}
+export NEON_NODE_SSD={node.Metadata.Labels.StorageSSD.ToString().ToLowerInvariant()}
+export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Definition)}
+");
+            }
 
             node.UploadText($"{NodeHostFolders.Config}/env-host", sbEnvHost.ToString(), 4, Encoding.UTF8);
         }
@@ -1257,6 +1306,58 @@ $@"docker login \
 
                         node.Status = "run: setup-vault-client.sh";
                         node.SudoCommand("setup-vault-client.sh");
+                    }
+
+                    // Clean up any cached APT files.
+
+                    node.Status = "clean up";
+                    node.SudoCommand("apt-get clean -yq");
+                    node.SudoCommand("rm -rf /var/lib/apt/lists");
+                });
+        }
+
+        /// <summary>
+        /// Configures an external node that is not part of the Docker Swarm.
+        /// </summary>
+        /// <param name="node">The target cluster node.</param>
+        private void ConfigureExternal(NodeProxy<NodeDefinition> node)
+        {
+            node.InvokeIdempotentAction("setup-external",
+                () =>
+                {
+                    // Setup NTP.
+
+                    node.Status = "run: setup-ntp.sh";
+                    node.SudoCommand("setup-ntp.sh");
+
+                    // Configure the VPN return routes.
+
+                    ConfigureVpnReturnRoutes(node);
+
+                    // Setup Docker.
+
+                    node.Status = "setup docker";
+
+                    node.SudoCommand("mkdir -p /etc/docker");
+                    node.UploadText("/etc/docker/daemon.json", GetDockerConfig(node));
+                    node.SudoCommand("setup-docker.sh");
+
+                    if (!string.IsNullOrEmpty(cluster.Definition.Docker.RegistryUsername))
+                    {
+                        // We need to log into the registry and/or cache.
+
+                        node.Status = "docker login";
+
+                        var loginCommand = new CommandBundle("./docker-login.sh");
+
+                        loginCommand.AddFile("docker-login.sh",
+$@"docker login \
+-u ""{cluster.Definition.Docker.RegistryUsername}"" \
+-p ""{cluster.Definition.Docker.RegistryPassword}"" \
+{cluster.Definition.Docker.Registry}",
+                            isExecutable: true);
+
+                        node.SudoCommand(loginCommand);
                     }
 
                     // Clean up any cached APT files.

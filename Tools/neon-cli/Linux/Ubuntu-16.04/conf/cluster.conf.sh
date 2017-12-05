@@ -138,7 +138,7 @@ if $summary ; then
     echo "NEON_NODE_IP                       = ${NEON_NODE_IP}" 1>&2
     echo "NEON_NODE_SSD                      = ${NEON_NODE_SSD}" 1>&2
     echo "NEON_NODE_SWAP                     = ${NEON_NODE_SWAP}" 1>&2
-    echo "NEON_APT_CACHE                     = ${NEON_APT_CACHE}" 1>&2
+    echo "NEON_APT_PROXY                     = ${NEON_APT_PROXY}" 1>&2
     echo 1>&2
     echo "NEON_CONFIG_FOLDER                 = ${NEON_CONFIG_FOLDER}" 1>&2
     echo "NEON_STATE_FOLDER                  = ${NEON_STATE_FOLDER}" 1>&2

@@ -688,6 +688,58 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Returns the APT package proxy references for a cluster definition as a space separated list.
+        /// </summary>
+        /// <returns>The space separated list of package proxy references formatted as HOST_OR_IP:PORT.</returns>
+        public static string GetPackageProxyReferences(ClusterDefinition clusterDefinition)
+        {
+            // Convert the package cache URIs from a list of comma separated HTTP URIs to
+            // a space separated list of hostname/ports.  Note that we'll use the proxy
+            // caches on the manager nodes if no cache URIs are specified.
+
+            // $todo(jeff.lill):
+            //
+            // Consider being able to specify something like "DIRECT" to avoid caching
+            // completely.  I'm not entirely convinced that this is useful though.
+
+            var packageProxy     = clusterDefinition.PackageProxy ?? string.Empty;
+            var packageCacheRefs = string.Empty;
+
+            foreach (var uriString in packageProxy.Split(','))
+            {
+                if (!string.IsNullOrEmpty(uriString))
+                {
+                    if (packageCacheRefs.Length > 0)
+                    {
+                        packageCacheRefs += " ";
+                    }
+
+                    var uri = new Uri(uriString, UriKind.Absolute);
+
+                    packageCacheRefs += $"{uri.Host}:{uri.Port}";
+                }
+            }
+
+            if (string.IsNullOrEmpty(packageCacheRefs))
+            {
+                // Configure the managers as proxy caches if no other
+                // proxies are specified.
+
+                foreach (var manager in clusterDefinition.Managers)
+                {
+                    if (packageCacheRefs.Length > 0)
+                    {
+                        packageCacheRefs += " ";
+                    }
+
+                    packageCacheRefs += $"{manager.PrivateAddress}:{NetworkPorts.AppCacherNg}";
+                }
+            }
+
+            return packageCacheRefs;
+        }
+
+        /// <summary>
         /// Connects to a cluster using a <see cref="ClusterProxy"/>.  Note that this version does not
         /// fully initialize the <see cref="ClusterLogin"/> property.
         /// </summary>
@@ -736,11 +788,11 @@ namespace Neon.Cluster
             Environment.SetEnvironmentVariable("NEON_NODE_ROLE", node.Metadata.Role);
             Environment.SetEnvironmentVariable("NEON_NODE_IP", node.Metadata.PrivateAddress.ToString());
             Environment.SetEnvironmentVariable("NEON_NODE_SSD", node.Metadata.Labels.StorageSSD ? "true" : "false");
-            Environment.SetEnvironmentVariable("NEON_APT_CACHE", clusterDefinition.PackageCache);
             Environment.SetEnvironmentVariable("VAULT_ADDR", $"{clusterDefinition.Vault.GetDirectUri(Cluster.FirstManager.Name)}");
             Environment.SetEnvironmentVariable("VAULT_DIRECT_ADDR", $"{clusterDefinition.Vault.GetDirectUri(Cluster.FirstManager.Name)}");
             Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"{NeonHosts.Consul}:{clusterDefinition.Consul.Port}");
             Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{NeonHosts.Consul}:{clusterDefinition.Consul.Port}");
+            Environment.SetEnvironmentVariable("NEON_APT_PROXY", GetPackageProxyReferences(clusterDefinition));
 
             // Temporarily modify the local DNS resolver hosts file so we'll be able
             // resolve common cluster host names.

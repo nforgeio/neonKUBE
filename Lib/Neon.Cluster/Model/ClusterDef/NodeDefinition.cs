@@ -131,7 +131,7 @@ namespace Neon.Cluster
         [DefaultValue(false)]
         public bool IsManager
         {
-            get { return Role == NodeRole.Manager; }
+            get { return Role.Equals(NodeRole.Manager, StringComparison.InvariantCultureIgnoreCase); }
         }
 
         /// <summary>
@@ -142,14 +142,33 @@ namespace Neon.Cluster
         /// Worker nodes within a cluster are where application containers will be deployed.
         /// Any node that is not a <see cref="IsManager"/> is considered to be a worker.
         /// </para>
-        /// <note>
-        /// Set <see cref="IsManager"/>=<c>false</c> to identify a worker node.
-        /// </note>
         /// </remarks>
         [JsonIgnore]
         public bool IsWorker
         {
-            get { return Role == NodeRole.Worker; }
+            get { return Role.Equals(NodeRole.Worker, StringComparison.InvariantCultureIgnoreCase); }
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> for nodes that are not part of the Docker Swarm.
+        /// </summary>
+        [JsonIgnore]
+        public bool IsExternal
+        {
+            get
+            {
+                switch (Role.ToLowerInvariant())
+                {
+                    case NodeRole.External:
+                    case NodeRole.ExternalElasticSearch:
+
+                        return true;
+
+                    default:
+
+                        return false;
+                }
+            }
         }
 
         /// <summary>

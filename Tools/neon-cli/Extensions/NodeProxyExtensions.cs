@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NodeManagementProxyExtensions.cs
+// FILE:	    NodeProxyExtensions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 

@@ -118,7 +118,7 @@ Server Requirements:
             {
                 clusterDefinition = new ClusterDefinition()
                 {
-                    PackageCache = packageCacheUri
+                    PackageProxy = packageCacheUri
                 };
             }
 

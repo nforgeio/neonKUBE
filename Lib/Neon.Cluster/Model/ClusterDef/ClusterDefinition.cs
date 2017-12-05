@@ -36,10 +36,10 @@ namespace Neon.Cluster
         //---------------------------------------------------------------------
         // Static members
 
-        private const string defaultDatacenter = "DATACENTER";
+        private const string defaultDatacenter       = "DATACENTER";
         private readonly string[] defaultTimeSources = new string[] { "pool.ntp.org" };
 
-        internal static Regex NameRegex { get; private set; } = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
+        internal static Regex NameRegex { get; private set; }    = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
         internal static Regex DnsHostRegex { get; private set; } = new Regex(@"^([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])(\.([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9]))*$", RegexOptions.IgnoreCase);
 
         /// <summary>
@@ -258,18 +258,30 @@ namespace Neon.Cluster
         public string[] TimeSources { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies an custom HTTP URL including the port (generally <b>3142</b>) of a 
-        /// <b>apt-cacher-ng</b> server to replace the package caches deployed to the manager nodes.
+        /// Optionally specifies one or more APT proxy/cache servers the cluster will use to install
+        /// and update Linux packages.  These are HTTP URLs including the port (generally 
+        /// <see cref="NetworkPorts.AppCacherNg"/> = 3142) of a  <b>apt-cacher-ng</b> or other proxy
+        /// server.  Multiple URLs may be specified by separating them with spaces.  This defaults to
+        /// <c>null</c> which will configure the cluster manager nodes as the package proxies.
         /// </summary>
         /// <remarks>
         /// <para>
         /// A package cache will greatly reduce the Internet network traffic required to deploy a
         /// cluster, especially for large clusters.
         /// </para>
+        /// <note>
+        /// The cluster nodes are configured to failover to different proxies or to hit the 
+        /// default Linux distribution package mirror directly if any or all of the caches
+        /// specified are unavailable.
+        /// </note>
+        /// <note>
+        /// The package caches will be tried in the order they are listed.  This essentially
+        /// makes the first cache primary, with the others as backups.
+        /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "PackageCache", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "PackageProxy", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string PackageCache { get; set; } = null;
+        public string PackageProxy { get; set; } = null;
 
         /// <summary>
         /// Specifies options for the host authentication options.
@@ -370,7 +382,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Enumerates the cluster manager node definitions sorted in ascending order by name..
+        /// Enumerates the cluster manager node definitions sorted in ascending order by name.
         /// </summary>
         [JsonIgnore]
         public IEnumerable<NodeDefinition> SortedManagers
@@ -388,12 +400,30 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Enumerates the cluster worker node definitions.
+        /// Enumerates the cluster worker node definitions sorted in ascending order by name..
         /// </summary>
         [JsonIgnore]
         public IEnumerable<NodeDefinition> SortedWorkers
         {
             get { return Workers.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
+        }
+
+        /// <summary>
+        /// Enumerates the cluster external node definitions.
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<NodeDefinition> External
+        {
+            get { return Nodes.Where(n => n.IsExternal); }
+        }
+
+        /// <summary>
+        /// Enumerates the cluster external node definitions sorted in ascending order by name..
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<NodeDefinition> SortedExternal
+        {
+            get { return External.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
         }
 
         /// <summary>
@@ -459,30 +489,22 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(Datacenter)}={Datacenter}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
-            if (!string.IsNullOrEmpty(PackageCache))
+            if (!string.IsNullOrEmpty(PackageProxy))
             {
-                Uri aptProxyUri;
+                var packageCacheUris = PackageProxy.Split(',');
 
-                if (!Uri.TryCreate(PackageCache, UriKind.Absolute, out aptProxyUri))
+                for (int i = 0; i < packageCacheUris.Length; i++)
                 {
-                    throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(PackageCache)}={PackageCache}] is not a valid URI.");
-                }
-                else
-                {
-                    // Verify that the cache server is running.
+                    packageCacheUris[i] = packageCacheUris[i].Trim();
 
-                    using (var client = new HttpClient() { Timeout = TimeSpan.FromSeconds(5) })
+                    if (!Uri.TryCreate(packageCacheUris[i], UriKind.Absolute, out var aptProxyUri))
                     {
-                        try
-                        {
-                            var response = client.GetAsync(new Uri(aptProxyUri, "/acng-report.html")).Result;
+                        throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(PackageProxy)}={PackageProxy}] includes [{packageCacheUris[i]}] which is not a valid URI.");
+                    }
 
-                            response.EnsureSuccessStatusCode();
-                        }
-                        catch
-                        {
-                            throw new ClusterDefinitionException($"Could not reach the APT-PROXY server at [{aptProxyUri}].");
-                        }
+                    if (aptProxyUri.Scheme != "http")
+                    {
+                        throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(PackageProxy)}={PackageProxy}] includes [{packageCacheUris[i]}] which does not have the [http] scheme.");
                     }
                 }
             }

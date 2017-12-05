@@ -49,10 +49,6 @@ if [ -d ${HOME}/.bundles ] ; then
     rm -r ${HOME}/.bundles
 fi
 
-# Make sure APT-GET has the latest package information.
-
-apt-get update
-
 # Install some common packages:
 #
 #	jq			JSON parser (useful for shell scripts)
