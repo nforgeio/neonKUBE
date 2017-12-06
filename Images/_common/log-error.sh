@@ -31,7 +31,7 @@ case "${LOG_LEVEL}" in
         LOG=false
         ;;
     *)
-        LOG=false
+        LOG=true
         ;;
 esac
 
