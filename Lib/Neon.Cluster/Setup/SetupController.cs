@@ -390,7 +390,31 @@ namespace Neon.Cluster
                     }
                     else if (step.GlobalAction != null)
                     {
-                        step.GlobalAction();
+                        try
+                        {
+                            step.GlobalAction();
+                        }
+                        catch (Exception e)
+                        {
+                            // $todo(jeff.lill):
+                            //
+                            // We're going to report global step exceptions as if they
+                            // happened on the first manager node because there's no
+                            // other place to log this in the current design.
+                            //
+                            // I suppose we could create a "global.log" file or something
+                            // and put this there and also indicate this somewhere in
+                            // the console output, but this is not worth messing with
+                            // right now.
+
+                            var firstManager = nodes
+                                .Where(n => n.Metadata.IsManager)
+                                .OrderBy(n => n.Name)
+                                .First();
+
+                            firstManager.Fault(NeonHelper.ExceptionError(e));
+                            firstManager.LogException(e);
+                        }
 
                         foreach (var node in stepNodes)
                         {
