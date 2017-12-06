@@ -177,7 +177,9 @@ Server Requirements:
                 Program.Exit(1);
             }
 
-            // Ensure that the nodes have unique IP addresses.
+            // Ensure that the nodes have valid IP addresses.
+
+            cluster.Definition.ValidatePrivateNodeAddresses();
 
             var ipAddressToServer = new Dictionary<IPAddress, NodeProxy<NodeDefinition>>();
 

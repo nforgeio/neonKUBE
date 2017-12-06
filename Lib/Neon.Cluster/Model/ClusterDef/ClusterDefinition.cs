@@ -427,6 +427,53 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Validates that node private IP addresses are set, are within the nodes subnet, and
+        /// are unique.  This method is intended to be called from hosting options classes
+        /// like <see cref="MachineOptions"/> which require specified node IP addresses.
+        /// </summary>
+        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        [Pure]
+        public void ValidatePrivateNodeAddresses()
+        {
+            var ipAddressToNode = new Dictionary<IPAddress, NodeDefinition>();
+
+            if (string.IsNullOrEmpty(Network.NodesSubnet))
+            {
+                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(ClusterDefinition.Network)}.{nameof(NetworkOptions.NodesSubnet)}] property is required.");
+            }
+
+            if (!NetworkCidr.TryParse(Network.NodesSubnet, out var nodesSubnet))
+            {
+                throw new ClusterDefinitionException($"The [{nameof(ClusterDefinition)}.{nameof(ClusterDefinition.Network)}.{nameof(NetworkOptions.NodesSubnet)}={Network.NodesSubnet}] property is not valid.");
+            }
+
+            foreach (var node in SortedNodes.OrderBy(n => n.Name))
+            {
+                if (string.IsNullOrEmpty(node.PrivateAddress))
+                {
+                    throw new ClusterDefinitionException($"Node [{node.Name}] has not been assigned a private IP address.");
+                }
+
+                if (!IPAddress.TryParse(node.PrivateAddress, out var address))
+                {
+                    throw new ClusterDefinitionException($"Node [{node.Name}] has invalid private IP address [{node.PrivateAddress}].");
+                }
+
+                if (address == IPAddress.Any)
+                {
+                    throw new ClusterDefinitionException($"Node [{node.Name}] has not been assigned a private IP address.");
+                }
+
+                if (ipAddressToNode.TryGetValue(address, out var conflictingNode))
+                {
+                    throw new ClusterDefinitionException($"Nodes [{conflictingNode.Name}] and [{node.Name}] have the same IP address [{address}].");
+                }
+
+                ipAddressToNode.Add(address, node);
+            }
+        }
+
+        /// <summary>
         /// Validates the cluster definition and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>

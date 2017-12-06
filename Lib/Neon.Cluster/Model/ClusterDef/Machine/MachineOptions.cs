@@ -130,6 +130,8 @@ namespace Neon.Cluster
                 }
             }
 
+            clusterDefinition.ValidatePrivateNodeAddresses();   // Private node IP addresses must be assigned and valid.
+
             VMMemory        = VMMemory ?? defaultVMMemory;
             VMMinimumMemory = VMMinimumMemory ?? VMMemory;
 
