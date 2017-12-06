@@ -57,6 +57,7 @@ REM Configure the PATH
 %NF_TOOLBIN%\pathtool -dedup -system -add "%DOTNETPATH%"
 %NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\PuTTY"
 %NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\WinSCP"
+%NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\7-Zip"
 
 :done
 pause

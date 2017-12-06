@@ -107,15 +107,17 @@ Follow steps below to configure a development or test workstation.
   * Open **$/neonFORGE.sln** (where **$** is the repo root directory)
   * Select **Build/Rebuild** Solution
 
-18. Install **OpenVPN** from (using the Windows Installer): [here](https://openvpn.net/index.php/open-source/downloads.html)
+18. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)s
 
-19. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
+19. Install **OpenVPN** from (using the Windows Installer): [here](https://openvpn.net/index.php/open-source/downloads.html)
 
-20. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+20. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
 
-21. *Optional*: In Chrome, install the **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
+21. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-22. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+22. *Optional*: In Chrome, install the **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
+
+23. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
 ## Cloud Environments
 
