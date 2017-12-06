@@ -18,4 +18,4 @@ ARG         VERSION
 
 RUN apt-get update \
     && apt-get install -yq openjdk-${VERSION}-jre \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    && apt-get clean -yq

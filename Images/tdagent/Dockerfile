@@ -22,7 +22,7 @@ RUN wget -nv https://packages.treasuredata.com/GPG-KEY-td-agent -O /tmp/GPG-KEY-
     && echo "deb http://packages.treasuredata.com/2/ubuntu/xenial/ xenial contrib" > /etc/apt/sources.list.d/treasure-data.list \
     && apt-get update \
     && apt-get install -yq td-agent \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    && apt-get clean -yq
 
 COPY td-agent.conf /etc/td-agent
 

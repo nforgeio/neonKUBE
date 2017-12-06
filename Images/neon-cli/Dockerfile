@@ -26,13 +26,13 @@ ENV EDITOR=/bin/nano
 
 RUN  apt-get update \
     && apt-get install -yq nano \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    && apt-get clean -yq
 
 # Install OpenVPN in it's own layer.
 
 RUN apt-get update \
     && apt-get install -yq openvpn \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    && apt-get clean -yq
 
 # [neon-cli] implements commands that integrate Ansible and since Ansible
 # only runs on Linux, we're going to integrate it into this image.
@@ -44,7 +44,7 @@ RUN apt-get update \
     && apt-add-repository ppa:ansible/ansible \
     && apt-get update \
     && apt-get install -yq ansible \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    && apt-get clean -yq
 
 # Add the application files in two layers.  The first will contain the dependencies
 # and the second will contain the application files.  This should result in more

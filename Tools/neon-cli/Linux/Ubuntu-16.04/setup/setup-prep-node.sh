@@ -121,9 +121,7 @@ echo "** Clean up" 1>&2
 
 # Clear any cached [apt-get] related files.
 
-apt-get autoclean -yq
-rm -rf /var/lib/apt/lists/* 
-rm -rf /var/cache/apt/archives/*
+apt-get clean -yq
 
 # Clear any DHCP leases to be super sure that cloned node
 # VMs will obtain fresh IP addresses.

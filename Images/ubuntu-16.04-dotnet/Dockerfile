@@ -29,6 +29,6 @@ RUN apt-get update \
     && echo "deb [arch=amd64] https://packages.microsoft.com/repos/microsoft-ubuntu-xenial-prod xenial main" > /etc/apt/sources.list.d/dotnetdev.list \
     && apt-get update \
     && apt-get install -yq dotnet-runtime-$VERSION \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    && apt-get clean -yq
 
 CMD /bin/bash

@@ -31,6 +31,6 @@ RUN sed -i 's!^#precedence ::ffff:0:0/96  10$!precedence ::ffff:0:0/96  100!g' /
     && apt-get -yq dist-upgrade \
     && apt-get install -yq wget curl unzip jq gosu \
     && apt-get install -yq apt-transport-https \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    && apt-get clean -yq
 
 CMD /bin/bash

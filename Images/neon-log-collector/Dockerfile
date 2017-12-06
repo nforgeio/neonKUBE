@@ -25,7 +25,7 @@ RUN /usr/sbin/td-agent-gem install fluent-plugin-elasticsearch --no-document \
     && /usr/sbin/td-agent-gem install maxminddb --no-document \
     && apt-get update \
     && apt-get install -yq nano \
-    && rm -rf /var/lib/apt/lists/* /var/cache/apt/archives/*
+    && apt-get clean -yq
 
 # Download the MAXMIND geolocation database.
 
