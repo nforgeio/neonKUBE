@@ -4,6 +4,13 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 
+. log-info.sh "Starting [neon-registry-cache]"
+. log-info.sh "HOSTNAME=${HOSTNAME}"
+. log-info.sh "REGISTRY=${REGISTRY}"
+. log-info.sh "USERNAME=${USERNAME}"
+. log-info.sh "PASSWORD=** REDACTED **"
+. log-info.sh "LOG_LEVEL=${LOG_LEVEL}"
+
 # Add the root directory to the PATH.
 
 PATH=${PATH}:/

@@ -7,6 +7,8 @@
 # Loads the Docker host node environment variables before launching TD-Agent
 # so these values can be referenced by the TD-Agent configuration file.
 
+. log-info.sh "Starting [neon-log-collector]"
+
 # Add the root directory to the PATH.
 
 PATH=${PATH}:/
