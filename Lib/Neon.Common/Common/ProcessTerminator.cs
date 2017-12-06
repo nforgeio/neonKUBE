@@ -138,7 +138,7 @@ namespace Neon.Common
                 return;
             }
 
-            log?.LogInfo(() => $"SIGTERM received: Stopping process [timeout={Timeout}]]");
+            log?.LogInfo(() => $"SIGTERM received: Stopping process [timeout={Timeout}]");
 
             cts.Cancel();
 
