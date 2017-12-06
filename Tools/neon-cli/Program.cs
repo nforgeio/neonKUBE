@@ -114,7 +114,7 @@ OPTIONS:
 
     --direct                            - See note below.
     --help                              - Display help
-    --log=LOG-FOLDER                    - Optional log folder path
+    --log-folder=LOG-FOLDER             - Optional log folder path
     -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
                                           configured in parallel [default=1]
     --node=NODE                         - Some commands may be directed at
@@ -172,7 +172,7 @@ tool requires admin priviledges for direct mode.
                 CommandLine.DefineOption("-q", "--quiet");
                 CommandLine.DefineOption("-m", "--max-parallel").Default = "1";
                 CommandLine.DefineOption("-w", "--wait").Default = "60";
-                CommandLine.DefineOption("--log").Default = string.Empty;
+                CommandLine.DefineOption("--log-folder").Default = string.Empty;
 
                 var validOptions = new HashSet<string>();
 
@@ -181,7 +181,7 @@ tool requires admin priviledges for direct mode.
                 validOptions.Add("-p");
                 validOptions.Add("--password");
                 validOptions.Add("--os");
-                validOptions.Add("--log");
+                validOptions.Add("--log-folder");
                 validOptions.Add("-q");
                 validOptions.Add("--quiet");
                 validOptions.Add("-m");
@@ -277,7 +277,7 @@ tool requires admin priviledges for direct mode.
 
                 // Handle the logging options.
 
-                LogPath = CommandLine.GetOption("--log");
+                LogPath = CommandLine.GetOption("--log-folder");
                 Quiet   = CommandLine.GetFlag("--quiet");
 
                 if (!string.IsNullOrEmpty(LogPath))

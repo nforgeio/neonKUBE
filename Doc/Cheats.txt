@@ -6,27 +6,27 @@
 
 neon cluster validate c:\docker\sample.json
  
-neon cluster prepare c:\docker\cluster-small.json -u=sysadmin -p=sysadmin0000 --log=c:\docker\neon.log --max-parallel=4 --force
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log=c:\docker\neon.log --max-parallel=4 --unredacted root@local
+neon cluster prepare c:\docker\cluster-small.json -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=4 --force
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=4 --unredacted root@local
 
-neon cluster prepare c:\docker\cluster-work.json -u=sysadmin -p=sysadmin0000 --log=c:\docker\neon.log --max-parallel=4 --force
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log=c:\docker\neon.log --max-parallel=4 --unredacted root@local
+neon cluster prepare c:\docker\cluster-work.json -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=4 --force
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=4 --unredacted root@local
 
-neon cluster prepare c:\docker\cluster-azure.json -u=sysadmin -p=sysadmin0000 --log=c:\docker\neon.log --max-parallel=6
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log=c:\docker\neon.log --max-parallel=6 root@azure
+neon cluster prepare c:\docker\cluster-azure.json -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=6
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=6 root@azure
 
-neon cluster prepare c:\docker\cluster-large.json -u=sysadmin -p=sysadmin0000 --log=c:\docker\neon.log --max-parallel=6
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log=c:\docker\neon.log --max-parallel=6 root@local
+neon cluster prepare c:\docker\cluster-large.json -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=6
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=6 root@local
 
 neon login rm --force root@test
-neon cluster prepare c:\docker\cluster-test.json -u=sysadmin -p=sysadmin0000 --log=c:\docker\neon.log --max-parallel=6
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log=c:\docker\neon.log --max-parallel=4 root@test
+neon cluster prepare c:\docker\cluster-test.json -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=6
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=4 root@test
 
-neon cluster prepare "%TS_ROOT%\setup\marcus-office-cluster.json" -u=sysadmin -p=sysadmin0000 --log=c:\neon.log --max-parallel=4 --force
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log=c:\docker\neon.log --max-parallel=4 root@local --unredacted
+neon cluster prepare "%TS_ROOT%\setup\marcus-office-cluster.json" -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=4 --force
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=4 --unredacted root@marcus-office
 
-neon cluster prepare "%TS_ROOT%\setup\jeff-office-cluster.json" -u=sysadmin -p=sysadmin0000 --log=c:\neon.log --max-parallel=4 --force --direct
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log=c:\docker\neon.log --max-parallel=4 --unredacted --direct root@jeff-office
+neon cluster prepare "%TS_ROOT%\setup\jeff-office-cluster.json" -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=4 --force --direct
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=4 --unredacted --direct root@jeff-office
 
 # Create host VHDX template zip files that will be compatible with the [neon-cli] tool.
 
