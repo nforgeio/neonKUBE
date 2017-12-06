@@ -1577,6 +1577,7 @@ $@"docker login \
 #endif
                             "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
                             "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
+                            "--env", $"INFO",
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "neoncluster/neon-proxy-vault");
 
