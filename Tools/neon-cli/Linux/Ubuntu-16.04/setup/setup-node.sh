@@ -55,6 +55,7 @@ fi
 #	aptitude	Apt related utilities
 #	gdebi-core	Installs .deb package files AND their dependencies
 
+apt-get update
 apt-get install -yq jq aptitude gdebi-core
 
 # Configure the host name.

@@ -248,11 +248,11 @@ namespace NeonCli
 
                 if (sbManagerNodesSummary.Length == 0)
                 {
-                    sbManagerNodesSummary.Append($"    echo \"NEON_MANAGER NODES                 = {nameField}: {manager.PrivateAddress}\" 1>&2\n");
+                    sbManagerNodesSummary.Append($"    echo \"NEON_MANAGER_NODES                 = {nameField}: {manager.PrivateAddress}\" 1>&2\n");
                 }
                 else
                 {
-                    sbManagerNodesSummary.Append($"    echo \"                                 {nameField}: {manager.PrivateAddress}\" 1>&2\n");
+                    sbManagerNodesSummary.Append($"    echo \"                                     {nameField}: {manager.PrivateAddress}\" 1>&2\n");
                 }
             }
 
