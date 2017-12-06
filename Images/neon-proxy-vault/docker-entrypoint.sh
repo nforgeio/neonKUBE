@@ -18,7 +18,8 @@ else
 
     # Initialize NEON_NODE_IP to the loopback address if host environment
     # variables weren't mapped.  We're doing this so the SYSLOG log line 
-    # below will be valid when no [/etc/neoncluster/env-host] file is mounted.
+    # below will be valid when event when no [/etc/neoncluster/env-host] 
+    # file is mounted.
 
     NEON_NODE_IP=127.0.0.1
 fi
