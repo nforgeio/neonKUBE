@@ -711,7 +711,7 @@ namespace Neon.Cluster
                 {
                     if (packageCacheRefs.Length > 0)
                     {
-                        packageCacheRefs += " ";
+                        packageCacheRefs += "\\ ";  // Bash needs us to escape the space
                     }
 
                     var uri = new Uri(uriString, UriKind.Absolute);
@@ -729,7 +729,7 @@ namespace Neon.Cluster
                 {
                     if (packageCacheRefs.Length > 0)
                     {
-                        packageCacheRefs += " ";
+                        packageCacheRefs += "\\ ";  // Bash needs us to escape the space
                     }
 
                     packageCacheRefs += $"{manager.PrivateAddress}:{NetworkPorts.AppCacherNg}";
