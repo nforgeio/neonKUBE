@@ -109,14 +109,14 @@ namespace Neon.IO
     ///     <term><b>#case VALUE</b></term>
     ///     <description>
     ///     This command causes the lines up to the next <b>#case</b>, <b>#default</b>,
-    ///     or <b>#endswitch</b> to be outputted if the value matches that specified for
+    ///     or <b>#endswitch</b> to be outputed if the value matches that specified for
     ///     the parent <b>#switch</b> statement.
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><b>#default</b></term>
     ///     <description>
-    ///     This command causes the lines up to the next <b>#endswitch</b> to be outputted
+    ///     This command causes the lines up to the next <b>#endswitch</b> to be outputed
     ///     if the value wasn't matched by any of the previous <b>case</b> statements.
     ///     <note>
     ///     <b>#default</b> must appear after all <b>#case</b> statements.
