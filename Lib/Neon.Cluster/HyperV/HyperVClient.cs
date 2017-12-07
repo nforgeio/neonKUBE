@@ -210,7 +210,7 @@ namespace Neon.Cluster.HyperV
 
             if (!checkpointDrive)
             {
-                powershell.Execute($"Set-VM -CheckpointType Disabled -AutomaticCheckpointsEnabled 0 -Name \"{machineName}\"");
+                powershell.Execute($"Set-VM -CheckpointType Disabled -Name \"{machineName}\"");
             }
         }
 
