@@ -53,7 +53,7 @@ COMMAND SUMMARY:
 
     neon help               COMMAND
 
-    neon cluster add        LOGIN_PATH
+    neon cluster add        LOGIN-PATH
     neon cluster example
     neon cluster get        VALUE-EXPR
     neon cluster prepare    [CLUSTER-DEF]
