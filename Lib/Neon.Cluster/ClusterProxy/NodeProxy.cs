@@ -333,21 +333,32 @@ namespace Neon.Cluster
         {
             get
             {
+                var result = status;
+
                 if (IsFaulted)
                 {
                     if (string.IsNullOrEmpty(faultMessage))
                     {
-                        return "*** FAULTED ***";
+                        result = "*** FAULTED ***";
                     }
                     else
                     {
-                        return $"*** FAULT: {faultMessage}";
+                        result = $"*** FAULT: {faultMessage}";
                     }
                 }
-                else
+
+                // Only return the first line of the status.
+
+                result = result ?? string.Empty;
+
+                var pos = result.IndexOfAny(new char[] { '\r', '\n' });
+
+                if (pos != -1)
                 {
-                    return status;
+                    result = result.Substring(0, pos).TrimEnd();
                 }
+
+                return result;
             }
 
             set
