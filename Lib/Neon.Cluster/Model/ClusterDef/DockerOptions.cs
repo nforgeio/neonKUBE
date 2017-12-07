@@ -135,24 +135,23 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Specifies the URL of the Docker registry the cluster will use to download Docker images.
-        /// This defaults to the Public Docker registry: <b>https://registry-1.docker.io</b>.
+        /// Returns the URL of the Docker registry the cluster will use to download Docker images:
+        /// <b>https://registry-1.docker.io</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "Registry", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultRegistry)]
-        public string Registry { get; set; } = defaultRegistry;
+        [JsonIgnore]
+        public string Registry => defaultRegistry;
 
         /// <summary>
-        /// Optionally specifies the username to be used to authenticate against the Docker registry
-        /// and mirrors.
+        /// Optionally specifies the username to be used to authenticate against the global
+        /// Docker registry.
         /// </summary>
         [JsonProperty(PropertyName = "RegistryUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string RegistryUsername { get; set; } = null;
 
         /// <summary>
-        /// Optionally specifies the password to be used to authenticate against the Docker registry
-        /// and mirrors.
+        /// Optionally specifies the password to be used to authenticate against the global
+        /// Docker registry.
         /// </summary>
         [JsonProperty(PropertyName = "RegistryPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -230,7 +229,6 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             Version          = Version ?? "latest";
-            Registry         = Registry ?? defaultRegistry;
             RegistryUsername = RegistryUsername ?? string.Empty;
             RegistryPassword = RegistryPassword ?? string.Empty;
 
