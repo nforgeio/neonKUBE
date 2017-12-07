@@ -205,7 +205,7 @@ Server Requirements:
             // and configure OpenVPN on the manager nodes so that cluster setup will be
             // able to reach the nodes on all ports.
 
-            var operation  = $"Preparing [{cluster.Definition.Name}] hosts";
+            var operation  = $"Preparing [{cluster.Definition.Name}] nodes";
 
             var controller = 
                 new SetupController(operation, cluster.Nodes)

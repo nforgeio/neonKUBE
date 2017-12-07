@@ -134,7 +134,7 @@ namespace NeonCli
         {
             var sbHosts = new StringBuilder();
 
-            sbHosts.AppendLineLinux("# PowerDNS Recursor authoritatively answers [*.cluster] hosts.");
+            sbHosts.AppendLineLinux("# PowerDNS Recursor authoritatively answers for [*.cluster] hostnames.");
             sbHosts.AppendLineLinux("# on the local node using these mappings.");
             sbHosts.AppendLineLinux();
 
