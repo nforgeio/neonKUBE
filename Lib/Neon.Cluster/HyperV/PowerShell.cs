@@ -134,11 +134,25 @@ namespace Neon.Cluster.HyperV
         {
             using (var file = new TempFile(suffix: ".ps1"))
             {
-                File.WriteAllText(file.Path, $"{command} | Out-String -Width {PowershellBufferWidth}");
+                File.WriteAllText(file.Path, 
+$@"
+try {{
+    {command} | Out-String -Width {PowershellBufferWidth}
+}}
+catch [Exception] {{
+    write-host $_Exception.Message
+    exit 1
+}}
+");
+                var result = NeonHelper.ExecuteCaptureStreams("powershell.exe", $"-command \"{file.Path}\"");
 
-                var result = NeonHelper.ExecuteCaptureStreams("powershell.exe", $"-file \"{file.Path}\"");
+                // $hack(jeff.lill):
+                //
+                // Powershell is returning [exitcode=0] even if there was an error and
+                // we called the [exit 1] statement.  I'm going to work around this for
+                // now by checking the error outport stream as well.
 
-                if (result.ExitCode != 0)
+                if (result.ExitCode != 0 || result.ErrorText.Length > 0)
                 {
                     throw new HyperVException(result.AllText);
                 }
@@ -177,11 +191,25 @@ namespace Neon.Cluster.HyperV
 
             using (var file = new TempFile(suffix: ".ps1"))
             {
-                File.WriteAllText(file.Path, $"{command} | Out-String -Width {PowershellBufferWidth} | Format-Table");
-
+                File.WriteAllText(file.Path,
+$@"
+try {{
+    {command} | Out-String -Width {PowershellBufferWidth} | Format-Table
+}}
+catch [Exception] {{
+    write-host $_Exception.Message
+    exit 1
+}}
+");
                 var result = NeonHelper.ExecuteCaptureStreams("powershell.exe", $"-file \"{file.Path}\"");
 
-                if (result.ExitCode != 0)
+                // $hack(jeff.lill):
+                //
+                // Powershell is returning [exitcode=0] even if there was an error and
+                // we called the [exit 1] statement.  I'm going to work around this for
+                // now by checking the error outport stream as well.
+
+                if (result.ExitCode != 0 || result.ErrorText.Length > 0)
                 {
                     throw new HyperVException(result.AllText);
                 }
