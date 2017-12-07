@@ -311,7 +311,7 @@ namespace Neon.Cluster
 
                 if (!string.IsNullOrEmpty(conflicts))
                 {
-                    throw new HyperVException($"[{conflicts}] virtual machine(s) already exist and connot be automatically replaced unless you specify [--force].");
+                    throw new HyperVException($"[{conflicts}] virtual machine(s) already exist and cannot be automatically replaced unless you specify [--force].");
                 }
 
                 controller.SetOperationStatus();
