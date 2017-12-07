@@ -124,7 +124,7 @@ namespace Neon.Cryptography
                     $"req -newkey rsa:{bitCount} -nodes -sha256 -x509 -days {validDays} " +
                     $"-subj \"/C=--/ST=./L=./O=./CN={hostName}\" " +
                     $"-keyout \"{keyPath}\" " +
-                    $"-out {certPath}");
+                    $"-out \"{certPath}\"");
 
                 if (result.ExitCode != 0)
                 {
