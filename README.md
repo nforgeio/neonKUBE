@@ -119,6 +119,47 @@ Follow steps below to configure a development or test workstation.
 
 23. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
+
+# Git Branches and Docker Image Tagging Conventions
+
+We're going to standardize on some conventions for managing source control branches and published Docker image tags.
+
+## Branches
+
+Four branches in the repo are to be used for specific purposes:
+
+* **master:** Includes the most recent relatively stable commits.  Developers will merge any changes here after confirming that the changes appear to work.  The **master** branch should always build and pass unit tests and will generally act as the candidate for test, staging, and production releases.
+
+* **prod:** Includes commits that will be deployed into production. 
+
+* **stage:** Includes commits that will be deployed info a staging environment.
+
+* **test:** Includes commits that will be deployed into a production environment.
+
+Developers will generally have one or more branches prefixed by their first name (lowercase), e.g. *jeff*, *marcus*, *jeff-experimental*,...  When developers need to colloborate on a feature over an extended period of time, we'll create feature branches like *feature-coolstuff*.  Most development work will happen in a developer or feature branch.
+
+## Image Tags
+
+By convention, Docker images will be tagged with the branch, short Git commit hash, and UTC date like:
+
+&nbsp;&nbsp;&nbsp;&nbsp;`my-image:prod-20171208-bfa4561c`
+
+This indicates that **my-image** was built from the **prod** branch on **12-08-2017** from Git commit **bfa4561c**.
+
+The most recent image built from the **prod** branch will also be tagged with **latest**.
+
+## Continuous Integration
+
+These conventions make automating builds and deployment relatively straightforward.  The basic approach is to have a CI infrastructure monitoring the **prod**, **stage**, **test**, and any other interesting branches for changes.  When a change is detected, the CI environment pulls and builds the branch including building, tagging and pushing any Docker images using the tagging conventions and then deploying the images to cluster(s) as required.
+
+For example to publish a production change, a developer would:
+
+1. Verify that the changes work in another branch.
+2. Merge the changes into the **prod** branch.
+3. Push the changes to the Git repo.
+4. The CI infrastructure would build and publish the image.
+5. ...or the developer would manually build and publish the image (before we get CI working).
+
 ## Cloud Environments
 
 neonCLUSTERs can currently be deployed to Microsoft Azure.  To test this, you'll need an Azure subscription and then gather the required authentication information.  The following sections describe how to accomplish this.
