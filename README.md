@@ -136,7 +136,7 @@ Four branches in the repo are to be used for specific purposes:
 
 * **test:** Includes commits that will be deployed into a production environment.
 
-Developers will generally have one or more branches prefixed by their first name (lowercase), e.g. *jeff*, *marcus*, *jeff-experimental*,...  When developers need to colloborate on a feature over an extended period of time, we'll create feature branches like *feature-coolstuff*.  Most development work will happen in a developer or feature branch.
+Developers will generally have one or more branches prefixed by their first name (lowercase), e.g. *jeff*, *jeff-experimental*,...  When developers need to colloborate on a feature over an extended period of time, we'll create feature branches like *feature-coolstuff*.  Most development work will happen in a developer or feature branch.
 
 ## Image Tags
 
