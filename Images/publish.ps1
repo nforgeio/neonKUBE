@@ -68,3 +68,6 @@ Publish "$image_root\\neon-proxy-vault"
 Publish "$image_root\\neon-proxy-manager"
 Publish "$image_root\\neon-registry-cache"
 
+# Clean up
+
+Exec { DeleteFile .rnd }
