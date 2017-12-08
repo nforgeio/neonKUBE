@@ -63,4 +63,5 @@ $date           = [System.DateTime]::Parse($response.Headers["Last-Modified"]);
 $date           = $date.ToUniversalTime();
 $version        = $date.ToString("yyyy.MM.dd");
 
-Build $version -latest
+# Build $version -latest
+Build unstable

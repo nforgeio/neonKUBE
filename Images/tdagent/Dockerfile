@@ -16,12 +16,15 @@ ARG         VERSION
 
 # Install TD-Agent.
 
+# NOTE: Not sure we really need to install
+#       [build-essential] below.
+
 RUN wget -nv https://packages.treasuredata.com/GPG-KEY-td-agent -O /tmp/GPG-KEY-td-agent.key \
     && cat /tmp/GPG-KEY-td-agent.key | apt-key add - \
     && rm /tmp/GPG-KEY-td-agent.key \
-    && echo "deb http://packages.treasuredata.com/2/ubuntu/xenial/ xenial contrib" > /etc/apt/sources.list.d/treasure-data.list \
+    && echo "deb http://packages.treasuredata.com/${VERSION}/ubuntu/xenial/ xenial contrib" > /etc/apt/sources.list.d/treasure-data.list \
     && apt-get update \
-    && apt-get install -yq td-agent \
+    && apt-get install -yq build-essential td-agent \
     && apt-get clean -yq
 
 COPY td-agent.conf /etc/td-agent
@@ -29,4 +32,3 @@ COPY td-agent.conf /etc/td-agent
 RUN chmod 600 /etc/td-agent
 
 ENTRYPOINT [ "/tini", "-g", "--", "/usr/sbin/td-agent" ]
-# ENTRYPOINT [ "/bin/bash" ]

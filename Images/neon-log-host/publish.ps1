@@ -49,4 +49,4 @@ function Build
 	}
 }
 
-Build 1.0.0 -latest
+Build 1.1.0 -latest
