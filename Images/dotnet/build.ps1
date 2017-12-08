@@ -48,3 +48,4 @@ if ($latest)
 # Clean up
 
 Exec { Remove-Item -Recurse _common }
+Exec { DeleteFile .rnd }

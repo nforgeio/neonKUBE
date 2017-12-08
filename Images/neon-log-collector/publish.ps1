@@ -50,7 +50,7 @@ function Build
 	}
 }
 
-# The image tag is the date (YYYY.MM.DD) when the MaxMind.com
+# The image tag as the UTC date (YYYY.MM.DD) when the MaxMind.com
 # database was released.  We're going to do a HEAD query on the
 # database file and extract this from the [Last-Modified] 
 # header returned.
@@ -64,4 +64,3 @@ $date           = $date.ToUniversalTime();
 $version        = $date.ToString("yyyy.MM.dd");
 
 Build $version -latest
-

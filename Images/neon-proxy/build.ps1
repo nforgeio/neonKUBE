@@ -75,3 +75,4 @@ sleep 5 # Docker sometimes appears to hold references to files we need
 Exec { Remove-Item -Recurse _common }
 Exec { Remove-Item -Recurse vault-binaries }
 Exec { Remove-Item -Recurse consul-binaries }
+Exec { DeleteFile .rnd }

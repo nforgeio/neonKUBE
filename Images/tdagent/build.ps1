@@ -40,3 +40,7 @@ if ($latest)
 {
 	Exec { docker tag "${registry}:$version" "${registry}:latest"}
 }
+
+# Clean up
+
+Exec { DeleteFile .rnd }

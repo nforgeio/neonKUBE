@@ -54,3 +54,4 @@ if ($latest)
 # Clean up
 
 Exec { rm -r bin }
+Exec { DeleteFile .rnd }

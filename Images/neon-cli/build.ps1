@@ -67,4 +67,5 @@ if ($latest)
 
 # Clean up
 
-Exec { rm -r bin }
+Exec { Remove-Item -Force .rnd }
+Exec { DeleteFile .rnd }

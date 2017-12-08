@@ -22,3 +22,7 @@ $image_root = "$env:NF_ROOT\\Images"
 $registry = "neoncluster/ubuntu-16.04"
 
 Exec { docker build -t "${registry}:latest" --build-arg "TINI_VERSION=$tini_version" . }
+
+# Clean up
+
+Exec { DeleteFile .rnd }

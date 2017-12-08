@@ -24,3 +24,6 @@ $registry = "neoncluster/node"
 
 Exec { docker build -t "${registry}:latest" --build-arg "TINI_VERSION=$tini_version" . }
 
+# Clean up
+
+Exec { DeleteFile .rnd }

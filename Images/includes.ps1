@@ -37,6 +37,23 @@ function Exec
 }
 
 #------------------------------------------------------------------------------
+# Deletes a file if it exists.
+
+function DeleteFile
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=1)]
+        [string]$Path
+    )
+
+	if (Test-Path $Path) 
+	{ 
+		Remove-Item $Path 
+	} 
+}
+
+#------------------------------------------------------------------------------
 # Pushes a Docker image to the public registry with retry as an attempt to handle
 # transient registry issues.
 
