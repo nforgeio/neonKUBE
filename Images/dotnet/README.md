@@ -1,8 +1,8 @@
 **Work in progress: Do not use**
 
-neonCLUSTER base image for Microsoft .NET Core Linux containers.
-
 # Supported Tags
+
+These images are tagged using a similar convention to the Microsoft repo.
 
 * `1.0.3-runtime`
 * `1.0.4-runtime, 1.0-runtime`
@@ -13,9 +13,7 @@ neonCLUSTER base image for Microsoft .NET Core Linux containers.
 
 # Details
 
-These images are based off of the corresponding versions at [microsoft/dotnet](https://hub.docker.com/r/microsoft/dotnet/).  These images are based on Debian.
-
-Note that **latest** refers to the the latest runtime image.
+neonCLUSTER base image for Microsoft .NET Core Linux containers.  These images are based off of the corresponding versions at [microsoft/dotnet](https://hub.docker.com/r/microsoft/dotnet/).
 
 # Additional Packages
 
