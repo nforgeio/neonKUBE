@@ -55,6 +55,8 @@ if ($all)
 	Build 3.2
 	Build 3.3
 	Build 3.4
+	Build 3.5
+	Build 3.6
 }
 
-Build 3.5 -latest
+Build 3.7 -latest

@@ -2,11 +2,15 @@
 
 # Supported Tags
 
+The neonCLUSTER Alpine images are tagged with the Alpine version.
+
 * `3.1`
 * `3.2`
 * `3.3`
 * `3.4`
-* `3.5, latest`
+* `3.5`
+* `3.6`
+* `3.7, latest`
 
 # Description
 
