@@ -1471,7 +1471,6 @@ $@"docker login \
                 {
                     var images = new List<string>()
                     {
-                        "neoncluster/alpine",
                         "neoncluster/ubuntu-16.04",
                         "neoncluster/neon-proxy-vault"
                     };
