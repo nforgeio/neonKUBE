@@ -7,7 +7,7 @@
 #
 # ARGUMENTS:
 #
-#   VERSION         - The TD-AGENT version (e.g. "2")
+#   VERSION         - The TD-AGENT version (e.g. "3")
 
 FROM        neoncluster/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
@@ -15,9 +15,6 @@ STOPSIGNAL  SIGTERM
 ARG         VERSION
 
 # Install TD-Agent.
-
-# NOTE: Not sure we really need to install
-#       [build-essential] below.
 
 RUN wget -nv https://packages.treasuredata.com/GPG-KEY-td-agent -O /tmp/GPG-KEY-td-agent.key \
     && cat /tmp/GPG-KEY-td-agent.key | apt-key add - \

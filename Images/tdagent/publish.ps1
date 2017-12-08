@@ -49,4 +49,4 @@ function Build
 	}
 }
 
-Build 2 -latest
+Build 3 -latest
