@@ -7,11 +7,11 @@
 # from the node [neon-log-host] containers, perform any transformations
 # and then persist them to Elasticsearch.
 
-FROM        neoncluster/tdagent
+FROM        neoncluster/td-agent
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 
-# Expose the standard TDAgent network ports for TCP/UDP
+# Expose the standard TD-Agent network ports for TCP/UDP
 # and HTTP.
 
 EXPOSE 24224/tcp 24224/udp 9880/tcp

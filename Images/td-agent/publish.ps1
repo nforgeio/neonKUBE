@@ -28,7 +28,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "neoncluster/tdagent"
+	$registry = "neoncluster/td-agent"
 	$date     = UtcDate
 	$tag      = "$version-$date"
 

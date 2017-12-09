@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 #
-# Creates the base [neoncluster/tdagent] image used by neonCLUSTER.
+# Creates the base [neoncluster/td-agent] image used by neonCLUSTER.
 #
 # ARGUMENTS:
 #

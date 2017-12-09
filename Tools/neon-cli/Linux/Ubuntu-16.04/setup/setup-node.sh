@@ -405,7 +405,7 @@ systemctl restart neon-port-forwarding
 
 #------------------------------------------------------------------------------
 # Configure the systemd journal to perist the journal to the file system at
-# [/var/log/journal].  We need this so the node's [tdagent-host] container
+# [/var/log/journal].  We need this so the node's [neon-log-host] container
 # will be able to access the journal.
 #
 # We're also setting [MaxRetentionSec=86400] which limits log local retention 
@@ -420,7 +420,7 @@ cat <<EOF >> /etc/systemd/journald.conf
 # COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 #
 # Configure the systemd journal to perist the journal to the file system at
-# [/var/log/journal].  We need this so the node's [tdagent-host] service
+# [/var/log/journal].  We need this so the node's [neon-log-host] service
 # will be able to forward the system logs to the cluster log aggregation
 # pipeline.
 #
