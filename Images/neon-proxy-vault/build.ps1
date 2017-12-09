@@ -7,6 +7,13 @@
 #
 # Usage: powershell -file build.ps1
 
+param 
+(
+	[parameter(Mandatory=$True,Position=1)][string] $registry,
+	[parameter(Mandatory=$True,Position=2)][string] $tag,
+	[switch]$latest = $False
+)
+
 #----------------------------------------------------------
 # Global Includes
 $image_root = "$env:NF_ROOT\\Images"
@@ -30,9 +37,12 @@ Exec { copy ..\_common\*.* .\_common }
 
 # Build the images.
 
-$registry = "neoncluster/neon-proxy-vault"
+Exec { docker build -t "${registry}:$tag" . }
 
-Exec { docker build -t "${registry}:latest" . }
+if ($latest)
+{
+	Exec { docker tag "${registry}:$tag" "${registry}:latest"}
+}
 
 # Clean up
 

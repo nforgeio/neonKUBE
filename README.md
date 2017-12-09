@@ -138,15 +138,17 @@ Four branches in the repo are to be used for specific purposes:
 
 Developers will generally have one or more branches prefixed by their first name (lowercase), e.g. *jeff*, *jeff-experimental*,...  When developers need to colloborate on a feature over an extended period of time, we'll create feature branches like *feature-coolstuff*.  Most development work will happen in a developer or feature branch.
 
-## Image Tags
+## Docker Image Tags
 
-By convention, Docker images will be tagged with the branch, short Git commit hash, and UTC date like:
+Application images are tagged with the branch, short Git commit hash, and UTC date like:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`my-image:prod-20171208-bfa4561c`
 
 This indicates that **my-image** was built from the **prod** branch on **12-08-2017** from Git commit **bfa4561c**.
 
 The most recent image built from the **prod** branch will also be tagged with **latest**.
+
+neonCLUSTER also maintains base images like **dotnet** or **elasticsearch** that applications containers can build on or that can be deployed directly to a cluster.  These are generally tagged with the version of the underlying software plus the image build date.  This allows multiple versions of an image with the same underlying software to be persisted to a repo to ensure that it's possible to revert to an older version if necessary.
 
 ## Continuous Integration
 

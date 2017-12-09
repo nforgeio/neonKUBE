@@ -9,7 +9,8 @@
 
 param 
 (
-	[parameter(Mandatory=$True,Position=1)][string] $version,    # like: "1.0.0"
+	[parameter(Mandatory=$True,Position=1)][string] $registry,
+	[parameter(Mandatory=$True,Position=2)][string] $tag,
 	[switch]$latest = $False
 )
 
@@ -21,11 +22,10 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* NEON-CLUSTER-MANAGER " + $version
+"* NEON-CLUSTER-MANAGER " + $tag
 "======================================="
 
 $appname  = "neon-cluster-manager"
-$registry = "neoncluster/$appname"
 
 # Build and publish the app to a local [bin] folder.
 
@@ -44,11 +44,11 @@ Exec { core-layers $appname "$pwd\bin" }
 
 # Build the images.
 
-Exec { docker build -t "${registry}:$version" --build-arg "APPNAME=$appname" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "APPNAME=$appname" . }
 
 if ($latest)
 {
-	Exec { docker tag "${registry}:$version" "${registry}:latest"}
+	Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 }
 
 # Clean up

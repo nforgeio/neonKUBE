@@ -20,40 +20,30 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-$registry = "neoncluster/elasticsearch"
-
 function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,	              # like: "5.0.0"
-		[parameter(Mandatory=$False, Position=2)][string] $subversion = "-",      # like: "5.0"
-		[parameter(Mandatory=$False, Position=3)][string] $majorversion = "-",    # like: "5"
+		[parameter(Mandatory=$True, Position=1)][string] $version,
 		[switch]$latest = $False
 	)
+
+	$registry = "neoncluster/elasticsearch"
+	$date     = UtcDate
+	$tag      = "$version-$date"
 
 	# Build the images.
 
 	if ($latest)
 	{
-		./build.ps1 -version $version -subversion $subversion -majorversion $majorversion -latest
+		./build.ps1 -registry $registry -version $version -tag $tag -latest
 	}
 	else
 	{
-		./build.ps1 -version $version -subversion $subversion -majorversion $majorversion
+		./build.ps1 -registry $registry -version $version -tag $tag
 	}
 
-	PushImage "${registry}:$version"
-
-	if ($subversion -ne "-") 
-	{
-		PushImage "${registry}:$subversion"
-	}
-
-	if ($majorversion -ne "-")
-	{
-		PushImage "${registry}:$majorversion"
-	}
+    PushImage "${registry}:$tag"
 
 	if ($latest)
 	{

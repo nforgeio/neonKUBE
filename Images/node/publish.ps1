@@ -20,10 +20,33 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-$registry = "neoncluster/node"
+function Build
+{
+	param
+	(
+		[switch]$latest = $False
+	)
 
-# Note that we currently build only one Node image (latest).
+	$registry = "neoncluster/node"
+	$tag      = ImageTag
 
-./build.ps1
-PushImage "${registry}:latest"
+	# Build the images.
 
+	if (IsProd)
+	{
+		./build.ps1 -registry $registry -tag $tag -latest
+	}
+	else
+	{
+		./build.ps1 -registry $registry -tag $tag
+	}
+
+    PushImage "${registry}:$tag"
+
+	if (IsProd)
+	{
+		PushImage "${registry}:latest"
+	}
+}
+
+Build

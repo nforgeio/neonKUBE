@@ -1,10 +1,8 @@
 **DO NOT USE: Work in progress**
 
-# Supported Tags
+# Image Tags
 
-* `1.0.0`
-* `1.1.0`
-* `1.2.0, latest - Integrates Ansible`
+The **neon-cli** images are tagged with the version of the tool.
 
 # Description
 

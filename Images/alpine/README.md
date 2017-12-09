@@ -1,16 +1,8 @@
 **DO NOT USE: Work in progress**
 
-# Supported Tags
+# Image Tags
 
-The neonCLUSTER Alpine images are tagged with the Alpine version.
-
-* `3.1`
-* `3.2`
-* `3.3`
-* `3.4`
-* `3.5`
-* `3.6`
-* `3.7, latest`
+Alpine images are tagged with the Alpine version plus the image build date.
 
 # Description
 

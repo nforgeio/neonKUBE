@@ -1,13 +1,15 @@
 **DO NOT USE: Work in progress**
 
-# Supported Tags
+# Image Tags
 
-Images are tagged with the embedded Elastic Metricbeat version.
+The following image tags identify deprecated images which will be deleted sometime in the future.
 
 * `5.2.0`
 * `5.3.0`
 * `5.4.0`
 * `5.5.0, latest`
+
+Supported images are tagged with the Metricbeat version plus the image build date.
 
 **NOTE:**
 

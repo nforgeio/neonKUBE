@@ -9,7 +9,8 @@
 
 param 
 (
-	[parameter(Mandatory=$True,Position=1)][string] $version,    # like: "2017.02.08"
+	[parameter(Mandatory=$True,Position=1)][string] $registry,
+	[parameter(Mandatory=$True,Position=3)][string] $tag,
 	[switch]$latest = $False
 )
 
@@ -36,13 +37,11 @@ Exec { copy ..\_common\*.* .\_common }
 
 # Build the image.
 
-$registry = "neoncluster/neon-log-collector"
+Exec { docker build -t "${registry}:${tag}" . }
 
-Exec { docker build -t "${registry}:${version}" . }
-
-if ($latest)
+if (IsProd)
 {
-	Exec { docker tag "${registry}:$version" "${registry}:latest"}
+	Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 }
 
 # Clean up

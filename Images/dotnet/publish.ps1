@@ -20,28 +20,30 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-$registry = "neoncluster/dotnet"
-
 function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,    # like: "1.1.0-runtime"
+		[parameter(Mandatory=$True, Position=1)][string] $version,
 		[switch]$latest = $False
 	)
+
+	$registry = "neoncluster/dotnet"
+	$date     = UtcDate
+	$tag      = "$version-$date"
 
 	# Build the images.
 
 	if ($latest)
 	{
-		./build.ps1 -version $version -latest
+		./build.ps1 -registry $registry -version $version -tag $tag -latest
 	}
 	else
 	{
-		./build.ps1 -version $version 
+		./build.ps1 -registry $registry -version $version -tag $tag
 	}
 
-	PushImage "${registry}:$version"
+    PushImage "${registry}:$tag"
 
 	if ($latest)
 	{
@@ -49,18 +51,4 @@ function Build
 	}
 }
 
-if ($all)
-{
-	Build 1.0-runtime
-	Build 1.0.3-runtime
-	Build 1.0.4-runtime
-	Build 1.1.0-runtime
-	Build 1.1.1-runtime
-	Build 1-runtime
-	Build 1.1-runtime
-	Build 1.1.2-runtime
-}
-
-Build 2-runtime
-Build 2.0-runtime
-Build 2.0.0-runtime
+Build 2.0.3-runtime -latest

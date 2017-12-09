@@ -2,9 +2,9 @@
 
 This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a pull-thru registry cache.
 
-# Supported Tags
+# Image Tags
 
-* `2.6.0, 2.0, 2, latest`
+Images are tagged with the Git branch, image build date, and Git commit.  The most recent production build will be tagged as **latest**.
 
 # Description
 

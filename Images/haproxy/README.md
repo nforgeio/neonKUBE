@@ -2,14 +2,18 @@
 
 HAProxy (Alpine) image that initializes itself with a mounted configuration file.
 
-# Supported Tags
+# Image Tags
+
+The following image tags identify deprecated images which will be deleted sometime in the future.
 
 * `1.6.9`
 * `1.6.10`
 * `1.7.0`
 * `1.7.1`
 * `1.7.2`
-* `1.7.8, latest`
+* `1.7.8`
+
+Supported images are tagged with the HAProxy version plus the image build date.
 
 # Description
 

@@ -24,29 +24,28 @@ $registry = "neoncluster/neon-proxy-manager"
 
 function Build
 {
-	param
-	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,    # like: "1.0.0"
-		[switch]$latest = $False
-	)
+	# Build the images.
+
+	$registry = "neoncluster/neon-proxy-manager"
+	$tag      = ImageTag
 
 	# Build the images.
 
-	if ($latest)
+	if (IsProd)
 	{
-		./build.ps1 -version $version -latest
+		./build.ps1 -registry $registry -tag $tag -latest
 	}
 	else
 	{
-		./build.ps1 -version $version 
+		./build.ps1 -registry $registry -tag $tag
 	}
 
-	PushImage "${registry}:$version"
+    PushImage "${registry}:$tag"
 
-	if ($latest)
+	if (IsProd)
 	{
 		PushImage "${registry}:latest"
 	}
 }
 
-Build 1.1.0 -latest
+Build

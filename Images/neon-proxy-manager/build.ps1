@@ -9,7 +9,8 @@
 
 param 
 (
-	[parameter(Mandatory=$True,Position=1)][string] $version,    # like: "1.0.0"
+	[parameter(Mandatory=$True,Position=1)][string] $registry,
+	[parameter(Mandatory=$True,Position=3)][string] $tag,
 	[switch]$latest = $False
 )
 
@@ -21,7 +22,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* NEON-PROXY-MANAGER " + $version
+"* NEON-PROXY-MANAGER " + $tag
 "======================================="
 
 $appname  = "neon-proxy-manager"
@@ -44,11 +45,11 @@ Exec { core-layers $appname "$pwd\bin" }
 
 # Build the images.
 
-Exec { docker build -t "${registry}:$version" --build-arg "APPNAME=$appname" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "APPNAME=$appname" . }
 
 if ($latest)
 {
-	Exec { docker tag "${registry}:$version" "${registry}:latest"}
+	Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 }
 
 # Clean up

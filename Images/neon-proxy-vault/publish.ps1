@@ -22,7 +22,33 @@ $image_root = "$env:NF_ROOT\\Images"
 
 $registry = "neoncluster/neon-proxy-vault"
 
-# Note that we currently build only one [neon-proxy-vault] image (latest).
+function Build
+{
+	param
+	(
+		[switch]$latest = $False
+	)
 
-./build.ps1
-PushImage "${registry}:latest"
+	$registry = "neoncluster/neon-proxy-vault"
+	$tag      = ImageTag
+
+	# Build the images.
+
+	if (IsProd and $latest)
+	{
+		./build.ps1 -registry $registry -tag $tag -latest
+	}
+	else
+	{
+		./build.ps1 -registry $registry -tag $tag 
+	}
+
+	PushImage "${registry}:$tag"
+
+	if (IsProd and $latest)
+	{
+		PushImage "${registry}:latest"
+	}
+}
+
+Build

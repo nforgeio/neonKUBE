@@ -20,42 +20,34 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-$registry = "neoncluster/neon-proxy"
-
 function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,    # like: "1.6.9"
+		[parameter(Mandatory=$True, Position=1)][string] $version,
 		[switch]$latest = $False
 	)
 
+	$registry = "neoncluster/neon-proxy"
+	$tag      = ImageTag
+
 	# Build the images.
 
-	if ($latest)
+	if (IsProd)
 	{
-		./build.ps1 -version $version -latest
+		./build.ps1 -registry $registry -version $version -tag $tag -latest
 	}
 	else
 	{
-		./build.ps1 -version $version 
+		./build.ps1 -registry $registry -version $version -tag $tag
 	}
 
-	PushImage "${registry}:$version"
+    PushImage "${registry}:$tag"
 
-	if ($latest)
+	if (IsProd)
 	{
 		PushImage "${registry}:latest"
 	}
 }
 
-if ($all)
-{
-	Build 1.6.9
-	Build 1.6.10
-	Build 1.7.0
-	Build 1.7.1
-	Build 1.7.2
-}
-
-Build 1.7.8 -latest
+Build 1.7.8

@@ -9,7 +9,9 @@
 
 param 
 (
-	[parameter(Mandatory=$True,Position=1)][string] $version,                # like: "5.0.0"
+	[parameter(Mandatory=$True,Position=1)][string] $registry,
+	[parameter(Mandatory=$True,Position=2)][string] $version,
+	[parameter(Mandatory=$True,Position=3)][string] $tag,
 	[switch]$latest = $False
 )
 
@@ -36,13 +38,13 @@ if (Test-Path _common)
 Exec { mkdir _common }
 Exec { copy ..\_common\*.* .\_common }
 
-$registry = "neoncluster/kibana"
+# Build the images.
 
-Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
 
 if ($latest)
 {
-	Exec { docker tag "${registry}:$version" "${registry}:latest"}
+	Exec { docker tag "${registry}:$tag" "${registry}:latest" }
 }
 
 # Clean up

@@ -1,15 +1,10 @@
 **Work in progress: Do not use**
 
-This is the standard neonCLUSTER network Proxy service based on **HAProxy**, **Consul**, and **Vault**.  This is typically deployed alongside the **neon-proxy-manager** service that monitors changes to proxy routes and TLS certificates to regenerate the HAProxy configuration.
+This is the standard neonCLUSTER network proxy service based on **HAProxy**, **Consul**, and **Vault**.  This is typically deployed alongside the **neon-proxy-manager** service that monitors changes to proxy routes and TLS certificates to regenerate the HAProxy configuration.
 
-# Supported Tags
+# Image Tags
 
-* `1.6.9`
-* `1.6.10`
-* `1.7.0`
-* `1.7.1`
-* `1.7.2`
-* `1.7.7, latest`
+Images are tagged with the Git branch, image build date, and Git commit.  The most recent production build will be tagged as **latest**.
 
 # Additional Packages
 

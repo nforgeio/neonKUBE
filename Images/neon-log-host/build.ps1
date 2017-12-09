@@ -9,7 +9,8 @@
 
 param 
 (
-	[parameter(Mandatory=$True,Position=1)][string] $version,    # like: "1.2.3"
+	[parameter(Mandatory=$True,Position=1)][string] $registry,
+	[parameter(Mandatory=$True,Position=3)][string] $tag,
 	[switch]$latest = $False
 )
 
@@ -21,7 +22,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* NEON-LOG-HOST " + $version
+"* NEON-LOG-HOST " + $tag
 "======================================="
 
 # Copy the common scripts.
@@ -36,13 +37,11 @@ Exec { copy ..\_common\*.* .\_common }
 
 # Build the image.
 
-$registry = "neoncluster/neon-log-host"
-
-Exec { docker build -t "${registry}:${version}" . }
+Exec { docker build -t "${registry}:$tag" . }
 
 if ($latest)
 {
-	Exec { docker tag "${registry}:$version" "${registry}:latest"}
+	Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 }
 
 # Clean up

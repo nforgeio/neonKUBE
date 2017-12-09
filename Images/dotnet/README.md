@@ -1,15 +1,8 @@
 **Work in progress: Do not use**
 
-# Supported Tags
+# Image Tags
 
-These images are tagged using a similar convention to the Microsoft repo.
-
-* `1.0.3-runtime`
-* `1.0.4-runtime, 1.0-runtime`
-* `1.1.0-runtime`
-* `1.1.1-runtime`
-* `1.1.2-runtime, 1.1-runtime, 1-runtime`
-* `2.0.0-runtime, 2.2-runtime, 2-runtime`
+These images are tagged using the corresponding version from the Microsoft repo plus the image build date.
 
 # Details
 

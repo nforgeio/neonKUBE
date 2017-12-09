@@ -9,7 +9,9 @@
 
 param 
 (
-	[parameter(Mandatory=$True,Position=1)][string] $version,    # like: "1.6.9"
+	[parameter(Mandatory=$True,Position=1)][string] $registry,
+	[parameter(Mandatory=$True, Position=2)][string] $version,
+	[parameter(Mandatory=$True,Position=3)][string] $tag,
 	[switch]$latest = $False
 )
 
@@ -21,10 +23,8 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* NEON-PROXY " + $version
+"* NEON-PROXY " + $tag
 "======================================="
-
-$registry = "neoncluster/neon-proxy"
 
 # Copy the common scripts.
 
@@ -60,11 +60,11 @@ Exec { 7z e -y "$image_root\\_artifacts\\vault_current_linux_amd64.zip" -ovault-
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
 
 if ($latest)
 {
-	Exec { docker tag "${registry}:$version" "${registry}:latest"}
+	Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 }
 
 # Clean up

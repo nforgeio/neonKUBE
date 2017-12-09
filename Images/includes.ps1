@@ -82,6 +82,36 @@ function PushImage
 }
 
 #------------------------------------------------------------------------------
+# Returns the current date (UTC) formatted as "yyyyMMdd".
+
+function UtcDate
+{
+	return [datetime]::UtcNow.ToString('yyyyMMdd')
+}
+
+#------------------------------------------------------------------------------
+# Returns the current Git branch, date, and commit formatted as a Docker image tag.
+
+function ImageTag
+{
+	$branch = git rev-parse --abbrev-ref HEAD
+	$date   = UtcDate
+	$commit = git log -1 --pretty=%h
+
+	return "$branch-$date-$commit"
+}
+
+#------------------------------------------------------------------------------
+# Returns $True if the current Git branch is "prod".
+
+function IsProd
+{
+	$branch = git rev-parse --abbrev-ref HEAD
+
+	return $branch -eq "prod"
+}
+
+#------------------------------------------------------------------------------
 # Makes any text files that will be included in Docker images Linux safe, by
 # converting CRLF line endings to LF and replacing TABs with spaces.
 

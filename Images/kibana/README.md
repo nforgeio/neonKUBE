@@ -2,12 +2,14 @@
 
 # Supported Tags
 
-Images are tagged with the embedded Elastic Kibana version.
+The following image tags identify deprecated images which will be deleted sometime in the future.
 
 * `5.2.0`&nbsp;&nbsp;&nbsp;&nbsp;`<-- `last image based on [elasticsearch](https://hub.docker.com/_/kibana/)
 * `5.3.0`&nbsp;&nbsp;&nbsp;&nbsp;`<-- `first image based directly on [openjdk](https://hub.docker.com/_/openjdk/)
 * `5.4.0`
-* `5.5.0, latest`
+* `5.5.0`
+
+Supported are be tagged with the Kibana version plus the image build date.
 
 **IMPORTANT:**
 

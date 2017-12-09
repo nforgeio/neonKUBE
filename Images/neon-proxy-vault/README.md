@@ -1,8 +1,8 @@
 **DO NOT USE: Work in progress**
 
-# Supported Tags
+# Image Tags
 
-* `latest`
+Images are tagged with the Git branch, image build date, and Git commit.  The most recent production build will be tagged as **latest**.
 
 # Configuration
 

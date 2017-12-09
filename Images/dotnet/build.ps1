@@ -9,7 +9,9 @@
 
 param 
 (
-	[parameter(Mandatory=$True,Position=1)][string] $version,    # like: "1.1.0-runtime"
+	[parameter(Mandatory=$True,Position=1)][string] $registry,
+	[parameter(Mandatory=$True,Position=2)][string] $version,
+	[parameter(Mandatory=$True,Position=3)][string] $tag,
 	[switch]$latest = $False
 )
 
@@ -24,8 +26,6 @@ $image_root = "$env:NF_ROOT\\Images"
 "* DOTNET " + $version
 "======================================="
 
-$registry = "neoncluster/dotnet"
-
 # Copy the common scripts.
 
 if (Test-Path _common)
@@ -38,11 +38,11 @@ Exec { copy ..\_common\*.* .\_common }
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" --build-arg "TINI_VERSION=$tini_version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version"  --build-arg "TINI_VERSION=$tini_version" . }
 
 if ($latest)
 {
-	Exec { docker tag "${registry}:$version" "${registry}:latest"}
+	Exec { docker tag "${registry}:$tag" "${registry}:latest" }
 }
 
 # Clean up

@@ -10,11 +10,6 @@
 #
 # Usage: powershell -file ./publish.ps1
 
-param 
-(
-	[switch]$all = $False
-)
-
 #----------------------------------------------------------
 # Global Includes
 $image_root = "$env:NF_ROOT\\Images"
@@ -27,40 +22,30 @@ function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,    # like: "2017.02.08"
 		[switch]$latest = $False
 	)
+
+	$registry = "neoncluster/neon-log-collector"
+	$tag      = ImageTag
 
 	# Build the images.
 
 	if ($latest)
 	{
-		./build.ps1 -version $version -latest
+		./build.ps1 -registry $registry -tag $tag -latest
 	}
 	else
 	{
-		./build.ps1 -version $version 
+		./build.ps1 -registry $registry -tag $tag
 	}
 
-	PushImage "${registry}:$version"
+    PushImage "${registry}:$tag"
 
-	if ($latest)
+
+	if (IsProd)
 	{
 		PushImage "${registry}:latest"
 	}
 }
 
-# The image tag as the UTC date (YYYY.MM.DD) when the MaxMind.com
-# database was released.  We're going to do a HEAD query on the
-# database file and extract this from the [Last-Modified] 
-# header returned.
-
-$url            = "http://geolite.maxmind.com/download/geoip/database/GeoLite2-City.mmdb.gz";
-$request        = [system.Net.HttpWebRequest]::Create($url);
-$request.Method = "HEAD";
-$response       = $request.GetResponse();
-$date           = [System.DateTime]::Parse($response.Headers["Last-Modified"]);
-$date           = $date.ToUniversalTime();
-$version        = $date.ToString("yyyy.MM.dd");
-
-Build $version -latest
+Build

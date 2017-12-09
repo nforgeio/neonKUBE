@@ -23,8 +23,6 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-$registry = "neoncluster/neon-cli"
-
 function Build
 {
 	param

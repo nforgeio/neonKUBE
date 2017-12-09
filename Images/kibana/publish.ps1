@@ -20,28 +20,30 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-$registry = "neoncluster/kibana"
-
 function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,	              # like: "5.0.0"
+		[parameter(Mandatory=$True, Position=1)][string] $version,
 		[switch]$latest = $False
 	)
+
+	$registry = "neoncluster/kibana"
+	$date     = UtcDate
+	$tag      = "$version-$date"
 
 	# Build the images.
 
 	if ($latest)
 	{
-		./build.ps1 -version $version -latest
+		./build.ps1 -registry $registry -version $version -tag $tag -latest
 	}
 	else
 	{
-		./build.ps1 -version $version 
+		./build.ps1 -registry $registry -version $version -tag $tag
 	}
 
-	PushImage "${registry}:$version"
+    PushImage "${registry}:$tag"
 
 	if ($latest)
 	{

@@ -24,29 +24,24 @@ $registry = "neoncluster/neon-log-host"
 
 function Build
 {
-	param
-	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,    # like: "1.2.3"
-		[switch]$latest = $False
-	)
+	$registry = "neoncluster/neon-log-host"
+	$tag      = ImageTag
 
 	# Build the images.
 
 	if ($latest)
 	{
-		./build.ps1 -version $version -latest
+		./build.ps1 -registry $registry -tag $tag -latest
 	}
 	else
 	{
-		./build.ps1 -version $version 
+		./build.ps1 -registry $registry -tag $tag
 	}
 
-	PushImage "${registry}:$version"
+    PushImage "${registry}:$tag"
 
-	if ($latest)
+	if (IsProd)
 	{
 		PushImage "${registry}:latest"
 	}
 }
-
-Build 1.1.0 -latest

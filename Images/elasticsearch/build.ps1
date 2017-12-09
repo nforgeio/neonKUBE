@@ -11,9 +11,9 @@
 
 param 
 (
-	[parameter(Mandatory=$True,Position=1)][string] $version,                # like: "5.0.0"
-	[parameter(Mandatory=$False,Position=2)][string] $subversion = "-",      # like: "5.0"
-	[parameter(Mandatory=$False,Position=3)][string] $majorversion = "-",    # like: "5"
+	[parameter(Mandatory=$True,Position=1)][string] $registry,
+	[parameter(Mandatory=$True,Position=2)][string] $version,
+	[parameter(Mandatory=$True,Position=3)][string] $tag,
 	[switch]$latest = $False
 )
 
@@ -40,23 +40,13 @@ Exec { copy ..\_common\*.* .\_common }
 
 # Build the images.
 
-$registry = "neoncluster/elasticsearch"
+# Build the images.
 
-Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" . }
-
-if ($subversion -ne "-")
-{
-	Exec { docker tag "${registry}:$version" "${registry}:$subversion"}
-}
-
-if ($majorversion -ne "-")
-{
-	Exec { docker tag "${registry}:$version" "${registry}:$majorversion"}
-}
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
 
 if ($latest)
 {
-	Exec { docker tag "${registry}:$version" "${registry}:latest"}
+	Exec { docker tag "${registry}:$tag" "${registry}:latest" }
 }
 
 # Clean up

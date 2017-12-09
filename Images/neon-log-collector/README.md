@@ -1,25 +1,14 @@
 **DO NOT USE: Work in progress**
 
-# Supported Tags
+# Image Tags
 
-This product includes the GeoLite2 database created by MaxMind, available from [http://www.maxmind.com](http://www.maxmind.com).  MaxMind releases an updated database once a month, around the first Tuesday of the month.  The image will be tagged with the GMT release date.
-
-* `2017.02.08`
-* `2017.03.07`
-* `2017.04.04`
-* `2017.05.02`
-* `2017.06.08`
-* `2017.07.04`
-* `2017.08.03`
-* `2017.09.06`
-* `2017.10.04`
-* `2017.12.05, latest`
-
-We'll retain several of the most recent images.
+Images are tagged with the Git branch, image build date, and Git commit.  The most recent production build will be tagged as **latest**.
 
 # Description
 
 This image is deployed as the **neon-log-collector** service.  This service acts handles the transformation and aggregation of log events captured on each cluster node by the **neon-log-host** containers running on the nodes.  This image relies on the [Fluentd](http://www.fluentd.org/) TD-Agent agent to handle the actual transformation and transmission of the logs.
+
+This product includes the GeoLite2 database created by MaxMind, available from [http://www.maxmind.com](http://www.maxmind.com).  MaxMind releases an updated database once a month, around the first Tuesday of the month
 
 The **neon-log-collector** service is responsible for receiving events from the hosts and then:
 
