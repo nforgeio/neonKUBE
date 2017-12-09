@@ -5,7 +5,7 @@ The following image tags identify archived images which will not be deleted but 
 * `5.2.0`
 * `5.3.0`
 * `5.4.0`
-* `5.5.0, latest`
+* `5.5.0`
 
 Supported images are tagged with the Metricbeat version plus the image build date.
 
