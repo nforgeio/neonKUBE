@@ -1,8 +1,6 @@
-**DO NOT USE: Work in progress**
-
 # Image Tags
 
-The following image tags identify deprecated images which will be deleted sometime in the future.
+The following image tags identify archived images which will not be deleted but are not maintained.
 
 * `5.2.0`&nbsp;&nbsp;&nbsp;&nbsp;`<-- `last image based on [elasticsearch](https://hub.docker.com/_/elasticsearch/)
 * `5.3.0`&nbsp;&nbsp;&nbsp;&nbsp;`<-- `first image based directly on [openjdk](https://hub.docker.com/_/openjdk/)

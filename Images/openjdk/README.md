@@ -1,8 +1,6 @@
-**DO NOT USE: Work in progress**
-
 # Image Tags
 
-These images are tagged with the Java OpenJDK version plus the image build date.  The most recent build will be tagged as **latest**.
+These base images are tagged with the Java OpenJDK version plus the image build date.  The most recent build will be tagged as **latest**.
 
 # Description
 

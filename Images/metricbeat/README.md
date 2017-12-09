@@ -1,8 +1,6 @@
-**DO NOT USE: Work in progress**
-
 # Image Tags
 
-The following image tags identify deprecated images which will be deleted sometime in the future.
+The following image tags identify archived images which will not be deleted but are not maintained.
 
 * `5.2.0`
 * `5.3.0`

@@ -1,10 +1,8 @@
-**DO NOT USE: Work in progress**
-
-HAProxy (Alpine) image that initializes itself with a mounted configuration file.
+Base HAProxy (Alpine) image that initializes itself with a mounted configuration file.
 
 # Image Tags
 
-The following image tags identify deprecated images which will be deleted sometime in the future.
+The following image tags identify archived images which will not be deleted but are not maintained.
 
 * `1.6.9`
 * `1.6.10`

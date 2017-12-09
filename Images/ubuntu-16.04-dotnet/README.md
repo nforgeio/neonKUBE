@@ -1,5 +1,3 @@
-**DO NOT USE: Work in progress**
-
 Ubuntu 16.04 image with .NET Core.
 
 # Image Tags

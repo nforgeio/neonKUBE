@@ -1,10 +1,8 @@
-**DO NOT USE: Work in progress**
-
 Ubuntu 16.04 image with recent package upgrades and a few handy packages.
 
 # Image Tags
 
-These images are tagged with the source branch, image build date, and the Git commit.  The most recent production build will be tagged as **latest**.
+These base images are tagged with the source image build date.  The most recent production build will be tagged as **latest**.
 
 # Description
 

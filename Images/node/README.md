@@ -1,5 +1,3 @@
-**DO NOT USE: Work in progress**
-
 Base neonCLUSTER **node.js** image.
 
 # Image Tags

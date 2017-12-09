@@ -1,10 +1,12 @@
-**DO NOT USE: Work in progress**
-
-This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a pull-thru registry cache.
+This base image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a pull-thru registry cache for a neonCLUSTER.
 
 # Image Tags
 
-Images are tagged with the Git branch, image build date, and Git commit.  The most recent production build will be tagged as **latest**.
+The following image tags identify archived images which will not be deleted but are not maintained.
+
+* `2.6.0, 2.6, 2`
+
+Supported images are tagged with the Git branch, image build date, and Git commit.  The most recent production build will be tagged as **latest**.
 
 # Description
 

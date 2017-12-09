@@ -1,5 +1,3 @@
-**DO NOT USE: Work in progress**
-
 # Image Tags
 
 Alpine images are tagged with the Alpine version plus the image build date.

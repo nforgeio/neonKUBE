@@ -1,5 +1,3 @@
-**DO NOT USE: Work in progress**
-
 # Image Tags
 
 The **neon-cli** images are tagged with the version of the tool.
