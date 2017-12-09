@@ -9,44 +9,25 @@
 #
 # Usage: powershell -file ./publish.ps1
 
-param 
-(
-	[switch]$all = $False
-)
-
 #----------------------------------------------------------
 # Global Includes
 $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-$registry = "neoncluster/neon-proxy-vault"
-
 function Build
 {
-	param
-	(
-		[switch]$latest = $False
-	)
-
 	$registry = "neoncluster/neon-proxy-vault"
 	$tag      = ImageTag
 
 	# Build the images.
 
-	if (IsProd and $latest)
-	{
-		./build.ps1 -registry $registry -tag $tag -latest
-	}
-	else
-	{
-		./build.ps1 -registry $registry -tag $tag 
-	}
-
+	./build.ps1 -registry $registry -tag $tag
 	PushImage "${registry}:$tag"
 
-	if (IsProd and $latest)
+	if (IsProd)
 	{
+		Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 		PushImage "${registry}:latest"
 	}
 }

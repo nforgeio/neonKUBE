@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the base Java OpenJDK-8 image and pushed it to Docker Hub.
+# Builds the base Java OpenJDK-8 image and pushes it to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -34,19 +34,12 @@ function Build
 
 	# Build the images.
 
-	if (IsProd)
-	{
-		./build.ps1 -registry $registry -version $version -tag $tag -latest
-	}
-	else
-	{
-		./build.ps1 -registry $registry -version $version -tag $tag
-	}
-
-    PushImage "${registry}:$tag"
+	./build.ps1 -registry $registry -version $version -tag $tag
+	PushImage "${registry}:$tag"
 
 	if (IsProd)
 	{
+		Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 		PushImage "${registry}:latest"
 	}
 }

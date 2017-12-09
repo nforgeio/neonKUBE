@@ -16,8 +16,6 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-$registry = "neoncluster/neon-log-collector"
-
 function Build
 {
 	param
@@ -30,20 +28,12 @@ function Build
 
 	# Build the images.
 
-	if ($latest)
-	{
-		./build.ps1 -registry $registry -tag $tag -latest
-	}
-	else
-	{
-		./build.ps1 -registry $registry -tag $tag
-	}
-
+	./build.ps1 -registry $registry -tag $tag
     PushImage "${registry}:$tag"
-
 
 	if (IsProd)
 	{
+		Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 		PushImage "${registry}:latest"
 	}
 }

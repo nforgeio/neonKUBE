@@ -29,25 +29,23 @@ function Build
 	)
 
 	$registry = "neoncluster/neon-registry-cache"
-	$tag      = ImageTag
+	$date     = UtcDate
+	$tag      = "$version-$date"
 
 	# Build the images.
 
-	if (IsProd and $latest)
-	{
-		./build.ps1 -registry $registry -version $version -tag $tag -latest
-	}
-	else
-	{
-		./build.ps1 -registry $registry -version $version -tag $tag 
-	}
-
+	./build.ps1 -registry $registry -version $version -tag $tag
 	PushImage "${registry}:$tag"
 
-	if (IsProd and $latest)
+	if ($latest)
 	{
+		Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 		PushImage "${registry}:latest"
 	}
+}
+
+if ($all)
+{
 }
 
 Build 2.6.0 -latest

@@ -20,8 +20,6 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-$registry = "neoncluster/ubuntu-16.04"
-
 function Build
 {
 	param
@@ -30,23 +28,16 @@ function Build
 	)
 
 	$registry = "neoncluster/ubuntu-16.04"
-	$tag      = ImageTag
+	$tag      = UtcDate
 
 	# Build the images.
 
-	if ($latest)
-	{
-		./build.ps1 -registry $registry -tag $tag -latest
-	}
-	else
-	{
-		./build.ps1 -registry $registry $version -tag $tag
-	}
-
-    PushImage "${registry}:$tag"
+	./build.ps1 -registry $registry -tag $tag
+	PushImage "${registry}:$tag"
 
 	if ($latest)
 	{
+		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
 		PushImage "${registry}:latest"
 	}
 }

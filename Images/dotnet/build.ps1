@@ -11,8 +11,7 @@ param
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,
 	[parameter(Mandatory=$True,Position=2)][string] $version,
-	[parameter(Mandatory=$True,Position=3)][string] $tag,
-	[switch]$latest = $False
+	[parameter(Mandatory=$True,Position=3)][string] $tag
 )
 
 #----------------------------------------------------------
@@ -39,11 +38,6 @@ Exec { copy ..\_common\*.* .\_common }
 # Build the image.
 
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version"  --build-arg "TINI_VERSION=$tini_version" . }
-
-if ($latest)
-{
-	Exec { docker tag "${registry}:$tag" "${registry}:latest" }
-}
 
 # Clean up
 

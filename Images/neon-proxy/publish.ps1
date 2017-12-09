@@ -9,11 +9,6 @@
 #
 # Usage: powershell -file ./publish.ps1
 
-param 
-(
-	[switch]$all = $False
-)
-
 #----------------------------------------------------------
 # Global Includes
 $image_root = "$env:NF_ROOT\\Images"
@@ -33,20 +28,13 @@ function Build
 
 	# Build the images.
 
-	if (IsProd)
-	{
-		./build.ps1 -registry $registry -version $version -tag $tag -latest
-	}
-	else
-	{
-		./build.ps1 -registry $registry -version $version -tag $tag
-	}
-
+	./build.ps1 -registry $registry -version $version -tag $tag
     PushImage "${registry}:$tag"
 
 	if (IsProd)
 	{
 		PushImage "${registry}:latest"
+		Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 	}
 }
 

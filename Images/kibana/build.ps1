@@ -11,8 +11,7 @@ param
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,
 	[parameter(Mandatory=$True,Position=2)][string] $version,
-	[parameter(Mandatory=$True,Position=3)][string] $tag,
-	[switch]$latest = $False
+	[parameter(Mandatory=$True,Position=3)][string] $tag
 )
 
 #----------------------------------------------------------
@@ -38,14 +37,9 @@ if (Test-Path _common)
 Exec { mkdir _common }
 Exec { copy ..\_common\*.* .\_common }
 
-# Build the images.
+# Build the image.
 
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
-
-if ($latest)
-{
-	Exec { docker tag "${registry}:$tag" "${registry}:latest" }
-}
 
 # Clean up
 

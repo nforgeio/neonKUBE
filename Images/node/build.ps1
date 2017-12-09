@@ -10,8 +10,7 @@
 param 
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,
-	[parameter(Mandatory=$True,Position=2)][string] $tag,
-	[switch]$latest = $False
+	[parameter(Mandatory=$True,Position=2)][string] $tag
 )
 
 #----------------------------------------------------------
@@ -28,11 +27,6 @@ $image_root = "$env:NF_ROOT\\Images"
 # Build the image.
 
 Exec { docker build -t "${registry}:$tag" --build-arg "TINI_VERSION=$tini_version" . }
-
-if ($latest)
-{
-	Exec { docker tag "${registry}:$tag" "${registry}:latest"}
-}
 
 # Clean up
 

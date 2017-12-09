@@ -10,8 +10,7 @@
 param 
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,
-	[parameter(Mandatory=$True,Position=3)][string] $tag,
-	[switch]$latest = $False
+	[parameter(Mandatory=$True,Position=3)][string] $tag
 )
 
 #----------------------------------------------------------
@@ -43,14 +42,9 @@ Exec { dotnet publish "$src_services_path\\$appname\\$appname.csproj" -c Release
 
 Exec { core-layers $appname "$pwd\bin" }
 
-# Build the images.
+# Build the image.
 
 Exec { docker build -t "${registry}:$tag" --build-arg "APPNAME=$appname" . }
-
-if ($latest)
-{
-	Exec { docker tag "${registry}:$tag" "${registry}:latest"}
-}
 
 # Clean up
 

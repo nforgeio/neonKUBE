@@ -34,19 +34,12 @@ function Build
 
 	# Build the images.
 
-	if ($latest)
-	{
-		./build.ps1 -registry $registry -version $version -tag $tag -latest
-	}
-	else
-	{
-		./build.ps1 -registry $registry -version $version -tag $tag
-	}
-
-    PushImage "${registry}:$tag"
+	./build.ps1 -registry $registry -version $version -tag $tag
+	PushImage "${registry}:$tag"
 
 	if ($latest)
 	{
+		Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 		PushImage "${registry}:latest"
 	}
 }

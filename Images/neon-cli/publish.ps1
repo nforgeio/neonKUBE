@@ -12,11 +12,6 @@
 #
 # Usage: powershell -file ./publish.ps1
 
-param 
-(
-	[switch]$all = $False
-)
-
 #----------------------------------------------------------
 # Global Includes
 $image_root = "$env:NF_ROOT\\Images"
@@ -30,7 +25,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	# Build the images.
+	# Build the image.
 
 	if ($latest)
 	{

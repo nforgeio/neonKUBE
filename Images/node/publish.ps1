@@ -9,11 +9,6 @@
 #
 # Usage: powershell -file ./publish.ps1
 
-param 
-(
-	[switch]$all = $False
-)
-
 #----------------------------------------------------------
 # Global Includes
 $image_root = "$env:NF_ROOT\\Images"
@@ -22,29 +17,17 @@ $image_root = "$env:NF_ROOT\\Images"
 
 function Build
 {
-	param
-	(
-		[switch]$latest = $False
-	)
-
 	$registry = "neoncluster/node"
 	$tag      = ImageTag
 
 	# Build the images.
 
-	if (IsProd)
-	{
-		./build.ps1 -registry $registry -tag $tag -latest
-	}
-	else
-	{
-		./build.ps1 -registry $registry -tag $tag
-	}
-
-    PushImage "${registry}:$tag"
+	./build.ps1 -registry $registry -tag $tag
+	PushImage "${registry}:$tag"
 
 	if (IsProd)
 	{
+		Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 		PushImage "${registry}:latest"
 	}
 }

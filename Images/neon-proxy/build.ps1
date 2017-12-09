@@ -11,8 +11,7 @@ param
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,
 	[parameter(Mandatory=$True, Position=2)][string] $version,
-	[parameter(Mandatory=$True,Position=3)][string] $tag,
-	[switch]$latest = $False
+	[parameter(Mandatory=$True,Position=3)][string] $tag
 )
 
 #----------------------------------------------------------
@@ -61,11 +60,6 @@ Exec { 7z e -y "$image_root\\_artifacts\\vault_current_linux_amd64.zip" -ovault-
 # Build the image.
 
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
-
-if ($latest)
-{
-	Exec { docker tag "${registry}:$tag" "${registry}:latest"}
-}
 
 # Clean up
 

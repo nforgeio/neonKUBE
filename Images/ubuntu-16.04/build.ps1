@@ -11,8 +11,7 @@
 param 
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,
-	[parameter(Mandatory=$True,Position=2)][string] $tag,
-	[switch]$latest = $False
+	[parameter(Mandatory=$True,Position=2)][string] $tag
 )
 
 #----------------------------------------------------------
@@ -25,6 +24,8 @@ $image_root = "$env:NF_ROOT\\Images"
 "======================================="
 "* UBUNTU-16.04"
 "======================================="
+
+# Build the image.
 
 Exec { docker build -t "${registry}:$tag" --build-arg "TINI_VERSION=$tini_version" . }
 

@@ -11,8 +11,7 @@ param
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,
 	[parameter(Mandatory=$True,Position=2)][string] $version,
-	[parameter(Mandatory=$True,Position=3)][string] $tag,
-	[switch]$latest = $False
+	[parameter(Mandatory=$True,Position=3)][string] $tag
 )
 
 #----------------------------------------------------------
@@ -26,14 +25,7 @@ $image_root = "$env:NF_ROOT\\Images"
 "* OpenJDK:$version"
 "======================================="
 
-$registry = "neoncluster/openjdk"
-
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
-
-if ($latest)
-{
-	Exec { docker tag "${registry}:$tag" "${registry}:latest"}
-}
 
 # Clean up
 

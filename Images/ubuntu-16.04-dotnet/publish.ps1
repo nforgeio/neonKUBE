@@ -34,19 +34,12 @@ function Build
 
 	# Build the images.
 
-	if ($latest)
-	{
-		./build.ps1 -registry $registry -tag $tag -dotnetVersion $dotnetVersion -latest
-	}
-	else
-	{
-		./build.ps1 -registry $registry -tag $tag -dotnetVersion $dotnetVersion 
-	}
-
+	./build.ps1 -registry $registry -tag $tag -dotnetVersion $dotnetVersion
 	PushImage "${registry}:$tag"
 
 	if ($latest)
 	{
+		Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 		PushImage "${registry}:latest"
 	}
 }
