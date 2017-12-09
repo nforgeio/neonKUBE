@@ -9,7 +9,9 @@
 
 param 
 (
-	[parameter(Mandatory=$True,Position=1)][string] $version,                # .NET Core runtime version, like: "2.0.0"
+	[parameter(Mandatory=$True,Position=1)][string] $registry,
+	[parameter(Mandatory=$True,Position=2)][string] $tag,
+	[parameter(Mandatory=$True,Position=3)][string] $dotnetVersion,
 	[switch]$latest = $False
 )
 
@@ -21,10 +23,8 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* UBUNTU-16.04-DOTNET v" + $version
+"* UBUNTU-16.04-DOTNET v" + $dotnetVersion
 "======================================="
-
-# Build the images.
 
 # Copy the common scripts.
 
@@ -36,13 +36,13 @@ if (Test-Path _common)
 Exec { mkdir _common }
 Exec { copy ..\_common\*.* .\_common }
 
-$registry = "neoncluster/ubuntu-16.04-dotnet"
+# Build the images.
 
-Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$dotnetVersion" . }
 
 if ($latest)
 {
-	Exec { docker tag "${registry}:$version" "${registry}:latest"}
+	Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 }
 
 # Clean up

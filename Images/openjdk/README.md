@@ -1,8 +1,8 @@
 **DO NOT USE: Work in progress**
 
-# Supported Tags
+# Image Tags
 
-* `8, latest`
+These images are tagged with the Java OpenJDK version plus the image build date.  The most recent build will be tagged as **latest**.
 
 # Description
 

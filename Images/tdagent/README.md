@@ -1,8 +1,8 @@
 **DO NOT USE: Work in progress**
 
-# Supported Tags
+# Image Tags
 
-* `2, latest`
+These images are tagged with the TD-Agent version plus the image build date.  The most recent build will be tagged as **latest**.
 
 # Configuration
 

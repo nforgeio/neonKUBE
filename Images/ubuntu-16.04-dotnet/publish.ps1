@@ -20,28 +20,30 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-$registry = "neoncluster/ubuntu-16.04-dotnet"
-
 function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,	              # like: "2.0.0"
+		[parameter(Mandatory=$True, Position=1)][string] $dotnetVersion,
 		[switch]$latest = $False
 	)
+
+	$registry = "neoncluster/ubuntu-16.04-dotnet"
+	$date     = UtcDate
+	$tag      = "${dotnetVersion}-${date}"
 
 	# Build the images.
 
 	if ($latest)
 	{
-		./build.ps1 -version $version -latest
+		./build.ps1 -registry $registry -tag $tag -dotnetVersion $dotnetVersion -latest
 	}
 	else
 	{
-		./build.ps1 -version $version 
+		./build.ps1 -registry $registry -tag $tag -dotnetVersion $dotnetVersion 
 	}
 
-	PushImage "${registry}:$version"
+	PushImage "${registry}:$tag"
 
 	if ($latest)
 	{
@@ -53,4 +55,4 @@ if ($all)
 {
 }
 
-Build 2.0.0 -latest
+Build 2.0.3 -latest

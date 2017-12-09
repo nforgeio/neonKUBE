@@ -20,37 +20,35 @@ $image_root = "$env:NF_ROOT\\Images"
 . $image_root/includes.ps1
 #----------------------------------------------------------
 
-$registry = "neoncluster/openjdk"
-
 function Build
 {
 	param
 	(
-		[parameter(Mandatory=$True, Position=1)][string] $version,	# like: "8"
+		[parameter(Mandatory=$True, Position=1)][string] $version,
 		[switch]$latest = $False
 	)
 
+	$registry = "neoncluster/openjdk"
+	$date     = UtcDate
+	$tag      = "$version-$date"
+
 	# Build the images.
 
-	if ($latest)
+	if (IsProd)
 	{
-		./build.ps1 -version $version -latest
+		./build.ps1 -registry $registry -version $version -tag $tag -latest
 	}
 	else
 	{
-		./build.ps1 -version $version
+		./build.ps1 -registry $registry -version $version -tag $tag
 	}
 
-	PushImage "${registry}:$version"
+    PushImage "${registry}:$tag"
 
-	if ($latest)
+	if (IsProd)
 	{
 		PushImage "${registry}:latest"
 	}
-}
-
-if ($all)
-{
 }
 
 Build 8 -latest

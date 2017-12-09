@@ -2,9 +2,9 @@
 
 Ubuntu 16.04 image with recent package upgrades and a few handy packages.
 
-# Supported Tags
+# Image Tags
 
-* `latest`
+These images are tagged with the source branch, image build date, and the Git commit.  The most recent production build will be tagged as **latest**.
 
 # Description
 

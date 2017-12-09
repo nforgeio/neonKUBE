@@ -8,6 +8,13 @@
 #
 # Usage: powershell -file build.ps1
 
+param 
+(
+	[parameter(Mandatory=$True,Position=1)][string] $registry,
+	[parameter(Mandatory=$True,Position=2)][string] $tag,
+	[switch]$latest = $False
+)
+
 #----------------------------------------------------------
 # Global Includes
 $image_root = "$env:NF_ROOT\\Images"
@@ -19,9 +26,12 @@ $image_root = "$env:NF_ROOT\\Images"
 "* UBUNTU-16.04"
 "======================================="
 
-$registry = "neoncluster/ubuntu-16.04"
+Exec { docker build -t "${registry}:$tag" --build-arg "TINI_VERSION=$tini_version" . }
 
-Exec { docker build -t "${registry}:latest" --build-arg "TINI_VERSION=$tini_version" . }
+if ($latest)
+{
+	Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+}
 
 # Clean up
 

@@ -90,11 +90,21 @@ function UtcDate
 }
 
 #------------------------------------------------------------------------------
+# Returns the current Git branch.
+
+function GitBranch
+{
+	$branch = git rev-parse --abbrev-ref HEAD
+
+	return $branch
+}
+
+#------------------------------------------------------------------------------
 # Returns the current Git branch, date, and commit formatted as a Docker image tag.
 
 function ImageTag
 {
-	$branch = git rev-parse --abbrev-ref HEAD
+	$branch = GitBranch
 	$date   = UtcDate
 	$commit = git log -1 --pretty=%h
 

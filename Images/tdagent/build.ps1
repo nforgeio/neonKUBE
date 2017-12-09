@@ -9,7 +9,9 @@
 
 param 
 (
-	[parameter(Mandatory=$True,Position=1)][string] $version,    # like: "2"
+	[parameter(Mandatory=$True,Position=1)][string] $registry,
+	[parameter(Mandatory=$True,Position=2)][string] $version,
+	[parameter(Mandatory=$True,Position=3)][string] $tag,
 	[switch]$latest = $False
 )
 
@@ -21,24 +23,16 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* TDAGENT " + $version
+"* TD-AGENT " + $version
 "======================================="
-
-# Build the images.
-
-$registry = "neoncluster/tdagent";
-
-# Build the images.
-
-$registry = "neoncluster/tdagent"
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$version" --build-arg "VERSION=$version" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
 
 if ($latest)
 {
-	Exec { docker tag "${registry}:$version" "${registry}:latest"}
+	Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 }
 
 # Clean up

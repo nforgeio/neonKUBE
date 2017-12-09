@@ -22,9 +22,34 @@ $image_root = "$env:NF_ROOT\\Images"
 
 $registry = "neoncluster/ubuntu-16.04"
 
-# Note that we currently build only one Ubuntu 16.04 image (latest).
+function Build
+{
+	param
+	(
+		[switch]$latest = $False
+	)
 
-./build.ps1
-PushImage "${registry}:latest"
+	$registry = "neoncluster/ubuntu-16.04"
+	$tag      = ImageTag
 
+	# Build the images.
+
+	if ($latest)
+	{
+		./build.ps1 -registry $registry -tag $tag -latest
+	}
+	else
+	{
+		./build.ps1 -registry $registry $version -tag $tag
+	}
+
+    PushImage "${registry}:$tag"
+
+	if ($latest)
+	{
+		PushImage "${registry}:latest"
+	}
+}
+
+Build -latest
 
