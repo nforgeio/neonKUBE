@@ -128,7 +128,7 @@ namespace NeonCli
 
                     var esNodeCount = cluster.Definition.Nodes.Count(n => n.Labels.LogEsData);
 
-                    firstManager.Status = $"Waiting for [neon-log-esdata] cluster [0/{esNodeCount} nodes ready] (be patient)...";
+                    firstManager.Status = $"Waiting for [neon-log-esdata] cluster [0/{esNodeCount} nodes ready] (be patient)";
 
                     using (var jsonClient = new JsonClient())
                     {
@@ -150,7 +150,7 @@ namespace NeonCli
                                 {
                                     dynamic clusterStatus = response.AsDynamic();
 
-                                    firstManager.Status = $"Waiting for [neon-log-esdata] cluster [{clusterStatus.number_of_nodes}/{esNodeCount} nodes ready] (be patient)...";
+                                    firstManager.Status = $"Waiting for [neon-log-esdata] cluster [{clusterStatus.number_of_nodes}/{esNodeCount} nodes ready] (be patient)";
 
                                     if (clusterStatus.status == "green" && clusterStatus.number_of_nodes == esNodeCount)
                                     {
@@ -181,7 +181,7 @@ namespace NeonCli
                         {
                             // Hit Kibana once so it will write its configuration document.
 
-                            firstManager.Status = "Waiting for [Kibana] to initialize (be patient)...";
+                            firstManager.Status = "Waiting for [Kibana] to initialize (be patient)";
 
                             timeoutTime = DateTime.UtcNow + timeout;
 
@@ -210,7 +210,7 @@ namespace NeonCli
 
                             // Wait for Kibana to initialize its configuration document.
 
-                            firstManager.Status = "Waiting for [Kibana] to initialize (be patient)...";
+                            firstManager.Status = "Waiting for [Kibana] to initialize (be patient)";
 
                             timeoutTime = DateTime.UtcNow + timeout;
 

@@ -570,7 +570,7 @@ namespace NeonCli
 
             // Upload the files.
 
-            node.Status = "upload: config files...";
+            node.Status = "upload: config files";
 
             foreach (var file in Program.LinuxFolder.GetFolder("conf").Files())
             {
@@ -604,7 +604,7 @@ namespace NeonCli
 
             // Upload the setup files.
 
-            server.Status = "upload: setup files...";
+            server.Status = "upload: setup files";
 
             foreach (var file in Program.LinuxFolder.GetFolder("setup").Files())
             {
@@ -624,7 +624,7 @@ namespace NeonCli
             // Upload the tool files.  Note that we're going to strip out the [.sh] 
             // file type to make these easier to run.
 
-            server.Status = "upload: tool files...";
+            server.Status = "upload: tool files";
 
             foreach (var file in Program.LinuxFolder.GetFolder("tools").Files())
             {
