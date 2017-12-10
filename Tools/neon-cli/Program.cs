@@ -84,7 +84,7 @@ COMMAND SUMMARY:
     neon shell              -- CMD...
     neon ssh                [NODE]
     neon validate           CLUSTER-DEF
-    neon version            [-n]
+    neon version            [-n] [-git]
     neon upload             SOURCE TARGET [NODE...]
     neon vault              ARGS
     neon zip create         SOURCE ARCHIVE
@@ -614,6 +614,25 @@ tool requires admin priviledges for direct mode.
             // No match.
 
             return null;
+        }
+
+        /// <summary>
+        /// Returns the program version as the Git branch and commit and an optional
+        /// indication of whether the program was build from a dirty branch.
+        /// </summary>
+        public static string GitVersion
+        {
+            get
+            {
+                var version = $"{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}";
+
+                if (ThisAssembly.Git.IsDirty)
+                {
+                    version += "-DIRTY";
+                }
+
+                return version;
+            }
         }
 
         /// <summary>

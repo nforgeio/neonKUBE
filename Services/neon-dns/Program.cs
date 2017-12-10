@@ -41,7 +41,7 @@ namespace NeonDns
         {
             LogManager.Default.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
             log = LogManager.Default.GetLogger(typeof(Program));
-            log.LogInfo(() => $"Starting [{serviceName}]");
+            log.LogInfo(() => $"Starting [{serviceName}:{Program.GitVersion}]");
 
             terminator = new ProcessTerminator(log);
 
@@ -90,6 +90,25 @@ namespace NeonDns
             }
 
             Program.Exit(0);
+        }
+
+        /// <summary>
+        /// Returns the program version as the Git branch and commit and an optional
+        /// indication of whether the program was build from a dirty branch.
+        /// </summary>
+        public static string GitVersion
+        {
+            get
+            {
+                var version = $"{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}";
+
+                if (ThisAssembly.Git.IsDirty)
+                {
+                    version += "-DIRTY";
+                }
+
+                return version;
+            }
         }
 
         /// <summary>

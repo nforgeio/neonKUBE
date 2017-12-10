@@ -31,11 +31,12 @@ Prints the program version.
 
 USAGE:
 
-    neon version [-n]
+    neon version [-n] [--get]
 
 OPTIONS:
 
     -n      - Don't write a newline after version.
+    --git   - Include the Git branch/commit information.
 ";
         /// <inheritdoc/>
         public override string[] Words
@@ -46,7 +47,7 @@ OPTIONS:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "-n" }; }
+            get { return new string[] { "-n", "--git" }; }
         }
 
         /// <inheritdoc/>
@@ -64,7 +65,14 @@ OPTIONS:
                 Program.Exit(0);
             }
 
-            Console.Write(Program.Version);
+            if (commandLine.HasOption("--git"))
+            {
+                Console.Write($"{Program.Version}/{Program.GitVersion}");
+            }
+            else
+            {
+                Console.Write(Program.Version);
+            }
 
             if (!commandLine.HasOption("-n"))
             {

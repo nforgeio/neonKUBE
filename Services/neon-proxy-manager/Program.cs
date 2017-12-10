@@ -135,6 +135,25 @@ namespace NeonProxyManager
         }
 
         /// <summary>
+        /// Returns the program version as the Git branch and commit and an optional
+        /// indication of whether the program was build from a dirty branch.
+        /// </summary>
+        public static string GitVersion
+        {
+            get
+            {
+                var version = $"{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}";
+
+                if (ThisAssembly.Git.IsDirty)
+                {
+                    version += "-DIRTY";
+                }
+
+                return version;
+            }
+        }
+
+        /// <summary>
         /// Exits the service with an exit code.
         /// </summary>
         /// <param name="exitCode">The exit code.</param>
