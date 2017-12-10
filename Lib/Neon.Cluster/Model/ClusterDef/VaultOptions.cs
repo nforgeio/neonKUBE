@@ -29,7 +29,7 @@ namespace Neon.Cluster
     /// </summary>
     public class VaultOptions
     {
-        private const string    defaultVersion      = "0.8.3";
+        private const string    defaultVersion      = "0.9.0";
         private const int       defaultKeyCount     = 1;
         private const int       defaultKeyThreshold = 1;
         private const string    defaultLease        = "0";
