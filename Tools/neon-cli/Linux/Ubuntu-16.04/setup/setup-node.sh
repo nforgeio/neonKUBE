@@ -729,9 +729,45 @@ echo "nameserver ${NEON_NODE_IP}" > /etc/resolvconf/resolv.conf.d/base
 resolvconf -u
 
 #------------------------------------------------------------------------------
-# Add the Neon tools folder to the [sudo] PATH.
+# Configure a CRON job that performs daily node maintenance including purging
+# unreferenced Docker images.
 
-sed -i "s|^Defaults\tsecure_path=\".*\"$|Defaults\tsecure_path=\"/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/snap/bin:${NEON_TOOLS_FOLDER}\"|g" /etc/sudoers
+cat <<EOF > /usr/local/bin/neon-host-maintenance 
+#!/bin/bash
+#------------------------------------------------------------------------------
+# FILE:         neon-host-maintenance
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
+#
+# This script runs is invoked by CRON to perform periodic host maintenance incuding
+# purging unreferenced Docker images to avoid maxing out the file system.  This
+# script needs root privileges.
+
+docker image prune --all --force
+EOF
+
+chmod 744 /usr/local/bin/neon-host-maintenance
+
+# $todo(jeff.lill):
+#
+# It would be nice to log what happened during maintenance and record This
+# in Elasticsearch for analysis.
+
+cat <<EOF > /etc/cron.d/neon-host-maintenance
+#------------------------------------------------------------------------------
+# FILE:         neon-host-maintenance
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
+#
+# Daily neonCLUSTER related host maintenance scheduled for 9:15pm system time (UTC)
+# or the middle of the night Pacific time.
+
+PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
+
+15 21 * * * root /usr/local/bin/neon-host-maintenance
+EOF
+
+chmod 644 /usr/local/bin/neon-host-maintenance
 
 # Indicate that the script has completed.
 
