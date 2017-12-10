@@ -22,7 +22,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* METRICBEAT " + $version
+"* METRICBEAT:" + $tag
 "======================================="
 
 # Copy the common scripts.

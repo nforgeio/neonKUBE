@@ -21,11 +21,10 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* NEON-PROXY-MANAGER " + $tag
+"* NEON-PROXY-MANAGER:" + $tag
 "======================================="
 
-$appname  = "neon-proxy-manager"
-$registry = "neoncluster/$appname"
+$appname = "neon-proxy-manager"
 
 # Build and publish the app to a local [bin] folder.
 

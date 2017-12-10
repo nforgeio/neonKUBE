@@ -21,7 +21,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* NEON-CLUSTER-MANAGER " + $tag
+"* NEON-CLUSTER-MANAGER:" + $tag
 "======================================="
 
 $appname  = "neon-cluster-manager"

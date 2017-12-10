@@ -22,7 +22,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* HAPROXY " + $version
+"* HAPROXY:" + $tag
 "======================================="
 
 # Copy the common scripts.

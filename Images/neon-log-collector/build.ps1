@@ -21,7 +21,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* NEON-LOG-COLLECTOR " + $version
+"* NEON-LOG-COLLECTOR:" + $tag
 "======================================="
 
 # Copy the common scripts.

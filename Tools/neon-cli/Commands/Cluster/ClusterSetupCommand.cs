@@ -1472,6 +1472,7 @@ $@"docker login \
                     var images = new List<string>()
                     {
                         "neoncluster/ubuntu-16.04",
+                        "neoncluster/ubuntu-16.04-dotnet",
                         "neoncluster/neon-proxy-vault"
                     };
 

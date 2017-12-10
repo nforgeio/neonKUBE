@@ -22,7 +22,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* KIBANA v" + $version
+"* KIBANA:" + $tag
 "======================================="
 
 # Build the images.

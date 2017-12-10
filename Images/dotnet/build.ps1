@@ -22,7 +22,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* DOTNET " + $version
+"* DOTNET:" + $tag
 "======================================="
 
 # Copy the common scripts.

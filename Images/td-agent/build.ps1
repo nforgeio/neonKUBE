@@ -22,7 +22,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* TD-AGENT " + $version
+"* TD-AGENT:" + $tag
 "======================================="
 
 # Build the image.

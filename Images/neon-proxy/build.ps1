@@ -22,7 +22,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* NEON-PROXY " + $tag
+"* NEON-PROXY:" + $tag
 "======================================="
 
 # Copy the common scripts.

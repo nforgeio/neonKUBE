@@ -24,7 +24,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* ELASTICSEARCH " + $version
+"* ELASTICSEARCH:" + $tag
 "======================================="
 
 # Copy the common scripts.

@@ -22,7 +22,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* ALPINE " + $version
+"* ALPINE:" + $tag
 "======================================="
 
 # Copy the common scripts.

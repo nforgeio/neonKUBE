@@ -24,7 +24,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* NEON-REGISTRY-CACHE " + $version
+"* NEON-REGISTRY-CACHE:" + $tag
 "======================================="
 
 # Copy the common scripts.
