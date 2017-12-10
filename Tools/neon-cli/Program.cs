@@ -626,10 +626,14 @@ tool requires admin priviledges for direct mode.
             {
                 var version = $"{ThisAssembly.Git.Branch}-{ThisAssembly.Git.Commit}";
 
+#pragma warning disable 162 // Unreachable code
+
                 if (ThisAssembly.Git.IsDirty)
                 {
                     version += "-DIRTY";
                 }
+
+#pragma warning restore 162 // Unreachable code
 
                 return version;
             }
