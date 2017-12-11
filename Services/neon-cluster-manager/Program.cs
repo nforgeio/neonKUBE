@@ -293,7 +293,7 @@ namespace NeonClusterManager
                     }
 
                     // Retrieve the current cluster definition from Consul if we don't already
-                    // have it or if it's changed from what we've cached.
+                    // have it or if it's different from what we've cached.
 
                     cachedClusterDefinition = await NeonClusterHelper.GetDefinitionAsync(cachedClusterDefinition, terminator.CancellationToken);
 
@@ -320,13 +320,43 @@ namespace NeonClusterManager
                         currentClusterDefinition.NodeDefinitions.Add(nodeDefinition.Name, nodeDefinition);
                     }
 
+                    // Cluster pets are not part of the Swarm, so Docker won't return any information
+                    // about them.  We'll read the pet definitions from [neon/cluster/pets.json] in 
+                    // Consul.  We'll assume that there are no pets if this key doesn't exist for
+                    // backwards compatibility and robustness.
+
+                    string petsJson = null;
+
+                    try
+                    {
+                        petsJson = await NeonClusterHelper.Consul.KV.GetString("neon/cluster/pets.json", terminator.CancellationToken);
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        // Assume that there are no cluster pets.
+                    }
+
+                    if (!string.IsNullOrWhiteSpace(petsJson))
+                    {
+                        // Parse the pet node definitions and add them to the cluster definition.
+
+                        var petDefinitions = NeonHelper.JsonDeserialize<Dictionary<string, NodeDefinition>>(petsJson);
+
+                        foreach (var item in petDefinitions)
+                        {
+                            currentClusterDefinition.NodeDefinitions.Add(item.Key, item.Value);
+                        }
+                    }
+
+                    // Determine if the definition has changed.
+
                     currentClusterDefinition.ComputeHash();
 
                     if (currentClusterDefinition.Hash != cachedClusterDefinition.Hash)
                     {
                         log.LogInfo(() => "NodePoller: Changed cluster definition.  Updating Consul.");
 
-                        await NeonClusterHelper.PutDefinitionAsync(currentClusterDefinition, terminator.CancellationToken);
+                        await NeonClusterHelper.PutDefinitionAsync(currentClusterDefinition, cancellationToken: terminator.CancellationToken);
 
                         cachedClusterDefinition = currentClusterDefinition;
                     }

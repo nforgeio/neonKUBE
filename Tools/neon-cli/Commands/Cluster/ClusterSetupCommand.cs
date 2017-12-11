@@ -217,8 +217,8 @@ OPTIONS:
             // We're going to configure the managers separately from the workers
             // because we need to be careful about when we reboot the managers
             // since this will also take down the VPN.  We're also going to 
-            // reboot all of the managers together after common configuration
-            // for the same reason.
+            // reboot all of the managers together after common manager 
+            // configuration is complete for the same reason.
 
             controller.AddStep("manager initialize", n => ConfigureCommon(n), n => n.Metadata.IsManager);
 
@@ -241,6 +241,8 @@ OPTIONS:
                     ConfigureNonManager(n);
                 },
                 n => n.Metadata.IsWorker || n.Metadata.IsPet);
+
+            // Create the Swarm.
 
             controller.AddStep("swarm create", n => CreateSwarm(n), n => n == cluster.FirstManager);
             controller.AddStep("swarm join", n => JoinSwarm(n), n => n != cluster.FirstManager && !n.Metadata.IsPet);
@@ -1305,10 +1307,10 @@ $@"docker login \
         }
 
         /// <summary>
-        /// Configures an external node that is not part of the Docker Swarm.
+        /// Configures a node that is not part of the Docker Swarm.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void ConfigureExternal(NodeProxy<NodeDefinition> node)
+        private void ConfigurePet(NodeProxy<NodeDefinition> node)
         {
             node.InvokeIdempotentAction("setup-external",
                 () =>

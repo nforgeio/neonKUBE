@@ -1067,9 +1067,10 @@ namespace Neon.Cluster
         /// Persists the cluster definition to Consul.
         /// </summary>
         /// <param name="definition">The cluster definition.</param>
+        /// <param name="savePets">Optionally persists the pet definitions to Consul.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <exception cref="InvalidOperationException">Thrown if no cluster is connected.</exception>
-        public async static Task PutDefinitionAsync(ClusterDefinition definition, CancellationToken cancellationToken = default)
+        public async static Task PutDefinitionAsync(ClusterDefinition definition, bool savePets = false, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(definition != null);
 
@@ -1077,8 +1078,23 @@ namespace Neon.Cluster
 
             definition.ComputeHash();   // Always recomute the hash
 
-            var json     = NeonHelper.JsonSerialize(definition);
-            var deflated = NeonHelper.CompressString(json);
+            var fullJson         = NeonHelper.JsonSerialize(definition);
+            var deflatedFullJson = NeonHelper.CompressString(fullJson);
+
+            // [neon-cluster-manager] expects the pet node definitions to be persisted to
+            // Consul at [neon/cluster/pets.json] so that it can include any pets in the
+            // cluster definition file consumed by [neon-cli] before it executes any 
+            // cluster related commands.
+
+            var petDefinitions = new Dictionary<string, NodeDefinition>();
+
+            foreach (var petDefinition in definition.SortedPets)
+            {
+                petDefinitions.Add(petDefinition.Name, petDefinition);
+            }
+
+            var petsJson      = NeonHelper.JsonSerialize(petDefinitions, Formatting.Indented);
+            var petsJsonBytes = Encoding.UTF8.GetBytes(petsJson);
 
             using (var consul = OpenConsul())
             {
@@ -1088,9 +1104,16 @@ namespace Neon.Cluster
 
                 var operations = new List<KVTxnOp>()
                     {
-                        new KVTxnOp("neon/cluster/definition.deflate", KVTxnVerb.Set) { Value = deflated },
+                        new KVTxnOp("neon/cluster/definition.deflate", KVTxnVerb.Set) { Value = deflatedFullJson },
                         new KVTxnOp("neon/cluster/definition.hash", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(definition.Hash) }
                     };
+
+                // Add any pets to the transaction if enabled.
+
+                if (savePets)
+                {
+                    operations.Add(new KVTxnOp("neon/cluster/pets.json", KVTxnVerb.Set) { Value = petsJsonBytes });
+                }
 
                 await consul.KV.Txn(operations);
             }

@@ -391,6 +391,24 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Enumerates the cluster pet node definitions.
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<NodeDefinition> Pets
+        {
+            get { return Nodes.Where(n => n.IsPet); }
+        }
+
+        /// <summary>
+        /// Enumerates the cluster manager pet definitions sorted in ascending order by name.
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<NodeDefinition> SortedPets
+        {
+            get { return Pets.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
+        }
+
+        /// <summary>
         /// Enumerates the cluster worker node definitions.
         /// </summary>
         [JsonIgnore]

@@ -244,9 +244,9 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Enumerates the cluster external node proxies sorted in ascending order by name.
+        /// Enumerates the cluster pet node proxies sorted in ascending order by name.
         /// </summary>
-        public IEnumerable<NodeProxy<NodeDefinition>> External
+        public IEnumerable<NodeProxy<NodeDefinition>> Pets
         {
             get { return Nodes.Where(n => !n.Metadata.IsPet).OrderBy(n => n.Name); }
         }
