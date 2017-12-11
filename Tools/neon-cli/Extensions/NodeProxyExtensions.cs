@@ -23,7 +23,7 @@ namespace NeonCli
     /// <summary>
     /// <see cref="NodeProxy{T}"/> extension methods.
     /// </summary>
-    public static class NodeManagentProxyExtension
+    public static class NodeProxyExtension
     {
         /// <summary>
         /// Converts a string into a value suitable for use in a Bash script.
