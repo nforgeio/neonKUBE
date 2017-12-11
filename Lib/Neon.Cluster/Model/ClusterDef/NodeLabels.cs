@@ -491,7 +491,7 @@ namespace Neon.Cluster
 
                 // Standard labels from this class.
 
-                list.Add(new KeyValuePair<string, object>(LabelStorageCapacityGB,         StorageCapacityGB));
+                list.Add(new KeyValuePair<string, object>(LabelStorageCapacityGB,       StorageCapacityGB));
                 list.Add(new KeyValuePair<string, object>(LabelStorageLocal,            StorageLocal));
                 list.Add(new KeyValuePair<string, object>(LabelStorageSSD,              StorageSSD));
                 list.Add(new KeyValuePair<string, object>(LabelStorageRedundant,        StorageRedundant));
@@ -501,7 +501,7 @@ namespace Neon.Cluster
                 list.Add(new KeyValuePair<string, object>(LabelComputeRamMB,            ComputeRamMB));
                 list.Add(new KeyValuePair<string, object>(LabelComputeSwap,             ComputeSwap));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalLocation,        PhysicalLocation));
-                list.Add(new KeyValuePair<string, object>(LabelPhysicalMachine,           PhysicalMachine));
+                list.Add(new KeyValuePair<string, object>(LabelPhysicalMachine,         PhysicalMachine));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalFaultDomain,     PhysicalFaultDomain));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,           PhysicalPower));
                 list.Add(new KeyValuePair<string, object>(LabelLogEsData,               LogEsData));

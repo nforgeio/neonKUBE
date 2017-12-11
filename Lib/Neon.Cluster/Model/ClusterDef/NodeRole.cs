@@ -24,14 +24,8 @@ namespace Neon.Cluster
         public const string Worker = "worker";
 
         /// <summary>
-        /// The node is external to the Docker Swarm without any built-in purpose.
+        /// The node is a member of the neonCLUSTER but is not part of the Docker Swarm.
         /// </summary>
-        public const string External = "external";
-
-        /// <summary>
-        /// The node is external to th Docker Swarm and is intended to host
-        /// Elasticsearch to persist cluster logs.
-        /// </summary>
-        public const string ExternalElasticSearch = "external-elasticsearch-log";
+        public const string Pet = "pet";
     }
 }

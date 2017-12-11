@@ -150,17 +150,16 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns <c>true</c> for nodes that are not part of the Docker Swarm.
+        /// Returns <c>true</c> for nodes that are part of the neonCLUSTER but in the Docker Swarm.
         /// </summary>
         [JsonIgnore]
-        public bool IsExternal
+        public bool IsPet
         {
             get
             {
                 switch (Role.ToLowerInvariant())
                 {
-                    case NodeRole.External:
-                    case NodeRole.ExternalElasticSearch:
+                    case NodeRole.Pet:
 
                         return true;
 
@@ -169,6 +168,15 @@ namespace Neon.Cluster
                         return false;
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> for nodes that are members of the Docker Swarm.
+        /// </summary>
+        [JsonIgnore]
+        public bool InSwarm
+        {
+            get { return IsManager || IsWorker; }
         }
 
         /// <summary>

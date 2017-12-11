@@ -248,7 +248,7 @@ namespace Neon.Cluster
         /// </summary>
         public IEnumerable<NodeProxy<NodeDefinition>> External
         {
-            get { return Nodes.Where(n => !n.Metadata.IsExternal).OrderBy(n => n.Name); }
+            get { return Nodes.Where(n => !n.Metadata.IsPet).OrderBy(n => n.Name); }
         }
 
         /// <summary>

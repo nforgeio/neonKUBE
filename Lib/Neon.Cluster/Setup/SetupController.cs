@@ -102,7 +102,7 @@ namespace Neon.Cluster
         public bool ShowStatus { get; set; } = false;
 
         /// <summary>
-        /// Specifies whether that status for individual nodes will be displayed.  This
+        /// Specifies whether that node status will be displayed.  This
         /// defaults to <c>true</c>.
         ///</summary>
         public bool ShowNodeStatus { get; set; } = true;
@@ -570,20 +570,6 @@ namespace Neon.Cluster
             {
                 if (nodes.First().Metadata != null)
                 {
-                    if (nodes.Exists(n => n.Metadata.IsExternal))
-                    {
-                        sbDisplay.AppendLine();
-                        sbDisplay.AppendLine();
-                        sbDisplay.AppendLine(" External:");
-                        sbDisplay.AppendLine(underline);
-                        sbDisplay.AppendLine();
-
-                        foreach (var node in nodes.Where(n => n.Metadata.IsExternal))
-                        {
-                            sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
-                        }
-                    }
-
                     if (nodes.Exists(n => n.Metadata.IsManager))
                     {
                         sbDisplay.AppendLine();
@@ -612,15 +598,15 @@ namespace Neon.Cluster
                         }
                     }
 
-                    if (nodes.Exists(n => n.Metadata.IsExternal))
+                    if (nodes.Exists(n => n.Metadata.IsPet))
                     {
                         sbDisplay.AppendLine();
                         sbDisplay.AppendLine();
-                        sbDisplay.AppendLine(" External:");
+                        sbDisplay.AppendLine(" Pets:");
                         sbDisplay.AppendLine(underline);
                         sbDisplay.AppendLine();
 
-                        foreach (var node in nodes.Where(n => n.Metadata.IsExternal))
+                        foreach (var node in nodes.Where(n => n.Metadata.IsPet))
                         {
                             sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
                         }

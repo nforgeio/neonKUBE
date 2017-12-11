@@ -243,7 +243,7 @@ USAGE:
         //  PublicSubnet                IP subnet assigned to the standard public cluster
         //                              overlay network.  This defaults to [10.249.0.0/16].
         //
-        //  PublicAttachable            Allow non-Docker swarm mode service containers to 
+        //  PublicAttachable            Allow non-Docker Swarm mode service containers to 
         //                              attach to the standard public cluster overlay network.
         //                              This defaults to [true] for flexibility but you may 
         //                              consider disabling this for better security.
@@ -251,7 +251,7 @@ USAGE:
         //  PrivateSubnet               IP subnet assigned to the standard private cluster
         //                              overlay network.  This defaults to [10.248.0.0/16].
         //
-        //  PrivateAttachable           Allow non-Docker swarm mode service containers to 
+        //  PrivateAttachable           Allow non-Docker Swarm mode service containers to 
         //                              attach to the standard private cluster overlay network.
         //                              This defaults to [true] for flexibility but you may 
         //                              consider disabling this for better security.
@@ -415,13 +415,22 @@ USAGE:
 
     //-------------------------------------------------------------------------
     // This section describes the physical and/or virtual machines that 
-    // will host your cluster.  There are two basic types of nodes:
+    // will host your cluster.  There are three basic types of nodes:
     //
-    //      * Manager Nodes
-    //      * Worker Nodes
+    //      * Managers
+    //      * Workers
+    //      * Pets
     //
-    // Manager nodes handle the cluster management tasks.  Both types of
-    // nodes can host application containers.
+    // Manager and Worker form the Docker Swarm with the manager nodes handling
+    // nodes handle the cluster management tasks.  Both Managers and Workers
+    // can host Swarm services.  Pet nodes are part of the neonCLUSTER but are
+    // not part of the Docker Swarm.
+    //
+    // Pet nodes are configured with Docker (non-Swarm) and also take advantage 
+    // of many neonCLUSTER services such as logging, DNS, the apt-cache, Consul,
+    // Vault and the Docker registry cache.  Pet nodes are generally used to
+    // host things you really care about on an individual basis like databases 
+    // and other services that aren't really appropriate for a Docker Swarm.
     //
     // Node Properties
     // ---------------
@@ -490,7 +499,7 @@ USAGE:
     ""Nodes"": {
 
         //---------------------------------------------------------------------
-        // Describe the cluster management nodes by setting [Manager=true].
+        // Define the cluster management nodes by setting [Manager=true].
         // Management nodes host Consul service discovery, Vault secret 
         // management, and the Docker Swarm managers.
         // 
@@ -501,7 +510,7 @@ USAGE:
         // cluster as a whole to function.
 
         ""manager-0"": {
-            ""PrivateAddress"": ""10.0.1.30"",
+            ""PrivateAddress"": ""10.0.0.30"",
             ""Role"": ""manager"",
             ""Labels"": {
                 ""LogEsData"": true,
@@ -512,14 +521,14 @@ USAGE:
             }
         },
         ""manager-1"": {
-            ""PrivateAddress"": ""10.0.1.31"",
+            ""PrivateAddress"": ""10.0.0.31"",
             ""Role"": ""manager"",
             ""Labels"": {
                 ""StorageSSD"": true
             }
         },
         ""manager-2"": {
-            ""PrivateAddress"": ""10.0.1.30"",
+            ""PrivateAddress"": ""10.0.0.30"",
             ""Role"": ""manager"",
             ""Labels"": {
                 ""StorageSSD"": true
@@ -527,33 +536,49 @@ USAGE:
         },
 
         //---------------------------------------------------------------------
-        // Describe the worker cluster nodes by leaving [Manager=false].
-        // Swarm will schedule containers to run on these nodes.
+        // Define the worker cluster nodes by setting [Role=worker] (which
+        // is the default).  Worker nodes are provisioned in the Docker Swarm.
 
         ""worker-0"": {
-            ""PrivateAddress"": ""10.0.1.40"",
+            ""Role"": ""manager"",
+            ""PrivateAddress"": ""10.0.0.40"",
             ""Labels"": {
                 ""StorageSSD"": true
             }
         },
         ""worker-1"": {
-            ""PrivateAddress"": ""10.0.1.41"",
+            ""Role"": ""manager"",
+            ""PrivateAddress"": ""10.0.0.41"",
             ""Labels"": {
                 ""StorageSSD"": true
             }
         },
         ""worker-2"": {
-            ""PrivateAddress"": ""10.0.1.42"",
+            ""Role"": ""manager"",
+            ""PrivateAddress"": ""10.0.0.42"",
             ""Labels"": {
                 ""StorageSSD"": true
             }
         },
         ""worker-3"": {
-            ""PrivateAddress"": ""10.0.1.43"",
+            ""Role"": ""manager"",
+            ""PrivateAddress"": ""10.0.0.43"",
             ""Labels"": {
                 ""StorageSSD"": true
             }
         },
+
+        //---------------------------------------------------------------------
+        // Define the pet cluster nodes by setting [Role=pet].  Individual nodes 
+        // are part of the neonCLUSTER but not the Docker Swarm.
+
+        ""individual-0"": {
+            ""Role"": ""pet"",
+            ""PrivateAddress"": ""10.0.0.44"",
+            ""Labels"": {
+                ""StorageSSD"": true
+            }
+        }
     }
 }
 

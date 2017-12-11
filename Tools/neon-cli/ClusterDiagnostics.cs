@@ -37,7 +37,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The manager node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void CheckClusterManager(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void CheckManager(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
             Covenant.Requires<ArgumentException>(node.Metadata.IsManager);
@@ -67,14 +67,14 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Verifies that a cluster worker nodes is healthy.
+        /// Verifies that a cluster worker or pet node is healthy.
         /// </summary>
         /// <param name="node">The server node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void CheckClusterWorker(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void CheckWorkersOrPet(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
-            Covenant.Requires<ArgumentException>(node.Metadata.IsWorker);
+            Covenant.Requires<ArgumentException>(node.Metadata.IsWorker || node.Metadata.IsPet);
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             if (!node.IsFaulted)

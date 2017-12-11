@@ -231,33 +231,21 @@ OPTIONS:
 
             controller.AddStep("manager config", n => ConfigureManager(n), n => n.Metadata.IsManager);
 
-            // Configure the external nodes.
+            // Configure the workers and pets.
 
-            if (cluster.Definition.External.Count() > 0)
-            {
-                controller.AddStep("external config",
-                    n =>
-                    {
-                        ConfigureCommon(n);
-                        n.InvokeIdempotentAction("setup-common-restart", () => RebootAndWait(n));
-                        ConfigureExternal(n);
-                    },
-                    n => n.Metadata.IsExternal);
-            }
-
-            // Configure the workers.
-
-            controller.AddStep("worker config", 
+            controller.AddStep("worker/pet config", 
                 n =>
                 {
                     ConfigureCommon(n);
                     n.InvokeIdempotentAction("setup-common-restart", () => RebootAndWait(n));
-                    ConfigureWorker(n);
+                    ConfigureNonManager(n);
                 },
-                n => n.Metadata.IsWorker);
+                n => n.Metadata.IsWorker || n.Metadata.IsPet);
 
             controller.AddStep("swarm create", n => CreateSwarm(n), n => n == cluster.FirstManager);
-            controller.AddStep("swarm join", n => JoinSwarm(n), n => n != cluster.FirstManager);
+            controller.AddStep("swarm join", n => JoinSwarm(n), n => n != cluster.FirstManager && !n.Metadata.IsPet);
+
+            // Continue with the configuration unless we're just installing bare Docker.
 
             if (!cluster.Definition.BareDocker)
             {
@@ -330,8 +318,8 @@ OPTIONS:
                     controller.AddGlobalStep("metricbeat dashboards", () => InstallMetricbeatDashboards(cluster));
                 }
 
-                controller.AddStep("check managers", n => ClusterDiagnostics.CheckClusterManager(n, cluster.Definition), n => n.Metadata.IsManager);
-                controller.AddStep("check workers", n => ClusterDiagnostics.CheckClusterWorker(n, cluster.Definition), n => n.Metadata.IsWorker);
+                controller.AddStep("check managers", n => ClusterDiagnostics.CheckManager(n, cluster.Definition), n => n.Metadata.IsManager);
+                controller.AddStep("check workers/pets", n => ClusterDiagnostics.CheckWorkersOrPet(n, cluster.Definition), n => n.Metadata.IsWorker || n.Metadata.IsPet);
 
                 if (cluster.Definition.Log.Enabled)
                 {
@@ -653,7 +641,7 @@ OPTIONS:
 
                     // Install the Vault certificate.
 
-                    if (!node.Metadata.IsExternal)
+                    if (!node.Metadata.IsPet)
                     {
                         node.UploadText($"/usr/local/share/ca-certificates/{NeonHosts.Vault}.crt", clusterLogin.VaultCertificate.Cert);
                         node.SudoCommand("mkdir -p /etc/vault");
@@ -718,7 +706,7 @@ ff02::2         ip6-allrouters
                 vaultDirectLine = $"export VAULT_DIRECT_ADDR={cluster.Definition.Vault.GetDirectUri(node.Name)}";
             }
 
-            if (!node.Metadata.IsExternal)
+            if (!node.Metadata.IsPet)
             {
                 // Upload the full [/etc/neoncluster/env-host] file for Docker Swarm nodes.
 
@@ -1218,12 +1206,12 @@ $@"docker login \
         }
 
         /// <summary>
-        /// Configures a worker node.
+        /// Configures non-manager nodes like workers or individuals.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void ConfigureWorker(NodeProxy<NodeDefinition> node)
+        private void ConfigureNonManager(NodeProxy<NodeDefinition> node)
         {
-            node.InvokeIdempotentAction("setup-worker",
+            node.InvokeIdempotentAction($"setup-{node.Metadata.Role}",
                 () =>
                 {
                     // Setup NTP.
@@ -1411,7 +1399,7 @@ $@"docker login \
             manager.InvokeIdempotentAction("setup-node-labels",
                 () =>
                 {
-                    foreach (var node in cluster.Nodes)
+                    foreach (var node in cluster.Nodes.Where(n => n.Metadata.InSwarm))
                     {
                         var labelDefinitions = new List<string>();
 

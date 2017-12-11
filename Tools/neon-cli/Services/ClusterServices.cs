@@ -181,12 +181,12 @@ namespace NeonCli
 
                     proxyConstraint = (string)null;
 #else
-                    var publicPublish  = $"--pubish {NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}:{NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}";
-                    var privatePublish = $"--pubish {NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}:{NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}";
+                    var publicPublish  = $"--publish {NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}:{NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}";
+                    var privatePublish = $"--publish {NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}:{NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}";
 
                     if (cluster.Definition.Workers.Count() > 0)
                     {
-                        // Constrain proxies to all worker nodes if there are any.
+                        // Constrain proxies to worker nodes if there are any.
 
                         proxyConstraint = "--constraint node.role!=manager";
                     }

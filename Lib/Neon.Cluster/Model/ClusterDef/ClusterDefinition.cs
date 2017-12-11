@@ -414,7 +414,7 @@ namespace Neon.Cluster
         [JsonIgnore]
         public IEnumerable<NodeDefinition> External
         {
-            get { return Nodes.Where(n => n.IsExternal); }
+            get { return Nodes.Where(n => n.IsPet); }
         }
 
         /// <summary>
