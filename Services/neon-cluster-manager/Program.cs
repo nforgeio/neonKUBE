@@ -61,6 +61,7 @@ namespace NeonClusterManager
             LogManager.Default.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
             log = LogManager.Default.GetLogger(typeof(Program));
             log.LogInfo(() => $"Starting [{serviceName}:{Program.GitVersion}]");
+            log.LogInfo(() => $"LOG_LEVEL={LogManager.Default.LogLevel.ToString().ToUpper()}");
 
             terminator = new ProcessTerminator(log);
 
@@ -320,32 +321,41 @@ namespace NeonClusterManager
                         currentClusterDefinition.NodeDefinitions.Add(nodeDefinition.Name, nodeDefinition);
                     }
 
+                    log.LogDebug(() => $"NodePoller: [{currentClusterDefinition.Managers.Count()}] managers and [{currentClusterDefinition.Workers.Count()}] workers in current cluster definition.");
+
                     // Cluster pets are not part of the Swarm, so Docker won't return any information
                     // about them.  We'll read the pet definitions from [neon/cluster/pets.json] in 
                     // Consul.  We'll assume that there are no pets if this key doesn't exist for
                     // backwards compatibility and robustness.
 
-                    string petsJson = null;
-
                     try
                     {
-                        petsJson = await NeonClusterHelper.Consul.KV.GetString("neon/cluster/pets.json", terminator.CancellationToken);
+                        var petsJson = await NeonClusterHelper.Consul.KV.GetString("neon/cluster/pets.json", terminator.CancellationToken);
+
+                        if (!string.IsNullOrWhiteSpace(petsJson))
+                        {
+                            // Parse the pet node definitions and add them to the cluster definition.
+
+                            var petDefinitions = NeonHelper.JsonDeserialize<Dictionary<string, NodeDefinition>>(petsJson);
+
+                            foreach (var item in petDefinitions)
+                            {
+                                currentClusterDefinition.NodeDefinitions.Add(item.Key, item.Value);
+                            }
+
+                            log.LogDebug(() => $"NodePoller: [neon/cluster/pets.json] defines [{petDefinitions.Count}] pets.");
+                        }
+                        else
+                        {
+                            log.LogDebug(() => $"NodePoller: [neon/cluster/pets.json] is empty.");
+                        }
+
                     }
                     catch (KeyNotFoundException)
                     {
                         // Assume that there are no cluster pets.
-                    }
 
-                    if (!string.IsNullOrWhiteSpace(petsJson))
-                    {
-                        // Parse the pet node definitions and add them to the cluster definition.
-
-                        var petDefinitions = NeonHelper.JsonDeserialize<Dictionary<string, NodeDefinition>>(petsJson);
-
-                        foreach (var item in petDefinitions)
-                        {
-                            currentClusterDefinition.NodeDefinitions.Add(item.Key, item.Value);
-                        }
+                        log.LogDebug(() => $"NodePoller: [neon/cluster/pets.json] Consul key not found.  Assuming no pets.");
                     }
 
                     // Determine if the definition has changed.

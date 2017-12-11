@@ -41,6 +41,7 @@ namespace CouchbaseTest
             LogManager.Default.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
             log = LogManager.Default.GetLogger(typeof(Program));
             log.LogInfo(() => $"Starting [{serviceName}]");
+            log.LogInfo(() => $"LOG_LEVEL={LogManager.Default.LogLevel.ToString().ToUpper()}");
 
             terminator = new ProcessTerminator(log);
 

@@ -1775,7 +1775,7 @@ $@"docker login \
                     loginClone.ClearRootSecrets();
                     loginClone.Definition.Hosting = null;
 
-                    NeonClusterHelper.PutDefinitionAsync(loginClone.Definition).Wait();
+                    NeonClusterHelper.PutDefinitionAsync(loginClone.Definition, savePets: true).Wait();
                 });
         }
 
