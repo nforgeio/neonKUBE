@@ -32,7 +32,7 @@ using Neon.Common;
 // I got to this point because I started out with my own logging scheme which has
 // somewhat different capabilites than is supported by the Microsoft logging abstractions
 // and I still like my scheme.  I've started to unify/bridge the two schemes by having 
-// [INeonLogger] implement [ILogger] and ith [NeonLoggerShim] wrapping an [ILogger] 
+// [INeonLogger] implement [ILogger] and with [NeonLoggerShim] wrapping an [ILogger] 
 // such that it behaves like an [INeonLogger].
 //
 // This is a bit of a mess, probably mostly for unit testing.  Right now this is
