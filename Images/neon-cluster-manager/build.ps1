@@ -24,7 +24,7 @@ $image_root = "$env:NF_ROOT\\Images"
 "* NEON-CLUSTER-MANAGER:" + $tag
 "======================================="
 
-$appname  = "neon-cluster-manager"
+$appname = "neon-cluster-manager"
 
 # Build and publish the app to a local [bin] folder.
 
