@@ -71,7 +71,7 @@ To enable automatic Vault unsealing, you'll need to persist the Vault unseal key
 
 # Deployment
 
-**neon-consul-manager** service will be deployed automatically by **neon-cli** during cluster setup using a command like:
+**neon-cluster-manager** service will be deployed automatically by **neon-cli** during cluster setup using a command like:
 
 ````
 docker service create \
