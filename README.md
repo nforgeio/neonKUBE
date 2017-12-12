@@ -47,7 +47,7 @@ Follow steps below to configure a development or test workstation.
     ![System Tray](./README/DockerSysTray.png)
   * Select the **Shared Drives** tab and **share** the drive with the project source code
   * You'll need to enter your workstation **credentials**
-  * Configure **Windows Defender** to exclude the **C:\ProgramData\Docker** directory from checks (to prevent crashes on Windows boot).
+  * Select the **Daemon** tab on the left and make sure that **Experimental** is **unchecked**
 
 10. Test your Docker configuration.
 
