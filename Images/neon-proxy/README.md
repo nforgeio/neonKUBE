@@ -2,7 +2,9 @@ This is the standard neonCLUSTER network proxy service based on **HAProxy**, **C
 
 # Image Tags
 
-Images are tagged with the Git branch, image build date, and Git commit.  The most recent production build will be tagged as **latest**.
+Images are tagged with the Git branch, image build date, and Git commit and an optional **-dirty** suffix if the image was built from a branch with uncommitted changes or untracked files.
+
+The most recent production build will be tagged as **latest**.
 
 # Additional Packages
 

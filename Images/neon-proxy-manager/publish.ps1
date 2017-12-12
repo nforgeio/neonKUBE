@@ -17,6 +17,11 @@ $image_root = "$env:NF_ROOT\\Images"
 
 function Build
 {
+	param
+	(
+		[switch]$latest = $False
+	)
+
 	# Build the images.
 
 	$registry = "neoncluster/neon-proxy-manager"
@@ -27,11 +32,11 @@ function Build
 	./build.ps1 -registry $registry -tag $tag
 	PushImage "${registry}:$tag"
 
-	if (IsProd)
+	if (($latest) -and (IsProd))
 	{
 		Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 		PushImage "${registry}:latest"
 	}
 }
 
-Build
+Build -latest

@@ -31,11 +31,11 @@ function Build
 	./build.ps1 -registry $registry -version $version -tag $tag
     PushImage "${registry}:$tag"
 
-	if (IsProd)
+	if (($latest) -and (IsProd))
 	{
 		Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 		PushImage "${registry}:latest"
 	}
 }
 
-Build 1.7.8
+Build 1.7.8 -latest

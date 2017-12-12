@@ -100,15 +100,22 @@ function GitBranch
 }
 
 #------------------------------------------------------------------------------
-# Returns the current Git branch, date, and commit formatted as a Docker image tag.
+# Returns the current Git branch, date, and commit formatted as a Docker image tag
+# and optional dirty branch indicator.
 
 function ImageTag
 {
 	$branch = GitBranch
 	$date   = UtcDate
 	$commit = git log -1 --pretty=%h
+	$tag    = "$branch-$date-$commit"
 
-	return "$branch-$date-$commit"
+	if (IsDirty)
+	{
+		$tag += "-dirty"
+	}
+
+	return $tag
 }
 
 #------------------------------------------------------------------------------
@@ -119,6 +126,31 @@ function IsProd
 	$branch = git rev-parse --abbrev-ref HEAD
 
 	return $branch -eq "prod"
+}
+
+#------------------------------------------------------------------------------
+# Returns $True if the current Git branch is includes uncommited changes or 
+# untracked files.  This was inspired by this article:
+#
+#	http://remarkablemark.org/blog/2017/10/12/check-git-dirty/
+
+function IsDirty
+{
+	$check = git status --short
+
+	if (!$check)
+	{
+		return $False
+	}
+
+	if ($check.Trim() -ne "")
+	{
+		return $True
+	}
+	else
+	{
+		return $False
+	}
 }
 
 #------------------------------------------------------------------------------

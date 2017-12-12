@@ -142,13 +142,17 @@ Developers will generally have one or more branches prefixed by their first name
 
 The neonCLUSTER Docker registry stores to catageories of of images: **Application** and **Base** images.
 
-Application images host custom services and other code that will tend to be modified and redeployed relatively frequently and it is important to be able to identify the source branch and commit where the application was built.  These are tagged with the branch, short Git commit hash, and UTC date like:
+Application images host custom services and other code that will tend to be modified and redeployed relatively frequently and it is important to be able to identify the source branch and commit where the application was built.  These are tagged with the branch, and UTC date, short Git commit hash like:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`my-app-image:prod-20171208-bfa4561c`
 
 This example indicates that **my-image** was built from the Git **prod** branch on **12-08-2017** from commit **bfa4561c**.
 
-The most recent image built from the **prod** branch will also be tagged with **latest**.
+Images built from a branch with uncommited changes or untracked files will include the `-dirty` tag suffix, like:
+
+&nbsp;&nbsp;&nbsp;&nbsp;`my-app-image:prod-20171208-bfa4561c-dirty`
+
+The most recent image stabe image (probably built from the **prod** branch) will also be tagged as **latest**.
 
 Base images are used as the source for other images and are modified relatively infrequently.  Examples include like **dotnet** or **elasticsearch** that applications containers build upon.  These are tagged with the version of the underlying software plus the image build date.  This allows multiple versions of an image with the same underlying software to be persisted to a repo to ensure that it's possible to revert to an older version if necessary.  The most up-to-date image will be tagged as **latest**.  Here's an example:
 

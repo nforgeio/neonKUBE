@@ -22,7 +22,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* UBUNTU-16.04-DOTNET v" + $version
+"* UBUNTU-16.04-DOTNET " + $tag
 "======================================="
 
 # Copy the common scripts.
