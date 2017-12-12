@@ -5,7 +5,7 @@
 #
 # Builds the base [neon-log-host] image.
 #
-# Usage: powershell -file build.ps1 VERSION [-latest]
+# Usage: powershell -file build.ps1 REGISTRY TAG
 
 param 
 (

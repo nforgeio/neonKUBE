@@ -5,7 +5,7 @@
 #
 # Builds a neonCLUSTER Metricbear image with the specified version.
 #
-# Usage: powershell -file build.ps1 VERSION [-latest]
+# Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 
 param 
 (

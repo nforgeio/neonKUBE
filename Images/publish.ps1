@@ -7,7 +7,7 @@
 #
 # NOTE: You must be logged into Docker Hub.
 #
-# Usage: powershell -file ./publish-all.ps1
+# Usage: powershell -file ./publish-all.ps1 [-all]
 
 param 
 (

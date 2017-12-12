@@ -6,8 +6,8 @@
 # Builds the base Ubuntu 16.04 image by applying all current package updates to the 
 # base Ubuntu image and then adds some handy packages.
 #
-# Usage: powershell -file build.ps1
-
+# Usage: powershell -file build.ps1 REGISTRY TAG
+ 
 param 
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,

@@ -5,7 +5,7 @@
 #
 # Builds the default [neon-proxy-vault] service image.
 #
-# Usage: powershell -file build.ps1
+# Usage: powershell -file build.ps1 REGISTRY TAG
 
 param 
 (

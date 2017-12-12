@@ -5,13 +5,13 @@
 #
 # Builds a neonCLUSTER Ubuntu image with the specified .NET Core packages.
 #
-# Usage: powershell -file build.ps1 VERSION [-latest]
+# Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 
 param 
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,
-	[parameter(Mandatory=$True,Position=2)][string] $tag,
-	[parameter(Mandatory=$True,Position=3)][string] $dotnetVersion
+	[parameter(Mandatory=$True,Position=2)][string] $version,
+	[parameter(Mandatory=$True,Position=3)][string] $tag
 )
 
 #----------------------------------------------------------
@@ -22,7 +22,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 "   "
 "======================================="
-"* UBUNTU-16.04-DOTNET v" + $dotnetVersion
+"* UBUNTU-16.04-DOTNET v" + $version
 "======================================="
 
 # Copy the common scripts.
@@ -37,7 +37,7 @@ Exec { copy ..\_common\*.* .\_common }
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$dotnetVersion" . }
+Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
 
 # Clean up
 

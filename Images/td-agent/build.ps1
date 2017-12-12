@@ -5,7 +5,7 @@
 #
 # Builds the [neoncluster/td-agent] image.
 #
-# Usage: powershell -file build.ps1 VERSION [-latest]
+# Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 
 param 
 (

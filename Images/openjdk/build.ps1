@@ -5,7 +5,7 @@
 #
 # Builds the base ubuntu/openjdk:# image.
 #
-# Usage: powershell -file build.ps1 VERSION
+# Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 
 param 
 (

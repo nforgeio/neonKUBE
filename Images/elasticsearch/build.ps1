@@ -7,7 +7,7 @@
 # and majorversion.  The image built will be a slightly modified version of the 
 # Elasticsearch reference.
 #
-# Usage: powershell -file build.ps1 VERSION [SUBVERSION] [MAJORVERSION] [-latest]
+# Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 
 param 
 (

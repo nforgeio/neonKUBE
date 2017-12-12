@@ -5,7 +5,7 @@
 #
 # Builds the neonCLUSTER [neon-proxy] image.
 #
-# Usage: powershell -file build.ps1 VERSION [-latest]
+# Usage: powershell -file build.ps1REGISTRY VERSION TAG
 
 param 
 (

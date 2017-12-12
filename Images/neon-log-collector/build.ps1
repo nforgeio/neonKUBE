@@ -5,8 +5,7 @@
 #
 # Builds the base [neon-log-collector] image.
 #
-# Usage: powershell -file build.ps1 VERSION [-latest]
-
+# Usage: powershell -file build.ps1 REGISTRY TAG
 param 
 (
 	[parameter(Mandatory=$True,Position=1)][string] $registry,

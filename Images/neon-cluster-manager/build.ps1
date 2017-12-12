@@ -5,7 +5,7 @@
 #
 # Builds the neonCLUSTER [neon-cluster-manager] image.
 #
-# Usage: powershell -file build.ps1 VERSION [-latest]
+# Usage: powershell -file REGISTRY TAG
 
 param 
 (
