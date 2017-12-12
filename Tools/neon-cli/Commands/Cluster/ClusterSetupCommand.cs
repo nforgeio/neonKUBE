@@ -1307,58 +1307,6 @@ $@"docker login \
         }
 
         /// <summary>
-        /// Configures a node that is not part of the Docker Swarm.
-        /// </summary>
-        /// <param name="node">The target cluster node.</param>
-        private void ConfigurePet(NodeProxy<NodeDefinition> node)
-        {
-            node.InvokeIdempotentAction("setup-external",
-                () =>
-                {
-                    // Setup NTP.
-
-                    node.Status = "run: setup-ntp.sh";
-                    node.SudoCommand("setup-ntp.sh");
-
-                    // Configure the VPN return routes.
-
-                    ConfigureVpnReturnRoutes(node);
-
-                    // Setup Docker.
-
-                    node.Status = "setup docker";
-
-                    node.SudoCommand("mkdir -p /etc/docker");
-                    node.UploadText("/etc/docker/daemon.json", GetDockerConfig(node));
-                    node.SudoCommand("setup-docker.sh");
-
-                    if (!string.IsNullOrEmpty(cluster.Definition.Docker.RegistryUsername))
-                    {
-                        // We need to log into the registry and/or cache.
-
-                        node.Status = "docker login";
-
-                        var loginCommand = new CommandBundle("./docker-login.sh");
-
-                        loginCommand.AddFile("docker-login.sh",
-$@"docker login \
--u ""{cluster.Definition.Docker.RegistryUsername}"" \
--p ""{cluster.Definition.Docker.RegistryPassword}"" \
-{cluster.Definition.Docker.Registry}",
-                            isExecutable: true);
-
-                        node.SudoCommand(loginCommand);
-                    }
-
-                    // Clean up any cached APT files.
-
-                    node.Status = "clean up";
-                    node.SudoCommand("apt-get clean -yq");
-                    node.SudoCommand("rm -rf /var/lib/apt/lists");
-                });
-        }
-
-        /// <summary>
         /// Creates the standard cluster overlay networks.
         /// </summary>
         /// <param name="manager">The manager node.</param>
