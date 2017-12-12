@@ -32,6 +32,7 @@ function Build
 
 	if (IsProd)
 	{
+		Exec { docker tag "${registry}:$tag" "${registry}:latest"}
 		PushImage "${registry}:latest"
 	}
 }

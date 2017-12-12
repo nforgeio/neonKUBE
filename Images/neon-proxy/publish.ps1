@@ -33,8 +33,8 @@ function Build
 
 	if (IsProd)
 	{
-		PushImage "${registry}:latest"
 		Exec { docker tag "${registry}:$tag" "${registry}:latest"}
+		PushImage "${registry}:latest"
 	}
 }
 
