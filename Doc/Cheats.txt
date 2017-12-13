@@ -8,7 +8,7 @@ neon cluster validate c:\docker\sample.json
 
 neon login rm root@local --force
 neon cluster prepare c:\docker\cluster-small.json -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=6 --force
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=6 --unredacted root@local
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=6 --unredacted root@local --direct
 
 neon cluster prepare c:\docker\cluster-azure.json -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=6
 neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=6 root@azure

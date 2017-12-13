@@ -1536,9 +1536,10 @@ $@"docker login \
                     cluster.Configure(steps);
                 });
 
+
             // We also need to deploy [neon-proxy-vault] to any pet nodes as Docker containers
-            // to forward any Vault related traffic to the primary Vault instance running on one
-            // of the managers.
+            // to forward any Vault related traffic to the primary Vault instance running on onez
+            // of the managers because pets aren't part of the Swarm.
 
             foreach (var pet in cluster.Pets)
             {
@@ -1546,9 +1547,10 @@ $@"docker login \
                     () =>
                     {
                         var steps   = new ConfigStepList();
-                        var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-proxy-vault",
+                        var command = CommandStep.CreateIdempotentDocker(pet.Name, "setup-neon-proxy-vault",
                         "docker run",
                             "--name", "neon-proxy-vault",
+                            "--detach",
                             "--publish", $"{NeonHostPorts.ProxyVault}:{NetworkPorts.Vault}",
                             "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
                             "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
@@ -1557,7 +1559,7 @@ $@"docker login \
                             "neoncluster/neon-proxy-vault");
 
                         steps.Add(command);
-                        steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
+                        steps.Add(cluster.GetFileUploadSteps(new[] { pet }, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
 
                         cluster.Configure(steps);
                     });
