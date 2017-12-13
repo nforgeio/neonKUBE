@@ -1471,20 +1471,20 @@ $@"docker login \
         /// </summary>
         private void VaultProxy()
         {
-            cluster.FirstManager.InvokeIdempotentAction("setup-vault-proxy",
+            // Create the comma separated list of Vault manager endpoints formatted as:
+            //
+            //      NODE:IP:PORT
+
+            var sbEndpoints = new StringBuilder();
+
+            foreach (var manager in cluster.Definition.SortedManagers)
+            {
+                sbEndpoints.AppendWithSeparator($"{manager.Name}:{manager.PrivateAddress}:{NetworkPorts.Vault}", ",");
+            }
+
+            cluster.FirstManager.InvokeIdempotentAction("setup-proxy-vault",
                 () =>
                 {
-                    // Create the comma separated list of Vault manager endpoints formatted as:
-                    //
-                    //      NODE:IP:PORT
-
-                    var sbEndpoints = new StringBuilder();
-
-                    foreach (var manager in cluster.Definition.SortedManagers)
-                    {
-                        sbEndpoints.AppendWithSeparator($"{manager.Name}:{manager.PrivateAddress}:{NetworkPorts.Vault}", ",");
-                    }
-
                     // $todo(jeff.lill):
                     //
                     // Docker mesh routing seems unstable right now on versions 17.03.0-ce
@@ -1502,11 +1502,11 @@ $@"docker login \
 
                     var steps   = new ConfigStepList();
                     var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-proxy-vault",
-                        "docker service create",
-                            "--name", "neon-proxy-vault",
-                            "--mode", "global",
-                            "--endpoint-mode", "vip",
-                            "--network", NeonClusterConst.PrivateNetwork,
+                    "docker service create",
+                        "--name", "neon-proxy-vault",
+                        "--mode", "global",
+                        "--endpoint-mode", "vip",
+                        "--network", NeonClusterConst.PrivateNetwork,
 #if !MESH_NETWORK_WORKS
                             "--publish", $"mode=host,published={NeonHostPorts.ProxyVault},target={NetworkPorts.Vault}",
 #else
@@ -1515,16 +1515,53 @@ $@"docker login \
 #endif
                             "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
                             "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
-                            "--env", $"INFO",
+                            "--env", $"LOG_LEVEL=INFO",
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "neoncluster/neon-proxy-vault");
 
                     steps.Add(command);
-                    steps.Add(CommandStep.CreateSudo(cluster.FirstManager.Name, "sleep 15"));  // $hack(jeff.lill): Fragile: Give Vault proxy a chance to start.
+
+                    //---------------------------------------------------------
+                    // $hack(jeff.lill): 
+                    //
+                    // Fragile: Give Vault a chance to start.  It would be better to have the subsequent
+                    // steps that depend on Vault to detect when ser service is not ready and retry.
+
+                    steps.Add(CommandStep.CreateSudo(cluster.FirstManager.Name, "sleep 15"));
+
+                    //---------------------------------------------------------
+
                     steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
 
                     cluster.Configure(steps);
                 });
+
+            // We also need to deploy [neon-proxy-vault] to any pet nodes as Docker containers
+            // to forward any Vault related traffic to the primary Vault instance running on one
+            // of the managers.
+
+            foreach (var pet in cluster.Pets)
+            {
+                pet.InvokeIdempotentAction("setup-proxy-vault",
+                    () =>
+                    {
+                        var steps   = new ConfigStepList();
+                        var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-proxy-vault",
+                        "docker run",
+                            "--name", "neon-proxy-vault",
+                            "--publish", $"{NeonHostPorts.ProxyVault}:{NetworkPorts.Vault}",
+                            "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
+                            "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
+                            "--env", $"LOG_LEVEL=INFO",
+                            "--restart", "always",
+                            "neoncluster/neon-proxy-vault");
+
+                        steps.Add(command);
+                        steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
+
+                        cluster.Configure(steps);
+                    });
+            }
         }
 
         /// <summary>
