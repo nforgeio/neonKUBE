@@ -240,7 +240,7 @@ namespace Neon.Cluster
         /// </summary>
         public IEnumerable<NodeProxy<NodeDefinition>> Workers
         {
-            get { return Nodes.Where(n => !n.Metadata.IsWorker).OrderBy(n => n.Name); }
+            get { return Nodes.Where(n => n.Metadata.IsWorker).OrderBy(n => n.Name); }
         }
 
         /// <summary>
@@ -248,7 +248,7 @@ namespace Neon.Cluster
         /// </summary>
         public IEnumerable<NodeProxy<NodeDefinition>> Pets
         {
-            get { return Nodes.Where(n => !n.Metadata.IsPet).OrderBy(n => n.Name); }
+            get { return Nodes.Where(n => n.Metadata.IsPet).OrderBy(n => n.Name); }
         }
 
         /// <summary>
