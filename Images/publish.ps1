@@ -70,4 +70,4 @@ Publish "$image_root\\neon-registry-cache"
 
 # Clean up
 
-Exec { DeleteFile .rnd }
+Exec { DeleteFile ".rnd" }

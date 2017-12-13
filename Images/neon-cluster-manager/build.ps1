@@ -48,4 +48,4 @@ Exec { docker build -t "${registry}:$tag" --build-arg "APPNAME=$appname" . }
 # Clean up
 
 Exec { rm -r bin }
-Exec { DeleteFile .rnd }
+Exec { DeleteFile ".rnd" }

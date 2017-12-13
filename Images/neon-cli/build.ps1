@@ -67,4 +67,4 @@ if ($latest)
 
 # Clean up
 
-Exec { DeleteFile .rnd }
+Exec { DeleteFile ".rnd" }

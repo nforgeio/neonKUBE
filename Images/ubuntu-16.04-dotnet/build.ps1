@@ -45,4 +45,4 @@ sleep 5 # Docker sometimes appears to hold references to files we need
 		# to delete so wait for a bit.
 
 Exec { Remove-Item -Recurse _common }
-Exec { DeleteFile .rnd }
+Exec { DeleteFile ".rnd" }

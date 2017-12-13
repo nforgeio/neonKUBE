@@ -30,4 +30,4 @@ Exec { docker build -t "${registry}:$tag" --build-arg "TINI_VERSION=$tini_versio
 
 # Clean up
 
-Exec { DeleteFile .rnd }
+Exec { DeleteFile ".rnd" }
