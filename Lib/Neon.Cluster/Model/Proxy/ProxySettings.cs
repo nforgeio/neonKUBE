@@ -103,7 +103,7 @@ namespace Neon.Cluster
         /// </para>
         /// <para>
         /// Valid values are <b>1024</b>, <b>2048</b>, and <b>4096</b>.  The default
-        /// value is <b>2048</b>.
+        ///  is <b>2048</b>.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "MaxDHParamBits", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
