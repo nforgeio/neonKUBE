@@ -42,4 +42,3 @@ Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version"  --buil
 # Clean up
 
 Exec { Remove-Item -Recurse _common }
-Exec { DeleteFile ".rnd" }

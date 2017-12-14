@@ -26,7 +26,3 @@ $image_root = "$env:NF_ROOT\\Images"
 "======================================="
 
 Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
-
-# Clean up
-
-Exec { DeleteFile ".rnd" }

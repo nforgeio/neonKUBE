@@ -64,7 +64,3 @@ if ($latest)
 {
 	PushImage "${registry}:latest"
 }
-
-# Clean up
-
-Exec { DeleteFile ".rnd" }
