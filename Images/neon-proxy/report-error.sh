@@ -15,9 +15,9 @@
 # the standard output and the container will exit with a non-zero exit code.
 #
 # If HAProxy is being restarted, a WARNING will be logged immediately and the 
-# [warning-loop.sh] script will be started to peridically issue fresh warnings
+# [logging-loop.sh] script will be started to peridically issue fresh warnings
 # while HAProxy's configuration remains out-of-date.  Note that this script
-# writes its PID to [/var/run/warning-loop.pid] so that it can be killed when
+# writes its PID to [/var/run/logging-loop.pid] so that it can be killed when
 # loading a new configuration (so we don't accumulate a bunch of running scripts).
 
 if [ "$1" != "" ] ; then
@@ -35,13 +35,13 @@ if [ "${DEBUG}" != "true" ] ; then
     rm -rf ${CONFIG_NEW_FOLDER}/*
 fi
 
-# Log a warning message and start the warning loop if we're restarting, otherwise
+# Log a warning message and start the logging loop if we're restarting, otherwise
 # treat this is a fatal error. 
 
 if [ "${RESTARTING}" == "true" ] ; then
 
     . log-warn.sh "${message}"
-    warning-loop.sh "HAProxy is running with an out-of-date configuration due to a previous error." &
+    logging-loop.sh "log-warn.sh" "HAProxy is running with an out-of-date configuration due to a previous error." &
     exit 0
 else
     . log-critical.sh "${message}"

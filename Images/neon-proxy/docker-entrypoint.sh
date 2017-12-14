@@ -60,8 +60,20 @@ fi
 
 # Attempt Vault authentication using the ${VAULT_CREDENTIALS} secret.  This
 # will set ${VAULT_TOKEN} if successful.
+# 
+# If ${VAULT_CREDENTIALS} doesn't exist or is empty, then ${VAULT_TOKEN} will
+# be set to an empty string resulting in the container being unable to pull
+# TLS certificates from Vault.  This mode is used for deploying the 
+# [neon-proxy-public-bridge] and [neon-proxy-private-bridge] containers on 
+# pet nodes to forward traffic from the pets to thw cluster's Swarm.  This
+# works because these proxies handle only TCP traffic.
 
-. vault-auth.sh
+if [ "${VAULT_CREDENTIALS}" != "" ] ; then
+    . vault-auth.sh
+else
+    . log-info.sh "HTTPS routes are not supported because VAULT_CREDENTIALS is not specified or blank."
+    export VAULT_TOKEN=
+fi
 
 # Ensure that the [/tmp/secrets] folder exists if one wasn't mounted as a tmpfs.
 

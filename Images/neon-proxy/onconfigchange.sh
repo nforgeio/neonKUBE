@@ -84,11 +84,11 @@ else
     . log-info.sh "Initial HAProxy configuration."
 fi
 
-# Kill the [warning-loop.sh] script if it's running.
+# Kill the [logging-loop.sh] script if it's running.
 
-if [ -f /var/run/warning-loop.pid ]; then
-    kill $(cat /var/run/warning-loop.pid) &> /dev/nul
-    rm -f /var/run/warning-loop.pid
+if [ -f /var/run/logging-loop.pid ]; then
+    kill $(cat /var/run/logging-loop.pid) &> /dev/nul
+    rm -f /var/run/logging-loop.pid
 fi
 
 # Unzip the configuration.
@@ -102,6 +102,13 @@ fi
 # Retrieve any certificates from Vault.
 
 if [ -f ${CONFIG_NEW_FOLDER}/.certs ] ; then
+
+    if [ "${VAULT_CREDENTIALS}" == "" ] ; then
+        ERROR_MESSAGE="Proxy cannot be updated because VAULT_CREDENTIALS are not available to obtain TLS certificates for one or more HTTPS routes."
+        . log-error.sh "${ERROR_MESSAGE}"
+        logging-loop.sh "log-warn.sh" "${ERROR_MESSAGE}" &
+        exit 0
+    fi
 
     . log-info.sh "Retrieving certificates from Vault."
 
