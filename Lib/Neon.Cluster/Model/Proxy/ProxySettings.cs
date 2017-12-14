@@ -86,7 +86,7 @@ namespace Neon.Cluster
 
         /// <summary>
         /// <para>
-        /// The proxy's DNS resolvers.
+        /// The DNS resolvers available for use by the proxy's routes.
         /// </para>
         /// <note>
         /// This includes the standard <b>docker</b> resolver by default, which 
@@ -97,13 +97,21 @@ namespace Neon.Cluster
         public List<ProxyResolver> Resolvers { get; set; } = new List<ProxyResolver>();
 
         /// <summary>
+        /// Determines how external traffic from a proxy bridge is targeted to the cluster Swarm nodes.
+        /// This defaults to reasonable settings.
+        /// </summary>
+        [JsonProperty(PropertyName = "Bridge")]
+        [DefaultValue(null)]
+        public ProxyBridge Bridge { get; set; } = null;
+
+        /// <summary>
         /// <para>
         /// The maximum number of Diffie-Hellman parameters used for generating
         /// the ephemeral/temporary Diffie-Hellman key in case of DHE key exchange.
         /// </para>
         /// <para>
         /// Valid values are <b>1024</b>, <b>2048</b>, and <b>4096</b>.  The default
-        ///  is <b>2048</b>.
+        /// is <b>2048</b>.
         /// </para>
         /// </summary>
         [JsonProperty(PropertyName = "MaxDHParamBits", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -118,6 +126,7 @@ namespace Neon.Cluster
         {
             Timeouts  = Timeouts ?? new ProxyTimeouts();
             Resolvers = Resolvers ?? new List<ProxyResolver>();
+            Bridge    = Bridge ?? new ProxyBridge();
 
             if (!Resolvers.Exists(r => r.Name == "docker"))
             {
@@ -149,6 +158,7 @@ namespace Neon.Cluster
             }
 
             Timeouts.Validate(context);
+            Bridge.Validate(context);
 
             if (!Resolvers.Exists(r => r.Name == "docker"))
             {
