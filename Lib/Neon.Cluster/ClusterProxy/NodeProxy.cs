@@ -1567,10 +1567,10 @@ mono {scriptPath}.mono $@
         /// </summary>
         private class SafeSshCommand
         {
-            public int ExitStatus { get; set; }
-            public string Result { get; set; }
-            public byte[] ResultBinary { get; set; }
-            public string Error { get; set; }
+            public int      ExitStatus { get; set; }
+            public string   Result { get; set; }
+            public byte[]   ResultBinary { get; set; }
+            public string   Error { get; set; }
         }
 
         /// <summary>
@@ -1747,6 +1747,17 @@ echo $? > {cmdFolder}/exit
         }
 
         /// <summary>
+        /// Returns the command and arguments as a nicely formatted Bash command.
+        /// </summary>
+        /// <param name="command">The command.</param>
+        /// <param name="args">The arguments.</param>
+        /// <returns>The command string.</returns>
+        private string ToBash(string command, params object[] args)
+        {
+            return new CommandBundle(command, args).ToBash();
+        }
+
+        /// <summary>
         /// Runs a shell command on the Linux server with <see cref="RunOptions"/>.
         /// </summary>
         /// <param name="command">The command.</param>
@@ -1847,7 +1858,8 @@ echo $? > {cmdFolder}/exit
             }
 
             SafeSshCommand      result;
-            CommandResponse     commandResult;
+            CommandResponse     response;
+            string              bashCommand = ToBash(command, args);
 
             if (shutdown)
             {
@@ -1865,20 +1877,22 @@ echo $? > {cmdFolder}/exit
 
                 var cmdResult = sshClient.RunCommand(command);
 
-                commandResult = new CommandResponse()
+                response = new CommandResponse()
                 {
-                    Command    = command,
-                    ExitCode   = cmdResult.ExitStatus,
-                    OutputText = cmdResult.Result,
-                    ErrorText  = cmdResult.Error
+                    Command     = command,
+                    BashCommand = bashCommand,
+                    ExitCode    = cmdResult.ExitStatus,
+                    OutputText  = cmdResult.Result,
+                    ErrorText   = cmdResult.Error
                 };
             }
             else if (binaryOutput)
             {
-                result        = SafeRunCommand($"{command}", binaryOutput: true);
-                commandResult = new CommandResponse()
+                result   = SafeRunCommand($"{command}", binaryOutput: true);
+                response = new CommandResponse()
                 {
                     Command      = command,
+                    BashCommand  = bashCommand,
                     ExitCode     = result.ExitStatus,
                     OutputBinary = result.ResultBinary,
                     ErrorText    = result.Error
@@ -1888,19 +1902,20 @@ echo $? > {cmdFolder}/exit
             {
                 // Text output.
 
-                result        = SafeRunCommand(command);
-                commandResult = new CommandResponse()
+                result   = SafeRunCommand(command);
+                response = new CommandResponse()
                 {
-                    Command    = command,
-                    ExitCode   = result.ExitStatus,
-                    OutputText = result.Result,
+                    Command     = command,
+                    BashCommand = bashCommand,
+                    ExitCode    = result.ExitStatus,
+                    OutputText  = result.Result,
                     ErrorText   = result.Error
                 };
             }
 
-            var logEnabled = commandResult.ExitCode != 0 || !logOnErrorOnly;
+            var logEnabled = response.ExitCode != 0 || !logOnErrorOnly;
 
-            if ((commandResult.ExitCode != 0 && logOnErrorOnly) || (runOptions & RunOptions.LogOutput) != 0)
+            if ((response.ExitCode != 0 && logOnErrorOnly) || (runOptions & RunOptions.LogOutput) != 0)
             {
                 if (!startLogged)
                 {
@@ -1911,7 +1926,7 @@ echo $? > {cmdFolder}/exit
                 {
                     if (binaryOutput)
                     {
-                        LogLine($"    BINARY OUTPUT [length={commandResult.OutputBinary.Length}]");
+                        LogLine($"    BINARY OUTPUT [length={response.OutputBinary.Length}]");
                     }
                     else
                     {
@@ -1921,7 +1936,7 @@ echo $? > {cmdFolder}/exit
                         }
                         else
                         {
-                            using (var reader = new StringReader(commandResult.OutputText))
+                            using (var reader = new StringReader(response.OutputText))
                             {
                                 foreach (var line in reader.Lines())
                                 {
@@ -1933,7 +1948,7 @@ echo $? > {cmdFolder}/exit
                 }
             }
 
-            if (commandResult.ExitCode != 0 || !logOnErrorOnly || (runOptions & RunOptions.LogOutput) != 0)
+            if (response.ExitCode != 0 || !logOnErrorOnly || (runOptions & RunOptions.LogOutput) != 0)
             {
                 if (redact)
                 {
@@ -1942,7 +1957,7 @@ echo $? > {cmdFolder}/exit
                 }
                 else
                 {
-                    using (var reader = new StringReader(commandResult.ErrorText))
+                    using (var reader = new StringReader(response.ErrorText))
                     {
                         var extendedWritten = false;
 
@@ -1959,26 +1974,26 @@ echo $? > {cmdFolder}/exit
                     }
                 }
 
-                if (commandResult.ExitCode == 0)
+                if (response.ExitCode == 0)
                 {
                     LogLine("END [OK]");
                 }
                 else
                 {
-                    LogLine($"END [ERROR={commandResult.ExitCode}]");
+                    LogLine($"END [ERROR={response.ExitCode}]");
                 }
 
-                if (commandResult.ExitCode != 0)
+                if (response.ExitCode != 0)
                 {
                     if (faultOnError)
                     {
-                        Status    = $"ERROR[{commandResult.ExitCode}]";
+                        Status    = $"ERROR[{response.ExitCode}]";
                         IsFaulted = true;
                     }
                 }
             }
 
-            return commandResult;
+            return response;
         }
 
         /// <summary>
@@ -2042,13 +2057,15 @@ echo $? > {cmdFolder}/exit
             // Upload and extract the bundle and then run the "__run.sh" script.
 
             var bundleFolder = UploadBundle(bundle, runOptions, userPermissions: true);
-            var result       = RunCommand($"cd {bundleFolder} && ./__run.sh", runOptions | RunOptions.LogBundle);
+            var response     = RunCommand($"cd {bundleFolder} && ./__run.sh", runOptions | RunOptions.LogBundle);
+
+            response.BashCommand = bundle.ToBash();
 
             // Remove the bundle files.
 
             RunCommand($"rm -rf {bundleFolder}", RunOptions.RunWhenFaulted, RunOptions.LogOnErrorOnly);
 
-            return result;
+            return response;
         }
 
         /// <summary>
@@ -2122,7 +2139,11 @@ echo $? > {cmdFolder}/exit
                 command = $"export PATH={RemotePath} && {command}";
             }
 
-            return RunCommand($"sudo bash -c '{command}'", runOptions | RunOptions.IgnoreRemotePath);
+            var response = RunCommand($"sudo bash -c '{command}'", runOptions | RunOptions.IgnoreRemotePath);
+
+            response.BashCommand = ToBash(command, args);
+
+            return response;
         }
 
         /// <summary>
@@ -2185,13 +2206,15 @@ echo $? > {cmdFolder}/exit
             // Upload and extract the bundle and then run the "__run.sh" script.
 
             var bundleFolder = UploadBundle(bundle, runOptions, userPermissions: false);
-            var result       = SudoCommand($"cd {bundleFolder} && /bin/bash ./__run.sh", runOptions | RunOptions.LogBundle);
+            var response     = SudoCommand($"cd {bundleFolder} && /bin/bash ./__run.sh", runOptions | RunOptions.LogBundle);
+
+            response.BashCommand = bundle.ToBash();
 
             // Remove the bundle files.
 
             SudoCommand($"rm -rf {bundleFolder}", runOptions);
 
-            return result;
+            return response;
         }
 
         /// <summary>
@@ -2214,7 +2237,7 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public CommandResponse DockerCommand(RunOptions runOptions, string command, params object[] args)
         {
-            // $todo(jeff.lill): Hardcoding transient handling for now.
+            // $todo(jeff.lill): Hardcoding transient error handling for now.
 
             CommandResponse response    = null;
             int             attempt     = 0;
@@ -2224,7 +2247,8 @@ echo $? > {cmdFolder}/exit
 
             while (attempt++ < maxAttempts)
             {
-                response = SudoCommand(command, runOptions, args);
+                response             = SudoCommand(command, runOptions, args);
+                response.BashCommand = ToBash(command, args);
 
                 if (response.ExitCode == 0)
                 {
@@ -2336,7 +2360,7 @@ echo $? > {cmdFolder}/exit
         /// <param name="name">The certificate name (included in errors).</param>
         /// <param name="certificate">The certificate being tested or <c>null</c>.</param>
         /// <param name="hostName">The host name to be secured by the certificate.</param>
-        /// <returns>The command result.</returns>
+        /// <returns>The command response.</returns>
         /// <remarks>
         /// You may pass <paramref name="certificate"/> as <c>null</c> to indicate that no 
         /// checking is to be performed as a convienence.

@@ -87,7 +87,8 @@ namespace NeonCli
                     }
 
                     cluster.FirstManager.Status = "start: neon-cluster-manager";
-                    cluster.FirstManager.DockerCommand(RunOptions.Redact,
+
+                    var response = cluster.FirstManager.DockerCommand(RunOptions.Redact,
                         "docker service create",
                             "--name", "neon-cluster-manager",
                             "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
@@ -99,6 +100,11 @@ namespace NeonCli
                             "--replicas", 1,
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "neoncluster/neon-cluster-manager");
+
+                    foreach (var manager in cluster.Managers)
+                    {
+                        manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-cluster-manager.sh"), response.BashCommand);
+                    }
 
                     //---------------------------------------------------------
                     // Deploy proxy related services
@@ -115,7 +121,8 @@ namespace NeonCli
                     // Deploy the proxy manager service.
 
                     firstManager.Status = "start: neon-proxy-manager";
-                    firstManager.DockerCommand(
+
+                    response = firstManager.DockerCommand(
                         "docker service create",
                             "--name", "neon-proxy-manager",
                             "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
@@ -127,6 +134,11 @@ namespace NeonCli
                             "--replicas", 1,
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "neoncluster/neon-proxy-manager");
+
+                    foreach (var manager in cluster.Managers)
+                    {
+                        manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-manager.sh"), response.BashCommand);
+                    }
 
                     // Initialize the public and private proxies.
 
@@ -199,7 +211,8 @@ namespace NeonCli
 #endif
 
                     firstManager.Status = "start: neon-proxy-public";
-                    firstManager.DockerCommand(
+
+                    response = firstManager.DockerCommand(
                         "docker service create",
                             "--name", "neon-proxy-public",
                             "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
@@ -216,8 +229,14 @@ namespace NeonCli
                             "--network", NeonClusterConst.PublicNetwork,
                             "neoncluster/neon-proxy");
 
+                    foreach (var manager in cluster.Managers)
+                    {
+                        manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-public.sh"), response.BashCommand);
+                    }
+
                     firstManager.Status = "start: neon-proxy-private";
-                    firstManager.DockerCommand(
+
+                    response = firstManager.DockerCommand(
                         "docker service create",
                             "--name", "neon-proxy-private",
                             "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
@@ -233,6 +252,11 @@ namespace NeonCli
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "--network", NeonClusterConst.PrivateNetwork,
                             "neoncluster/neon-proxy");
+
+                    foreach (var manager in cluster.Managers)
+                    {
+                        manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-private.sh"), response.BashCommand);
+                    }
 
                     firstManager.Status = string.Empty;
                 });

@@ -419,7 +419,11 @@ export VAULT_TOKEN={ClusterLogin.VaultCredentials.RootToken}
 ",
                 isExecutable: true);
 
-            return FirstManager.SudoCommand(bundle, VaultRunOptions);
+            var response = FirstManager.SudoCommand(bundle, VaultRunOptions);
+
+            response.BashCommand = bundle.ToBash();
+
+            return response;
         }
 
         /// <summary>
@@ -444,7 +448,11 @@ vault policy-write {policy.Name} policy.hcl
 
             bundle.AddFile("policy.hcl", policy);
 
-            return FirstManager.SudoCommand(bundle, VaultRunOptions);
+            var response = FirstManager.SudoCommand(bundle, VaultRunOptions);
+
+            response.BashCommand = bundle.ToBash();
+
+            return response;
         }
 
         /// <summary>

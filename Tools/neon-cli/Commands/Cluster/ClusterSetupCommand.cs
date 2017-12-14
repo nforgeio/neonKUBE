@@ -1777,7 +1777,7 @@ $@"docker login \
                 {
                     node.Status = "deploying metricbeat";
 
-                    node.DockerCommand(
+                    var response = node.DockerCommand(
                         "docker run",
                             "--name", "neon-log-metricbeat",
                             "--detach",
@@ -1788,6 +1788,8 @@ $@"docker login \
                             "--volume", "/:/hostfs:ro",
                             "--log-driver", "json-file",
                             "neoncluster/metricbeat");
+
+                    node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-metricbeat.sh"), response.BashCommand);
                 });
         }
 
