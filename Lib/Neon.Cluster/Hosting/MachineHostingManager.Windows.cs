@@ -491,6 +491,17 @@ broadcast {subnet.LastAddress}
                         // configure the name servers specified in the cluster
                         // definition.
 
+                        // $todo(jeff.lill):
+                        //
+                        // Is there a good reason why we're not just configuring the
+                        // DNS servers from the cluster definition here???
+                        //
+                        // Using the Google DNS seems like it could break some cluster
+                        // network configurations, e.g. for clusters that don't have
+                        // access to the public Internet.  Totally private clusters
+                        // aren't really a supported scenario right now though because
+                        // we assume we can use [apt-get]... to pull down packages.
+
                         var resolvBaseText =
 $@"nameserver 8.8.8.8
 nameserver 8.8.4.4
