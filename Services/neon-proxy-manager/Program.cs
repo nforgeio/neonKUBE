@@ -307,14 +307,15 @@ namespace NeonProxyManager
 
                                     // Rebuild the proxy configurations and write the captured status to
                                     // Consul to make it available for the [neon proxy public|private status]
-                                    // command.
+                                    // command.  Note that we're going to build the [neon-proxy-private-bridge]
+                                    // configuration as well for use by any cluster pet nodes.
 
-                                    var publicBuildStatus = await BuildProxyConfigAsync("public", clusterCerts, ct);
+                                    var publicBuildStatus = await BuildProxyConfigAsync("public", clusterCerts, buildBridge: false, cancellationToken: ct);
                                     var publicProxyStatus = new ProxyStatus() { Status = publicBuildStatus.Status };
 
                                     await consul.KV.PutString($"{proxyStatus}/public", NeonHelper.JsonSerialize(publicProxyStatus), ct);
 
-                                    var privateBuildStatus = await BuildProxyConfigAsync("private", clusterCerts, ct);
+                                    var privateBuildStatus = await BuildProxyConfigAsync("private", clusterCerts, buildBridge: true, cancellationToken: ct);
                                     var privateProxyStatus = new ProxyStatus() { Status = privateBuildStatus.Status };
 
                                     await consul.KV.PutString($"{proxyStatus}/private", NeonHelper.JsonSerialize(privateProxyStatus), ct);
@@ -380,16 +381,20 @@ namespace NeonProxyManager
         /// </summary>
         /// <param name="proxyName">The proxy name: <b>public</b> or <b>private</b>.</param>
         /// <param name="clusterCerts">The cluster certificate information.</param>
+        /// <param name="buildBridge">Specifies that the corresponding proxy bridge configuration is to be built too.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>
         /// A tuple including the proxy's route dictionary, publication status details,
         /// as well as a flag indicating whether changes were published to Consul.
         /// </returns>
-        private static async Task<(Dictionary<string, ProxyRoute> Routes, string Status, bool Published)> BuildProxyConfigAsync(string proxyName, ClusterCerts clusterCerts, CancellationToken cancellationToken)
+        private static async Task<(Dictionary<string, ProxyRoute> Routes, string Status, bool Published)> 
+            BuildProxyConfigAsync(string proxyName, ClusterCerts clusterCerts, bool buildBridge, CancellationToken cancellationToken)
         {
-            var proxyDisplayName = proxyName.ToUpperInvariant();
-            var configError      = false;
-            var log              = new LogRecorder(Program.log);
+            var proxyBridgeName        = $"{proxyName}-bridge";
+            var proxyDisplayName       = proxyName.ToUpperInvariant();
+            var proxyBridgeDisplayName = proxyBridgeName.ToUpperInvariant();
+            var configError            = false;
+            var log                    = new LogRecorder(Program.log);
 
             log.LogInfo(() => $"Rebuilding proxy [{proxyDisplayName}].");
 
@@ -632,7 +637,7 @@ resolvers {resolver.Name}
 
             // Enable the HAProxy statistics pages.  These will be available on the 
             // [NeonClusterConst.HAProxyStatsPort] port on the [neon-public] or
-            // [neon-private] network the proxy is serving.
+            // [neon-private] network the proxy serves.
             //
             // HAProxy statistics pages are not intended to be viewed directly by
             // by cluster operators.  Instead, the statistics from multiple HAProxy
@@ -1354,6 +1359,40 @@ backend http:{httpRoute.Name}
                 log.LogWarn("Consul request failure.", e);
                 return (Routes: routes, log.ToString(), Published: false);
             }
+
+            // Generate the HAProxy bridge configuration if this is enabled.  This configuration is 
+            // pretty simple.  All we need to do is forward all endpoints as TCP connections to the
+            // proxy we generated above.  We won't treat HTTP/S specially and we don't need to worry 
+            // about TLS termination or generate fancy health checks.
+            //
+            // The bridge proxy is typically deployed as a standalone Docker container on cluster
+            // pet nodes and will expose internal cluster services on the pets using the same
+            // ports where they are deployed internally.  This means that containers running on
+            // pet nodes can consume cluster services the same way as they do on the manager
+            // and worker nodes.
+            //
+            // This was initially used as a way to route pet node logging traffic from the
+            // [neon-log-host] containers to the [neon-log-collector] service to handle
+            // upstream log processing and persistance to the Elasticsearch cluster but
+            // this could also be used in the future to access any cluster service.
+            //
+            // The code below generally assumes that the bridge target proxy is exposed 
+            // on all Swarm manager or worker nodes (via the Docker ingress/mesh network 
+            // or because the proxy is running in global mode).  Exactly which nodes will
+            // be configured to handle forwarded traffic is determined by the target proxy
+            // settings.
+            //
+            // The code below starts by quering the Docker Swarm to get a list of the active
+            // Swarm nodes.  If there are 5 (the default) or fewer worker nodes, the configuration
+            // will use all cluster nodes (including managers) as target endpoints.  If there are more
+            // than 5 worker nodes, the code will randomly select 5 of them as endpoints.
+            //
+            // This approach balances the need for simplicity and reliability in the face of 
+            // node failure while trying to avoid an explosion of health check traffic.
+            //
+            // This may become a problem for clusters with a large number of pet nodes
+            // banging away with health checks.  One way to mitigate this is to explicitly
+            // specify the target Swarm nodes in the [ProxySettings] by IP address.
 
             return (Routes: routes, Status: log.ToString(), Published: publish);
         }

@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -111,13 +112,62 @@ namespace Neon.Cluster
         public int MaxDHParamBits { get; set; } = 2048;
 
         /// <summary>
+        /// Specifies the desired number of Swarm nodes to be designated as bridge
+        /// proxy targets.  This can be overridden by explicity designating target
+        /// node IP addresses in <see cref="BridgeTargetNodeAddresses"/>.  This
+        /// defaults to <b>5</b>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// If the number of active workers equals this count then all of them will
+        /// be designated as bridge proxy targets.  If there are more workers, then
+        /// <see cref="BridgeTargetCount"/> workers will be randomly selected as
+        /// targets.  If there are fewer workers, then all active Swarm nodes 
+        /// (including managers) will be targeted.
+        /// </para>
+        /// <para>
+        /// It is also possible to explicity specify that bridge targets via
+        /// <see cref="BridgeTargetNodeAddresses"/>.  That property overrides this
+        /// one.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "BridgeTargetCount", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(5)]
+        public int BridgeTargetCount { get; set; } = 5;
+
+        /// <summary>
+        /// Explicitly specifies the bridge target Swarm nodes by IP address.  This
+        /// ovverides <see cref="BridgeTargetCount"/> if any nodes are specified.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Clusters with a large number of pet nodes may generate an excessive amount
+        /// of bridge related health checking traffic.  You can mitigate this somewhat 
+        /// by designating a smaller number of Swarm target nodes here.
+        /// </para>
+        /// <para>
+        /// It can also be useful for reliability to explicitly identify the target
+        /// nodes to ensure that they're running on different underlying hardware
+        /// for better reliability.  For example, if a cluster had <see cref="BridgeTargetCount "/>
+        /// or more nodes running as VMs on the same host or bare metal machines running
+        /// in the same rack, it could be possible that all of the target nodes could
+        /// be randomly selected to reside on the same host or rack resulting with all
+        /// of them being unreachable when the host or rack fails.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "BridgeTargetNodeAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public List<IPAddress> BridgeTargetNodeAddresses = new List<IPAddress>();
+
+        /// <summary>
         /// Validates the instance.
         /// </summary>
         /// <param name="context">The validation context.</param>
         public void Validate(ProxyValidationContext context)
         {
-            Timeouts  = Timeouts ?? new ProxyTimeouts();
-            Resolvers = Resolvers ?? new List<ProxyResolver>();
+            Timeouts                  = Timeouts ?? new ProxyTimeouts();
+            Resolvers                 = Resolvers ?? new List<ProxyResolver>();
+            BridgeTargetNodeAddresses = BridgeTargetNodeAddresses ?? new List<IPAddress>();
 
             if (!Resolvers.Exists(r => r.Name == "docker"))
             {
@@ -158,6 +208,11 @@ namespace Neon.Cluster
             foreach (var resolver in Resolvers)
             {
                 resolver.Validate(context);
+            }
+
+            if (BridgeTargetCount == 0 && BridgeTargetNodeAddresses.Count == 0)
+            {
+                context.Error($"Proxy settings [{nameof(BridgeTargetCount)}] or [{nameof(BridgeTargetNodeAddresses)}] must specify at least one bridge target.");
             }
         }
     }
