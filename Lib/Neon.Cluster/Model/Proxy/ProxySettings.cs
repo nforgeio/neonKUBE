@@ -98,14 +98,6 @@ namespace Neon.Cluster
         public List<ProxyResolver> Resolvers { get; set; } = new List<ProxyResolver>();
 
         /// <summary>
-        /// Determines how external traffic from a proxy bridge is targeted to the cluster Swarm nodes.
-        /// This defaults to reasonable settings.
-        /// </summary>
-        [JsonProperty(PropertyName = "Bridge")]
-        [DefaultValue(null)]
-        public ProxyBridge Bridge { get; set; } = null;
-
-        /// <summary>
         /// <para>
         /// The maximum number of Diffie-Hellman parameters used for generating
         /// the ephemeral/temporary Diffie-Hellman key in case of DHE key exchange.
@@ -207,7 +199,6 @@ namespace Neon.Cluster
             }
 
             Timeouts.Validate(context);
-            Bridge.Validate(context);
 
             if (!Resolvers.Exists(r => r.Name == "docker"))
             {
