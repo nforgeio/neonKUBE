@@ -32,7 +32,9 @@ using Neon.Diagnostics;
 namespace NeonProxyManager
 {
     /// <summary>
-    /// Implements the <b>neon-proxy-manager</b> service.  See 
+    /// Implements the <b>neon-proxy-manager</b> service which is responsible for dynamically generating the HAProxy 
+    /// configurations for the <c>neon-proxy-public</c>, <c>neon-proxy-private</c> and <c>neon-proxy-private-bridge</c>
+    /// services from the proxy routes persisted in Consul and the TLS certificates persisted in Vault.  See 
     /// <a href="https://hub.docker.com/r/neoncluster/neon-proxy-manager/">neoncluster/neon-proxy-manager</a>  
     /// and <a href="https://hub.docker.com/r/neoncluster/neon-proxy/">neoncluster/neon-proxy</a> for more information.
     /// </summary>
@@ -379,7 +381,10 @@ namespace NeonProxyManager
         /// <param name="proxyName">The proxy name: <b>public</b> or <b>private</b>.</param>
         /// <param name="clusterCerts">The cluster certificate information.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
-        /// <returns>A tuple including the proxy's route dictionary as well as a flag indicating whether changes were published to Consul.</returns>
+        /// <returns>
+        /// A tuple including the proxy's route dictionary, publication status details,
+        /// as well as a flag indicating whether changes were published to Consul.
+        /// </returns>
         private static async Task<(Dictionary<string, ProxyRoute> Routes, string Status, bool Published)> BuildProxyConfigAsync(string proxyName, ClusterCerts clusterCerts, CancellationToken cancellationToken)
         {
             var proxyDisplayName = proxyName.ToUpperInvariant();
@@ -580,12 +585,12 @@ $@"#----------------------------------------------------------------------------
 global
     daemon
 
-# Specifiy the maximum number of connections allowed by the proxy.
+# Specifiy the maximum number of connections allowed for a proxy instance.
 
     maxconn             {settings.MaxConnections}
 
 # Enable logging to syslog on the local Docker host under the
-# NeonSysLogFacility_ProxyPublic facility.
+# [NeonSysLogFacility_ProxyPublic] facility.
 
     log                 ""${{NEON_NODE_IP}}:{NeonHostPorts.LogHostSysLog}"" len 65535 {NeonSysLogFacility.ProxyName}
 
@@ -669,9 +674,7 @@ backend haproxy_stats
                         continue;
                     }
 
-                    ProxyRoute conflictRoute;
-
-                    if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
+                    if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out ProxyRoute conflictRoute))
                     {
                         log.LogError(() => $"TCP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
@@ -705,9 +708,7 @@ backend haproxy_stats
                         continue;
                     }
 
-                    ProxyRoute conflictRoute;
-
-                    if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
+                    if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out ProxyRoute conflictRoute))
                     {
                         log.LogError(() => $"HTTP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
@@ -741,9 +742,7 @@ backend haproxy_stats
                         continue;
                     }
 
-                    ProxyRoute conflictRoute;
-
-                    if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
+                    if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out ProxyRoute conflictRoute))
                     {
                         log.LogError(() => $"HTTP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
@@ -777,9 +776,7 @@ backend haproxy_stats
             {
                 foreach (var frontend in route.Frontends)
                 {
-                    ProxyRoute conflictRoute;
-
-                    if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
+                    if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out ProxyRoute conflictRoute))
                     {
                         log.LogError(() => $"TCP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
@@ -810,9 +807,7 @@ backend haproxy_stats
                         continue;
                     }
 
-                    ProxyRoute conflictRoute;
-
-                    if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
+                    if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out ProxyRoute conflictRoute))
                     {
                         log.LogError(() => $"HTTP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
@@ -846,9 +841,7 @@ backend haproxy_stats
                         continue;
                     }
 
-                    ProxyRoute conflictRoute;
-
-                    if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out conflictRoute))
+                    if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out ProxyRoute conflictRoute))
                     {
                         log.LogError(() => $"HTTP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
                         configError = true;
@@ -982,13 +975,11 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
                 {
                     foreach (var frontend in httpRoute.Frontends)
                     {
-                        HAProxyHttpFrontend haProxyFrontend;
-
-                        if (!haProxyFrontends.TryGetValue(frontend.ProxyPort, out haProxyFrontend))
+                        if (!haProxyFrontends.TryGetValue(frontend.ProxyPort, out HAProxyHttpFrontend haProxyFrontend))
                         {
                             haProxyFrontend = new HAProxyHttpFrontend()
                             {
-                                Port       = frontend.ProxyPort,
+                                Port = frontend.ProxyPort,
                                 PathPrefix = NormalizePathPrefix(frontend.PathPrefix)
                             };
 
@@ -1039,9 +1030,7 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
 
                         if (frontend.Tls)
                         {
-                            CertInfo certInfo;
-
-                            if (!clusterCerts.TryGetValue(frontend.CertName, out certInfo))
+                            if (!clusterCerts.TryGetValue(frontend.CertName, out CertInfo certInfo))
                             {
                                 log.LogError(() => $"Route [{httpRoute.Name}] references [{frontend.CertName}] which does not exist.");
                                 configError = true;
