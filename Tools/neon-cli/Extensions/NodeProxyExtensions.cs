@@ -386,6 +386,7 @@ namespace NeonCli
             preprocessReader.Set("load-cluster-config-quiet", NodeHostFolders.Config + "/cluster.conf.sh");
 
             SetBashVariable(preprocessReader, "cluster.schema", ClusterDefinition.ClusterSchema);
+            SetBashVariable(preprocessReader, "cluster.rootuser", Program.Username);
 
             SetBashVariable(preprocessReader, "neon.folders.config", NodeHostFolders.Config);
             SetBashVariable(preprocessReader, "neon.folders.secrets", NodeHostFolders.Secrets);

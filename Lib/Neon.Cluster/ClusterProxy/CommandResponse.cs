@@ -39,6 +39,12 @@ namespace Neon.Cluster
         public string Command { get; internal set; }
 
         /// <summary>
+        /// Returns the command nicely formatted across multiple lines of text
+        /// that is suitable for including in a Bash script.
+        /// </summary>
+        public string BashCommand { get; internal set; }
+
+        /// <summary>
         /// Returns the command exit code.
         /// </summary>
         public int ExitCode { get; internal set; }

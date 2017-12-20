@@ -220,6 +220,14 @@ namespace Neon.Cluster
             {
                 get { return Node.Metadata.IsWorker; }
             }
+
+            /// <summary>
+            /// Returns <c>true</c> if the node is a pet.
+            /// </summary>
+            public bool IsPet
+            {
+                get { return Node.Metadata.IsPet; }
+            }
         }
 
         //---------------------------------------------------------------------
@@ -429,7 +437,8 @@ namespace Neon.Cluster
 
             AzureConnect();
 
-            // Assign IP addresses and frontend NAT ports for the cluster virtual machines.
+            // Assign IP addresses and frontend NAT ports for the cluster nodes
+            // (including the pets).
 
             AssignVmAddresses();
             AssignVmNatPorts();
@@ -442,6 +451,11 @@ namespace Neon.Cluster
             }
 
             foreach (var node in cluster.Workers.OrderBy(n => n.Name))
+            {
+                node.SshPort = nextSshPort++;
+            }
+
+            foreach (var node in cluster.Pets.OrderBy(n => n.Name))
             {
                 node.SshPort = nextSshPort++;
             }
@@ -608,6 +622,20 @@ namespace Neon.Cluster
             // Worker node SSH ports.
 
             foreach (var azureNode in nodeDictionary.Values.Where(n => n.IsWorker).OrderBy(n => n.Name))
+            {
+                if (azureOptions.PublicNodeAddresses)
+                {
+                    azureNode.PublicSshPort = NetworkPorts.SSH;
+                }
+                else
+                {
+                    azureNode.PublicSshPort = nextSshFrontendPort++;
+                }
+            }
+
+            // Pet node SSH ports.
+
+            foreach (var azureNode in nodeDictionary.Values.Where(n => n.IsPet).OrderBy(n => n.Name))
             {
                 if (azureOptions.PublicNodeAddresses)
                 {

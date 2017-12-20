@@ -29,7 +29,7 @@ COPY vault-binaries/*       /usr/local/bin
 COPY docker-entrypoint.sh   /
 COPY onconfigchange.sh      /
 COPY report-error.sh        /
-COPY warning-loop.sh        /
+COPY logging-loop.sh        /
 COPY _common/*.sh           /
 
 # Set script permissions and then install [bash], [unzip] and [jq]. 

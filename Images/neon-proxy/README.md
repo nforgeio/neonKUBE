@@ -1,4 +1,4 @@
-This is the standard neonCLUSTER network proxy service based on **HAProxy**, **Consul**, and **Vault**.  This is typically deployed alongside the **neon-proxy-manager** service that monitors changes to proxy routes and TLS certificates to regenerate the HAProxy configuration.
+This is the standard neonCLUSTER network proxy service based on **HAProxy**, **Consul**, and **Vault**.  This is typically deployed alongside the **neon-proxy-manager** service that monitors changes to proxy routes and TLS certificates to regenerate the HAProxy configuration.  This can be deployed as a Docker container or service.
 
 # Image Tags
 
@@ -34,7 +34,7 @@ All you need to do is pass the **CONFIG_KEY** environment variable as the Consul
 
 * **CONFIG_KEY** (*required*) - Consul key holding the HAProxy ZIP archive configuration.
 
-* **VAULT_CREDENTIALS** (*required*) - names the file within `/run/secrets/` that holds the Vault credentials the proxy will need to access TLS certificates.
+* **VAULT_CREDENTIALS** (*required*) - optionally names the file within `/run/secrets/` that holds the Vault credentials the proxy will need to access TLS certificates.  If this is not specified or is blank, then the the proxy won't be able to handle HTTPS routes but HTTP and TCP routes will still work.
 
 * **WARN_SECONDS** (*optional*) - seconds between logging warning while HAProxy is running with an out-of-date configuration.  This defaults to 300 (5 minutes).
 
@@ -82,7 +82,7 @@ When deployed as a Docker service, this image can also be used to load secrets s
 
 When the `.certs` file is present, the container will retrieve the Vault keys and write them to `/tmp/secrets/haproxy` using the specified file names before validating the configuration and starting HAProxy.
 
-Credentials are required to access Vault.  These credentials will be passed as JSON using the **Docker secrets** feature and will be persisted within the container at `/run/secrets/${VAULT_CREDENTIALS}`, where **VAULT_CREDENTIALS** is an environment variable that identifies the secret file.
+Credentials are required to obtain TLS certificates Vault if the HTTPS routes are required.  These credentials will be passed as JSON using the **Docker secrets** feature and will be persisted within the container at `/run/secrets/${VAULT_CREDENTIALS}`, where **VAULT_CREDENTIALS** is an environment variable that identifies the secret file.
 
 Two types of credentials are currently supported: **vault-token** and **vault-approle**.
 
@@ -108,7 +108,7 @@ Two types of credentials are currently supported: **vault-token** and **vault-ap
 
 # Deployment
 
-Proxies are deployed  by default to non-manager nodes (if there are any).  Here are the default deployment commands:
+Proxies are deployed  by default to non-manager nodes (if there are any) as a Docker service and on any pet nodes as containers.  Here are the service deployment commands (container deployment is similar):
 
 ````
 docker service create --name neon-proxy-public \

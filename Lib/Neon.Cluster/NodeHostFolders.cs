@@ -57,7 +57,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Path to the neonCLUSTER management scripts directory.
         /// </summary>
-        public const string Scripts = "${HOME}/.scripts";
+        public const string Scripts = "/opt/neonscripts";
 
         /// <summary>
         /// The folder where cluster tools can upload, unpack, and then

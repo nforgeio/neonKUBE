@@ -172,7 +172,7 @@ ClientAliveCountMax 20
         /// </remarks>
         public static void WaitForPackageManager(NodeProxy<NodeDefinition> node)
         {
-            node.Status = "package-manager wait";
+            node.Status = "apt-get wait";
 
             // Pause to give Linux a chance to boot and actually start any
             // pending package manager operations.
@@ -188,10 +188,10 @@ ClientAliveCountMax 20
                     break;
                 }
 
-                node.Status = "package-manager busy";
+                node.Status = "apt-get busy";
             }
 
-            node.Status = "package-manager ready";
+            node.Status = "apt-get ready";
         }
 
         /// <summary>
@@ -202,7 +202,7 @@ ClientAliveCountMax 20
         /// <param name="clusterDefinition">The cluster definition.</param>
         public static void ConfigureEnvironmentVariables(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
-            node.Status = "setup: environment";
+            node.Status = "environment vars";
 
             // We're going to append the new variables to the existing Linux [/etc/environment] file.
 

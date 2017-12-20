@@ -255,7 +255,7 @@ namespace Neon.Cluster
         /// <param name="comment">Optional comment text (without a leading <b>#</b>).</param>
         /// <returns>The command formatted for Bash.</returns>
         /// <exception cref="NotSupportedException">
-        /// <see cref="ToBash"/> does not support commands with attached files.
+        /// Thrown because <see cref="ToBash"/> does not support commands with attached files.
         /// </exception>
         /// <remarks>
         /// This can be useful for making copies of cluster configuration commands

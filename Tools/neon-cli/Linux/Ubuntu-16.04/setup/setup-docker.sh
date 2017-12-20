@@ -202,6 +202,10 @@ if [ -d /var/lib/docker ] ; then
 	rm -r /var/lib/docker
 fi
 
+# Add the current user to the [docker] group so SUDO won't be necessary.
+
+addgroup $<cluster.rootuser> docker
+
 # Indicate that the script has completed.
 
 endsetup setup-docker

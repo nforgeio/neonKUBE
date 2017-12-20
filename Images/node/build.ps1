@@ -27,7 +27,3 @@ $image_root = "$env:NF_ROOT\\Images"
 # Build the image.
 
 Exec { docker build -t "${registry}:$tag" --build-arg "TINI_VERSION=$tini_version" . }
-
-# Clean up
-
-Exec { DeleteFile .rnd }
