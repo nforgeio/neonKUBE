@@ -199,6 +199,20 @@ namespace Neon.Cluster
         public string Schema { get; set; } = ClusterSchema;
 
         /// <summary>
+        /// <para>
+        /// Enables cluster debug mode which can be useful for neonCLUSTER development purposes.
+        /// This defaults to <c>false</c>.
+        /// </para>
+        /// <note>
+        /// <b>WARNING:</b> This should not be enabled for production clusters because it may 
+        /// enable potential security threads.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "DebugMode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool DebugMode { get; set; } = false;
+
+        /// <summary>
         /// Specifies hosting related settings (e.g. the cloud provider).  This defaults to
         /// <c>null</c> which indicates that the cluster will be hosted on private servers.
         /// </summary>

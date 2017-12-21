@@ -338,6 +338,14 @@ namespace NeonCli
                 throw new NotImplementedException();
             }
 
+            if (clusterDefinition.DebugMode)
+            {
+                // Expose the Docker Swarm REST API on the node's internal cluster IP address so it
+                // can be reached by apps like [neon-proxy-manager] running in the debugger.
+
+                sbDockerOptions.AppendWithSeparator($"-H tcp://{nodeDefinition.PrivateAddress}:{NetworkPorts.Docker}");
+            }
+
             preprocessReader.Set("docker.options", sbDockerOptions);
             
             // Define the Consul command line options.
