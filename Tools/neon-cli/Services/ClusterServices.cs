@@ -67,8 +67,7 @@ namespace NeonCli
                     }
 
                     //---------------------------------------------------------
-                    // Deploy [neon-cluster-manager] as a container on each
-                    // manager node.
+                    // Deploy [neon-cluster-manager] as a service on each manager node.
 
                     string unsealSecretOption = null;
 
@@ -260,6 +259,46 @@ namespace NeonCli
 
                     firstManager.Status = string.Empty;
                 });
+
+            // Start the [neon-proxy-public-bridge] and [neon-proxy-private-bridge] containers
+            // on the cluster pets.
+
+            foreach (var pet in cluster.Pets)
+            {
+                pet.InvokeIdempotentAction("setup-neon-proxy-public-bridge",
+                    () =>
+                    {
+                        pet.Status = "start: neon-proxy-public-bridge";
+
+                        var response = pet.DockerCommand(
+                            "docker run",
+                                "--detach",
+                                "--name", "neon-proxy-public-bridge",
+                                "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public-bridge/conf",
+                                "--env", "LOG_LEVEL=INFO",
+                                "neoncluster/neon-proxy");
+
+                        pet.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-public-bridge.sh"), response.BashCommand);
+                        pet.Status = string.Empty;
+                    });
+
+                pet.InvokeIdempotentAction("setup-neon-proxy-private-bridge",
+                    () =>
+                    {
+                        pet.Status = "start: neon-proxy-private-bridge";
+
+                        var response = pet.DockerCommand(
+                            "docker run",
+                                "--detach",
+                                "--name", "neon-proxy-private-bridge",
+                                "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private-bridge/conf",
+                                "--env", "LOG_LEVEL=INFO",
+                                "neoncluster/neon-proxy");
+
+                        pet.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-private-bridge.sh"), response.BashCommand);
+                        pet.Status = string.Empty;
+                    });
+            }
         }
     }
 }
