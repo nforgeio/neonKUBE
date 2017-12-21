@@ -341,7 +341,8 @@ namespace NeonCli
             if (clusterDefinition.DebugMode)
             {
                 // Expose the Docker Swarm REST API on the node's internal cluster IP address so it
-                // can be reached by apps like [neon-proxy-manager] running in the debugger.
+                // can be reached by apps like [neon-proxy-manager] running off the manager node
+                // (potentially in the debugger).
 
                 sbDockerOptions.AppendWithSeparator($"-H tcp://{nodeDefinition.PrivateAddress}:{NetworkPorts.Docker}");
             }
