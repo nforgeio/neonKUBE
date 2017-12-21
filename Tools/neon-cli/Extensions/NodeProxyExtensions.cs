@@ -315,7 +315,7 @@ namespace NeonCli
             {
                 // Default to reasonable public time sources.
 
-                managerTimeSources = "\"0.pool.ntp.org\" \"1.pool.ntp.org\" \"ec2-us-east.time.rightscale.com\" \"ec2-us-west.time.rightscale.com\"";
+                managerTimeSources = "\"pool.ntp.org\"";
             }
 
             // Generate the Docker daemon command line options.  The [/etc/default/docker] script uses this.
