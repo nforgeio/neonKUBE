@@ -6,13 +6,14 @@
 // $todo(jeff.lill):
 //
 // Temporarily disabling leader locking because of [https://github.com/jefflill/NeonForge/issues/80].
-// This shouldn't reall be a problem since we're deploying only one service replica and the changes
+// This shouldn't really be a problem since we're deploying only one service replica and the changes
 // are committed to Consul via a transaction.
 
 using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Runtime.Loader;
 using System.Security.Cryptography;
@@ -28,14 +29,15 @@ using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
+using Neon.Docker;
 
 namespace NeonProxyManager
 {
     /// <summary>
     /// Implements the <b>neon-proxy-manager</b> service which is responsible for dynamically generating the HAProxy 
-    /// configurations for the <c>neon-proxy-public</c>, <c>neon-proxy-private</c> and <c>neon-proxy-private-bridge</c>
-    /// services from the proxy routes persisted in Consul and the TLS certificates persisted in Vault.  See 
-    /// <a href="https://hub.docker.com/r/neoncluster/neon-proxy-manager/">neoncluster/neon-proxy-manager</a>  
+    /// configurations for the <c>neon-proxy-public</c>, <c>neon-proxy-private</c>, <c>neon-proxy-public-bridge</c>,
+    /// and <c>neon-proxy-private-bridge</c> services from the proxy routes persisted in Consul and the TLS certificates
+    /// persisted in Vault.  See <a href="https://hub.docker.com/r/neoncluster/neon-proxy-manager/">neoncluster/neon-proxy-manager</a>  
     /// and <a href="https://hub.docker.com/r/neoncluster/neon-proxy/">neoncluster/neon-proxy</a> for more information.
     /// </summary>
     public static class Program
@@ -307,15 +309,16 @@ namespace NeonProxyManager
 
                                     // Rebuild the proxy configurations and write the captured status to
                                     // Consul to make it available for the [neon proxy public|private status]
-                                    // command.  Note that we're going to build the [neon-proxy-private-bridge]
-                                    // configuration as well for use by any cluster pet nodes.
+                                    // command.  Note that we're going to build the [neon-proxy-public-bridge]
+                                    // and [neon-proxy-private-bridge] configurations as well for use by any 
+                                    // cluster pet nodes.
 
-                                    var publicBuildStatus = await BuildProxyConfigAsync("public", clusterCerts, buildBridge: false, cancellationToken: ct);
+                                    var publicBuildStatus = await BuildProxyConfigAsync("public", clusterCerts, ct);
                                     var publicProxyStatus = new ProxyStatus() { Status = publicBuildStatus.Status };
 
                                     await consul.KV.PutString($"{proxyStatus}/public", NeonHelper.JsonSerialize(publicProxyStatus), ct);
 
-                                    var privateBuildStatus = await BuildProxyConfigAsync("private", clusterCerts, buildBridge: true, cancellationToken: ct);
+                                    var privateBuildStatus = await BuildProxyConfigAsync("private", clusterCerts, ct);
                                     var privateProxyStatus = new ProxyStatus() { Status = privateBuildStatus.Status };
 
                                     await consul.KV.PutString($"{proxyStatus}/private", NeonHelper.JsonSerialize(privateProxyStatus), ct);
@@ -376,22 +379,21 @@ namespace NeonProxyManager
         }
 
         /// <summary>
-        /// Rebuilds the configuration for a public or private proxy and persists it
-        /// to Consul if it differs from the previous version.
+        /// Rebuilds the configurations for a public or private proxy and persists them
+        /// to Consul if they differs from the previous version.
         /// </summary>
         /// <param name="proxyName">The proxy name: <b>public</b> or <b>private</b>.</param>
         /// <param name="clusterCerts">The cluster certificate information.</param>
-        /// <param name="buildBridge">Specifies that the corresponding proxy bridge configuration is to be built too.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>
         /// A tuple including the proxy's route dictionary, publication status details,
         /// as well as a flag indicating whether changes were published to Consul.
         /// </returns>
         private static async Task<(Dictionary<string, ProxyRoute> Routes, string Status, bool Published)> 
-            BuildProxyConfigAsync(string proxyName, ClusterCerts clusterCerts, bool buildBridge, CancellationToken cancellationToken)
+            BuildProxyConfigAsync(string proxyName, ClusterCerts clusterCerts, CancellationToken cancellationToken)
         {
-            var proxyBridgeName        = $"{proxyName}-bridge";
             var proxyDisplayName       = proxyName.ToUpperInvariant();
+            var proxyBridgeName        = $"{proxyName}-bridge";
             var proxyBridgeDisplayName = proxyBridgeName.ToUpperInvariant();
             var configError            = false;
             var log                    = new LogRecorder(Program.log);
@@ -890,7 +892,6 @@ backend haproxy_stats
                 // Generate the resolvers argument to be used to locate the
                 // backend servers.
 
-                var checkArg     = tcpRoute.Check ? " check" : string.Empty;
                 var initAddrArg  = " init-addr none";
                 var resolversArg = string.Empty;
 
@@ -927,6 +928,7 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
                     }
                 }
 
+                var checkArg    = tcpRoute.Check ? " check" : string.Empty;
                 var serverIndex = 0;
 
                 foreach (var backend in tcpRoute.Backends)
@@ -1166,15 +1168,16 @@ frontend {haProxyFrontend.Name}
                     // Generate the resolvers argument to be used to locate the
                     // backend servers.
 
-                    var checkArg        = httpRoute.Check ? " check" : string.Empty;
-                    var initAddrArg     = " init-addr none";
                     var resolversArg    = string.Empty;
-                    var checkVersionArg = string.Empty;
 
                     if (!string.IsNullOrEmpty(httpRoute.Resolver))
                     {
                         resolversArg = $" resolvers {httpRoute.Resolver}";
                     }
+
+                    var checkArg        = httpRoute.Check ? " check" : string.Empty;
+                    var initAddrArg     = " init-addr none";
+                    var checkVersionArg = string.Empty;
 
                     if (!string.IsNullOrEmpty(httpRoute.CheckHost))
                     {
@@ -1360,9 +1363,10 @@ backend http:{httpRoute.Name}
                 return (Routes: routes, log.ToString(), Published: false);
             }
 
-            // Generate the HAProxy bridge configuration if this is enabled.  This configuration is 
-            // pretty simple.  All we need to do is forward all endpoints as TCP connections to the
-            // proxy we generated above.  We won't treat HTTP/S specially and we don't need to worry 
+            //-----------------------------------------------------------------
+            // Generate the HAProxy bridge configuration.  This configuration is  pretty simple.  
+            // All we need to do is forward all endpoints as TCP connections to the proxy we just
+            // generated above.  We won't treat HTTP/S specially and we don't need to worry 
             // about TLS termination or generate fancy health checks.
             //
             // The bridge proxy is typically deployed as a standalone Docker container on cluster
@@ -1379,7 +1383,7 @@ backend http:{httpRoute.Name}
             // The code below generally assumes that the bridge target proxy is exposed 
             // on all Swarm manager or worker nodes (via the Docker ingress/mesh network 
             // or because the proxy is running in global mode).  Exactly which nodes will
-            // be configured to handle forwarded traffic is determined by the target proxy
+            // be configured to handle forwarded traffic is determined by the proxy
             // settings.
             //
             // The code below starts by quering the Docker Swarm to get a list of the active
@@ -1391,8 +1395,293 @@ backend http:{httpRoute.Name}
             // node failure while trying to avoid an explosion of health check traffic.
             //
             // This may become a problem for clusters with a large number of pet nodes
-            // banging away with health checks.  One way to mitigate this is to explicitly
-            // specify the target Swarm nodes in the [ProxySettings] by IP address.
+            // banging away with health checks.  One way to mitigate this is to target
+            // specific Swarm nodes in the [ProxySettings] by IP address.
+
+            // Determine which cluster Swarm nodes will be targeted by the bridge.  The
+            // target nodes may have been specified explicitly by IP address in the 
+            // proxy settings or we may need to select them here.
+            // 
+            // Start out by querying Docker for the current Swarm nodes.
+
+            List<DockerNode>                swarmNodes;
+            Dictionary<string, DockerNode>  addressToSwarmNode = new Dictionary<string, DockerNode>();
+
+            using (var docker = NeonClusterHelper.OpenDocker())
+            {
+                swarmNodes = await docker.NodeListAsync();
+
+                foreach (var node in swarmNodes)
+                {
+                    addressToSwarmNode.Add(node.Addr, node);
+                }
+            }
+
+            var bridgeTargets = new List<string>();
+
+            if (settings.BridgeTargetAddresses.Count > 0)
+            {
+                // Specific Swarm nodes have been targeted.
+
+                foreach (var targetAddress in settings.BridgeTargetAddresses)
+                {
+                    bridgeTargets.Add(targetAddress.ToString());
+
+                    if (!addressToSwarmNode.ContainsKey(targetAddress.ToString()))
+                    {
+                        log.LogWarn(() => $"Proxy bridge target [{targetAddress}] does not reference a known cluster Swarm node.");
+                    }
+                }
+            }
+            else
+            {
+                // We're going to automatically select the target nodes.
+
+                swarmNodes = swarmNodes.Where(n => n.State == "ready").ToList();    // We want only READY Swarm nodes.
+
+                var workers = swarmNodes.Where(n => n.Role == "worker").ToList();
+
+                if (workers.Count >= settings.BridgeTargetCount)
+                {
+                    // There are enough workers to select targets from so we'll just do that.
+                    // The idea here is to try to keep the managers from doing as much routing 
+                    // work as possible because they may be busy handling global cluster activities,
+                    // especially for large clusters.
+
+                    foreach (var worker in workers.SelectRandom(settings.BridgeTargetCount))
+                    {
+                        bridgeTargets.Add(worker.Addr);
+                    }
+                }
+                else
+                {
+                    // Otherwise for small clusters, we'll select targets from managers
+                    // and workers.
+
+                    foreach (var node in swarmNodes.SelectRandom(settings.BridgeTargetCount))
+                    {
+                        bridgeTargets.Add(node.Addr);
+                    }
+                }
+            }
+
+            if (bridgeTargets.Count == 0)
+            {
+                log.LogWarn(() => $"No bridge targets were specified or are ready.");
+            }
+
+            // Generate the contents of the [haproxy.cfg] file.
+
+            sbHaProxy = new StringBuilder();
+
+            sbHaProxy.Append(
+$@"#------------------------------------------------------------------------------
+# {proxyBridgeDisplayName} HAProxy configuration file.
+#
+# Generated by:     {serviceName}
+# Documentation:    http://cbonte.github.io/haproxy-dconv/1.7/configuration.html#7.1.4
+
+global
+    daemon
+
+# Specifiy the maximum number of connections allowed for a proxy instance.
+
+    maxconn             {settings.MaxConnections}
+
+# We're going to disable bridge proxy logging for now because I'm not entirely 
+# sure that this will be useful.  If we decide to enable this in the future, we
+# should probably specify a different SYSLOG facility so we can distinguish 
+# between problems with the bridge and normal proxies. 
+
+#   log                 ""${{NEON_NODE_IP}}:{NeonHostPorts.LogHostSysLog}"" len 65535 {NeonSysLogFacility.ProxyName}
+
+# Certificate Authority and Certificate file locations:
+
+    ca-base             ""${{HAPROXY_CONFIG_FOLDER}}""
+    crt-base            ""${{HAPROXY_CONFIG_FOLDER}}""
+
+# Other settings
+
+    tune.ssl.default-dh-param   {settings.MaxDHParamBits}
+
+defaults
+    balance             roundrobin
+    retries             2
+    timeout connect     {settings.Timeouts.ConnectSeconds}s
+    timeout client      {settings.Timeouts.ClientSeconds}s
+    timeout server      {settings.Timeouts.ServerSeconds}s
+    timeout check       {settings.Timeouts.CheckSeconds}s
+");
+            // Enable the HAProxy statistics pages.  These will be available on the 
+            // [NeonClusterConst.HAProxyStatsPort] port on the [neon-public] or
+            // [neon-private] network the proxy serves.
+            //
+            // HAProxy statistics pages are not intended to be viewed directly by
+            // by cluster operators.  Instead, the statistics from multiple HAProxy
+            // instances will be aggregated by the cluster Dashboard.
+
+            sbHaProxy.AppendLine($@"
+#------------------------------------------------------------------------------
+# Enable HAProxy statistics pages.
+
+frontend haproxy_stats
+    bind                *:{NeonClusterConst.HAProxyStatsPort}
+    mode                http
+    log                 global
+    option              httplog
+    option              http-server-close
+    use_backend         haproxy_stats
+
+backend haproxy_stats
+    mode                http
+    stats               enable
+    stats               scope .
+    stats               uri {NeonClusterConst.HaProxyStatsUri}
+    stats               refresh 5s
+");
+            // Generate the TCP bridge routes.
+
+            sbHaProxy.AppendLine("#------------------------------------------------------------------------------");
+            sbHaProxy.AppendLine("# TCP Routes");
+
+            var bridgePorts = new HashSet<int>();
+
+            foreach (ProxyTcpRoute tcpRoute in routes.Values
+                .Where(r => r.Mode == ProxyMode.Tcp))
+            {
+                foreach (var frontEnd in tcpRoute.Frontends)
+                {
+                    if (!bridgePorts.Contains(frontEnd.ProxyPort))
+                    {
+                        bridgePorts.Add(frontEnd.ProxyPort);
+                    }
+                }
+            }
+
+            foreach (ProxyHttpRoute httpRoute in routes.Values
+                .Where(r => r.Mode == ProxyMode.Http))
+            {
+                foreach (var frontEnd in httpRoute.Frontends)
+                {
+                    if (!bridgePorts.Contains(frontEnd.ProxyPort))
+                    {
+                        bridgePorts.Add(frontEnd.ProxyPort);
+                    }
+                }
+            }
+
+            foreach (var port in bridgePorts)
+            {
+                    sbHaProxy.Append(
+$@"
+listen tcp:port-{port}
+    mode                tcp
+    bind                *:{port}
+");
+
+                // Bridge logging is disabled for now.
+
+                // $todo(jeff.lill):
+                //
+                // I wonder if it's possible to have HAProxy log ONLY health checks.  It seems like this
+                // is the main thing we'd really want to log for bridge proxies.
+
+                //sbHaProxy.AppendLine($"    log                 global");
+                //sbHaProxy.AppendLine($"    log-format          {NeonClusterHelper.GetProxyLogFormat("neon-proxy-" + proxyName, tcp: true)}");
+                //sbHaProxy.AppendLine($"    option              log-health-checks");
+
+                var checkArg    = " check";
+                var initAddrArg = " init-addr none";
+                var serverIndex = 0;
+
+                foreach (var targetAddress in bridgeTargets)
+                {
+                    var backendName = $"server-{serverIndex++}";
+
+                    sbHaProxy.AppendLine($"    server              {backendName} {targetAddress}:{port}{checkArg}{initAddrArg}");
+                }
+            }
+
+            // Generate the [neon-proxy] service compatible configuration ZIP archive for the bridge.
+            // Note that the bridge forwards only TCP traffic so there are no TLS certificates.
+
+            using (var ms = new MemoryStream())
+            {
+                using (var zip = ZipFile.Create(ms))
+                {
+                    // We need all archive entries to have fixed dates so we'll be able
+                    // to compare configuration archives for changes using MD5 hashes.
+
+                    zip.EntryFactory = new ZipEntryFactory(new DateTime(2000, 1, 1));
+
+                    // NOTE: We're converting text to Linux style line endings.
+
+                    zip.BeginUpdate();
+                    zip.Add(new StaticBytesDataSource(NeonHelper.ToLinuxLineEndings(sbHaProxy.ToString())), "haproxy.cfg");
+                    zip.CommitUpdate();
+                }
+
+                zipBytes = ms.ToArray();
+            }
+
+            // Compute the MD5 hash for the combined configuration ZIP and the referenced certificates.
+
+            hasher       = MD5.Create();
+            combinedHash = Convert.ToBase64String(hasher.ComputeHash(zipBytes));
+
+            // Compare the combined hash against what's already published to Consul
+            // for the proxy and update these keys if the hashes differ.
+
+            publish = false;
+
+            try
+            {
+                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{proxyBridgeName}/hash", cancellationToken) ||
+                    !await consul.KV.Exists($"{consulPrefix}/proxies/{proxyBridgeName}/conf", cancellationToken))
+                {
+                    publish = true; // Nothing published yet.
+                }
+                else
+                {
+                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{proxyBridgeName}/hash", cancellationToken);
+                }
+
+                if (publish)
+                {
+                    log.LogInfo(() => $"Updating proxy [{proxyBridgeDisplayName}] configuration: [routes={bridgePorts.Count}] [hash={combinedHash}]");
+
+                    // Write the hash and configuration out as a transaction so we'll 
+                    // be sure they match (don't get out of sync).  We don't need to
+                    // do CAS here because only one proxy manager will be running
+                    // most of the time and even if multiple instances happened to
+                    // update this with different values for some reason, the most 
+                    // recent updates would be applied the next time a proxy manager
+                    // polled the config and then the instances will remain in sync
+                    // until the next routing change is detected.
+
+                    var operations = new List<KVTxnOp>()
+                    {
+                        new KVTxnOp($"{consulPrefix}/proxies/{proxyBridgeName}/hash", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(combinedHash) },
+                        new KVTxnOp($"{consulPrefix}/proxies/{proxyBridgeName}/conf", KVTxnVerb.Set) { Value = zipBytes }
+                    };
+
+                    await consul.KV.Txn(operations, cancellationToken);
+                }
+                else
+                {
+                    log.LogInfo(() => $"No changes detected for proxy [{proxyBridgeDisplayName}].");
+                }
+            }
+            catch (Exception e)
+            {
+                // Warn and exit for Consul/Docker errors.
+
+                log.LogWarn("Consul or Docker request failure.", e);
+                return (Routes: routes, log.ToString(), Published: false);
+            }
+            
+            //-----------------------------------------------------------------
+            // We're done
 
             return (Routes: routes, Status: log.ToString(), Published: publish);
         }

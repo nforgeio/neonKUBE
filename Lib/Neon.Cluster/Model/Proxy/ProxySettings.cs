@@ -114,7 +114,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Specifies the desired number of Swarm nodes to be designated as bridge
         /// proxy targets.  This can be overridden by explicity designating target
-        /// node IP addresses in <see cref="BridgeTargetNodeAddresses"/>.  This
+        /// node IP addresses in <see cref="BridgeTargetAddresses"/>.  This
         /// defaults to <b>5</b>.
         /// </summary>
         /// <remarks>
@@ -127,7 +127,7 @@ namespace Neon.Cluster
         /// </para>
         /// <para>
         /// It is also possible to explicity specify that bridge targets via
-        /// <see cref="BridgeTargetNodeAddresses"/>.  That property overrides this
+        /// <see cref="BridgeTargetAddresses"/>.  That property overrides this
         /// one.
         /// </para>
         /// </remarks>
@@ -137,7 +137,7 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Explicitly specifies the bridge target Swarm nodes by IP address.  This
-        /// ovverides <see cref="BridgeTargetCount"/> if any nodes are specified.
+        /// overrides <see cref="BridgeTargetCount"/> if any nodes are specified.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -155,9 +155,9 @@ namespace Neon.Cluster
         /// of them being unreachable when the host or rack fails.
         /// </para>
         /// </remarks>
-        [JsonProperty(PropertyName = "BridgeTargetNodeAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "BridgeTargetAddresses", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public List<IPAddress> BridgeTargetNodeAddresses = new List<IPAddress>();
+        public List<IPAddress> BridgeTargetAddresses = new List<IPAddress>();
 
         /// <summary>
         /// Validates the instance.
@@ -165,9 +165,9 @@ namespace Neon.Cluster
         /// <param name="context">The validation context.</param>
         public void Validate(ProxyValidationContext context)
         {
-            Timeouts                  = Timeouts ?? new ProxyTimeouts();
-            Resolvers                 = Resolvers ?? new List<ProxyResolver>();
-            BridgeTargetNodeAddresses = BridgeTargetNodeAddresses ?? new List<IPAddress>();
+            Timeouts              = Timeouts ?? new ProxyTimeouts();
+            Resolvers             = Resolvers ?? new List<ProxyResolver>();
+            BridgeTargetAddresses = BridgeTargetAddresses ?? new List<IPAddress>();
 
             if (!Resolvers.Exists(r => r.Name == "docker"))
             {
@@ -210,9 +210,13 @@ namespace Neon.Cluster
                 resolver.Validate(context);
             }
 
-            if (BridgeTargetCount == 0 && BridgeTargetNodeAddresses.Count == 0)
+            if (BridgeTargetCount < 0)
             {
-                context.Error($"Proxy settings [{nameof(BridgeTargetCount)}] or [{nameof(BridgeTargetNodeAddresses)}] must specify at least one bridge target.");
+                context.Error($"Proxy settings [{nameof(BridgeTargetCount)}={BridgeTargetCount}] cannot be negative.");
+            }
+
+            if (BridgeTargetCount == 0 && BridgeTargetAddresses.Count == 0)
+            {
             }
         }
     }
