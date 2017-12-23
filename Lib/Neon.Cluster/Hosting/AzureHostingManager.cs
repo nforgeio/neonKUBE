@@ -415,9 +415,9 @@ namespace Neon.Cluster
                 node.Labels.ComputeCores = vmCaps.CoreCount;
                 node.Labels.ComputeRamMB = vmCaps.RamSizeMB;
 
-                if (node.Azure.DriveCount == 0)
+                if (node.Azure.HardDriveCount == 0)
                 {
-                    node.Labels.StorageCapacityGB = node.Azure.DriveSizeGB * node.Azure.DriveCount;
+                    node.Labels.StorageCapacityGB = node.Azure.HardDriveSizeGB * node.Azure.HardDriveCount;
                     node.Labels.StorageSSD        = node.Azure.StorageType == AzureStorageTypes.PremiumLRS;
                     node.Labels.StorageLocal      = false;
                     node.Labels.StorageEphemeral  = false;
@@ -1313,7 +1313,7 @@ namespace Neon.Cluster
                 var azureNodeOptions   = azureNode.Node.Metadata.Azure;
                 var storageAccountType = StorageAccountTypes.StandardLRS;
 
-                if (azureNodeOptions.DriveCount > 0)
+                if (azureNodeOptions.HardDriveCount > 0)
                 {
                     switch (azureNodeOptions.StorageType)
                     {
@@ -1362,11 +1362,11 @@ namespace Neon.Cluster
                     vmCreator.WithExistingSecondaryNetworkInterface(secondaryNic);
                 }
 
-                if (azureNodeOptions.DriveCount > 0)
+                if (azureNodeOptions.HardDriveCount > 0)
                 {
-                    for (int lun = 1; lun <= azureNodeOptions.DriveCount; lun++)
+                    for (int lun = 1; lun <= azureNodeOptions.HardDriveCount; lun++)
                     {
-                        vmCreator.WithNewDataDisk(AzureHelper.GetDiskSizeGB(azureNodeOptions.StorageType, azureNodeOptions.DriveSizeGB), lun, CachingTypes.None);
+                        vmCreator.WithNewDataDisk(AzureHelper.GetDiskSizeGB(azureNodeOptions.StorageType, azureNodeOptions.HardDriveSizeGB), lun, CachingTypes.None);
                     }
                 }
 

@@ -485,8 +485,8 @@ namespace Neon.Cluster
                 {
                     list.Add(new KeyValuePair<string, object>(LabelAzureVmSize,         node.Azure.VmSize));
                     list.Add(new KeyValuePair<string, object>(LabelAzureStorageType,    node.Azure.StorageType));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveCount,     node.Azure.DriveCount));
-                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSizeGB,    node.Azure.DriveSizeGB));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveCount,     node.Azure.HardDriveCount));
+                    list.Add(new KeyValuePair<string, object>(LabelAzureDriveSizeGB,    node.Azure.HardDriveSizeGB));
                 }
 
                 // Standard labels from this class.
@@ -559,8 +559,8 @@ namespace Neon.Cluster
                         {
                             case LabelAzureVmSize:      ParseCheck(label, () => { node.Azure.VmSize = NeonHelper.ParseEnum<AzureVmSizes>(label.Value, ignoreCase: true); }); break;
                             case LabelAzureStorageType: ParseCheck(label, () => { node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageTypes>(label.Value, ignoreCase: true); }); break;
-                            case LabelAzureDriveCount:  ParseCheck(label, () => { node.Azure.DriveCount = int.Parse(label.Value); }); break;
-                            case LabelAzureDriveSizeGB: ParseCheck(label, () => { node.Azure.DriveSizeGB = int.Parse(label.Value); }); break;
+                            case LabelAzureDriveCount:  ParseCheck(label, () => { node.Azure.HardDriveCount = int.Parse(label.Value); }); break;
+                            case LabelAzureDriveSizeGB: ParseCheck(label, () => { node.Azure.HardDriveSizeGB = int.Parse(label.Value); }); break;
                         }
                         break;
 

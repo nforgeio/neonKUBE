@@ -75,12 +75,12 @@ namespace Neon.Cluster
         /// <para>
         /// For most clusters, you'll wish to provision one or more drives per node.  Multiple
         /// drives will be auytomatically combined into a consolidated RAID0 drive on the node.
-        /// The size of each drive is specified by <see cref="DriveSizeGB"/>.
+        /// The size of each drive is specified by <see cref="HardDriveSizeGB"/>.
         /// </para>
         /// </remarks>
-        [JsonProperty(PropertyName = "DriveCount", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "HardDriveCount", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(1)]
-        public int DriveCount { get; set; } = 1;
+        public int HardDriveCount { get; set; } = 1;
 
         /// <summary>
         /// Specifies the size of each of the mounted managed drives in gigabytes.  Multiple
@@ -101,9 +101,9 @@ namespace Neon.Cluster
         /// and rounded down to the maximum allowed size, if necessary.
         /// </note>
         /// </remarks>
-        [JsonProperty(PropertyName = "DriveSizeGB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "HardDriveSizeGB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(128)]
-        public int DriveSizeGB { get; set; } = 128;
+        public int HardDriveSizeGB { get; set; } = 128;
 
         /// <summary>
         /// Validates the options definition and also ensures that all <c>null</c> properties are
@@ -129,12 +129,12 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"Cluster node [{nodeName}] has size [{VmSize}] which does not support [{StorageType}] managed data drives.");
             }
 
-            if (caps.DataDriveCount < DriveCount)
+            if (caps.DataDriveCount < HardDriveCount)
             {
-                throw new ClusterDefinitionException($"Cluster node [{nodeName}] has size [{VmSize}] which does not support [{DriveCount}] managed data drives. Up to [{caps.DataDriveCount}] drives are allowed.");
+                throw new ClusterDefinitionException($"Cluster node [{nodeName}] has size [{VmSize}] which does not support [{HardDriveCount}] managed data drives. Up to [{caps.DataDriveCount}] drives are allowed.");
             }
 
-            AzureHelper.GetDiskSizeGB(StorageType, DriveSizeGB);
+            AzureHelper.GetDiskSizeGB(StorageType, HardDriveSizeGB);
         }
     }
 }

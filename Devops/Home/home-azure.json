@@ -50,35 +50,35 @@
       "Role": "manager",
       "Azure": {
         "VmSize": "Standard_DS2_v2",
-        "DriveCount": 0
+        "HardDriveCount": 0
       }
     },
     "worker-0": {
       "Role": "worker",
       "Azure": {
         "VmSize": "Standard_DS2_v2",
-        "DriveCount": 0
+        "HardDriveCount": 0
       }
     },
     "worker-1": {
       "Role": "worker",
       "Azure": {
         "VmSize": "Standard_DS2_v2",
-        "DriveCount": 0
+        "HardDriveCount": 0
       }
     },
     "worker-2": {
       "Role": "worker",
       "Azure": {
         "VmSize": "Standard_DS2_v2",
-        "DriveCount": 0
+        "HardDriveCount": 0
       }
     },
     "pet-0": {
       "Role": "pet",
       "Azure": {
         "VmSize": "Standard_DS2_v2",
-        "DriveCount": 0
+        "HardDriveCount": 0
       },
       "Labels": {
         "LogEsData": true
@@ -88,7 +88,7 @@
       "Role": "pet",
       "Azure": {
         "VmSize": "Standard_DS2_v2",
-        "DriveCount": 0
+        "HardDriveCount": 0
       },
       "Labels": {
         "LogEsData": true
