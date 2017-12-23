@@ -233,7 +233,18 @@ OPTIONS:
 
             // Configure the workers and pets.
 
-            controller.AddStep("worker/pet config", 
+            var workerPetStepLabel = "worker/pet config";
+
+            if (cluster.Workers.Count() == 0)
+            {
+                workerPetStepLabel = "pet config";
+            }
+            else if (cluster.Pets.Count() == 0)
+            {
+                workerPetStepLabel = "worker config";
+            }
+
+            controller.AddStep(workerPetStepLabel, 
                 n =>
                 {
                     ConfigureCommon(n);
