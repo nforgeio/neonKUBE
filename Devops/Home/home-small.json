@@ -1,0 +1,72 @@
+{
+  "Name": "home",
+  "Datacenter": "woodinville",
+  "Environment": "development",
+  "TimeSources": [ "pool.ntp.org" ],
+  "Hosting": {
+    "ManagerRouterAddress": "lill-home.ddns.net",
+    "Machine": {
+      "DeployVMs": true
+    }
+  },
+  "Network": {
+    "NodesSubnet": "10.0.0.0/24"
+  },
+  "Vpn": {
+    "Enabled": false
+  },
+  "HostAuth": {
+    "SshAuth": "tls",
+    "PasswordLength": 20
+  },
+  "Docker": {
+    "Version": "17.09.0-ce",
+    //"Version": "17.06.1-ce",
+    //"Version": "17.03.2-ce",
+    //"Version": "latest",
+    //"Version": "test",
+    //"Version": "experimental",
+    "RegistryCache": true,
+    "Experimental": false,
+    "RegistryUsername": "stokebot",
+    "RegistryPassword": "Leather.632"
+  },
+  "Vault": {
+    "KeyCount": 1,
+    "KeyThreshold": 1
+  },
+  "Log": {
+    "Enabled": true
+  },
+  "Nodes": {
+    "manager-0": {
+      "PrivateAddress": "10.0.0.30",
+      "Role": "manager",
+      "Labels": {
+        "StorageSSD": true
+      }
+    },
+    "worker-0": {
+      "PrivateAddress": "10.0.0.40",
+      "Labels": {
+        "StorageSSD": true,
+        "LogEsData": true
+      }
+    },
+    "worker-1": {
+      "PrivateAddress": "10.0.0.41",
+      "Labels": {
+        "StorageSSD": true,
+        "LogEsData": true
+      }
+    },
+    "worker-2": {
+      "PrivateAddress": "10.0.0.42",
+      "Labels": {
+        "StorageSSD": true,
+        "LogEsData": true
+      }
+    }
+  }
+}
+

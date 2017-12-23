@@ -1,0 +1,89 @@
+{
+  "Name": "azure",
+  "Datacenter": "westus2",
+  "Environment": "development",
+  "TimeSources": [ "0.pool.ntp.org" ],
+  "Hosting": {
+    "Environment": "azure",
+    "CloudSubnet": "10.168.0.0/21",
+    "Azure": {
+      "SubscriptionId": "$<<NF_AZURE_SUBSCRIPTIONID>>",
+      "TenantId": "$<<NF_AZURE_TENANTID>>",
+      "ApplicationId": "$<<NF_AZURE_APPLICATIONID>>",
+      "Password": "$<<NF_AZURE_PASSWORD>>",
+      "ResourceGroup": "neon-dev",
+      "Region": "westus2",
+      "DomainLabel": "neonforge-99",
+      "StaticClusterAddress": false,
+      "PublicNodeAddresses": false
+    }
+  },
+  "Network": {
+    "CloudSubnet": "10.168.0.0/21"
+  },
+  "Vpn": {
+    "Enabled": true
+  },
+  "HostAuth": {
+    "SshAuth": "tls",
+    "PasswordLength": 20
+  },
+  "Docker": {
+    "Version": "17.09.0-ce",
+    //"Version": "17.06.1-ce",
+    //"Version": "17.03.2-ce",
+    //"Version": "latest",
+    //"Version": "test",
+    //"Version": "experimental",
+    "RegistryCache": true,
+    "Experimental": false,
+    "RegistryUsername": "stokebot",
+    "RegistryPassword": "Leather.632"
+  },
+  "Vault": {
+    "KeyCount": 1,
+    "KeyThreshold": 1
+  },
+  "Log": {
+    "Enabled": true
+  },
+  "Nodes": {
+    "manage-0": {
+      "Role": "manager",
+      "Azure": {
+        "VmSize": "Standard_DS2_v2",
+        "DriveCount": 0
+      },
+      "labels": {
+        "LogEsData": false
+      }
+    },
+    "node-0": {
+      "azure": {
+        "VmSize": "Standard_DS2_v2",
+        "DriveCount": 0
+      },
+      "labels": {
+        "LogEsData": true
+      }
+    },
+    "node-1": {
+      "azure": {
+        "VmSize": "Standard_DS2_v2",
+        "DriveCount": 0
+      },
+      "labels": {
+        "LogEsData": true
+      }
+    },
+    "node-2": {
+      "azure": {
+        "VmSize": "Standard_DS2_v2",
+        "DriveCount": 0
+      },
+      "labels": {
+        "LogEsData": true
+      }
+    }
+  }
+}
