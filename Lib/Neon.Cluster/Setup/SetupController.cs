@@ -36,7 +36,7 @@ namespace Neon.Cluster
 
         private class Step
         {
-            public string                                   Summary;
+            public string                                   Label;
             public bool                                     Quiet;
             public Action                                   GlobalAction;
             public Action<NodeProxy<NodeDefinition>>        NodeAction;
@@ -116,14 +116,14 @@ namespace Neon.Cluster
         /// <summary>
         /// Appends a configuration step.
         /// </summary>
-        /// <param name="stepSummary">Brief step summary.</param>
+        /// <param name="stepLabel">Brief step summary.</param>
         /// <param name="nodeAction">The action to be performed on each node.</param>
         /// <param name="nodePredicate">
         /// Optional predicate used to select the nodes that participate in the step
         /// or <c>null</c> to select all nodes.
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
-        public void AddStep(string stepSummary,
+        public void AddStep(string stepLabel,
                             Action<NodeProxy<NodeDefinition>> nodeAction,
                             Func<NodeProxy<NodeDefinition>, bool> nodePredicate = null,
                             bool quiet = false)
@@ -134,7 +134,7 @@ namespace Neon.Cluster
             steps.Add(
                 new Step()
                 {
-                    Summary    = stepSummary,
+                    Label      = stepLabel,
                     Quiet      = quiet,
                     NodeAction = nodeAction,
                     Predicate  = nodePredicate
@@ -144,14 +144,14 @@ namespace Neon.Cluster
         /// <summary>
         /// Appends a configuration step that will not be limited by <see cref="MaxParallel"/>.
         /// </summary>
-        /// <param name="stepSummary">Brief step summary.</param>
+        /// <param name="stepLabel">Brief step summary.</param>
         /// <param name="nodeAction">The action to be performed on each node.</param>
         /// <param name="nodePredicate">
         /// Optional predicate used to select the nodes that participate in the step
         /// or <c>null</c> to select all nodes.
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
-        public void AddStepNoParallelLimit(string stepSummary,
+        public void AddStepNoParallelLimit(string stepLabel,
                                            Action<NodeProxy<NodeDefinition>> nodeAction,
                                            Func<NodeProxy<NodeDefinition>, bool> nodePredicate = null,
                                            bool quiet = false)
@@ -162,7 +162,7 @@ namespace Neon.Cluster
             steps.Add(
                 new Step()
                 {
-                    Summary         = stepSummary,
+                    Label           = stepLabel,
                     Quiet           = quiet,
                     NodeAction      = nodeAction,
                     Predicate       = nodePredicate,
@@ -173,15 +173,15 @@ namespace Neon.Cluster
         /// <summary>
         /// Adds a global cluster configuration step.
         /// </summary>
-        /// <param name="stepSummary">Brief step summary.</param>
+        /// <param name="stepLabel">Brief step summary.</param>
         /// <param name="action">The global action to be performed.</param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
-        public void AddGlobalStep(string stepSummary, Action action, bool quiet = false)
+        public void AddGlobalStep(string stepLabel, Action action, bool quiet = false)
         {
             steps.Add(
                 new Step()
                 {
-                    Summary      = stepSummary,
+                    Label        = stepLabel,
                     Quiet        = quiet,
                     GlobalAction = action,
                     Predicate    = n => true,
@@ -191,7 +191,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Adds a step that waits for nodes to be online.
         /// </summary>
-        /// <param name="stepSummary">Brief step summary.</param>
+        /// <param name="stepLabel">Brief step summary.</param>
         /// <param name="status">The optional node status.</param>
         /// <param name="nodePredicate">
         /// Optional predicate used to select the nodes that participate in the step
@@ -199,14 +199,14 @@ namespace Neon.Cluster
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
         /// <param name="timeout">Optionally specifies the maximum time to wait (defaults to <b>10 minutes</b>).</param>
-        public void AddWaitUntilOnlineStep(string stepSummary = "connect", string status = null, Func<NodeProxy<NodeDefinition>, bool> nodePredicate = null, bool quiet = false, TimeSpan? timeout = null)
+        public void AddWaitUntilOnlineStep(string stepLabel = "connect", string status = null, Func<NodeProxy<NodeDefinition>, bool> nodePredicate = null, bool quiet = false, TimeSpan? timeout = null)
         {
             if (timeout == null)
             {
                 timeout = TimeSpan.FromMinutes(10);
             }
 
-            AddStepNoParallelLimit(stepSummary,
+            AddStepNoParallelLimit(stepLabel,
                 n =>
                 {
                     n.Status = status ?? "connecting";
@@ -220,7 +220,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Adds a step that waits for a specified period of time.
         /// </summary>
-        /// <param name="stepSummary">Brief step summary.</param>
+        /// <param name="stepLabel">Brief step summary.</param>
         /// <param name="delay">The amount of time to wait.</param>
         /// <param name="status">The optional node status.</param>
         /// <param name="nodePredicate">
@@ -228,9 +228,9 @@ namespace Neon.Cluster
         /// or <c>null</c> to select all nodes.
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
-        public void AddDelayStep(string stepSummary, TimeSpan delay, string status = null, Func<NodeProxy<NodeDefinition>, bool> nodePredicate = null, bool quiet = false)
+        public void AddDelayStep(string stepLabel, TimeSpan delay, string status = null, Func<NodeProxy<NodeDefinition>, bool> nodePredicate = null, bool quiet = false)
         {
-            AddStepNoParallelLimit(stepSummary,
+            AddStepNoParallelLimit(stepLabel,
                 n =>
                 {
                     n.Status = status ?? $"delay: [{delay.TotalSeconds}] seconds";
@@ -520,10 +520,10 @@ namespace Neon.Cluster
                 return;
             }
 
-            var underline           = " " + new string('-', 39);
-            var maxStepSummaryWidth = steps.Max(n => n.Summary.Length);
-            var maxNameWidth        = nodes.Max(n => n.Name.Length);
-            var stepNumber          = 0;
+            var underline         = " " + new string('-', 39);
+            var maxStepLabelWidth = steps.Max(n => n.Label.Length);
+            var maxNameWidth      = nodes.Max(n => n.Name.Length);
+            var stepNumber        = 0;
 
             sbDisplay.Clear();
 
@@ -546,22 +546,22 @@ namespace Neon.Cluster
                 {
                     case StepStatus.None:
 
-                        sbDisplay.AppendLine($"     {FormatStepNumber(stepNumber)}{step.Summary}");
+                        sbDisplay.AppendLine($"     {FormatStepNumber(stepNumber)}{step.Label}");
                         break;
 
                     case StepStatus.Running:
 
-                        sbDisplay.AppendLine($" --> {FormatStepNumber(stepNumber)}{step.Summary}");
+                        sbDisplay.AppendLine($" --> {FormatStepNumber(stepNumber)}{step.Label}");
                         break;
 
                     case StepStatus.Done:
 
-                        sbDisplay.AppendLine($"     {FormatStepNumber(stepNumber)}{step.Summary}{new string(' ', maxStepSummaryWidth - step.Summary.Length)}   [done]");
+                        sbDisplay.AppendLine($"     {FormatStepNumber(stepNumber)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [done]");
                         break;
 
                     case StepStatus.Failed:
 
-                        sbDisplay.AppendLine($"     {FormatStepNumber(stepNumber)}{step.Summary}{new string(' ', maxStepSummaryWidth - step.Summary.Length)}   [fail]"); ;
+                        sbDisplay.AppendLine($"     {FormatStepNumber(stepNumber)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [fail]"); ;
                         break;
                 }
             }
