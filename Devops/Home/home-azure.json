@@ -36,9 +36,7 @@
     //"Version": "test",
     //"Version": "experimental",
     "RegistryCache": true,
-    "Experimental": false,
-    "RegistryUsername": "stokebot",
-    "RegistryPassword": "Leather.632"
+    "Experimental": false
   },
   "Vault": {
     "KeyCount": 1,
@@ -48,40 +46,51 @@
     "Enabled": true
   },
   "Nodes": {
-    "manage-0": {
+    "manager-0": {
       "Role": "manager",
       "Azure": {
         "VmSize": "Standard_DS2_v2",
         "DriveCount": 0
-      },
-      "labels": {
-        "LogEsData": false
       }
     },
-    "node-0": {
-      "azure": {
+    "worker-0": {
+      "Role": "worker",
+      "Azure": {
+        "VmSize": "Standard_DS2_v2",
+        "DriveCount": 0
+      }
+    },
+    "worker-1": {
+      "Role": "worker",
+      "Azure": {
+        "VmSize": "Standard_DS2_v2",
+        "DriveCount": 0
+      }
+    },
+    "worker-2": {
+      "Role": "worker",
+      "Azure": {
+        "VmSize": "Standard_DS2_v2",
+        "DriveCount": 0
+      }
+    },
+    "pet-0": {
+      "Role": "pet",
+      "Azure": {
         "VmSize": "Standard_DS2_v2",
         "DriveCount": 0
       },
-      "labels": {
+      "Labels": {
         "LogEsData": true
       }
     },
-    "node-1": {
-      "azure": {
+    "pet-1": {
+      "Role": "pet",
+      "Azure": {
         "VmSize": "Standard_DS2_v2",
         "DriveCount": 0
       },
-      "labels": {
-        "LogEsData": true
-      }
-    },
-    "node-2": {
-      "azure": {
-        "VmSize": "Standard_DS2_v2",
-        "DriveCount": 0
-      },
-      "labels": {
+      "Labels": {
         "LogEsData": true
       }
     }
