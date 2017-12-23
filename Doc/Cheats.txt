@@ -5,14 +5,14 @@
 # [neon]: Ubuntu 16.04
 
 neon login rm root@home --force
-neon cluster prepare %NF_ROOT%\Devops\Home\home-small.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=6 --force
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=6 --unredacted root@home --direct
+neon cluster prepare %NF_ROOT%\Devops\Home\home-small.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --force
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=6 --unredacted root@home --direct
 
-neon cluster prepare %NF_ROOT%\Devops\Home\home-azure.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=6
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=6 root@azure
+neon cluster prepare %NF_ROOT%\Devops\Home\home-azure.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=6 root@azure --direct
 
-neon cluster prepare %NF_ROOT%\Devops\Home\home-large.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=6
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=c:\neon.log --max-parallel=6 root@home
+neon cluster prepare %NF_ROOT%\Devops\Home\home-large.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=6 root@home --direct
 
 # Create host VHDX template zip files that will be compatible with the [neon-cli] tool.
 
