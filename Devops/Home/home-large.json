@@ -43,7 +43,7 @@
       "Labels": {
         "StorageSSD": true
       }
-    //},
+    },
     //"manager-1": {
     //  "Role": "manager",
     //  "PrivateAddress": "10.0.0.31",
