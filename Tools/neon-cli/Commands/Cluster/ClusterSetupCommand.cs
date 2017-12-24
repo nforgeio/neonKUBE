@@ -960,9 +960,9 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
         /// <param name="node">The target cluster node.</param>
         private void ConfigureVpnReturnRoutes(NodeProxy<NodeDefinition> node)
         {
-            if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine)
+            if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine || !cluster.Definition.Vpn.Enabled)
             {
-                // Cloud handle VPN return routing via routing tables setup
+                // Note that cloud deployments handle VPN return routing via routing tables setup
                 // during cluster preparation.
 
                 return;

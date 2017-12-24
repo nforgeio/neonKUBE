@@ -33,7 +33,9 @@ namespace NeonCli
     /// <summary>
     /// Handles the provisioning of the global cluster proxy services including: 
     /// <b>neon-cluster-manager</b>, <b>neon-proxy-manager</b>,
-    /// <b>neon-proxy-public</b> and <b>neon-proxy-private</b>.
+    /// <b>neon-proxy-public</b> and <b>neon-proxy-private</b>, and the
+    /// <b>neon-proxy-public-bridge</b> and <b>neon-proxy-private-bridge</b>
+    /// containers on any pet nodes.
     /// </summary>
     public class ClusterServices
     {
@@ -117,6 +119,22 @@ namespace NeonCli
                     cluster.DockerSecret.Set("neon-proxy-public-credentials", NeonHelper.JsonSerialize(cluster.Vault.GetAppRoleCredentialsAsync("neon-proxy-public").Result, Formatting.Indented));
                     cluster.DockerSecret.Set("neon-proxy-private-credentials", NeonHelper.JsonSerialize(cluster.Vault.GetAppRoleCredentialsAsync("neon-proxy-private").Result, Formatting.Indented));
 
+                    // Initialize the public and private proxies.
+
+                    cluster.PublicProxy.UpdateSettings(
+                        new ProxySettings()
+                        {
+                            FirstPort = NeonHostPorts.ProxyPublicFirst,
+                            LastPort = NeonHostPorts.ProxyPublicLast
+                        });
+
+                    cluster.PrivateProxy.UpdateSettings(
+                        new ProxySettings()
+                        {
+                            FirstPort = NeonHostPorts.ProxyPrivateFirst,
+                            LastPort = NeonHostPorts.ProxyPrivateLast
+                        });
+
                     // Deploy the proxy manager service.
 
                     firstManager.Status = "start: neon-proxy-manager";
@@ -138,22 +156,6 @@ namespace NeonCli
                     {
                         manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-manager.sh"), response.BashCommand);
                     }
-
-                    // Initialize the public and private proxies.
-
-                    cluster.PublicProxy.UpdateSettings(
-                        new ProxySettings()
-                        {
-                            FirstPort = NeonHostPorts.ProxyPublicFirst,
-                            LastPort  = NeonHostPorts.ProxyPublicLast
-                        });
-
-                    cluster.PrivateProxy.UpdateSettings(
-                        new ProxySettings()
-                        {
-                            FirstPort = NeonHostPorts.ProxyPrivateFirst,
-                            LastPort  = NeonHostPorts.ProxyPrivateLast
-                        });
 
                     // $todo(jeff.lill):
                     //
@@ -276,6 +278,7 @@ namespace NeonCli
                                 "--name", "neon-proxy-public-bridge",
                                 "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public-bridge/conf",
                                 "--env", "LOG_LEVEL=INFO",
+                                "--restart", "always",
                                 "neoncluster/neon-proxy");
 
                         pet.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-public-bridge.sh"), response.BashCommand);
@@ -293,6 +296,7 @@ namespace NeonCli
                                 "--name", "neon-proxy-private-bridge",
                                 "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private-bridge/conf",
                                 "--env", "LOG_LEVEL=INFO",
+                                "--restart", "always",
                                 "neoncluster/neon-proxy");
 
                         pet.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-private-bridge.sh"), response.BashCommand);

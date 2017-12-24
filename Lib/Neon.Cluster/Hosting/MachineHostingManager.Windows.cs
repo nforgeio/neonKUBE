@@ -255,6 +255,8 @@ namespace Neon.Cluster
                 var existingMachines = hyperv.ListVMs();
                 var conflicts        = string.Empty;
 
+                controller.SetOperationStatus("Stopping virtual machines");
+
                 foreach (var machine in existingMachines)
                 {
                     var drivePath   = Path.Combine(vmDriveFolder, $"{machine.Name}.vhdx");

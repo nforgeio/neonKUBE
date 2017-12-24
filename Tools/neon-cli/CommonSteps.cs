@@ -172,7 +172,7 @@ ClientAliveCountMax 20
         /// </remarks>
         public static void WaitForPackageManager(NodeProxy<NodeDefinition> node)
         {
-            node.Status = "apt-get wait";
+            node.Status = "package manager check";
 
             // Pause to give Linux a chance to boot and actually start any
             // pending package manager operations.
@@ -188,10 +188,10 @@ ClientAliveCountMax 20
                     break;
                 }
 
-                node.Status = "apt-get busy";
+                node.Status = "package manager busy";
             }
 
-            node.Status = "apt-get ready";
+            node.Status = "package manager ready";
         }
 
         /// <summary>
