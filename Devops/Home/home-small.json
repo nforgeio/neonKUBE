@@ -3,6 +3,7 @@
   "Datacenter": "woodinville",
   "Environment": "development",
   "TimeSources": [ "pool.ntp.org" ],
+  "DebugMode": true,
   "Hosting": {
     "ManagerRouterAddress": "lill-home.ddns.net",
     "Machine": {
@@ -66,6 +67,14 @@
       "Labels": {
         "StorageSSD": true,
         "LogEsData": true
+      }
+    },
+    "pet-0": {
+      "Role": "pet",
+      "PrivateAddress": "10.0.0.43",
+      "Labels": {
+        "StorageSSD": true,
+        "LogEsData": false
       }
     }
   }
