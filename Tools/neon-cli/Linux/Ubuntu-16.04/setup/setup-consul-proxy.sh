@@ -91,15 +91,14 @@ Before=
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/consul agent -config-dir /etc/consul.d \\
-    ${encrypt_option}
+ExecStart=/usr/local/bin/consul agent -config-dir /etc/consul.d ${encrypt_option}
 ExecReload=/bin/kill -s HUP \$MAINPID
 
 [Install]
 WantedBy=multi-user.target
 EOF
 
-# Restrict this to ROOT because it includes the encryption key.
+# Restrict this to ROOT because it may include an encryption key.
 
 chmod 700 /lib/systemd/system/consul.service
 
