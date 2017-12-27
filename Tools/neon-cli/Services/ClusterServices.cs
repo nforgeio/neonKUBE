@@ -278,6 +278,7 @@ namespace NeonCli
                                 "--name", "neon-proxy-public-bridge",
                                 "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public-bridge/conf",
                                 "--env", "LOG_LEVEL=INFO",
+                                "--network", "host",
                                 "--restart", "always",
                                 "neoncluster/neon-proxy");
 
@@ -293,13 +294,14 @@ namespace NeonCli
                         var response = pet.DockerCommand(
                             "docker run",
                                 "--detach",
-                                "--name", "neon-proxy-private-bridge",
+                                "--name", "neon-proxy-private-proxy-bridge",
                                 "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private-bridge/conf",
                                 "--env", "LOG_LEVEL=INFO",
+                                "--network", "host",
                                 "--restart", "always",
                                 "neoncluster/neon-proxy");
 
-                        pet.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-private-bridge.sh"), response.BashCommand);
+                        pet.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-private-bridge.sh"), response.BashCommand);
                         pet.Status = string.Empty;
                     });
             }

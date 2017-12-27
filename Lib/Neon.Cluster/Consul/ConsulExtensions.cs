@@ -44,7 +44,7 @@ namespace Consul
         }
 
         /// <summary>
-        /// Writes a byte array value to a Consul key.
+        /// Writes a byte array value to a Consul key. 
         /// </summary>
         /// <param name="kv">The key/value endpoint.</param>
         /// <param name="key">The key.</param>

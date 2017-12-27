@@ -386,10 +386,9 @@ namespace NeonProxyManager
         /// <param name="clusterCerts">The cluster certificate information.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>
-        /// A tuple including the proxy's route dictionary, publication status details,
-        /// as well as a flag indicating whether changes were published to Consul.
+        /// A tuple including the proxy's route dictionary and publication status details.
         /// </returns>
-        private static async Task<(Dictionary<string, ProxyRoute> Routes, string Status, bool Published)> 
+        private static async Task<(Dictionary<string, ProxyRoute> Routes, string Status)> 
             BuildProxyConfigAsync(string proxyName, ClusterCerts clusterCerts, CancellationToken cancellationToken)
         {
             var proxyDisplayName       = proxyName.ToUpperInvariant();
@@ -471,7 +470,7 @@ namespace NeonProxyManager
                 // Warn and exit for (presumably transient) Consul errors.
 
                 log.LogWarn($"Consul request failure for proxy [{proxyDisplayName}].", e);
-                return (Routes: routes, Status: log.ToString(), Published: false);
+                return (Routes: routes, Status: log.ToString());
             }
 
             log.Record();
@@ -572,7 +571,7 @@ namespace NeonProxyManager
             if (validationContext.HasErrors)
             {
                 log.LogError(validationContext.GetErrors());
-                return (Routes: routes, log.ToString(), Published: false);
+                return (Routes: routes, log.ToString());
             }
 
             // Generate the contents of the [haproxy.cfg] file.
@@ -1245,7 +1244,7 @@ backend http:{httpRoute.Name}
             if (configError)
             {
                 log.LogError("Proxy configuration aborted due to one or more errors.");
-                return (Routes: routes, log.ToString(), Published: false);
+                return (Routes: routes, log.ToString());
             }
 
             // Generate the contents of the [.certs] file.
@@ -1360,7 +1359,7 @@ backend http:{httpRoute.Name}
                 // Warn and exit for Consul errors.
 
                 log.LogWarn("Consul request failure.", e);
-                return (Routes: routes, log.ToString(), Published: false);
+                return (Routes: routes, log.ToString());
             }
 
             //-----------------------------------------------------------------
@@ -1443,7 +1442,7 @@ backend http:{httpRoute.Name}
 
                 if (workers.Count >= settings.BridgeTargetCount)
                 {
-                    // There are enough workers to select targets from so we'll just do that.
+                    // There are enough workers to select targets from, so we'll just do that.
                     // The idea here is to try to keep the managers from doing as much routing 
                     // work as possible because they may be busy handling global cluster activities,
                     // especially for large clusters.
@@ -1458,7 +1457,7 @@ backend http:{httpRoute.Name}
                     // Otherwise for small clusters, we'll select targets from managers
                     // and workers.
 
-                    foreach (var node in swarmNodes.SelectRandom(settings.BridgeTargetCount))
+                    foreach (var node in swarmNodes.SelectRandom(Math.Min(settings.BridgeTargetCount, swarmNodes.Count)))
                     {
                         bridgeTargets.Add(node.Addr);
                     }
@@ -1677,13 +1676,13 @@ listen tcp:port-{port}
                 // Warn and exit for Consul/Docker errors.
 
                 log.LogWarn("Consul or Docker request failure.", e);
-                return (Routes: routes, log.ToString(), Published: false);
+                return (Routes: routes, log.ToString());
             }
             
             //-----------------------------------------------------------------
             // We're done
 
-            return (Routes: routes, Status: log.ToString(), Published: publish);
+            return (Routes: routes, Status: log.ToString());
         }
 
         /// <summary>

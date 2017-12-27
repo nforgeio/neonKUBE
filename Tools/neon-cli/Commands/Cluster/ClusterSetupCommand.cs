@@ -1422,7 +1422,8 @@ $@"docker login \
                     {
                         "neoncluster/ubuntu-16.04",
                         "neoncluster/ubuntu-16.04-dotnet",
-                        "neoncluster/neon-proxy-vault"
+                        "neoncluster/neon-proxy-vault",
+                        "neoncluster/neon-proxy"
                     };
 
                     if (cluster.Definition.Log.Enabled)

@@ -979,7 +979,7 @@ namespace Neon.Cluster
 
             DockerSettings  settings; 
 
-            if (externalConnection && false)
+            if (externalConnection)
             {
                 settings = new DockerSettings(Cluster.FirstManager.PrivateAddress);
             }
