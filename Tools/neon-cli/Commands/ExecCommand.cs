@@ -20,6 +20,11 @@ using Neon.Cluster;
 using Neon.Common;
 using Neon.IO;
 
+// $todo(jeff.lill):
+//
+// It would be cool to introduce some kind of target node filtering
+// based in contraint expressions.
+
 namespace NeonCli
 {
     /// <summary>
@@ -69,7 +74,7 @@ NOTES:
 
     * If the command targets multiple nodes, the command output will
       be written to the node log files and [neon-cli] will return a
-      0 exit code if all of the node commands returned 0, othwerise 1.
+      [0] exit code if all of the node commands returned [0], otherwise [1].
 
     * Commands are executed with [sudo] privileges. 
 
