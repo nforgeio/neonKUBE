@@ -294,7 +294,7 @@ namespace NeonCli
                         var response = pet.DockerCommand(
                             "docker run",
                                 "--detach",
-                                "--name", "neon-proxy-private-proxy-bridge",
+                                "--name", "neon-proxy-private-bridge",
                                 "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private-bridge/conf",
                                 "--env", "LOG_LEVEL=INFO",
                                 "--network", "host",
