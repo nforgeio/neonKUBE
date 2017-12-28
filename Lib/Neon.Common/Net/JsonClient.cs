@@ -71,7 +71,7 @@ namespace Neon.Net
         /// Constructor.
         /// </summary>
         /// <param name="handler">The optional message handler.</param>
-        /// <param name="disposeHandler">Indicates whether the handler will be disposed automatically (defaults to <c>false</c>).</param>
+        /// <param name="disposeHandler">Indicates whether the handler passed will be disposed automatically (defaults to <c>false</c>).</param>
         public JsonClient(HttpMessageHandler handler = null, bool disposeHandler = false)
         {
             if (handler == null)
@@ -80,6 +80,8 @@ namespace Neon.Net
                 {
                     AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
                 };
+
+                disposeHandler = false; // Always dispose handlers created by the constructor.
             }
 
             client = new HttpClient(handler, disposeHandler);
