@@ -590,7 +590,7 @@ namespace Neon.Cluster
 
                 if (ClusterLogin == null)
                 {
-                    throw new InvalidOperationException("Connect failed because due to not being logged into a cluster.");
+                    throw new InvalidOperationException("Connect failed due to not being logged into a cluster.");
                 }
             }
 
