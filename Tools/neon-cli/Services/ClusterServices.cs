@@ -144,6 +144,7 @@ namespace NeonCli
                             "--name", "neon-proxy-manager",
                             "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
                             "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
+                            "--mount", "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
                             "--env", "VAULT_CREDENTIALS=neon-proxy-manager-credentials",
                             "--env", "LOG_LEVEL=INFO",
                             "--secret", "neon-proxy-manager-credentials",

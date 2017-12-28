@@ -56,10 +56,12 @@ namespace NeonProxyManager
         private static INeonLogger              log;
         private static VaultClient              vault;
         private static ConsulClient             consul;
+        private static DockerClient             docker;
         private static TimeSpan                 pollInterval;
         private static TimeSpan                 certWarnTime;
         private static ClusterDefinition        cachedClusterDefinition;
         private static Task                     monitorTask;
+        private static List<DockerNode>         swarmNodes;
 
         /// <summary>
         /// Application entry point.
@@ -120,8 +122,11 @@ namespace NeonProxyManager
 
                     using (consul = NeonClusterHelper.OpenConsul())
                     {
-                        await RunAsync();
-                        terminator.ReadyToExit();
+                        using (docker = NeonClusterHelper.OpenDocker())
+                        {
+                            await RunAsync();
+                            terminator.ReadyToExit();
+                        }
                     }
                 }
             }
@@ -306,6 +311,11 @@ namespace NeonProxyManager
                                         log.LogError("Aborting proxy configuration.");
                                         return;
                                     }
+
+                                    // Fetch the list of active Docker Swarm nodes.  We'll need this to generate the
+                                    // proxy bridge configurations.
+
+                                    swarmNodes = await docker.NodeListAsync();
 
                                     // Rebuild the proxy configurations and write the captured status to
                                     // Consul to make it available for the [neon proxy public|private status]
@@ -1370,14 +1380,15 @@ backend http:{httpRoute.Name}
             //
             // The bridge proxy is typically deployed as a standalone Docker container on cluster
             // pet nodes and will expose internal cluster services on the pets using the same
-            // ports where they are deployed internally.  This means that containers running on
-            // pet nodes can consume cluster services the same way as they do on the manager
+            // ports where they are deployed on the internal Swarm nodes.  This means that containers
+            // running on pet nodes can consume cluster services the same way as they do on the manager
             // and worker nodes.
             //
             // This was initially used as a way to route pet node logging traffic from the
             // [neon-log-host] containers to the [neon-log-collector] service to handle
             // upstream log processing and persistance to the Elasticsearch cluster but
-            // this could also be used in the future to access any cluster service.
+            // the bridges could also be used in the future to access any cluster service
+            // with a public or private proxy route defined.
             //
             // The code below generally assumes that the bridge target proxy is exposed 
             // on all Swarm manager or worker nodes (via the Docker ingress/mesh network 
@@ -1385,10 +1396,11 @@ backend http:{httpRoute.Name}
             // be configured to handle forwarded traffic is determined by the proxy
             // settings.
             //
-            // The code below starts by quering the Docker Swarm to get a list of the active
-            // Swarm nodes.  If there are 5 (the default) or fewer worker nodes, the configuration
-            // will use all cluster nodes (including managers) as target endpoints.  If there are more
-            // than 5 worker nodes, the code will randomly select 5 of them as endpoints.
+            // The code below starts by examining the list of active Docker Swarm nodes captured
+            // before we started generating proxy configs.  If there are 5 (the default) or fewer 
+            // worker nodes, the configuration will use all cluster nodes (including managers) as 
+            // target endpoints.  If there are more than 5 worker nodes, the code will randomly 
+            // select 5 of them as endpoints.
             //
             // This approach balances the need for simplicity and reliability in the face of 
             // node failure while trying to avoid an explosion of health check traffic.
@@ -1403,17 +1415,11 @@ backend http:{httpRoute.Name}
             // 
             // Start out by querying Docker for the current Swarm nodes.
 
-            List<DockerNode>                swarmNodes;
             Dictionary<string, DockerNode>  addressToSwarmNode = new Dictionary<string, DockerNode>();
 
-            using (var docker = NeonClusterHelper.OpenDocker())
+            foreach (var node in swarmNodes)
             {
-                swarmNodes = await docker.NodeListAsync();
-
-                foreach (var node in swarmNodes)
-                {
-                    addressToSwarmNode.Add(node.Addr, node);
-                }
+                addressToSwarmNode.Add(node.Addr, node);
             }
 
             var bridgeTargets = new List<string>();

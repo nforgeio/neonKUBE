@@ -45,25 +45,26 @@
         "StorageSSD": true
       }
     },
-    //"manager-1": {
-    //  "Role": "manager",
-    //  "PrivateAddress": "10.0.0.31",
-    //  "Labels": {
-    //    "StorageSSD": true
-    //  }
-    //},
-    //"manager-2": {
-    //  "Role": "manager",
-    //  "PrivateAddress": "10.0.0.32",
-    //  "Labels": {
-    //    "StorageSSD": true
-    //  }
-    //},
+    "manager-1": {
+      "Role": "manager",
+      "PrivateAddress": "10.0.0.31",
+      "Labels": {
+        "StorageSSD": true
+      }
+    },
+    "manager-2": {
+      "Role": "manager",
+      "PrivateAddress": "10.0.0.32",
+      "Labels": {
+        "StorageSSD": true
+      }
+    },
     "worker-0": {
       "Role": "worker",
       "PrivateAddress": "10.0.0.40",
       "Labels": {
         "StorageSSD": true
+        //"LogEsData": true
       }
     },
     "worker-1": {
@@ -71,6 +72,7 @@
       "PrivateAddress": "10.0.0.41",
       "Labels": {
         "StorageSSD": true
+        //"LogEsData": true
       }
     },
     "worker-2": {
@@ -78,6 +80,7 @@
       "PrivateAddress": "10.0.0.42",
       "Labels": {
         "StorageSSD": true
+        //"LogEsData": true
       }
     },
     "pet-0": {
