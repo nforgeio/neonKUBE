@@ -89,8 +89,7 @@ Before=
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/consul agent -server -config-dir /etc/consul.d \\
-	${encrypt_option}
+ExecStart=/usr/local/bin/consul agent -server -config-dir /etc/consul.d ${encrypt_option}
 ExecReload=/bin/kill -s HUP \$MAINPID
 
 [Install]
@@ -109,16 +108,26 @@ safeinvoke systemctl enable consul
 echo "*** Start Consul" 1>&2
 safeinvoke systemctl start consul
 
-# We need to modify the systemd unit file by removing the encryption option
+# We need to rewrite the systemd unit file to remove the encryption option
 # to prevent problems with key ring conflicts after the Consul cluster has
 # been formed and Consul is restarted.
 
-sed -i '/\s*-encrypt\s.*/d' /lib/systemd/system/consul.service
+cat <<EOF > /lib/systemd/system/consul.service
+[Unit]
+Description=Consul Proxy service
+Documentation=
+After=
+Requires=
+Before=
 
-# We can also remove the [--bootstrap-expect] after the first start so
-# we won't see any warnings on restart.
+[Service]
+Type=simple
+ExecStart=/usr/local/bin/consul agent -server -config-dir /etc/consul.d
+ExecReload=/bin/kill -s HUP \$MAINPID
 
-sed -i '/\s*-bootstrap-expect\s.*/d' /lib/systemd/system/consul.service
+[Install]
+WantedBy=multi-user.target
+EOF
 
 # Reload the service configuration to pick up the changes.
 
