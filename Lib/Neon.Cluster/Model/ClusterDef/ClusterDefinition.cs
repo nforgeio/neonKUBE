@@ -36,8 +36,12 @@ namespace Neon.Cluster
         //---------------------------------------------------------------------
         // Static members
 
-        private const string defaultDatacenter       = "DATACENTER";
-        private readonly string[] defaultTimeSources = new string[] { "pool.ntp.org" };
+        private const string        defaultDatacenter          = "DATACENTER";
+        private readonly string[]   defaultTimeSources         = new string[] { "pool.ntp.org" };
+        private const string        defaultProxyImage          = "neoncluster/neon-proxy:latest";
+        private const string        defaultProxyVaultImage     = "neoncluster/neon-proxy-vault:latest";
+        private const string        defaultProxyManagerImage   = "neoncluster/neon-proxy-manager:latest";
+        private const string        defaultClusterManagerImage = "neoncluster/neon-cluster-manager:latest";
 
         internal static Regex NameRegex { get; private set; }    = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
         internal static Regex DnsHostRegex { get; private set; } = new Regex(@"^([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])(\.([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9]))*$", RegexOptions.IgnoreCase);
@@ -347,6 +351,38 @@ namespace Neon.Cluster
         public DashboardOptions Dashboard { get; set; } = new DashboardOptions();
 
         /// <summary>
+        /// The Docker image to be used to provision public and private proxies and proxy bridges.
+        /// This defaults to <b>neoncluster/neon-proxy:latest</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ProxyImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(defaultProxyImage)]
+        public string ProxyImage { get; set; } = defaultProxyImage;
+
+        /// <summary>
+        /// The Docker image to be used to provision HashiCorp Vault proxies.
+        /// This defaults to <b>neoncluster/neon-proxy-vault:latest</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ProxyVaultImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(defaultProxyVaultImage)]
+        public string ProxyVaultImage { get; set; } = defaultProxyVaultImage;
+
+        /// <summary>
+        /// The Docker image to be used to provision the <b>neon-proxy-manager</b>
+        /// service.   This defaults to <b>neoncluster/neon-proxy-manager:latest</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ProxyManagerImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(defaultProxyManagerImage)]
+        public string ProxyManagerImage { get; set; } = defaultProxyManagerImage;
+
+        /// <summary>
+        /// The Docker image to be used to provision the <b>neon-cluster-manager</b>
+        /// service.   This defaults to <b>neoncluster/neon-cluster-manager:latest</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "ClusterManagerImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(defaultClusterManagerImage)]
+        public string ClusterManagerImage { get; set; } = defaultClusterManagerImage;
+
+        /// <summary>
         /// Describes the Docker host nodes in the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Nodes", Required = Required.Always)]
@@ -522,6 +558,11 @@ namespace Neon.Cluster
             Vault     = Vault ?? new VaultOptions();
             Log       = Log ?? new LogOptions();
             Dashboard = Dashboard ?? new DashboardOptions();
+
+            ProxyImage          = ProxyImage ?? defaultProxyImage;
+            ProxyVaultImage     = ProxyVaultImage ?? defaultProxyVaultImage;
+            ProxyManagerImage   = ProxyManagerImage ?? defaultProxyManagerImage;
+            ClusterManagerImage = ClusterManagerImage ?? defaultClusterManagerImage;
 
             Network.Validate(this);
             Hosting.Validate(this);

@@ -86,6 +86,15 @@ USAGE:
     //  BareDocker        Optionally indicates that a basic Docker cluster without
     //                    most of the extra neonCLUSTER features should be deployed.
     //                    This defaults to [false].
+    //
+    //  These properties specify the Docker image to be deployed for various
+    //  cluster level services.  The reasonable default values for each are
+    //  shown on the right.
+    //
+    //  ProxyImage              neoncluster/neon-proxy:latest
+    //  ProxyVaultImage         neoncluster/neon-proxy-vault:latest
+    //  ProxyManagerImage       neoncluster/neon-proxy-manager:latest
+    //  ClusterManagerImage     neoncluster/neon-cluster-manager:latest
 
     ""Name"": ""my-cluster"",
     ""Datacenter"": ""Seattle"",
@@ -141,7 +150,7 @@ USAGE:
         // ""CertOrganization"" : ""my-authority""
     },
 
-    // Cluster host authention options:
+    // Cluster host authentication options:
 
     ""HostAuth"": {
 

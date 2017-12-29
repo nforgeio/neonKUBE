@@ -1422,8 +1422,8 @@ $@"docker login \
                     {
                         "neoncluster/ubuntu-16.04",
                         "neoncluster/ubuntu-16.04-dotnet",
-                        "neoncluster/neon-proxy-vault",
-                        "neoncluster/neon-proxy"
+                        cluster.Definition.ProxyImage,
+                        cluster.Definition.ProxyVaultImage
                     };
 
                     if (cluster.Definition.Log.Enabled)
@@ -1529,7 +1529,7 @@ $@"docker login \
                             "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                             "--env", $"LOG_LEVEL=INFO",
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                            "neoncluster/neon-proxy-vault");
+                            cluster.Definition.ProxyVaultImage);
 
                     steps.Add(command);
 
@@ -1568,7 +1568,7 @@ $@"docker login \
                             "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                             "--env", $"LOG_LEVEL=INFO",
                             "--restart", "always",
-                            "neoncluster/neon-proxy-vault");
+                            cluster.Definition.ProxyVaultImage);
 
                         steps.Add(command);
                         steps.Add(cluster.GetFileUploadSteps(new[] { pet }, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
