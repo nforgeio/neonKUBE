@@ -48,8 +48,8 @@ namespace Neon.Cluster
 
         /// <summary>
         /// The shared key used by Consul to encrypt network traffic between cluster nodes.
-        /// This key must be 16-bytes, Base64 encoded.  This defaults to a cryptographically
-        /// generated key.
+        /// This key must be 16-bytes, Base64 encoded.  This defaults to a generated 
+        /// cryptographically random key.
         /// </summary>
         /// <remarks>
         /// <note>

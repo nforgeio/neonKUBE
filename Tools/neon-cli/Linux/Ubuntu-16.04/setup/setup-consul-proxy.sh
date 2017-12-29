@@ -13,14 +13,19 @@
 #
 #       consul-key              - Consul encryption key (or "-" for none)
 
-# Get the encryption key.  Note that we're going to replace "-" 
-# arguments values with empty strings because Bash doesn't 
-# do empty arguments.
+#------------------------------------------------------------------------------
+# Configure Consul encryption.
 
 if [ "${1}" == "-" ] ; then
     encryption_key=
 else
     encryption_key=${1}
+fi
+
+if [ "${encryption_key}" != "-" ] ; then
+    encrypt_option="-encrypt ${encryption_key}"
+else
+    encrypt_option=""
 fi
 
 # Configure Bash strict mode so that the entire script will fail if 
@@ -68,15 +73,6 @@ mkdir -p /mnt-data/consul
 chmod 770 /mnt-data/consul
 
 #------------------------------------------------------------------------------
-# Configure Consul encryption.
-
-if [ "${encryption_key}" != "" ] ; then
-    encrypt_option="-encrypt ${encryption_key}"
-else
-    encrypt_option=""
-fi
-
-#------------------------------------------------------------------------------
 # Generate the Consul systemd service unit (PROXY mode).
 
 echo "*** Generating Consul Proxy systemd service unit" 1>&2
@@ -91,7 +87,8 @@ Before=
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/consul agent -config-dir /etc/consul.d ${encrypt_option}
+ExecStart=/usr/local/bin/consul agent -config-dir /etc/consul.d \\
+	${encrypt_option}
 ExecReload=/bin/kill -s HUP \$MAINPID
 
 [Install]

@@ -13,14 +13,19 @@
 #
 #       encryption_key  - Consul encryption key (or "-" for none)
 
-# Get the encryption key.  Note that we're going to replace "-" 
-# arguments values with empty strings because Bash doesn't 
-# do empty arguments.
+#------------------------------------------------------------------------------
+# Configure Consul encryption.
 
 if [ "${1}" == "-" ] ; then
     encryption_key=
 else
     encryption_key=${1}
+fi
+
+if [ "${encryption_key}" != "-" ] ; then
+    encrypt_option="-encrypt ${encryption_key}"
+else
+    encrypt_option=""
 fi
 
 # Configure Bash strict mode so that the entire script will fail if 
@@ -85,7 +90,7 @@ Before=
 [Service]
 Type=simple
 ExecStart=/usr/local/bin/consul agent -server -config-dir /etc/consul.d \\
-    -encrypt ${encryption_key}
+	${encrypt_option}
 ExecReload=/bin/kill -s HUP \$MAINPID
 
 [Install]
