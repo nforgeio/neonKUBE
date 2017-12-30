@@ -371,6 +371,17 @@ tool requires admin priviledges for direct mode.
                         var shimMount    = $"-v \"{shim.ShimExternalFolder}:/shim\"";
                         var options      = shim.Terminal ? "-it" : "-i";
 
+                        // If the tool was built from the Git production branch then the Docker image
+                        // tag will simply be the tool version.  For non-production branches we'll
+                        // use [BRANCH-latest] as the tag.
+
+                        var imageTag = Program.Version;
+
+                        if (ThisAssembly.Git.Branch != NeonClusterConst.GitProdBranch)
+                        {
+                            imageTag = $"{ThisAssembly.Git.Branch}-latest";
+                        }
+
                         Process process;
 
                         try
