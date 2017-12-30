@@ -4,6 +4,8 @@ Images are tagged with the Git branch, image build date, and Git commit and an o
 
 The most recent production build will be tagged as **latest**.
 
+From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
+
 # Description
 
 This image is deployed as the **neon-log-collector** service.  This service acts handles the transformation and aggregation of log events captured on each cluster node by the **neon-log-host** containers running on the nodes.  This image relies on the [Fluentd](http://www.fluentd.org/) TD-Agent agent to handle the actual transformation and transmission of the logs.

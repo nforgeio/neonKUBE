@@ -27,6 +27,7 @@ $image_root = "$env:NF_ROOT\\Images"
 
 $appname  = "neon"
 $registry = "neoncluster/neon-cli"
+$branch   = GitBranch
 
 # Build and publish the app to a local [bin] folder.
 
@@ -51,16 +52,35 @@ $version=$(& dotnet "$pwd\bin\$appname.dll" --direct version -n)
 
 # Build the image.
 
-Exec { docker build -t "${registry}:$version" --build-arg "APPNAME=$appname" . }
-
-if ($latest)
+if (IsProd)
 {
-	Exec { docker tag "${registry}:$version" "${registry}:latest"}
+	Exec { docker build -t "${registry}:$version" --build-arg "APPNAME=$appname" . }
+
+	if ($latest)
+	{
+		Exec { docker tag "${registry}:$version" "${registry}:latest"}
+	}
+
+	PushImage "${registry}:$version"
+
+	if ($latest)
+	{
+		PushImage "${registry}:latest"
+	}
 }
-
-PushImage "${registry}:$version"
-
-if ($latest)
+else
 {
-	PushImage "${registry}:latest"
+	Exec { docker build -t "${registry}:$branch-$version" --build-arg "APPNAME=$appname" . }
+
+	if ($latest)
+	{
+		Exec { docker tag "${registry}:$branch-$version" "${registry}:$branch-latest"}
+	}
+
+	PushImage "${registry}:$branch-$version"
+
+	if ($latest)
+	{
+		PushImage "${registry}:$branch-latest"
+	}
 }

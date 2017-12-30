@@ -30,6 +30,7 @@ function Build
 
 	$registry = "neoncluster/ubuntu-16.04-dotnet"
 	$date     = UtcDate
+	$branch   = GitBranch
 	$tag      = "${dotnetVersion}-${date}"
 
 	# Build the images.
@@ -37,10 +38,18 @@ function Build
 	./build.ps1 -registry $registry -tag $tag -version $dotnetVersion
 	PushImage "${registry}:$tag"
 
-	if (($latest) -and (IsProd))
+	if ($latest)
 	{
-		Exec { docker tag "${registry}:$tag" "${registry}:latest"}
-		PushImage "${registry}:latest"
+		if (IsProd)
+		{
+			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+			PushImage "${registry}:latest"
+		}
+		else
+		{
+			Exec { docker tag "${registry}:$tag" "${registry}:${branch}-latest" }
+			PushImage "${registry}:${branch}-latest"
+		}
 	}
 }
 

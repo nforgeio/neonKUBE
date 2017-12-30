@@ -4,6 +4,8 @@ Images are tagged with the Git branch, image build date, and Git commit and an o
 
 The most recent production build will be tagged as **latest**.
 
+From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
+
 # Configuration
 
 This image implements the **neon-proxy-vault** service which is responsible for forwarding internal requests to the HashiCorp Vault instances running on the cluster manager nodes.  This this function could not be handled by the **neon-proxy-private** service because that service needs to call Vault to retrieve secrets such as TLS certificates and keys. 

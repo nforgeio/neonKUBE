@@ -9,6 +9,8 @@ The following image tags identify archived images which will not be deleted but 
 
 Supported images are tagged with the Elasticsearch version plus the image build date.
 
+From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
+
 **IMPORTANT:**
 
 The official [elasticsearch](https://hub.docker.com/_/elasticsearch/) image is being deprecated in favor of images maintained in Elastic's corporate repository.  The original official images were based on [openjdk](https://hub.docker.com/_/openjdk/).  I'm not entirely sure what the new images are based on, but they seem locked down and my custom scripts no longer work.

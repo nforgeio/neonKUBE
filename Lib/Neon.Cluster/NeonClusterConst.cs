@@ -119,5 +119,10 @@ namespace Neon.Cluster
         /// The maximum number of manager nodes allowed in a neonCLUSTER.
         /// </summary>
         public const int MaxManagers = 5;
+
+        /// <summary>
+        /// Identifies the Git production branch.
+        /// </summary>
+        public const string GitProdBranch = "prod";
     }
 }

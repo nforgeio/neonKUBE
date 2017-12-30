@@ -29,16 +29,25 @@ function Build
 
 	$registry = "neoncluster/ubuntu-16.04"
 	$tag      = UtcDate
+	$branch   = GitBranch
 
 	# Build the images.
 
 	./build.ps1 -registry $registry -tag $tag
 	PushImage "${registry}:$tag"
 
-	if (($latest) -and (IsProd))
+	if ($latest)
 	{
-		Exec { docker tag "${registry}:$tag" "${registry}:latest" }
-		PushImage "${registry}:latest"
+		if (IsProd)
+		{
+			Exec { docker tag "${registry}:$tag" "${registry}:latest" }
+			PushImage "${registry}:latest"
+		}
+		else
+		{
+			Exec { docker tag "${registry}:$tag" "${registry}:${branch}-latest" }
+			PushImage "${registry}:${branch}-latest"
+		}
 	}
 }
 
