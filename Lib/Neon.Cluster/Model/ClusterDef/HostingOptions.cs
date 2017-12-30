@@ -73,12 +73,38 @@ namespace Neon.Cluster
         public MachineOptions Machine { get; set; } = null;
 
         /// <summary>
+        /// Specifies the hosting settings when hosting on Microsoft Hyper-V virtual machines.
+        /// </summary>
+        [JsonProperty(PropertyName = "HyperV", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public HyperVOptions HyperV { get; set; } = null;
+
+        /// <summary>
         /// Returns <c>true</c> if the cluster will be hosted by a cloud provider like AWS or Azure.
         /// </summary>
         [JsonIgnore]
         public bool IsCloudProvider
         {
-            get { return Environment != HostingEnvironments.Machine; }
+            get
+            {
+                switch (Environment)
+                {
+                    case HostingEnvironments.HyperV:
+                    case HostingEnvironments.Machine:
+
+                        return false;
+
+                    case HostingEnvironments.Aws:
+                    case HostingEnvironments.Azure:
+                    case HostingEnvironments.Google:
+
+                        return true;
+
+                    default:
+
+                        throw new NotImplementedException("Unexpected hosting environment.");
+                }
+            }
         }
 
         /// <summary>
@@ -124,12 +150,16 @@ namespace Neon.Cluster
                     Google.Validate(clusterDefinition);
                     break;
 
+                case HostingEnvironments.HyperV:
+
+                    HyperV = HyperV ?? new HyperVOptions();
+
+                    HyperV.Validate(clusterDefinition);
+                    break;
+
                 case HostingEnvironments.Machine:
 
-                    if (Machine == null)
-                    {
-                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Machine)}] must be initialized when cloud provider is [{Environment}].");
-                    }
+                    Machine = Machine ?? new MachineOptions();
 
                     Machine.Validate(clusterDefinition);
                     break;

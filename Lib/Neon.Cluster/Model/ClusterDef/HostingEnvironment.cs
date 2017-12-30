@@ -16,10 +16,16 @@ namespace Neon.Cluster
     public enum HostingEnvironments
     {
         /// <summary>
-        /// Hosted on directly on privately managed bare metal or virtual machines.
+        /// Hosted on directly on pre-provisioned bare metal or virtual machines.
         /// </summary>
         [EnumMember(Value = "machine")]
         Machine = 0,
+
+        /// <summary>
+        /// Hosted on Microsoft Hyper-V virtual machines.
+        /// </summary>
+        [EnumMember(Value = "hyper-v")]
+        HyperV,
 
         /// <summary>
         /// Amazon Web Services.

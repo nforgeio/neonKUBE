@@ -36,8 +36,6 @@ namespace Neon.Cluster
     public partial class MachineHostingManager : HostingManager
     {
         private ClusterProxy        cluster;
-        private SetupController     controller;
-        private bool                forceVmOverwrite;
 
         /// <summary>
         /// Constructor.
@@ -62,84 +60,15 @@ namespace Neon.Cluster
         /// <inheritdoc/>
         public override bool IsProvisionNOP
         {
-            get { return !cluster.Definition.Hosting.Machine.DeployVMs; }
+            get { return true; }
         }
 
         /// <inheritdoc/>
         public override bool Provision(bool force)
         {
-            this.forceVmOverwrite = force;
-
-            if (IsProvisionNOP)
-            {
-                // There's nothing to do here.
-
-                return true;
-            }
-
-            // If a public address isn't explicitly specified, we'll assume that the
-            // tool is running inside the network and can access the private address.
-
-            foreach (var node in cluster.Definition.Nodes)
-            {
-                if (string.IsNullOrEmpty(node.PublicAddress))
-                {
-                    node.PublicAddress = node.PrivateAddress;
-                }
-            }
-
-            // Initialize and perform the setup operations.
-
-            controller = new SetupController($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
-            {
-                ShowStatus  = this.ShowStatus,
-                MaxParallel = 1     // We're only going to prepare one VM at a time.
-            };
-
-            if (NeonHelper.IsWindows)
-            {
-                controller.AddGlobalStep("prepare hypervisor", () => PrepareHyperV());
-                controller.AddStep("create virtual machines", n => ProvisionHyperVMachine(n));
-                controller.AddGlobalStep(string.Empty, () => FinishHyperV(), quiet: true);
-            }
-            else if (NeonHelper.IsOSX)
-            {
-                controller.AddGlobalStep("prepare hypervisor", () => PrepareVirtualBox());
-                controller.AddStep("create virtual machines", n => ProvisionVirtualBoxMachine(n));
-                controller.AddGlobalStep(string.Empty, () => FinishVirtualBox(), quiet: true);
-            }
-            else
-            {
-                throw new NotSupportedException("neonCLUSTER virtual machines may only be deployed on Windows or Macintosh OSX.");
-            }
-
-            if (!controller.Run())
-            {
-                Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-                return false;
-            }
+            // There's nothing to do here.
 
             return true;
-        }
-
-        /// <summary>
-        /// Performs any required initialization before host nodes can be provisioned.
-        /// </summary>
-        /// <param name="force">Specifies whether any existing named VMs are to be stopped and overwritten.</param>
-        private void PrepareVirtualization(bool force)
-        {
-            if (NeonHelper.IsWindows)
-            {
-                PrepareHyperV();
-            }
-            else if (NeonHelper.IsOSX)
-            {
-                PrepareVirtualBox();
-            }
-            else
-            {
-                throw new NotSupportedException("neonCLUSTER virtual machines may only be deployed on Windows or Macintosh OSX.");
-            }
         }
 
         /// <inheritdoc/>

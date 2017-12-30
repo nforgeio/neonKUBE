@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    MachineHostingManager.Windows.cs
+// FILE:	    HyperVHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 
@@ -24,16 +24,19 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using Neon.Cluster.HyperV;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Cluster.HyperV;
 using Neon.Net;
 using Neon.Time;
 
 namespace Neon.Cluster
 {
-    public partial class MachineHostingManager : HostingManager
+    /// <summary>
+    /// Manages cluster provisioning on Microsoft Hyper-V virtual machines.
+    /// </summary>
+    public partial class HyperVHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
         // Private types
@@ -64,9 +67,118 @@ namespace Neon.Cluster
 
         private const string defaultSwitchName = "neonCLUSTER";
 
-        private string driveTemplatePath;
-        private string vmDriveFolder;
-        private string switchName;
+        private ClusterProxy        cluster;
+        private SetupController     controller;
+        private bool                forceVmOverwrite;
+        private string              driveTemplatePath;
+        private string              vmDriveFolder;
+        private string              switchName;
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="cluster">The cluster being managed.</param>
+        public HyperVHostingManager(ClusterProxy cluster)
+        {
+            cluster.HostingManager = this;
+
+            this.cluster = cluster;
+        }
+
+        /// <inheritdoc/>
+        public override void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                GC.SuppressFinalize(this);
+            }
+        }
+
+        /// <inheritdoc/>
+        public override bool IsProvisionNOP
+        {
+            get { return false; }
+        }
+
+        /// <inheritdoc/>
+        public override bool Provision(bool force)
+        {
+            this.forceVmOverwrite = force;
+
+            if (IsProvisionNOP)
+            {
+                // There's nothing to do here.
+
+                return true;
+            }
+
+            // If a public address isn't explicitly specified, we'll assume that the
+            // tool is running inside the network and can access the private address.
+
+            foreach (var node in cluster.Definition.Nodes)
+            {
+                if (string.IsNullOrEmpty(node.PublicAddress))
+                {
+                    node.PublicAddress = node.PrivateAddress;
+                }
+            }
+
+            // Initialize and perform the setup operations.
+
+            controller = new SetupController($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
+            {
+                ShowStatus  = this.ShowStatus,
+                MaxParallel = 1     // We're only going to prepare one VM at a time.
+            };
+
+            controller.AddGlobalStep("prepare hyper-v", () => PrepareHyperV());
+            controller.AddStep("create virtual machines", n => ProvisionHyperVMachine(n));
+            controller.AddGlobalStep(string.Empty, () => FinishHyperV(), quiet: true);
+
+            if (!controller.Run())
+            {
+                Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <inheritdoc/>
+        public override (string Address, int Port) GetSshEndpoint(string nodeName)
+        {
+            return (Address: cluster.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
+        }
+
+        /// <inheritdoc/>
+        public override void AddPostProvisionSteps(SetupController controller)
+        {
+        }
+
+        /// <inheritdoc/>
+        public override void AddPostVpnSteps(SetupController controller)
+        {
+        }
+
+        /// <inheritdoc/>
+        public override List<HostedEndpoint> GetPublicEndpoints()
+        {
+            // Note that public endpoints have to be managed manually for
+            // on-premise cluster deployments so we're going to return an 
+            // empty list.
+
+            return new List<HostedEndpoint>();
+        }
+
+        /// <inheritdoc/>
+        public override bool CanUpdatePublicEndpoints => false;
+
+        /// <inheritdoc/>
+        public override void UpdatePublicEndpoints(List<HostedEndpoint> endpoints)
+        {
+            // Note that public endpoints have to be managed manually for
+            // on-premise cluster deployments.
+        }
 
         /// <summary>
         /// Performs any required Hyper-V initialization before host nodes can be provisioned.
@@ -76,9 +188,9 @@ namespace Neon.Cluster
             // Determine where we're going to place the VM hard drive files and
             // ensure that the directory exists.
 
-            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.Machine.VMDriveFolder))
+            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.HyperV.VMDriveFolder))
             {
-                vmDriveFolder = cluster.Definition.Hosting.Machine.VMDriveFolder;
+                vmDriveFolder = cluster.Definition.Hosting.HyperV.VMDriveFolder;
             }
             else
             {
@@ -102,14 +214,14 @@ namespace Neon.Cluster
             // drive template.  Production clusters should reference a specific
             // drive template.
 
-            var driveTemplateUri  = new Uri(cluster.Definition.Hosting.Machine.HostVhdxUri);
+            var driveTemplateUri = new Uri(cluster.Definition.Hosting.HyperV.HostVhdxUri);
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
             driveTemplatePath = Path.Combine(NeonClusterHelper.GetSetupFolder(), driveTemplateName);
 
-            var driveTemplateInfoPath  = Path.Combine(NeonClusterHelper.GetSetupFolder(), driveTemplateName + ".info");
+            var driveTemplateInfoPath = Path.Combine(NeonClusterHelper.GetSetupFolder(), driveTemplateName + ".info");
             var driveTemplateIsCurrent = true;
-            var driveTemplateInfo      = (DriveTemplateInfo)null;
+            var driveTemplateInfo = (DriveTemplateInfo)null;
 
             if (!File.Exists(driveTemplatePath) || !File.Exists(driveTemplateInfoPath))
             {
@@ -136,7 +248,7 @@ namespace Neon.Cluster
 
             if (!driveTemplateIsCurrent)
             {
-                controller.SetOperationStatus($"Download Template VHDX: [{cluster.Definition.Hosting.Machine.HostVhdxUri}]");
+                controller.SetOperationStatus($"Download Template VHDX: [{cluster.Definition.Hosting.HyperV.HostVhdxUri}]");
 
                 Task.Run(
                     async () =>
@@ -145,7 +257,7 @@ namespace Neon.Cluster
                         {
                             // Download the file.
 
-                            var response = await client.GetAsync(cluster.Definition.Hosting.Machine.HostVhdxUri, HttpCompletionOption.ResponseHeadersRead);
+                            var response = await client.GetAsync(cluster.Definition.Hosting.HyperV.HostVhdxUri, HttpCompletionOption.ResponseHeadersRead);
 
                             response.EnsureSuccessStatusCode();
 
@@ -175,11 +287,11 @@ namespace Neon.Cluster
                                             {
                                                 var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                                controller.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{cluster.Definition.Hosting.Machine.HostVhdxUri}]");
+                                                controller.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{cluster.Definition.Hosting.HyperV.HostVhdxUri}]");
                                             }
                                             else
                                             {
-                                                controller.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{cluster.Definition.Hosting.Machine.HostVhdxUri}]");
+                                                controller.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{cluster.Definition.Hosting.HyperV.HostVhdxUri}]");
                                             }
                                         }
                                     }
@@ -234,7 +346,7 @@ namespace Neon.Cluster
 
                 controller.SetOperationStatus("Scanning virtual switches");
 
-                var switches       = hyperv.ListVMSwitches();
+                var switches = hyperv.ListVMSwitches();
                 var externalSwitch = switches.FirstOrDefault(s => s.Type == VirtualSwitchType.External);
 
                 if (externalSwitch == null)
@@ -253,13 +365,13 @@ namespace Neon.Cluster
                 controller.SetOperationStatus("Scanning virtual machines");
 
                 var existingMachines = hyperv.ListVMs();
-                var conflicts        = string.Empty;
+                var conflicts = string.Empty;
 
                 controller.SetOperationStatus("Stopping virtual machines");
 
                 foreach (var machine in existingMachines)
                 {
-                    var drivePath   = Path.Combine(vmDriveFolder, $"{machine.Name}.vhdx");
+                    var drivePath = Path.Combine(vmDriveFolder, $"{machine.Name}.vhdx");
                     var isClusterVM = cluster.FindNode(machine.Name) != null;
 
                     if (isClusterVM)
@@ -381,7 +493,7 @@ namespace Neon.Cluster
                     // $hack(jeff.lill): Update console at 2 sec intervals to avoid annoying flicker
 
                     var updateInterval = TimeSpan.FromSeconds(2);
-                    var stopwatch      = new Stopwatch();
+                    var stopwatch = new Stopwatch();
 
                     stopwatch.Start();
 
@@ -422,9 +534,9 @@ namespace Neon.Cluster
                     node.Status = $"create virtual machine";
                     hyperv.AddVM(
                         node.Name,
-                        memorySize: cluster.Definition.Hosting.Machine.VMMemory, 
-                        minimumMemorySize: cluster.Definition.Hosting.Machine.VMMinimumMemory, 
-                        drivePath: drivePath, 
+                        memorySize: cluster.Definition.Hosting.HyperV.VMMemory,
+                        minimumMemorySize: cluster.Definition.Hosting.HyperV.VMMinimumMemory,
+                        drivePath: drivePath,
                         switchName: switchName);
                 }
 
@@ -438,10 +550,10 @@ namespace Neon.Cluster
                 node.Status = $"get current ip";
 
                 var adapters = hyperv.ListVMNetworkAdapters(node.Name, waitForAddresses: true);
-                var adapter  = adapters.FirstOrDefault();
-                var address  = adapter.Addresses.First();
-                var subnet   = NetworkCidr.Parse(cluster.Definition.Network.NodesSubnet);
-                var gateway  = cluster.Definition.Network.Gateway;
+                var adapter = adapters.FirstOrDefault();
+                var address = adapter.Addresses.First();
+                var subnet = NetworkCidr.Parse(cluster.Definition.Network.NodesSubnet);
+                var gateway = cluster.Definition.Network.Gateway;
 
                 if (adapter == null)
                 {

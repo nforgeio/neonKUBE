@@ -3,12 +3,10 @@
   "Datacenter": "woodinville",
   "Environment": "development",
   "TimeSources": [ "pool.ntp.org" ],
-  "DebugMode":  true,
+  "DebugMode": true,
   "Hosting": {
     "ManagerRouterAddress": "lill-home.ddns.net",
-    "Machine": {
-      "DeployVMs": true
-    }
+    "Environment": "hyper-v"
   },
   "Network": {
     "NodesSubnet": "10.0.0.0/24"
