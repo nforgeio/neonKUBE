@@ -288,7 +288,7 @@ namespace Neon.Cluster
                 {
                     var clusterLogin = NeonClusterHelper.LoadClusterLogin(username, clusterName);
 
-                    clusterLogin.ViaVpn = current.ViaVpn;
+                    clusterLogin.ViaVpn = current.ViaVpn && clusterLogin.VpnCredentials != null;
 
                     if (noConnect)
                     {
