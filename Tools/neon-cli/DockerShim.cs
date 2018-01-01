@@ -79,7 +79,9 @@ namespace NeonCli
                 // the container returns.  I'm going to handle this by treating;
                 // any IO Exceptions as transient.
 
-                for (int retryCount = 0; retryCount < 5; retryCount++)
+                const int retryCount = 5;
+
+                for (int retry = 0; retry < retryCount; retry++)
                 {
                     try
                     {
@@ -88,6 +90,11 @@ namespace NeonCli
                     }
                     catch (IOException)
                     {
+                        if (retry >= retryCount - 1)
+                        {
+                            throw;
+                        }
+
                         Thread.Sleep(TimeSpan.FromSeconds(1));
                     }
                 }
