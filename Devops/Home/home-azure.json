@@ -29,7 +29,7 @@
     "PasswordLength": 20
   },
   "Docker": {
-    "Version": "17.09.0-ce",
+    "Version": "17.09.1-ce",
     //"Version": "17.06.1-ce",
     //"Version": "17.03.2-ce",
     //"Version": "latest",
