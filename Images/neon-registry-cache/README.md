@@ -2,15 +2,15 @@ This base image derives from the offical [registry](https://hub.docker.com/_/reg
 
 # Image Tags
 
-The following image tags identify archived images which will not be deleted but are not maintained.
-
-* `2.6.0, 2.6, 2`
-
 Supported images are tagged with the Git branch, image build date, and Git commit and an optional **-dirty** suffix if the image was built from a branch with uncommitted changes or untracked files.
 
 The most recent production build will be tagged as **latest**.
 
 From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
+
+The following image tags identify archived images which will not be deleted but are no longer maintained.
+
+* `2.6.0, 2.6, 2`
 
 # Description
 
