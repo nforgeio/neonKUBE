@@ -57,14 +57,6 @@ namespace NeonCli
 
             ShimExternalFolder = Path.Combine(Program.ClusterTempFolder, $"shim-{Guid.NewGuid().ToString("D")}");
 
-            if (Directory.Exists(ShimExternalFolder))
-            {
-                foreach (var file in Directory.GetFiles(ShimExternalFolder))
-                {
-                    File.Delete(file);
-                }
-            }
-
             Directory.CreateDirectory(ShimExternalFolder);
 
             // Write the original command line to a special shim file so the [neon-cli]
@@ -80,7 +72,25 @@ namespace NeonCli
         {
             if (ShimExternalFolder != null)
             {
-                Directory.Delete(ShimExternalFolder, recursive: true);
+                // $todo(jeff.lill):
+                //
+                // I've seen evidence that one or more files in the shim folder
+                // sometimes still have locks on them for a brief time after
+                // the container returns.  I'm going to handle this by treating;
+                // any IO Exceptions as transient.
+
+                for (int retryCount = 0; retryCount < 5; retryCount++)
+                {
+                    try
+                    {
+                        Directory.Delete(ShimExternalFolder, recursive: true);
+                        break;
+                    }
+                    catch (IOException)
+                    {
+                        Thread.Sleep(TimeSpan.FromSeconds(1));
+                    }
+                }
 
                 ShimExternalFolder = null;
             }
