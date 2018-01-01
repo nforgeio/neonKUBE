@@ -259,7 +259,7 @@ namespace NeonCli
                             // Make the [logstash-*] index pattern the default Kibana index.
 
                             var kibanaConfigHit = (JObject)hitsArray[0];
-                            var kibanaConfig = (JObject)kibanaConfigHit.GetValue("_source");
+                            var kibanaConfig    = (JObject)kibanaConfigHit.GetValue("_source");
 
                             kibanaConfig["defaultIndex"] = "logstash-*";
 
@@ -372,7 +372,7 @@ namespace NeonCli
                         "--memory-swappiness", "0",
                         "--network", "host",
                         "--log-driver", "json-file",
-                        cluster.Definition.Log.EsImage);
+                        Program.ResolveDockerImage(cluster.Definition.Log.EsImage));
 
                 steps.Add(runCommand);
 
@@ -436,7 +436,7 @@ $@"
                         "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
                         "--env", $"ELASTICSEARCH_URL=http://{NeonHosts.LogEsData}:{NeonHostPorts.ProxyPrivateHttpLogEsData}",
                         "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
-                        cluster.Definition.Log.KibanaImage);
+                        Program.ResolveDockerImage(cluster.Definition.Log.KibanaImage));
 
             steps.Add(command);
             steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-kibana.sh"), command.ToBash()));
@@ -460,7 +460,7 @@ $@"
                         "--constraint", $"node.role==manager",
                         "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
                         "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
-                        cluster.Definition.Log.CollectorImage);
+                        Program.ResolveDockerImage(cluster.Definition.Log.CollectorImage));
 
             steps.Add(command);
             steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-collector.sh"), command.ToBash()));
@@ -489,7 +489,7 @@ $@"
                     "--volume", "/var/log:/hostfs/var/log",
                     "--network", "host",
                     "--log-driver", "json-file",        // Ensure that we don't log to the pipeline to avoid cascading events.
-                    cluster.Definition.Log.HostImage);
+                    Program.ResolveDockerImage(cluster.Definition.Log.HostImage));
 
                 steps.Add(runCommand);
                 steps.Add(UploadStep.Text(node.Name, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-host.sh"), runCommand.ToBash()));

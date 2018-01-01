@@ -154,7 +154,7 @@ namespace NeonCli
                             "--env", $"USERNAME={cluster.Definition.Docker.RegistryUsername}",
                             "--env", $"PASSWORD={cluster.Definition.Docker.RegistryPassword}",
                             "--env", "LOG_LEVEL=info",
-                            "neoncluster/neon-registry-cache");
+                            Program.ResolveDockerImage(cluster.Definition.Docker.RegistryCacheImage));
 
                         node.SudoCommand(runCommand);
 

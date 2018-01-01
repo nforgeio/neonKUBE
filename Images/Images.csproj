@@ -50,6 +50,7 @@
     <Content Include="neon-cluster-manager\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <None Include="elasticsearch\README.md" />
     <None Include="neon-cluster-manager\build.ps1" />
     <None Include="neon-cluster-manager\docker-entrypoint.sh" />
     <None Include="neon-cluster-manager\Dockerfile">
@@ -152,7 +153,6 @@
     </None>
     <None Include="dotnet\publish.ps1" />
     <None Include="dotnet\README.md" />
-    <None Include="elasticsearch\README.md" />
     <Content Include="neon-proxy-manager\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

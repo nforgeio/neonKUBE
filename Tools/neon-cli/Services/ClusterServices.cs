@@ -100,7 +100,7 @@ namespace NeonCli
                             "--constraint", "node.role==manager",
                             "--replicas", 1,
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                            "neoncluster/neon-cluster-manager");
+                            Program.ResolveDockerImage(cluster.Definition.ClusterManagerImage));
 
                     foreach (var manager in cluster.Managers)
                     {
@@ -151,7 +151,7 @@ namespace NeonCli
                             "--constraint", "node.role==manager",
                             "--replicas", 1,
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                            cluster.Definition.ProxyManagerImage);
+                            Program.ResolveDockerImage(cluster.Definition.ProxyManagerImage));
 
                     foreach (var manager in cluster.Managers)
                     {
@@ -229,7 +229,7 @@ namespace NeonCli
                             "--mode", "global",
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "--network", NeonClusterConst.PublicNetwork,
-                            cluster.Definition.ProxyImage);
+                            Program.ResolveDockerImage(cluster.Definition.ProxyImage));
 
                     foreach (var manager in cluster.Managers)
                     {
@@ -253,7 +253,7 @@ namespace NeonCli
                             "--mode", "global",
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
                             "--network", NeonClusterConst.PrivateNetwork,
-                            cluster.Definition.ProxyImage);
+                            Program.ResolveDockerImage(cluster.Definition.ProxyImage));
 
                     foreach (var manager in cluster.Managers)
                     {
@@ -281,7 +281,7 @@ namespace NeonCli
                                 "--env", "LOG_LEVEL=INFO",
                                 "--network", "host",
                                 "--restart", "always",
-                                cluster.Definition.ProxyImage);
+                                Program.ResolveDockerImage(cluster.Definition.ProxyImage));
 
                         pet.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-public-bridge.sh"), response.BashCommand);
                         pet.Status = string.Empty;
@@ -300,7 +300,7 @@ namespace NeonCli
                                 "--env", "LOG_LEVEL=INFO",
                                 "--network", "host",
                                 "--restart", "always",
-                                cluster.Definition.ProxyImage);
+                                Program.ResolveDockerImage(cluster.Definition.ProxyImage));
 
                         pet.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-private-bridge.sh"), response.BashCommand);
                         pet.Status = string.Empty;

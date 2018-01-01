@@ -33,7 +33,7 @@ namespace NeonCli
         /// <summary>
         /// The <b>neon-cli</b> version/tag.
         /// </summary>
-        public const string Version = "1.2.8";
+        public const string Version = "1.2.9";
 
         /// <summary>
         /// Program entry point.
@@ -114,6 +114,9 @@ OPTIONS:
 
     --direct                            - See note below.
     --help                              - Display help
+    --image-tag=TAG                     - Replaces any [:latest] Docker image
+                                          tags when deploying a cluster (usually
+                                          for development/testing purposes)
     --log-folder=LOG-FOLDER             - Optional log folder path
     -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
                                           configured in parallel [default=1]
@@ -189,6 +192,7 @@ tool requires admin priviledges for direct mode.
                 validOptions.Add("-w");
                 validOptions.Add("--wait");
                 validOptions.Add("--direct");
+                validOptions.Add("--image-tag");
 
                 if (CommandLine.Arguments.Length == 0)
                 {
@@ -465,6 +469,46 @@ tool requires admin priviledges for direct mode.
 
                 Program.WaitSeconds = waitSeconds;
 
+                // Parse and check any [--image-tag=TAG] option.
+
+                DockerImageTag = leftCommandLine.GetOption("--image-tag");
+
+                if (DockerImageTag != null)
+                {
+                    if (DockerImageTag.Length == 0)
+                    {
+                        Console.Error.WriteLine($"*** ERROR: [--image-tag={DockerImageTag}] cannot specify an empty tag.");
+                        Program.Exit(1);
+                    }
+
+                    if (DockerImageTag[0] == '.' || DockerImageTag[0] == '-')
+                    {
+                        Console.Error.WriteLine($"*** ERROR: [--image-tag={DockerImageTag}] cannot start with a period (.) or dash (-).");
+                        Program.Exit(1);
+                    }
+
+                    foreach (var ch in DockerImageTag)
+                    {
+                        var upper = char.ToUpperInvariant(ch);
+
+                        if ('A' <= upper && upper <= 'Z')
+                        {
+                            continue;
+                        }
+                        else if ('0' <= upper && upper <= '9')
+                        {
+                            continue;
+                        }
+                        else if (ch == '_' || ch == '.' || ch == '-')
+                        {
+                            continue;
+                        }
+
+                        Console.Error.WriteLine($"*** ERROR: [--image-tag={DockerImageTag}] includes the invalid character [{ch}].  Only [a-zA-Z0-9_.-] are allowed.");
+                        Program.Exit(1);
+                    }
+                }
+
                 if (command.CheckOptions)
                 {
                     // Make sure there are no unexpected command line options.
@@ -553,6 +597,69 @@ tool requires admin priviledges for direct mode.
         /// Message written then a user is not logged into a cluster.
         /// </summary>
         public const string MustLoginMessage = "*** ERROR: You must first log into a cluster.";
+
+        /// <summary>
+        /// Optionally set to the tag to be used to override any explicit or implicit <b>:latest</b>
+        /// image tags specified when deploying a neonCLUSTER.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This property is <c>null</c> by default but may be specified using the <b>--image-tag=TAG</b>
+        /// command line option.  The main purpose of this is support development and testing by specifying
+        /// something like <b>--image-tag=BRANCH-latest</b>, where <b>BRANCH</b> is the current development
+        /// branch.
+        /// </para>
+        /// <para>
+        /// This will direct <b>neon-cli</b> to use images built from the branch rather than the default
+        /// production images without needing to modify cluster configuration files.  All the developer
+        /// needs to do is ensure that all of the required images were built from that branch first and
+        /// then published to Docker Hub.
+        /// </para>
+        /// </remarks>
+        public static string DockerImageTag { get; set; } = null;
+
+        /// <summary>
+        /// Resolves a Docker Image name/tag into the image specification to be actually deployed, taking
+        /// the <see cref="DockerImageTag"/> property into account.
+        /// </summary>
+        /// <param name="image">The input image specification.</param>
+        /// <returns>The output specification.</returns>
+        /// <remarks>
+        /// <para>
+        /// If <see cref="DockerImageTag"/> is empty, then this method simply returns the <paramref name="image"/> 
+        /// argument as passed.  Otherwise, if the image argument implicitly or explicitly specifies the
+        /// <b>:latest</b> tag, then the value returned will include the <see cref="DockerImageTag"/>.
+        /// </para>
+        /// <para>
+        /// In all cases where <paramref name="image"/> specifies a non-latest tag, then the argument
+        /// will be returned unchanged.
+        /// </para>
+        /// </remarks>
+        public static string ResolveDockerImage(string image)
+        {
+            if (string.IsNullOrEmpty(DockerImageTag) || string.IsNullOrEmpty(image))
+            {
+                return image;
+            }
+
+            var normalized = image;
+
+            if (normalized.IndexOf(':') == -1)
+            {
+                // The image implicitly specifies [:latest].
+
+                normalized += ":latest";
+            }
+
+            if (normalized.EndsWith(":latest"))
+            {
+                return normalized.Replace(":latest", $":{DockerImageTag}");
+            }
+            else
+            {
+                return image;
+            }
+        }
 
         /// <summary>
         /// Path to the WinSCP program executable.

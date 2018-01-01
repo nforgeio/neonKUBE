@@ -1529,7 +1529,7 @@ $@"docker login \
                             "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                             "--env", $"LOG_LEVEL=INFO",
                             "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                            cluster.Definition.ProxyVaultImage);
+                            Program.ResolveDockerImage(cluster.Definition.ProxyVaultImage));
 
                     steps.Add(command);
 
@@ -1568,7 +1568,7 @@ $@"docker login \
                             "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                             "--env", $"LOG_LEVEL=INFO",
                             "--restart", "always",
-                            cluster.Definition.ProxyVaultImage);
+                            Program.ResolveDockerImage(cluster.Definition.ProxyVaultImage));
 
                         steps.Add(command);
                         steps.Add(cluster.GetFileUploadSteps(new[] { pet }, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
@@ -1787,7 +1787,7 @@ $@"docker login \
             node.InvokeIdempotentAction("setup-metricbeat",
                 () =>
                 {
-                    node.Status = "deploying metricbeat";
+                    node.Status = "metricbeat deploy";
 
                     var response = node.DockerCommand(
                         "docker run",
@@ -1799,7 +1799,7 @@ $@"docker login \
                             "--volume", "/proc:/hostfs/proc:ro",
                             "--volume", "/:/hostfs:ro",
                             "--log-driver", "json-file",
-                            "neoncluster/metricbeat");
+                            Program.ResolveDockerImage(cluster.Definition.Log.MetricbeatImage));
 
                     node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-metricbeat.sh"), response.BashCommand);
                 });
@@ -1825,7 +1825,7 @@ $@"docker login \
                         "docker run --rm",
                             "--name", "neon-log-metricbeat-dash",
                             "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
-                            "neoncluster/metricbeat", "import-dashboards");
+                            Program.ResolveDockerImage(cluster.Definition.Log.MetricbeatImage), "import-dashboards");
                 });
         }
 
