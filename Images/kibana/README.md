@@ -1,15 +1,15 @@
 # Supported Tags
 
-The following image tags identify archived images which will not be deleted but are not maintained.
+Supported are be tagged with the Kibana version plus the image build date.
+
+From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
+
+The following image tags identify archived images which will not be deleted but are no longer maintained.
 
 * `5.2.0`&nbsp;&nbsp;&nbsp;&nbsp;`<-- `last image based on [elasticsearch](https://hub.docker.com/_/kibana/)
 * `5.3.0`&nbsp;&nbsp;&nbsp;&nbsp;`<-- `first image based directly on [openjdk](https://hub.docker.com/_/openjdk/)
 * `5.4.0`
 * `5.5.0`
-
-Supported are be tagged with the Kibana version plus the image build date.
-
-From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
 
 **IMPORTANT:**
 
