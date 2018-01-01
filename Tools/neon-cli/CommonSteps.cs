@@ -202,7 +202,7 @@ ClientAliveCountMax 20
         /// <param name="clusterDefinition">The cluster definition.</param>
         public static void ConfigureEnvironmentVariables(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
-            node.Status = "environment vars";
+            node.Status = "environment variables";
 
             // We're going to append the new variables to the existing Linux [/etc/environment] file.
 
