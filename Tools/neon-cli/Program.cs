@@ -26,7 +26,7 @@ namespace NeonCli
 {
     /// <summary>
     /// This tool is used to configure the nodes of a Neon Docker Swarm cluster.
-    /// See <b>~/Stack/Dock/Ubuntu-16.04 Cluster Deploy.docx</b> for more information.
+    /// See <b>$/Doc/Ubuntu-16.04 Cluster Deploy.docx</b> for more information.
     /// </summary>
     public static class Program
     {
