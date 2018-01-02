@@ -31,7 +31,7 @@ namespace NeonCli
     public static class Program
     {
         /// <summary>
-        /// The <b>neon-cli</b> version/tag.
+        /// The <b>neon-cli</b> version.
         /// </summary>
         public const string Version = "1.2.10";
 
