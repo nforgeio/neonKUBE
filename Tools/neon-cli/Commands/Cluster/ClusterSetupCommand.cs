@@ -1497,12 +1497,10 @@ $@"docker login \
             cluster.FirstManager.InvokeIdempotentAction("setup-proxy-vault",
                 () =>
                 {
-                    // $todo(jeff.lill):
-                    //
-                    // Docker mesh routing seems unstable right now on versions 17.03.0-ce
-                    // thru 17.06.0-ce so we're going to temporarily work around this by
-                    // running the PUBLIC, PRIVATE and VAULT proxies on all nodes and 
-                    // publishing the ports to the host (not the mesh).
+                    // Docker mesh routing seemed unstable on versions 17.03.0-ce
+                    // thru 17.06.0-ce so we're going to provide an option to work
+                    // around this by running the PUBLIC, PRIVATE and VAULT proxies 
+                    // on all nodes and  publishing the ports to the host (not the mesh).
                     //
                     //      https://github.com/jefflill/NeonForge/issues/104
                     //
@@ -1510,7 +1508,23 @@ $@"docker login \
                     //
                     //      https://docs.docker.com/engine/swarm/services/#publish-ports
 
-                    // Deploy [neon-proxy-vault] on all manager nodes.
+                    var options = new List<string>();
+
+                    if (cluster.Definition.Docker.AvoidIngressNetwork)
+                    {
+                        options.Add("--publish");
+                        options.Add($"mode=host,published={NeonHostPorts.ProxyVault},target={NetworkPorts.Vault}");
+                    }
+                    else
+                    {
+                        options.Add("--constraint");
+                        options.Add($"node.role==manager");
+
+                        options.Add("--publish");
+                        options.Add($"{NeonHostPorts.ProxyVault}:{NetworkPorts.Vault}");
+                    }
+
+                    // Deploy [neon-proxy-vault].
 
                     var steps   = new ConfigStepList();
                     var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-proxy-vault",
@@ -1519,17 +1533,12 @@ $@"docker login \
                         "--mode", "global",
                         "--endpoint-mode", "vip",
                         "--network", NeonClusterConst.PrivateNetwork,
-#if !MESH_NETWORK_WORKS
-                            "--publish", $"mode=host,published={NeonHostPorts.ProxyVault},target={NetworkPorts.Vault}",
-#else
-                            "--constraint", $"node.role==manager",
-                            "--publish", $"{NeonHostPorts.ProxyVault}:{NetworkPorts.Vault}",
-#endif
-                            "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
-                            "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
-                            "--env", $"LOG_LEVEL=INFO",
-                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                            Program.ResolveDockerImage(cluster.Definition.ProxyVaultImage));
+                        options,
+                        "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
+                        "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
+                        "--env", $"LOG_LEVEL=INFO",
+                        "--restart-delay", cluster.Definition.Docker.RestartDelay,
+                        Program.ResolveDockerImage(cluster.Definition.ProxyVaultImage));
 
                     steps.Add(command);
 

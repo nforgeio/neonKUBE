@@ -158,12 +158,10 @@ namespace NeonCli
                         manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-manager.sh"), response.BashCommand);
                     }
 
-                    // $todo(jeff.lill):
-                    //
-                    // Docker mesh routing seems unstable right now on versions 17.03.0-ce
-                    // thru 17.06.0-ce so we're going to temporarily work around this by
-                    // running the PUBLIC, PRIVATE and VAULT proxies on all nodes and 
-                    // publishing the ports to the host (not the mesh).
+                    // Docker mesh routing seemed unstable on versions 17.03.0-ce
+                    // thru 17.06.0-ce so we're going to provide an option to work
+                    // around this by running the PUBLIC, PRIVATE and VAULT proxies 
+                    // on all nodes and  publishing the ports to the host (not the mesh).
                     //
                     //      https://github.com/jefflill/NeonForge/issues/104
                     //
@@ -171,46 +169,50 @@ namespace NeonCli
                     //
                     //      https://docs.docker.com/engine/swarm/services/#publish-ports
 
-                    string proxyConstraint;
+                    var publicPublish   = new List<string>();
+                    var privatePublish  = new List<string>();
+                    var proxyConstraint = new List<string>();
 
-#if !MESH_NETWORK_WORKS
-                    // The parameterized [service create --publish] option doesn't handle port ranges so we need to 
-                    // specify multiple publish options.
-
-                    var publicPublish = new List<string>();
-
-                    for (int port = NeonHostPorts.ProxyPublicFirst; port <= NeonHostPorts.ProxyPublicLast; port++)
+                    if (cluster.Definition.Docker.AvoidIngressNetwork)
                     {
-                        publicPublish.Add("--publish");
-                        publicPublish.Add($"mode=host,published={port},target={port}");
-                    }
+                        // The parameterized [service create --publish] option doesn't handle port ranges so we need to 
+                        // specify multiple publish options.
 
-                    var privatePublish = new List<string>();
+                        for (int port = NeonHostPorts.ProxyPublicFirst; port <= NeonHostPorts.ProxyPublicLast; port++)
+                        {
+                            publicPublish.Add($"--publish");
+                            publicPublish.Add($"mode=host,published={port},target={port}");
+                        }
 
-                    for (int port = NeonHostPorts.ProxyPrivateFirst; port <= NeonHostPorts.ProxyPrivateLast; port++)
-                    {
-                        privatePublish.Add("--publish");
-                        privatePublish.Add($"mode=host,published={port},target={port}");
-                    }
-
-                    proxyConstraint = (string)null;
-#else
-                    var publicPublish  = $"--publish {NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}:{NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}";
-                    var privatePublish = $"--publish {NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}:{NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}";
-
-                    if (cluster.Definition.Workers.Count() > 0)
-                    {
-                        // Constrain proxies to worker nodes if there are any.
-
-                        proxyConstraint = "--constraint node.role!=manager";
+                        for (int port = NeonHostPorts.ProxyPrivateFirst; port <= NeonHostPorts.ProxyPrivateLast; port++)
+                        {
+                            privatePublish.Add($"--publish");
+                            privatePublish.Add($"mode=host,published={port},target={port}");
+                        }
                     }
                     else
                     {
-                        // Constrain proxies to manager nodes nodes if there are no workers.
+                        publicPublish.Add($"--publish");
+                        publicPublish.Add($"{NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}:{NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}");
 
-                        proxyConstraint = "--constraint node.role==manager";
+                        privatePublish.Add($"--publish");
+                        privatePublish.Add($"{NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}:{NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}");
+
+                        proxyConstraint.Add($"--constraint");
+
+                        if (cluster.Definition.Workers.Count() > 0)
+                        {
+                            // Constrain proxies to worker nodes if there are any.
+
+                            proxyConstraint.Add($"node.role!=manager");
+                        }
+                        else
+                        {
+                            // Constrain proxies to manager nodes nodes if there are no workers.
+
+                            proxyConstraint.Add($"node.role==manager");
+                        }
                     }
-#endif
 
                     firstManager.Status = "start: neon-proxy-public";
 

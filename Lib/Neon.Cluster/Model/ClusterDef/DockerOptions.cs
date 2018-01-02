@@ -220,6 +220,25 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Avoids using the Docker Ingress network for cluster proxies.  This defaults to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Docker releases made during the first three quarters of 2017 appear to have serious
+        /// problems with the ingress mesh network.  This problem seems to have been fixed but
+        /// this setting is available just in case.  Setting this property to <c>true</c> will
+        /// avoid this network by deploying the cluster's public, private, and Vault proxies
+        /// on all cluster Swarm nodes, effectively providing the same feature.
+        /// </para>
+        /// <para>
+        /// Here's the issue describing this: https://github.com/jefflill/NeonForge/issues/104
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "AvoidIngressNetwork", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool AvoidIngressNetwork { get; set; } = false;
+
+        /// <summary>
         /// Enables experimental Docker features.  This defaults to <c>false</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Experimental", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
