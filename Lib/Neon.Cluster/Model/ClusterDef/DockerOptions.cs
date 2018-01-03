@@ -220,7 +220,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Avoids using the Docker Ingress network for cluster proxies.  This defaults to <c>false</c>.
+        /// Avoid using the Docker Ingress network for cluster proxies.  This defaults to <c>true</c>.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -235,8 +235,8 @@ namespace Neon.Cluster
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "AvoidIngressNetwork", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(false)]
-        public bool AvoidIngressNetwork { get; set; } = false;
+        [DefaultValue(true)]
+        public bool AvoidIngressNetwork { get; set; } = true;
 
         /// <summary>
         /// Enables experimental Docker features.  This defaults to <c>false</c>.
