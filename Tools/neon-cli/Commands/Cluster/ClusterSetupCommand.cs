@@ -1820,7 +1820,9 @@ $@"docker login \
         /// <param name="cluster">The cluster proxy.</param>
         private void InstallMetricbeatDashboards(ClusterProxy cluster)
         {
-            cluster.FirstManager.InvokeIdempotentAction("setup-metricbeat-dashboards",
+            var node = cluster.FirstManager;
+
+            node.InvokeIdempotentAction("setup-metricbeat-dashboards",
                 () =>
                 {
                     // Note that we're going to add the Metricbeat dashboards to Elasticsearch
@@ -1830,11 +1832,13 @@ $@"docker login \
 
                     cluster.FirstManager.Status = "metricbeat dashboards";
 
-                    cluster.FirstManager.DockerCommand(
+                    var response = node.DockerCommand(
                         "docker run --rm",
                             "--name", "neon-log-metricbeat-dash",
                             "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
                             Program.ResolveDockerImage(cluster.Definition.Log.MetricbeatImage), "import-dashboards");
+
+                    node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-metricbeat-dashboards.sh"), response.BashCommand);
                 });
         }
 

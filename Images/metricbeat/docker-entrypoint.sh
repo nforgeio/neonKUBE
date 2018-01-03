@@ -60,8 +60,8 @@ if [ "${1}" == "service" ] ; then
     /metricbeat -e -system.hostfs=/hostfs
 
 elif [ "${1}" == "import-dashboards" ] ; then
-    . log-info.sh "Importing dashboards to: ${ELASTICSEARCH_URL}"
-    /scripts/import_dashboards -es ${ELASTICSEARCH_URL}
+    . log-info.sh "Importing dashboards"
+    /metricbeat --setup
 else 
     . log-error.sh "Invalid command line: $@"
     exit 1

@@ -54,7 +54,7 @@
           "type": "keyword"
         },
         "json": {
-          "type": "string"
+          "type": "text"
         },
         "level": {
           "type": "keyword"

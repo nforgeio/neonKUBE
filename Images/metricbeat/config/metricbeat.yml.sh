@@ -69,6 +69,11 @@ output.elasticsearch:
   #username: "elastic"
   #password: "changeme"
 
+#================================ Kibana ======================================
+
+setup.kibana:
+  host: "${NEON_NODE_IP}:${NeonHostPorts_Kibana}"
+
 #================================ Logging =====================================
 
 # Sets log level. The default log level is info.
