@@ -1420,18 +1420,18 @@ $@"docker login \
                 {
                     var images = new List<string>()
                     {
-                        "neoncluster/ubuntu-16.04",
-                        "neoncluster/ubuntu-16.04-dotnet",
-                        cluster.Definition.ProxyImage,
-                        cluster.Definition.ProxyVaultImage
+                        Program.ResolveDockerImage("neoncluster/ubuntu-16.04"),
+                        Program.ResolveDockerImage("neoncluster/ubuntu-16.04-dotnet"),
+                        Program.ResolveDockerImage(cluster.Definition.ProxyImage),
+                        Program.ResolveDockerImage(cluster.Definition.ProxyVaultImage)
                     };
 
                     if (cluster.Definition.Log.Enabled)
                     {
-                        images.Add(cluster.Definition.Log.HostImage);
-                        images.Add(cluster.Definition.Log.CollectorImage);
-                        images.Add(cluster.Definition.Log.EsImage);
-                        images.Add(cluster.Definition.Log.MetricbeatImage);
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.Log.HostImage));
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.Log.CollectorImage));
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.Log.EsImage));
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.Log.MetricbeatImage));
                     }
 
                     foreach (var image in images)
