@@ -50,7 +50,18 @@
     <Content Include="neon-cluster-manager\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="elasticsearch\README.md" />
+    <Content Include="elasticsearch6\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="elasticsearch6\build.ps1" />
+    <None Include="elasticsearch6\config\elasticsearch.yml.sh" />
+    <None Include="elasticsearch6\config\log4j2.properties" />
+    <None Include="elasticsearch6\docker-entrypoint.sh" />
+    <None Include="elasticsearch6\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="elasticsearch6\publish.ps1" />
+    <None Include="elasticsearch6\README.md" />
     <None Include="neon-cluster-manager\build.ps1" />
     <None Include="neon-cluster-manager\docker-entrypoint.sh" />
     <None Include="neon-cluster-manager\Dockerfile">

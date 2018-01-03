@@ -37,10 +37,10 @@ elasticsearch.url: "${ELASTICSEARCH_URL}"
 
 # Kibana uses an index in Elasticsearch to store saved searches, visualizations and
 # dashboards. Kibana creates a new index if the index doesn’t already exist.
-#kibana.index: ".kibana"
+kibana.index: ".kibana"
 
 # The default application to load.
-#kibana.defaultAppId: "discover"
+kibana.defaultAppId: "discover"
 
 # If your Elasticsearch is protected with basic authentication, these settings provide
 # the username and password that the Kibana server uses to perform maintenance on the Kibana

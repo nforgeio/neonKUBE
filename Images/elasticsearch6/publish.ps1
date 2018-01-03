@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds all of the supported Metricbeat images and pushes them to Docker Hub.
+# Builds all of the supported Elasticsearch images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -28,7 +28,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "neoncluster/metricbeat"
+	$registry = "neoncluster/elasticsearch"
 	$date     = UtcDate
 	$branch   = GitBranch
 	$tag      = "$version-$date"
@@ -55,13 +55,6 @@ function Build
 
 if ($all)
 {
-	# Never rebuild 5.2.0 again so it will remain based on the deprecated Kibana image.
-	#
-	# Build 5.2.0
-
-	Build 5.3.0
-	Build 5.4.0
-	Build 5.5.0
 }
 
 Build 6.1.1 -latest

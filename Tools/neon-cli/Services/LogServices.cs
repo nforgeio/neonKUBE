@@ -181,7 +181,7 @@ namespace NeonCli
                         {
                             // Hit Kibana once so it will write its configuration document.
 
-                            firstManager.Status = "Waiting for [Kibana] to initialize (be patient)";
+                            firstManager.Status = "Initializing [Kibana]";
 
                             timeoutTime = DateTime.UtcNow + timeout;
 
