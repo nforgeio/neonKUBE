@@ -42,7 +42,7 @@ This service is deployed automatically when the **neon-cli** configures a cluste
 ````
 docker service create \
     --name neon-log-collector \
-	--detach=false \
+    --detach=false \
     --mode global \
     --restart-delay 10s \
     --endpoint-mode vip \
