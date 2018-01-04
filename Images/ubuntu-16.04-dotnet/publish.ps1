@@ -33,10 +33,16 @@ function Build
 	$branch   = GitBranch
 	$tag      = "${dotnetVersion}-${date}"
 
-	# Build the images.
+	# Build and publish the images.
 
 	./build.ps1 -registry $registry -tag $tag -version $dotnetVersion
 	PushImage "${registry}:$tag"
+
+	if (IsProd)
+	{
+		Exec { docker tag "${registry}:$tag" "${registry}:$dotnetVersion" }
+		PushImage "${registry}:$dotnetVersion"
+	}
 
 	if ($latest)
 	{

@@ -22,13 +22,12 @@ function Build
 		[switch]$latest = $False
 	)
 
-	# Build the images.
 
 	$registry = "neoncluster/neon-proxy-manager"
 	$tag      = ImageTag
 	$branch   = GitBranch
 
-	# Build the images.
+	# Build and publish the images.
 
 	./build.ps1 -registry $registry -tag $tag
 	PushImage "${registry}:$tag"

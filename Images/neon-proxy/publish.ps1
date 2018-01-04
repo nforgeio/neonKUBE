@@ -27,7 +27,7 @@ function Build
 	$tag      = ImageTag
 	$branch   = GitBranch
 
-	# Build the images.
+	# Build and publish the images.
 
 	./build.ps1 -registry $registry -version $version -tag $tag
     PushImage "${registry}:$tag"

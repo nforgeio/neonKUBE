@@ -101,7 +101,7 @@ function GitBranch
 
 #------------------------------------------------------------------------------
 # Returns the current Git branch, date, and commit formatted as a Docker image tag
-# and optional dirty branch indicator.
+# along with an optional dirty branch indicator.
 
 function ImageTag
 {

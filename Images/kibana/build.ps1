@@ -25,7 +25,7 @@ $image_root = "$env:NF_ROOT\\Images"
 "* KIBANA:" + $tag
 "======================================="
 
-# Build the images.
+# Build and publish the images.
 
 # Copy the common scripts.
 
