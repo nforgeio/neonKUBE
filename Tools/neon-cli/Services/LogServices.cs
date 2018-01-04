@@ -169,6 +169,115 @@ namespace NeonCli
 
                             Thread.Sleep(TimeSpan.FromSeconds(10));
                         }
+
+                        // $todo(jeff.lill):
+                        //
+                        // The hacked code below used to be able initialize the default Kibana index pattern
+                        // but this stopped working with Kibana 6+.  The problem is that hitting Kibana no
+                        // longer creates the [.kibana] index.
+                        //
+                        // I've noticed that Metricbeat does create this index when it initializes the sample
+                        // dashboards and it appears that there is a Kibana API for this sort of thing, but
+                        // it's not documented yet.
+                        //
+                        //      https://github.com/jefflill/NeonForge/issues/148
+#if TODO
+                        // Initialize the Kibana [logstash-*] index pattern if Kibana is enabled.
+                        //
+                        // NOTE: 
+                        //
+                        // We're NOT going to initialize the Elasticsearch index mappings here.
+                        // That will be handled by the [neon-log-collector] service.
+
+                        if (cluster.Definition.Dashboard.Kibana)
+                        {
+                            // Hit Kibana once so it will write its configuration document.
+
+                            firstManager.Status = "Initializing [Kibana]";
+
+                            timeoutTime = DateTime.UtcNow + timeout;
+
+                            while (true)
+                            {
+                                try
+                                {
+                                    var response = jsonClient.GetAsync($"http://{firstManager.Metadata.PrivateAddress}:{NeonHostPorts.Kibana}/").Result;
+
+                                    if (response.IsSuccess)
+                                    {
+                                        break;
+                                    }
+                                }
+                                catch
+                                {
+                                    if (DateTime.UtcNow >= timeoutTime)
+                                    {
+                                        firstManager.Fault($"[Kibana] not initialized after waiting [{timeout}].");
+                                        return;
+                                    }
+                                }
+
+                                Thread.Sleep(TimeSpan.FromSeconds(10));
+                            }
+
+                            // Wait for Kibana to initialize its configuration document.
+
+                            firstManager.Status = "Waiting for [Kibana] to initialize (be patient)";
+
+                            timeoutTime = DateTime.UtcNow + timeout;
+
+                            JObject     queryResults;
+                            JObject     hitsObject;
+                            JArray      hitsArray;
+
+                            while (true)
+                            {
+                                try
+                                {
+                                    var response = jsonClient.GetUnsafeAsync($"{baseLogEsDataUri}/.kibana/config/_search").Result;
+
+                                    if (response.IsSuccess)
+                                    {
+                                        queryResults = (JObject)response.AsDynamic();
+                                        hitsObject   = (JObject)queryResults.GetValue("hits");
+                                        hitsArray    = (JArray)hitsObject.GetValue("hits");
+
+                                        if (hitsArray.Count > 0)
+                                        {
+                                            break;
+                                        }
+                                    }
+                                }
+                                catch
+                                {
+                                    if (DateTime.UtcNow >= timeoutTime)
+                                    {
+                                        firstManager.Fault($"[Kibana] not initialized after waiting [{timeout}].");
+                                    }
+                                }
+
+                                Thread.Sleep(TimeSpan.FromSeconds(10));
+                            }
+
+                            // Initialize the Kibana [logstash-*] index pattern.
+
+                            jsonClient.PostAsync($"{baseLogEsDataUri}/.kibana/index-pattern/logstash-*",
+@"{
+""title"": ""logstash-*"",
+""timeFieldName"": ""@timestamp""
+}
+").Wait();
+
+                            // Make the [logstash-*] index pattern the default Kibana index.
+
+                            var kibanaConfigHit = (JObject)hitsArray[0];
+                            var kibanaConfig    = (JObject)kibanaConfigHit.GetValue("_source");
+
+                            kibanaConfig["defaultIndex"] = "logstash-*";
+
+                            jsonClient.PostAsync($"{baseLogEsDataUri}/.kibana/config/{kibanaConfigHit.GetValue("_id")}", kibanaConfig).Wait();
+                        }
+#endif // TODO
                     }
 
                     firstManager.Status = string.Empty;
