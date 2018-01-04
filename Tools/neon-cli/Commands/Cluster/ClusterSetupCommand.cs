@@ -1525,6 +1525,7 @@ $@"docker login \
                     var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-proxy-vault",
                     "docker service create",
                         "--name", "neon-proxy-vault",
+                        "--detach=false",
                         "--mode", "global",
                         "--endpoint-mode", "vip",
                         "--network", NeonClusterConst.PrivateNetwork,

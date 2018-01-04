@@ -42,6 +42,7 @@ This image is typically deployed as a Docker service like:
 ````
 docker service create \
     --name neon-log-kibana \
+	--detach=false \
     --mode global \
     --restart-delay 10s \
     --endpoint-mode vip \

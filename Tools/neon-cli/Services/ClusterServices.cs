@@ -92,6 +92,7 @@ namespace NeonCli
                     var response = cluster.FirstManager.DockerCommand(RunOptions.Redact,
                         "docker service create",
                             "--name", "neon-cluster-manager",
+                            "--detach=false",
                             "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
                             "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
                             "--mount", "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
@@ -142,6 +143,7 @@ namespace NeonCli
                     response = firstManager.DockerCommand(
                         "docker service create",
                             "--name", "neon-proxy-manager",
+                            "--detach=false",
                             "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
                             "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
                             "--mount", "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
@@ -219,6 +221,7 @@ namespace NeonCli
                     response = firstManager.DockerCommand(
                         "docker service create",
                             "--name", "neon-proxy-public",
+                            "--detach=false",
                             "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
                             "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
                             "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public/conf",
@@ -243,6 +246,7 @@ namespace NeonCli
                     response = firstManager.DockerCommand(
                         "docker service create",
                             "--name", "neon-proxy-private",
+                            "--detach=false",
                             "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
                             "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
                             "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private/conf",

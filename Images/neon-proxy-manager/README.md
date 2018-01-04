@@ -122,7 +122,9 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 **neon-cli** deploys **neon-proxy-manager** when the cluster is provisioned using this Docker command:
 
 ````
-docker service create --name neon-proxy-manager \
+docker service create \
+    --name neon-proxy-manager \
+	--detach=false \
     --mount type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
     --env VAULT_CREDENTIALS=neon-proxy-manager-credentials \
