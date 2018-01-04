@@ -320,15 +320,10 @@ OPTIONS:
 
                 if (cluster.Definition.Log.Enabled)
                 {
-                    controller.AddGlobalStep("log services", () => new LogServices(cluster).Configure(cluster.FirstManager));
+                    var logServices = new LogServices(cluster);
 
-                    // $todo(jeff.lill): 
-                    //
-                    // It's a bit weird that I'm not doing these steps in [LogServices.Configure()] 
-                    // along with the other cluster configuration.
-
-                    controller.AddStep("metricbeat", n => DeployMetricbeat(n));
-                    controller.AddGlobalStep("metricbeat dashboards", () => InstallMetricbeatDashboards(cluster));
+                    controller.AddGlobalStep("log services", () => logServices.Configure(cluster.FirstManager));
+                    controller.AddStep("metricbeat", n => logServices.DeployMetricbeat(n));
                 }
 
                 controller.AddStep("check managers", n => ClusterDiagnostics.CheckManager(n, cluster.Definition), n => n.Metadata.IsManager);
@@ -1784,61 +1779,6 @@ $@"docker login \
                     loginClone.Definition.Hosting = null;
 
                     NeonClusterHelper.PutDefinitionAsync(loginClone.Definition, savePets: true).Wait();
-                });
-        }
-
-        /// <summary>
-        /// Deploys <b>Elastic Metricbeat</b> to the node.
-        /// </summary>
-        /// <param name="node">The target cluster node.</param>
-        private void DeployMetricbeat(NodeProxy<NodeDefinition> node)
-        {
-            node.InvokeIdempotentAction("setup-metricbeat",
-                () =>
-                {
-                    node.Status = "metricbeat deploy";
-
-                    var response = node.DockerCommand(
-                        "docker run",
-                            "--name", "neon-log-metricbeat",
-                            "--detach",
-                            "--net", "host",
-                            "--restart", "always",
-                            "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
-                            "--volume", "/proc:/hostfs/proc:ro",
-                            "--volume", "/:/hostfs:ro",
-                            "--log-driver", "json-file",
-                            Program.ResolveDockerImage(cluster.Definition.Log.MetricbeatImage));
-
-                    node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-metricbeat.sh"), response.BashCommand);
-                });
-        }
-
-        /// <summary>
-        /// Installs the <b>Elastic Metricbeat</b> dashboards to the log Elasticsearch cluster.
-        /// </summary>
-        /// <param name="cluster">The cluster proxy.</param>
-        private void InstallMetricbeatDashboards(ClusterProxy cluster)
-        {
-            var node = cluster.FirstManager;
-
-            node.InvokeIdempotentAction("setup-metricbeat-dashboards",
-                () =>
-                {
-                    // Note that we're going to add the Metricbeat dashboards to Elasticsearch
-                    // even when the Kibana dashboard isn't enabled because it doesn't cost
-                    // much and to make it easier for operators that wish to install Kibana
-                    // themselves.
-
-                    cluster.FirstManager.Status = "metricbeat dashboards";
-
-                    var response = node.DockerCommand(
-                        "docker run --rm",
-                            "--name", "neon-log-metricbeat-dash",
-                            "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
-                            Program.ResolveDockerImage(cluster.Definition.Log.MetricbeatImage), "import-dashboards");
-
-                    node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-metricbeat-dashboards.sh"), response.BashCommand);
                 });
         }
 

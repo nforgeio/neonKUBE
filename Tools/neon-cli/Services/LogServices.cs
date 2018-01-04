@@ -423,5 +423,32 @@ $@"
 
             cluster.PrivateProxy.SetRoute(route);
         }
+
+        /// <summary>
+        /// Deploys <b>Elastic Metricbeat</b> to the node.
+        /// </summary>
+        /// <param name="node">The target cluster node.</param>
+        public void DeployMetricbeat(NodeProxy<NodeDefinition> node)
+        {
+            node.InvokeIdempotentAction("setup-metricbeat",
+                () =>
+                {
+                    node.Status = "metricbeat deploy";
+
+                    var response = node.DockerCommand(
+                        "docker run",
+                            "--name", "neon-log-metricbeat",
+                            "--detach",
+                            "--net", "host",
+                            "--restart", "always",
+                            "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
+                            "--volume", "/proc:/hostfs/proc:ro",
+                            "--volume", "/:/hostfs:ro",
+                            "--log-driver", "json-file",
+                            Program.ResolveDockerImage(cluster.Definition.Log.MetricbeatImage));
+
+                    node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-metricbeat.sh"), response.BashCommand);
+                });
+        }
     }
 }

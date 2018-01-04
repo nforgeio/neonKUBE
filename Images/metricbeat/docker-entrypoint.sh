@@ -44,7 +44,12 @@ else
     export LOG_LEVEL=$(echo ${LOG_LEVEL} | tr '[:upper:]' '[:lower:]')
 fi
 
-# We're either going to run [metricbeat] or import the dashboards.
+# Generate the Metricbeat config file.
+
+/metricbeat.yml.sh
+
+# Start [metricbeat] using the [--setup] option so that the the sample
+# dashboards will be configured.
 
 if [ "${1}" == "service" ] ; then
 
@@ -54,14 +59,7 @@ if [ "${1}" == "service" ] ; then
     . log-info.sh "PROCESSES: ${PROCESSES}"
     . log-info.sh "LOG_LEVEL: ${LOG_LEVEL}"
 
-    # Generate the Metricbeat config file and then start Metricbeat.
-
-    /metricbeat.yml.sh
-    /metricbeat -e -system.hostfs=/hostfs
-
-elif [ "${1}" == "import-dashboards" ] ; then
-    . log-info.sh "Importing dashboards"
-    /metricbeat --setup
+    /metricbeat -e -system.hostfs=/hostfs --setup
 else 
     . log-error.sh "Invalid command line: $@"
     exit 1
