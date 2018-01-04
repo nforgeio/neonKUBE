@@ -19,7 +19,7 @@ The `5.2.0` image here is still based on the original Elasticsearch 5.2.0 image.
 
 **NOTE:**
 
-Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined system.  You should deploy the same version of each component to your cluster and when it's time to upgrade, always upgrade the Elasticsearch cluster first, followed by the Metricbeat and Kibana.
+Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined system.  You should deploy the same version of each component to your cluster and when it's time to upgrade, always upgrade the Elasticsearch cluster first, followed by Metricbeat and Kibana.
 
 # Description
 
