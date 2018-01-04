@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HostAuthOptions.cs
+// FILE:	    HostNodeOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 
@@ -26,17 +26,26 @@ using Neon.IO;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes cluster host node authentication options.
+    /// Describes cluster host node options.
     /// </summary>
-    public class HostAuthOptions
+    public class HostNodeOptions
     {
         private const AuthMethods   defaultSshAuth        = AuthMethods.Tls;
         private const int           defaultPasswordLength = 20;
         private const bool          defaultPasswordAuth   = true;
 
         /// <summary>
+        /// Specifies whether the host node operating system should be upgraded
+        /// during cluster preparation.  This defaults to <see cref="OsUpgrade.Partial"/>
+        /// to pick up most criticial updates.
+        /// </summary>
+        [JsonProperty(PropertyName = "OsUpgrade", Required = Required.Default)]
+        [DefaultValue(OsUpgrade.Partial)]
+        public OsUpgrade OsUpgrade { get; set; } = OsUpgrade.Partial;
+
+        /// <summary>
         /// Specifies the authentication method to be used to secure SSH sessions
-        /// to the cluster host nodes.  This defaults to  <see cref="AuthMethods.Tls"/>  
+        /// to the cluster host nodes.  This defaults to <see cref="AuthMethods.Tls"/>  
         /// for better security.
         /// </summary>
         [JsonProperty(PropertyName = "SshAuth", Required = Required.Default)]
@@ -63,7 +72,7 @@ namespace Neon.Cluster
         {
             if (PasswordLength > 0 && PasswordLength < 8)
             {
-                throw new ClusterDefinitionException($"[{nameof(HostAuthOptions)}.{nameof(PasswordLength)}={PasswordLength}] is not zero and is less than the minimum [8].");
+                throw new ClusterDefinitionException($"[{nameof(HostNodeOptions)}.{nameof(PasswordLength)}={PasswordLength}] is not zero and is less than the minimum [8].");
             }
         }
     }

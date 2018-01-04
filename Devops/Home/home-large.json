@@ -14,7 +14,8 @@
   "Vpn": {
     "Enabled": false
   },
-  "HostAuth": {
+  "HostNode": {
+    "OsUpgrade": "partial",
     "SshAuth": "tls",
     "PasswordLength": 20
   },

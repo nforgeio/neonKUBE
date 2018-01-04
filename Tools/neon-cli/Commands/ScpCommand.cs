@@ -145,7 +145,7 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            switch (clusterLogin.Definition.HostAuth.SshAuth)
+            switch (clusterLogin.Definition.HostNode.SshAuth)
             {
                 case AuthMethods.Tls:
 
@@ -219,7 +219,7 @@ OPTIONS:
 
                 default:
 
-                    throw new NotSupportedException($"Unsupported SSH authentication method [{clusterLogin.Definition.HostAuth.SshAuth}].");
+                    throw new NotSupportedException($"Unsupported SSH authentication method [{clusterLogin.Definition.HostNode.SshAuth}].");
             }
         }
 

@@ -133,7 +133,7 @@ Server Requirements:
 
             controller.AddWaitUntilOnlineStep();
             controller.AddStep("verify OS", n => CommonSteps.VerifyOS(n));
-            controller.AddStep("prepare", server => CommonSteps.PrepareNode(server, clusterDefinition, shutdown: true, upgrade: upgrade));
+            controller.AddStep("prepare", server => CommonSteps.PrepareNode(server, clusterDefinition, shutdown: true, upgrade: upgrade ? OsUpgrade.Partial : OsUpgrade.None));
 
             if (!controller.Run())
             {

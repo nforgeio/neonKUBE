@@ -316,7 +316,7 @@ ClientAliveCountMax 20
         /// <c>true</c> if the method waited for the package manager to become
         /// ready before returning.
         /// </returns>
-        public static bool PrepareNode(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition = null, bool shutdown = false, bool upgrade = false)
+        public static bool PrepareNode(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition = null, bool shutdown = false, OsUpgrade upgrade = OsUpgrade.None)
         {
             var waitedForPackageManager = false;
 
@@ -346,11 +346,17 @@ ClientAliveCountMax 20
                 node.SudoCommand("setup-apt-proxy.sh");
             }
 
-            if (upgrade)
+            if (upgrade == OsUpgrade.Partial)
             {
-                node.Status = "upgrade packages";
+                node.Status = "package upgrade (partial)";
 
                 node.SudoCommand("apt-get upgrade -yq --allow-unauthenticated");
+            }
+            else if (upgrade == OsUpgrade.Full)
+            {
+                node.Status = "package upgrade (full)";
+
+                node.SudoCommand("apt-get dist-upgrade -yq --allow-unauthenticated");
             }
 
             node.InvokeIdempotentAction("setup-prep-node",

@@ -189,7 +189,7 @@ OPTIONS:
 
             controller.AddWaitUntilOnlineStep("connect");
 
-            switch (cluster.Definition.HostAuth.SshAuth)
+            switch (cluster.Definition.HostNode.SshAuth)
             {
                 case AuthMethods.Password:
 
@@ -203,7 +203,7 @@ OPTIONS:
 
                 default:
 
-                    throw new NotSupportedException($"Unsupported SSH authentication method [{cluster.Definition.HostAuth.SshAuth}].");
+                    throw new NotSupportedException($"Unsupported SSH authentication method [{cluster.Definition.HostNode.SshAuth}].");
             }
 
             if (sshTlsAuth)
@@ -347,9 +347,9 @@ OPTIONS:
 
             if (!clusterLogin.HasStrongSshPassword)
             {
-                if (cluster.Definition.HostAuth.PasswordLength > 0)
+                if (cluster.Definition.HostNode.PasswordLength > 0)
                 {
-                    clusterLogin.SshPassword          = NeonHelper.GetRandomPassword(cluster.Definition.HostAuth.PasswordLength);
+                    clusterLogin.SshPassword          = NeonHelper.GetRandomPassword(cluster.Definition.HostNode.PasswordLength);
                     clusterLogin.HasStrongSshPassword = true;
                 }
                 else
@@ -360,7 +360,7 @@ OPTIONS:
                 clusterLogin.Save();
             }
 
-            if (cluster.Definition.HostAuth.PasswordLength > 0)
+            if (cluster.Definition.HostNode.PasswordLength > 0)
             {
                 controller.AddStep("strong password",
                     n =>

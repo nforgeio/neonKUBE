@@ -54,9 +54,6 @@ OPTIONS:
                                   This is useful for debugging cluster setup 
                                   issues.  Do not use for production clusters.
 
-    --upgrade                   - Applies any available Linux distribution
-                                  package updates.
-
 Server Requirements:
 --------------------
 
@@ -72,7 +69,6 @@ Server Requirements:
         private VpnCaFiles      vpnCaFiles;
         private VpnCredentials  vpnCredentials;
         private bool            force;
-        private bool            upgrade;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -83,7 +79,7 @@ Server Requirements:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--force", "--package-cache", "--unredacted", "--upgrade" }; }
+            get { return new string[] { "--force", "--package-cache", "--unredacted" }; }
         }
 
         /// <inheritdoc/>
@@ -117,7 +113,6 @@ Server Requirements:
 
             clusterDefPath = commandLine.Arguments[0];
             force          = commandLine.GetFlag("--force");
-            upgrade        = commandLine.GetFlag("--upgrade");
 
             ClusterDefinition.ValidateFile(clusterDefPath);
 
@@ -224,7 +219,7 @@ Server Requirements:
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
             hostingManager.AddPostProvisionSteps(controller);
             controller.AddStep("verify OS", n => CommonSteps.VerifyOS(n));
-            controller.AddStep("prepare", server => CommonSteps.PrepareNode(server, cluster.Definition, shutdown: false, upgrade: upgrade));
+            controller.AddStep("prepare", server => CommonSteps.PrepareNode(server, cluster.Definition, shutdown: false, upgrade: cluster.Definition.HostNode.OsUpgrade));
 
             // Add any VPN configuration steps.
 

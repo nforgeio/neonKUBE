@@ -302,11 +302,11 @@ namespace Neon.Cluster
         public string PackageProxy { get; set; } = null;
 
         /// <summary>
-        /// Specifies options for the host authentication options.
+        /// Specifies host node options.
         /// </summary>
-        [JsonProperty(PropertyName = "HostAuth", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "HostNode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public HostAuthOptions HostAuth { get; set; } = new HostAuthOptions();
+        public HostNodeOptions HostNode { get; set; } = new HostNodeOptions();
 
         /// <summary>
         /// Describes the Docker configuration.
@@ -551,7 +551,7 @@ namespace Neon.Cluster
         {
             Hosting   = Hosting ?? new HostingOptions();
             Vpn       = Vpn ?? new VpnOptions();
-            HostAuth  = HostAuth ?? new HostAuthOptions();
+            HostNode  = HostNode ?? new HostNodeOptions();
             Docker    = Docker ?? new DockerOptions();
             Network   = Network ?? new NetworkOptions();
             Consul    = Consul ?? new ConsulOptions();
@@ -567,7 +567,7 @@ namespace Neon.Cluster
             Network.Validate(this);
             Hosting.Validate(this);
             Vpn.Validate(this);
-            HostAuth.Validate(this);
+            HostNode.Validate(this);
             Docker.Validate(this);
             Consul.Validate(this);
             Vault.Validate(this);
