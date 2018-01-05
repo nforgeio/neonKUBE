@@ -161,7 +161,7 @@ certificates, and then finally the private key.
 
             string certName;
 
-            switch (command.ToLowerInvariant())
+            switch (command)
             {
                 case "get":
 

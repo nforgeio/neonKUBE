@@ -205,7 +205,7 @@ See the documentation for more proxy route and setting details.
 
             string routeName;
 
-            switch (command.ToLowerInvariant())
+            switch (command)
             {
                 case "get":
 
