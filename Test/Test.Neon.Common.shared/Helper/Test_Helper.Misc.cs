@@ -373,5 +373,19 @@ namespace TestCommon
                 Assert.Equal("test3", File.ReadAllText(Path.Combine(targetFolder, "subfolder", "test3.txt")));
             }
         }
+
+        [Fact]
+        public void NormalizeExecArgs()
+        {
+            Assert.Equal("", NeonHelper.NormalizeExecArgs());
+            Assert.Equal("", NeonHelper.NormalizeExecArgs(null));
+            Assert.Equal("", NeonHelper.NormalizeExecArgs(new object[] { null }));
+            Assert.Equal("", NeonHelper.NormalizeExecArgs(new object[] { null, null }));
+            Assert.Equal("", NeonHelper.NormalizeExecArgs(string.Empty));
+            Assert.Equal("0 1 2 3", NeonHelper.NormalizeExecArgs(0, 1, 2, 3));
+            Assert.Equal("0 1 2 3", NeonHelper.NormalizeExecArgs("0", "1", "2", "3"));
+            Assert.Equal(@"""\""""", NeonHelper.NormalizeExecArgs("\""));
+            Assert.Equal(@"""one two"" three", NeonHelper.NormalizeExecArgs("one two", "three"));
+        }
     }
 }

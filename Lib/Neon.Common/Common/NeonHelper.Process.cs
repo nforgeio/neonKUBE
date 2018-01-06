@@ -83,7 +83,86 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Starts a process to run an executable file and waits for the process to terminate.
+        /// Normalizes an array of argument objects into a form that can
+        /// be passed to an invoked process by adding a quotes and escape
+        /// characters as necessary.
+        /// </summary>
+        /// <param name="args">The arguments.</param>
+        /// <returns>The formatted argument string.</returns>
+        /// <remarks>
+        /// <note>
+        /// <c>null</c> and empty arguments are ignored.
+        /// </note>
+        /// </remarks>
+        public static string NormalizeExecArgs(params object[] args)
+        {
+            if (args == null || args.Length == 0)
+            {
+                return string.Empty;
+            }
+
+            var sb = new StringBuilder();
+
+            foreach (var arg in args)
+            {
+                if (arg == null)
+                {
+                    continue;
+                }
+
+                var argValue = arg.ToString();
+
+                if (argValue == string.Empty)
+                {
+                    continue;
+                }
+
+                if (argValue.Contains('"'))
+                {
+                    argValue = argValue.Replace("\"", "\\\"");
+                    argValue = $"\"{argValue}\"";
+                }
+                else if (argValue.Contains(' '))
+                {
+                    argValue = $"\"{argValue}\"";
+                }
+
+                sb.AppendWithSeparator(argValue);
+            }
+
+            return sb.ToString();
+        }
+
+        /// <summary>
+        /// Starts a process with an array of arguments to run an executable file and
+        /// then waits for the process to terminate.
+        /// </summary>
+        /// <param name="path">Path to the executable file.</param>
+        /// <param name="args">Command line arguments (or <c>null</c>).</param>
+        /// <param name="timeout">
+        /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
+        /// indefinitely.
+        /// </param>
+        /// <param name="process">
+        /// The optional <see cref="Process"/> instance to use to launch the process.
+        /// </param>
+        /// <returns>The process exit code.</returns>
+        /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
+        /// <remarks>
+        /// <note>
+        /// If <paramref name="timeout"/> is and execution has not commpleted in time then
+        /// a <see cref="TimeoutException"/> will be thrown and the process will be killed
+        /// if it was created by this method.  Process instances passed via the <paramref name="process"/>
+        /// parameter will not be killed in this case.
+        /// </note>
+        /// </remarks>
+        public static int Execute(string path, object[] args, TimeSpan? timeout = null, Process process = null)
+        {
+            return Execute(path, NormalizeExecArgs(args), timeout, process);
+        }
+
+        /// <summary>
+        /// Starts a process to run an executable file and then waits for the process to terminate.
         /// </summary>
         /// <param name="path">Path to the executable file.</param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
@@ -153,7 +232,35 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Asyncrhonously starts a process to run an executable file and waits for the process to terminate.
+        /// Asyncrhonously starts a process to run an executable file with an array of
+        /// arguments and then and waits for the process to terminate.
+        /// </summary>
+        /// <param name="path">Path to the executable file.</param>
+        /// <param name="args">Command line arguments (or <c>null</c>).</param>
+        /// <param name="timeout">
+        /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
+        /// indefinitely.
+        /// </param>
+        /// <param name="process">
+        /// The optional <see cref="Process"/> instance to use to launch the process.
+        /// </param>
+        /// <returns>The process exit code.</returns>
+        /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
+        /// <remarks>
+        /// <note>
+        /// If <paramref name="timeout"/> is and execution has not commpleted in time then
+        /// a <see cref="TimeoutException"/> will be thrown and the process will be killed
+        /// if it was created by this method.  Process instances passed via the <paramref name="process"/>
+        /// parameter will not be killed in this case.
+        /// </note>
+        /// </remarks>
+        public static async Task<int> ExecuteAsync(string path, object[] args, TimeSpan? timeout = null, Process process = null)
+        {
+            return await ExecuteAsync(path, NormalizeExecArgs(args), timeout, process);
+        }
+
+        /// <summary>
+        /// Asyncrhonously starts a process to run an executable file and then waits for the process to terminate.
         /// </summary>
         /// <param name="path">Path to the executable file.</param>
         /// <param name="args">Command line arguments (or <c>null</c>).</param>
@@ -230,7 +337,38 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Starts a process to run an executable file and waits for the process to terminate
+        /// Starts a process to run an executable file and then waits for the process to terminate
+        /// while capturing any output written to the standard output and error streams.
+        /// </summary>
+        /// <param name="path">Path to the executable file.</param>
+        /// <param name="args">Command line arguments (or <c>null</c>).</param>
+        /// <param name="timeout">
+        /// Optional maximum time to wait for the process to complete or <c>null</c> to wait
+        /// indefinitely.
+        /// </param>
+        /// <param name="process">
+        /// The optional <see cref="Process"/> instance to use to launch the process.
+        /// </param>
+        /// <returns>
+        /// The <see cref="ExecuteResult"/> including the process exit code and capture 
+        /// standard output and error streams.
+        /// </returns>
+        /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
+        /// <remarks>
+        /// <note>
+        /// If <paramref name="timeout"/> is and execution has not commpleted in time then
+        /// a <see cref="TimeoutException"/> will be thrown and the process will be killed
+        /// if it was created by this method.  Process instances passed via the <paramref name="process"/>
+        /// parameter will not be killed in this case.
+        /// </note>
+        /// </remarks>
+        public static ExecuteResult ExecuteCaptureStreams(string path, object[] args, TimeSpan? timeout = null, Process process = null)
+        {
+            return ExecuteCaptureStreams(path, NormalizeExecArgs(args), timeout, process);
+        }
+
+        /// <summary>
+        /// Starts a process to run an executable file and then waits for the process to terminate
         /// while capturing any output written to the standard output and error streams.
         /// </summary>
         /// <param name="path">Path to the executable file.</param>
@@ -320,7 +458,39 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Asynchronously starts a process to run an executable file and waits for the process to terminate
+        /// Asynchronously starts a process to run an executable file and then waits for the process to terminate
+        /// while capturing any output written to the standard output and error streams.
+        /// </summary>
+        /// <param name="path">Path to the executable file.</param>
+        /// <param name="args">Command line arguments (or <c>null</c>).</param>
+        /// <param name="timeout">
+        /// Maximum time to wait for the process to complete or <c>null</c> to wait
+        /// indefinitely.
+        /// </param>
+        /// <param name="process">
+        /// The optional <see cref="Process"/> instance to use to launch the process.
+        /// </param>
+        /// <returns>
+        /// The <see cref="ExecuteResult"/> including the process exit code and capture 
+        /// standard output and error streams.
+        /// </returns>
+        /// <exception cref="TimeoutException">Thrown if the process did not exit within the <paramref name="timeout"/> limit.</exception>
+        /// <remarks>
+        /// <note>
+        /// If <paramref name="timeout"/> is and execution has not commpleted in time then
+        /// a <see cref="TimeoutException"/> will be thrown and the process will be killed
+        /// if it was created by this method.  Process instances passed via the <paramref name="process"/>
+        /// parameter will not be killed in this case.
+        /// </note>
+        /// </remarks>
+        public static async Task<ExecuteResult> ExecuteCaptureStreamsAsync(string path, object[] args,
+                                                                           TimeSpan? timeout = null, Process process = null)
+        {
+            return await ExecuteCaptureStreamsAsync(path, NormalizeExecArgs(args), timeout, process);
+        }
+
+        /// <summary>
+        /// Asynchronously starts a process to run an executable file and then waits for the process to terminate
         /// while capturing any output written to the standard output and error streams.
         /// </summary>
         /// <param name="path">Path to the executable file.</param>
