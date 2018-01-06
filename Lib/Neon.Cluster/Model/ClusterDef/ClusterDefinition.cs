@@ -477,24 +477,6 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Enumerates the cluster external node definitions.
-        /// </summary>
-        [JsonIgnore]
-        public IEnumerable<NodeDefinition> External
-        {
-            get { return Nodes.Where(n => n.IsPet); }
-        }
-
-        /// <summary>
-        /// Enumerates the cluster external node definitions sorted in ascending order by name..
-        /// </summary>
-        [JsonIgnore]
-        public IEnumerable<NodeDefinition> SortedExternal
-        {
-            get { return External.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
-        }
-
-        /// <summary>
         /// Validates that node private IP addresses are set, are within the nodes subnet, and
         /// are unique.  This method is intended to be called from hosting options classes
         /// like <see cref="MachineOptions"/> which require specified node IP addresses.
