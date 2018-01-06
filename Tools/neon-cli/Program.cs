@@ -53,6 +53,8 @@ COMMAND SUMMARY:
 
     neon help               COMMAND
 
+    neon ansible exec       ARGS
+    neon ansible playbook   ARGS
     neon cluster add        LOGIN-PATH
     neon cluster example
     neon cluster get        VALUE-EXPR
@@ -375,6 +377,17 @@ that the tool requires admin priviledges for direct mode.
                         var shimMount    = $"-v \"{shim.ShimExternalFolder}:/shim\"";
                         var options      = shim.Terminal ? "-it" : "-i";
 
+                        // Mount any mapped client folders.
+
+                        var sbMappedMount = new StringBuilder();
+
+                        foreach (var mappedFolder in shim.MappedFolders)
+                        {
+                            var mode = mappedFolder.IsReadOnly ? "ro" : "rw";
+
+                            sbMappedMount.AppendWithSeparator($"-v \"{mappedFolder.ClientFolderPath}:{mappedFolder.ContainerFolderPath}:{mode}");
+                        }
+
                         // If the tool was built from the Git production branch then the Docker image
                         // tag will simply be the tool version.  For non-production branches we'll
                         // use [BRANCH-latest] as the tag.
@@ -390,7 +403,7 @@ that the tool requires admin priviledges for direct mode.
 
                         try
                         {
-                            process = Process.Start("docker", $"run {options} --rm {secretsMount} {shimMount} {logMount} --network host neoncluster/neon-cli:{Program.Version}");
+                            process = Process.Start("docker", $"run {options} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} --network host neoncluster/neon-cli:{Program.Version}");
                         }
                         catch (Win32Exception)
                         {

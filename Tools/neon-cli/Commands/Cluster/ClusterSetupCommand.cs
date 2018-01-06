@@ -300,9 +300,9 @@ OPTIONS:
                             }
                             else
                             {
-                            // Simply pull in parallel if there's no local registry cache.
+                                // Simply pull in parallel if there's no local registry cache.
 
-                            PullImages(n);
+                                PullImages(n);
                             }
                         });
 

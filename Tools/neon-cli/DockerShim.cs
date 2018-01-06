@@ -27,11 +27,6 @@ namespace NeonCli
     /// line and any referenced files from the operator workstation in
     /// to the <b>neon-cli</b> being invoked in a Docker container.
     /// </summary>
-    /// <remarks>
-    /// <para>
-    /// 
-    /// </para>
-    /// </remarks>
     public sealed class DockerShim : IDisposable
     {
         private string      stdInFile = null;
@@ -107,6 +102,11 @@ namespace NeonCli
         /// Returns the command line invoked on the operator workstation.
         /// </summary>
         public CommandLine CommandLine { get; set; }
+
+        /// <summary>
+        /// The list of folders to be mapped from the client workstation into the container.
+        /// </summary>
+        public List<DockerShimFolder> MappedFolders { get; set; } = new List<DockerShimFolder>();
 
         /// <summary>
         /// Returns the shim folder path on the operator's workstation.
