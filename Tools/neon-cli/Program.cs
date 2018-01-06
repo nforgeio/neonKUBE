@@ -137,9 +137,9 @@ that the command is actually executed there.  In this case, the tool
 is just acting as a shim.
 
 For limited circumstances, it may be desirable to have the tool actually
-perform the command on the operator's workstation rather than using
-Docker.  You can accomplish this by using the [--direct].  Note that the 
-tool requires admin priviledges for direct mode.
+perform the command on the operator's workstation rather than within a
+Docker container.  You can accomplish this by using the [--direct].  Note
+that the tool requires admin priviledges for direct mode.
 ";
             // Disable any logging that might be performed by library classes.
 
@@ -1171,8 +1171,8 @@ tool requires admin priviledges for direct mode.
         }
 
         /// <summary>
-        /// Executes a command on the local operating system and writes an error and
-        /// exits the program if the command fails.
+        /// Executes a command on the local operating system, writing an error and
+        /// existing the program if the command fails.
         /// </summary>
         /// <param name="programPath">The program.</param>
         /// <param name="args">The arguments.</param>
