@@ -85,7 +85,7 @@ namespace Neon.Common
         /// <summary>
         /// Normalizes an array of argument objects into a form that can
         /// be passed to an invoked process by adding a quotes and escape
-        /// characters as necessary.
+        /// characters as necessary. 
         /// </summary>
         /// <param name="args">The arguments.</param>
         /// <returns>The formatted argument string.</returns>
@@ -110,6 +110,23 @@ namespace Neon.Common
                     continue;
                 }
 
+                var stringEnumerable = arg as IEnumerable<string>;
+
+                if (stringEnumerable != null)
+                {
+                    foreach (var value in stringEnumerable)
+                    {
+                        if (value == null || value == string.Empty)
+                        {
+                            continue;
+                        }
+
+                        sb.AppendWithSeparator(NormalizeArg(value));
+                    }
+
+                    continue;
+                }
+
                 var argValue = arg.ToString();
 
                 if (argValue == string.Empty)
@@ -117,20 +134,30 @@ namespace Neon.Common
                     continue;
                 }
 
-                if (argValue.Contains('"'))
-                {
-                    argValue = argValue.Replace("\"", "\\\"");
-                    argValue = $"\"{argValue}\"";
-                }
-                else if (argValue.Contains(' '))
-                {
-                    argValue = $"\"{argValue}\"";
-                }
-
-                sb.AppendWithSeparator(argValue);
+                sb.AppendWithSeparator(NormalizeArg(argValue));
             }
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Normalizes a string argument.
+        /// </summary>
+        /// <param name="argValue">The argument.</param>
+        /// <returns>The argument string with any required quotes and escapes.</returns>
+        private static string NormalizeArg(string argValue)
+        {
+            if (argValue.Contains('"'))
+            {
+                argValue = argValue.Replace("\"", "\\\"");
+                argValue = $"\"{argValue}\"";
+            }
+            else if (argValue.Contains(' '))
+            {
+                argValue = $"\"{argValue}\"";
+            }
+
+            return argValue;
         }
 
         /// <summary>

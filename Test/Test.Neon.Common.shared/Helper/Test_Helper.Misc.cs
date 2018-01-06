@@ -386,6 +386,10 @@ namespace TestCommon
             Assert.Equal("0 1 2 3", NeonHelper.NormalizeExecArgs("0", "1", "2", "3"));
             Assert.Equal(@"""\""""", NeonHelper.NormalizeExecArgs("\""));
             Assert.Equal(@"""one two"" three", NeonHelper.NormalizeExecArgs("one two", "three"));
+
+            Assert.Equal(@"one two three", NeonHelper.NormalizeExecArgs(new string[] { "one", "two" }, "three"));
+            Assert.Equal(@"one two three", NeonHelper.NormalizeExecArgs(new string[] { "one", "two", null }, "three"));
+            Assert.Equal(@"one two three", NeonHelper.NormalizeExecArgs(new string[] { "one", "two", "" }, "three"));
         }
     }
 }
