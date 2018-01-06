@@ -44,9 +44,15 @@ namespace Neon.Cluster
         public OsUpgrade OsUpgrade { get; set; } = OsUpgrade.Partial;
 
         /// <summary>
+        /// <para>
         /// Specifies the authentication method to be used to secure SSH sessions
         /// to the cluster host nodes.  This defaults to <see cref="AuthMethods.Tls"/>  
         /// for better security.
+        /// </para>
+        /// <note>
+        /// Some <b>neon-cli</b> features such as the <b>Ansible</b> commands require 
+        /// <see cref="AuthMethods.Tls"/> (the default) to function.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "SshAuth", Required = Required.Default)]
         [DefaultValue(defaultSshAuth)]
