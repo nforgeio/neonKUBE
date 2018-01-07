@@ -1972,8 +1972,8 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
                     cluster.FirstManager.Status = "download server SSH key";
 
                     clusterLogin.SshClusterHostPrivateKey     = cluster.FirstManager.DownloadText("/dev/shm/ssh/ssh_host_rsa_key");
-                    clusterLogin.SshClusterHostPublicKey      = cluster.FirstManager.DownloadText("/dev/shm/ssh/ssh_host_rsa_key");
-                    clusterLogin.SshClusterHostKeyFingerprint = cluster.FirstManager.DownloadText("/dev/shm/ssh/ssh_host_rsa_key.pub");
+                    clusterLogin.SshClusterHostPublicKey      = cluster.FirstManager.DownloadText("/dev/shm/ssh/ssh_host_rsa_key.pub");
+                    clusterLogin.SshClusterHostKeyFingerprint = cluster.FirstManager.DownloadText("/dev/shm/ssh/ssh.fingerprint");
 
                     // Delete the SSH key files for security.
 

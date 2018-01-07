@@ -204,6 +204,7 @@ that the tool requires admin priviledges for direct mode.
 
                 var commands = new List<ICommand>()
                 {
+                    new AnsibleCommand(),
                     new ClusterCommand(),
                     new ClusterExampleCommand(),
                     new ClusterGetCommand(),
@@ -385,7 +386,7 @@ that the tool requires admin priviledges for direct mode.
                         {
                             var mode = mappedFolder.IsReadOnly ? "ro" : "rw";
 
-                            sbMappedMount.AppendWithSeparator($"-v \"{mappedFolder.ClientFolderPath}:{mappedFolder.ContainerFolderPath}:{mode}");
+                            sbMappedMount.AppendWithSeparator($"-v \"{mappedFolder.ClientFolderPath}:{mappedFolder.ContainerFolderPath}:{mode}\"");
                         }
 
                         // If the tool was built from the Git production branch then the Docker image
@@ -403,7 +404,7 @@ that the tool requires admin priviledges for direct mode.
 
                         try
                         {
-                            process = Process.Start("docker", $"run {options} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} --network host neoncluster/neon-cli:{Program.Version}");
+                            process = Process.Start("docker", $"run {options} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} --network host neoncluster/neon-cli:{imageTag}");
                         }
                         catch (Win32Exception)
                         {

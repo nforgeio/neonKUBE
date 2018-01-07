@@ -453,7 +453,7 @@ namespace Neon.Cluster
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "Custom")]
-        public Dictionary<string, string> Custom { get; set; } = new Dictionary<string, string>();
+        public Dictionary<string, object> Custom { get; set; } = new Dictionary<string, object>();
 
         //---------------------------------------------------------------------
         // Implementation
@@ -700,7 +700,7 @@ namespace Neon.Cluster
                     throw new ClusterDefinitionException($"Custom node name [{item.Key}] has an illegal character.  Only letters, digits, dash and dots are allowed.");
                 }
 
-                foreach (var ch in item.Value)
+                foreach (var ch in item.Value.ToString())
                 {
                     if (char.IsWhiteSpace(ch))
                     {
