@@ -57,7 +57,7 @@ namespace NeonCli
 USAGE:
 
     neon ansible exec -- ARGS       - runs an adhoc command via: ansible ARGS
-    neon ansible playbook -- ARGS   - runs a playbook via: ansible-playbook ARGS
+    neon ansible play -- ARGS       - runs a playbook via: ansible-playbook ARGS
 
 ARGS: Any valid Ansible options and arguments.
 
@@ -130,7 +130,7 @@ NOTE: This command makes no attempt to map files referenced by command line argu
                     NeonHelper.Execute("ansible", NeonHelper.NormalizeExecArgs("--user", login.SshUsername, "--private-key", sshClientPrivateKeyPath, ansibleCommandLine.Items));
                     break;
 
-                case "playbook":
+                case "play":
 
                     GenerateAnsibleFiles(login);
                     NeonHelper.Execute("ansible-playbook", NeonHelper.NormalizeExecArgs("--user", login.SshUsername, "--private-key", sshClientPrivateKeyPath, ansibleCommandLine.Items));

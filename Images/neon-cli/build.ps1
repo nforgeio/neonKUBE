@@ -61,11 +61,11 @@ if (IsProd)
 		Exec { docker tag "${registry}:$version" "${registry}:latest"}
 	}
 
-	# PushImage "${registry}:$version"
+	PushImage "${registry}:$version"
 
 	if ($latest)
 	{
-		# PushImage "${registry}:latest"
+		PushImage "${registry}:latest"
 	}
 }
 else
@@ -77,10 +77,10 @@ else
 		Exec { docker tag "${registry}:$branch-$version" "${registry}:$branch-latest"}
 	}
 
-	# PushImage "${registry}:$branch-$version"
+	PushImage "${registry}:$branch-$version"
 
 	if ($latest)
 	{
-		# PushImage "${registry}:$branch-latest"
+		PushImage "${registry}:$branch-latest"
 	}
 }
