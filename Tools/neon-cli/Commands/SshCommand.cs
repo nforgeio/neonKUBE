@@ -91,25 +91,25 @@ ARGUMENTS:
             int             startPos;
             int             endPos;
 
-            startPos = clusterLogin.SshServerKeyFingerprint.IndexOf(md5Pattern);
+            startPos = clusterLogin.SshClusterHostKeyFingerprint.IndexOf(md5Pattern);
 
             if (startPos == -1)
             {
-                Console.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{clusterLogin.SshServerKeyFingerprint}].");
+                Console.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{clusterLogin.SshClusterHostKeyFingerprint}].");
                 Program.Exit(1);
             }
 
             startPos += md5Pattern.Length;
 
-            endPos = clusterLogin.SshServerKeyFingerprint.IndexOf(' ', startPos);
+            endPos = clusterLogin.SshClusterHostKeyFingerprint.IndexOf(' ', startPos);
 
             if (endPos == -1)
             {
-                fingerprint = clusterLogin.SshServerKeyFingerprint.Substring(startPos).Trim();
+                fingerprint = clusterLogin.SshClusterHostKeyFingerprint.Substring(startPos).Trim();
             }
             else
             {
-                fingerprint = clusterLogin.SshServerKeyFingerprint.Substring(startPos, endPos - startPos).Trim();
+                fingerprint = clusterLogin.SshClusterHostKeyFingerprint.Substring(startPos, endPos - startPos).Trim();
             }
 
             // Launch PuTTY.

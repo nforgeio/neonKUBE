@@ -139,14 +139,20 @@ namespace Neon.Cluster
         /// The SSH RSA private key fingerprint used to secure the cluster servers.  This is an 
         /// MD5 hash encoded as hex bytes separated by colons.
         /// </summary>
-        [JsonProperty(PropertyName = "SshServerKeyFingerprint")]
-        public string SshServerKeyFingerprint { get; set; }
+        [JsonProperty(PropertyName = "SshClusterHostKeyFingerprint")]
+        public string SshClusterHostKeyFingerprint { get; set; }
 
         /// <summary>
         /// The SSH RSA private key used to secure the cluster servers.
         /// </summary>
-        [JsonProperty(PropertyName = "SshServerKey")]
-        public string SshServerKey { get; set; }
+        [JsonProperty(PropertyName = "SshClusterHostPrivateKey")]
+        public string SshClusterHostPrivateKey { get; set; }
+
+        /// <summary>
+        /// The SSH RSA private key used to secure the cluster servers.
+        /// </summary>
+        [JsonProperty(PropertyName = "SshClusterHostPublicKey")]
+        public string SshClusterHostPublicKey { get; set; }
 
         /// <summary>
         /// The HashiCorp Vault credentials.
@@ -222,7 +228,7 @@ namespace Neon.Cluster
             IsRoot            = false;
             SwarmManagerToken = null;
             SwarmWorkerToken  = null;
-            SshServerKey      = null;
+            SshClusterHostPrivateKey      = null;
             RegistryCerts     = null;
             RegistryKeys      = null;
 

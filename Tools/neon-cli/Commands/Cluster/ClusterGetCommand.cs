@@ -145,7 +145,7 @@ NODE VALUE IDENTIFIERS:
 
                     case "sshkey-fingerprint":
 
-                        Console.Write(clusterLogin.SshServerKeyFingerprint);
+                        Console.Write(clusterLogin.SshClusterHostKeyFingerprint);
                         break;
 
                     case "sshkey-client-pem":

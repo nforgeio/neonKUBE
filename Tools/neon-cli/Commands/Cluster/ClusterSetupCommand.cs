@@ -1961,6 +1961,7 @@ ssh-keygen -l -E md5 -f /dev/shm/ssh/ssh_host_rsa_key > /dev/shm/ssh/ssh.fingerp
 
 chmod 777 /dev/shm/ssh/
 chmod 666 /dev/shm/ssh/ssh_host_rsa_key
+chmod 666 /dev/shm/ssh/ssh_host_rsa_key.pub
 chmod 666 /dev/shm/ssh/ssh.fingerprint
 ";
                     var bundle = new CommandBundle("./config.sh");
@@ -1970,8 +1971,11 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
 
                     cluster.FirstManager.Status = "download server SSH key";
 
-                    clusterLogin.SshServerKey            = cluster.FirstManager.DownloadText("/dev/shm/ssh/ssh_host_rsa_key");
-                    clusterLogin.SshServerKeyFingerprint = cluster.FirstManager.DownloadText("/dev/shm/ssh/ssh.fingerprint");
+                    clusterLogin.SshClusterHostPrivateKey     = cluster.FirstManager.DownloadText("/dev/shm/ssh/ssh_host_rsa_key");
+                    clusterLogin.SshClusterHostPublicKey      = cluster.FirstManager.DownloadText("/dev/shm/ssh/ssh_host_rsa_key");
+                    clusterLogin.SshClusterHostKeyFingerprint = cluster.FirstManager.DownloadText("/dev/shm/ssh/ssh_host_rsa_key.pub");
+
+                    // Delete the SSH key files for security.
 
                     cluster.FirstManager.SudoCommand("rm -r /dev/shm/ssh");
 
@@ -2051,7 +2055,7 @@ systemctl restart sshd
                     bundle = new CommandBundle("./config.sh");
 
                     bundle.AddFile("config.sh", configScript, isExecutable: true);
-                    bundle.AddFile("ssh_host_rsa_key", clusterLogin.SshServerKey);
+                    bundle.AddFile("ssh_host_rsa_key", clusterLogin.SshClusterHostPrivateKey);
                     node.SudoCommand(bundle);
                 });
         }
