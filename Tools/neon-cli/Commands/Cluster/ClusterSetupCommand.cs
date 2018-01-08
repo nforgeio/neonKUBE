@@ -288,23 +288,23 @@ OPTIONS:
                             // this will appear to be a single step to the operator.
 
                             if (n == cluster.FirstManager)
-                                {
-                                    PullImages(n);
-                                    managerPulledEvent.Set();
-                                }
-                                else
-                                {
-                                    managerPulledEvent.WaitOne();
-                                    PullImages(n);
-                                }
+                            {
+                                PullImages(n);
+                                managerPulledEvent.Set();
                             }
                             else
                             {
-                                // Simply pull in parallel if there's no local registry cache.
-
+                                managerPulledEvent.WaitOne();
                                 PullImages(n);
                             }
-                        });
+                        }
+                        else
+                        {
+                            // Simply pull in parallel if there's no local registry cache.
+
+                            PullImages(n);
+                        }
+                    });
 
                 controller.AddGlobalStep("cluster key/value",
                     () =>
