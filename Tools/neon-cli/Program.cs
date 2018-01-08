@@ -263,7 +263,7 @@ that the tool requires admin priviledges for direct mode.
 
                     if (command == null)
                     {
-                        Console.Error.WriteLine($"*** ERROR: Unknown command: {CommandLine.Arguments[0]}");
+                        Console.Error.WriteLine($"*** ERROR: Unexpected command [{CommandLine.Arguments[0]}].");
                         Console.Error.WriteLine(usage);
                         Program.Exit(1);
                     }
@@ -278,7 +278,7 @@ that the tool requires admin priviledges for direct mode.
 
                 if (command == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: Unknown command: {CommandLine.Arguments[0]}");
+                    Console.Error.WriteLine($"*** ERROR: Unexpected command [{CommandLine.Arguments[0]}].");
                     Console.Error.WriteLine(usage);
                     Program.Exit(1);
                 }
@@ -308,7 +308,7 @@ that the tool requires admin priviledges for direct mode.
 
                 if (command == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: Unknown command: {CommandLine.Arguments[0]}");
+                    Console.Error.WriteLine($"*** ERROR: Unexpected command [{CommandLine.Arguments[0]}].");
                     Program.Exit(1);
                 }
 
