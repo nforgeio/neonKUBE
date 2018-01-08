@@ -29,8 +29,8 @@ namespace NeonCli
         private const string usage = @"
 USAGE:
 
-    neon create key
-    neon create password [OPTIONS]
+    neon create cypher              - Generates 16-byte encryption key
+    neon create password [OPTIONS]  - Generates secure password
 ";
         /// <inheritdoc/>
         public override string[] Words

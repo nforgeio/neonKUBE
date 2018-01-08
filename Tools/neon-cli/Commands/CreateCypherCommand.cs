@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CreateKeyCommand.cs
+// FILE:	    CreateCypherCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 
@@ -22,23 +22,22 @@ using Neon.Common;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>create key</b> command.
+    /// Implements the <b>create cypher</b> command.
     /// </summary>
-    public class CreateKeyCommand : CommandBase
+    public class CreateCypherCommand : CommandBase
     {
         private const string usage = @"
 Generates a cryptographically random 16-byte key suitable for encrypting 
-Consul and Weave network traffic and writes it encoded as Base64 to the
-standard output.
+Consul and Weave network traffic and writes as Base64 to standard output.
 
 USAGE:
 
-    neon create key
+    neon create cypher
 ";
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "create", "key" }; }
+            get { return new string[] { "create", "cypher" }; }
         }
 
         /// <inheritdoc/>

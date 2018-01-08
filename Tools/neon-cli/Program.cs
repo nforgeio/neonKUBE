@@ -66,7 +66,7 @@ COMMAND SUMMARY:
     neon couchbase          CMD...
     neon cert               CMD...
     neon consul             ARGS
-    neon create key
+    neon create cypher
     neon create password
     neon dashboard          DASHBOARD
     neon docker             ARGS
@@ -217,7 +217,7 @@ that the tool requires admin priviledges for direct mode.
                     new CertCommand(),
                     new ConsulCommand(),
                     new CreateCommand(),
-                    new CreateKeyCommand(),
+                    new CreateCypherCommand(),
                     new CreatePasswordCommand(),
                     new DashboardCommand(),
                     new DockerCommand(),
