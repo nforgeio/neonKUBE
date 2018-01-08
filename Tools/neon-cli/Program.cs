@@ -409,7 +409,7 @@ that the tool requires admin priviledges for direct mode.
                         }
                         catch (Win32Exception)
                         {
-                            Console.WriteLine("*** ERROR: Cannot run Docker.  Make sure that it is installed and is on the PATH.");
+                            Console.Error.WriteLine("*** ERROR: Cannot run Docker.  Make sure that it is installed and is on the PATH.");
                             Program.Exit(1);
                             return;
                         }

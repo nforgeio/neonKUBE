@@ -124,19 +124,19 @@ installed here will be available for [ansible exec] and [ansible play] commands.
 
             if (!NeonClusterHelper.InToolContainer)
             {
-                Console.WriteLine("*** ERROR: The [ansible] commands do not support [--direct] mode.");
+                Console.Error.WriteLine("*** ERROR: The [ansible] commands do not support [--direct] mode.");
                 Program.Exit(1);
             }
 
             if (ansibleCommandLine == null)
             {
-                Console.WriteLine($"*** ERROR: The [ansible] commands require the [--] argument to prefix the Ansible arguments.");
+                Console.Error.WriteLine($"*** ERROR: The [ansible] commands require the [--] argument to prefix the Ansible arguments.");
                 Program.Exit(1);
             }
 
             if (login.Definition.HostNode.SshAuth != AuthMethods.Tls)
             {
-                Console.WriteLine($"*** ERROR: The [ansible] commands require that the cluster nodes were deployed with [{nameof(HostNodeOptions)}.{nameof(HostNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
+                Console.Error.WriteLine($"*** ERROR: The [ansible] commands require that the cluster nodes were deployed with [{nameof(HostNodeOptions)}.{nameof(HostNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
                 Program.Exit(1);
             }
 

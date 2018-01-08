@@ -145,7 +145,7 @@ USAGE:
 
             if (logins.Count == 0)
             {
-                Console.WriteLine("*** No cluster logins");
+                Console.Error.WriteLine("*** No cluster logins");
             }
             else
             {

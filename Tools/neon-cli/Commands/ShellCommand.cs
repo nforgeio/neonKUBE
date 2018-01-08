@@ -103,7 +103,7 @@ The shell will be CMD.EXE for Windows and Bash for OSX and Linux.
 
             if (shellCommandLine == null || shellCommandLine.Arguments.Length == 0)
             {
-                Console.WriteLine("*** ERROR: Expecting a [--] argument followed be a shell command.");
+                Console.Error.WriteLine("*** ERROR: Expecting a [--] argument followed be a shell command.");
                 Program.Exit(1);
             }
 
@@ -111,7 +111,7 @@ The shell will be CMD.EXE for Windows and Bash for OSX and Linux.
 
             if (!Directory.Exists(secretsFolder))
             {
-                Console.WriteLine($"*** ERROR: Secrets folder [{secretsFolder}] does not exist.");
+                Console.Error.WriteLine($"*** ERROR: Secrets folder [{secretsFolder}] does not exist.");
                 Program.Exit(1);
             }
 

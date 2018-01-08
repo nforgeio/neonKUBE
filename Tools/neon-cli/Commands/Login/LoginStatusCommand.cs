@@ -65,7 +65,7 @@ USAGE:
 
             if (clusterLogin == null)
             {
-                Console.WriteLine("*** You are not logged in.");
+                Console.Error.WriteLine("*** You are not logged in.");
                 Program.Exit(1);
             }
 
@@ -89,7 +89,7 @@ USAGE:
 
                 if (vpnClient == null)
                 {
-                    Console.WriteLine("*** ERROR: VPN is not running.");
+                    Console.Error.WriteLine("*** ERROR: VPN is not running.");
                 }
                 else
                 {
@@ -107,7 +107,7 @@ USAGE:
 
                         case NeonClusterHelper.VpnState.Unhealthy:
 
-                            Console.WriteLine("*** ERROR: VPN connection is not healthy");
+                            Console.Error.WriteLine("*** ERROR: VPN connection is not healthy");
                             verifyCredentials = false;
                             break;
                     }

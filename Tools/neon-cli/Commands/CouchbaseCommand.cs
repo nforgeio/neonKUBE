@@ -116,7 +116,7 @@ COMMANDS:
 
             if (commandLine.Arguments.Length == 0)
             {
-                Console.WriteLine("*** ERROR: Expected a TARGET argument like: [couchbase://HOST@USER:PASSWORD:BUCKET] or [http(s)://HOST:PORT@USER:PASSWORD:BUCKET]");
+                Console.Error.WriteLine("*** ERROR: Expected a TARGET argument like: [couchbase://HOST@USER:PASSWORD:BUCKET] or [http(s)://HOST:PORT@USER:PASSWORD:BUCKET]");
                 Program.Exit(1);
             }
 
@@ -166,7 +166,7 @@ COMMANDS:
 
                         if (commandLine.Arguments.Length != 1)
                         {
-                            Console.WriteLine("*** ERROR: QUERY argument expected.");
+                            Console.Error.WriteLine("*** ERROR: QUERY argument expected.");
                             Program.Exit(1);
                         }
 
@@ -194,7 +194,7 @@ COMMANDS:
 
                         if (commandLine.Arguments.Length != 1)
                         {
-                            Console.WriteLine("*** ERROR: JSON object argument expected.");
+                            Console.Error.WriteLine("*** ERROR: JSON object argument expected.");
                             Program.Exit(1);
                         }
 
@@ -219,7 +219,7 @@ COMMANDS:
 
                         if (jObject == null && jArray == null)
                         {
-                            Console.WriteLine("*** ERROR: JSON argument must be an object or array of objects.");
+                            Console.Error.WriteLine("*** ERROR: JSON argument must be an object or array of objects.");
                             Program.Exit(1);
                         }
 
@@ -240,7 +240,7 @@ COMMANDS:
                         {
                             if (key != null)
                             {
-                                Console.WriteLine("*** WARN: [--key] option is ignored when upserting an array of objects.  Specifiy a [@key] property in each object to customize the key.");
+                                Console.Error.WriteLine("*** WARN: [--key] option is ignored when upserting an array of objects.  Specifiy a [@key] property in each object to customize the key.");
                             }
 
                             // Verify that the array contains only objects.
@@ -251,7 +251,7 @@ COMMANDS:
 
                                 if (jObject == null)
                                 {
-                                    Console.WriteLine("*** ERROR: JSON array has one or more elements that is not an object.");
+                                    Console.Error.WriteLine("*** ERROR: JSON array has one or more elements that is not an object.");
                                     Program.Exit(1);
                                 }
                             }

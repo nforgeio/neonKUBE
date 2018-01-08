@@ -883,7 +883,7 @@ nsCertType              = server
 
             if (string.IsNullOrEmpty(username))
             {
-                Console.WriteLine("***ERROR: USER argument is required.");
+                Console.Error.WriteLine("***ERROR: USER argument is required.");
                 Program.Exit(1);
             }
 

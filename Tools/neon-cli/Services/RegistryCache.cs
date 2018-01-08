@@ -80,8 +80,8 @@ namespace NeonCli
                     }
                     catch (Exception e)
                     {
-                        Console.WriteLine("*** ERROR: Could not generate registry cache TLS certificate.");
-                        Console.WriteLine(e.Message);
+                        Console.Error.WriteLine("*** ERROR: Could not generate registry cache TLS certificate.");
+                        Console.Error.WriteLine(e.Message);
                         Program.Exit(1);
                     }
                 }
