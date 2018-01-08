@@ -20,12 +20,12 @@ ARG         APPNAME
 ENV NEON_TOOL_CONTAINER=1
 
 # We're going to configure NANO as the default editor used by Ansible Vault
-# to edit encrypted files.
+# to edit encrypted files.  We're also going to install VIM/VI as an option.
 
 ENV EDITOR=/bin/nano
 
 RUN  apt-get update \
-    && apt-get install -yq nano \
+    && apt-get install -yq nano vim \
     && apt-get clean -yq
 
 # Install OpenVPN in it's own layer.
