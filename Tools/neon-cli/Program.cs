@@ -54,6 +54,7 @@ COMMAND SUMMARY:
     neon help               COMMAND
 
     neon ansible exec       ARGS
+    neon ansible galaxy     ARGS
     neon ansible play       ARGS
     neon cluster add        LOGIN-PATH
     neon cluster example

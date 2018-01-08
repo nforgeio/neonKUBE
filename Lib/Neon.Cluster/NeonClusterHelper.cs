@@ -190,12 +190,12 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns the path to the root folder containing the Ansible related files.
+        /// Returns the path to the root folder containing the installed Ansible role files.
         /// </summary>
         /// <returns>The folder path.</returns>
         public static string GetAnsibleFolder()
         {
-            var path = Path.Combine(GetRootFolder(), "ansible");
+            var path = Path.Combine(GetRootFolder(), "ansible", "roles");
 
             Directory.CreateDirectory(path);
 
