@@ -56,9 +56,10 @@ namespace NeonCli
         private const string usage = @"
 USAGE:
 
-    neon ansible exec [OPTIONS] -- ARGS     - runs an adhoc command via: ansible ARGS
-    neon ansible galaxy [OPTIONS] -- ARGS   - manage roles via: ansible-galaxy ARGS
-    neon ansible play [OPTIONS] -- ARGS     - runs a playbook via: ansible-playbook ARGS
+    neon ansible exec   [OPTIONS] -- ARGS   - runs an adhoc command via:   ansible ARGS
+    neon ansible galaxy [OPTIONS] -- ARGS   - manage ansible roles via:    ansible-galaxy ARGS
+    neon ansible play   [OPTIONS] -- ARGS   - runs a playbook via:         ansible-playbook ARGS
+    neon ansible vault  [OPTIONS] -- ARGS   - manages ansible secrets via: ansible-vault ARGS
 
 ARGS: Any valid Ansible options and arguments.
 
@@ -74,15 +75,143 @@ container and to run the Ansible command within this mapped directory.  You can
 use [--cwd=FOLDER] to override the current working directory when running the 
 command.
 
-Ansible modules can be installed via the [neon ansible galaxy] command.  This 
-command installs modules to [%LOCALAPPDATA%\neonFORGE\neoncluster\ansible]
-on Windows machines and [~/.neonforge/neoncluster/ansible] on OSX.  Any modules
-installed here will be available for [ansible exec] and [ansible play] commands.
+Ansible roles are managed via the [neon ansible galaxy] command.  This 
+command installs roles to the your workstation in a user specific folder:
+
+    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\roles  - for Windows
+    ~/.neonforge/neoncluster/ansible/roles              - for OSX
+
+Ansible vault passwords are managed via the [neon ansible vault] command which
+manages secrets on your workstation in the user specific folder:
+
+    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\vault  - for Windows
+    ~/.neonforge/neoncluster/ansible/vault              - for OSX
+";
+
+        private const string execHelp = @"
+Performs ad hoc Ansible commands via [ansible] built into [neon-cli].
+
+USAGE:
+
+    neon ansible exec [OPTIONS] -- ARGS
+
+ARGS: Any valid [ansible] options and arguments.
+
+OPTIONS:
+
+    --cwd=FOLDER        - Use FOLDER as the current working directory
+
+This command works by running the [ansible ARGS] command within a Docker 
+container, mapping the current directory (or the [--cwd=FOLDER] directory)
+into the container as the current directory there.  Any installed Ansible
+roles or vault passwords are also mapped into the container.
+
+The Ansible hosts will be set to the nodes in the current cluster.  These
+are organized into four groups:
+
+    all             - all cluster nodes
+    managers        - manager nodes
+    workers         - worker nodes
+    swarm           - manager or worker nodes
+    pets            - pet nodes
+
+Host variables will be generated for each cluster node.  These will include
+the variables used by Ansible to establish the SSH connections as well as
+all of the node labels specified in the cluster configuration.  The node
+label names will be prefixed by ""neon_"" and will have all embedded periods
+converted to underscores.
+";
+
+        private const string playHelp = @"
+Runs Ansible playbooks via [ansible-playbook] built into [neon-cli].
+
+USAGE:
+
+    neon ansible play [OPTIONS] -- ARGS
+
+ARGS: Any valid [ansible-playbook] options and arguments.
+
+OPTIONS:
+
+    --cwd=FOLDER        - Use FOLDER as the current working directory
+
+This command works by running the [ansible-playbook ARGS] command within a 
+Docker  container, mapping the current directory (or the [--cwd=FOLDER] 
+directory) into the container as the current directory there.  Any installed
+Ansible roles or vault passwords are also mapped into the container.
+
+The Ansible hosts will be set to the nodes in the current cluster.  These
+are organized into four groups:
+
+    all             - all cluster nodes
+    managers        - manager nodes
+    workers         - worker nodes
+    swarm           - manager or worker nodes
+    pets            - pet nodes
+
+Host variables will be generated for each cluster node.  These will include
+the variables used by Ansible to establish the SSH connections as well as
+all of the node labels specified in the cluster configuration.  The node
+label names will be prefixed by ""neon_"" and will have all embedded periods
+converted to underscores.
+";
+
+        private const string galaxyHelp = @"
+Manages installed Ansible roles via [ansible-galaxy] built into [neon-cli].
+
+USAGE:
+
+    neon ansible galaxy [OPTIONS] -- ARGS
+
+ARGS: Any valid [ansible-galaxy] options and arguments.
+
+OPTIONS:
+
+    --cwd=FOLDER        - Use FOLDER as the current working directory
+
+Ansible roles are managed via the [neon ansible galaxy] command.  This 
+command installs roles to the your workstation in a user specific folder:
+
+    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\roles  - for Windows
+    ~/.neonforge/neoncluster/ansible/roles              - for OSX
+
+The [neon ansible ...] commands map this folder into the Docker container
+they create such that any installed roles will be available. 
+";
+
+        private const string vaultHelp = @"
+Manages Ansible roles via [ansible-Vault] built into [neon-cli].
+
+USAGE:
+
+    neon ansible vault [OPTIONS] -- ARGS
+
+ARGS: Any valid [ansible-vault] options and arguments.
+
+OPTIONS:
+
+    --cwd=FOLDER            - Use FOLDER as the current working directory
+    --editor=nano|vim|vi    - Specifies the editor to use for modifying
+                              encrypted files.  This defaults to [nano].
+    --vault=FOLDER          - Use FOLDER as the password file location.
+
+You can use [--ask-vault-pass] so that Ansible commands prompt for 
+passwords or use [--vault-password-file FILE] to specify the password.
+
+Note that all password files must be located at a user specific folder
+on your workstation and must be referenced without specifying a path:
+
+    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\vault  - for Windows
+    ~/.neonforge/neoncluster/ansible/vault              - for OSX
+
+NOTE: Ansible Vault IDs are not currently supported.
+NOTE: Use the [neon create password] command to generate secure passwords.
 ";
 
         private const string sshClientPrivateKeyPath = "/dev/shm/ansible/ssh-client.key";   // Path to the SSH private client key (on a container RAM drive)
         private const string mappedCurrentDirectory  = "/cwd";                              // Path to the current working directory mapped into the container
         private const string mappedRolesPath         = "/etc/ansible/mapped-roles";         // Path where external roles are mapped into the container
+        private const string mappedVaultPath         = "/etc/ansible/mapped-vault";         // Path where external Vault passwords are mapped into the container
 
         /// <inheritdoc/>
         public override string[] Words
@@ -99,7 +228,7 @@ installed here will be available for [ansible exec] and [ansible play] commands.
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--cwd" }; }
+            get { return new string[] { "--cwd", "--editor" }; }
         }
 
         /// <inheritdoc/>
@@ -140,6 +269,35 @@ installed here will be available for [ansible exec] and [ansible play] commands.
                 Program.Exit(1);
             }
 
+            // Munge any [--vault-password-file=FILE] or [--vault-password-file FILE] options to be relative to the
+            // mapped external Vault folder.
+
+            for (int i = 0; i < ansibleCommandLine.Items.Length; i++)
+            {
+                var item = ansibleCommandLine.Items[i];
+
+                if (item.StartsWith("--vault-password-file="))
+                {
+                    var passwordFile = item.Substring(item.IndexOf('=') + 1);
+
+                    item = $"--vault-password-file={Path.Combine(mappedVaultPath, passwordFile)}";
+                    break;
+                }
+                else if (item == "--vault-password-file")
+                {
+                    if (i + 1 >= ansibleCommandLine.Items.Length)
+                    {
+                        Console.Error.WriteLine("*** ERROR: Missing password file after [--vault-password-file] option.");
+                        Program.Exit(1);
+                    }
+
+                    var passwordFile = ansibleCommandLine.Items[i + 1];
+
+                    ansibleCommandLine.Items[i + 1] = Path.Combine(mappedVaultPath, passwordFile);
+                    break;
+                }
+            }
+
             // Execute the command.
 
             var command = neonCommandLine.Arguments.Skip(1).First();
@@ -148,12 +306,24 @@ installed here will be available for [ansible exec] and [ansible play] commands.
             {
                 case "exec":
 
+                    if (neonCommandLine.HasHelpOption)
+                    {
+                        Console.WriteLine(execHelp);
+                        Program.Exit(0);
+                    }
+
                     GenerateAnsibleConfig();
                     GenerateAnsibleFiles(login);
                     NeonHelper.Execute("ansible", NeonHelper.NormalizeExecArgs("--user", login.SshUsername, "--private-key", sshClientPrivateKeyPath, ansibleCommandLine.Items));
                     break;
 
                 case "play":
+
+                    if (neonCommandLine.HasHelpOption)
+                    {
+                        Console.WriteLine(playHelp);
+                        Program.Exit(0);
+                    }
 
                     GenerateAnsibleConfig();
                     GenerateAnsibleFiles(login);
@@ -162,8 +332,53 @@ installed here will be available for [ansible exec] and [ansible play] commands.
 
                 case "galaxy":
 
+                    if (neonCommandLine.HasHelpOption)
+                    {
+                        Console.WriteLine(galaxyHelp);
+                        Program.Exit(0);
+                    }
+
                     GenerateAnsibleConfig();
                     NeonHelper.Execute("ansible-galaxy", NeonHelper.NormalizeExecArgs(ansibleCommandLine.Items));
+                    break;
+
+                case "vault":
+
+                    if (neonCommandLine.HasHelpOption)
+                    {
+                        Console.WriteLine(vaultHelp);
+                        Program.Exit(0);
+                    }
+
+                    GenerateAnsibleConfig();
+
+                    var editor = neonCommandLine.GetOption("--editor", "nano");
+
+                    switch (editor.ToLowerInvariant())
+                    {
+                        case "nano":
+
+                            Environment.SetEnvironmentVariable("EDITOR", "/bin/nano");
+                            break;
+
+                        case "vim":
+
+                            Environment.SetEnvironmentVariable("EDITOR", "/usr/bin/vim");
+                            break;
+
+                        case "vi":
+
+                            Environment.SetEnvironmentVariable("EDITOR", "/usr/bin/vi");
+                            break;
+
+                        default:
+
+                            Console.Error.WriteLine($"*** ERROR: [--editor={editor}] does not specified a known editor.  Use one of: nano, vim, or vi.");
+                            Program.Exit(1);
+                            break;
+                    }
+
+                    NeonHelper.Execute("ansible-vault", NeonHelper.NormalizeExecArgs(ansibleCommandLine.Items));
                     break;
 
                 default:
@@ -185,9 +400,10 @@ installed here will be available for [ansible exec] and [ansible play] commands.
 
             shim.MappedFolders.Add(new DockerShimFolder(externalCurrentDirectory, mappedCurrentDirectory, isReadOnly: false));
 
-            // And also map the external Ansible roles folder into the container.
+            // ...and also map the external Ansible roles and vault folders into the container.
 
-            shim.MappedFolders.Add(new DockerShimFolder(NeonClusterHelper.GetAnsibleFolder(), mappedRolesPath, isReadOnly: false));
+            shim.MappedFolders.Add(new DockerShimFolder(NeonClusterHelper.GetAnsibleRolesFolder(), mappedRolesPath, isReadOnly: false));
+            shim.MappedFolders.Add(new DockerShimFolder(NeonClusterHelper.GetAnsibleRolesFolder(), mappedVaultPath, isReadOnly: false));
 
             return new ShimInfo(isShimmed: true, ensureConnection: true);
         }
@@ -788,7 +1004,7 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
                         .Union(node.Labels.Custom)
                         .OrderBy(l => l.Key))
                     {
-                        var name = label.Key.Replace('.', '_');    // Convert periods in label names to underscores
+                        var name = "neon_" + label.Key.Replace('.', '_');   // Prefix by "neon_" and convert periods in label names to underscores
 
                         // We may need to escape the label value to be YAML/Ansible safe.
                         // Note that I'm going to just go ahead and quote all values for
