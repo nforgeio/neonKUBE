@@ -36,10 +36,10 @@ namespace NeonCli
     /// </para>
     /// <para>
     /// This command works by mapping the current client directory into the <b>neon-cli</b> 
-    /// container at <b>/ansible</b> and then generating the hosts and host variables files at
-    /// <b>/etc/ansible</b> in the container and then running <b>ansible ARGS</b> or 
-    /// <b>ansible-playbook ARGS</b>, passing the SSH client certificate and any command 
-    /// line arguments.
+    /// container at <b>/cwd</b> and then generating the hosts and host variables files at
+    /// <b>/etc/ansible</b> in the container and then running <b>ansible ARGS</b>, <b>ansible-galaxy ARGS</b>
+    /// <b>ansible-playbook ARGS</b>, or <b>ansible-vault ARGS</b> passing the SSH client 
+    /// certificate and any command line arguments after the "--".
     /// </para>
     /// <para>
     /// Variables are generated for each Docker label specified for each host node.  Each
@@ -48,7 +48,10 @@ namespace NeonCli
     /// </para>
     /// <note>
     /// This command makes no attempt to map files referenced by command line arguments
-    /// or options into the container other than to map the current directory.
+    /// or options into the container other than to map the current directory from the
+    /// workstation along with the Ansible roles and vault directories in the user folder.
+    /// Any password file references will be assumed to be relative to the user's vault
+    /// folder.
     /// </note>
     /// </remarks>
     public class AnsibleCommand : CommandBase
@@ -60,6 +63,8 @@ USAGE:
     neon ansible galaxy [OPTIONS] -- ARGS   - manage ansible roles via:    ansible-galaxy ARGS
     neon ansible play   [OPTIONS] -- ARGS   - runs a playbook via:         ansible-playbook ARGS
     neon ansible vault  [OPTIONS] -- ARGS   - manages ansible secrets via: ansible-vault ARGS
+
+    neon ansible password CMD ARGS          - password management       
 
 ARGS: Any valid Ansible options and arguments.
 
@@ -208,6 +213,37 @@ NOTE: Ansible Vault IDs are not currently supported.
 NOTE: Use the [neon create password] command to generate secure passwords.
 ";
 
+        private const string passwordHelp = @"
+Manages Ansible Vault passwords for neonCLUSTER.
+
+USAGE:
+
+    neon ansible password ls|list           - Lists passwords
+    neon ansible password folder [--open]   - Prints or opens password folder
+    neon ansible password get NAME          - Displays a password
+    neon ansible password set NAME          - Sets a secure generated password 
+    neon ansible password set NAME VALUE    - Sets a password to a specific value
+    neon ansible password set NAME -        - Sets a password from STDIN
+    neon ansible password rm|remove NAME    - Removes a password
+
+ARGS:
+
+    NAME        - Name of the password file
+    VALUE       - Password value
+    -           - Indicates that password is read from STDIN
+
+OPTIONS:
+
+    --open      - Indicates that the password folder should be opened
+                  in a file explorer window.
+
+Passwords are simple text files that hold passwords on a single line.  These
+are stored in a user-specific folder at:
+
+    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\vault  - for Windows
+    ~/.neonforge/neoncluster/ansible/vault              - for OSX
+";
+
         private const string sshClientPrivateKeyPath = "/dev/shm/ansible/ssh-client.key";   // Path to the SSH private client key (on a container RAM drive)
         private const string mappedCurrentDirectory  = "/cwd";                              // Path to the current working directory mapped into the container
         private const string mappedRolesPath         = "/etc/ansible/mapped-roles";         // Path where external roles are mapped into the container
@@ -228,7 +264,7 @@ NOTE: Use the [neon create password] command to generate secure passwords.
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--cwd", "--editor" }; }
+            get { return new string[] { "--cwd", "--editor", "--open" }; }
         }
 
         /// <inheritdoc/>
@@ -250,10 +286,157 @@ NOTE: Use the [neon create password] command to generate secure passwords.
             var commandSplit       = commandLine.Split();
             var neonCommandLine    = commandSplit.Left;
             var ansibleCommandLine = commandSplit.Right;
+            var command            = neonCommandLine.Arguments.Skip(1).First();
+
+            // The [password] command operates in [--direct] mode so we'll implement it here.
+
+            if (command == "password")
+            {
+                var passwordCommandLine = neonCommandLine.Shift(2);
+
+                if (neonCommandLine.HasHelpOption || passwordCommandLine.Arguments.Length == 0)
+                {
+                    Console.WriteLine(passwordHelp);
+                    Program.Exit(0);
+                }
+
+                string vaultFolder     = NeonClusterHelper.GetAnsibleVaultFolder();
+                string passwordCommand = passwordCommandLine.Arguments.First();
+                string passwordName    = passwordCommandLine.Arguments.Skip(1).FirstOrDefault();
+                string passwordValue   = passwordCommandLine.Arguments.Skip(2).FirstOrDefault();
+                string passwordPath;
+
+                switch (passwordCommand)
+                {
+                    case "folder":
+
+                        if (passwordCommandLine.HasOption("--open"))
+                        {
+                            if (NeonHelper.IsWindows)
+                            {
+                                Process.Start(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"), $"\"{vaultFolder}\"");
+                            }
+                            else if (NeonHelper.IsOSX)
+                            {
+                                throw new NotImplementedException("$todo(jeff.lill): Implement this for OSX.");
+                            }
+                            else
+                            {
+                                throw new NotSupportedException("[--open] option is not supported on this platform.");
+                            }
+                        }
+                        else
+                        {
+                            Console.Write(vaultFolder);
+                        }
+                        break;
+
+                    case "get":
+
+                        if (passwordName == null)
+                        {
+                            Console.Error.WriteLine("[ansible password get NAME] command is missing the [NAME] argument.");
+                            Program.Exit(1);
+                        }
+
+                        passwordPath = Path.Combine(vaultFolder, passwordName);
+
+                        if (!File.Exists(passwordPath))
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Password file [{passwordPath}] does not exist.");
+                            Program.Exit(1);
+                        }
+
+                        Console.Write(File.ReadAllText(passwordPath));
+                        break;
+
+                    case "ls":
+                    case "list":
+
+                        foreach (var file in Directory.GetFiles(vaultFolder, "*.*", SearchOption.AllDirectories)
+                            .OrderBy(f => f.ToLowerInvariant()))
+                        {
+                            Console.WriteLine(file.Substring(vaultFolder.Length + 1));  // Strip off the Vault folder path.
+                        }
+                        break;
+
+                    case "rm":
+                    case "remove":
+
+                        if (passwordName == null)
+                        {
+                            Console.Error.WriteLine("[ansible password rm NAME] command is missing the [NAME] argument.");
+                            Program.Exit(1);
+                        }
+
+                        passwordPath = Path.Combine(vaultFolder, passwordName);
+
+                        if (!File.Exists(passwordPath))
+                        {
+                            Console.Error.WriteLine($"***ERROR: Password file [{passwordPath}] does not exist.");
+                            Program.Exit(1);
+                        }
+
+                        File.Delete(passwordPath);
+                        break;
+
+                    case "set":
+
+                        if (passwordName == null)
+                        {
+                            Console.Error.WriteLine("[ansible password set] command is missing the [NAME] argument.");
+                            Program.Exit(1);
+                        }
+
+                        passwordPath = Path.Combine(vaultFolder, passwordName);
+
+                        if (passwordValue == null)
+                        {
+                            // Generate and set a secure password.
+
+                            File.WriteAllText(passwordPath, NeonHelper.GetRandomPassword(20));
+                        }
+                        else if (passwordValue == "-")
+                        {
+                            // Read the password from standard input.
+
+                            passwordValue = NeonHelper.ReadStandardInputText();
+
+                            // Make sure we have a only single line of text.
+
+                            passwordValue = passwordValue.Trim();
+
+                            if (passwordValue.IndexOf('\n') != -1)
+                            {
+                                Console.Error.WriteLine($"*** ERROR: Password passed in STDIN cannot have one line of text.");
+                                Program.Exit(1);
+                            }
+
+                            File.WriteAllText(passwordPath, passwordValue);
+                        }
+                        else
+                        {
+                            // Password value is passed on the command line.
+
+                            File.WriteAllText(passwordPath, passwordValue.Trim());
+                        }
+                        break;
+
+                    default:
+
+                        Console.Error.WriteLine($"*** ERROR: Unexpected Ansible password command [{passwordCommand}].");
+                        Program.Exit(1);
+                        break;
+                }
+
+                return;
+            }
+
+            // Implement the rest of the commands.
 
             if (!NeonClusterHelper.InToolContainer)
             {
-                Console.Error.WriteLine("*** ERROR: The [ansible] commands do not support [--direct] mode.");
+                Console.Error.WriteLine("*** ERROR: This [ansible] command does not support [--direct] mode.");
                 Program.Exit(1);
             }
 
@@ -303,8 +486,6 @@ NOTE: Use the [neon create password] command to generate secure passwords.
             }
 
             // Execute the command.
-
-            var command = neonCommandLine.Arguments.Skip(1).First();
 
             switch (command)
             {
@@ -407,6 +588,14 @@ NOTE: Use the [neon create password] command to generate secure passwords.
 
             shim.AddMappedFolder(new DockerShimFolder(NeonClusterHelper.GetAnsibleRolesFolder(), mappedRolesPath, isReadOnly: false));
             shim.AddMappedFolder(new DockerShimFolder(NeonClusterHelper.GetAnsibleRolesFolder(), mappedVaultPath, isReadOnly: false));
+
+            // Note that we don't shim the password command and we also don't need
+            // a cluster connection.
+
+            if (shim.CommandLine.Arguments.Length >= 2 && shim.CommandLine.Items.Skip(1).First() == "password")
+            {
+                return new ShimInfo(isShimmed: false, ensureConnection: false);
+            }
 
             return new ShimInfo(isShimmed: true, ensureConnection: true);
         }
