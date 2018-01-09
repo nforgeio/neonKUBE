@@ -208,9 +208,6 @@ on your workstation and must be referenced without specifying a path:
 
     %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\vault  - for Windows
     ~/.neonforge/neoncluster/ansible/vault              - for OSX
-
-NOTE: Ansible Vault IDs are not currently supported.
-NOTE: Use the [neon create password] command to generate secure passwords.
 ";
 
         private const string passwordHelp = @"
@@ -457,7 +454,8 @@ are stored in a user-specific folder at:
             Environment.CurrentDirectory = mappedCurrentDirectory;
 
             // Munge any [--vault-password-file=FILE] or [--vault-password-file FILE] options to use a 
-            // path prefix that is relative to the mapped external Vault folder.
+            // path prefix that is relative to the mapped external Vault folder.  Note that [--vault-password-file=FILE]
+            // may appear only once in the command line.
 
             for (int i = 0; i < ansibleCommandLine.Items.Length; i++)
             {
@@ -467,7 +465,7 @@ are stored in a user-specific folder at:
                 {
                     var passwordFile = item.Substring(item.IndexOf('=') + 1);
 
-                    item = $"--vault-password-file={Path.Combine(mappedVaultPath, passwordFile)}";
+                    ansibleCommandLine.Items[i] = $"--vault-password-file={Path.Combine(mappedVaultPath, passwordFile)}";
                     break;
                 }
                 else if (item == "--vault-password-file")
@@ -482,6 +480,52 @@ are stored in a user-specific folder at:
 
                     ansibleCommandLine.Items[i + 1] = Path.Combine(mappedVaultPath, passwordFile);
                     break;
+                }
+            }
+
+            // We also need to munge any [--vault-id=ID@NAME] or [--vault-password-file ID@NAME] options to use a 
+            // path prefix that is relative to the mapped external Vault folder.  Note that the ID is optional
+            // and that [--vault-id] may appear multiple times in the command line.
+
+            for (int i = 0; i < ansibleCommandLine.Items.Length; i++)
+            {
+                var item = ansibleCommandLine.Items[i];
+
+                if (item.StartsWith("--vault-id="))
+                {
+                    var vaultId      = item.Substring(item.IndexOf('=') + 1);
+                    var vaultIdParts = vaultId.Split('@', 2);
+
+                    if (vaultIdParts.Length == 1)
+                    {
+                        ansibleCommandLine.Items[i] = Path.Combine(mappedVaultPath, vaultIdParts[0]);
+                    }
+                    else
+                    {
+                        ansibleCommandLine.Items[i] =$"{vaultIdParts[0]}@{Path.Combine(mappedVaultPath, vaultIdParts[1])}";
+                    }
+                }
+                else if (item == "--vault-id")
+                {
+                    if (i + 1 >= ansibleCommandLine.Items.Length)
+                    {
+                        Console.Error.WriteLine("*** ERROR: Missing password file after [--vault-id] option.");
+                        Program.Exit(1);
+                    }
+
+                    i++;    // Advance to the vault ID argument.
+
+                    var vaultId      = ansibleCommandLine.Items[i];
+                    var vaultIdParts = vaultId.Split('@', 2);
+
+                    if (vaultIdParts.Length == 1)
+                    {
+                        ansibleCommandLine.Items[i] = Path.Combine(mappedVaultPath, vaultIdParts[0]);
+                    }
+                    else
+                    {
+                        ansibleCommandLine.Items[i] = $"{vaultIdParts[0]}@{Path.Combine(mappedVaultPath, vaultIdParts[1])}";
+                    }
                 }
             }
 
