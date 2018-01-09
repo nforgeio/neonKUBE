@@ -269,6 +269,10 @@ NOTE: Use the [neon create password] command to generate secure passwords.
                 Program.Exit(1);
             }
 
+            // Change the current directory to the mapped external directory.
+
+            Environment.CurrentDirectory = mappedCurrentDirectory;
+
             // Munge any [--vault-password-file=FILE] or [--vault-password-file FILE] options to use a 
             // path prefix that is relative to the mapped external Vault folder.
 
@@ -371,12 +375,11 @@ NOTE: Use the [neon create password] command to generate secure passwords.
 
                         default:
 
-                            Console.Error.WriteLine($"*** ERROR: [--editor={editor}] does not specify a known editor.  Use one of: nano, vim, or vi.");
+                            Console.Error.WriteLine($"*** ERROR: [--editor={editor}] does not specify a known editor.  Specify one of: nano, vim, or vi.");
                             Program.Exit(1);
                             break;
                     }
 
-                    Thread.Sleep(10000000);
                     GenerateAnsibleConfig();
                     NeonHelper.Execute("ansible-vault", NeonHelper.NormalizeExecArgs(ansibleCommandLine.Items));
                     break;
@@ -398,12 +401,12 @@ NOTE: Use the [neon create password] command to generate secure passwords.
 
             var externalCurrentDirectory = shim.CommandLine.GetOption("--cwd", Environment.CurrentDirectory);
 
-            shim.MappedFolders.Add(new DockerShimFolder(externalCurrentDirectory, mappedCurrentDirectory, isReadOnly: false));
+            shim.AddMappedFolder(new DockerShimFolder(externalCurrentDirectory, mappedCurrentDirectory, isReadOnly: false));
 
             // ...and also map the external Ansible roles and vault folders into the container.
 
-            shim.MappedFolders.Add(new DockerShimFolder(NeonClusterHelper.GetAnsibleRolesFolder(), mappedRolesPath, isReadOnly: false));
-            shim.MappedFolders.Add(new DockerShimFolder(NeonClusterHelper.GetAnsibleRolesFolder(), mappedVaultPath, isReadOnly: false));
+            shim.AddMappedFolder(new DockerShimFolder(NeonClusterHelper.GetAnsibleRolesFolder(), mappedRolesPath, isReadOnly: false));
+            shim.AddMappedFolder(new DockerShimFolder(NeonClusterHelper.GetAnsibleRolesFolder(), mappedVaultPath, isReadOnly: false));
 
             return new ShimInfo(isShimmed: true, ensureConnection: true);
         }
