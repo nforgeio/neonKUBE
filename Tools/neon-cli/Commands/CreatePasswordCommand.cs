@@ -36,7 +36,7 @@ USAGE:
 OPTIONS:
 
     --length=#      - The desired password length.  This defaults
-                      to 15 characters.
+                      to 20 characters.
 ";
         /// <inheritdoc/>
         public override string[] Words
@@ -59,7 +59,7 @@ OPTIONS:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            var lengthOption = commandLine.GetOption("--length", "15");
+            var lengthOption = commandLine.GetOption("--length", "20");
 
             if (!int.TryParse(lengthOption, out var length) || length < 1 || length > 1024)
             {
