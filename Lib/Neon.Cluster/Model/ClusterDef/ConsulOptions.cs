@@ -53,7 +53,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <remarks>
         /// <note>
-        /// Suitable keys may be generated via <b>neon create key</b>.
+        /// Suitable keys may be generated via <b>neon create cypher</b>.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "EncryptionKey", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

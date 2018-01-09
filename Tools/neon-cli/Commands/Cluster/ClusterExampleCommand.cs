@@ -304,7 +304,7 @@ USAGE:
         //                        a cryptographically generated key.  Use the 
         //                        command below to generate a custom key:
         //
-        //                              neon create key 
+        //                              neon create cyhper 
     },
 
     // HashiCorp Vault secret server options.
