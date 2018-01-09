@@ -51,7 +51,6 @@ ARGS:
         }
 
         /// <inheritdoc/>
-        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);
