@@ -130,7 +130,7 @@ namespace Neon.Cluster
         /// be located.
         /// </summary>
         /// <returns>The folder path.</returns>
-        private static string GetVpnFolder()
+        public static string GetVpnFolder()
         {
             if (NeonClusterHelper.InToolContainer)
             {

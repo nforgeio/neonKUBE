@@ -72,6 +72,7 @@ COMMAND SUMMARY:
     neon docker             ARGS
     neon download           SOURCE TARGET [NODE]
     neon exec               BASH-CMD
+    neon folder             FOLDER
     neon get                [VALUE-EXPR]
     neon login              [--vpn] USER@CLUSTER
     neon login export       USER@CLUSTER
@@ -104,6 +105,7 @@ ARGUMENTS:
                           optional for some commands when logged in.
     CMD...              - Subcommand and arguments.
     DASHBOARD           - Identifies a cluster dashboard
+    FOLDER              - Identifies a neonCLUSTER folder
     LOGIN-PATH          - Path to a cluster login file including the cluster
                           definition and user credentials.
     NODE                - Identifies a cluster node by name.
@@ -223,6 +225,7 @@ that the tool requires admin priviledges for direct mode.
                     new DockerCommand(),
                     new DownloadCommand(),
                     new ExecCommand(),
+                    new FolderCommand(),
                     new LoginCommand(),
                     new LoginExportCommand(),
                     new LoginImportCommand(),
