@@ -106,7 +106,7 @@ namespace NeonCli
         /// <summary>
         /// The list of folders to be mapped from the client workstation into the container.
         /// </summary>
-        public List<DockerShimFolder> MappedFolders { get; set; } = new List<DockerShimFolder>();
+        public List<DockerShimFolder> MappedFolders { get; private set; } = new List<DockerShimFolder>();
 
         /// <summary>
         /// Returns the shim folder path on the operator's workstation.
@@ -124,6 +124,22 @@ namespace NeonCli
             // [neoncluster/neon-cli] container scripts.
 
             get { return "/shim"; }
+        }
+
+        /// <summary>
+        /// Adds a folder to be shimmed into the Docker container.
+        /// </summary>
+        /// <param name="folder">The folder.</param>
+        public void AddMappedFolder(DockerShimFolder folder)
+        {
+            Covenant.Requires<ArgumentNullException>(folder != null);
+
+            if (!Directory.Exists(folder.ClientFolderPath))
+            {
+                throw new FileNotFoundException($"Directory [{folder.ClientFolderPath}] does not exist.");
+            }
+
+            MappedFolders.Add(folder);
         }
 
         /// <summary>
