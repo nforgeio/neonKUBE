@@ -71,8 +71,8 @@ else
 	if ($latest)
 	{
 		Exec { docker tag "${registry}:$branch-$version" "${registry}:$branch-latest"}
-		PushImage "${registry}:$branch-latest"
+		# PushImage "${registry}:$branch-latest"
 	}
 
-	PushImage "${registry}:$branch-$version"
+	# PushImage "${registry}:$branch-$version"
 }

@@ -269,8 +269,8 @@ NOTE: Use the [neon create password] command to generate secure passwords.
                 Program.Exit(1);
             }
 
-            // Munge any [--vault-password-file=FILE] or [--vault-password-file FILE] options to be relative to the
-            // mapped external Vault folder.
+            // Munge any [--vault-password-file=FILE] or [--vault-password-file FILE] options to use a 
+            // path prefix that is relative to the mapped external Vault folder.
 
             for (int i = 0; i < ansibleCommandLine.Items.Length; i++)
             {
@@ -350,8 +350,6 @@ NOTE: Use the [neon create password] command to generate secure passwords.
                         Program.Exit(0);
                     }
 
-                    GenerateAnsibleConfig();
-
                     var editor = neonCommandLine.GetOption("--editor", "nano");
 
                     switch (editor.ToLowerInvariant())
@@ -373,11 +371,13 @@ NOTE: Use the [neon create password] command to generate secure passwords.
 
                         default:
 
-                            Console.Error.WriteLine($"*** ERROR: [--editor={editor}] does not specified a known editor.  Use one of: nano, vim, or vi.");
+                            Console.Error.WriteLine($"*** ERROR: [--editor={editor}] does not specify a known editor.  Use one of: nano, vim, or vi.");
                             Program.Exit(1);
                             break;
                     }
 
+                    Thread.Sleep(10000000);
+                    GenerateAnsibleConfig();
                     NeonHelper.Execute("ansible-vault", NeonHelper.NormalizeExecArgs(ansibleCommandLine.Items));
                     break;
 
@@ -393,7 +393,7 @@ NOTE: Use the [neon create password] command to generate secure passwords.
         public override ShimInfo Shim(DockerShim shim)
         {
             // We need to map the current directory into the container.  Note that
-            // the [--cmd=FOLDER] command line option will override the current
+            // the [--cwd=FOLDER] command line option will override the current
             // directory if present.
 
             var externalCurrentDirectory = shim.CommandLine.GetOption("--cwd", Environment.CurrentDirectory);
