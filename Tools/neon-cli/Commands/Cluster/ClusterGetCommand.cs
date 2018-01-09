@@ -41,7 +41,7 @@ ARGUMENTS:
     VALUE       - identifies the desired value
     NODE        - optionally names a specific node.
 
-CLUSTER VALUE IDENTIFIERS:
+CLUSTER IDENTIFIERS:
 
     username                - root account username
     password                - root account password
@@ -49,7 +49,7 @@ CLUSTER VALUE IDENTIFIERS:
     sshkey-client-ppk       - client SSH private key (PPK format)
     sshkey-fingerprint      - SSH host key fingerprint
 
-NODE VALUE IDENTIFIERS:
+NODE IDENTIFIERS:
 
     ip                      - internal cluster IP address
     role                    - role: manager or worker
@@ -170,7 +170,7 @@ NODE VALUE IDENTIFIERS:
         /// <inheritdoc/>
         public override ShimInfo Shim(DockerShim shim)
         {
-            return new ShimInfo(isShimmed: false, ensureConnection: false);
+            return new ShimInfo(isShimmed: false, ensureConnection: true);
         }
     }
 }
