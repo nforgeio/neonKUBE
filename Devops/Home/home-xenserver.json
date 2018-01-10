@@ -1,0 +1,50 @@
+{
+  "Name": "xen",
+  "Datacenter": "woodinville",
+  "Environment": "development",
+  "TimeSources": [ "pool.ntp.org" ],
+  "DebugMode": true,
+  "Hosting": {
+    "ManagerRouterAddress": "lill-home.ddns.net",
+    "Environment": "xenserver"
+  },
+  "Network": {
+    "NodesSubnet": "10.50.0.0/24"
+  },
+  "Vpn": {
+    "Enabled": false
+  },
+  "HostNode": {
+    "OsUpgrade": "full",
+    "SshAuth": "tls",
+    "PasswordLength": 20
+  },
+  "Docker": {
+    "Version": "17.09.1-ce",
+    //"Version": "17.06.1-ce",
+    //"Version": "17.03.2-ce",
+    //"Version": "latest",
+    //"Version": "test",
+    //"Version": "experimental",
+    "RegistryCache": true,
+    "Experimental": false
+  },
+  "Vault": {
+    "KeyCount": 1,
+    "KeyThreshold": 1
+  },
+  "Log": {
+    "Enabled": true
+  },
+  "Nodes": {
+    "manager-0": {
+      "Role": "manager",
+      "PrivateAddress": "10.50.0.35",
+      "Labels": {
+        "StorageSSD": true,
+        "LogEsData": true
+      }
+    }
+  }
+}
+

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HyperVOptions.cs
+// FILE:	    XenServerOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
 
@@ -13,9 +13,9 @@ using Newtonsoft.Json.Serialization;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Specifies hosting settings for the Microsoft Hyper-V hypervisor.
+    /// Specifies hosting settings for the Citrix XenServer hypervisor.
     /// </summary>
-    public class HyperVOptions
+    public class XenServerOptions
     {
         private const string defaultHostVhdxUri     = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.vhdx.zip";
         private const string defaultVMMemory        = "4GB";
@@ -24,7 +24,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public HyperVOptions()
+        public XenServerOptions()
         {
         }
 

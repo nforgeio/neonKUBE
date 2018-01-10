@@ -1,7 +1,7 @@
 ﻿
 Microsoft Visual Studio Solution File, Format Version 12.00
 # Visual Studio 15
-VisualStudioVersion = 15.0.27130.2010
+VisualStudioVersion = 15.0.27130.2020
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C4-490A-9519-4702DF7A4E15}"
 	ProjectSection(SolutionItems) = preProject
@@ -131,6 +131,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Home", "Home", "{A7E3360B-C
 		Devops\Home\home-azure.json = Devops\Home\home-azure.json
 		Devops\Home\home-large.json = Devops\Home\home-large.json
 		Devops\Home\home-small.json = Devops\Home\home-small.json
+		Devops\Home\home-xenserver.json = Devops\Home\home-xenserver.json
 	EndProjectSection
 EndProject
 Global

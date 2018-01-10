@@ -22,7 +22,7 @@ namespace Neon.Cluster
         Machine = 0,
 
         /// <summary>
-        /// Hosted on Microsoft Hyper-V virtual machines.
+        /// Microsoft Hyper-V hypervisor.
         /// </summary>
         [EnumMember(Value = "hyper-v")]
         HyperV,
@@ -43,6 +43,12 @@ namespace Neon.Cluster
         /// Google Cloud Platform.
         /// </summary>
         [EnumMember(Value = "google")]
-        Google
+        Google,
+
+        /// <summary>
+        /// Citrix XenServer hypervisor.
+        /// </summary>
+        [EnumMember(Value = "xenserver")]
+        XenServer
     }
 }

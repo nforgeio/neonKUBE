@@ -113,7 +113,7 @@ namespace Neon.Cluster
             }
 
             // If a public address isn't explicitly specified, we'll assume that the
-            // tool is running inside the network and can access the private address.
+            // tool is running inside the network and we can access the private address.
 
             foreach (var node in cluster.Definition.Nodes)
             {
@@ -132,7 +132,7 @@ namespace Neon.Cluster
             };
 
             controller.AddGlobalStep("prepare hyper-v", () => PrepareHyperV());
-            controller.AddStep("create virtual machines", n => ProvisionHyperVMachine(n));
+            controller.AddStep("create virtual machines", n => ProvisionVM(n));
             controller.AddGlobalStep(string.Empty, () => FinishHyperV(), quiet: true);
 
             if (!controller.Run())
@@ -437,7 +437,7 @@ namespace Neon.Cluster
         /// Creates a Hyper-V virtual machine for a cluster node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void ProvisionHyperVMachine(NodeProxy<NodeDefinition> node)
+        private void ProvisionVM(NodeProxy<NodeDefinition> node)
         {
             // $todo(jeff.lill):
             //

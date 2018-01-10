@@ -73,11 +73,18 @@ namespace Neon.Cluster
         public MachineOptions Machine { get; set; } = null;
 
         /// <summary>
-        /// Specifies the hosting settings when hosting on Microsoft Hyper-V virtual machines.
+        /// Specifies the hosting settings when hosting on the Microsoft Hyper-V hypervisor.
         /// </summary>
         [JsonProperty(PropertyName = "HyperV", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public HyperVOptions HyperV { get; set; } = null;
+
+        /// <summary>
+        /// Specifies the hosting settings when hosting on Citrix XenServer hypervisor.
+        /// </summary>
+        [JsonProperty(PropertyName = "XenServer", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public XenServerOptions XenServer { get; set; } = null;
 
         /// <summary>
         /// Returns <c>true</c> if the cluster will be hosted by a cloud provider like AWS or Azure.
@@ -91,6 +98,7 @@ namespace Neon.Cluster
                 {
                     case HostingEnvironments.HyperV:
                     case HostingEnvironments.Machine:
+                    case HostingEnvironments.XenServer:
 
                         return false;
 
@@ -164,6 +172,13 @@ namespace Neon.Cluster
                     Machine.Validate(clusterDefinition);
                     break;
 
+                case HostingEnvironments.XenServer:
+
+                    XenServer = XenServer ?? new XenServerOptions();
+
+                    XenServer.Validate(clusterDefinition);
+                    break;
+
                 default:
 
                     throw new NotImplementedException();
@@ -183,10 +198,12 @@ namespace Neon.Cluster
         /// </summary>
         public void ClearSecrets()
         {
-            Aws     = null;
-            Azure   = null;
-            Google  = null;
-            Machine = null;
+            Aws       = null;
+            Azure     = null;
+            Google    = null;
+            HyperV    = null;
+            Machine   = null;
+            XenServer = null;
         }
     }
 }

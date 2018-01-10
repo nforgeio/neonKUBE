@@ -68,6 +68,10 @@ namespace Neon.Cluster
 
                     return new MachineHostingManager(cluster);
 
+                case HostingEnvironments.XenServer:
+
+                    return new XenServerHostingManager(cluster);
+
                 default:
 
                     throw new NotImplementedException($"Hosting manager for [{cluster.Definition.Hosting.Environment}] is not implemented.");
