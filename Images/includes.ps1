@@ -73,6 +73,11 @@ function DeleteFolder
 #------------------------------------------------------------------------------
 # Pushes a Docker image to the public registry with retry as an attempt to handle
 # transient registry issues.
+#
+# Note that you may set [$noImagePush=$True] to disable image pushing for debugging
+# purposes.  The [publish.ps1] scripts accept the [--nopush] switchto control this.
+
+$noImagePush = $False
 
 function PushImage
 {
@@ -81,6 +86,11 @@ function PushImage
         [Parameter(Position=0, Mandatory=1)]
         [string]$Image
     )
+
+	if ($noImagePush)
+	{
+		return
+	}
 
 	$maxAttempts = 5
 

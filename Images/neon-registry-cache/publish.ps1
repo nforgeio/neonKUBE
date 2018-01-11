@@ -11,7 +11,8 @@
 
 param 
 (
-	[switch]$all = $False
+	[switch]$all = $False,
+    [switch]$nopush = $False
 )
 
 #----------------------------------------------------------
@@ -43,7 +44,7 @@ function Build
 
 	# Build and publish the images.
 
-	./build.ps1 -registry $registry -version $version -tag $tag
+	. ./build.ps1 -registry $registry -version $version -tag $tag
 	PushImage "${registry}:$tag"
 
 	if (IsProd)
@@ -66,6 +67,8 @@ function Build
 		}
 	}
 }
+
+$noImagePush = $nopush
 
 if ($all)
 {

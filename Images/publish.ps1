@@ -11,7 +11,8 @@
 
 param 
 (
-	[switch]$all = $False
+	[switch]$all = $False,
+    [switch]$nopush = $False
 )
 
 #----------------------------------------------------------
@@ -35,11 +36,25 @@ function Publish
 
 	if ($all)
 	{
-		./publish.ps1 -all
+		if ($nopush)
+		{
+			./publish.ps1 -all -nopush
+		}
+		else
+		{
+			./publish.ps1 -all
+		}
 	}
 	else
 	{
-		./publish.ps1
+		if ($nopush)
+		{
+			./publish.ps1 -nopush
+		}
+		else
+		{
+			./publish.ps1
+		}
 	}
 }
 

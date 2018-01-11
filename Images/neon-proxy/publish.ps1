@@ -9,6 +9,11 @@
 #
 # Usage: powershell -file ./publish.ps1
 
+param 
+(
+    [switch]$nopush = $False
+)
+
 #----------------------------------------------------------
 # Global Includes
 $image_root = "$env:NF_ROOT\\Images"
@@ -29,7 +34,7 @@ function Build
 
 	# Build and publish the images.
 
-	./build.ps1 -registry $registry -version $version -tag $tag
+	. ./build.ps1 -registry $registry -version $version -tag $tag
     PushImage "${registry}:$tag"
 
 	if ($latest)
@@ -46,5 +51,7 @@ function Build
 		}
 	}
 }
+
+$noImagePush = $nopush
 
 Build 1.7.8 -latest

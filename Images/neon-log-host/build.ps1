@@ -13,12 +13,6 @@ param
 	[parameter(Mandatory=$True,Position=3)][string] $tag
 )
 
-#----------------------------------------------------------
-# Global Includes
-$image_root = "$env:NF_ROOT\\Images"
-. $image_root/includes.ps1
-#----------------------------------------------------------
-
 "   "
 "======================================="
 "* NEON-LOG-HOST:" + $tag

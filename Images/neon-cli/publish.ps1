@@ -12,6 +12,11 @@
 #
 # Usage: powershell -file ./publish.ps1
 
+param 
+(
+    [switch]$nopush = $False
+)
+
 #----------------------------------------------------------
 # Global Includes
 $image_root = "$env:NF_ROOT\\Images"
@@ -29,12 +34,14 @@ function Build
 
 	if ($latest)
 	{
-		./build.ps1 -latest
+		. ./build.ps1 -latest
 	}
 	else
 	{
-		./build.ps1
+		. ./build.ps1
 	}
 }
+
+$noImagePush = $nopush
 
 Build -latest
