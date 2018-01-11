@@ -62,6 +62,8 @@
     </None>
     <None Include="elasticsearch6\publish.ps1" />
     <None Include="elasticsearch6\README.md" />
+    <None Include="neon-cli\XenServer\README.md" />
+    <None Include="neon-cli\XenServer\xapi-xe_1.30.0-2_amd64.deb" />
     <None Include="neon-cluster-manager\build.ps1" />
     <None Include="neon-cluster-manager\docker-entrypoint.sh" />
     <None Include="neon-cluster-manager\Dockerfile">
