@@ -115,7 +115,7 @@ Proxies are deployed  by default to non-manager nodes (if there are any) as a Do
 ````
 docker service create \
     --name neon-proxy-public \
-	--detach=false \
+    --detach=false \
     --mount type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
     --env CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public/conf \
@@ -132,7 +132,7 @@ docker service create \
 
 docker service create \
     --name neon-proxy-private \
-	--detach=false \
+    --detach=false \
     --mount type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
     --env CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private/conf \

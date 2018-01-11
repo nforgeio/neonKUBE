@@ -54,6 +54,23 @@ function DeleteFile
 }
 
 #------------------------------------------------------------------------------
+# Deletes a folder if it exists.
+
+function DeleteFolder
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=1)]
+        [string]$Path
+    )
+
+	if (Test-Path $Path) 
+	{ 
+		Remove-Item -Recurse $Path 
+	} 
+}
+
+#------------------------------------------------------------------------------
 # Pushes a Docker image to the public registry with retry as an attempt to handle
 # transient registry issues.
 

@@ -27,35 +27,26 @@ $image_root = "$env:NF_ROOT\\Images"
 
 # Copy the common scripts.
 
-if (Test-Path _common)
-{
-	Exec { Remove-Item -Recurse _common }
-}
+DeleteFolder _common
 
-Exec { mkdir _common }
-Exec { copy ..\_common\*.* .\_common }
+mkdir _common
+copy ..\_common\*.* .\_common
 
 # Unzip the latest Consul binaries to a temporary [consul-binaries] folder so 
 # they can be copied into the image.  The folder will be deleted further below.
 
-if (Test-Path consul-binaries)
-{
-	Exec { Remove-Item -Recurse consul-binaries }
-}
+DeleteFolder consul-binaries
 
-Exec { mkdir consul-binaries }
-Exec { 7z e -y "$image_root\\_artifacts\\consul_latest_linux_amd64.zip" -oconsul-binaries }
+mkdir consul-binaries
+7z e -y "$image_root\\_artifacts\\consul_latest_linux_amd64.zip" -oconsul-binaries
 
 # Unzip the latest Vault binaries to a temporary [vault-binaries] folder so 
 # they can be copied into the image.  The folder will be deleted further below.
 
-if (Test-Path vault-binaries)
-{
-	Exec { Remove-Item -Recurse vault-binaries }
-}
+DeleteFolder vault-binaries
 
-Exec { mkdir vault-binaries }
-Exec { 7z e -y "$image_root\\_artifacts\\vault_current_linux_amd64.zip" -ovault-binaries }
+mkdir vault-binaries
+7z e -y "$image_root\\_artifacts\\vault_current_linux_amd64.zip" -ovault-binaries
 
 # Build the image.
 
@@ -66,6 +57,6 @@ Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
 sleep 5 # Docker sometimes appears to hold references to files we need
 		# to delete so wait for a bit.
 
-Exec { Remove-Item -Recurse _common }
-Exec { Remove-Item -Recurse vault-binaries }
-Exec { Remove-Item -Recurse consul-binaries }
+DeleteFolder _common
+DeleteFolder vault-binaries
+DeleteFolder consul-binaries

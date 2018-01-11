@@ -19,6 +19,10 @@ ARG         VERSION
 
 ENV DEBIAN_FRONTEND noninteractive
 
+# Opt-out of .NET Core telemetry.
+
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+
 # Install .NET Core as described here:
 #
 #   https://www.microsoft.com/net/learn/get-started/linuxubuntu

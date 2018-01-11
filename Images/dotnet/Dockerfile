@@ -16,6 +16,10 @@ MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         TINI_VERSION
 
+# Opt-out of .NET Core telemetry.
+
+ENV DOTNET_CLI_TELEMETRY_OPTOUT=1
+
 # Add a file to tweak the DNS resolver's [/etc/resolve.conf] settings.
 
 COPY resolv.conf.head.sh    /etc/resolv.conf.head

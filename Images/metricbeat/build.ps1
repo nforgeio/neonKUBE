@@ -27,13 +27,10 @@ $image_root = "$env:NF_ROOT\\Images"
 
 # Copy the common scripts.
 
-if (Test-Path _common)
-{
-	Exec { Remove-Item -Recurse _common }
-}
+DeleteFolder _common
 
-Exec { mkdir _common }
-Exec { copy ..\_common\*.* .\_common }
+mkdir _common
+copy ..\_common\*.* .\_common
 
 # Build the image.
 
@@ -49,4 +46,4 @@ if ($latest)
 sleep 5 # Docker sometimes appears to hold references to files we need
 		# to delete so wait for a bit.
 
-Exec { Remove-Item -Recurse _common }
+DeleteFolder _common

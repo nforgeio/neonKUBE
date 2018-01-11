@@ -27,13 +27,10 @@ $image_root = "$env:NF_ROOT\\Images"
 
 # Copy the common scripts.
 
-if (Test-Path _common)
-{
-	Exec { Remove-Item -Recurse _common }
-}
+DeleteFolder _common
 
-Exec { mkdir _common }
-Exec { copy ..\_common\*.* .\_common }
+mkdir _common
+copy ..\_common\*.* .\_common
 
 # Build the image.
 
@@ -41,4 +38,4 @@ Exec { docker build -t "${registry}:$tag" --build-arg "VERSION=$version" . }
 
 # Clean up
 
-Exec { Remove-Item -Recurse _common }
+DeleteFolder _common
