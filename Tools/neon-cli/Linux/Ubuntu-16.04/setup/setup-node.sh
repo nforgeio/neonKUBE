@@ -235,7 +235,7 @@ EOF
 # memory for heaps and such based on the total machine memory and not that
 # assigned to the container.  This is common for many Java apps.
 #
-# This corrects this problem but unforunately at a cost of 10% of
+# This corrects this problem but unfortunately at a cost of 10% of
 # performance and 1% memory.  See this for more information:
 #
 #   https://fabiokung.com/2014/03/13/memory-inside-linux-containers/

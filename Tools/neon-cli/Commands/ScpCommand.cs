@@ -185,7 +185,7 @@ OPTIONS:
                         // $todo(jeff.lill):
                         //
                         // We really need to delete the key, leaving this hanging around
-                        // is a security risk.  Unforunately, the code below doesn't work
+                        // is a security risk.  Unfortunately, the code below doesn't work
                         // because WinSCP doesn't seen to hold the key in RAM like it
                         // does with passwords.
                         //

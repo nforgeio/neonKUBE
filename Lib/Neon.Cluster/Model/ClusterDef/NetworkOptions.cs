@@ -48,7 +48,6 @@ namespace Neon.Cluster
         private const string defaultCloudSubnet     = "10.168.0.0/21";
         private const string defaulVpnReturnSubnet  = "10.169.0.0/22";
 
-
         // WARNING: [pdns-server] and its [pdns-remote-backend] packages must come from the same build.
 
         private const string defaultPdnsServerPackageUri          = "https://jefflill.github.io/neoncluster/binaries/ubuntu/pdns-server_4.1.0~rc1-1pdns.xenial_amd64.deb";
@@ -83,7 +82,7 @@ namespace Neon.Cluster
         /// nodes to deploy a malicious service.
         /// </para>
         /// <para>
-        /// Unforunately, it's not currently possible to change this setting after a cluster is deployed.
+        /// Unfortunately, it's not currently possible to change this setting after a cluster is deployed.
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "PublicAttachable", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -111,7 +110,7 @@ namespace Neon.Cluster
         /// nodes to deploy a malicious service.
         /// </para>
         /// <para>
-        /// Unforunately, it's not currently possible to change this setting after a cluster is deployed.
+        /// Unfortunately, it's not currently possible to change this setting after a cluster is deployed.
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "PrivateAttachable", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
