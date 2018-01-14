@@ -19,18 +19,22 @@ ARG         APPNAME
 
 ENV NEON_TOOL_CONTAINER=1
 
+# NOTE: I decided against using the XE client locally for XenServer provisoning but 
+#       am just going to comment this out in case I change my mind in the future.
+#
 # Install the XenServer XE client.  This is required for provisioning XenServer based
 # clusters.  Note that Citrix ships XE as a RedHat/Centos RPM package that is not compatible
 # with Debian/Ubuntu.  It is possible to convert RPM packages to DEB format and so we'll
 # use the a converted package from the [./XenServer] folder.  See the [README.md] there
 # to learn how this conversion was accomplished.
 
-COPY XenServer/xapi-xe_1.30.0-2_amd64.deb /xapi-xe.deb
+# COPY XenServer/xapi-xe_1.30.0-2_amd64.deb /xapi-xe.deb
 
-RUN apt-get update \
-    && apt-get install -yq stunnel4 \
-    && dpkg -i xapi-xe.deb \
-    && apt-get clean -yq
+# RUN apt-get update \
+#     && apt-get install -yq stunnel4 \
+#     && dpkg -i xapi-xe.deb \
+#     && apt-get clean -yq \
+#     && rm xapi-xe.deb
 
 # We're going to configure NANO as the default editor used by Ansible Vault
 # to edit encrypted files.  We're also going to install VIM/VI as an option.

@@ -1,5 +1,7 @@
 # XenServer Assets
 
+NOTE: I've decided not to include the Citrix XenServer XE CLI in **neon-cli** and use SSH to access the tool on the XenServer hosts instead.  I'm going to leave these instructions here though as documentation if I change my mind in the future.
+
 To enable XenServer cluster provisioning, the **neon-cli** tool requires that the XenServer **xe** client tool be installed within the Docker image.  This installation is handled by the `Dockerfile` by copying one of the Debian packages from this folder into the container and then installing it.
 
 Citrix provides the **xe** client package as part of its distribution but unforunately, XenServer is based on Centos Linux so this is a RPM package not an Ubuntu compatible DEB package.  It is possible though to convert an RPM into a DEB package and the instructions below describe how to accomplish this:
