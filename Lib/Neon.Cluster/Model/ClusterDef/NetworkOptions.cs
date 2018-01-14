@@ -30,25 +30,134 @@ namespace Neon.Cluster
     /// </summary>
     /// <remarks>
     /// <para>
-    /// neonCLUSTERs are provisioned with two standard overlay networks: <b>neon-public</b> and <b>neon-private</b>.
+    /// neonCLUSTERs can be deployed in two basic environments, cloud or on-premise.  Cloud providers include
+    /// <see cref="HostingEnvironments.Aws"/>, <see cref="HostingEnvironments.Azure"/>, and <see cref="HostingEnvironments.Google"/>
+    /// and on-premise providers include <see cref="HostingEnvironments.HyperV"/>, <see cref="HostingEnvironments.Machine"/> and
+    /// <see cref="HostingEnvironments.XenServer"/>.  Cluster network options are interpreted somewhat differently
+    /// depending on whether the the cluster is being provisioned to the cloud or to on-premise hardware.
     /// </para>
     /// <para>
-    /// <b>neon-public</b> is configured by default on the <b>10.249.0.0/16</b> subnet and is intended to
+    /// Both cloud and on-premise clusters are provisioned with two standard overlay networks: <b>neon-public</b> and <b>neon-private</b>.
+    /// These networks are used to as the service backend networks for the <b>neon-proxy-public</b> and <b>neon-proxy-private</b> TCP/HTTP
+    /// network proxies used to forward external in internal traffic from Docker ingress/mesh networks to services.  Both of these
+    /// networks are assigned reasonable default subnets for standalone clusters, but you'll need to take care to avoid conflicts
+    /// when deploying more than one cluster on a network.
+    /// </para>
+    /// <para>
+    /// <see cref="PublicSubnet"/> is configured by default on the <b>10.249.0.0/16</b> subnet and is intended to
     /// host public facing service endpoints to be served by the <b>neon-proxy-public</b> proxy service.
     /// </para>
     /// <para>
-    /// <b>neon-private</b> is configured by default on the <b>10.248.0.0/16</b> subnet and is intended to
+    /// <see cref="PrivateSubnet"/> is configured by default on the <b>10.248.0.0/16</b> subnet and is intended to
     /// host internal service endpoints to be served by the <b>neon-proxy-private</b> proxy service.
     /// </para>
+    /// <para><b>On-Premise Network Configuration</b></para>
+    /// <para>
+    /// When deploying to an on-premise environment, you'll need to define up to four cluster subnets:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><see cref="NodesSubnet"/></term>
+    ///     <description>
+    ///     This subnet describes where the neonCLUSTER Docker host node IP addresses will be allocated.  This may
+    ///     be any valid subnet for on-premise deployments but will typically <b>/24</b> or larger.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="PublicSubnet"/></term>
+    ///     <description>
+    ///     <para>
+    ///     This defaults to <b>10.249.0.0/16</b> as described above to allow roughly 64K 
+    ///     addresses to be assigned to Docker services on the public network.
+    ///     </para>
+    ///     <note>
+    ///     This subnet is internal to the neonCLUSTER so you don't need to worry about conflicting
+    ///     with other clusters or network services.
+    ///     </note>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="PrivateSubnet"/></term>
+    ///     <description>
+    ///     <para>
+    ///     This defaults to <b>10.248.0.0/16</b> as described above to allow roughly 64K 
+    ///     addresses to be assigned to Docker services on the private network.
+    ///     </para>
+    ///     <note>
+    ///     This subnet is internal to the neonCLUSTER so you don't need to worry about conflicting
+    ///     with other clusters or network services.
+    ///     </note>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="VpnReturnSubnet"/></term>
+    ///     <description>
+    ///     This subnet is required if the cluster is deployed with an integrated VPN.
+    ///     This subnet must be a <b>/22</b> at this time and defaults to <b>10.169.0.0/22</b>.
+    ///     </description>
+    /// </item>
+    /// </list>
+    /// <para>
+    /// In general, we recommend that you allocate two <b>/22</b> subnets for each on-premise
+    /// cluster.  One <b>/22</b> for <see cref="NodesSubnet"/> which allows for up to 1024 
+    /// host nodes and the second <b>/22</b> for the <see cref="VpnReturnSubnet"/>.  This results
+    /// in each cluster being allocated a <b>/21</b> overall.
+    /// </para>
+    /// <para><b>Cloud Network Configuration</b></para>
+    /// <para>
+    /// Cloud deployment options are a bit simpler: only three subnets must be specified:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><see cref="CloudAddressSpace"/></term>
+    ///     <description>
+    ///     <para>
+    ///     This defaults to <b>10.168.0.0/21</b> and specifies where all cloud NIC and VPN client
+    ///     addresses will be provisioned.  <see cref="CloudAddressSpace"/> will be automatically
+    ///     split into <see cref="NodesSubnet"/> and <see cref="VpnReturnSubnet"/> and other internal
+    ///     subnets when the neonCLUSTER is provisioned. 
+    ///     </para>
+    ///     <para>
+    ///     This must be a <b>/21</b> subnet.
+    ///     </para>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="PublicSubnet"/></term>
+    ///     <description>
+    ///     <para>
+    ///     This defaults to <b>10.249.0.0/16</b> as described above to allow roughly 64K 
+    ///     addresses to be assigned to Docker services on the public network.
+    ///     </para>
+    ///     <note>
+    ///     This subnet is internal to the neonCLUSTER so you don't need to worry about conflicting
+    ///     with other clusters or network services.
+    ///     </note>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="PrivateSubnet"/></term>
+    ///     <description>
+    ///     <para>
+    ///     This defaults to <b>10.248.0.0/16</b> as described above to allow roughly 64K 
+    ///     addresses to be assigned to Docker services on the private network.
+    ///     </para>
+    ///     <note>
+    ///     This subnet is internal to the neonCLUSTER so you don't need to worry about conflicting
+    ///     with other clusters or network services.
+    ///     </note>
+    ///     </description>
+    /// </item>
+    /// </list>
     /// </remarks>
     public class NetworkOptions
     {
-        private const string defaultPublicSubnet    = "10.249.0.0/16";
-        private const string defaultPrivateSubnet   = "10.248.0.0/16";
-        private const string defaultCloudSubnet     = "10.168.0.0/21";
-        private const string defaulVpnReturnSubnet  = "10.169.0.0/22";
+        private const string defaultPublicSubnet      = "10.249.0.0/16";
+        private const string defaultPrivateSubnet     = "10.248.0.0/16";
+        private const string defaultCloudAddressSpace = "10.168.0.0/21";
+        private const string defaultVpnReturnSubnet   = "10.169.0.0/22";
 
-        // WARNING: [pdns-server] and its [pdns-remote-backend] packages must come from the same build.
+        // WARNING: [pdns-server] and the [pdns-remote-backend] packages must come from the same build.
 
         private const string defaultPdnsServerPackageUri          = "https://jefflill.github.io/neoncluster/binaries/ubuntu/pdns-server_4.1.0~rc1-1pdns.xenial_amd64.deb";
         private const string defaultPdnsBackendRemotePackageUri   = "https://jefflill.github.io/neoncluster/binaries/ubuntu/pdns-backend-remote_4.1.0~rc1-1pdns.xenial_amd64.deb";
@@ -64,6 +173,12 @@ namespace Neon.Cluster
         /// <summary>
         /// The subnet to be assigned to the built-in <b>neon-public</b> overlay network.  This defaults to <b>10.249.0.0/16</b>.
         /// </summary>
+        /// <remarks>
+        /// <note>
+        /// You must take care that this subnet does not conflict with any other subnets for this
+        /// cluster or any other clusters that may be deployed to the same network.
+        /// </note>
+        /// </remarks>
         [JsonProperty(PropertyName = "PublicSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultPublicSubnet)]
         public string PublicSubnet { get; set; } = defaultPublicSubnet;
@@ -92,6 +207,12 @@ namespace Neon.Cluster
         /// <summary>
         /// The subnet to be assigned to the built-in <b>neon-public</b> overlay network.  This defaults to <b>10.248.0.0/16</b>.
         /// </summary>
+        /// <remarks>
+        /// <note>
+        /// You must take care that this subnet does not conflict with any other subnets for this
+        /// cluster or any other clusters that may be deployed to the same network.
+        /// </note>
+        /// </remarks>
         [JsonProperty(PropertyName = "PrivateSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultPrivateSubnet)]
         public string PrivateSubnet { get; set; } = defaultPrivateSubnet;
@@ -295,8 +416,8 @@ namespace Neon.Cluster
         /// </list>
         /// </remarks>
         [JsonProperty(PropertyName = "CloudAddressSpace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultCloudSubnet)]
-        public string CloudAddressSpace { get; set; } = defaultCloudSubnet;
+        [DefaultValue(defaultCloudAddressSpace)]
+        public string CloudAddressSpace { get; set; } = defaultCloudAddressSpace;
 
         /// <summary>
         /// <para>
@@ -317,8 +438,9 @@ namespace Neon.Cluster
         /// a NIC attached to this subnet.
         /// </para>
         /// <note>
-        /// This property must be configured the <see cref="HostingEnvironments.Machine"/> provider and 
-        /// is computed automatically by the <b>neon</b> tool when provisioning in a cloud environment.
+        /// This property must be configured for the on-premise providers (<see cref="HostingEnvironments.Machine"/>, 
+        /// <see cref="HyperV"/>, and <see cref="XenServer"/>) and is computed automatically by the <b>neon</b> tool when
+        /// provisioning in a cloud environment.
         /// </note>
         /// <note>
         /// For on-premise clusters, the statically assigned IP addresses assigned 
@@ -355,9 +477,8 @@ namespace Neon.Cluster
         /// server.
         /// </para>
         /// <note>
-        /// This property must be specifically initialized when <see cref="Environment"/> is set to 
-        /// <see cref="HostingEnvironments.Machine"/> and is computed automatically by the <b>neon-cli</b>
-        /// when provisioning in a cloud environment.
+        /// This property must be specifically initialized for on-premise hosting providers and is 
+        /// computed automatically by the <b>neon-cli</b> when provisioning in a cloud environment.
         /// </note>
         /// <note>
         /// For on-premise clusters this will default to <b>10.169.0.0/22</b> which will work
@@ -366,8 +487,8 @@ namespace Neon.Cluster
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VpnReturnSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaulVpnReturnSubnet)]
-        public string VpnReturnSubnet { get; set; } = defaulVpnReturnSubnet;
+        [DefaultValue(defaultVpnReturnSubnet)]
+        public string VpnReturnSubnet { get; set; } = defaultVpnReturnSubnet;
 
         /// <summary>
         /// Indicates that host IP addresses are to be configured explicitly as static values.
@@ -388,6 +509,33 @@ namespace Neon.Cluster
         public string Gateway { get; set; } = null;
 
         /// <summary>
+        /// Used for checking subnet conflicts below.
+        /// </summary>
+        private class SubnetDefinition
+        {
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="name">Subnet name.</param>
+            /// <param name="cidr">Subnet CIDR.</param>
+            public SubnetDefinition(string name, NetworkCidr cidr)
+            {
+                this.Name = $"{nameof(NetworkOptions)}.{name}";
+                this.Cidr = cidr;
+            }
+
+            /// <summary>
+            /// Identifies the subnet.
+            /// </summary>
+            public string Name { get; set; }
+
+            /// <summary>
+            /// The subnet CIDR.
+            /// </summary>
+            public NetworkCidr Cidr { get; set; }
+        }
+
+        /// <summary>
         /// Validates the options definition and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -398,15 +546,21 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
+            var subnets = new List<SubnetDefinition>();
+
             if (!NetworkCidr.TryParse(PublicSubnet, out var cidr))
             {
                 throw new ClusterDefinitionException($"Invalid [{nameof(NetworkOptions)}.{nameof(PublicSubnet)}={PublicSubnet}].");
             }
 
+            subnets.Add(new SubnetDefinition(nameof(PublicSubnet), cidr));
+
             if (!NetworkCidr.TryParse(PrivateSubnet, out cidr))
             {
                 throw new ClusterDefinitionException($"Invalid [{nameof(NetworkOptions)}.{nameof(PrivateSubnet)}={PrivateSubnet}].");
             }
+
+            subnets.Add(new SubnetDefinition(nameof(PrivateSubnet), cidr));
 
             if (PublicSubnet == PrivateSubnet)
             {
@@ -453,7 +607,7 @@ namespace Neon.Cluster
 
                 if (string.IsNullOrEmpty(CloudAddressSpace))
                 {
-                    CloudAddressSpace = defaultCloudSubnet;
+                    CloudAddressSpace = defaultCloudAddressSpace;
                 }
 
                 if (!NetworkCidr.TryParse(CloudAddressSpace, out var cloudAddressSpaceCidr))
@@ -469,15 +623,17 @@ namespace Neon.Cluster
                 // Compute [NodeSubnet] by splitting [ClusterSubnet] in quarters and taking the
                 // first quarter.
 
-                NetworkCidr nodeSubnetCidr;
+                NetworkCidr nodesSubnetCidr;
 
-                nodeSubnetCidr = new NetworkCidr(cloudAddressSpaceCidr.Address, cloudAddressSpaceCidr.PrefixLength + 2);
-                NodesSubnet    = nodeSubnetCidr.ToString();
+                nodesSubnetCidr = new NetworkCidr(cloudAddressSpaceCidr.Address, cloudAddressSpaceCidr.PrefixLength + 2);
+                NodesSubnet     = nodesSubnetCidr.ToString();
 
-                // Ensure that the node subnet is big enough to allocate IP 
-                // addresses for each node.
+                subnets.Add(new SubnetDefinition(nameof(NodesSubnet), nodesSubnetCidr));
 
-                if (clusterDefinition.Nodes.Count() > nodeSubnetCidr.AddressCount - 4)
+                // Ensure that the node subnet is big enough to allocate an
+                // IP address for each node.
+
+                if (clusterDefinition.Nodes.Count() > nodesSubnetCidr.AddressCount - 4)
                 {
                     throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] subnet not large enough for the [{clusterDefinition.Nodes.Count()}] node addresses.");
                 }
@@ -490,7 +646,7 @@ namespace Neon.Cluster
 
                     NetworkCidr cloudVpnCidr;
 
-                    cloudVpnCidr   = new NetworkCidr(nodeSubnetCidr.NextAddress, cloudAddressSpaceCidr.PrefixLength + 2);
+                    cloudVpnCidr   = new NetworkCidr(nodesSubnetCidr.NextAddress, cloudAddressSpaceCidr.PrefixLength + 2);
                     CloudVpnSubnet = cloudVpnCidr.ToString();
 
                     // Compute [CloudVNetSubnet] by taking the first half of [CloudAddressSpace],
@@ -507,11 +663,13 @@ namespace Neon.Cluster
 
                     vpnReturnCidr   = new NetworkCidr(cloudVpnCidr.NextAddress, 22);
                     VpnReturnSubnet = vpnReturnCidr.ToString();
+
+                    subnets.Add(new SubnetDefinition(nameof(VpnReturnSubnet), vpnReturnCidr));
                 }
             }
             else
             {
-                // Verify VPN properties.
+                // Verify VPN properties for non-cloud environments.
 
                 if (clusterDefinition.Vpn.Enabled)
                 {
@@ -535,6 +693,8 @@ namespace Neon.Cluster
                         throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnReturnSubnet)}={VpnReturnSubnet}] is too small.  The subnet prefix length cannot be longer than [23].");
                     }
 
+                    subnets.Add(new SubnetDefinition(nameof(VpnReturnSubnet), vpnReturnCidr));
+
                     // Verify [NodesSubnet].
 
                     if (!NetworkCidr.TryParse(NodesSubnet, out var nodesSubnetCidr))
@@ -546,8 +706,30 @@ namespace Neon.Cluster
                     {
                         throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] and [{nameof(VpnReturnSubnet)}={VpnReturnSubnet}] overlap.");
                     }
+
+                    subnets.Add(new SubnetDefinition(nameof(NodesSubnet), nodesSubnetCidr));
                 }
             }
+
+            // Verify that none of the major subnets conflict.
+
+            foreach (var subnet in subnets)
+            {
+                foreach (var subnetTest in subnets)
+                {
+                    if (subnet == subnetTest)
+                    {
+                        continue;   // Don't test against self.
+                    }
+
+                    if (subnet.Cidr.Overlaps(subnetTest.Cidr))
+                    {
+                        throw new ClusterDefinitionException($"[{subnet.Name}={subnet.Cidr}] and [{subnetTest.Name}={subnetTest.Cidr}] overlap.");
+                    }
+                }
+            }
+
+            // Static IP checks.
 
             if (StaticIP)
             {

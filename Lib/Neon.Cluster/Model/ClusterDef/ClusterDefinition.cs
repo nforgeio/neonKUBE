@@ -619,11 +619,11 @@ namespace Neon.Cluster
             }
             else if (managementNodeCount > 5)
             {
-                throw new ClusterDefinitionException("Clusters may not have more than five management nodes.");
+                throw new ClusterDefinitionException("Clusters may not have more than [5] management nodes.");
             }
             else if (!NeonHelper.IsOdd(managementNodeCount))
             {
-                throw new ClusterDefinitionException("Clusters must have an odd number of management nodes.");
+                throw new ClusterDefinitionException("Clusters must have an odd number of management nodes: [1, 3, or 5]");
             }
 
             // Ensure that each node has a valid unique or NULL IP address.

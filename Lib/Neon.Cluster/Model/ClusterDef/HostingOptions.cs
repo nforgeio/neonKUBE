@@ -87,7 +87,7 @@ namespace Neon.Cluster
         public XenServerOptions XenServer { get; set; } = null;
 
         /// <summary>
-        /// Returns <c>true</c> if the cluster will be hosted by a cloud provider like AWS or Azure.
+        /// Returns <c>true</c> if the cluster will be hosted by a cloud provider like AWS, Azure or Google.
         /// </summary>
         [JsonIgnore]
         public bool IsCloudProvider
@@ -113,6 +113,15 @@ namespace Neon.Cluster
                         throw new NotImplementedException("Unexpected hosting environment.");
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns <c>true</c> if the cluster will be hosted by an on-premise (non-cloud) provider.
+        /// </summary>
+        [JsonIgnore]
+        public bool IsOnPremiseProvider
+        {
+            get { return !IsCloudProvider; }
         }
 
         /// <summary>
