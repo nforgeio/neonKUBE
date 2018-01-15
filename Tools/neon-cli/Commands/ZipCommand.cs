@@ -115,7 +115,17 @@ ARGS:
                 File.Delete(zipPath);
             }
 
-            Console.WriteLine($"Creating: {zipPath}...");
+            var patience = string.Empty;
+
+            if (new FileInfo(sourcePath).Length > 200 * 1024 * 1024)
+            {
+                // Compression is very slow, so add a message to be patient
+                // for files >= 200MB.
+
+                patience = " (be patient)";
+            }
+
+            Console.WriteLine($"Creating: {zipPath}...{patience}");
 
             if ((File.GetAttributes(sourcePath) & FileAttributes.Directory) != 0)
             {
