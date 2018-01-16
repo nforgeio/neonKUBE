@@ -96,9 +96,7 @@ namespace Neon.Cluster
         /// <inheritdoc/>
         public override bool Provision(bool force)
         {
-            // $todo(jeff.lill): DELETE THIS ----------------------------------
-
-            // ----------------------------------------------------------------
+            throw new NotImplementedException("$todo(jeff.lill): Need to complete this.");
 
             // If a public address isn't explicitly specified, we'll assume that the
             // tool is running inside the network and we can access the private address.

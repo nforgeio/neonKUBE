@@ -628,8 +628,8 @@ namespace Neon.Cluster
 
             // Ensure that each node has a valid unique or NULL IP address.
 
-            NetworkCidr nodesSubnet     = null;
-            NetworkCidr vpnReturnSubnet = null;
+            NetworkCidr nodesSubnet   = null;
+            NetworkCidr vpnPoolSubnet = null;
 
             if (Network.NodesSubnet != null)
             {
@@ -638,7 +638,7 @@ namespace Neon.Cluster
 
             if (Vpn.Enabled)
             {
-                vpnReturnSubnet = NetworkCidr.Parse(Network.VpnReturnSubnet);
+                vpnPoolSubnet = NetworkCidr.Parse(Network.VpnPoolSubnet);
             }
 
             var addressToNode = new Dictionary<string, NodeDefinition>();
@@ -665,9 +665,9 @@ namespace Neon.Cluster
                         throw new ClusterDefinitionException($"Node [name={node.Name}] has invalid private IP address [{node.PrivateAddress}].");
                     }
 
-                    if (vpnReturnSubnet != null && vpnReturnSubnet.Contains(address))
+                    if (vpnPoolSubnet != null && vpnPoolSubnet.Contains(address))
                     {
-                        throw new ClusterDefinitionException($"Node [name={node.Name}] has private IP address [{node.PrivateAddress}] within the hosting [{nameof(Network.VpnReturnSubnet)}={Network.VpnReturnSubnet}].");
+                        throw new ClusterDefinitionException($"Node [name={node.Name}] has private IP address [{node.PrivateAddress}] within the hosting [{nameof(Network.VpnPoolSubnet)}={Network.VpnPoolSubnet}].");
                     }
 
                     if (nodesSubnet != null && !nodesSubnet.Contains(address))

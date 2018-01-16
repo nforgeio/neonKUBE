@@ -214,9 +214,9 @@ namespace Neon.Cluster
         /// be used when routing return traffic from other cluster nodes back to a
         /// connected VPN client.  This is only set when provisioning a cluster VPN.  
         /// </summary>
-        [JsonProperty(PropertyName = "VpnReturnAddress", Required = Required.Default)]
+        [JsonProperty(PropertyName = "VpnPoolAddress", Required = Required.Default)]
         [DefaultValue(null)]
-        public string VpnReturnAddress { get; set; }
+        public string VpnPoolAddress { get; set; }
 
         /// <summary>
         /// <para>
@@ -229,9 +229,9 @@ namespace Neon.Cluster
         /// cluster VPN is enabled.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "VpnReturnSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "VpnPoolSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string VpnReturnSubnet { get; set; }
+        public string VpnPoolSubnet { get; set; }
 
         /// <summary>
         /// Specifies the Docker labels to be assigned to the host node.  These can provide

@@ -583,8 +583,8 @@ namespace Neon.Cluster
 
             foreach (var node in cluster.Definition.Nodes.Where(n => n.IsManager).OrderBy(n => n.Name))
             {
-                node.VpnReturnAddress = nextAddress.ToString();
-                nextAddress           = NetHelper.AddressIncrement(nextAddress);
+                node.VpnPoolAddress = nextAddress.ToString();
+                nextAddress         = NetHelper.AddressIncrement(nextAddress);
             }
         }
 
@@ -948,8 +948,8 @@ namespace Neon.Cluster
             {
                 vpnRoutesDef
                     .DefineRoute($"vpn-return-via-{manager.Name}")
-                    .WithDestinationAddressPrefix(manager.Node.Metadata.VpnReturnSubnet)
-                    .WithNextHopToVirtualAppliance(manager.Node.Metadata.VpnReturnAddress)
+                    .WithDestinationAddressPrefix(manager.Node.Metadata.VpnPoolSubnet)
+                    .WithNextHopToVirtualAppliance(manager.Node.Metadata.VpnPoolAddress)
                     .Attach();
             }
 
@@ -1265,7 +1265,7 @@ namespace Neon.Cluster
                             .WithExistingResourceGroup(resourceGroup)
                             .WithExistingPrimaryNetwork(vnet)
                             .WithSubnet(subnetVpnName)
-                            .WithPrimaryPrivateIPAddressStatic(azureNode.Node.Metadata.VpnReturnAddress);
+                            .WithPrimaryPrivateIPAddressStatic(azureNode.Node.Metadata.VpnPoolAddress);
 
                     vpnServerNicCreator
                         .WithExistingNetworkSecurityGroup(nsgVpn);

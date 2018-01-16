@@ -135,7 +135,7 @@ Server Requirements:
 
             if (cluster.Definition.Vpn.Enabled)
             {
-                var vpnSubnet            = NetworkCidr.Parse(cluster.Definition.Network.VpnReturnSubnet);
+                var vpnSubnet            = NetworkCidr.Parse(cluster.Definition.Network.VpnPoolSubnet);
                 var prefixLength         = 25;
                 var nextVpnSubnetAddress = vpnSubnet.Address;
 
@@ -148,7 +148,7 @@ Server Requirements:
                 {
                     var managerVpnSubnet    = new NetworkCidr(NetHelper.AddressIncrement(nextVpnSubnetAddress, VpnOptions.ServerAddressCount), prefixLength);
 
-                    manager.VpnReturnSubnet = managerVpnSubnet.ToString();
+                    manager.VpnPoolSubnet = managerVpnSubnet.ToString();
                     nextVpnSubnetAddress    = managerVpnSubnet.NextAddress;
                 }
             }
@@ -372,7 +372,7 @@ Server Requirements:
             // Configure OpenVPN.
 
             var nodesSubnet      = NetworkCidr.Parse(cluster.Definition.Network.NodesSubnet);
-            var vpnSubnet        = NetworkCidr.Parse(manager.Metadata.VpnReturnSubnet);
+            var vpnSubnet        = NetworkCidr.Parse(manager.Metadata.VpnPoolSubnet);
             var duplicateCN      = cluster.Definition.Vpn.AllowSharedCredentials ? "duplicate-cn" : ";duplicate-cn";
             var vpnServerAddress = NetHelper.UintToAddress(NetHelper.AddressToUint(vpnSubnet.Address) + 1);
 

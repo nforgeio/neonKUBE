@@ -953,7 +953,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
         /// that enable VPN.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void ConfigureVpnReturnRoutes(NodeProxy<NodeDefinition> node)
+        private void ConfigureVpnPoolRoutes(NodeProxy<NodeDefinition> node)
         {
             if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine || !cluster.Definition.Vpn.Enabled)
             {
@@ -983,7 +983,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
 
             foreach (var manager in cluster.Managers.Where(m => m != node))
             {
-                routeCommands.Add($"ip route add {manager.Metadata.VpnReturnSubnet} via {manager.PrivateAddress} dev eth0 || true");
+                routeCommands.Add($"ip route add {manager.Metadata.VpnPoolSubnet} via {manager.PrivateAddress} dev eth0 || true");
             }
 
             // Execute the route commands on the node so they will be 
@@ -1058,7 +1058,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
 
                     // Configure the VPN return routes.
 
-                    ConfigureVpnReturnRoutes(node);
+                    ConfigureVpnPoolRoutes(node);
 
                     // Setup the Consul server and join it to the cluster.
 
@@ -1229,7 +1229,7 @@ $@"docker login \
 
                     // Configure the VPN return routes.
 
-                    ConfigureVpnReturnRoutes(node);
+                    ConfigureVpnPoolRoutes(node);
 
                     if (!cluster.Definition.BareDocker)
                     {

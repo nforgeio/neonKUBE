@@ -108,16 +108,16 @@ namespace Neon.Cluster
         public const string LabelVpnFrontendPort = ClusterDefinition.ReservedLabelPrefix + ".node.vpn_frontend_port";
 
         /// <summary>
-        /// Reserved label name that identifies a manager node's VPN return address 
+        /// Reserved label name that identifies a manager node's VPN pool address 
         /// (if it's hosting a VPN server).
         /// </summary>
-        public const string LabelVpnReturnAddress = ClusterDefinition.ReservedLabelPrefix + ".node.vpn_return_address";
+        public const string LabelVpnPoolAddress = ClusterDefinition.ReservedLabelPrefix + ".node.vpn_pool_address";
 
         /// <summary>
-        /// Reserved label name that identifies a manager node's VPN return subnet 
+        /// Reserved label name that identifies a manager node's VPN address pool subnet 
         /// (if it's hosting a VPN server).
         /// </summary>
-        public const string LabelVpnReturnSubnet = ClusterDefinition.ReservedLabelPrefix + ".node.vpn_return_subnet";
+        public const string LabelVpnPoolSubnet = ClusterDefinition.ReservedLabelPrefix + ".node.vpn_pool_subnet";
 
         //---------------------------------------------------------------------
         // Azure hosting related labels.
@@ -478,8 +478,8 @@ namespace Neon.Cluster
                 list.Add(new KeyValuePair<string, object>(LabelPrivateAddress,          node.PrivateAddress));
                 list.Add(new KeyValuePair<string, object>(LabelRole,                    node.Role));
                 list.Add(new KeyValuePair<string, object>(LabelVpnFrontendPort,         node.VpnFrontendPort));
-                list.Add(new KeyValuePair<string, object>(LabelVpnReturnAddress,        node.VpnReturnAddress));
-                list.Add(new KeyValuePair<string, object>(LabelVpnReturnSubnet,         node.VpnReturnSubnet));
+                list.Add(new KeyValuePair<string, object>(LabelVpnPoolAddress,          node.VpnPoolAddress));
+                list.Add(new KeyValuePair<string, object>(LabelVpnPoolSubnet,           node.VpnPoolSubnet));
 
                 if (node.Azure != null)
                 {
@@ -542,8 +542,8 @@ namespace Neon.Cluster
                     case LabelPrivateAddress:   node.PrivateAddress = label.Value; break;
                     case LabelRole:             node.Role = label.Value; break;
                     case LabelVpnFrontendPort:  ParseCheck(label, () => { node.VpnFrontendPort = int.Parse(label.Value); }); break;
-                    case LabelVpnReturnAddress: node.VpnReturnAddress = label.Value; break;
-                    case LabelVpnReturnSubnet:  node.VpnReturnSubnet = label.Value; break;
+                    case LabelVpnPoolAddress:   node.VpnPoolAddress = label.Value; break;
+                    case LabelVpnPoolSubnet:    node.VpnPoolSubnet = label.Value; break;
 
                     case LabelAzureVmSize:
                     case LabelAzureStorageType:

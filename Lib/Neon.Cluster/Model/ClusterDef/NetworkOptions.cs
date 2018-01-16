@@ -90,7 +90,7 @@ namespace Neon.Cluster
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><see cref="VpnReturnSubnet"/></term>
+    ///     <term><see cref="VpnPoolSubnet"/></term>
     ///     <description>
     ///     This subnet is required if the cluster is deployed with an integrated VPN.
     ///     This subnet must be a <b>/22</b> at this time and defaults to <b>10.169.0.0/22</b>.
@@ -100,7 +100,7 @@ namespace Neon.Cluster
     /// <para>
     /// In general, we recommend that you allocate two <b>/22</b> subnets for each on-premise
     /// cluster.  One <b>/22</b> for <see cref="NodesSubnet"/> which allows for up to 1024 
-    /// host nodes and the second <b>/22</b> for the <see cref="VpnReturnSubnet"/>.  This results
+    /// host nodes and the second <b>/22</b> for the <see cref="VpnPoolSubnet"/>.  This results
     /// in each cluster being allocated a <b>/21</b> overall.
     /// </para>
     /// <para><b>Cloud Network Configuration</b></para>
@@ -114,7 +114,7 @@ namespace Neon.Cluster
     ///     <para>
     ///     This defaults to <b>10.168.0.0/21</b> and specifies where all cloud NIC and VPN client
     ///     addresses will be provisioned.  <see cref="CloudAddressSpace"/> will be automatically
-    ///     split into <see cref="NodesSubnet"/> and <see cref="VpnReturnSubnet"/> and other internal
+    ///     split into <see cref="NodesSubnet"/> and <see cref="VpnPoolSubnet"/> and other internal
     ///     subnets when the neonCLUSTER is provisioned. 
     ///     </para>
     ///     <para>
@@ -155,7 +155,7 @@ namespace Neon.Cluster
         private const string defaultPublicSubnet      = "10.249.0.0/16";
         private const string defaultPrivateSubnet     = "10.248.0.0/16";
         private const string defaultCloudAddressSpace = "10.168.0.0/21";
-        private const string defaultVpnReturnSubnet   = "10.169.0.0/22";
+        private const string defaultVpnPoolSubnet     = "10.169.0.0/22";
 
         // WARNING: [pdns-server] and the [pdns-remote-backend] packages must come from the same build.
 
@@ -395,7 +395,7 @@ namespace Neon.Cluster
         /// <item>
         ///     <term><b>10.168.4.0/22</b></term>
         ///     <description>
-        ///     <see cref="VpnReturnSubnet"/>: The second half of the cloud address space is 
+        ///     <see cref="VpnPoolSubnet"/>: The second half of the cloud address space is 
         ///     reserved for the OpenVPN tunnels with the OpenVPN tunnel on each cluster manager
         ///     being assigned a <b>/25</b> subnet from this address space.
         ///     </description>
@@ -446,7 +446,7 @@ namespace Neon.Cluster
         /// For on-premise clusters, the statically assigned IP addresses assigned 
         /// to the nodes must reside within the this subnet.  For clusters hosted by
         /// cloud providers, the <b>neon-cli</b> will split this into three subnets:
-        /// <see cref="NodesSubnet"/>, <see cref="CloudVpnSubnet"/> and <see cref="VpnReturnSubnet"/>
+        /// <see cref="NodesSubnet"/>, <see cref="CloudVpnSubnet"/> and <see cref="VpnPoolSubnet"/>
         /// and will automatically assign IP addresses to the virtual machines.
         /// </note>
         /// </summary>
@@ -486,9 +486,9 @@ namespace Neon.Cluster
         /// local network or if you intend to deploy multiple clusters on the same network.
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "VpnReturnSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultVpnReturnSubnet)]
-        public string VpnReturnSubnet { get; set; } = defaultVpnReturnSubnet;
+        [JsonProperty(PropertyName = "VpnPoolSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultVpnPoolSubnet)]
+        public string VpnPoolSubnet { get; set; } = defaultVpnPoolSubnet;
 
         /// <summary>
         /// Indicates that host IP addresses are to be configured explicitly as static values.
@@ -657,14 +657,14 @@ namespace Neon.Cluster
                     cloudVNetSubnet = new NetworkCidr(cloudAddressSpaceCidr.Address, cloudAddressSpaceCidr.PrefixLength + 1);
                     CloudVNetSubnet = cloudVNetSubnet.ToString();
 
-                    // Compute [VpnReturnSubnet] by taking the upper half of [ClusterSubnet].
+                    // Compute [VpnPoolSubnet] by taking the upper half of [ClusterSubnet].
 
-                    NetworkCidr vpnReturnCidr;
+                    NetworkCidr vpnPoolCidr;
 
-                    vpnReturnCidr   = new NetworkCidr(cloudVpnCidr.NextAddress, 22);
-                    VpnReturnSubnet = vpnReturnCidr.ToString();
+                    vpnPoolCidr   = new NetworkCidr(cloudVpnCidr.NextAddress, 22);
+                    VpnPoolSubnet = vpnPoolCidr.ToString();
 
-                    subnets.Add(new SubnetDefinition(nameof(VpnReturnSubnet), vpnReturnCidr));
+                    subnets.Add(new SubnetDefinition(nameof(VpnPoolSubnet), vpnPoolCidr));
                 }
             }
             else
@@ -681,19 +681,19 @@ namespace Neon.Cluster
                         }
                     }
 
-                    // Verify [VpnReturnSubnet].
+                    // Verify [VpnPoolSubnet].
 
-                    if (!NetworkCidr.TryParse(VpnReturnSubnet, out var vpnReturnCidr))
+                    if (!NetworkCidr.TryParse(VpnPoolSubnet, out var vpnPoolCidr))
                     {
-                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnReturnSubnet)}={VpnReturnSubnet}] is not a valid subnet.");
+                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] is not a valid subnet.");
                     }
 
-                    if (vpnReturnCidr.PrefixLength > 23)
+                    if (vpnPoolCidr.PrefixLength > 23)
                     {
-                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnReturnSubnet)}={VpnReturnSubnet}] is too small.  The subnet prefix length cannot be longer than [23].");
+                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] is too small.  The subnet prefix length cannot be longer than [23].");
                     }
 
-                    subnets.Add(new SubnetDefinition(nameof(VpnReturnSubnet), vpnReturnCidr));
+                    subnets.Add(new SubnetDefinition(nameof(VpnPoolSubnet), vpnPoolCidr));
 
                     // Verify [NodesSubnet].
 
@@ -702,9 +702,9 @@ namespace Neon.Cluster
                         throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] is not a valid IPv4 subnet.");
                     }
 
-                    if (nodesSubnetCidr.Overlaps(vpnReturnCidr))
+                    if (nodesSubnetCidr.Overlaps(vpnPoolCidr))
                     {
-                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] and [{nameof(VpnReturnSubnet)}={VpnReturnSubnet}] overlap.");
+                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] and [{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] overlap.");
                     }
 
                     subnets.Add(new SubnetDefinition(nameof(NodesSubnet), nodesSubnetCidr));
