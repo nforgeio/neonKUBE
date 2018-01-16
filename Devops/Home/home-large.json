@@ -5,7 +5,6 @@
   "TimeSources": [ "pool.ntp.org" ],
   "DebugMode": true,
   "Hosting": {
-    "ManagerRouterAddress": "lill-home.ddns.net",
     "Environment": "hyper-v"
   },
   "Network": {
