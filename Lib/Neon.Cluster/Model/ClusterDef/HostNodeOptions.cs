@@ -39,9 +39,9 @@ namespace Neon.Cluster
         /// during cluster preparation.  This defaults to <see cref="OsUpgrade.Partial"/>
         /// to pick up most criticial updates.
         /// </summary>
-        [JsonProperty(PropertyName = "OsUpgrade", Required = Required.Default)]
+        [JsonProperty(PropertyName = "Upgrade", Required = Required.Default)]
         [DefaultValue(OsUpgrade.Partial)]
-        public OsUpgrade OsUpgrade { get; set; } = OsUpgrade.Partial;
+        public OsUpgrade Upgrade { get; set; } = OsUpgrade.Partial;
 
         /// <summary>
         /// <para>

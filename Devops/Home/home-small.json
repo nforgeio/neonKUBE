@@ -14,7 +14,7 @@
     "Enabled": false
   },
   "HostNode": {
-    "OsUpgrade": "full",
+    "Upgrade": "full",
     "SshAuth": "tls",
     "PasswordLength": 20
   },
