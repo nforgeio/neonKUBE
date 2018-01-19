@@ -99,6 +99,11 @@ export NEON_NTP_WORKER_SOURCES=( $<ntp.worker.sources> )
 
 export NEON_DOCKER_VERSION=$<docker.version>
 
+# Host node settings
+
+export NEON_HOST_CONTAINX_ENABLED=$<host.containx.enabled>
+export NEON_HOST_CONTAINX_PACKAGEURL=$<host.containx.packageurl>
+
 # Consul settings
 
 export NEON_CONSUL_VERSION=$<consul.version>
@@ -108,7 +113,6 @@ export NEON_CONSUL_FULLADDRESS=$<consul.fulladdress>
 export NEON_CONSUL_HOSTNAME=$<consul.hostname>
 export NEON_CONSUL_PORT=$<consul.port>
 export NEON_CONSUL_TLS_DISABLED=$<consul.tlsdisabled>
-
 
 # Vault settings
 

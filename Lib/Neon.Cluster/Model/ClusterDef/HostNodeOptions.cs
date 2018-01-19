@@ -30,18 +30,21 @@ namespace Neon.Cluster
     /// </summary>
     public class HostNodeOptions
     {
-        private const AuthMethods   defaultSshAuth        = AuthMethods.Tls;
-        private const int           defaultPasswordLength = 20;
-        private const bool          defaultPasswordAuth   = true;
+        private const AuthMethods   defaultSshAuth         = AuthMethods.Tls;
+        private const OsUpgrade     defaultUpgrade         = OsUpgrade.Full;
+        private const int           defaultPasswordLength  = 20;
+        private const bool          defaultPasswordAuth    = true;
+        private const bool          defaultEnableNfs       = true;
+        private const string        defaultContainXVersion = "0.34";
 
         /// <summary>
         /// Specifies whether the host node operating system should be upgraded
-        /// during cluster preparation.  This defaults to <see cref="OsUpgrade.Partial"/>
-        /// to pick up most criticial updates.
+        /// during cluster preparation.  This defaults to <see cref="OsUpgrade.Full"/>
+        /// to pick up the most criticial updates.
         /// </summary>
         [JsonProperty(PropertyName = "Upgrade", Required = Required.Default)]
-        [DefaultValue(OsUpgrade.Partial)]
-        public OsUpgrade Upgrade { get; set; } = OsUpgrade.Partial;
+        [DefaultValue(defaultUpgrade)]
+        public OsUpgrade Upgrade { get; set; } = defaultUpgrade;
 
         /// <summary>
         /// <para>
@@ -68,6 +71,41 @@ namespace Neon.Cluster
         public int PasswordLength { get; set; } = defaultPasswordLength;
 
         /// <summary>
+        /// Enables client NFS on the host and install the Docker <a href="https://github.com/ContainX/docker-volume-netshare">ContainX</a> 
+        /// volume plugin so that Docker containers can mount NFS, AWS EFS, and Samaba/CIFS based volumes.
+        /// This defaults to <c>true</c>.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// Enable this to install the <b>NFS Common</b> package on all Docker hosts notes
+        /// including the managers, wokers, and pets.  This also installs the <a href="https://github.com/ContainX/docker-volume-netshare">ContainX</a>
+        /// Docker plugin and configures it to run as a service in NFS mode.  This means that
+        /// you'll be able to immediately launch a Docker container or service that mounts
+        /// the NFS share like:
+        /// </para>
+        /// <code lang="none">
+        /// docker run -i -t --volume-driver=nfs -v nfshost/path:/mount ubuntu /bin/bash
+        /// </code>
+        /// <para>
+        /// The <b>ContainX</b> plugin is also capable of mounting remote <b>AWS EFS</b> 
+        /// and <b>Samba/CIFS</b> file systems.  This is not enabled by default; you'll 
+        /// need to customize how you start the ContainX plugin, as described
+        /// <a href="https://github.com/ContainX/docker-volume-netshare">here</a>.
+        /// </para>
+        /// </remarks>
+        [JsonProperty(PropertyName = "EnableNfs", Required = Required.Default)]
+        [DefaultValue(defaultEnableNfs)]
+        public bool EnableNfs { get; set; } = defaultEnableNfs;
+
+        /// <summary>
+        /// Specifies the <b>ContainX</b> package version to install when <see cref="EnableNfs"/> is <c>true</c>.
+        /// This defaults to a reasonable version.
+        /// </summary>
+        [JsonProperty(PropertyName = "ContainXVersion", Required = Required.Default)]
+        [DefaultValue(defaultContainXVersion)]
+        public string ContainXVersion = defaultContainXVersion;
+
+        /// <summary>
         /// Validates the options definition and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -80,6 +118,8 @@ namespace Neon.Cluster
             {
                 throw new ClusterDefinitionException($"[{nameof(HostNodeOptions)}.{nameof(PasswordLength)}={PasswordLength}] is not zero and is less than the minimum [8].");
             }
+
+            ContainXVersion = ContainXVersion ?? defaultContainXVersion;
         }
     }
 }

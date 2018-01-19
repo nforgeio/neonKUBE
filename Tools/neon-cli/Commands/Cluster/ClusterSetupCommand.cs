@@ -666,6 +666,16 @@ OPTIONS:
 
                     node.Status = "run: setup-ssd.sh";
                     node.SudoCommand("setup-ssd.sh");
+
+                    // Install the ContainX Docker volume plugin if enabled.
+                    //
+                    //      https://github.com/ContainX/docker-volume-netshare
+
+                    if (cluster.Definition.HostNode.EnableNfs)
+                    {
+                        node.Status = "run: containx volume plugin";
+                        node.SudoCommand("setup-containx.sh");
+                    }
                 });
         }
 

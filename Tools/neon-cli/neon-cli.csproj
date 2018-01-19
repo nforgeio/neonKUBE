@@ -52,6 +52,9 @@
     <None Update="Linux\Ubuntu-16.04\setup\setup-consul-server.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Linux\Ubuntu-16.04\setup\setup-containx.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Linux\Ubuntu-16.04\setup\setup-disk.sh">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
