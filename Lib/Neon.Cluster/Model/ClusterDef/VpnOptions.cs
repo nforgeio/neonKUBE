@@ -96,18 +96,34 @@ namespace Neon.Cluster
             if (clusterDefinition.Hosting.Environment == HostingEnvironments.Machine)
             {
                 // Ensure that the manager nodes are assigned VPN frontend ports
-                // for on-premise deployments.
+                // for on-premise deployments.  We're going to assign the standard
+                // OpenVPN port (1194) to the first manager and increment this by
+                // one for subsequent managers.
+
+                var nextVpnFrontendPort = NetworkPorts.OpenVPN;
 
                 foreach (var manager in clusterDefinition.SortedManagers)
                 {
                     if (manager.VpnFrontendPort == 0)
                     {
-                        manager.VpnFrontendPort = NetworkPorts.OpenVPN;
+                        manager.VpnFrontendPort = nextVpnFrontendPort++;
                     }
 
                     if (!NetHelper.IsValidPort(manager.VpnFrontendPort))
                     {
                         throw new ClusterDefinitionException($"Manager node [{manager.Name}] assigns [{nameof(NodeDefinition.VpnFrontendPort)}={manager.VpnFrontendPort}] which is not a valid network port.");
+                    }
+                }
+
+                // Ensure that manager VPN ports don't conflict.
+
+                foreach (var manager in clusterDefinition.SortedManagers)
+                {
+                    var conflictingManager = clusterDefinition.SortedManagers.FirstOrDefault(m => !object.ReferenceEquals(m, manager) && m.VpnFrontendPort == manager.VpnFrontendPort);
+
+                    if (conflictingManager != null)
+                    {
+                        throw new ClusterDefinitionException($"Manager node [{manager.Name}] assigns [{nameof(NodeDefinition.VpnFrontendPort)}={manager.VpnFrontendPort}] which conflicts with the port assigned to [{conflictingManager.Name}].");
                     }
                 }
             }

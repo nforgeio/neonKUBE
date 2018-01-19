@@ -189,8 +189,9 @@ namespace Neon.Cluster
         /// <summary>
         /// <para>
         /// Specifies the frontend port to be used to reach the OpenVPN server from outside
-        /// the cluster.  This defaults to <see cref="NetworkPorts.OpenVPN"/> for manager nodes
-        /// and <b>0</b> for workers.
+        /// the cluster.  This defaults to <see cref="NetworkPorts.OpenVPN"/> for the first manager
+        /// node (sorted by name), (<see cref="NetworkPorts.OpenVPN"/> + 1), for the second
+        /// manager node an so on for subsequent managers.  This defaults to <b>0</b> for workers.
         /// </para>
         /// <para>
         /// For cloud deployments, this will be initialized by the <b>neon-cli</b> during
