@@ -550,10 +550,10 @@ namespace Neon.Cluster
                 node.Status = $"get current ip";
 
                 var adapters = hyperv.ListVMNetworkAdapters(node.Name, waitForAddresses: true);
-                var adapter = adapters.FirstOrDefault();
-                var address = adapter.Addresses.First();
-                var subnet = NetworkCidr.Parse(cluster.Definition.Network.NodesSubnet);
-                var gateway = cluster.Definition.Network.Gateway;
+                var adapter  = adapters.FirstOrDefault();
+                var address  = adapter.Addresses.First();
+                var subnet   = NetworkCidr.Parse(cluster.Definition.Network.NodesSubnet);
+                var gateway  = cluster.Definition.Network.Gateway;
 
                 if (adapter == null)
                 {
@@ -611,8 +611,8 @@ broadcast {subnet.LastAddress}
                         // DNS servers from the cluster definition here???
                         //
                         // Using the Google DNS seems like it could break some cluster
-                        // network configurations, e.g. for clusters that don't have
-                        // access to the public Internet.  Totally private clusters
+                        // network configurations (i.e. for clusters that don't have
+                        // access to the public Internet).  Totally private clusters
                         // aren't really a supported scenario right now though because
                         // we assume we can use [apt-get]... to pull down packages.
 
