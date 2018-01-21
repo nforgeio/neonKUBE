@@ -56,14 +56,26 @@ namespace Neon.Cluster.XenServer
         /// <summary>
         /// Constructor.  Note that you should dispose the instance when you're finished with it.
         /// </summary>
-        /// <param name="address">The target XenServer IP address.</param>
+        /// <param name="addressOrFQDN">The target XenServer IP address or FQDN.</param>
+        /// <param name="username">The user name.</param>
         /// <param name="password">The password.</param>
-        /// <param name="username">Optionally override the default username (<b>root</b>).</param>
-        public XenClient(IPAddress address, string password, string username = "root")
+        public XenClient(string addressOrFQDN, string username, string password)
         {
-            var addressString = address.ToString();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
 
-            server = new NodeProxy<object>(addressString, addressString, address, SshCredentials.FromUserPassword(username, password));
+            if (!IPAddress.TryParse(addressOrFQDN, out var address))
+            {
+                var hostEntry = Dns.GetHostEntry(addressOrFQDN);
+
+                if (hostEntry.AddressList.Length == 0)
+                {
+                    throw new XenException($"[{addressOrFQDN}] is not a valid IP address or fully qualified domain name of a XenServer host.");
+                }
+
+                address = hostEntry.AddressList.First();
+            }
+
+            server = new NodeProxy<object>(addressOrFQDN, null, address, SshCredentials.FromUserPassword(username, password));
         }
 
         /// <summary>
@@ -88,5 +100,49 @@ namespace Neon.Cluster.XenServer
                 throw new ObjectDisposedException(nameof(XenClient));
             }
         }
+
+        /// <summary>
+        /// Invokes a low-level <b>xe CLI</b> command on the remote XenServer host.
+        /// </summary>
+        /// <param name="command">The <b>xe CLI</b> command.</param>
+        /// <param name="args">The optional arguments formatted as <b>name=value</b>.</param>
+        /// <returns>The command <see cref="XenResponse"/>.</returns>
+        public XenResponse Invoke(string command, params string[] args)
+        {
+            return new XenResponse(server.RunCommand($"xe {command}", args));
+        }
+
+        /// <summary>
+        /// Lists the XenServer storage repositories.
+        /// </summary>
+        /// <returns>The list of storage repositories.</returns>
+        public List<XenStorageRepository> ListStorageRepositories()
+        {
+            var response     = Invoke("sr-list");
+            var repositories = new List<XenStorageRepository>();
+
+            if (response.ExitCode != 0)
+            {
+                return repositories;
+            }
+
+            foreach (var result in response.Results)
+            {
+                repositories.Add(new XenStorageRepository(result));
+            }
+
+            return repositories;
+        }
+
+        /// <summary>
+        /// Finds a specific storage repository by name.
+        /// </summary>
+        /// <returns>The named storage repository or <c>null</c> if it doesn't exist.</returns>
+        public XenStorageRepository FindStorageRepository(string name)
+        {
+            return ListStorageRepositories().FirstOrDefault(sr => sr.NameLabel == name);
+        }
     }
 }
+
+// xe vm-import url=http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva force=true sr-uuid=1aedccc5-8b18-4fc8-b498-e776a5ae2702

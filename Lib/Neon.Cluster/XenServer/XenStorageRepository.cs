@@ -27,14 +27,7 @@ namespace Neon.Cluster.XenServer
     public class XenStorageRepository
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        internal XenStorageRepository()
-        {
-        }
-
-        /// <summary>
-        /// Constructs an instance from raw peoperty values returned by the 
+        /// Constructs an instance from raw property values returned by the 
         /// <b>xe CLI</b>.
         /// </summary>
         /// <param name="rawProperties"></param>

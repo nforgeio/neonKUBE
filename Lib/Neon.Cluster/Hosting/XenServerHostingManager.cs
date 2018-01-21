@@ -23,6 +23,8 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
+using Neon.Cluster;
+using Neon.Cluster.XenServer;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
@@ -73,9 +75,10 @@ namespace Neon.Cluster
         public XenServerHostingManager(ClusterProxy cluster)
         {
             cluster.HostingManager = this;
-            nameToXenProxy            = new Dictionary<string, NodeProxy<object>>();
+            nameToXenProxy         = new Dictionary<string, NodeProxy<object>>();
 
             this.cluster = cluster;
+
         }
 
         /// <inheritdoc/>

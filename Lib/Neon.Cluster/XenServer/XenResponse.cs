@@ -34,7 +34,7 @@ namespace Neon.Cluster.XenServer
         internal XenResponse(CommandResponse response)
         {
             this.Response = response;
-            this.Results  = (IList<IDictionary<string, string>>) new List<Dictionary<string, string>>();
+            this.Results  = new List<Dictionary<string, string>>();
 
             // We need to parse the [xe] results from the standard output.  This will 
             // look something like:
@@ -114,10 +114,12 @@ namespace Neon.Cluster.XenServer
                                 isEOF = true;
                                 break;
                             }
-                            else
+                            else if (line != string.Empty)
                             {
                                 Covenant.Assert(line.Trim() == string.Empty, "Unexpected XenServer [xe] CLI output.");
                             }
+
+                            break;
                         }
 
                         // Parse the property name and value.
@@ -165,6 +167,6 @@ namespace Neon.Cluster.XenServer
         /// <summary>
         /// The list of raw property dictionaries returned by the command.
         /// </summary>
-        public IList<IDictionary<string, string>> Results { get; private set; }
+        public List<Dictionary<string, string>> Results { get; private set; }
     }
 }

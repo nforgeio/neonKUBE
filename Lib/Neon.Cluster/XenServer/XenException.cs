@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HyperVException.cs
+// FILE:	    XenException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -15,19 +15,19 @@ using System.Threading.Tasks;
 using Neon.Common;
 using Neon.IO;
 
-namespace Neon.Cluster.HyperV
+namespace Neon.Cluster.XenServer
 {
     /// <summary>
-    /// Thrown by <see cref="HyperVClient"/> when an error is detected.
+    /// Thrown by <see cref="XenClient"/> when an error is detected.
     /// </summary>
-    public class HyperVException : Exception
+    public class XenException : Exception
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="message">The exception message.</param>
         /// <param name="innerException">Optionally specifies an inner exception.</param>
-        public HyperVException(string message, Exception innerException = null)
+        public XenException(string message, Exception innerException = null)
             : base(message, innerException)
         {
         }
