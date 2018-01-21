@@ -62,10 +62,9 @@ namespace Neon.Cluster
         //---------------------------------------------------------------------
         // Implementation
 
-        private ClusterProxy        cluster;
-        private SetupController     controller;
-        private string              driveTemplatePath;
-        private string              vmDriveFolder;
+        private ClusterProxy                            cluster;
+        private SetupController                         controller;
+        private Dictionary<string, NodeProxy<object>>   nameToXenProxy;
 
         /// <summary>
         /// Constructor.
@@ -74,6 +73,7 @@ namespace Neon.Cluster
         public XenServerHostingManager(ClusterProxy cluster)
         {
             cluster.HostingManager = this;
+            nameToXenProxy            = new Dictionary<string, NodeProxy<object>>();
 
             this.cluster = cluster;
         }

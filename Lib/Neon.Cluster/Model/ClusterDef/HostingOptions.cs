@@ -87,6 +87,13 @@ namespace Neon.Cluster
         public XenServerOptions XenServer { get; set; } = null;
 
         /// <summary>
+        /// The default username to use for connecting 
+        /// </summary>
+        public string DefaultHypervisorUsername { get; set; }
+
+        public string DefaultHypervisorPassword { get; set; }
+
+        /// <summary>
         /// Returns <c>true</c> if the cluster will be hosted by a cloud provider like AWS, Azure or Google.
         /// </summary>
         [JsonIgnore]

@@ -64,8 +64,6 @@ namespace Neon.Cluster.XenServer
             var addressString = address.ToString();
 
             server = new NodeProxy<object>(addressString, addressString, address, SshCredentials.FromUserPassword(username, password));
-
-            throw new NotImplementedException("$todo(jeff.lill): Need to complete this.");
         }
 
         /// <summary>

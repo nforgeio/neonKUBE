@@ -8,7 +8,7 @@
     "Environment": "xenserver"
   },
   "Network": {
-    "NodesSubnet": "10.50.0.0/24"
+    "NodesSubnet": "10.0.0.0/24"
   },
   "Vpn": {
     "Enabled": false
@@ -38,7 +38,7 @@
   "Nodes": {
     "manager-0": {
       "Role": "manager",
-      "PrivateAddress": "10.50.0.35",
+      "PrivateAddress": "10.0.0.35",
       "Labels": {
         "StorageSSD": true,
         "LogEsData": true
@@ -46,4 +46,3 @@
     }
   }
 }
-
