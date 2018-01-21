@@ -246,7 +246,7 @@ namespace Neon.Cluster
         public bool Experimental { get; set; } = defaultExperimental;
 
         /// <summary>
-        /// Validates the options definition and also ensures that all <c>null</c> properties are
+        /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
