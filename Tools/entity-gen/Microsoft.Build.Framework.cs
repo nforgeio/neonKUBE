@@ -1,7 +1,7 @@
 ﻿//-----------------------------------------------------------------------------
 // FILE:	    Microsoft.Build.Framework.cs
 // CONTRIBUTOR: Jeff Lill
-// COPYRIGHT:	Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 //
 // For some reason, I can reference the [Microsoft.Build.Framework] and [Microsoft.Build.Utilities]
 // Nuget packages by the application won't run (it's unable to locate the assemblies.  I suspect

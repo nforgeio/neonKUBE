@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         check-vault.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
 # Verifies that a specific Vault backend is healthy and ready for traffic.  This is
 # called peridocially by HAProxy to add or remove instances from rotation.  See the

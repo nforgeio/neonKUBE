@@ -1,7 +1,7 @@
 ﻿#------------------------------------------------------------------------------
 # FILE:         publish.ps1
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
 # Builds the [neon-cli] images and pushes them to Docker Hub.  This publish
 # script is somewhat different than the others because the build script 

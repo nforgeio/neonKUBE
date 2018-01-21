@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         cluster.conf.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 # REQUIRES:     
 #
 # WARNING: This script is generated and managed by the [neon-cli] and

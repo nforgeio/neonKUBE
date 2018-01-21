@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         onconfigchange.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
 # This is called when the container starts and then whenever the CONFIG_KEY is 
 # is modified in Consul.  A JSON record detailing the change (like that depicted

@@ -2,7 +2,7 @@
 #------------------------------------------------------------------------------
 # FILE:         setup-apt-proxy.sh
 # CONTRIBUTOR:  Jeff Lill
-# COPYRIGHT:    Copyright (c) 2016-2017 by neonFORGE, LLC.  All rights reserved.
+# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
 # Have this node use the APT package cache server if one was specified.
 
