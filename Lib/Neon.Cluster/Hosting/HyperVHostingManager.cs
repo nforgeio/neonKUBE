@@ -31,6 +31,14 @@ using Neon.Cluster.HyperV;
 using Neon.Net;
 using Neon.Time;
 
+// $todo(jeff.lill):
+//
+// Extend this to support remote Hyper-V machines:
+//
+//      * Allow the specification of per-VM processors, memory, and disk size.
+//      * I'm hoping I can use PowerShell to manage remote hosts.
+//      * Including copying the VHDX files.
+
 namespace Neon.Cluster
 {
     /// <summary>
@@ -188,9 +196,9 @@ namespace Neon.Cluster
             // Determine where we're going to place the VM hard drive files and
             // ensure that the directory exists.
 
-            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.HyperV.VMDriveFolder))
+            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.VmDriveFolder))
             {
-                vmDriveFolder = cluster.Definition.Hosting.HyperV.VMDriveFolder;
+                vmDriveFolder = cluster.Definition.Hosting.VmDriveFolder;
             }
             else
             {
@@ -488,7 +496,7 @@ namespace Neon.Cluster
                         throw new ArgumentException($"[{driveTemplatePath}] ZIP archive includes a file that's not named like [*.vhdx].");
                     }
 
-                    node.Status = $"hard drive create";
+                    node.Status = $"create drive";
 
                     // $hack(jeff.lill): Update console at 2 sec intervals to avoid annoying flicker
 
@@ -519,7 +527,7 @@ namespace Neon.Cluster
 
                                 if (stopwatch.Elapsed >= updateInterval || percentComplete >= 100.0)
                                 {
-                                    node.Status = $"[{percentComplete}%] hard drive create";
+                                    node.Status = $"[{percentComplete}%] create drive";
                                     stopwatch.Restart();
                                 }
                             }
@@ -534,8 +542,8 @@ namespace Neon.Cluster
                     node.Status = $"create virtual machine";
                     hyperv.AddVM(
                         node.Name,
-                        memorySize: cluster.Definition.Hosting.HyperV.VMMemory,
-                        minimumMemorySize: cluster.Definition.Hosting.HyperV.VMMinimumMemory,
+                        memorySize: cluster.Definition.Hosting.VmMemory,
+                        minimumMemorySize: cluster.Definition.Hosting.VmMinimumMemory,
                         drivePath: drivePath,
                         switchName: switchName);
                 }
@@ -543,7 +551,7 @@ namespace Neon.Cluster
                 node.Status = $"start virtual machine";
                 hyperv.StartVM(node.Name);
 
-                // Retrive the virtual machine's network adapters (there should only be one) 
+                // Retrieve the virtual machine's network adapters (there should only be one) 
                 // to obtain the IP address we'll use to SSH into the machine and configure
                 // it's static IP.
 

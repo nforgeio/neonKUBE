@@ -45,7 +45,7 @@ mkdir -p ${CONFIG_NEW_FOLDER}
 consul kv get ${CONFIG_KEY} > ${CONFIG_NEW_FOLDER}/haproxy.zip
 
 if [ "$?" != "0" ] ; then
-    . report-error.sh "Cannot retrive Consul path [${CONFIG_KEY}]"
+    . report-error.sh "Cannot retrieve Consul path [${CONFIG_KEY}]"
 fi
 
 # It's possible to see spurious change notifications from the Consul client due to

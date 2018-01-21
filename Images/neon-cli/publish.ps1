@@ -5,7 +5,7 @@
 #
 # Builds the [neon-cli] images and pushes them to Docker Hub.  This publish
 # script is somewhat different than the others because the build script 
-# retrives the version tag from the [neon] tool itself and then actually
+# retrieves the version tag from the [neon] tool itself and then actually
 # publishes the image.
 #
 # NOTE: You must be logged into Docker Hub.

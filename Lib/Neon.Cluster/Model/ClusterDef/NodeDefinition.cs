@@ -249,6 +249,61 @@ namespace Neon.Cluster
         public AzureNodeOptions Azure { get; set; }
 
         /// <summary>
+        /// <para>
+        /// Identifies the hypervisor instance where this node is to be provisioned for Hyper-V
+        /// or XenServer based clusters.  This name must map to one of the <see cref="HostingOptions.VmHosts"/>
+        /// when set.
+        /// </para>
+        /// <note>
+        /// Hypervisor host names are case sensitive.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "VmHost", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string VmHost { get; set; } = null;
+
+        /// <summary>
+        /// Specifies the number of processors to assigned to this node when provisioned on a hypervisor.  This
+        /// defaults to the value specified by <see cref="HostingOptions.VmCores"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "VmCores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(0)]
+        public int VmCores { get; set; } = 0;
+
+        /// <summary>
+        /// Specifies the maximum amount of memory to allocate to this node when provisioned on a hypervisor.  
+        /// This is specified as a string that can be a long byte count or a long with units like <b>512MB</b>
+        /// or <b>2GB</b>.  This defaults to the value specified by <see cref="HostingOptions.VmMemory"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "VmMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string VmMemory { get; set; } = null;
+
+        /// <summary>
+        /// <para>
+        /// Specifies the minimum amount of memory to allocate to each cluster virtual machine.  This is specified as a string that
+        /// can be a a long byte count or a long with units like <b>512MB</b> or <b>2GB</b> or may be set to <c>null</c> to set
+        /// the same value as <see cref="VmMemory"/>.  This defaults to the value specified by <see cref="HostingOptions.VmMinimumMemory"/>.
+        /// </para>
+        /// <note>
+        /// This is currently honored only when provisioning to a local Hyper-V instance (typically as a developer).  This is ignored
+        /// for XenServer and when provisioning to remote Hyper-V instances.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "VmMinimumMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string VmMinimumMemory { get; set; } = null;
+
+        /// <summary>
+        /// The amount of disk space to allocate to this node when when provisioned on a hypervisor.  This is specified as a string
+        /// that can be a long byte count or a long with units like <b>512MB</b> or <b>2GB</b>.  This defaults to the value specified 
+        /// by <see cref="HostingOptions.VmDisk"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "VmDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string VmDisk { get; set; } = null;
+
+        /// <summary>
         /// Validates the node definition.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
@@ -296,6 +351,109 @@ namespace Neon.Cluster
             if (Azure != null)
             {
                 Azure.Validate(clusterDefinition, this.Name);
+            }
+
+            if (VmMemory != null)
+            {
+                HostingOptions.ValidateVMSize(VmMemory, this.GetType(), nameof(VmMemory));
+            }
+
+            if (VmMinimumMemory != null)
+            {
+                HostingOptions.ValidateVMSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
+            }
+
+            if (VmDisk != null)
+            {
+                HostingOptions.ValidateVMSize(VmDisk, this.GetType(), nameof(VmDisk));
+            }
+
+            // Ensure that any specified hypervisor host actually exists.
+
+            if (VmHost != null)
+            {
+                if (!clusterDefinition.Hosting.VmHosts.TryGetValue(VmHost, out var vmHost))
+                {
+                    throw new ClusterDefinitionException($"Node [{Name}] has [{nameof(VmHost)}={VmHost}] which references a hypervisor host that was not specified in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the maximum number processor cores allocate to for this node when
+        /// hosted on a hypervisor.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <returns>The number of cores.</returns>
+        internal long GetVmCores(ClusterDefinition clusterDefinition)
+        {
+            if (VmCores != 0)
+            {
+                return VmCores;
+            }
+            else
+            {
+                return clusterDefinition.Hosting.VmCores;
+            }
+        }
+
+        /// <summary>
+        /// Returns the maximum number of bytes of memory allocate to for this node when
+        /// hosted on a hypervisor.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <returns>The size in bytes.</returns>
+        internal long GetVmMemory(ClusterDefinition clusterDefinition)
+        {
+            if (VmMemory != null)
+            {
+                return HostingOptions.ValidateVMSize(VmMemory, this.GetType(), nameof(VmMemory));
+            }
+            else
+            {
+                return HostingOptions.ValidateVMSize(clusterDefinition.Hosting.VmMemory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmMemory));
+            }
+        }
+
+        /// <summary>
+        /// Returns the minimum number of bytes of memory allocate to for this node when
+        /// hosted on a hypervisor.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <returns>The size in bytes.</returns>
+        internal long GetVmMinimumMemory(ClusterDefinition clusterDefinition)
+        {
+            if (VmMinimumMemory != null)
+            {
+                return HostingOptions.ValidateVMSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
+            }
+            else if (clusterDefinition.Hosting.VmMinimumMemory != null)
+            {
+                return HostingOptions.ValidateVMSize(clusterDefinition.Hosting.VmMinimumMemory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmMinimumMemory));
+            }
+            else
+            {
+                // Return [VmMemory] otherwise.
+
+                return GetVmMemory(clusterDefinition);
+            }
+        }
+
+        /// <summary>
+        /// Returns the maximum number of bytes to disk allocate to for this node when
+        /// hosted on a hypervisor.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <returns>The size in bytes.</returns>
+        internal long GetVmDisk(ClusterDefinition clusterDefinition)
+        {
+            if (VmDisk != null)
+            {
+                return HostingOptions.ValidateVMSize(VmDisk, this.GetType(), nameof(VmDisk));
+            }
+            else
+            {
+                return HostingOptions.ValidateVMSize(clusterDefinition.Hosting.VmDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmDisk));
             }
         }
     }

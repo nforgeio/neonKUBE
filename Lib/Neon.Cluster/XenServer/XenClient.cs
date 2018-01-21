@@ -88,7 +88,5 @@ namespace Neon.Cluster.XenServer
                 throw new ObjectDisposedException(nameof(XenClient));
             }
         }
-
-
     }
 }
