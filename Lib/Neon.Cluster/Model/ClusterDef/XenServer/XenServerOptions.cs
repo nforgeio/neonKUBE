@@ -46,6 +46,8 @@ namespace Neon.Cluster
         [DefaultValue(defaultHostXvaUri)]
         public string HostXvaUri { get; set; } = defaultHostXvaUri;
 
+        //public string TemplateName { get; set; } = defaultTemplateName;
+
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.

@@ -79,6 +79,20 @@ namespace Neon.Cluster
 
             this.cluster = cluster;
 
+            // $todo(jeff.lill): DELETE THIS --------------------------
+
+            using (var xenClient = new XenClient("10.0.0.189", "root", ""))
+            {
+                //xenClient.DestroyTemplate(xenClient.FindTemplate(uuid: "b2ae3104-60d3-3ab3-b846-9c23e1bb0b85"));
+
+                var repos    = xenClient.ListStorageRepositories();
+                var template = xenClient.InstallTemplate("http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva", "test");
+
+
+                var templates = xenClient.ListTemplates();
+            }
+
+            //---------------------------------------------------------
         }
 
         /// <inheritdoc/>
