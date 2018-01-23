@@ -39,8 +39,8 @@ namespace Neon.Cluster
             public string                                   Label;
             public bool                                     Quiet;
             public Action                                   GlobalAction;
-            public Action<NodeProxy<NodeDefinition>>        NodeAction;
-            public Func<NodeProxy<NodeDefinition>, bool>    Predicate;
+            public Action<SshProxy<NodeDefinition>>         NodeAction;
+            public Func<SshProxy<NodeDefinition>, bool>     Predicate;
             public StepStatus                               Status;
             public bool                                     NoParallelLimit;
         }
@@ -50,7 +50,7 @@ namespace Neon.Cluster
 
         private string                                      operationTitle;
         private string                                      operationStatus;
-        private List<NodeProxy<NodeDefinition>>             nodes;
+        private List<SshProxy<NodeDefinition>>              nodes;
         private List<Step>                                  steps;
         private Step                                        currentStep;
         private bool                                        error;
@@ -63,7 +63,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="operationTitle">Summarizes the high-level operation being performed.</param>
         /// <param name="nodes">The node proxies for the cluster nodes being manipulated.</param>
-        public SetupController(string operationTitle, IEnumerable<NodeProxy<NodeDefinition>> nodes)
+        public SetupController(string operationTitle, IEnumerable<SshProxy<NodeDefinition>> nodes)
             : this(new string[] { operationTitle }, nodes)
         {
         }
@@ -73,7 +73,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="operationTitle">Summarizes the high-level operation being performed.</param>
         /// <param name="nodes">The node proxies for the cluster nodes being manipulated.</param>
-        public SetupController(string[] operationTitle, IEnumerable<NodeProxy<NodeDefinition>> nodes)
+        public SetupController(string[] operationTitle, IEnumerable<SshProxy<NodeDefinition>> nodes)
         {
             var title = string.Empty;
 
@@ -124,12 +124,12 @@ namespace Neon.Cluster
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
         public void AddStep(string stepLabel,
-                            Action<NodeProxy<NodeDefinition>> nodeAction,
-                            Func<NodeProxy<NodeDefinition>, bool> nodePredicate = null,
+                            Action<SshProxy<NodeDefinition>> nodeAction,
+                            Func<SshProxy<NodeDefinition>, bool> nodePredicate = null,
                             bool quiet = false)
         {
-            nodeAction    = nodeAction ?? new Action<NodeProxy<NodeDefinition>>(n => { });
-            nodePredicate = nodePredicate ?? new Func<NodeProxy<NodeDefinition>, bool>(n => true);
+            nodeAction    = nodeAction ?? new Action<SshProxy<NodeDefinition>>(n => { });
+            nodePredicate = nodePredicate ?? new Func<SshProxy<NodeDefinition>, bool>(n => true);
 
             steps.Add(
                 new Step()
@@ -152,12 +152,12 @@ namespace Neon.Cluster
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
         public void AddStepNoParallelLimit(string stepLabel,
-                                           Action<NodeProxy<NodeDefinition>> nodeAction,
-                                           Func<NodeProxy<NodeDefinition>, bool> nodePredicate = null,
+                                           Action<SshProxy<NodeDefinition>> nodeAction,
+                                           Func<SshProxy<NodeDefinition>, bool> nodePredicate = null,
                                            bool quiet = false)
         {
-            nodeAction    = nodeAction ?? new Action<NodeProxy<NodeDefinition>>(n => { });
-            nodePredicate = nodePredicate ?? new Func<NodeProxy<NodeDefinition>, bool>(n => true);
+            nodeAction    = nodeAction ?? new Action<SshProxy<NodeDefinition>>(n => { });
+            nodePredicate = nodePredicate ?? new Func<SshProxy<NodeDefinition>, bool>(n => true);
 
             steps.Add(
                 new Step()
@@ -199,7 +199,7 @@ namespace Neon.Cluster
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
         /// <param name="timeout">Optionally specifies the maximum time to wait (defaults to <b>10 minutes</b>).</param>
-        public void AddWaitUntilOnlineStep(string stepLabel = "connect", string status = null, Func<NodeProxy<NodeDefinition>, bool> nodePredicate = null, bool quiet = false, TimeSpan? timeout = null)
+        public void AddWaitUntilOnlineStep(string stepLabel = "connect", string status = null, Func<SshProxy<NodeDefinition>, bool> nodePredicate = null, bool quiet = false, TimeSpan? timeout = null)
         {
             if (timeout == null)
             {
@@ -228,7 +228,7 @@ namespace Neon.Cluster
         /// or <c>null</c> to select all nodes.
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
-        public void AddDelayStep(string stepLabel, TimeSpan delay, string status = null, Func<NodeProxy<NodeDefinition>, bool> nodePredicate = null, bool quiet = false)
+        public void AddDelayStep(string stepLabel, TimeSpan delay, string status = null, Func<SshProxy<NodeDefinition>, bool> nodePredicate = null, bool quiet = false)
         {
             AddStepNoParallelLimit(stepLabel,
                 n =>
@@ -311,18 +311,18 @@ namespace Neon.Cluster
         /// <returns><c>true</c> if the step succeeded.</returns>
         /// <remarks>
         /// <para>
-        /// This method begins by setting the <see cref="NodeProxy{TMetadata}.IsReady"/>
+        /// This method begins by setting the <see cref="SshProxy{TMetadata}.IsReady"/>
         /// state of each selected node to <c>false</c> and then it starts a new thread for
         /// each node and performs the action on these servnodeer threads.
         /// </para>
         /// <para>
         /// In parallel, the method spins on the current thread, displaying status while
-        /// waiting for each of the nodes to transition to the <see cref="NodeProxy{TMetadata}.IsReady"/>=<c>true</c>
+        /// waiting for each of the nodes to transition to the <see cref="SshProxy{TMetadata}.IsReady"/>=<c>true</c>
         /// state.
         /// </para>
         /// <para>
         /// The method returns <c>true</c> after all of the node actions have completed
-        /// and none of the nodes have <see cref="NodeProxy{TMetadata}.IsFaulted"/>=<c>true</c>.
+        /// and none of the nodes have <see cref="SshProxy{TMetadata}.IsFaulted"/>=<c>true</c>.
         /// </para>
         /// <note>
         /// This method does nothing if a previous step failed.
@@ -458,7 +458,7 @@ namespace Neon.Cluster
         /// <param name="stepNodeNamesSet">The set of node names participating in the current step.</param>
         /// <param name="node">The node being queried.</param>
         /// <returns>The status prefix.</returns>
-        private string GetStatus(HashSet<string> stepNodeNamesSet, NodeProxy<NodeDefinition> node)
+        private string GetStatus(HashSet<string> stepNodeNamesSet, SshProxy<NodeDefinition> node)
         {
             if (stepNodeNamesSet != null && !stepNodeNamesSet.Contains(node.Name))
             {

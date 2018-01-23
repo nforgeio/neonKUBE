@@ -132,7 +132,7 @@ namespace Neon.Cluster
             /// Constructor.
             /// </summary>
             /// <param name="node">The associated node proxy.</param>
-            public AzureNode(NodeProxy<NodeDefinition> node)
+            public AzureNode(SshProxy<NodeDefinition> node)
             {
                 this.Node = node;
             }
@@ -140,7 +140,7 @@ namespace Neon.Cluster
             /// <summary>
             /// Returns the associated node proxy.
             /// </summary>
-            public NodeProxy<NodeDefinition> Node { get; private set;}
+            public SshProxy<NodeDefinition> Node { get; private set;}
 
             /// <summary>
             /// Returns the node name.

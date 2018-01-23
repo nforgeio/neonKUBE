@@ -176,11 +176,11 @@ Server Requirements:
 
             cluster.Definition.ValidatePrivateNodeAddresses();
 
-            var ipAddressToServer = new Dictionary<IPAddress, NodeProxy<NodeDefinition>>();
+            var ipAddressToServer = new Dictionary<IPAddress, SshProxy<NodeDefinition>>();
 
             foreach (var node in cluster.Nodes.OrderBy(n => n.Name))
             {
-                NodeProxy<NodeDefinition> duplicateServer;
+                SshProxy<NodeDefinition> duplicateServer;
 
                 if (node.PrivateAddress == IPAddress.Any)
                 {
@@ -349,7 +349,7 @@ Server Requirements:
         /// Configures OpenVPN on a manager node.
         /// </summary>
         /// <param name="manager">The manager.</param>
-        private void ConfigManagerVpn(NodeProxy<NodeDefinition> manager)
+        private void ConfigManagerVpn(SshProxy<NodeDefinition> manager)
         {
             // Upload the setup and configuration files.
             //

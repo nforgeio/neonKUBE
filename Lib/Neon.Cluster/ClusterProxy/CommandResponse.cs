@@ -28,8 +28,8 @@ namespace Neon.Cluster
 {
     /// <summary>
     /// Describes the results of a command executed on the remote server using
-    /// <see cref="NodeProxy{TMetadata}.RunCommand(CommandBundle, RunOptions)"/> 
-    /// or <see cref="NodeProxy{TMetadata}.SudoCommand(string, object[])"/>.
+    /// <see cref="SshProxy{TMetadata}.RunCommand(CommandBundle, RunOptions)"/> 
+    /// or <see cref="SshProxy{TMetadata}.SudoCommand(string, object[])"/>.
     /// </summary>
     public class CommandResponse
     {

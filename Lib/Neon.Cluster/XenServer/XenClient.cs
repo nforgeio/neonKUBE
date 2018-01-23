@@ -37,7 +37,7 @@ namespace Neon.Cluster.XenServer
     /// <para>
     /// The workaround is to simnply connect to the XenServer host via SSH
     /// and perform commands using the <b>xe</b> command line tool installed
-    /// with XenServer.  We're going to take advantage of the <see cref="NodeProxy{TMetadata}"/>
+    /// with XenServer.  We're going to take advantage of the <see cref="SshProxy{TMetadata}"/>
     /// class to handle the SSH connection and command execution.
     /// </para>
     /// </remarks>
@@ -52,8 +52,7 @@ namespace Neon.Cluster.XenServer
         //      https://docs.citrix.com/content/dam/docs/en-us/xenserver/current-release/downloads/xenserver-vm-users-guide.pdf
         //      https://docs.citrix.com/content/dam/docs/en-us/xenserver/xenserver-7-0/downloads/xenserver-7-0-management-api-guide.pdf
 
-        private NodeProxy<object>   server;
-        private RunOptions          runOptions;
+        private RunOptions  runOptions;
 
         /// <summary>
         /// Constructor.  Note that you should dispose the instance when you're finished with it.
@@ -77,8 +76,8 @@ namespace Neon.Cluster.XenServer
                 address = hostEntry.AddressList.First();
             }
 
-            server     = new NodeProxy<object>(addressOrFQDN, null, address, SshCredentials.FromUserPassword(username, password));
-            runOptions = server.DefaultRunOptions | RunOptions.IgnoreRemotePath;
+            Proxy      = new SshProxy<object>(addressOrFQDN, null, address, SshCredentials.FromUserPassword(username, password));
+            runOptions = Proxy.DefaultRunOptions | RunOptions.IgnoreRemotePath;
 
             // Initialize the operation classes.
 
@@ -92,12 +91,17 @@ namespace Neon.Cluster.XenServer
         /// </summary>
         public void Dispose()
         {
-            if (server == null)
+            if (Proxy == null)
             {
-                server.Dispose();
-                server = null;
+                Proxy.Dispose();
+                Proxy = null;
             }
         }
+
+        /// <summary>
+        /// Returns the SSH proxy for the XenServer host.
+        /// </summary>
+        public SshProxy<object> Proxy { get; private set; }
 
         /// <summary>
         /// Implements the XenServer storage repository operations.
@@ -119,7 +123,7 @@ namespace Neon.Cluster.XenServer
         /// </summary>
         private void VerifyNotDisposed()
         {
-            if (server == null)
+            if (Proxy == null)
             {
                 throw new ObjectDisposedException(nameof(XenClient));
             }
@@ -135,7 +139,7 @@ namespace Neon.Cluster.XenServer
         public CommandResponse Invoke(string command, params string[] args)
         {
             VerifyNotDisposed();
-            return server.RunCommand($"xe {command}", runOptions, args);
+            return Proxy.RunCommand($"xe {command}", runOptions, args);
         }
 
         /// <summary>
@@ -148,7 +152,7 @@ namespace Neon.Cluster.XenServer
         public XenResponse InvokeItems(string command, params string[] args)
         {
             VerifyNotDisposed();
-            return new XenResponse(server.RunCommand($"xe {command}", runOptions, args));
+            return new XenResponse(Proxy.RunCommand($"xe {command}", runOptions, args));
         }
 
         /// <summary>
@@ -163,7 +167,7 @@ namespace Neon.Cluster.XenServer
         {
             VerifyNotDisposed();
 
-            var response = server.RunCommand($"xe {command}", runOptions, args);
+            var response = Proxy.RunCommand($"xe {command}", runOptions, args);
 
             if (response.ExitCode != 0)
             {

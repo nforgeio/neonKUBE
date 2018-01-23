@@ -20,7 +20,7 @@ namespace Neon.Cluster
 {
     /// <summary>
     /// Enumerates the possible options to use when executing a remote
-    /// command on a <see cref="NodeProxy{T}"/>.  These options may be 
+    /// command on a <see cref="SshProxy{T}"/>.  These options may be 
     /// combined using the bitwise OR operator.
     /// </summary>
     [Flags]
@@ -32,25 +32,25 @@ namespace Neon.Cluster
         None = 0x00000000,
 
         /// <summary>
-        /// Bitwise ORs any specific option flags with those specified by <see cref="NodeProxy{TMetadata}.DefaultRunOptions"/>.
+        /// Bitwise ORs any specific option flags with those specified by <see cref="SshProxy{TMetadata}.DefaultRunOptions"/>.
         /// This is handy for setting or resetting flags like <see cref="FaultOnError"/> on a global 
         /// basis for a node proxy instance.
         /// </summary>
         Defaults = 0x00000001,
 
         /// <summary>
-        /// Puts the <see cref="NodeProxy{T}"/> into the faulted state when the command
+        /// Puts the <see cref="SshProxy{T}"/> into the faulted state when the command
         /// returns a non-zero exit code.
         /// </summary>
         FaultOnError = 0x00000002,
 
         /// <summary>
-        /// Runs the command even if the <see cref="NodeProxy{T}"/> is in the faulted state.
+        /// Runs the command even if the <see cref="SshProxy{T}"/> is in the faulted state.
         /// </summary>
         RunWhenFaulted = 0x00000004,
 
         /// <summary>
-        /// Ignore the <see cref="NodeProxy{TMetadata}.RemotePath"/> property.
+        /// Ignore the <see cref="SshProxy{TMetadata}.RemotePath"/> property.
         /// </summary>
         IgnoreRemotePath = 0x00000008,
 

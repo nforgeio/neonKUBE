@@ -445,7 +445,7 @@ namespace Neon.Cluster
         /// Creates a Hyper-V virtual machine for a cluster node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void ProvisionVM(NodeProxy<NodeDefinition> node)
+        private void ProvisionVM(SshProxy<NodeDefinition> node)
         {
             // $todo(jeff.lill):
             //

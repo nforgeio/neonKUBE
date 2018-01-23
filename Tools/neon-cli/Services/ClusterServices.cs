@@ -56,7 +56,7 @@ namespace NeonCli
         /// Configures the cluster proxy related services.
         /// </summary>
         /// <param name="firstManager">The first cluster proxy manager.</param>
-        public void Configure(NodeProxy<NodeDefinition> firstManager)
+        public void Configure(SshProxy<NodeDefinition> firstManager)
         {
             firstManager.InvokeIdempotentAction("setup-cluster-services",
                 () =>

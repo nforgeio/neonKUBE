@@ -103,7 +103,7 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
 
             // Determine which node we're going to target.
 
-            NodeProxy<NodeDefinition>   node;
+            SshProxy<NodeDefinition>    node;
             var                         nodeName = leftCommandLine.GetOption("--node", null);
 
             if (!string.IsNullOrEmpty(nodeName))

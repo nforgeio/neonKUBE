@@ -205,7 +205,7 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Returns the <see cref="SshCredentials"/> for the cluster that can be used
-        /// by <see cref="NodeProxy{TMetadata}"/> and the <b>SSH.NET</b> Nuget package.
+        /// by <see cref="SshProxy{TMetadata}"/> and the <b>SSH.NET</b> Nuget package.
         /// </summary>
         /// <returns></returns>
         public SshCredentials GetSshCredentials()

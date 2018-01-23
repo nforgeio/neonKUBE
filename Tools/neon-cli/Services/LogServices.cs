@@ -98,7 +98,7 @@ namespace NeonCli
         /// Configures the cluster logging related services.
         /// </summary>
         /// <param name="firstManager">The first cluster proxy manager.</param>
-        public void Configure(NodeProxy<NodeDefinition> firstManager)
+        public void Configure(SshProxy<NodeDefinition> firstManager)
         {
             if (!cluster.Definition.Log.Enabled)
             {
@@ -181,7 +181,7 @@ namespace NeonCli
         /// <param name="steps">The configuration step list.</param>
         private void AddElasticsearchSteps(ConfigStepList steps)
         {
-            var esNodes = new List<NodeProxy<NodeDefinition>>();
+            var esNodes = new List<SshProxy<NodeDefinition>>();
 
             foreach (var nodeDefinition in cluster.Definition.Nodes.Where(n => n.Labels.LogEsData))
             {
@@ -204,8 +204,8 @@ namespace NeonCli
             // worker nodes (managers will be assigned to nodes that appear
             // first in the list).
 
-            var managerEsNodes = new List<NodeProxy<NodeDefinition>>();
-            var normalEsNodes  = new List<NodeProxy<NodeDefinition>>();
+            var managerEsNodes = new List<SshProxy<NodeDefinition>>();
+            var normalEsNodes  = new List<SshProxy<NodeDefinition>>();
 
             esNodes = esNodes.OrderBy(n => n.Name).ToList();
 
@@ -430,7 +430,7 @@ $@"
         /// Deploys <b>Elastic Metricbeat</b> to the node.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        public void DeployMetricbeat(NodeProxy<NodeDefinition> node)
+        public void DeployMetricbeat(SshProxy<NodeDefinition> node)
         {
             node.InvokeIdempotentAction("setup-metricbeat",
                 () =>

@@ -22,8 +22,8 @@ namespace Neon.Cluster
     /// </summary>
     /// <remarks>
     /// <para>
-    /// This class is intended for use with the <see cref="NodeProxy{TMetadata}.RunCommand(CommandBundle, RunOptions)"/>
-    /// and  <see cref="NodeProxy{TMetadata}.SudoCommand(CommandBundle, RunOptions)"/> methods for situations where
+    /// This class is intended for use with the <see cref="SshProxy{TMetadata}.RunCommand(CommandBundle, RunOptions)"/>
+    /// and  <see cref="SshProxy{TMetadata}.SudoCommand(CommandBundle, RunOptions)"/> methods for situations where
     /// one or more files need to be uploaded to a neonCLUSTER host node and be used when a command is executed.
     /// </para>
     /// <para>

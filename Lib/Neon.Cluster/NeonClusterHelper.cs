@@ -600,7 +600,7 @@ namespace Neon.Cluster
                 new Cluster.ClusterProxy(ClusterLogin,
                     (name, publicAddress, privateAddress) =>
                     {
-                        var proxy = new NodeProxy<NodeDefinition>(name, publicAddress, privateAddress, ClusterLogin.GetSshCredentials(), null);
+                        var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, ClusterLogin.GetSshCredentials(), null);
 
                         proxy.RemotePath += $":{NodeHostFolders.Setup}";
                         proxy.RemotePath += $":{NodeHostFolders.Tools}";
@@ -640,7 +640,7 @@ namespace Neon.Cluster
                 new Cluster.ClusterProxy(ClusterLogin,
                     (name, publicAddress, privateAddress) =>
                     {
-                        var proxy = new NodeProxy<NodeDefinition>(name, publicAddress, privateAddress, ClusterLogin.GetSshCredentials(), null);
+                        var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, ClusterLogin.GetSshCredentials(), null);
 
                         proxy.RemotePath += $":{NodeHostFolders.Setup}";
                         proxy.RemotePath += $":{NodeHostFolders.Tools}";

@@ -70,7 +70,7 @@ OPTIONS:
             var dashboard    = commandLine.Arguments[0];
             var nodeName     = commandLine.GetOption("--node");
 
-            NodeProxy<NodeDefinition> node;
+            SshProxy<NodeDefinition> node;
 
             if (nodeName == null)
             {

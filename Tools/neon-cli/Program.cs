@@ -987,7 +987,7 @@ that the tool requires admin priviledges for direct mode.
         public static bool DirectMode { get; private set; }
 
         /// <summary>
-        /// Creates a <see cref="NodeProxy{TMetadata}"/> for the specified host and server name,
+        /// Creates a <see cref="SshProxy{TMetadata}"/> for the specified host and server name,
         /// configuring logging and the credentials as specified by the global command
         /// line options.
         /// </summary>
@@ -995,8 +995,8 @@ that the tool requires admin priviledges for direct mode.
         /// <param name="publicAddress">The node's public IP address or FQDN.</param>
         /// <param name="privateAddress">The node's private IP address.</param>
         /// <typeparam name="TMetadata">Defines the metadata type the command wishes to associate with the sewrver.</typeparam>
-        /// <returns>The <see cref="NodeProxy{TMetadata}"/>.</returns>
-        public static NodeProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, string publicAddress, IPAddress privateAddress)
+        /// <returns>The <see cref="SshProxy{TMetadata}"/>.</returns>
+        public static SshProxy<TMetadata> CreateNodeProxy<TMetadata>(string name, string publicAddress, IPAddress privateAddress)
             where TMetadata : class
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -1026,7 +1026,7 @@ that the tool requires admin priviledges for direct mode.
                 return null;
             }
 
-            var proxy = new NodeProxy<TMetadata>(name, publicAddress, privateAddress, sshCredentials, logWriter);
+            var proxy = new SshProxy<TMetadata>(name, publicAddress, privateAddress, sshCredentials, logWriter);
 
             proxy.RemotePath += $":{NodeHostFolders.Setup}";
             proxy.RemotePath += $":{NodeHostFolders.Tools}";

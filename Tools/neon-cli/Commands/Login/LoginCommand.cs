@@ -175,7 +175,7 @@ ARGUMENTS:
             clusterProxy = new ClusterProxy(clusterLogin,
                 (nodeName, publicAddress, privateAddress) =>
                 {
-                    return new NodeProxy<NodeDefinition>(nodeName, publicAddress, privateAddress, clusterLogin.GetSshCredentials(), TextWriter.Null);
+                    return new SshProxy<NodeDefinition>(nodeName, publicAddress, privateAddress, clusterLogin.GetSshCredentials(), TextWriter.Null);
                 });
 
             var viaVpn = useVpn ? $" (via VPN)" : string.Empty;

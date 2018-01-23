@@ -64,9 +64,9 @@ namespace Neon.Cluster
         //---------------------------------------------------------------------
         // Implementation
 
-        private ClusterProxy                            cluster;
-        private SetupController                         controller;
-        private Dictionary<string, NodeProxy<object>>   nameToXenProxy;
+        private ClusterProxy                    cluster;
+        private SetupController                 controller;
+        private Dictionary<string, XenClient>   xenClients;
 
         /// <summary>
         /// Constructor.
@@ -74,10 +74,9 @@ namespace Neon.Cluster
         /// <param name="cluster">The cluster being managed.</param>
         public XenServerHostingManager(ClusterProxy cluster)
         {
-            cluster.HostingManager = this;
-            nameToXenProxy         = new Dictionary<string, NodeProxy<object>>();
-
-            this.cluster = cluster;
+            this.cluster                = cluster;
+            this.cluster.HostingManager = this;
+            this.xenClients             = new Dictionary<string, XenClient>();
 
             // $todo(jeff.lill): DELETE THIS --------------------------
 
@@ -115,6 +114,14 @@ namespace Neon.Cluster
         /// <inheritdoc/>
         public override void Dispose(bool disposing)
         {
+            if (xenClients != null)
+            {
+                foreach (var client in xenClients.Values)
+                {
+                    client.Dispose();
+                }
+            }
+
             if (disposing)
             {
                 GC.SuppressFinalize(this);

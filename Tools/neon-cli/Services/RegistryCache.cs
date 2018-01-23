@@ -93,7 +93,7 @@ namespace NeonCli
         /// <summary>
         /// Performs the Docker registry cache related configuration of the node.
         /// </summary>
-        public void Configure(NodeProxy<NodeDefinition> node)
+        public void Configure(SshProxy<NodeDefinition> node)
         {
             if (!cluster.Definition.Docker.RegistryCache)
             {

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NodeProxy.cs
+// FILE:	    SshProxy.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,7 +28,8 @@ using Renci.SshNet.Common;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Remotely manages a neonCLUSTER host node.
+    /// Uses an SSH/SCP connection to provide access to Linux machines to access
+    /// files, run commands, etc., typically for setup purposes.
     /// </summary>
     /// <typeparam name="TMetadata">
     /// Defines the metadata type the application wishes to associate with the server.
@@ -50,7 +51,7 @@ namespace Neon.Cluster
     /// Call <see cref="Dispose()"/> or <see cref="Disconnect()"/> to close the connection.
     /// </para>
     /// </remarks>
-    public class NodeProxy<TMetadata> : IDisposable
+    public class SshProxy<TMetadata> : IDisposable
         where TMetadata : class
     {
         // SSH and SCP keep-alive ping interval.
@@ -76,7 +77,7 @@ namespace Neon.Cluster
         private string          faultMessage;
 
         /// <summary>
-        /// Constructs a <see cref="NodeProxy{TMetadata}"/>.
+        /// Constructs a <see cref="SshProxy{TMetadata}"/>.
         /// </summary>
         /// <param name="name">The display name for the server.</param>
         /// <param name="publicAddress">The public IP address or FQDN of the server or <c>null.</c></param>
@@ -86,7 +87,7 @@ namespace Neon.Cluster
         /// <exception cref="ArgumentNullException">
         /// Thrown if <paramref name="name"/> or if <paramref name="credentials"/> is <c>null</c>.
         /// </exception>
-        public NodeProxy(string name, string publicAddress, IPAddress privateAddress, SshCredentials credentials, TextWriter logWriter = null)
+        public SshProxy(string name, string publicAddress, IPAddress privateAddress, SshCredentials credentials, TextWriter logWriter = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentNullException>(credentials != null);
@@ -110,7 +111,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Finalizer.
         /// </summary>
-        ~NodeProxy()
+        ~SshProxy()
         {
             Dispose(false);
         }
@@ -743,7 +744,7 @@ namespace Neon.Cluster
             {
                 if (isDisposed)
                 {
-                    throw new ObjectDisposedException(nameof(NodeProxy<TMetadata>));
+                    throw new ObjectDisposedException(nameof(SshProxy<TMetadata>));
                 }
 
                 if (sshClient != null)
@@ -805,7 +806,7 @@ namespace Neon.Cluster
             {
                 if (isDisposed)
                 {
-                    throw new ObjectDisposedException(nameof(NodeProxy<TMetadata>));
+                    throw new ObjectDisposedException(nameof(SshProxy<TMetadata>));
                 }
 
                 if (scpClient != null)

@@ -32,7 +32,7 @@ namespace Neon.Cluster
         private VaultClient                                                 vaultClient;
         private ConsulClient                                                consulClient;
         private RunOptions                                                  defaultRunOptions;
-        private Func<string, string, IPAddress, NodeProxy<NodeDefinition>>  nodeProxyCreator;
+        private Func<string, string, IPAddress, SshProxy<NodeDefinition>>  nodeProxyCreator;
 
         /// <summary>
         /// Constructs a cluster proxy from a cluster login.
@@ -45,7 +45,7 @@ namespace Neon.Cluster
         /// </param>
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
-        /// <see cref="NodeProxy{TMetadata}.DefaultRunOptions"/> property for the
+        /// <see cref="SshProxy{TMetadata}.DefaultRunOptions"/> property for the
         /// nodes managed by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
         /// </param>
         /// <remarks>
@@ -55,7 +55,7 @@ namespace Neon.Cluster
         /// creator that doesn't initialize SSH credentials and logging is used if a <c>null</c>
         /// argument is passed.
         /// </remarks>
-        public ClusterProxy(ClusterLogin clusterLogin, Func<string, string, IPAddress, NodeProxy<NodeDefinition>> nodeProxyCreator = null, RunOptions defaultRunOptions = RunOptions.None)
+        public ClusterProxy(ClusterLogin clusterLogin, Func<string, string, IPAddress, SshProxy<NodeDefinition>> nodeProxyCreator = null, RunOptions defaultRunOptions = RunOptions.None)
             : this(clusterLogin.Definition, nodeProxyCreator, defaultRunOptions)
         {
             this.ClusterLogin = clusterLogin;
@@ -72,7 +72,7 @@ namespace Neon.Cluster
         /// </param>
         /// <param name="defaultRunOptions">
         /// Optionally specifies the <see cref="RunOptions"/> to be assigned to the 
-        /// <see cref="NodeProxy{TMetadata}.DefaultRunOptions"/> property for the
+        /// <see cref="SshProxy{TMetadata}.DefaultRunOptions"/> property for the
         /// nodes managed by the cluster proxy.  This defaults to <see cref="RunOptions.None"/>.
         /// </param>
         /// <remarks>
@@ -82,7 +82,7 @@ namespace Neon.Cluster
         /// creator that doesn't initialize SSH credentials and logging is used if a <c>null</c>
         /// argument is passed.
         /// </remarks>
-        public ClusterProxy(ClusterDefinition clusterDefinition, Func<string, string, IPAddress, NodeProxy<NodeDefinition>> nodeProxyCreator = null, RunOptions defaultRunOptions = RunOptions.None)
+        public ClusterProxy(ClusterDefinition clusterDefinition, Func<string, string, IPAddress, SshProxy<NodeDefinition>> nodeProxyCreator = null, RunOptions defaultRunOptions = RunOptions.None)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
@@ -96,7 +96,7 @@ namespace Neon.Cluster
                         // we need a cluster proxy for global things (like managing a hosting
                         // environment) where we won't need access to specific cluster nodes.
 
-                        return new NodeProxy<NodeDefinition>(name, publicAddress, privateAddress, SshCredentials.FromUserPassword("null", ""));
+                        return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, SshCredentials.FromUserPassword("null", ""));
                     };
             }
 
@@ -162,7 +162,7 @@ namespace Neon.Cluster
         public ClusterLogin ClusterLogin { get; set; }
 
         /// <summary>
-        /// Indicates that any <see cref="NodeProxy{TMetadata}"/> instances belonging
+        /// Indicates that any <see cref="SshProxy{TMetadata}"/> instances belonging
         /// to this cluster proxy should use public address/DNS names for SSH connections
         /// rather than their private cluster address.  This defaults to <c>false</c>
         /// and must be modified before establising a node connection to have any effect.
@@ -190,13 +190,13 @@ namespace Neon.Cluster
         /// <summary>
         /// Returns the read-only list of cluster node proxies.
         /// </summary>
-        public IReadOnlyList<NodeProxy<NodeDefinition>> Nodes { get; private set; }
+        public IReadOnlyList<SshProxy<NodeDefinition>> Nodes { get; private set; }
 
         /// <summary>
         /// Returns the first cluster manager node that will be used for global
         /// cluster setup.
         /// </summary>
-        public NodeProxy<NodeDefinition> FirstManager { get; private set; }
+        public SshProxy<NodeDefinition> FirstManager { get; private set; }
 
         /// <summary>
         /// Returns the object to be used to manage cluster Docker secrets.
@@ -230,7 +230,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Enumerates the cluster manager node proxies sorted in ascending order by name.
         /// </summary>
-        public IEnumerable<NodeProxy<NodeDefinition>> Managers
+        public IEnumerable<SshProxy<NodeDefinition>> Managers
         {
             get { return Nodes.Where(n => n.Metadata.IsManager).OrderBy(n => n.Name); }
         }
@@ -238,7 +238,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Enumerates the cluster worker node proxies sorted in ascending order by name.
         /// </summary>
-        public IEnumerable<NodeProxy<NodeDefinition>> Workers
+        public IEnumerable<SshProxy<NodeDefinition>> Workers
         {
             get { return Nodes.Where(n => n.Metadata.IsWorker).OrderBy(n => n.Name); }
         }
@@ -246,7 +246,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Enumerates the cluster pet node proxies sorted in ascending order by name.
         /// </summary>
-        public IEnumerable<NodeProxy<NodeDefinition>> Pets
+        public IEnumerable<SshProxy<NodeDefinition>> Pets
         {
             get { return Nodes.Where(n => n.Metadata.IsPet).OrderBy(n => n.Name); }
         }
@@ -258,7 +258,7 @@ namespace Neon.Cluster
         /// </summary>
         public void CreateNodes()
         {
-            var nodes = new List<NodeProxy<NodeDefinition>>();
+            var nodes = new List<SshProxy<NodeDefinition>>();
 
             foreach (var nodeDefinition in Definition.SortedNodes)
             {
@@ -275,12 +275,12 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns the <see cref="NodeProxy{TMetadata}"/> instance for a named node.
+        /// Returns the <see cref="SshProxy{TMetadata}"/> instance for a named node.
         /// </summary>
         /// <param name="nodeName">The node name.</param>
         /// <returns>The node proxy instance.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if the name node is not present in the cluster.</exception>
-        public NodeProxy<NodeDefinition> GetNode(string nodeName)
+        public SshProxy<NodeDefinition> GetNode(string nodeName)
         {
             var node = Nodes.SingleOrDefault(n => string.Compare(n.Name, nodeName, StringComparison.OrdinalIgnoreCase) == 0);
 
@@ -293,11 +293,11 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Looks for the <see cref="NodeProxy{TMetadata}"/> instance for a named node.
+        /// Looks for the <see cref="SshProxy{TMetadata}"/> instance for a named node.
         /// </summary>
         /// <param name="nodeName">The node name.</param>
         /// <returns>The node proxy instance or <c>null</c> if the named node does not exist.</returns>
-        public NodeProxy<NodeDefinition> FindNode(string nodeName)
+        public SshProxy<NodeDefinition> FindNode(string nodeName)
         {
             return Nodes.SingleOrDefault(n => string.Compare(n.Name, nodeName, StringComparison.OrdinalIgnoreCase) == 0);
         }
@@ -325,7 +325,7 @@ namespace Neon.Cluster
         /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
         /// <returns>The steps.</returns>
-        public IEnumerable<ConfigStep> GetFileUploadSteps(IEnumerable<NodeProxy<NodeDefinition>> nodes, string path, string text, int tabStop = 0, Encoding outputEncoding = null)
+        public IEnumerable<ConfigStep> GetFileUploadSteps(IEnumerable<SshProxy<NodeDefinition>> nodes, string path, string text, int tabStop = 0, Encoding outputEncoding = null)
         {
             var steps = new ConfigStepList();
 

@@ -37,7 +37,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The manager node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void CheckManager(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void CheckManager(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
             Covenant.Requires<ArgumentException>(node.Metadata.IsManager);
@@ -71,7 +71,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The server node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void CheckWorkersOrPet(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void CheckWorkersOrPet(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
             Covenant.Requires<ArgumentException>(node.Metadata.IsWorker || node.Metadata.IsPet);
@@ -148,7 +148,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The manager node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckManagerNtp(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        private static void CheckManagerNtp(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             // We're going to use [ntpq -p] to query the configured time sources.
             // We should get something back that looks like
@@ -240,7 +240,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The manager node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckWorkerNtp(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        private static void CheckWorkerNtp(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             // We're going to use [ntpq -p] to query the configured time sources.
             // We should get something back that looks like
@@ -297,7 +297,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The target cluster node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckDocker(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        private static void CheckDocker(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             node.Status = "checking: Docker";
 
@@ -316,7 +316,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The manager node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckConsul(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        private static void CheckConsul(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             node.Status = "checking: Consul";
 
@@ -348,7 +348,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="node">The node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckVault(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        private static void CheckVault(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             // $todo(jeff.lill): Implement this.
 

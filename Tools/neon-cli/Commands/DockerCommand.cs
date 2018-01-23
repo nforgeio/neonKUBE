@@ -115,7 +115,7 @@ the [neon exec] command.
 
             // Determine which node we're going to target.
 
-            NodeProxy<NodeDefinition>   node;
+            SshProxy<NodeDefinition>    node;
             var                         nodeName = leftCommandLine.GetOption("--node", null);
 
             if (!string.IsNullOrEmpty(nodeName))
@@ -161,7 +161,7 @@ the [neon exec] command.
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="rightCommandLine">The right split of the command line.</param>
-        private void Deploy(NodeProxy<NodeDefinition> node, CommandLine rightCommandLine)
+        private void Deploy(SshProxy<NodeDefinition> node, CommandLine rightCommandLine)
         {
             string path = null;
 
@@ -248,7 +248,7 @@ the [neon exec] command.
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <param name="rightCommandLine">The right split of the command line.</param>
-        private void SecretCreate(NodeProxy<NodeDefinition> node, CommandLine rightCommandLine)
+        private void SecretCreate(SshProxy<NodeDefinition> node, CommandLine rightCommandLine)
         {
             // We're expecting a command like: 
             //

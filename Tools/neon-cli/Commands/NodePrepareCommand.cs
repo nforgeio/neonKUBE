@@ -103,7 +103,7 @@ Server Requirements:
             operationSummary.Add("prepare");
 
             var clusterDefinition = (ClusterDefinition)null;
-            var nodes             = new List<NodeProxy<NodeDefinition>>();
+            var nodes             = new List<SshProxy<NodeDefinition>>();
 
             foreach (var fqdn in commandLine.GetArguments(0))
             {

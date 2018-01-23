@@ -27,7 +27,7 @@ namespace NeonCli
         /// Verifies that the node has the correct operating system installed.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        public static void VerifyOS(NodeProxy<NodeDefinition> node)
+        public static void VerifyOS(SshProxy<NodeDefinition> node)
         {
             node.Status = "verify: operating system";
 
@@ -53,7 +53,7 @@ namespace NeonCli
         /// Customizes the OpenSSH configuration on a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        public static void ConfigureOpenSSH(NodeProxy<NodeDefinition> node)
+        public static void ConfigureOpenSSH(SshProxy<NodeDefinition> node)
         {
             // Upload the OpenSSH server configuration, restart OpenSSH and
             // then disconnect and wait for the OpenSSH to restart.
@@ -170,7 +170,7 @@ ClientAliveCountMax 20
         /// The package manager is often busy after a reboot, installing updates.
         /// This method polls the package manager status until it reports ready.
         /// </remarks>
-        public static void WaitForPackageManager(NodeProxy<NodeDefinition> node)
+        public static void WaitForPackageManager(SshProxy<NodeDefinition> node)
         {
             node.Status = "package manager check";
 
@@ -200,7 +200,7 @@ ClientAliveCountMax 20
         /// </summary>
         /// <param name="node">The server to be updated.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void ConfigureEnvironmentVariables(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        public static void ConfigureEnvironmentVariables(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
             node.Status = "environment variables";
 
@@ -316,7 +316,7 @@ ClientAliveCountMax 20
         /// <c>true</c> if the method waited for the package manager to become
         /// ready before returning.
         /// </returns>
-        public static bool PrepareNode(NodeProxy<NodeDefinition> node, ClusterDefinition clusterDefinition = null, bool shutdown = false, OsUpgrade upgrade = OsUpgrade.None)
+        public static bool PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition = null, bool shutdown = false, OsUpgrade upgrade = OsUpgrade.None)
         {
             var waitedForPackageManager = false;
 

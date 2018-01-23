@@ -118,7 +118,7 @@ NOTE: The following Vault commands are not supported:
 
             // Determine which node we're going to target.
 
-            NodeProxy<NodeDefinition>   node;
+            SshProxy<NodeDefinition>    node;
             string                      nodeName = leftCommandLine.GetOption("--node", null);
             CommandBundle               bundle;
             CommandResponse             response;

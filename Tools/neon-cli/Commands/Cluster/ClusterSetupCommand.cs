@@ -575,7 +575,7 @@ OPTIONS:
         /// Performs common node configuration.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void ConfigureCommon(NodeProxy<NodeDefinition> node)
+        private void ConfigureCommon(SshProxy<NodeDefinition> node)
         {
             //-----------------------------------------------------------------
             // NOTE: 
@@ -683,7 +683,7 @@ OPTIONS:
         /// Reboots the nodes and waits until the package manager is ready.
         /// </summary>
         /// <param name="node">The cluster node.</param>
-        private void RebootAndWait(NodeProxy<NodeDefinition> node)
+        private void RebootAndWait(SshProxy<NodeDefinition> node)
         {
             node.Status = "rebooting...";
             node.Reboot(wait: true);
@@ -695,7 +695,7 @@ OPTIONS:
         /// Generates and uploads the <b>/etc/hosts</b> file for a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void UploadHostsFile(NodeProxy<NodeDefinition> node)
+        private void UploadHostsFile(SshProxy<NodeDefinition> node)
         {
             var sbHosts = new StringBuilder();
 
@@ -714,7 +714,7 @@ ff02::2         ip6-allrouters
         /// Generates and uploads the <b>/etc/neoncluster/env-host</b> file for a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void UploadHostEnvFile(NodeProxy<NodeDefinition> node)
+        private void UploadHostEnvFile(SshProxy<NodeDefinition> node)
         {
             var sbEnvHost       = new StringBuilder();
             var vaultDirectLine = string.Empty;
@@ -792,7 +792,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
         /// </summary>
         /// <param name="node">The target cluster node.</param>
         /// <returns>The configuration file text.</returns>
-        private string GetConsulConfig(NodeProxy<NodeDefinition> node)
+        private string GetConsulConfig(SshProxy<NodeDefinition> node)
         {
             var consulTlsDisabled = true;   // $todo(jeff.lill): Remove this once we support Consul TLS.
             var consulDef         = node.Cluster.Definition.Consul;
@@ -886,7 +886,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <returns>The Docker settings as JSON text.</returns>
-        private string GetDockerConfig(NodeProxy<NodeDefinition> node)
+        private string GetDockerConfig(SshProxy<NodeDefinition> node)
         {
             var settings = new JObject();
 
@@ -963,7 +963,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
         /// that enable VPN.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void ConfigureVpnPoolRoutes(NodeProxy<NodeDefinition> node)
+        private void ConfigureVpnPoolRoutes(SshProxy<NodeDefinition> node)
         {
             if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine || !cluster.Definition.Vpn.Enabled)
             {
@@ -1056,7 +1056,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
         /// Complete a manager node configuration.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void ConfigureManager(NodeProxy<NodeDefinition> node)
+        private void ConfigureManager(SshProxy<NodeDefinition> node)
         {
             node.InvokeIdempotentAction("setup-manager",
                 () =>
@@ -1155,7 +1155,7 @@ $@"docker login \
         /// nodes to the cluster.
         /// </summary>
         /// <param name="bootstrapManager">The target bootstrap manager server.</param>
-        private void CreateSwarm(NodeProxy<NodeDefinition> bootstrapManager)
+        private void CreateSwarm(SshProxy<NodeDefinition> bootstrapManager)
         {
             if (clusterLogin.SwarmManagerToken != null && clusterLogin.SwarmWorkerToken != null)
             {
@@ -1227,7 +1227,7 @@ $@"docker login \
         /// Configures non-manager nodes like workers or individuals.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void ConfigureNonManager(NodeProxy<NodeDefinition> node)
+        private void ConfigureNonManager(SshProxy<NodeDefinition> node)
         {
             node.InvokeIdempotentAction($"setup-{node.Metadata.Role}",
                 () =>
@@ -1326,7 +1326,7 @@ $@"docker login \
         /// Creates the standard cluster overlay networks.
         /// </summary>
         /// <param name="manager">The manager node.</param>
-        private void CreateClusterNetworks(NodeProxy<NodeDefinition> manager)
+        private void CreateClusterNetworks(SshProxy<NodeDefinition> manager)
         {
             // $todo(jeff.lill):
             //
@@ -1360,7 +1360,7 @@ $@"docker login \
         /// Adds the node labels.
         /// </summary>
         /// <param name="manager">The manager node.</param>
-        private void AddNodeLabels(NodeProxy<NodeDefinition> manager)
+        private void AddNodeLabels(SshProxy<NodeDefinition> manager)
         {
             manager.InvokeIdempotentAction("setup-node-labels",
                 () =>
@@ -1418,7 +1418,7 @@ $@"docker login \
         /// Pulls common images to the node.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void PullImages(NodeProxy<NodeDefinition> node)
+        private void PullImages(SshProxy<NodeDefinition> node)
         {
             node.InvokeIdempotentAction("setup-pull-images",
                 () =>
@@ -1453,7 +1453,7 @@ $@"docker login \
         /// Adds the node to the swarm cluster.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void JoinSwarm(NodeProxy<NodeDefinition> node)
+        private void JoinSwarm(SshProxy<NodeDefinition> node)
         {
             if (node == cluster.FirstManager)
             {
@@ -1797,7 +1797,7 @@ $@"docker login \
         /// Generates the SSH key to be used for authenticating SSH client connections.
         /// </summary>
         /// <param name="manager">A cluster manager node.</param>
-        private void GenerateClientSshKey(NodeProxy<NodeDefinition> manager)
+        private void GenerateClientSshKey(SshProxy<NodeDefinition> manager)
         {
             // Here's some information explaining what how I'm doing this:
             //
@@ -1917,7 +1917,7 @@ chmod 666 /run/ssh-key*
         /// Changes the admin account's password on a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void SetStrongPassword(NodeProxy<NodeDefinition> node)
+        private void SetStrongPassword(SshProxy<NodeDefinition> node)
         {
             node.InvokeIdempotentAction("setup-strong-password",
                 () =>
@@ -1999,7 +1999,7 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
         /// Configures SSH on a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void ConfigureSsh(NodeProxy<NodeDefinition> node)
+        private void ConfigureSsh(SshProxy<NodeDefinition> node)
         {
             node.InvokeIdempotentAction("setup-ssh",
                 () =>

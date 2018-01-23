@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NodeProxyExtensions.cs
+// FILE:	    SshProxyExtension.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -21,9 +21,9 @@ using Neon.Net;
 namespace NeonCli
 {
     /// <summary>
-    /// <see cref="NodeProxy{T}"/> extension methods.
+    /// <see cref="SshProxy{T}"/> extension methods.
     /// </summary>
-    public static class NodeProxyExtension
+    public static class SshProxyExtension
     {
         /// <summary>
         /// Converts a string into a value suitable for use in a Bash script.
@@ -517,7 +517,7 @@ namespace NeonCli
         /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
         /// <param name="file">The resource file.</param>
         /// <param name="targetPath">The target path on the remote server.</param>
-        private static void UploadFile<TMetadata>(this NodeProxy<TMetadata> node, ClusterDefinition clusterDefinition, ResourceFiles.File file, string targetPath)
+        private static void UploadFile<TMetadata>(this SshProxy<TMetadata> node, ClusterDefinition clusterDefinition, ResourceFiles.File file, string targetPath)
             where TMetadata : class
         {
             using (var input = file.ToStream())
@@ -571,7 +571,7 @@ namespace NeonCli
         /// <typeparam name="Metadata">The node metadata type.</typeparam>
         /// <param name="node">The remote node.</param>
         /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
-        public static void UploadConfigFiles<Metadata>(this NodeProxy<Metadata> node, ClusterDefinition clusterDefinition = null)
+        public static void UploadConfigFiles<Metadata>(this SshProxy<Metadata> node, ClusterDefinition clusterDefinition = null)
             where Metadata : class
         {
             Covenant.Requires<ArgumentNullException>(node != null);
@@ -604,7 +604,7 @@ namespace NeonCli
         /// <typeparam name="TMetadata">The server's metadata type.</typeparam>
         /// <param name="server">The remote server.</param>
         /// <param name="clusterDefinition">The cluster definition or <c>null</c>.</param>
-        public static void UploadTools<TMetadata>(this NodeProxy<TMetadata> server, ClusterDefinition clusterDefinition = null)
+        public static void UploadTools<TMetadata>(this SshProxy<TMetadata> server, ClusterDefinition clusterDefinition = null)
             where TMetadata : class
         {
             Covenant.Requires<ArgumentNullException>(server != null);

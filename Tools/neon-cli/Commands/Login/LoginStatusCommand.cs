@@ -74,7 +74,7 @@ USAGE:
             clusterProxy = new ClusterProxy(clusterLogin,
                 (nodeName, publicAddress, privateAddress) =>
                 {
-                    return new NodeProxy<NodeDefinition>(nodeName, publicAddress, privateAddress, clusterLogin.GetSshCredentials(), TextWriter.Null);
+                    return new SshProxy<NodeDefinition>(nodeName, publicAddress, privateAddress, clusterLogin.GetSshCredentials(), TextWriter.Null);
                 });
 
             // Verify the credentials by logging into a manager node.
