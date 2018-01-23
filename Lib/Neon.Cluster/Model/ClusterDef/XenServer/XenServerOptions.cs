@@ -18,6 +18,7 @@ namespace Neon.Cluster
     public class XenServerOptions
     {
         private const string defaultHostXvaUri = "http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva";
+        private const string defaultTemplate   = "neon-template";
 
         /// <summary>
         /// Default constructor.
@@ -38,7 +39,7 @@ namespace Neon.Cluster
         /// operating system version.
         /// </note>
         /// <note>
-        /// The XenServer <b>xe</b> CLI <b>does not support</b> downloading XVA images <b>via HTTPS</b>.  
+        /// The XenServer <b>xe</b> CLI <b>does not support</b> downloading XVA images <b>via HTTPS</b>.
         /// You'll need to use HTTP or FTP.
         /// </note>
         /// </summary>
@@ -46,7 +47,13 @@ namespace Neon.Cluster
         [DefaultValue(defaultHostXvaUri)]
         public string HostXvaUri { get; set; } = defaultHostXvaUri;
 
-        //public string TemplateName { get; set; } = defaultTemplateName;
+        /// <summary>
+        /// Names the XenServer template to be used when creating neonCLUSTER nodes.  This defaults
+        /// to <b>neon-template</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Template", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultTemplate)]
+        public string Template { get; set; } = defaultTemplate;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -60,6 +67,7 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             HostXvaUri = HostXvaUri ?? defaultHostXvaUri;
+            Template   = Template ?? defaultTemplate;
 
             if (!clusterDefinition.Network.StaticIP)
             {

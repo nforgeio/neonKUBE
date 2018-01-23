@@ -81,15 +81,30 @@ namespace Neon.Cluster
 
             // $todo(jeff.lill): DELETE THIS --------------------------
 
-            using (var xenClient = new XenClient("10.0.0.189", "root", ""))
+            using (var xenClient = new XenClient("10.50.0.217", "root", ""))
             {
-                //xenClient.DestroyTemplate(xenClient.FindTemplate(uuid: "b2ae3104-60d3-3ab3-b846-9c23e1bb0b85"));
+                //xenClient.Template.Destroy(xenClient.Template.Find("neon-template"));
 
-                var repos    = xenClient.ListStorageRepositories();
-                var template = xenClient.InstallTemplate("http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva", "test");
+                //var repos     = xenClient.StorageRepository.List();
+                //var template  = xenClient.Template.Install("http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva", "neon-template");
+                //var templates = xenClient.Template.List();
 
+                // var vm = xenClient.VirtualMachine.Install("myVM", "neon-template");
 
-                var templates = xenClient.ListTemplates();
+                var vm = xenClient.VirtualMachine.Find("myVM");
+
+                if (vm.IsRunning)
+                {
+                    xenClient.VirtualMachine.Shutdown(vm);
+                }
+
+                vm = xenClient.VirtualMachine.Find("myVM");
+
+                xenClient.VirtualMachine.Start(vm);
+
+                xenClient.VirtualMachine.Shutdown(vm);
+
+                vm = xenClient.VirtualMachine.Find("myVM");
             }
 
             //---------------------------------------------------------
