@@ -88,15 +88,25 @@ namespace Neon.Cluster.XenServer
             }
 
             /// <summary>
-            /// Creates a virtual machine from a template.
+            /// <para>
+            /// Creates a virtual machine from a template, optionally initializing its memory and 
+            /// disk size.
+            /// </para>
+            /// <note>
+            /// This does not start the machine.
+            /// </note>
             /// </summary>
             /// <param name="name">Name for the new virtual machine.</param>
             /// <param name="templateName">Identifies the template.</param>
+            /// <param name="memoryBytes">Optionally specifies the memory assigned to the machine (overriding the template).</param>
+            /// <param name="diskBytes">Optionally specifies the disk assigned to the machine (overriding the template).</param>
             /// <returns>The new <see cref="XenVirtualMachine"/>.</returns>
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
-            public XenVirtualMachine Install(string name, string templateName)
+            public XenVirtualMachine Install(string name, string templateName, long memoryBytes = 0, long diskBytes = 0)
             {
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(templateName));
+                Covenant.Requires<ArgumentException>(memoryBytes >= 0);
+                Covenant.Requires<ArgumentException>(diskBytes >= 0);
 
                 if (client.Template.Find(templateName) == null)
                 {
@@ -105,6 +115,31 @@ namespace Neon.Cluster.XenServer
 
                 var response = client.SafeInvoke("vm-install", $"template={templateName}", $"new-name-label={name}");
                 var uuid     = response.OutputText.Trim();
+
+                if (memoryBytes > 0)
+                {
+                    client.SafeInvoke("vm-memory-limits-set",
+                        $"uuid={uuid}",
+                        $"dynamic-max={memoryBytes}",
+                        $"dynamic-min={memoryBytes}",
+                        $"static-max={memoryBytes}",
+                        $"static-min={memoryBytes}");
+                }
+
+                if (diskBytes > 0)
+                {
+                    var disks = client.SafeInvokeItems("vm-disk-list", $"uuid={uuid}").Results;
+                    var vdi   = disks.FirstOrDefault(items => items.ContainsKey("Disk 0 VDI"));
+
+                    if (vdi == null)
+                    {
+                        throw new XenException($"Cannot locate disk for [{name}] virtual machine.");
+                    }
+
+                    var vdiUuid = vdi["uuid"];
+
+                    client.SafeInvoke("vdi-resize", $"uuid={vdiUuid}", $"disk-size={diskBytes}");
+                }
 
                 return client.VirtualMachine.Find(uuid: uuid);
             }

@@ -89,9 +89,9 @@ namespace Neon.Cluster
                 //var template  = xenClient.Template.Install("http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva", "neon-template");
                 //var templates = xenClient.Template.List();
 
-                // var vm = xenClient.VirtualMachine.Install("myVM", "neon-template");
+                var vm = xenClient.VirtualMachine.Install("myVM", "neon-template", memoryBytes: NeonHelper.Giga, diskBytes: 25L * NeonHelper.Giga);
 
-                var vm = xenClient.VirtualMachine.Find("myVM");
+                vm = xenClient.VirtualMachine.Find("myVM");
 
                 if (vm.IsRunning)
                 {
