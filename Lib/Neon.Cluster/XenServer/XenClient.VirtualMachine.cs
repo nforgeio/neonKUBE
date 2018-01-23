@@ -98,13 +98,15 @@ namespace Neon.Cluster.XenServer
             /// </summary>
             /// <param name="name">Name for the new virtual machine.</param>
             /// <param name="templateName">Identifies the template.</param>
+            /// <param name="processors">Optionally specifies the number of processors to assign.  This defaults to <b>2</b>.</param>
             /// <param name="memoryBytes">Optionally specifies the memory assigned to the machine (overriding the template).</param>
             /// <param name="diskBytes">Optionally specifies the disk assigned to the machine (overriding the template).</param>
             /// <returns>The new <see cref="XenVirtualMachine"/>.</returns>
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
-            public XenVirtualMachine Install(string name, string templateName, long memoryBytes = 0, long diskBytes = 0)
+            public XenVirtualMachine Install(string name, string templateName, int processors = 2, long memoryBytes = 0, long diskBytes = 0)
             {
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(templateName));
+                Covenant.Requires<ArgumentException>(processors > 0);
                 Covenant.Requires<ArgumentException>(memoryBytes >= 0);
                 Covenant.Requires<ArgumentException>(diskBytes >= 0);
 
@@ -116,6 +118,15 @@ namespace Neon.Cluster.XenServer
                 var response = client.SafeInvoke("vm-install", $"template={templateName}", $"new-name-label={name}");
                 var uuid     = response.OutputText.Trim();
 
+                // Configure processors
+
+                client.SafeInvoke("vm-param-set",
+                        $"uuid={uuid}",
+                        $"VCPUs-at-startup={processors}",
+                        $"VCPUs-max={processors}");
+
+                // Configure memory.
+
                 if (memoryBytes > 0)
                 {
                     client.SafeInvoke("vm-memory-limits-set",
@@ -125,6 +136,8 @@ namespace Neon.Cluster.XenServer
                         $"static-max={memoryBytes}",
                         $"static-min={memoryBytes}");
                 }
+
+                // Configure disk.
 
                 if (diskBytes > 0)
                 {
