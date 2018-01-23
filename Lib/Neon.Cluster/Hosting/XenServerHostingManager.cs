@@ -102,6 +102,8 @@ namespace Neon.Cluster
 
                 xenClient.VirtualMachine.Start(vm);
 
+                vm = xenClient.VirtualMachine.Find("myVM");
+
                 xenClient.VirtualMachine.Shutdown(vm);
 
                 vm = xenClient.VirtualMachine.Find("myVM");

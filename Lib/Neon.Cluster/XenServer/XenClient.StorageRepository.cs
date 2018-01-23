@@ -45,7 +45,7 @@ namespace Neon.Cluster.XenServer
             /// <returns>The list of storage repositories.</returns>
             public List<XenStorageRepository> List()
             {
-                var response     = client.InvokeItems("sr-list");
+                var response     = client.InvokeItems("sr-list", "params=all");
                 var repositories = new List<XenStorageRepository>();
 
                 foreach (var result in response.Results)

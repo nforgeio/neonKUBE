@@ -14,13 +14,14 @@ namespace Neon.Cluster.XenServer
     /// <summary>
     /// Describes a XenServer storage repository.
     /// </summary>
-    public class XenStorageRepository
+    public class XenStorageRepository : XenObject
     {
         /// <summary>
         /// Constructs an instance from raw property values returned by the <b>xe CLI</b>.
         /// </summary>
-        /// <param name="rawProperties"></param>
+        /// <param name="rawProperties">The raw object properties.</param>
         internal XenStorageRepository(IDictionary<string, string> rawProperties)
+            : base(rawProperties)
         {
             this.Uuid            = rawProperties["uuid"];
             this.NameLabel       = rawProperties["name-label"];
@@ -31,33 +32,33 @@ namespace Neon.Cluster.XenServer
         }
 
         /// <summary>
-        /// The repository unique ID.
+        /// Returns the repository unique ID.
         /// </summary>
-        public string Uuid { get; set; }
+        public string Uuid { get; private set; }
 
         /// <summary>
-        /// The repository name.
+        /// Returns the repository name.
         /// </summary>
-        public string NameLabel { get; set; }
+        public string NameLabel { get; private set; }
 
         /// <summary>
-        /// The repository description.
+        /// Returns the repository description.
         /// </summary>
-        public string NameDescription { get; set; }
+        public string NameDescription { get; private set; }
 
         /// <summary>
-        /// The XenServer host.
+        /// Returns the XenServer host.
         /// </summary>
-        public string Host { get; set; }
+        public string Host { get; private set; }
 
         /// <summary>
-        /// The repository type.
+        /// Returns the repository type.
         /// </summary>
-        public string Type { get; set; }
+        public string Type { get; private set; }
 
         /// <summary>
-        /// The type of content stored in the repository.
+        /// Returns the type of content stored in the repository.
         /// </summary>
-        public string ContentType { get; set; }
+        public string ContentType { get; private set; }
     }
 }

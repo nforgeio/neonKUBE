@@ -46,7 +46,7 @@ namespace Neon.Cluster.XenServer
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             public List<XenTemplate> List()
             {
-                var response  = client.SafeInvokeItems("template-list");
+                var response  = client.SafeInvokeItems("template-list", "params=all");
                 var templates = new List<XenTemplate>();
 
                 foreach (var result in response.Results)

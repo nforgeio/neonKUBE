@@ -46,7 +46,7 @@ namespace Neon.Cluster.XenServer
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
             public List<XenVirtualMachine> List()
             {
-                var response = client.SafeInvokeItems("vm-list");
+                var response = client.SafeInvokeItems("vm-list", "params=all");
                 var vms      = new List<XenVirtualMachine>();
 
                 foreach (var result in response.Results)

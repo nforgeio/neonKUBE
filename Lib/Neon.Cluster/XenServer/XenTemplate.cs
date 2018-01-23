@@ -14,13 +14,14 @@ namespace Neon.Cluster.XenServer
     /// <summary>
     /// Describes a XenServer virtual machine template.
     /// </summary>
-    public class XenTemplate
+    public class XenTemplate : XenObject
     {
         /// <summary>
         /// Constructs an instance from raw property values returned by the <b>xe CLI</b>.
         /// </summary>
-        /// <param name="rawProperties"></param>
+        /// <param name="rawProperties">The raw object properties.</param>
         internal XenTemplate(IDictionary<string, string> rawProperties)
+            : base(rawProperties)
         {
             this.Uuid            = rawProperties["uuid"];
             this.NameLabel       = rawProperties["name-label"];
@@ -28,18 +29,18 @@ namespace Neon.Cluster.XenServer
         }
 
         /// <summary>
-        /// The repository unique ID.
+        /// Returns the repository unique ID.
         /// </summary>
-        public string Uuid { get; set; }
+        public string Uuid { get; private set; }
 
         /// <summary>
-        /// The repository name.
+        /// Returns the repository name.
         /// </summary>
-        public string NameLabel { get; set; }
+        public string NameLabel { get; private set; }
 
         /// <summary>
-        /// The repository description.
+        /// Returns the repository description.
         /// </summary>
-        public string NameDescription { get; set; }
+        public string NameDescription { get; private set; }
     }
 }
