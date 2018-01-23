@@ -36,7 +36,7 @@ using Neon.Time;
 // Extend this to support remote Hyper-V machines:
 //
 //      * Allow the specification of per-VM processors, memory, and disk size.
-//      * I'm hoping I can use PowerShell to manage remote hosts.
+//      * I'm hoping I can use PowerShell to manage remote hosts (but what about OSX?).
 //      * Including copying the VHDX files.
 
 namespace Neon.Cluster
