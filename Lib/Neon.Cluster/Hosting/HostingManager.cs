@@ -43,34 +43,38 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="provider">The target hosting provider.</param>
         /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="logFolder">
+        /// The folder where log files are to be written, otherwise or <c>null</c> or 
+        /// empty if logging is disabled.
+        /// </param>
         /// <returns>The <see cref="HostingManager"/>.</returns>
-        public static HostingManager GetManager(HostingEnvironments provider, ClusterProxy cluster)
+        public static HostingManager GetManager(HostingEnvironments provider, ClusterProxy cluster, string logFolder = null)
         {
             switch (cluster.Definition.Hosting.Environment)
             {
                 case HostingEnvironments.Aws:
 
-                    return new AwsHostingManager(cluster);
+                    return new AwsHostingManager(cluster, logFolder);
 
                 case HostingEnvironments.Azure:
 
-                    return new AzureHostingManager(cluster);
+                    return new AzureHostingManager(cluster, logFolder);
 
                 case HostingEnvironments.Google:
 
-                    return new GoogleHostingManager(cluster);
+                    return new GoogleHostingManager(cluster, logFolder);
 
                 case HostingEnvironments.HyperV:
 
-                    return new HyperVHostingManager(cluster);
+                    return new HyperVHostingManager(cluster, logFolder);
 
                 case HostingEnvironments.Machine:
 
-                    return new MachineHostingManager(cluster);
+                    return new MachineHostingManager(cluster, logFolder);
 
                 case HostingEnvironments.XenServer:
 
-                    return new XenServerHostingManager(cluster);
+                    return new XenServerHostingManager(cluster, logFolder);
 
                 default:
 
@@ -120,10 +124,10 @@ namespace Neon.Cluster
         public bool ShowStatus { get; set; } = false;
 
         /// <summary>
-        /// The maximum number of nodes that will execute setup steps in parallel.  This
-        /// defaults to essentially unconstrained.
+        /// The maximum number of nodes that will execute provisioning steps in parallel.  This
+        /// defaults to <b>5</b>.
         /// </summary>
-        public int MaxParallel { get; set; } = int.MaxValue;
+        public int MaxParallel { get; set; } = 5;
 
         /// <summary>
         /// Number of seconds to delay after specific operations (e.g. to allow services to stablize).

@@ -86,7 +86,11 @@ namespace Neon.Cluster
         /// Constructor.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        public HyperVHostingManager(ClusterProxy cluster)
+        /// <param name="logFolder">
+        /// The folder where log files are to be written, otherwise or <c>null</c> or 
+        /// empty if logging is disabled.
+        /// </param>
+        public HyperVHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             cluster.HostingManager = this;
 
@@ -111,6 +115,16 @@ namespace Neon.Cluster
         /// <inheritdoc/>
         public override bool Provision(bool force)
         {
+            // $todo(jeff.lill):
+            //
+            // I'm not entirely sure that the [force] option makes sense for 
+            // production clusters and especially when there are pet nodes.
+            //
+            // Perhaps it would make more sense to replace this with a
+            // [neon cluster remove] command.
+            //
+            //      https://github.com/jefflill/NeonForge/issues/156
+
             this.forceVmOverwrite = force;
 
             if (IsProvisionNOP)
@@ -131,12 +145,12 @@ namespace Neon.Cluster
                 }
             }
 
-            // Initialize and perform the setup operations.
+            // Initialize and perform the provisioning operations.
 
             controller = new SetupController($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
             {
                 ShowStatus  = this.ShowStatus,
-                MaxParallel = 1     // We're only going to prepare one VM at a time.
+                MaxParallel = 1     // We're only going to provision one VM at a time on a local Hyper-V instance.
             };
 
             controller.AddGlobalStep("prepare hyper-v", () => PrepareHyperV());

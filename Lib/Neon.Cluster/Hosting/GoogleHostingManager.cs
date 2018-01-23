@@ -41,7 +41,11 @@ namespace Neon.Cluster
         /// Constructor.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        public GoogleHostingManager(ClusterProxy cluster)
+        /// <param name="logFolder">
+        /// The folder where log files are to be written, otherwise or <c>null</c> or 
+        /// empty if logging is disabled.
+        /// </param>
+        public GoogleHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             cluster.HostingManager = this;
 

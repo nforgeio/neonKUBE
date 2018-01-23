@@ -155,7 +155,7 @@ Server Requirements:
 
             // Initialize the hosting environment manager.
 
-            hostingManager              = HostingManager.GetManager(cluster.Definition.Hosting.Environment, cluster);
+            hostingManager              = HostingManager.GetManager(cluster.Definition.Hosting.Environment, cluster, Program.LogPath);
             hostingManager.HostUsername = Program.Username;
             hostingManager.HostPassword = Program.Password;
             hostingManager.ShowStatus   = !Program.Quiet;

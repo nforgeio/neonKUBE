@@ -1728,7 +1728,7 @@ listen tcp:port-{port}
                 // This could be considered a feature.  For example, this allows
                 // the operator temporarily block a port manually.
 
-                var hostingManager  = HostingManager.GetManager(cachedClusterDefinition.Hosting.Environment, cluster);
+                var hostingManager = HostingManager.GetManager(cachedClusterDefinition.Hosting.Environment, cluster);
 
                 if (!hostingManager.CanUpdatePublicEndpoints)
                 {

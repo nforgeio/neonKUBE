@@ -273,7 +273,11 @@ namespace Neon.Cluster
         /// Constructor.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        public AzureHostingManager(ClusterProxy cluster)
+        /// <param name="logFolder">
+        /// The folder where log files are to be written, otherwise or <c>null</c> or 
+        /// empty if logging is disabled.
+        /// </param>
+        public AzureHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             this.cluster        = cluster;
             this.clusterName    = cluster.Definition.Name;

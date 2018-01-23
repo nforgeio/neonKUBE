@@ -66,17 +66,21 @@ namespace Neon.Cluster
 
         private ClusterProxy                    cluster;
         private SetupController                 controller;
-        private Dictionary<string, XenClient>   xenClients;
+        private Dictionary<string, XenClient>   xenHosts;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        public XenServerHostingManager(ClusterProxy cluster)
+        /// <param name="logFolder">
+        /// The folder where log files are to be written, otherwise or <c>null</c> or 
+        /// empty if logging is disabled.
+        /// </param>
+        public XenServerHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             this.cluster                = cluster;
             this.cluster.HostingManager = this;
-            this.xenClients             = new Dictionary<string, XenClient>();
+            this.xenHosts               = new Dictionary<string, XenClient>();
 
             // $todo(jeff.lill): DELETE THIS --------------------------
 
@@ -114,11 +118,11 @@ namespace Neon.Cluster
         /// <inheritdoc/>
         public override void Dispose(bool disposing)
         {
-            if (xenClients != null)
+            if (xenHosts != null)
             {
-                foreach (var client in xenClients.Values)
+                foreach (var xenHost in xenHosts.Values)
                 {
-                    client.Dispose();
+                    xenHost.Dispose();
                 }
             }
 
@@ -137,36 +141,43 @@ namespace Neon.Cluster
         /// <inheritdoc/>
         public override bool Provision(bool force)
         {
-            throw new NotImplementedException("$todo(jeff.lill): Need to complete this.");
+            // $todo(jeff.lill):
+            //
+            // I'm not implementing [force] here.  I'm not entirely sure
+            // that this makes sense for production clusters and especially
+            // when there are pet nodes.
+            //
+            // Perhaps it would make more sense to replace this with a
+            // [neon cluster remove] command.
+            //
+            //      https://github.com/jefflill/NeonForge/issues/156
 
-            // If a public address isn't explicitly specified, we'll assume that the
-            // tool is running inside the network and we can access the private address.
-
-            foreach (var node in cluster.Definition.Nodes)
+            if (IsProvisionNOP)
             {
-                if (string.IsNullOrEmpty(node.PublicAddress))
-                {
-                    node.PublicAddress = node.PrivateAddress;
-                }
+                // There's nothing to do here.
+
+                return true;
             }
 
-            // Initialize and perform the setup operations.
+            // We're going to provision the XenServer hosts in parallel to
+            // speed up cluster setup.  This works because each XenServer
+            // is essentially independent from the others.
+            
+            // Initialize and perform the provisioning operations.
 
-            //controller = new SetupController($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
-            //{
-            //    ShowStatus  = this.ShowStatus,
-            //    MaxParallel = 1     // We're only going to prepare one VM at a time.
-            //};
+            controller = new SetupController($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
+            {
+                ShowStatus  = this.ShowStatus,
+                MaxParallel = this.MaxParallel
+            };
 
-            //controller.AddGlobalStep("prepare hyper-v", () => PrepareXenServer());
             //controller.AddStep("create virtual machines", n => ProvisionVM(n));
-            //controller.AddGlobalStep(string.Empty, () => FinishXenServer(), quiet: true);
 
-            //if (!controller.Run())
-            //{
-            //    System.Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
-            //    return false;
-            //}
+            if (!controller.Run())
+            {
+                Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
+                return false;
+            }
 
             return true;
         }

@@ -41,7 +41,11 @@ namespace Neon.Cluster
         /// Constructor.
         /// </summary>
         /// <param name="cluster">The cluster being managed.</param>
-        public AwsHostingManager(ClusterProxy cluster)
+        /// <param name="logFolder">
+        /// The folder where log files are to be written, otherwise or <c>null</c> or 
+        /// empty if logging is disabled.
+        /// </param>
+        public AwsHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             cluster.HostingManager = this;
 
@@ -58,7 +62,7 @@ namespace Neon.Cluster
         }
 
         /// <inheritdoc/>
-        public override bool Provision(bool force )
+        public override bool Provision(bool force)
         {
             throw new NotImplementedException("$todo(jeff.lill): Implement this.");
         }

@@ -60,7 +60,11 @@ namespace Neon.Cluster.XenServer
         /// <param name="addressOrFQDN">The target XenServer IP address or FQDN.</param>
         /// <param name="username">The user name.</param>
         /// <param name="password">The password.</param>
-        public XenClient(string addressOrFQDN, string username, string password)
+        /// <param name="logFolder">
+        /// The folder where log files are to be written, otherwise or <c>null</c> or 
+        /// empty if logging is disabled.
+        /// </param>
+        public XenClient(string addressOrFQDN, string username, string password, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
 
@@ -76,8 +80,15 @@ namespace Neon.Cluster.XenServer
                 address = hostEntry.AddressList.First();
             }
 
-            Proxy      = new SshProxy<object>(addressOrFQDN, null, address, SshCredentials.FromUserPassword(username, password));
-            runOptions = Proxy.DefaultRunOptions | RunOptions.IgnoreRemotePath;
+            var logWriter = (TextWriter)null;
+
+            if (!string.IsNullOrEmpty(logFolder))
+            {
+                logWriter = new StreamWriter(Path.Combine(logFolder, $"XENSERVER-{addressOrFQDN}.log"));
+            }
+
+            SshProxy   = new SshProxy<object>(addressOrFQDN, null, address, SshCredentials.FromUserPassword(username, password), logWriter);
+            runOptions = RunOptions.IgnoreRemotePath;
 
             // Initialize the operation classes.
 
@@ -91,17 +102,17 @@ namespace Neon.Cluster.XenServer
         /// </summary>
         public void Dispose()
         {
-            if (Proxy == null)
+            if (SshProxy == null)
             {
-                Proxy.Dispose();
-                Proxy = null;
+                SshProxy.Dispose();
+                SshProxy = null;
             }
         }
 
         /// <summary>
         /// Returns the SSH proxy for the XenServer host.
         /// </summary>
-        public SshProxy<object> Proxy { get; private set; }
+        public SshProxy<object> SshProxy { get; private set; }
 
         /// <summary>
         /// Implements the XenServer storage repository operations.
@@ -123,7 +134,7 @@ namespace Neon.Cluster.XenServer
         /// </summary>
         private void VerifyNotDisposed()
         {
-            if (Proxy == null)
+            if (SshProxy == null)
             {
                 throw new ObjectDisposedException(nameof(XenClient));
             }
@@ -139,7 +150,7 @@ namespace Neon.Cluster.XenServer
         public CommandResponse Invoke(string command, params string[] args)
         {
             VerifyNotDisposed();
-            return Proxy.RunCommand($"xe {command}", runOptions, args);
+            return SshProxy.RunCommand($"xe {command}", runOptions, args);
         }
 
         /// <summary>
@@ -152,7 +163,7 @@ namespace Neon.Cluster.XenServer
         public XenResponse InvokeItems(string command, params string[] args)
         {
             VerifyNotDisposed();
-            return new XenResponse(Proxy.RunCommand($"xe {command}", runOptions, args));
+            return new XenResponse(SshProxy.RunCommand($"xe {command}", runOptions, args));
         }
 
         /// <summary>
@@ -167,7 +178,7 @@ namespace Neon.Cluster.XenServer
         {
             VerifyNotDisposed();
 
-            var response = Proxy.RunCommand($"xe {command}", runOptions, args);
+            var response = SshProxy.RunCommand($"xe {command}", runOptions, args);
 
             if (response.ExitCode != 0)
             {
