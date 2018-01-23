@@ -222,14 +222,14 @@ namespace Neon.Cluster
             // drive template.  Production clusters should reference a specific
             // drive template.
 
-            var driveTemplateUri = new Uri(cluster.Definition.Hosting.HyperV.HostVhdxUri);
+            var driveTemplateUri  = new Uri(cluster.Definition.Hosting.HyperV.HostVhdxUri);
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
             driveTemplatePath = Path.Combine(NeonClusterHelper.GetSetupFolder(), driveTemplateName);
 
-            var driveTemplateInfoPath = Path.Combine(NeonClusterHelper.GetSetupFolder(), driveTemplateName + ".info");
+            var driveTemplateInfoPath  = Path.Combine(NeonClusterHelper.GetSetupFolder(), driveTemplateName + ".info");
             var driveTemplateIsCurrent = true;
-            var driveTemplateInfo = (DriveTemplateInfo)null;
+            var driveTemplateInfo      = (DriveTemplateInfo)null;
 
             if (!File.Exists(driveTemplatePath) || !File.Exists(driveTemplateInfoPath))
             {
@@ -354,7 +354,7 @@ namespace Neon.Cluster
 
                 controller.SetOperationStatus("Scanning virtual switches");
 
-                var switches = hyperv.ListVMSwitches();
+                var switches       = hyperv.ListVMSwitches();
                 var externalSwitch = switches.FirstOrDefault(s => s.Type == VirtualSwitchType.External);
 
                 if (externalSwitch == null)
@@ -379,7 +379,7 @@ namespace Neon.Cluster
 
                 foreach (var machine in existingMachines)
                 {
-                    var drivePath = Path.Combine(vmDriveFolder, $"{machine.Name}.vhdx");
+                    var drivePath   = Path.Combine(vmDriveFolder, $"{machine.Name}.vhdx");
                     var isClusterVM = cluster.FindNode(machine.Name) != null;
 
                     if (isClusterVM)
@@ -501,7 +501,7 @@ namespace Neon.Cluster
                     // $hack(jeff.lill): Update console at 2 sec intervals to avoid annoying flicker
 
                     var updateInterval = TimeSpan.FromSeconds(2);
-                    var stopwatch = new Stopwatch();
+                    var stopwatch      = new Stopwatch();
 
                     stopwatch.Start();
 
