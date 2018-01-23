@@ -81,33 +81,33 @@ namespace Neon.Cluster
 
             // $todo(jeff.lill): DELETE THIS --------------------------
 
-            using (var xenClient = new XenClient("10.50.0.217", "root", ""))
-            {
-                //xenClient.Template.Destroy(xenClient.Template.Find("neon-template"));
+            //using (var xenClient = new XenClient("10.50.0.217", "root", ""))
+            //{
+            //    xenClient.Template.Destroy(xenClient.Template.Find("neon-template"));
 
-                //var repos     = xenClient.StorageRepository.List();
-                //var template  = xenClient.Template.Install("http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva", "neon-template");
-                //var templates = xenClient.Template.List();
+            //    var repos     = xenClient.StorageRepository.List();
+            //    var template  = xenClient.Template.Install("http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva", "neon-template");
+            //    var templates = xenClient.Template.List();
 
-                var vm = xenClient.VirtualMachine.Install("myVM", "neon-template", memoryBytes: NeonHelper.Giga, diskBytes: 25L * NeonHelper.Giga);
+            //    var vm = xenClient.VirtualMachine.Install("myVM", "neon-template", memoryBytes: NeonHelper.Giga, diskBytes: 25L * NeonHelper.Giga);
 
-                vm = xenClient.VirtualMachine.Find("myVM");
+            //    vm = xenClient.VirtualMachine.Find("myVM");
 
-                if (vm.IsRunning)
-                {
-                    xenClient.VirtualMachine.Shutdown(vm);
-                }
+            //    if (vm.IsRunning)
+            //    {
+            //        xenClient.VirtualMachine.Shutdown(vm);
+            //    }
 
-                vm = xenClient.VirtualMachine.Find("myVM");
+            //    vm = xenClient.VirtualMachine.Find("myVM");
 
-                xenClient.VirtualMachine.Start(vm);
+            //    xenClient.VirtualMachine.Start(vm);
 
-                vm = xenClient.VirtualMachine.Find("myVM");
+            //    vm = xenClient.VirtualMachine.Find("myVM");
 
-                xenClient.VirtualMachine.Shutdown(vm);
+            //    xenClient.VirtualMachine.Shutdown(vm);
 
-                vm = xenClient.VirtualMachine.Find("myVM");
-            }
+            //    vm = xenClient.VirtualMachine.Find("myVM");
+            //}
 
             //---------------------------------------------------------
         }
