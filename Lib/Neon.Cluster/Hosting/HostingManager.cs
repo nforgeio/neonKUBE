@@ -148,10 +148,10 @@ namespace Neon.Cluster
         public abstract (string Address, int Port) GetSshEndpoint(string nodeName);
 
         /// <inheritdoc/>
-        public abstract void AddPostProvisionSteps(SetupController controller);
+        public abstract void AddPostProvisionSteps(SetupController<NodeDefinition> controller);
 
         /// <inheritdoc/>
-        public abstract void AddPostVpnSteps(SetupController controller);
+        public abstract void AddPostVpnSteps(SetupController<NodeDefinition> controller);
 
         /// <inheritdoc/>
         public abstract List<HostedEndpoint> GetPublicEndpoints();

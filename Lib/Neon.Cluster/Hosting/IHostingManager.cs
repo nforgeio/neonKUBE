@@ -72,13 +72,13 @@ namespace Neon.Cluster
         /// Adds any necessary post-provisioning steps to the step controller.
         /// </summary>
         /// <param name="controller">The target setup controller.</param>
-        void AddPostProvisionSteps(SetupController controller);
+        void AddPostProvisionSteps(SetupController<NodeDefinition> controller);
 
         /// <summary>
         /// Adds any necessary post-VPN steps to the step controller.
         /// </summary>
         /// <param name="controller">The target setup controller.</param>
-        void AddPostVpnSteps(SetupController controller);
+        void AddPostVpnSteps(SetupController<NodeDefinition> controller);
 
         /// <summary>
         /// Returns the endpoints currently exposed to the public for the deployment.

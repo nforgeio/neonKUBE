@@ -467,7 +467,7 @@ namespace Neon.Cluster
             // Perform the provisioning operations.
 
             var operation  = $"Provisioning [{cluster.Definition.Name}] on Azure [{azureOptions.Region}/{resourceGroup}]";
-            var controller = new SetupController(operation, cluster.Nodes)
+            var controller = new SetupController<NodeDefinition>(operation, cluster.Nodes)
             {
                 ShowStatus     = this.ShowStatus,
                 ShowNodeStatus = false,
@@ -1394,7 +1394,7 @@ namespace Neon.Cluster
         }
 
         /// <inheritdoc/>
-        public override void AddPostProvisionSteps(SetupController controller)
+        public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
         {
             // Azure doesn't initialize the secondary NIC on the manager nodes
             // properly when the VM is created so we need to do this ourselves.
@@ -1423,7 +1423,7 @@ iface eth1 inet dhcp
         }
 
         /// <inheritdoc/>
-        public override void AddPostVpnSteps(SetupController controller)
+        public override void AddPostVpnSteps(SetupController<NodeDefinition> controller)
         {
             // Remove all temporary rules (e.g. allowing SSH) from the VPN and node network security groups.
             // We won't need these after provisioning has been completed because we can use the OpenVPN to

@@ -125,7 +125,7 @@ Server Requirements:
             // Perform the setup operations.
 
             var controller = 
-                new SetupController(operationSummary.ToArray(), nodes)
+                new SetupController<NodeDefinition>(operationSummary.ToArray(), nodes)
                 {
                     ShowStatus  = !Program.Quiet,
                     MaxParallel = Program.MaxParallel

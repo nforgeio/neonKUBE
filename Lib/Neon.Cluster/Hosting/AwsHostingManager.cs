@@ -74,12 +74,12 @@ namespace Neon.Cluster
         }
 
         /// <inheritdoc/>
-        public override void AddPostProvisionSteps(SetupController controller)
+        public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
         {
         }
 
         /// <inheritdoc/>
-        public override void AddPostVpnSteps(SetupController controller)
+        public override void AddPostVpnSteps(SetupController<NodeDefinition> controller)
         {
         }
 

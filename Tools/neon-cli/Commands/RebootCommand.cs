@@ -115,7 +115,7 @@ command.
 
             var cluster   = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>);
             var operation = 
-                new SetupController(Program.SafeCommandLine, cluster.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
+                new SetupController<NodeDefinition>(Program.SafeCommandLine, cluster.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
                 {
                     ShowStatus  = !Program.Quiet,
                     MaxParallel = Program.MaxParallel

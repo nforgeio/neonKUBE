@@ -75,12 +75,12 @@ namespace Neon.Cluster
 
         private const string defaultSwitchName = "neonCLUSTER";
 
-        private ClusterProxy        cluster;
-        private SetupController     controller;
-        private bool                forceVmOverwrite;
-        private string              driveTemplatePath;
-        private string              vmDriveFolder;
-        private string              switchName;
+        private ClusterProxy                    cluster;
+        private SetupController<NodeDefinition> controller;
+        private bool                            forceVmOverwrite;
+        private string                          driveTemplatePath;
+        private string                          vmDriveFolder;
+        private string                          switchName;
 
         /// <summary>
         /// Constructor.
@@ -147,7 +147,7 @@ namespace Neon.Cluster
 
             // Initialize and perform the provisioning operations.
 
-            controller = new SetupController($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
+            controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
             {
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = 1     // We're only going to provision one VM at a time on a local Hyper-V instance.
@@ -173,12 +173,12 @@ namespace Neon.Cluster
         }
 
         /// <inheritdoc/>
-        public override void AddPostProvisionSteps(SetupController controller)
+        public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
         {
         }
 
         /// <inheritdoc/>
-        public override void AddPostVpnSteps(SetupController controller)
+        public override void AddPostVpnSteps(SetupController<NodeDefinition> controller)
         {
         }
 
@@ -569,7 +569,7 @@ namespace Neon.Cluster
                 // to obtain the IP address we'll use to SSH into the machine and configure
                 // it's static IP.
 
-                node.Status = $"get current ip";
+                node.Status = $"get ip address";
 
                 var adapters = hyperv.ListVMNetworkAdapters(node.Name, waitForAddresses: true);
                 var adapter  = adapters.FirstOrDefault();

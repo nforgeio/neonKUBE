@@ -259,7 +259,7 @@ does this on the first manager node:
                 // Run the command on multiple nodes and return an overall exit code.
 
                 var operation = 
-                    new SetupController(Program.SafeCommandLine, cluster.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
+                    new SetupController<NodeDefinition>(Program.SafeCommandLine, cluster.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
                     {
                         ShowStatus  = !Program.Quiet,
                         MaxParallel = Program.MaxParallel

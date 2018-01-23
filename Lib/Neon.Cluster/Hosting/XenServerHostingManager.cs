@@ -65,7 +65,7 @@ namespace Neon.Cluster
         // Implementation
 
         private ClusterProxy                    cluster;
-        private SetupController                 controller;
+        private SetupController<NodeDefinition> controller;
         private Dictionary<string, XenClient>   xenHosts;
 
         /// <summary>
@@ -165,7 +165,7 @@ namespace Neon.Cluster
             
             // Initialize and perform the provisioning operations.
 
-            controller = new SetupController($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
+            controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
             {
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = this.MaxParallel
@@ -189,12 +189,12 @@ namespace Neon.Cluster
         }
 
         /// <inheritdoc/>
-        public override void AddPostProvisionSteps(SetupController controller)
+        public override void AddPostProvisionSteps(SetupController<NodeDefinition> controller)
         {
         }
 
         /// <inheritdoc/>
-        public override void AddPostVpnSteps(SetupController controller)
+        public override void AddPostVpnSteps(SetupController<NodeDefinition> controller)
         {
         }
 

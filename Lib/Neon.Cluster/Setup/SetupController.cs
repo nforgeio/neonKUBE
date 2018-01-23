@@ -21,7 +21,9 @@ namespace Neon.Cluster
     /// Manages a cluster setup operation consisting of a series of  setup operations
     /// steps, while displaying status to the <see cref="Console"/>.
     /// </summary>
-    public class SetupController
+    /// <typeparam name="NodeMetadata">Specifies the node metadata type.</typeparam>
+    public class SetupController<NodeMetadata>
+        where NodeMetadata : class
     {
         //---------------------------------------------------------------------
         // Private types
@@ -39,8 +41,8 @@ namespace Neon.Cluster
             public string                                   Label;
             public bool                                     Quiet;
             public Action                                   GlobalAction;
-            public Action<SshProxy<NodeDefinition>>         NodeAction;
-            public Func<SshProxy<NodeDefinition>, bool>     Predicate;
+            public Action<SshProxy<NodeMetadata>>           NodeAction;
+            public Func<SshProxy<NodeMetadata>, bool>       Predicate;
             public StepStatus                               Status;
             public bool                                     NoParallelLimit;
         }
@@ -50,7 +52,7 @@ namespace Neon.Cluster
 
         private string                                      operationTitle;
         private string                                      operationStatus;
-        private List<SshProxy<NodeDefinition>>              nodes;
+        private List<SshProxy<NodeMetadata>>                nodes;
         private List<Step>                                  steps;
         private Step                                        currentStep;
         private bool                                        error;
@@ -63,7 +65,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="operationTitle">Summarizes the high-level operation being performed.</param>
         /// <param name="nodes">The node proxies for the cluster nodes being manipulated.</param>
-        public SetupController(string operationTitle, IEnumerable<SshProxy<NodeDefinition>> nodes)
+        public SetupController(string operationTitle, IEnumerable<SshProxy<NodeMetadata>> nodes)
             : this(new string[] { operationTitle }, nodes)
         {
         }
@@ -73,7 +75,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="operationTitle">Summarizes the high-level operation being performed.</param>
         /// <param name="nodes">The node proxies for the cluster nodes being manipulated.</param>
-        public SetupController(string[] operationTitle, IEnumerable<SshProxy<NodeDefinition>> nodes)
+        public SetupController(string[] operationTitle, IEnumerable<SshProxy<NodeMetadata>> nodes)
         {
             var title = string.Empty;
 
@@ -124,12 +126,12 @@ namespace Neon.Cluster
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
         public void AddStep(string stepLabel,
-                            Action<SshProxy<NodeDefinition>> nodeAction,
-                            Func<SshProxy<NodeDefinition>, bool> nodePredicate = null,
+                            Action<SshProxy<NodeMetadata>> nodeAction,
+                            Func<SshProxy<NodeMetadata>, bool> nodePredicate = null,
                             bool quiet = false)
         {
-            nodeAction    = nodeAction ?? new Action<SshProxy<NodeDefinition>>(n => { });
-            nodePredicate = nodePredicate ?? new Func<SshProxy<NodeDefinition>, bool>(n => true);
+            nodeAction    = nodeAction ?? new Action<SshProxy<NodeMetadata>>(n => { });
+            nodePredicate = nodePredicate ?? new Func<SshProxy<NodeMetadata>, bool>(n => true);
 
             steps.Add(
                 new Step()
@@ -152,12 +154,12 @@ namespace Neon.Cluster
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
         public void AddStepNoParallelLimit(string stepLabel,
-                                           Action<SshProxy<NodeDefinition>> nodeAction,
-                                           Func<SshProxy<NodeDefinition>, bool> nodePredicate = null,
+                                           Action<SshProxy<NodeMetadata>> nodeAction,
+                                           Func<SshProxy<NodeMetadata>, bool> nodePredicate = null,
                                            bool quiet = false)
         {
-            nodeAction    = nodeAction ?? new Action<SshProxy<NodeDefinition>>(n => { });
-            nodePredicate = nodePredicate ?? new Func<SshProxy<NodeDefinition>, bool>(n => true);
+            nodeAction    = nodeAction ?? new Action<SshProxy<NodeMetadata>>(n => { });
+            nodePredicate = nodePredicate ?? new Func<SshProxy<NodeMetadata>, bool>(n => true);
 
             steps.Add(
                 new Step()
@@ -199,7 +201,7 @@ namespace Neon.Cluster
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
         /// <param name="timeout">Optionally specifies the maximum time to wait (defaults to <b>10 minutes</b>).</param>
-        public void AddWaitUntilOnlineStep(string stepLabel = "connect", string status = null, Func<SshProxy<NodeDefinition>, bool> nodePredicate = null, bool quiet = false, TimeSpan? timeout = null)
+        public void AddWaitUntilOnlineStep(string stepLabel = "connect", string status = null, Func<SshProxy<NodeMetadata>, bool> nodePredicate = null, bool quiet = false, TimeSpan? timeout = null)
         {
             if (timeout == null)
             {
@@ -228,7 +230,7 @@ namespace Neon.Cluster
         /// or <c>null</c> to select all nodes.
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
-        public void AddDelayStep(string stepLabel, TimeSpan delay, string status = null, Func<SshProxy<NodeDefinition>, bool> nodePredicate = null, bool quiet = false)
+        public void AddDelayStep(string stepLabel, TimeSpan delay, string status = null, Func<SshProxy<NodeMetadata>, bool> nodePredicate = null, bool quiet = false)
         {
             AddStepNoParallelLimit(stepLabel,
                 n =>
@@ -407,13 +409,16 @@ namespace Neon.Cluster
                             // the console output, but this is not worth messing with
                             // right now.
 
-                            var firstManager = nodes
-                                .Where(n => n.Metadata.IsManager)
-                                .OrderBy(n => n.Name)
-                                .First();
+                            if (typeof(NodeMetadata) == typeof(NodeDefinition))
+                            {
+                                var firstManager = nodes
+                                    .Where(n => (n.Metadata as NodeDefinition).IsManager)
+                                    .OrderBy(n => n.Name)
+                                    .First();
 
-                            firstManager.Fault(NeonHelper.ExceptionError(e));
-                            firstManager.LogException(e);
+                                firstManager.Fault(NeonHelper.ExceptionError(e));
+                                firstManager.LogException(e);
+                            }
                         }
 
                         foreach (var node in stepNodes)
@@ -458,7 +463,7 @@ namespace Neon.Cluster
         /// <param name="stepNodeNamesSet">The set of node names participating in the current step.</param>
         /// <param name="node">The node being queried.</param>
         /// <returns>The status prefix.</returns>
-        private string GetStatus(HashSet<string> stepNodeNamesSet, SshProxy<NodeDefinition> node)
+        private string GetStatus(HashSet<string> stepNodeNamesSet, SshProxy<NodeMetadata> node)
         {
             if (stepNodeNamesSet != null && !stepNodeNamesSet.Contains(node.Name))
             {
@@ -568,45 +573,72 @@ namespace Neon.Cluster
 
             if (hasNodeSteps && ShowNodeStatus)
             {
-                if (nodes.First().Metadata != null)
+                // $hack(jeff.lill):
+                //
+                // I'm hardcoding the status display here for two scenarios:
+                //
+                //      1. Configuring cluster nodes with [NodeDefinition] metadata which.
+                //      2. Provisioning cluster nodes on XenServer and remote Hyper-V hosts.
+                //
+                // It would be more flexible to implement some kind of callback to handle this.
+
+                if (typeof(NodeMetadata) == typeof(NodeDefinition))
                 {
-                    if (nodes.Exists(n => n.Metadata.IsManager))
-                    {
-                        sbDisplay.AppendLine();
-                        sbDisplay.AppendLine();
-                        sbDisplay.AppendLine(" Managers:");
-                        sbDisplay.AppendLine(underline);
-                        sbDisplay.AppendLine();
+                    // Configuring cluster nodes with [NodeDefinition] metadata which.
 
-                        foreach (var node in nodes.Where(n => n.Metadata.IsManager))
+                    if (nodes.First().Metadata != null)
+                    {
+                        if (nodes.Exists(n => (n.Metadata as NodeDefinition).IsManager))
                         {
-                            sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
+                            sbDisplay.AppendLine();
+                            sbDisplay.AppendLine();
+                            sbDisplay.AppendLine(" Managers:");
+                            sbDisplay.AppendLine(underline);
+                            sbDisplay.AppendLine();
+
+                            foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsManager))
+                            {
+                                sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
+                            }
+                        }
+
+                        if (nodes.Exists(n => (n.Metadata as NodeDefinition).IsWorker))
+                        {
+                            sbDisplay.AppendLine();
+                            sbDisplay.AppendLine();
+                            sbDisplay.AppendLine(" Workers:");
+                            sbDisplay.AppendLine(underline);
+                            sbDisplay.AppendLine();
+
+                            foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsWorker))
+                            {
+                                sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
+                            }
+                        }
+
+                        if (nodes.Exists(n => (n.Metadata as NodeDefinition).IsPet))
+                        {
+                            sbDisplay.AppendLine();
+                            sbDisplay.AppendLine();
+                            sbDisplay.AppendLine(" Pets:");
+                            sbDisplay.AppendLine(underline);
+                            sbDisplay.AppendLine();
+
+                            foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsPet))
+                            {
+                                sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
+                            }
                         }
                     }
-
-                    if (nodes.Exists(n => n.Metadata.IsWorker))
+                    else
                     {
                         sbDisplay.AppendLine();
                         sbDisplay.AppendLine();
-                        sbDisplay.AppendLine(" Workers:");
+                        sbDisplay.AppendLine(" Nodes:");
                         sbDisplay.AppendLine(underline);
                         sbDisplay.AppendLine();
 
-                        foreach (var node in nodes.Where(n => n.Metadata.IsWorker))
-                        {
-                            sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
-                        }
-                    }
-
-                    if (nodes.Exists(n => n.Metadata.IsPet))
-                    {
-                        sbDisplay.AppendLine();
-                        sbDisplay.AppendLine();
-                        sbDisplay.AppendLine(" Pets:");
-                        sbDisplay.AppendLine(underline);
-                        sbDisplay.AppendLine();
-
-                        foreach (var node in nodes.Where(n => n.Metadata.IsPet))
+                        foreach (var node in nodes)
                         {
                             sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
                         }
@@ -614,16 +646,9 @@ namespace Neon.Cluster
                 }
                 else
                 {
-                    sbDisplay.AppendLine();
-                    sbDisplay.AppendLine();
-                    sbDisplay.AppendLine(" Nodes:");
-                    sbDisplay.AppendLine(underline);
-                    sbDisplay.AppendLine();
+                    // Provisioning cluster nodes on XenServer and remote Hyper-V hosts.
 
-                    foreach (var node in nodes)
-                    {
-                        sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
-                    }
+                    
                 }
             }
 

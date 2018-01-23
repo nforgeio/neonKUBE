@@ -181,7 +181,7 @@ OPTIONS:
             // Perform the setup operations.
 
             var controller = 
-                new SetupController(new string[] { "cluster", "setup", $"[{cluster.Name}]" }, cluster.Nodes)
+                new SetupController<NodeDefinition>(new string[] { "cluster", "setup", $"[{cluster.Name}]" }, cluster.Nodes)
                 {
                     ShowStatus  = !Program.Quiet,
                     MaxParallel = Program.MaxParallel

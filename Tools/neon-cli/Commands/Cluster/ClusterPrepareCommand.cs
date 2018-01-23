@@ -203,7 +203,7 @@ Server Requirements:
             var operation  = $"Preparing [{cluster.Definition.Name}] nodes";
 
             var controller = 
-                new SetupController(operation, cluster.Nodes)
+                new SetupController<NodeDefinition>(operation, cluster.Nodes)
                 {
                     ShowStatus  = !Program.Quiet,
                     MaxParallel = Program.MaxParallel
