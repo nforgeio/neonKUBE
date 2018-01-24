@@ -434,28 +434,6 @@ namespace Neon.Cluster
 
         /// <summary>
         /// <para>
-        /// The <b>/23</b> subnet for the cluster node IP addresses.  All cluster nodes will have
-        /// a NIC attached to this subnet.
-        /// </para>
-        /// <note>
-        /// This property must be configured for the on-premise providers (<see cref="HostingEnvironments.Machine"/>, 
-        /// <see cref="HyperV"/>, and <see cref="XenServer"/>) and is computed automatically by the <b>neon</b> tool when
-        /// provisioning in a cloud environment.
-        /// </note>
-        /// <note>
-        /// For on-premise clusters, the statically assigned IP addresses assigned 
-        /// to the nodes must reside within the this subnet.  For clusters hosted by
-        /// cloud providers, the <b>neon-cli</b> will split this into three subnets:
-        /// <see cref="NodesSubnet"/>, <see cref="CloudVpnSubnet"/> and <see cref="VpnPoolSubnet"/>
-        /// and will automatically assign IP addresses to the virtual machines.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "NodesSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string NodesSubnet { get; set; }
-
-        /// <summary>
-        /// <para>
         /// The cloud VPN server <b>/23</b> subnet.  Cluster managers will have a NIC attached to this subnet 
         /// in addition to one attached to <see cref="NodesSubnet"/>.  These will be reponsible for forwarding
         /// return traffic from the nodes in the <see cref="NodesSubnet"/> back to the VPN clients.
@@ -468,6 +446,32 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "CloudVpnSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string CloudVpnSubnet { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// The subnet where the cluster nodes reside.
+        /// </para>
+        /// <note>
+        /// This property must be configured for the on-premise providers (<see cref="HostingEnvironments.Machine"/>, 
+        /// <see cref="HyperV"/>, and <see cref="XenServer"/>) and is computed automatically by the <b>neon</b> tool when
+        /// provisioning in a cloud environment.
+        /// </note>
+        /// <note>
+        /// For on-premise clusters, the statically assigned IP addresses assigned 
+        /// to the nodes must reside within the this subnet.  The network gateway
+        /// will be assumed to be the second address in this subnet and the broadcast
+        /// address will assumed to be the last address.
+        /// </note>
+        /// <note>
+        /// For clusters hosted by cloud providers, the <b>neon-cli</b> will split this
+        /// into three subnets: <see cref="NodesSubnet"/>, <see cref="CloudVpnSubnet"/> and 
+        /// <see cref="VpnPoolSubnet"/> and will automatically assign IP addresses to the 
+        /// virtual machines.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "NodesSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string NodesSubnet { get; set; }
 
         /// <summary>
         /// <para>

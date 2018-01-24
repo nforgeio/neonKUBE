@@ -299,79 +299,6 @@ namespace Neon.Cluster
         public string VmDisk { get; set; } = null;
 
         /// <summary>
-        /// Validates the node definition.
-        /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
-        [Pure]
-        public void Validate(ClusterDefinition clusterDefinition)
-        {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
-
-            Labels = Labels ?? new NodeLabels(this);
-
-            if (Name == null)
-            {
-                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}] property is required.");
-            }
-
-            if (!ClusterDefinition.IsValidName(Name))
-            {
-                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
-            }
-
-            if (clusterDefinition.Hosting.Environment == HostingEnvironments.Machine)
-            {
-                if (string.IsNullOrEmpty(PrivateAddress))
-                {
-                    throw new ClusterDefinitionException($"Node [{Name}] requires [{nameof(PrivateAddress)}] when hosting in a private facility.");
-                }
-
-                if (!IPAddress.TryParse(PrivateAddress, out var nodeAddress))
-                {
-                    throw new ClusterDefinitionException($"Node [{Name}] has invalid IP address [{PrivateAddress}].");
-                }
-            }
-
-            if (IsManager && clusterDefinition.Hosting.Environment == HostingEnvironments.Machine && clusterDefinition.Vpn.Enabled)
-            {
-                if (!NetHelper.IsValidPort(VpnFrontendPort))
-                {
-                    throw new ClusterDefinitionException($"Manager node [{Name}] has [{nameof(VpnFrontendPort)}={VpnFrontendPort}] which is not a valid network port.");
-                }
-            }
-
-            Labels.Validate(clusterDefinition);
-
-            if (Azure != null)
-            {
-                Azure.Validate(clusterDefinition, this.Name);
-            }
-
-            if (VmMemory != null)
-            {
-                HostingOptions.ValidateVMSize(VmMemory, this.GetType(), nameof(VmMemory));
-            }
-
-            if (VmMinimumMemory != null)
-            {
-                HostingOptions.ValidateVMSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
-            }
-
-            if (VmDisk != null)
-            {
-                HostingOptions.ValidateVMSize(VmDisk, this.GetType(), nameof(VmDisk));
-            }
-
-            // Ensure that any referenced hypervisor host actually exists.
-
-            if (VmHost != null && clusterDefinition.Hosting.VmHosts.FirstOrDefault(h => h.Name.Equals(VmHost, StringComparison.InvariantCultureIgnoreCase)) == null)
-            {
-                throw new ClusterDefinitionException($"Node [{Name}] has [{nameof(VmHost)}={VmHost}] which references a hypervisor host that was not found in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
-            }
-        }
-
-        /// <summary>
         /// Returns the maximum number processors to allocate for this node when
         /// hosted on a hypervisor.
         /// </summary>
@@ -446,6 +373,72 @@ namespace Neon.Cluster
             else
             {
                 return HostingOptions.ValidateVMSize(clusterDefinition.Hosting.VmDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmDisk));
+            }
+        }
+
+        /// <summary>
+        /// Validates the node definition.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
+        [Pure]
+        public void Validate(ClusterDefinition clusterDefinition)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+
+            Labels = Labels ?? new NodeLabels(this);
+
+            if (Name == null)
+            {
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}] property is required.");
+            }
+
+            if (!ClusterDefinition.IsValidName(Name))
+            {
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
+            }
+
+            if (clusterDefinition.Hosting.Environment == HostingEnvironments.Machine)
+            {
+                if (string.IsNullOrEmpty(PrivateAddress))
+                {
+                    throw new ClusterDefinitionException($"Node [{Name}] requires [{nameof(PrivateAddress)}] when hosting in a private facility.");
+                }
+
+                if (!IPAddress.TryParse(PrivateAddress, out var nodeAddress))
+                {
+                    throw new ClusterDefinitionException($"Node [{Name}] has invalid IP address [{PrivateAddress}].");
+                }
+            }
+
+            if (IsManager && clusterDefinition.Hosting.Environment == HostingEnvironments.Machine && clusterDefinition.Vpn.Enabled)
+            {
+                if (!NetHelper.IsValidPort(VpnFrontendPort))
+                {
+                    throw new ClusterDefinitionException($"Manager node [{Name}] has [{nameof(VpnFrontendPort)}={VpnFrontendPort}] which is not a valid network port.");
+                }
+            }
+
+            Labels.Validate(clusterDefinition);
+
+            if (Azure != null)
+            {
+                Azure.Validate(clusterDefinition, this.Name);
+            }
+
+            if (VmMemory != null)
+            {
+                HostingOptions.ValidateVMSize(VmMemory, this.GetType(), nameof(VmMemory));
+            }
+
+            if (VmMinimumMemory != null)
+            {
+                HostingOptions.ValidateVMSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
+            }
+
+            if (VmDisk != null)
+            {
+                HostingOptions.ValidateVMSize(VmDisk, this.GetType(), nameof(VmDisk));
             }
         }
     }

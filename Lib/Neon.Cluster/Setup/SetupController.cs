@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Neon.Cluster.XenServer;
 using Neon.Common;
 
 namespace Neon.Cluster
@@ -645,11 +646,22 @@ namespace Neon.Cluster
                         }
                     }
                 }
-                else
+                else if (typeof(NodeMetadata) == typeof(XenClient))
                 {
                     // Provisioning cluster nodes on XenServer and remote Hyper-V hosts.
 
-                    
+                    sbDisplay.AppendLine();
+                    sbDisplay.AppendLine();
+                    sbDisplay.AppendLine(" XenServers:");
+                    sbDisplay.AppendLine(underline);
+                    sbDisplay.AppendLine();
+
+                    foreach (var node in nodes.OrderBy(n => (n.Metadata as XenClient).Name, StringComparer.InvariantCultureIgnoreCase))
+                    {
+                        var xenHost = node.Metadata as XenClient;
+
+                        sbDisplay.AppendLine($"    {xenHost.Name}{new string(' ', maxNameWidth - xenHost.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
+                    }
                 }
             }
 

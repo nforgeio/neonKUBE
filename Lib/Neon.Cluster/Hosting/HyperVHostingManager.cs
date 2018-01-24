@@ -125,7 +125,7 @@ namespace Neon.Cluster
             //
             //      https://github.com/jefflill/NeonForge/issues/156
 
-            this.forceVmOverwrite = force;
+            this.forceVmOverwrite  = force;
 
             if (IsProvisionNOP)
             {
@@ -200,6 +200,41 @@ namespace Neon.Cluster
         {
             // Note that public endpoints have to be managed manually for
             // on-premise cluster deployments.
+        }
+
+        /// <summary>
+        /// Returns the name to use for naming the virtual machine hosting the node.
+        /// currently, this is the name of the cluster (capitalized) followed by a 
+        /// dash and then the node name.  This convention will help disambiguate
+        /// nodes from multiple clusters.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <returns>The virtual machine name.</returns>
+        private string GetVmName(NodeDefinition node)
+        {
+            return $"{cluster.Definition.Name.ToUpperInvariant()}-{node.Name}";
+        }
+
+        /// <summary>
+        /// Attempts to extract the cluster node name from a virtual machine name.
+        /// </summary>
+        /// <param name="machineName">The virtual machine name.</param>
+        /// <returns>
+        /// The extracted node name if the virtual machine belongs to this 
+        /// cluster or else the empty string.
+        /// </returns>
+        private string ExtractNodeName(string machineName)
+        {
+            var clusterPrefix = $"{cluster.Definition.Name.ToUpperInvariant()}-";
+
+            if (machineName.StartsWith(clusterPrefix))
+            {
+                return machineName.Substring(clusterPrefix.Length);
+            }
+            else
+            {
+                return string.Empty;
+            }
         }
 
         /// <summary>
@@ -393,8 +428,9 @@ namespace Neon.Cluster
 
                 foreach (var machine in existingMachines)
                 {
+                    var nodeName    = ExtractNodeName(machine.Name);
                     var drivePath   = Path.Combine(vmDriveFolder, $"{machine.Name}.vhdx");
-                    var isClusterVM = cluster.FindNode(machine.Name) != null;
+                    var isClusterVM = cluster.FindNode(nodeName) != null;
 
                     if (isClusterVM)
                     {
@@ -402,9 +438,9 @@ namespace Neon.Cluster
                         {
                             if (machine.State != VirtualMachineState.Off)
                             {
-                                cluster.GetNode(machine.Name).Status = "stop virtual machine";
+                                cluster.GetNode(nodeName).Status = "stop virtual machine";
                                 hyperv.StopVM(machine.Name);
-                                cluster.GetNode(machine.Name).Status = string.Empty;
+                                cluster.GetNode(nodeName).Status = string.Empty;
                             }
 
                             // The named machine already exists.  For force mode, we're going to stop and
@@ -422,9 +458,9 @@ namespace Neon.Cluster
                             {
                                 // Remove the machine and recreate it below.
 
-                                cluster.GetNode(machine.Name).Status = "delete virtual machine";
+                                cluster.GetNode(nodeName).Status = "delete virtual machine";
                                 hyperv.RemoveVM(machine.Name);
-                                cluster.GetNode(machine.Name).Status = string.Empty;
+                                cluster.GetNode(nodeName).Status = string.Empty;
                             }
                             else
                             {
@@ -441,7 +477,7 @@ namespace Neon.Cluster
                                 conflicts += ", ";
                             }
 
-                            conflicts += machine.Name;
+                            conflicts += nodeName;
                         }
                     }
                 }
@@ -480,10 +516,12 @@ namespace Neon.Cluster
 
             using (var hyperv = new HyperVClient())
             {
+                var vmName = GetVmName(node.Metadata);
+
                 // Extract the template file contents to the virtual machine's
                 // virtual hard drive file.
 
-                var drivePath = Path.Combine(vmDriveFolder, $"{node.Name}.vhdx");
+                var drivePath = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
 
                 using (var zip = new ZipFile(driveTemplatePath))
                 {
@@ -551,11 +589,11 @@ namespace Neon.Cluster
 
                 // Create the virtual machine if it doesn't already exist.
 
-                if (!hyperv.VMExists(node.Name))
+                if (!hyperv.VMExists(vmName))
                 {
                     node.Status = $"create virtual machine";
                     hyperv.AddVM(
-                        node.Name,
+                        vmName,
                         memorySize: cluster.Definition.Hosting.VmMemory,
                         minimumMemorySize: cluster.Definition.Hosting.VmMinimumMemory,
                         drivePath: drivePath,
@@ -563,7 +601,7 @@ namespace Neon.Cluster
                 }
 
                 node.Status = $"start virtual machine";
-                hyperv.StartVM(node.Name);
+                hyperv.StartVM(vmName);
 
                 // Retrieve the virtual machine's network adapters (there should only be one) 
                 // to obtain the IP address we'll use to SSH into the machine and configure
@@ -571,7 +609,7 @@ namespace Neon.Cluster
 
                 node.Status = $"get ip address";
 
-                var adapters = hyperv.ListVMNetworkAdapters(node.Name, waitForAddresses: true);
+                var adapters = hyperv.ListVMNetworkAdapters(vmName, waitForAddresses: true);
                 var adapter  = adapters.FirstOrDefault();
                 var address  = adapter.Addresses.First();
                 var subnet   = NetworkCidr.Parse(cluster.Definition.Network.NodesSubnet);
@@ -579,7 +617,7 @@ namespace Neon.Cluster
 
                 if (adapter == null)
                 {
-                    throw new HyperVException($"Virtual machine [{node.Name}] has no network adapters.");
+                    throw new HyperVException($"Virtual machine [{vmName}] has no network adapters.");
                 }
 
                 // We're going to temporarily set the node to the current VM address

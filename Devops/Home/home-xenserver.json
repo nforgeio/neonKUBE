@@ -5,10 +5,18 @@
   "TimeSources": [ "pool.ntp.org" ],
   "DebugMode": true,
   "Hosting": {
-    "Environment": "xenserver"
+    "Environment": "xenserver",
+    "VmHostUsername": "root",
+    "VmHostPassword": "Holy.Cow.29",
+    "VmHosts": [
+      {
+        "Name": "XENTEST",
+        "Address": "10.50.0.217"
+      }
+    ]
   },
   "Network": {
-    "NodesSubnet": "10.0.0.0/24"
+    "NodesSubnet": "10.50.0.0/24"
   },
   "Vpn": {
     "Enabled": false
@@ -38,7 +46,11 @@
   "Nodes": {
     "manager-0": {
       "Role": "manager",
-      "PrivateAddress": "10.0.0.35",
+      "PrivateAddress": "10.50.0.50",
+      "VmHost":  "XENTEST",
+      "VmProcessors": 4,
+      "VmMemory": "4GB",
+      "VmDisk": "128GB",
       "Labels": {
         "StorageSSD": true,
         "LogEsData": true

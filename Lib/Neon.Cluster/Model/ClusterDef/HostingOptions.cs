@@ -390,8 +390,8 @@ namespace Neon.Cluster
                 hostAddressSet.Add(vmHost.Address);
             }
 
-            // Ensure that some hypervisor hosts have been specified if  
-            // we're deploying to remote hypervisors.
+            // Ensure that some hypervisor hosts have been specified if we're deploying to remote
+            // hypervisors and also that each node definition specifies a host hyoervisor.
 
             if (remoteHypervisors)
             {
@@ -403,6 +403,19 @@ namespace Neon.Cluster
                 foreach (var vmHost in VmHosts)
                 {
                     vmHost.Validate(clusterDefinition);
+                }
+
+                foreach (var node in clusterDefinition.NodeDefinitions.Values)
+                {
+                    if (string.IsNullOrEmpty(node.VmHost))
+                    {
+                        throw new ClusterDefinitionException($"Node [{node.Name}] does not specify a host hypervisor with [{nameof(NodeDefinition.VmHost)}].");
+                    }
+
+                    if (!hostNameSet.Contains(node.VmHost))
+                    {
+                        throw new ClusterDefinitionException($"Node [{node.Name}] has [{nameof(VmHost)}={node.VmHost}] which specifies a hypervisor host that was not found in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
+                    }
                 }
             }
         }
