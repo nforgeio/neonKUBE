@@ -156,7 +156,7 @@ that the tool requires admin priviledges for direct mode.
 
             ClusterRootFolder  = NeonClusterHelper.GetRootFolder();
             ClusterLoginFolder = NeonClusterHelper.GetLoginFolder();
-            ClusterSetupFolder = NeonClusterHelper.GetSetupFolder();
+            ClusterSetupFolder = NeonClusterHelper.GetVmTemplatesFolder();
             CurrentClusterPath = NeonClusterHelper.CurrentPath;
 
             // We're going to special case the temp folder and locate this within the [/dev/shm] 

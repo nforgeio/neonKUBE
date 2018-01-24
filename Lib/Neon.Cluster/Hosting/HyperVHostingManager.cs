@@ -263,9 +263,10 @@ namespace Neon.Cluster
             //
             // Note that I'm not actually going check for ETAG changes to update
             // the download file.  The reason for this is that I want to avoid the
-            // aituation where a user has provisioned some nodes with one version
+            // situation where the user has provisioned some nodes with one version
             // of the template and then goes on later to provision new nodes with
-            // an updated template.
+            // an updated template.  The [neon cluster setup --remove-templates] 
+            // option is provided to delete any cached templates.
             //
             // This should only be an issue for people using the default "latest"
             // drive template.  Production clusters should reference a specific
@@ -274,9 +275,9 @@ namespace Neon.Cluster
             var driveTemplateUri  = new Uri(cluster.Definition.Hosting.HyperV.HostVhdxUri);
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
-            driveTemplatePath = Path.Combine(NeonClusterHelper.GetSetupFolder(), driveTemplateName);
+            driveTemplatePath = Path.Combine(NeonClusterHelper.GetVmTemplatesFolder(), driveTemplateName);
 
-            var driveTemplateInfoPath  = Path.Combine(NeonClusterHelper.GetSetupFolder(), driveTemplateName + ".info");
+            var driveTemplateInfoPath  = Path.Combine(NeonClusterHelper.GetVmTemplatesFolder(), driveTemplateName + ".info");
             var driveTemplateIsCurrent = true;
             var driveTemplateInfo      = (DriveTemplateInfo)null;
 

@@ -98,7 +98,7 @@ OPTIONS:
 
                 case "setup":
 
-                    path = NeonClusterHelper.GetSetupFolder();
+                    path = NeonClusterHelper.GetVmTemplatesFolder();
                     break;
 
                 case "temp":

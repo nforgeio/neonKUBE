@@ -238,13 +238,13 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns the path to the current user's cluster setup folder, creating
-        /// the directory if it doesn't already exist.
+        /// Returns the path to the current user's cluster virtual machine templates
+        /// folder, creating the directory if it doesn't already exist.
         /// </summary>
         /// <returns>The path to the nenCLUSTER setup folder.</returns>
-        public static string GetSetupFolder()
+        public static string GetVmTemplatesFolder()
         {
-            var path = Path.Combine(GetRootFolder(), "setup");
+            var path = Path.Combine(GetRootFolder(), "vm-templates");
 
             Directory.CreateDirectory(path);
 

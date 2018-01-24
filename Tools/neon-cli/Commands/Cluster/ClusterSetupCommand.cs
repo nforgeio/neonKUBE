@@ -51,9 +51,13 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --unredacted    - Runs Vault commands without redacting logs.  This
-                      is useful for debugging cluster setup issues.  Do
-                      not use for production clusters.
+    --remove-templates  - Removes any cached local virtual machine templates
+                          without actually setting up a cluster.  You can
+                          use this to ensure that the 
+
+    --unredacted        - Runs Vault related commands without redacting logs.
+                          This is useful for debugging cluster setup issues.
+                          Do not use for production clusters.
 ";
         private string              clusterLoginPath;
         private ClusterLogin        clusterLogin;
@@ -72,7 +76,7 @@ OPTIONS:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--unredacted" }; }
+            get { return new string[] { "--remove-templates", "--unredacted" }; }
         }
 
         /// <inheritdoc/>
@@ -90,6 +94,18 @@ OPTIONS:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
+            if (commandLine.HasOption("--remove-templates"))
+            {
+                Console.WriteLine("Removing cached virtual machine templates.");
+
+                foreach (var fileName in Directory.GetFiles(NeonClusterHelper.GetVmTemplatesFolder(), "*.*", SearchOption.TopDirectoryOnly))
+                {
+                    File.Delete(fileName);
+                }
+
+                Program.Exit(0);
+            }
+
             if (Program.ClusterLogin != null)
             {
                 Console.Error.WriteLine("*** ERROR: You are logged into a cluster.  You need to logout before setting up another.");
@@ -428,6 +444,13 @@ OPTIONS:
         public override ShimInfo Shim(DockerShim shim)
         {
             var commandLine = shim.CommandLine.Shift(Words.Length);
+
+            if (commandLine.HasOption("--remove-templates"))
+            {
+                // We'll run the command in [--direct] mode for this option.
+
+                return new ShimInfo(isShimmed: false);
+            }
 
             if (Program.ClusterLogin != null)
             {
