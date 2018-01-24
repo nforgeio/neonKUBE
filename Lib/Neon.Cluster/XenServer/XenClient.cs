@@ -60,11 +60,12 @@ namespace Neon.Cluster.XenServer
         /// <param name="addressOrFQDN">The target XenServer IP address or FQDN.</param>
         /// <param name="username">The user name.</param>
         /// <param name="password">The password.</param>
+        /// <param name="name">Optionally specifies the XenServer name.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public XenClient(string addressOrFQDN, string username, string password, string logFolder = null)
+        public XenClient(string addressOrFQDN, string username, string password, string name = null, string logFolder = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
 
@@ -84,11 +85,16 @@ namespace Neon.Cluster.XenServer
 
             if (!string.IsNullOrEmpty(logFolder))
             {
+                Directory.CreateDirectory(logFolder);
+
                 logWriter = new StreamWriter(Path.Combine(logFolder, $"XENSERVER-{addressOrFQDN}.log"));
             }
 
-            SshProxy   = new SshProxy<object>(addressOrFQDN, null, address, SshCredentials.FromUserPassword(username, password), logWriter);
-            runOptions = RunOptions.IgnoreRemotePath;
+            Address           = addressOrFQDN;
+            Name              = name;
+            SshProxy          = new SshProxy<XenClient>(addressOrFQDN, null, address, SshCredentials.FromUserPassword(username, password), logWriter);
+            SshProxy.Metadata = this;
+            runOptions        = RunOptions.IgnoreRemotePath;
 
             // Initialize the operation classes.
 
@@ -110,9 +116,19 @@ namespace Neon.Cluster.XenServer
         }
 
         /// <summary>
+        /// Returns the XenServer name as passed to the constructor.
+        /// </summary>
+        public string Name { get; private set; }
+
+        /// <summary>
+        /// Returns the address or FQDN of the remote XenServer.
+        /// </summary>
+        public string Address { get; private set; }
+
+        /// <summary>
         /// Returns the SSH proxy for the XenServer host.
         /// </summary>
-        public SshProxy<object> SshProxy { get; private set; }
+        public SshProxy<XenClient> SshProxy { get; private set; }
 
         /// <summary>
         /// Implements the XenServer storage repository operations.

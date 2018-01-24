@@ -4,6 +4,7 @@
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
+using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 
@@ -51,9 +52,9 @@ namespace Neon.Cluster
         /// Names the XenServer template to be used when creating neonCLUSTER nodes.  This defaults
         /// to <b>neon-template</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "Template", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "TemplateName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultTemplate)]
-        public string Template { get; set; } = defaultTemplate;
+        public string TemplateName { get; set; } = defaultTemplate;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -67,7 +68,7 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
             HostXvaUri = HostXvaUri ?? defaultHostXvaUri;
-            Template   = Template ?? defaultTemplate;
+            TemplateName   = TemplateName ?? defaultTemplate;
 
             if (!clusterDefinition.Network.StaticIP)
             {
@@ -79,8 +80,8 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"[{nameof(XenServerOptions)}.{nameof(HostXvaUri)}] is required when deploying to XenServer.");
             }
 
-            clusterDefinition.ValidatePrivateNodeAddresses();                   // Private node IP addresses must be assigned and valid.
-            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition);    // Hypervisor options must be valid.
+            clusterDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.
+            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition, remoteHypervisors: true);   // Hypervisor options must be valid.
         }
     }
 }

@@ -580,7 +580,8 @@ namespace Neon.Cluster
                 //      1. Configuring cluster nodes with [NodeDefinition] metadata which.
                 //      2. Provisioning cluster nodes on XenServer and remote Hyper-V hosts.
                 //
-                // It would be more flexible to implement some kind of callback to handle this.
+                // It would be more flexible to implement some kind of callback or virtual
+                // method to handle this.
 
                 if (typeof(NodeMetadata) == typeof(NodeDefinition))
                 {

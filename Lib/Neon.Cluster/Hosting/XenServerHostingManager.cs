@@ -64,9 +64,10 @@ namespace Neon.Cluster
         //---------------------------------------------------------------------
         // Implementation
 
-        private ClusterProxy                    cluster;
-        private SetupController<NodeDefinition> controller;
-        private Dictionary<string, XenClient>   xenHosts;
+        private ClusterProxy                cluster;
+        private string                      logFolder;
+        private List<XenClient>             xenHosts;
+        private SetupController<XenClient>  controller;
 
         /// <summary>
         /// Constructor.
@@ -80,36 +81,36 @@ namespace Neon.Cluster
         {
             this.cluster                = cluster;
             this.cluster.HostingManager = this;
-            this.xenHosts               = new Dictionary<string, XenClient>();
+            this.logFolder              = logFolder;
 
             // $todo(jeff.lill): DELETE THIS --------------------------
 
             //using (var xenClient = new XenClient("10.50.0.217", "root", ""))
             //{
-            //    xenClient.Template.Destroy(xenClient.Template.Find("neon-template"));
+                //xenClient.Template.Destroy(xenClient.Template.Find("neon-template"));
 
-            //    var repos     = xenClient.StorageRepository.List();
-            //    var template  = xenClient.Template.Install("http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva", "neon-template");
-            //    var templates = xenClient.Template.List();
+                //var repos     = xenClient.StorageRepository.List();
+                //var template  = xenClient.Template.Install("http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva", "neon-template");
+                //var templates = xenClient.Template.List();
 
-            //    var vm = xenClient.VirtualMachine.Install("myVM", "neon-template", memoryBytes: NeonHelper.Giga, diskBytes: 25L * NeonHelper.Giga);
+                //var vm = xenClient.VirtualMachine.Install("myVM", "neon-template", processors: 2, memoryBytes: NeonHelper.Giga, diskBytes: 25L * NeonHelper.Giga);
 
-            //    vm = xenClient.VirtualMachine.Find("myVM");
+                //vm = xenClient.VirtualMachine.Find("myVM");
 
-            //    if (vm.IsRunning)
-            //    {
-            //        xenClient.VirtualMachine.Shutdown(vm);
-            //    }
+                //if (vm.IsRunning)
+                //{
+                //    xenClient.VirtualMachine.Shutdown(vm);
+                //}
 
-            //    vm = xenClient.VirtualMachine.Find("myVM");
+                //vm = xenClient.VirtualMachine.Find("myVM");
 
-            //    xenClient.VirtualMachine.Start(vm);
+                //xenClient.VirtualMachine.Start(vm);
 
-            //    vm = xenClient.VirtualMachine.Find("myVM");
+                //vm = xenClient.VirtualMachine.Find("myVM");
 
-            //    xenClient.VirtualMachine.Shutdown(vm);
+                //xenClient.VirtualMachine.Shutdown(vm);
 
-            //    vm = xenClient.VirtualMachine.Find("myVM");
+                //vm = xenClient.VirtualMachine.Find("myVM");
             //}
 
             //---------------------------------------------------------
@@ -120,10 +121,12 @@ namespace Neon.Cluster
         {
             if (xenHosts != null)
             {
-                foreach (var xenHost in xenHosts.Values)
+                foreach (var xenHost in xenHosts)
                 {
                     xenHost.Dispose();
                 }
+
+                xenHosts = null;
             }
 
             if (disposing)
@@ -159,19 +162,45 @@ namespace Neon.Cluster
                 return true;
             }
 
+            // Build a list of [SshProxy] instances that map to the specified XenServer
+            // hosts.  We'll use the [XenClient] instances as proxy metadata.
+
+            var sshProxies = new List<SshProxy<XenClient>>();
+
+            xenHosts = new List<XenClient>();
+
+            foreach (var host in cluster.Definition.Hosting.VmHosts)
+            {
+                var hostAddress  = host.Address;
+                var hostName     = host.Name;
+                var hostUsername = host.Username ?? cluster.Definition.Hosting.VmHostUsername;
+                var hostPassword = host.Password ?? cluster.Definition.Hosting.VmHostPassword;
+
+                if (string.IsNullOrEmpty(hostName))
+                {
+                    hostName = host.Address;
+                }
+
+                var xenHost = new XenClient(hostAddress, hostUsername, hostPassword, name: host.Name, logFolder: logFolder);
+
+                xenHosts.Add(xenHost);
+                sshProxies.Add(xenHost.SshProxy);
+            }
+
             // We're going to provision the XenServer hosts in parallel to
             // speed up cluster setup.  This works because each XenServer
             // is essentially independent from the others.
-            
-            // Initialize and perform the provisioning operations.
 
-            controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
+            controller = new SetupController<XenClient>($"Provisioning [{cluster.Definition.Name}] cluster", sshProxies)
             {
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = this.MaxParallel
             };
 
-            //controller.AddStep("create virtual machines", n => ProvisionVM(n));
+            controller.AddStep("connect", sshProxy => Connect(sshProxy));
+            controller.AddStep("verify readiness", sshProxy => VerifyReadiness(sshProxy));
+            controller.AddStep("virtual machine template", sshProxy => CheckVmTemplate(sshProxy));
+            controller.AddStep("provision virtual machines", sshProxy => ProvisionVirtualMachines(sshProxy));
 
             if (!controller.Run())
             {
@@ -180,6 +209,109 @@ namespace Neon.Cluster
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Returns the list of <see cref="NodeDefinition"/> instances describing which cluster
+        /// nodes are to be hosted by a specific XenServer.
+        /// </summary>
+        /// <param name="xenHost">The target XenServer.</param>
+        /// <returns>The list of nodes to be hosted on the XenServer.</returns>
+        private List<NodeDefinition> GetHostedNodes(XenClient xenHost)
+        {
+            var nodeDefinitions = cluster.Definition.NodeDefinitions.Values;
+
+            return nodeDefinitions.Where(n => n.VmHost.Equals(xenHost.Name))
+                .OrderBy(n => n.Name)
+                .ToList();
+        }
+
+        /// <summary>
+        /// Connect to the XenServer.
+        /// </summary>
+        /// <param name="sshProxy">The XenServer SSH proxy.</param>
+        private void Connect(SshProxy<XenClient> sshProxy)
+        {
+            sshProxy.Status = "connecting";
+            sshProxy.Connect();
+        }
+
+        /// <summary>
+        /// Verify that the XenServer is ready to provision the cluster virtual machines.
+        /// </summary>
+        /// <param name="sshProxy">The XenServer SSH proxy.</param>
+        private void VerifyReadiness(SshProxy<XenClient> sshProxy)
+        {
+            // $todo(jeff.lill):
+            //
+            // It would be nice to verify that XenServer actually has enough 
+            // resources (RAM, DISK, and perhaps CPU) here as well.
+
+            var xenHost = sshProxy.Metadata;
+            var nodes   = GetHostedNodes(xenHost);
+
+            sshProxy.Status = "checking virtual machine conflicts";
+
+            var vmNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var vm in xenHost.VirtualMachine.List())
+            {
+                vmNames.Add(vm.NameLabel);
+            }
+
+            foreach (var hostedNode in nodes)
+            {
+                if (vmNames.Contains(hostedNode.Name))
+                {
+                    sshProxy.Fault($"XenServer [{xenHost.Name}] is already hosting a virtual machine named [{hostedNode.Name}].");
+                    return;
+                }
+            }
+        }
+
+        /// <summary>
+        /// Install the virtual machine template on the XenServer if it's not already present.
+        /// </summary>
+        /// <param name="sshProxy">The XenServer SSH proxy.</param>
+        private void CheckVmTemplate(SshProxy<XenClient> sshProxy)
+        {
+            var xenHost      = sshProxy.Metadata;
+            var templateName = cluster.Definition.Hosting.XenServer.TemplateName;
+
+            sshProxy.Status = "check virtual machine template";
+
+            if (xenHost.Template.Find(templateName) == null)
+            {
+                sshProxy.Status = "install virtual machine template";
+                xenHost.Template.Install(cluster.Definition.Hosting.XenServer.HostXvaUri, templateName);
+            }
+        }
+
+        /// <summary>
+        /// Provision the virtual machines on the XenServer.
+        /// </summary>
+        /// <param name="sshProxy">The XenServer SSH proxy.</param>
+        private void ProvisionVirtualMachines(SshProxy<XenClient> sshProxy)
+        {
+            var xenHost = sshProxy.Metadata;
+
+            foreach (var node in GetHostedNodes(xenHost))
+            {
+                var processors  = node.GetVmProcessors(cluster.Definition);
+                var memoryBytes = node.GetVmMemory(cluster.Definition);
+                var diskBytes   = node.GetVmDisk(cluster.Definition);
+
+                sshProxy.Status = $"creating: {node.Name}";
+
+                var vm = xenHost.VirtualMachine.Install(node.Name, cluster.Definition.Hosting.XenServer.TemplateName,
+                    processors: processors, 
+                    memoryBytes: memoryBytes, 
+                    diskBytes: diskBytes);
+
+                sshProxy.Status = $"starting: {node.Name}";
+
+                xenHost.VirtualMachine.Start(vm);
+            }
         }
 
         /// <inheritdoc/>

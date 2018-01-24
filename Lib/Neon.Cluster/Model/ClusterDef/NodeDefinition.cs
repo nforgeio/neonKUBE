@@ -249,14 +249,9 @@ namespace Neon.Cluster
         public AzureNodeOptions Azure { get; set; }
 
         /// <summary>
-        /// <para>
         /// Identifies the hypervisor instance where this node is to be provisioned for Hyper-V
-        /// or XenServer based clusters.  This name must map to one of the <see cref="HostingOptions.VmHosts"/>
+        /// or XenServer based clusters.  This name must map to the name of one of the <see cref="HostingOptions.VmHosts"/>
         /// when set.
-        /// </para>
-        /// <note>
-        /// Hypervisor host names are case sensitive.
-        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VmHost", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -264,11 +259,11 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Specifies the number of processors to assigned to this node when provisioned on a hypervisor.  This
-        /// defaults to the value specified by <see cref="HostingOptions.VmCores"/>.
+        /// defaults to the value specified by <see cref="HostingOptions.VmProcessors"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "VmCores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "VmProcessors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(0)]
-        public int VmCores { get; set; } = 0;
+        public int VmProcessors { get; set; } = 0;
 
         /// <summary>
         /// Specifies the maximum amount of memory to allocate to this node when provisioned on a hypervisor.  
@@ -368,32 +363,29 @@ namespace Neon.Cluster
                 HostingOptions.ValidateVMSize(VmDisk, this.GetType(), nameof(VmDisk));
             }
 
-            // Ensure that any specified hypervisor host actually exists.
+            // Ensure that any referenced hypervisor host actually exists.
 
-            if (VmHost != null)
+            if (VmHost != null && clusterDefinition.Hosting.VmHosts.FirstOrDefault(h => h.Name.Equals(VmHost, StringComparison.InvariantCultureIgnoreCase)) == null)
             {
-                if (!clusterDefinition.Hosting.VmHosts.TryGetValue(VmHost, out var vmHost))
-                {
-                    throw new ClusterDefinitionException($"Node [{Name}] has [{nameof(VmHost)}={VmHost}] which references a hypervisor host that was not specified in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
-                }
+                throw new ClusterDefinitionException($"Node [{Name}] has [{nameof(VmHost)}={VmHost}] which references a hypervisor host that was not found in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
             }
         }
 
         /// <summary>
-        /// Returns the maximum number processor cores allocate to for this node when
+        /// Returns the maximum number processors to allocate for this node when
         /// hosted on a hypervisor.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The number of cores.</returns>
-        internal long GetVmCores(ClusterDefinition clusterDefinition)
+        internal int GetVmProcessors(ClusterDefinition clusterDefinition)
         {
-            if (VmCores != 0)
+            if (VmProcessors != 0)
             {
-                return VmCores;
+                return VmProcessors;
             }
             else
             {
-                return clusterDefinition.Hosting.VmCores;
+                return clusterDefinition.Hosting.VmProcessors;
             }
         }
 

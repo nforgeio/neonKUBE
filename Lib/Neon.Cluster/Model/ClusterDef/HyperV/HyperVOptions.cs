@@ -64,8 +64,8 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"[{nameof(HyperVOptions)}.{nameof(HostVhdxUri)}] is required when deploying to Hyper-V.");
             }
 
-            clusterDefinition.ValidatePrivateNodeAddresses();                   // Private node IP addresses must be assigned and valid.
-            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition);    // Hypervisor options must be valid.
+            clusterDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.
+            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition, remoteHypervisors: false);  // Hypervisor options must be valid.
         }
     }
 }

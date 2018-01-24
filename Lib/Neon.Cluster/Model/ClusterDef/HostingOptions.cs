@@ -144,16 +144,11 @@ namespace Neon.Cluster
         public XenServerOptions XenServer { get; set; } = null;
 
         /// <summary>
-        /// <para>
         /// Optionally identifies the target Hyper-V or XenServer hypervisor machines.
-        /// </para>
-        /// <note>
-        /// Hypervisor names are case-sensitive.
-        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VmHosts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public Dictionary<string, VmHost> VmHosts = new Dictionary<string, VmHost>();
+        public List<VmHost> VmHosts = new List<VmHost>();
 
         /// <summary>
         /// <para>
@@ -179,9 +174,9 @@ namespace Neon.Cluster
         /// <summary>
         /// The number of virtual processors to assign to each virtual machine.
         /// </summary>
-        [JsonProperty(PropertyName = "VmCores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "VmProcessors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(4)]
-        public int VmCores { get; set; } = 4;
+        public int VmProcessors { get; set; } = 4;
 
         /// <summary>
         /// Specifies the maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
@@ -349,24 +344,67 @@ namespace Neon.Cluster
         /// Validates the Hypervisor related options.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="remoteHypervisors">
+        /// Indicates that we're going to be deploying to remote hypervisor
+        /// host machines as opposed to the local workstation.
+        /// </param>
         /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        internal void ValidateHypervisor(ClusterDefinition clusterDefinition)
+        internal void ValidateHypervisor(ClusterDefinition clusterDefinition, bool remoteHypervisors)
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
-            if (VmCores <= 0)
+            if (VmProcessors <= 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(HyperVOptions)}.{nameof(VmCores)}={VmCores}] must be positive.");
+                throw new ClusterDefinitionException($"[{nameof(HyperVOptions)}.{nameof(VmProcessors)}={VmProcessors}] must be positive.");
             }
 
             VmMemory        = VmMemory ?? DefaultVmMemory;
             VmMinimumMemory = VmMinimumMemory ?? VmMemory;
             VmDisk          = VmDisk ?? DefaultVmMinimumMemory;
+            VmHosts         = VmHosts ?? new List<VmHost>();
 
             HostingOptions.ValidateVMSize(VmMemory, this.GetType(), nameof(VmMemory));
             HostingOptions.ValidateVMSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
             HostingOptions.ValidateVMSize(VmDisk, this.GetType(), nameof(VmDisk));
+
+            // Verify that the hypervisor host machines have unique names and addresses.
+
+            var hostNameSet    = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            var hostAddressSet = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var vmHost in clusterDefinition.Hosting.VmHosts)
+            {
+                if (hostNameSet.Contains(vmHost.Name))
+                {
+                    throw new ClusterDefinitionException($"One or more hypervisor hosts are assigned the [{vmHost.Name}] name.");
+                }
+
+                hostNameSet.Add(vmHost.Name);
+
+                if (hostAddressSet.Contains(vmHost.Address))
+                {
+                    throw new ClusterDefinitionException($"One or more hypervisor hosts are assigned the [{vmHost.Address}] address.");
+                }
+
+                hostAddressSet.Add(vmHost.Address);
+            }
+
+            // Ensure that some hypervisor hosts have been specified if  
+            // we're deploying to remote hypervisors.
+
+            if (remoteHypervisors)
+            {
+                if (clusterDefinition.Hosting.VmHosts.Count == 0)
+                {
+                    throw new ClusterDefinitionException($"At least one host XenServer must be specified in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
+                }
+
+                foreach (var vmHost in VmHosts)
+                {
+                    vmHost.Validate(clusterDefinition);
+                }
+            }
         }
 
         /// <summary>
