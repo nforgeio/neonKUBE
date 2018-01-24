@@ -137,6 +137,7 @@ namespace Neon.Cluster
                         }
 
                         clusterDefinition.Validate();
+
                         return clusterDefinition;
                     }
                 }
