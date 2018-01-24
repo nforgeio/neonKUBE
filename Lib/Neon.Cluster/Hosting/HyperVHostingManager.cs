@@ -602,6 +602,7 @@ namespace Neon.Cluster
                 }
 
                 node.Status = $"start virtual machine";
+
                 hyperv.StartVM(vmName);
 
                 // Retrieve the virtual machine's network adapters (there should only be one) 
