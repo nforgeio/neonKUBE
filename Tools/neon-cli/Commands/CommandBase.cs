@@ -48,9 +48,9 @@ namespace NeonCli
         }
 
         /// <inheritdoc/>
-        public virtual bool NeedsCommandCredentials
+        public virtual bool NeedsSshCredentials(CommandLine commandLine)
         {
-            get { return false; }
+            return false;
         }
 
         /// <inheritdoc/>

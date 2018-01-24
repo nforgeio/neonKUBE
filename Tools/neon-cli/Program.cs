@@ -567,7 +567,7 @@ that the tool requires admin priviledges for direct mode.
 
                 // Run the command.
 
-                if (command.NeedsCommandCredentials)
+                if (command.NeedsSshCredentials(CommandLine))
                 {
                     if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrEmpty(Password))
                     {

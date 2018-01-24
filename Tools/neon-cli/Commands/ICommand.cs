@@ -63,7 +63,8 @@ namespace NeonCli
         /// options vs. obtaining them from the currently logged in cluster secrets or
         /// not needing credentials at all.
         /// </summary>
-        bool NeedsCommandCredentials { get; }
+        /// <param name="commandLine">The command line.</param>
+        bool NeedsSshCredentials(CommandLine commandLine);
 
         /// <summary>
         /// Returns the item used to split a command line into two parts with
@@ -114,11 +115,16 @@ namespace NeonCli
         public string[]     AltWords { get; }
         public string[]     ExtendedOptions { get; }
         public bool         CheckOptions { get; }
-        public bool         NeedsCommandCredentials { get; }
         public string       SplitItem { get; }
 
         public void Help()
         {
+        }
+
+        public bool NeedsSshCredentials(CommandLine commandLine)
+        {
+            Covenant.Requires<ArgumentNullException>(commandLine != null);
+            return false;
         }
 
         public void Run(CommandLine commandLine)

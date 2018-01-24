@@ -80,9 +80,9 @@ OPTIONS:
         }
 
         /// <inheritdoc/>
-        public override bool NeedsCommandCredentials
+        public override bool NeedsSshCredentials(CommandLine commandLine)
         {
-            get { return true; }
+            return !commandLine.HasOption("--remove-templates");
         }
 
         /// <inheritdoc/>
