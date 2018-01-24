@@ -108,7 +108,7 @@ namespace Neon.Cluster.XenServer
                     throw new ArgumentException($"[{uri}] is not a valid URI");
                 }
 
-                var sr = client.StorageRepository.GetTargetStorageRepository(repositoryNameOrUuid);
+                var sr = client.Repository.GetTargetStorageRepository(repositoryNameOrUuid);
 
                 if (uriParsed.Scheme != "http" && uriParsed.Scheme != "ftp")
                 {

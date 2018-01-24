@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    XenClient.VirtualMachine.cs
+// FILE:	    XenClient.Machine.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -24,9 +24,9 @@ namespace Neon.Cluster.XenServer
     public partial class XenClient
     {
         /// <summary>
-        /// Implements the <see cref="XenClient"/> virtual machine template operations.
+        /// Implements the <see cref="XenClient"/> virtual machine operations.
         /// </summary>
-        public class StorageVirtualMachineOperations
+        public class MachineOperations
         {
             private XenClient client;
 
@@ -34,7 +34,7 @@ namespace Neon.Cluster.XenServer
             /// Constructor.
             /// </summary>
             /// <param name="client">The XenServer client instance.</param>
-            internal StorageVirtualMachineOperations(XenClient client)
+            internal MachineOperations(XenClient client)
             {
                 this.client = client;
             }
@@ -75,11 +75,11 @@ namespace Neon.Cluster.XenServer
 
                 if (!string.IsNullOrWhiteSpace(name))
                 {
-                    return client.VirtualMachine.List().FirstOrDefault(item => item.NameLabel == name);
+                    return client.Machine.List().FirstOrDefault(item => item.NameLabel == name);
                 }
                 else if (!string.IsNullOrWhiteSpace(uuid))
                 {
-                    return client.VirtualMachine.List().FirstOrDefault(item => item.Uuid == uuid);
+                    return client.Machine.List().FirstOrDefault(item => item.Uuid == uuid);
                 }
                 else
                 {
@@ -154,7 +154,7 @@ namespace Neon.Cluster.XenServer
                     client.SafeInvoke("vdi-resize", $"uuid={vdiUuid}", $"disk-size={diskBytes}");
                 }
 
-                return client.VirtualMachine.Find(uuid: uuid);
+                return client.Machine.Find(uuid: uuid);
             }
 
             /// <summary>

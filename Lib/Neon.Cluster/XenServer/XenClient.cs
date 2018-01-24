@@ -40,6 +40,11 @@ namespace Neon.Cluster.XenServer
     /// with XenServer.  We're going to take advantage of the <see cref="SshProxy{TMetadata}"/>
     /// class to handle the SSH connection and command execution.
     /// </para>
+    /// <para>
+    /// XenServer template operations are implemented by the <see cref="Template"/>
+    /// property, storage repository operations by <see cref="Repository"/> and
+    /// virtual machine operations by <see cref="Machine"/>.
+    /// </para>
     /// </remarks>
     /// <threadsafety instance="false"/>
     public sealed partial class XenClient : IDisposable
@@ -98,9 +103,9 @@ namespace Neon.Cluster.XenServer
 
             // Initialize the operation classes.
 
-            StorageRepository = new StorageRepositoryOperations(this);
-            Template          = new TemplateOperations(this);
-            VirtualMachine    = new StorageVirtualMachineOperations(this);
+            Repository = new RepositoryOperations(this);
+            Template   = new TemplateOperations(this);
+            Machine    = new MachineOperations(this);
         }
 
         /// <summary>
@@ -133,7 +138,7 @@ namespace Neon.Cluster.XenServer
         /// <summary>
         /// Implements the XenServer storage repository operations.
         /// </summary>
-        public StorageRepositoryOperations StorageRepository { get; private set; }
+        public RepositoryOperations Repository { get; private set; }
 
         /// <summary>
         /// Implements the XenServer virtual machine template operations.
@@ -143,7 +148,7 @@ namespace Neon.Cluster.XenServer
         /// <summary>
         /// Implements the XenServer virtual machine operations.
         /// </summary>
-        public StorageVirtualMachineOperations VirtualMachine { get; private set; }
+        public MachineOperations Machine { get; private set; }
 
         /// <summary>
         /// Verifies that that the instance hasn't been disposed.

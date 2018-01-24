@@ -211,7 +211,7 @@ namespace Neon.Cluster
 
             var vmNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var vm in xenHost.VirtualMachine.List())
+            foreach (var vm in xenHost.Machine.List())
             {
                 vmNames.Add(vm.NameLabel);
             }
@@ -263,14 +263,14 @@ namespace Neon.Cluster
 
                 sshProxy.Status = $"create: {vmName}";
 
-                var vm = xenHost.VirtualMachine.Install(vmName, cluster.Definition.Hosting.XenServer.TemplateName,
+                var vm = xenHost.Machine.Install(vmName, cluster.Definition.Hosting.XenServer.TemplateName,
                     processors: processors,
                     memoryBytes: memoryBytes,
                     diskBytes: diskBytes);
 
                 sshProxy.Status = $"start: {vmName}";
 
-                xenHost.VirtualMachine.Start(vm);
+                xenHost.Machine.Start(vm);
 
                 // We need to wait for the virtual machine to start and obtain
                 // and IP address via DHCP.
@@ -286,7 +286,7 @@ namespace Neon.Cluster
                         {
                             while (true)
                             {
-                                vm = xenHost.VirtualMachine.Find(vmName);
+                                vm = xenHost.Machine.Find(vmName);
 
                                 if (!string.IsNullOrEmpty(vm.Address))
                                 {
