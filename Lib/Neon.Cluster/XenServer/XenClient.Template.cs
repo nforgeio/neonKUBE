@@ -92,22 +92,23 @@ namespace Neon.Cluster.XenServer
             /// </summary>
             /// <param name="uri">The HTTP or FTP URI for the template file.</param>
             /// <param name="name">The optional template name.</param>
-            /// <param name="sr">Optionally specifies the target storage repository.  This defaults to <b>Local storage</b>.</param>
+            /// <param name="repositoryNameOrUuid">
+            /// Optionally specifies the target storage repository by name or UUID.  
+            /// This defaults to <b>Local storage</b>.
+            /// </param>
             /// <returns>The installed template.</returns>
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
-            public XenTemplate Install(string uri, string name = null, XenStorageRepository sr = null)
+            public XenTemplate Install(string uri, string name = null, string repositoryNameOrUuid = "Local storage")
             {
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(uri));
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(repositoryNameOrUuid));
 
                 if (!Uri.TryCreate(uri, UriKind.Absolute, out var uriParsed))
                 {
                     throw new ArgumentException($"[{uri}] is not a valid URI");
                 }
 
-                if (sr == null)
-                {
-                    sr = client.StorageRepository.GetLocal();
-                }
+                var sr = client.StorageRepository.GetTargetStorageRepository(repositoryNameOrUuid);
 
                 if (uriParsed.Scheme != "http" && uriParsed.Scheme != "ftp")
                 {

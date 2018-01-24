@@ -86,25 +86,23 @@ namespace Neon.Cluster.XenServer
             }
 
             /// <summary>
-            /// Returns the local XenServer storage repository.
+            /// Returns the XenServer storage repository where the image template and 
+            /// virtual machine disk images will be stored.
             /// </summary>
+            /// <param name="nameOrUuid">The storage repository name or UUID.</param>
             /// <returns>The local storage repository.</returns>
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
-            public XenStorageRepository GetLocal()
+            public XenStorageRepository GetTargetStorageRepository(string nameOrUuid)
             {
-                // We're going to first look for a repo named "Local storage"
-                // and if that doesn't exist, we'll return the first SR with
-                // type==lvm.
-
                 var repos = List();
-                var sr    = repos.FirstOrDefault(item => item.NameLabel == "Local storage");
+                var sr    = repos.FirstOrDefault(item => item.NameLabel == nameOrUuid);
 
                 if (sr != null)
                 {
                     return sr;
                 }
 
-                sr = repos.FirstOrDefault(item => item.Type == "lvm");
+                sr = repos.FirstOrDefault(item => item.Uuid == nameOrUuid);
 
                 if (sr != null)
                 {
@@ -112,7 +110,7 @@ namespace Neon.Cluster.XenServer
                 }
                 else
                 {
-                    throw new XenException("Cannot find the [Local storage] repository.");
+                    throw new XenException($"Cannot find the [{nameOrUuid}] storage repository on the [{client.Address}] XenServer.");
                 }
             }
         }

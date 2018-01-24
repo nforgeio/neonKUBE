@@ -18,8 +18,9 @@ namespace Neon.Cluster
     /// </summary>
     public class XenServerOptions
     {
-        private const string defaultHostXvaUri = "http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva";
-        private const string defaultTemplate   = "neon-template";
+        private const string defaultHostXvaUri        = "http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva";
+        private const string defaultTemplate          = "neon-template";
+        private const string defaultStorageRepository = "Local storage";
 
         /// <summary>
         /// Default constructor.
@@ -57,6 +58,15 @@ namespace Neon.Cluster
         public string TemplateName { get; set; } = defaultTemplate;
 
         /// <summary>
+        /// Identifies the XenServer storage repository to be used to store the XenServer
+        /// node template as well as the cluster virtual machine images.  This may be the
+        /// name of the target repository or its UUID.  This defaults to <b>Local storage</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "StorageRepository", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultStorageRepository)]
+        public string StorageRepository { get; set; } = defaultStorageRepository;
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -67,8 +77,9 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
-            HostXvaUri = HostXvaUri ?? defaultHostXvaUri;
-            TemplateName   = TemplateName ?? defaultTemplate;
+            HostXvaUri        = HostXvaUri ?? defaultHostXvaUri;
+            TemplateName      = TemplateName ?? defaultTemplate;
+            StorageRepository = StorageRepository ?? defaultStorageRepository;
 
             if (!clusterDefinition.Network.StaticIP)
             {
@@ -78,6 +89,11 @@ namespace Neon.Cluster
             if (string.IsNullOrEmpty(HostXvaUri) || !Uri.TryCreate(HostXvaUri, UriKind.Absolute, out Uri uri))
             {
                 throw new ClusterDefinitionException($"[{nameof(XenServerOptions)}.{nameof(HostXvaUri)}] is required when deploying to XenServer.");
+            }
+
+            if (string.IsNullOrEmpty(StorageRepository))
+            {
+                throw new ClusterDefinitionException($"[{nameof(XenServerOptions)}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
             }
 
             clusterDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.
