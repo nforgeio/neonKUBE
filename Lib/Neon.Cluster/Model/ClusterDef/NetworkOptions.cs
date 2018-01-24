@@ -60,7 +60,15 @@ namespace Neon.Cluster
     ///     <term><see cref="NodesSubnet"/></term>
     ///     <description>
     ///     This subnet describes where the neonCLUSTER Docker host node IP addresses will be allocated.  This may
-    ///     be any valid subnet for on-premise deployments but will typically <b>/24</b> or larger.
+    ///     be any valid subnet for on-premise deployments but will typically a <b>/24</b> or larger.
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><see cref="PremiseSubnet"/></term>
+    ///     <description>
+    ///     This specifies the subnet for entire host network for on-premise environments like
+    ///     <see cref="HostingEnvironments.Machine"/>, <see cref="HostingEnvironments.HyperV"/> and
+    ///     <see cref="HostingEnvironments.XenServer"/>.  This is required for those environments.
     ///     </description>
     /// </item>
     /// <item>
@@ -109,11 +117,11 @@ namespace Neon.Cluster
     /// </para>
     /// <list type="table">
     /// <item>
-    ///     <term><see cref="CloudAddressSpace"/></term>
+    ///     <term><see cref="CloudSubnet"/></term>
     ///     <description>
     ///     <para>
     ///     This defaults to <b>10.168.0.0/21</b> and specifies where all cloud NIC and VPN client
-    ///     addresses will be provisioned.  <see cref="CloudAddressSpace"/> will be automatically
+    ///     addresses will be provisioned.  <see cref="CloudSubnet"/> will be automatically
     ///     split into <see cref="NodesSubnet"/> and <see cref="VpnPoolSubnet"/> and other internal
     ///     subnets when the neonCLUSTER is provisioned. 
     ///     </para>
@@ -152,10 +160,10 @@ namespace Neon.Cluster
     /// </remarks>
     public class NetworkOptions
     {
-        private const string defaultPublicSubnet      = "10.249.0.0/16";
-        private const string defaultPrivateSubnet     = "10.248.0.0/16";
-        private const string defaultCloudAddressSpace = "10.168.0.0/21";
-        private const string defaultVpnPoolSubnet     = "10.169.0.0/22";
+        private const string defaultPublicSubnet  = "10.249.0.0/16";
+        private const string defaultPrivateSubnet = "10.248.0.0/16";
+        private const string defaultCloudSubnet   = "10.168.0.0/21";
+        private const string defaultVpnPoolSubnet = "10.169.0.0/22";
 
         // WARNING: [pdns-server] and the [pdns-remote-backend] packages must come from the same build.
 
@@ -415,9 +423,9 @@ namespace Neon.Cluster
         /// <item><b>192.168.0.0/16</b></item>
         /// </list>
         /// </remarks>
-        [JsonProperty(PropertyName = "CloudAddressSpace", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultCloudAddressSpace)]
-        public string CloudAddressSpace { get; set; } = defaultCloudAddressSpace;
+        [JsonProperty(PropertyName = "CloudSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultCloudSubnet)]
+        public string CloudSubnet { get; set; } = defaultCloudSubnet;
 
         /// <summary>
         /// <para>
@@ -446,6 +454,15 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "CloudVpnSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string CloudVpnSubnet { get; set; }
+
+        /// <summary>
+        /// Specifies the subnet for entire host network for on-premise environments like
+        /// <see cref="HostingEnvironments.Machine"/>, <see cref="HostingEnvironments.HyperV"/> and
+        /// <see cref="HostingEnvironments.XenServer"/>.  This is required for those environments.
+        /// </summary>
+        [JsonProperty(PropertyName = "PremiseSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string PremiseSubnet { get; set; }
 
         /// <summary>
         /// <para>
@@ -503,14 +520,24 @@ namespace Neon.Cluster
         public bool StaticIP { get; set; } = true;
 
         /// <summary>
-        /// Specifies the default network gateway to be configured for hosts when <see cref="StaticIP"/> is set to <c>true</c>.
-        /// This defaults to the first usable address in the <see cref="NodesSubnet"/>.  For example, for the
+        /// Specifies the default network gateway address to be configured for hosts when <see cref="StaticIP"/> is set to <c>true</c>.
+        /// This defaults to the first usable address in the <see cref="PremiseSubnet"/>.  For example, for the
         /// <b>10.0.0.0/24</b> subnet, this will be set to <b>10.0.0.1</b>.  This is ignored for cloud hosting 
         /// environments.
         /// </summary>
         [JsonProperty(PropertyName = "Gateway", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Gateway { get; set; } = null;
+
+        /// <summary>
+        /// Specifies the default network broadcast address to be configured for hosts when <see cref="StaticIP"/> is set to <c>true</c>.
+        /// This defaults to the last address in the <see cref="PremiseSubnet"/>.  For example, for the
+        /// <b>10.0.0.0/24</b> subnet, this will be set to <b>10.0.0.255</b>.  This is ignored for cloud hosting 
+        /// environments.
+        /// </summary>
+        [JsonProperty(PropertyName = "Broadcast", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string Broadcast { get; set; } = null;
 
         /// <summary>
         /// Used for checking subnet conflicts below.
@@ -607,21 +634,21 @@ namespace Neon.Cluster
 
             if (clusterDefinition.Hosting.IsCloudProvider)
             {
-                // Verify [CloudAddressSpace].
+                // Verify [CloudSubnet].
 
-                if (string.IsNullOrEmpty(CloudAddressSpace))
+                if (string.IsNullOrEmpty(CloudSubnet))
                 {
-                    CloudAddressSpace = defaultCloudAddressSpace;
+                    CloudSubnet = defaultCloudSubnet;
                 }
 
-                if (!NetworkCidr.TryParse(CloudAddressSpace, out var cloudAddressSpaceCidr))
+                if (!NetworkCidr.TryParse(CloudSubnet, out var cloudSubnetCidr))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CloudAddressSpace)}={CloudAddressSpace}] is not a valid IPv4 subnet.");
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CloudSubnet)}={CloudSubnet}] is not a valid IPv4 subnet.");
                 }
 
-                if (cloudAddressSpaceCidr.PrefixLength != 21)
+                if (cloudSubnetCidr.PrefixLength != 21)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CloudAddressSpace)}={CloudAddressSpace}] prefix length is not valid.  Only [/21] subnets are currently supported.");
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CloudSubnet)}={CloudSubnet}] prefix length is not valid.  Only [/21] subnets are currently supported.");
                 }
 
                 // Compute [NodeSubnet] by splitting [ClusterSubnet] in quarters and taking the
@@ -629,7 +656,7 @@ namespace Neon.Cluster
 
                 NetworkCidr nodesSubnetCidr;
 
-                nodesSubnetCidr = new NetworkCidr(cloudAddressSpaceCidr.Address, cloudAddressSpaceCidr.PrefixLength + 2);
+                nodesSubnetCidr = new NetworkCidr(cloudSubnetCidr.Address, cloudSubnetCidr.PrefixLength + 2);
                 NodesSubnet     = nodesSubnetCidr.ToString();
 
                 subnets.Add(new SubnetDefinition(nameof(NodesSubnet), nodesSubnetCidr));
@@ -650,15 +677,15 @@ namespace Neon.Cluster
 
                     NetworkCidr cloudVpnCidr;
 
-                    cloudVpnCidr   = new NetworkCidr(nodesSubnetCidr.NextAddress, cloudAddressSpaceCidr.PrefixLength + 2);
+                    cloudVpnCidr   = new NetworkCidr(nodesSubnetCidr.NextAddress, cloudSubnetCidr.PrefixLength + 2);
                     CloudVpnSubnet = cloudVpnCidr.ToString();
 
-                    // Compute [CloudVNetSubnet] by taking the first half of [CloudAddressSpace],
+                    // Compute [CloudVNetSubnet] by taking the first half of [CloudSubnet],
                     // which includes both [NodesSubnet] and [CloudVpnSubnet].
 
                     NetworkCidr cloudVNetSubnet;
 
-                    cloudVNetSubnet = new NetworkCidr(cloudAddressSpaceCidr.Address, cloudAddressSpaceCidr.PrefixLength + 1);
+                    cloudVNetSubnet = new NetworkCidr(cloudSubnetCidr.Address, cloudSubnetCidr.PrefixLength + 1);
                     CloudVNetSubnet = cloudVNetSubnet.ToString();
 
                     // Compute [VpnPoolSubnet] by taking the upper half of [ClusterSubnet].
@@ -673,7 +700,66 @@ namespace Neon.Cluster
             }
             else
             {
-                // Verify VPN properties for non-cloud environments.
+                // Verify [PremiseSubnet].
+
+                if (!NetworkCidr.TryParse(PremiseSubnet, out var premiseCidr))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
+                }
+
+                // Verify [Gateway]
+
+                if (string.IsNullOrEmpty(Gateway))
+                {
+                    // Default to the first valid address of the cluster nodes subnet 
+                    // if this isn't already set.
+
+                    Gateway = premiseCidr.FirstUsableAddress.ToString();
+                }
+
+                if (!IPAddress.TryParse(Gateway, out var gateway) || gateway.AddressFamily != AddressFamily.InterNetwork)
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
+                }
+
+                if (!premiseCidr.Contains(gateway))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodesSubnet)}={NodesSubnet}] subnet.");
+                }
+
+                // Verify [Broadcast]
+
+                if (string.IsNullOrEmpty(Broadcast))
+                {
+                    // Default to the first valid address of the cluster nodes subnet 
+                    // if this isn't already set.
+
+                    Broadcast = premiseCidr.LastAddress.ToString();
+                }
+
+                if (!IPAddress.TryParse(Broadcast, out var broadcast) || broadcast.AddressFamily != AddressFamily.InterNetwork)
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Broadcast)}={Broadcast}] is not a valid IPv4 address.");
+                }
+
+                if (!premiseCidr.Contains(broadcast))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Broadcast)}={Broadcast}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodesSubnet)}={NodesSubnet}] subnet.");
+                }
+
+                // Verify [NodesSubnet].
+
+                if (!NetworkCidr.TryParse(NodesSubnet, out var nodesSubnetCidr))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] is not a valid IPv4 subnet.");
+                }
+
+                if (!premiseCidr.Contains(nodesSubnetCidr))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] is not within [{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}].");
+                }
+
+                // Verify VPN properties for on-premise environments.
 
                 if (clusterDefinition.Vpn.Enabled)
                 {
@@ -699,19 +785,17 @@ namespace Neon.Cluster
 
                     subnets.Add(new SubnetDefinition(nameof(VpnPoolSubnet), vpnPoolCidr));
 
-                    // Verify [NodesSubnet].
-
-                    if (!NetworkCidr.TryParse(NodesSubnet, out var nodesSubnetCidr))
-                    {
-                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] is not a valid IPv4 subnet.");
-                    }
-
                     if (nodesSubnetCidr.Overlaps(vpnPoolCidr))
                     {
                         throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] and [{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] overlap.");
                     }
 
                     subnets.Add(new SubnetDefinition(nameof(NodesSubnet), nodesSubnetCidr));
+
+                    if (!premiseCidr.Contains(vpnPoolCidr))
+                    {
+                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] is not within [{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}].");
+                    }
                 }
             }
 
@@ -730,44 +814,6 @@ namespace Neon.Cluster
                     {
                         throw new ClusterDefinitionException($"[{subnet.Name}={subnet.Cidr}] and [{subnetTest.Name}={subnetTest.Cidr}] overlap.");
                     }
-                }
-            }
-
-            // Static IP checks.
-
-            if (StaticIP)
-            {
-                if (string.IsNullOrEmpty(NodesSubnet))
-                {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodesSubnet)}] is required when [{nameof(NetworkOptions)}.{nameof(StaticIP)}=true]");
-                }
-
-                if (!NetworkCidr.TryParse(NodesSubnet, out var subnet))
-                {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={clusterDefinition.Network.NodesSubnet}] is not a valid IPv4 subnet.");
-                }
-
-                if (string.IsNullOrEmpty(Gateway))
-                {
-                    // Default to the first valid address of the cluster nodes subnet 
-                    // if this isn't already set.
-
-                    Gateway = subnet.FirstUsableAddress.ToString();
-                }
-
-                if (string.IsNullOrEmpty(Gateway))
-                {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}] is required when [{nameof(NetworkOptions)}.{nameof(StaticIP)}=true]");
-                }
-
-                if (!IPAddress.TryParse(Gateway, out var gateway) || gateway.AddressFamily != AddressFamily.InterNetwork)
-                {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
-                }
-
-                if (!subnet.Contains(gateway))
-                {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodesSubnet)}={clusterDefinition.Network.NodesSubnet}] subnet.");
                 }
             }
         }

@@ -8,6 +8,7 @@
     "Environment": "hyper-v"
   },
   "Network": {
+    "PremiseSubnet": "10.0.0.0/24",
     "NodesSubnet": "10.0.0.0/24"
   },
   "Vpn": {

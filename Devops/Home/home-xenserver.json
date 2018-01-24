@@ -16,6 +16,7 @@
     ]
   },
   "Network": {
+    "PremiseSubnet": "10.50.0.0/24",
     "NodesSubnet": "10.50.0.0/24"
   },
   "Vpn": {

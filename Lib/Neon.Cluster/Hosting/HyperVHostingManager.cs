@@ -609,11 +609,12 @@ namespace Neon.Cluster
 
                 node.Status = $"get ip address";
 
-                var adapters = hyperv.ListVMNetworkAdapters(vmName, waitForAddresses: true);
-                var adapter  = adapters.FirstOrDefault();
-                var address  = adapter.Addresses.First();
-                var subnet   = NetworkCidr.Parse(cluster.Definition.Network.NodesSubnet);
-                var gateway  = cluster.Definition.Network.Gateway;
+                var adapters  = hyperv.ListVMNetworkAdapters(vmName, waitForAddresses: true);
+                var adapter   = adapters.FirstOrDefault();
+                var address   = adapter.Addresses.First();
+                var subnet    = NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet);
+                var gateway   = cluster.Definition.Network.Gateway;
+                var broadcast = cluster.Definition.Network.Broadcast;
 
                 if (adapter == null)
                 {
@@ -655,7 +656,7 @@ iface eth0 inet static
 address {nodeAddress}
 netmask {subnet.Mask}
 gateway {gateway}
-broadcast {subnet.LastAddress}
+broadcast {broadcast}
 ";
                         nodeProxy.UploadText("/etc/network/interfaces", interfacesText);
 

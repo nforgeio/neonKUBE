@@ -307,8 +307,9 @@ namespace Neon.Cluster
                 // SSH into the VM using the DHCP address, configure the static IP
                 // address and then reboot.
 
-                var subnet  = NetworkCidr.Parse(cluster.Definition.Network.NodesSubnet);
-                var gateway = cluster.Definition.Network.Gateway;
+                var subnet    = NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet);
+                var gateway   = cluster.Definition.Network.Gateway;
+                var broadcast = cluster.Definition.Network.Broadcast;
 
                 // We're going to temporarily set the node to the current VM address
                 // so we can connect via SSH.
@@ -339,7 +340,7 @@ iface eth0 inet static
 address {node.PrivateAddress}
 netmask {subnet.Mask}
 gateway {gateway}
-broadcast {subnet.LastAddress}
+broadcast {broadcast}
 ";
                     nodeProxy.UploadText("/etc/network/interfaces", interfacesText);
 
