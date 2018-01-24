@@ -329,12 +329,13 @@ namespace Neon.Cluster
         /// <para>
         /// This needs to be explicitly defined for on-premise clusters that also
         /// deploy VPN servers.  In this case, you'll need to specify the public IP
-        /// address or FQDN of your cluster router.
+        /// address or FQDN of your cluster router that has forwarding rules for
+        /// the inbound VPN traffic.
         /// </para>
         /// </remarks>
-        [JsonProperty(PropertyName = "ManagerRouterAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "ManagerRouter", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
-        public string ManagerRouterAddress { get; set; }
+        public string ManagerRouter { get; set; }
 
         /// <summary>
         /// The cluster's worker load balancer's FQDN or IP address during cluster
@@ -765,9 +766,9 @@ namespace Neon.Cluster
                 {
                     if (clusterDefinition.Hosting.Environment == HostingEnvironments.Machine)
                     {
-                        if (string.IsNullOrEmpty(ManagerRouterAddress))
+                        if (string.IsNullOrEmpty(ManagerRouter))
                         {
-                            throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(ManagerRouterAddress)}] is required for on-premise deployments that enable VPN.  Set the public IP address or FQDN of your cluster router.");
+                            throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(ManagerRouter)}] is required for on-premise deployments that enable VPN.  Set the public IP address or FQDN of your cluster router.");
                         }
                     }
 

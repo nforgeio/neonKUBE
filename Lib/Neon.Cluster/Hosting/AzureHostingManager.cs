@@ -713,7 +713,7 @@ namespace Neon.Cluster
                     .Create();
             }
 
-            cluster.Definition.Network.ManagerRouterAddress = pipLbManager.Fqdn;
+            cluster.Definition.Network.ManagerRouter        = pipLbManager.Fqdn;
             cluster.Definition.Network.WorkerRouterAddress  = pipLbWorker.Fqdn;
 
             //-----------------------------------------------------------------
