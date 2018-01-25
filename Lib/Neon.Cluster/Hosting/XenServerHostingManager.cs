@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
+using System.Net;
 using System.Threading;
 
 using Newtonsoft.Json;
@@ -171,11 +172,11 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="xenHost">The target XenServer.</param>
         /// <returns>The list of nodes to be hosted on the XenServer.</returns>
-        private List<NodeDefinition> GetHostedNodes(XenClient xenHost)
+        private List<SshProxy<NodeDefinition>> GetHostedNodes(XenClient xenHost)
         {
             var nodeDefinitions = cluster.Definition.NodeDefinitions.Values;
 
-            return nodeDefinitions.Where(n => n.VmHost.Equals(xenHost.Name))
+            return cluster.Nodes.Where(n => n.Metadata.VmHost.Equals(xenHost.Name, StringComparison.InvariantCultureIgnoreCase))
                 .OrderBy(n => n.Name, StringComparer.CurrentCultureIgnoreCase)
                 .ToList();
         }
@@ -188,7 +189,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <returns>The virtual machine name.</returns>
-        private string GetVmName(NodeDefinition node)
+        private string GetVmName(SshProxy<NodeDefinition> node)
         {
             return $"{cluster.Definition.Name.ToLowerInvariant()}-{node.Name}";
         }
@@ -257,9 +258,9 @@ namespace Neon.Cluster
             foreach (var node in GetHostedNodes(xenHost))
             {
                 var vmName      = GetVmName(node);
-                var processors  = node.GetVmProcessors(cluster.Definition);
-                var memoryBytes = node.GetVmMemory(cluster.Definition);
-                var diskBytes   = node.GetVmDisk(cluster.Definition);
+                var processors  = node.Metadata.GetVmProcessors(cluster.Definition);
+                var memoryBytes = node.Metadata.GetVmMemory(cluster.Definition);
+                var diskBytes   = node.Metadata.GetVmDisk(cluster.Definition);
 
                 xenSshProxy.Status = $"{vmName}: create";
 
@@ -318,7 +319,7 @@ namespace Neon.Cluster
 
                 try
                 {
-                    node.PrivateAddress = address;
+                    node.PrivateAddress = IPAddress.Parse(address);
 
                     using (var nodeProxy = cluster.GetNode(node.Name))
                     {
@@ -343,7 +344,7 @@ iface lo inet loopback
 # The primary network interface
 auto eth0
 iface eth0 inet static
-address {node.PrivateAddress}
+address {savedNodeAddress}
 netmask {subnet.Mask}
 gateway {gateway}
 broadcast {broadcast}
