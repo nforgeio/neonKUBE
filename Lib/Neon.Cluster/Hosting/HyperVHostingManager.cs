@@ -155,7 +155,7 @@ namespace Neon.Cluster
 
             controller.AddGlobalStep("prepare hyper-v", () => PrepareHyperV());
             controller.AddStep("create virtual machines", n => ProvisionVM(n));
-            controller.AddGlobalStep(string.Empty, () => FinishHyperV(), quiet: true);
+            controller.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
             if (!controller.Run())
             {
@@ -609,7 +609,7 @@ namespace Neon.Cluster
                 // to obtain the IP address we'll use to SSH into the machine and configure
                 // it's static IP.
 
-                node.Status = $"get ip address";
+                node.Status = $"fetch ip address";
 
                 var adapters  = hyperv.ListVMNetworkAdapters(vmName, waitForAddresses: true);
                 var adapter   = adapters.FirstOrDefault();
@@ -626,7 +626,7 @@ namespace Neon.Cluster
                 // We're going to temporarily set the node to the current VM address
                 // so we can connect via SSH.
 
-                var nodeAddress = node.PrivateAddress;
+                var savedNodeAddress = node.PrivateAddress;
 
                 try
                 {
@@ -635,12 +635,12 @@ namespace Neon.Cluster
                     using (var nodeProxy = cluster.GetNode(node.Name))
                     {
                         node.Status = $"connecting";
-                        nodeProxy.Connect();
+                        nodeProxy.WaitForBoot();
 
                         // Replace the [/etc/network/interfaces] file to configure the static
                         // IP and then reboot to reinitialize networking subsystem.
 
-                        node.Status = $"set static ip [{nodeAddress}]";
+                        node.Status = $"set static ip [{savedNodeAddress}]";
 
                         var interfacesText =
 $@"# This file describes the network interfaces available on your system
@@ -655,7 +655,7 @@ iface lo inet loopback
 # The primary network interface
 auto eth0
 iface eth0 inet static
-address {nodeAddress}
+address {savedNodeAddress}
 netmask {subnet.Mask}
 gateway {gateway}
 broadcast {broadcast}
@@ -695,7 +695,7 @@ nameserver 8.8.4.4
                 {
                     // Restore the node's IP address.
 
-                    node.PrivateAddress = nodeAddress;
+                    node.PrivateAddress = savedNodeAddress;
                 }
             }
         }
@@ -703,7 +703,7 @@ nameserver 8.8.4.4
         /// <summary>
         /// Perform any necessary global post Hyper-V provisioning steps.
         /// </summary>
-        private void FinishHyperV()
+        private void Finish()
         {
             // Recreate the node proxies because we disposed them above.
             // We need to do this so subsequent prepare steps will be
