@@ -264,6 +264,35 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Returns <c>true</c> if the cluster will be hosted by a hypervisor provider.
+        /// </summary>
+        [JsonIgnore]
+        public bool IsHypervisorProvider
+        {
+            get
+            {
+                switch (Environment)
+                {
+                    case HostingEnvironments.HyperV:
+                    case HostingEnvironments.XenServer:
+
+                        return true;
+
+                    case HostingEnvironments.Aws:
+                    case HostingEnvironments.Azure:
+                    case HostingEnvironments.Google:
+                    case HostingEnvironments.Machine:
+
+                        return false;
+
+                    default:
+
+                        throw new NotImplementedException("Unexpected hosting environment.");
+                }
+            }
+        }
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>

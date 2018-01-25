@@ -426,6 +426,18 @@ namespace Neon.Cluster
                 Azure.Validate(clusterDefinition, this.Name);
             }
 
+            if (clusterDefinition.Hosting.IsHypervisorProvider)
+            {
+                if (string.IsNullOrEmpty(VmHost))
+                {
+                    throw new ClusterDefinitionException($"Node [{Name}] does not specify a hypervisor [{nameof(NodeDefinition)}.{nameof(NodeDefinition.VmHost)}].");
+                }
+                else if (clusterDefinition.Hosting.VmHosts.FirstOrDefault(h => h.Name.Equals(VmHost, StringComparison.InvariantCultureIgnoreCase)) == null)
+                {
+                    throw new ClusterDefinitionException($"Node [{Name}] references hypervisor [{VmHost}] which is defined in [{nameof(HostingOptions)}={nameof(HostingOptions.VmHosts)}].");
+                }
+            }
+
             if (VmMemory != null)
             {
                 HostingOptions.ValidateVMSize(VmMemory, this.GetType(), nameof(VmMemory));
