@@ -123,18 +123,20 @@ namespace Neon.Cluster
         public GoogleOptions Google { get; set; } = null;
 
         /// <summary>
+        /// Specifies the hosting settings when hosting on the local workstation using the 
+        /// Microsoft Hyper-V hypervisor.  This is typically used for development or
+        /// test purposes.
+        /// </summary>
+        [JsonProperty(PropertyName = "HyperV", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public LocalHyperVOptions LocalHyperV { get; set; } = null;
+
+        /// <summary>
         /// Specifies the hosting settings when hosting directly on bare metal or virtual machines.
         /// </summary>
         [JsonProperty(PropertyName = "Machine", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public MachineOptions Machine { get; set; } = null;
-
-        /// <summary>
-        /// Specifies the hosting settings when hosting on the Microsoft Hyper-V hypervisor.
-        /// </summary>
-        [JsonProperty(PropertyName = "HyperV", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public HyperVOptions HyperV { get; set; } = null;
 
         /// <summary>
         /// Specifies the hosting settings when hosting on Citrix XenServer hypervisor.
@@ -235,7 +237,7 @@ namespace Neon.Cluster
             {
                 switch (Environment)
                 {
-                    case HostingEnvironments.HyperV:
+                    case HostingEnvironments.LocalHyperV:
                     case HostingEnvironments.Machine:
                     case HostingEnvironments.XenServer:
 
@@ -281,7 +283,7 @@ namespace Neon.Cluster
                     case HostingEnvironments.Aws:
                     case HostingEnvironments.Azure:
                     case HostingEnvironments.Google:
-                    case HostingEnvironments.HyperV:    // $todo(jeff.lill): This will need to change when Hyper-V supports remote hosts.
+                    case HostingEnvironments.LocalHyperV:
                     case HostingEnvironments.Machine:
 
                         return false;
@@ -336,11 +338,11 @@ namespace Neon.Cluster
                     Google.Validate(clusterDefinition);
                     break;
 
-                case HostingEnvironments.HyperV:
+                case HostingEnvironments.LocalHyperV:
 
-                    HyperV = HyperV ?? new HyperVOptions();
+                    LocalHyperV = LocalHyperV ?? new LocalHyperVOptions();
 
-                    HyperV.Validate(clusterDefinition);
+                    LocalHyperV.Validate(clusterDefinition);
                     break;
 
                 case HostingEnvironments.Machine:
@@ -386,7 +388,7 @@ namespace Neon.Cluster
 
             if (VmProcessors <= 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(HyperVOptions)}.{nameof(VmProcessors)}={VmProcessors}] must be positive.");
+                throw new ClusterDefinitionException($"[{nameof(LocalHyperVOptions)}.{nameof(VmProcessors)}={VmProcessors}] must be positive.");
             }
 
             VmMemory        = VmMemory ?? DefaultVmMemory;
@@ -456,12 +458,12 @@ namespace Neon.Cluster
         /// </summary>
         public void ClearSecrets()
         {
-            Aws       = null;
-            Azure     = null;
-            Google    = null;
-            HyperV    = null;
-            Machine   = null;
-            XenServer = null;
+            Aws         = null;
+            Azure       = null;
+            Google      = null;
+            LocalHyperV = null;
+            Machine     = null;
+            XenServer   = null;
         }
     }
 }

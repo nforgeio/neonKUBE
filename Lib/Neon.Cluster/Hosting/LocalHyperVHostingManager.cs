@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    HyperVHostingManager.cs
+// FILE:	    LocalHyperVHostingManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -31,20 +31,13 @@ using Neon.Cluster.HyperV;
 using Neon.Net;
 using Neon.Time;
 
-// $todo(jeff.lill):
-//
-// Extend this to support remote Hyper-V machines:
-//
-//      * Allow the specification of per-VM processors, memory, and disk size.
-//      * I'm hoping I can use PowerShell to manage remote hosts (but what about OSX?).
-//      * Including copying the VHDX files.
-
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Manages cluster provisioning on Microsoft Hyper-V virtual machines.
+    /// Manages cluster provisioning on the local workstation using Microsoft Hyper-V virtual machines.
+    /// This is typically used for development and test purposes.
     /// </summary>
-    public partial class HyperVHostingManager : HostingManager
+    public partial class LocalHyperVHostingManager : HostingManager
     {
         //---------------------------------------------------------------------
         // Private types
@@ -90,7 +83,7 @@ namespace Neon.Cluster
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public HyperVHostingManager(ClusterProxy cluster, string logFolder = null)
+        public LocalHyperVHostingManager(ClusterProxy cluster, string logFolder = null)
         {
             cluster.HostingManager = this;
 
@@ -272,7 +265,7 @@ namespace Neon.Cluster
             // drive template.  Production clusters should reference a specific
             // drive template.
 
-            var driveTemplateUri  = new Uri(cluster.Definition.Hosting.HyperV.HostVhdxUri);
+            var driveTemplateUri  = new Uri(cluster.Definition.Hosting.LocalHyperV.HostVhdxUri);
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
             driveTemplatePath = Path.Combine(NeonClusterHelper.GetVmTemplatesFolder(), driveTemplateName);
@@ -306,7 +299,7 @@ namespace Neon.Cluster
 
             if (!driveTemplateIsCurrent)
             {
-                controller.SetOperationStatus($"Download Template VHDX: [{cluster.Definition.Hosting.HyperV.HostVhdxUri}]");
+                controller.SetOperationStatus($"Download Template VHDX: [{cluster.Definition.Hosting.LocalHyperV.HostVhdxUri}]");
 
                 Task.Run(
                     async () =>
@@ -315,7 +308,7 @@ namespace Neon.Cluster
                         {
                             // Download the file.
 
-                            var response = await client.GetAsync(cluster.Definition.Hosting.HyperV.HostVhdxUri, HttpCompletionOption.ResponseHeadersRead);
+                            var response = await client.GetAsync(cluster.Definition.Hosting.LocalHyperV.HostVhdxUri, HttpCompletionOption.ResponseHeadersRead);
 
                             response.EnsureSuccessStatusCode();
 
@@ -345,11 +338,11 @@ namespace Neon.Cluster
                                             {
                                                 var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                                controller.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{cluster.Definition.Hosting.HyperV.HostVhdxUri}]");
+                                                controller.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{cluster.Definition.Hosting.LocalHyperV.HostVhdxUri}]");
                                             }
                                             else
                                             {
-                                                controller.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{cluster.Definition.Hosting.HyperV.HostVhdxUri}]");
+                                                controller.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{cluster.Definition.Hosting.LocalHyperV.HostVhdxUri}]");
                                             }
                                         }
                                     }

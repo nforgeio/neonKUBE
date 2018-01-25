@@ -32,7 +32,7 @@ namespace Neon.Cluster
     /// <para>
     /// neonCLUSTERs can be deployed in two basic environments, cloud or on-premise.  Cloud providers include
     /// <see cref="HostingEnvironments.Aws"/>, <see cref="HostingEnvironments.Azure"/>, and <see cref="HostingEnvironments.Google"/>
-    /// and on-premise providers include <see cref="HostingEnvironments.HyperV"/>, <see cref="HostingEnvironments.Machine"/> and
+    /// and on-premise providers include <see cref="HostingEnvironments.LocalHyperV"/>, <see cref="HostingEnvironments.Machine"/> and
     /// <see cref="HostingEnvironments.XenServer"/>.  Cluster network options are interpreted somewhat differently
     /// depending on whether the the cluster is being provisioned to the cloud or to on-premise hardware.
     /// </para>
@@ -67,7 +67,7 @@ namespace Neon.Cluster
     ///     <term><see cref="PremiseSubnet"/></term>
     ///     <description>
     ///     This specifies the subnet for entire host network for on-premise environments like
-    ///     <see cref="HostingEnvironments.Machine"/>, <see cref="HostingEnvironments.HyperV"/> and
+    ///     <see cref="HostingEnvironments.Machine"/>, <see cref="HostingEnvironments.LocalHyperV"/> and
     ///     <see cref="HostingEnvironments.XenServer"/>.  This is required for those environments.
     ///     </description>
     /// </item>
@@ -458,7 +458,7 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Specifies the subnet for entire host network for on-premise environments like
-        /// <see cref="HostingEnvironments.Machine"/>, <see cref="HostingEnvironments.HyperV"/> and
+        /// <see cref="HostingEnvironments.Machine"/>, <see cref="HostingEnvironments.LocalHyperV"/> and
         /// <see cref="HostingEnvironments.XenServer"/>.  This is required for those environments.
         /// </summary>
         [JsonProperty(PropertyName = "PremiseSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

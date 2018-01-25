@@ -64,9 +64,9 @@ namespace Neon.Cluster
 
                     return new GoogleHostingManager(cluster, logFolder);
 
-                case HostingEnvironments.HyperV:
+                case HostingEnvironments.LocalHyperV:
 
-                    return new HyperVHostingManager(cluster, logFolder);
+                    return new LocalHyperVHostingManager(cluster, logFolder);
 
                 case HostingEnvironments.Machine:
 

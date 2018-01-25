@@ -15,7 +15,7 @@ namespace Neon.Cluster
     /// <summary>
     /// Specifies hosting settings for the Microsoft Hyper-V hypervisor.
     /// </summary>
-    public class HyperVOptions
+    public class LocalHyperVOptions
     {
         private const string defaultHostVhdxUri      = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.vhdx.zip";
         internal const string defaultVmMinimumMemory = "2GB";
@@ -23,7 +23,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public HyperVOptions()
+        public LocalHyperVOptions()
         {
         }
 
@@ -61,7 +61,7 @@ namespace Neon.Cluster
 
             if (string.IsNullOrEmpty(HostVhdxUri) || !Uri.TryCreate(HostVhdxUri, UriKind.Absolute, out Uri uri))
             {
-                throw new ClusterDefinitionException($"[{nameof(HyperVOptions)}.{nameof(HostVhdxUri)}] is required when deploying to Hyper-V.");
+                throw new ClusterDefinitionException($"[{nameof(LocalHyperVOptions)}.{nameof(HostVhdxUri)}] is required when deploying to Hyper-V.");
             }
 
             clusterDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.

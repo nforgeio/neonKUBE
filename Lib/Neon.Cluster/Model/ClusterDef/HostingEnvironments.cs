@@ -22,12 +22,6 @@ namespace Neon.Cluster
         Machine = 0,
 
         /// <summary>
-        /// Microsoft Hyper-V hypervisor.
-        /// </summary>
-        [EnumMember(Value = "hyper-v")]
-        HyperV,
-
-        /// <summary>
         /// Amazon Web Services.
         /// </summary>
         [EnumMember(Value = "aws")]
@@ -44,6 +38,13 @@ namespace Neon.Cluster
         /// </summary>
         [EnumMember(Value = "google")]
         Google,
+
+        /// <summary>
+        /// Microsoft Hyper-V hypervisor running on the local workstation
+        /// (typically for development or test purposes).
+        /// </summary>
+        [EnumMember(Value = "local-hyper-v")]
+        LocalHyperV,
 
         /// <summary>
         /// Citrix XenServer hypervisor.
