@@ -7,7 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
-using System.Net;
 using System.Threading;
 
 using Newtonsoft.Json;
@@ -152,9 +151,10 @@ namespace Neon.Cluster
             };
 
             controller.AddWaitUntilOnlineStep();
-            controller.AddStep("verify readiness", sshProxy => VerifyReadiness(sshProxy));
+            controller.AddStep("verify readiness", sshProxy => VerifyReady(sshProxy));
             controller.AddStep("virtual machine template", sshProxy => CheckVmTemplate(sshProxy));
             controller.AddStep("provision virtual machines", sshProxy => ProvisionVirtualMachines(sshProxy));
+            controller.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
             if (!controller.Run())
             {
@@ -196,18 +196,18 @@ namespace Neon.Cluster
         /// <summary>
         /// Verify that the XenServer is ready to provision the cluster virtual machines.
         /// </summary>
-        /// <param name="sshProxy">The XenServer SSH proxy.</param>
-        private void VerifyReadiness(SshProxy<XenClient> sshProxy)
+        /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
+        private void VerifyReady(SshProxy<XenClient> xenSshProxy)
         {
             // $todo(jeff.lill):
             //
             // It would be nice to verify that XenServer actually has enough 
             // resources (RAM, DISK, and perhaps CPU) here as well.
 
-            var xenHost = sshProxy.Metadata;
+            var xenHost = xenSshProxy.Metadata;
             var nodes   = GetHostedNodes(xenHost);
 
-            sshProxy.Status = "check virtual machines";
+            xenSshProxy.Status = "check virtual machines";
 
             var vmNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -222,7 +222,7 @@ namespace Neon.Cluster
 
                 if (vmNames.Contains(vmName))
                 {
-                    sshProxy.Fault($"XenServer [{xenHost.Name}] is already hosting a virtual machine named [{vmNames}].");
+                    xenSshProxy.Fault($"XenServer [{xenHost.Name}] is already hosting a virtual machine named [{vmNames}].");
                     return;
                 }
             }
@@ -231,17 +231,17 @@ namespace Neon.Cluster
         /// <summary>
         /// Install the virtual machine template on the XenServer if it's not already present.
         /// </summary>
-        /// <param name="sshProxy">The XenServer SSH proxy.</param>
-        private void CheckVmTemplate(SshProxy<XenClient> sshProxy)
+        /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
+        private void CheckVmTemplate(SshProxy<XenClient> xenSshProxy)
         {
-            var xenHost      = sshProxy.Metadata;
+            var xenHost      = xenSshProxy.Metadata;
             var templateName = cluster.Definition.Hosting.XenServer.TemplateName;
 
-            sshProxy.Status = "check VM template";
+            xenSshProxy.Status = "check VM template";
 
             if (xenHost.Template.Find(templateName) == null)
             {
-                sshProxy.Status = "install VM template";
+                xenSshProxy.Status = "download VM template (be patient)";
                 xenHost.Template.Install(cluster.Definition.Hosting.XenServer.HostXvaUri, templateName);
             }
         }
@@ -249,10 +249,10 @@ namespace Neon.Cluster
         /// <summary>
         /// Provision the virtual machines on the XenServer.
         /// </summary>
-        /// <param name="sshProxy">The XenServer SSH proxy.</param>
-        private void ProvisionVirtualMachines(SshProxy<XenClient> sshProxy)
+        /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
+        private void ProvisionVirtualMachines(SshProxy<XenClient> xenSshProxy)
         {
-            var xenHost = sshProxy.Metadata;
+            var xenHost = xenSshProxy.Metadata;
 
             foreach (var node in GetHostedNodes(xenHost))
             {
@@ -261,23 +261,23 @@ namespace Neon.Cluster
                 var memoryBytes = node.GetVmMemory(cluster.Definition);
                 var diskBytes   = node.GetVmDisk(cluster.Definition);
 
-                sshProxy.Status = $"create: {vmName}";
+                xenSshProxy.Status = $"{vmName}: create";
 
                 var vm = xenHost.Machine.Install(vmName, cluster.Definition.Hosting.XenServer.TemplateName,
                     processors: processors,
                     memoryBytes: memoryBytes,
                     diskBytes: diskBytes);
 
-                sshProxy.Status = $"start: {vmName}";
+                xenSshProxy.Status = $"{vmName}: start";
 
                 xenHost.Machine.Start(vm);
 
                 // We need to wait for the virtual machine to start and obtain
                 // and IP address via DHCP.
 
-                string address;
+                var address = string.Empty;
 
-                sshProxy.Status = $"get ip address";
+                xenSshProxy.Status = $"{vmName}: fetch ip address";
 
                 try
                 {
@@ -301,7 +301,7 @@ namespace Neon.Cluster
                 }
                 catch (TimeoutException)
                 {
-                    sshProxy.Fault("Timeout waiting for virtual machine to start and be assigned a DHCP address.");
+                    xenSshProxy.Fault("Timeout waiting for virtual machine to start and be assigned a DHCP address.");
                 }
 
                 // SSH into the VM using the DHCP address, configure the static IP
@@ -314,17 +314,23 @@ namespace Neon.Cluster
                 // We're going to temporarily set the node to the current VM address
                 // so we can connect via SSH.
 
-                using (var nodeProxy = cluster.GetNode(node.Name))
+                var savedNodeAddress = node.PrivateAddress;
+
+                try
                 {
-                    sshProxy.Status = $"connecting to: {vmName}";
-                    nodeProxy.Connect();
+                    node.PrivateAddress = address;
 
-                    // Replace the [/etc/network/interfaces] file to configure the static
-                    // IP and then reboot to reinitialize networking subsystem.
+                    using (var nodeProxy = cluster.GetNode(node.Name))
+                    {
+                        xenSshProxy.Status = $"{vmName}: connect";
+                        nodeProxy.WaitForBoot();
 
-                    sshProxy.Status = $"set static ip [{node.PrivateAddress}]";
+                        // Replace the [/etc/network/interfaces] file to configure the static
+                        // IP and then reboot to reinitialize networking subsystem.
 
-                    var interfacesText =
+                        xenSshProxy.Status = $"{vmName}: set static ip [{node.PrivateAddress}]";
+
+                        var interfacesText =
 $@"# This file describes the network interfaces available on your system
 # and how to activate them. For more information, see interfaces(5).
 
@@ -342,37 +348,56 @@ netmask {subnet.Mask}
 gateway {gateway}
 broadcast {broadcast}
 ";
-                    nodeProxy.UploadText("/etc/network/interfaces", interfacesText);
+                        nodeProxy.UploadText("/etc/network/interfaces", interfacesText);
 
-                    // Temporarily configure the public Google DNS servers as
-                    // the name servers so DNS will work after we reboot with
-                    // the static IP.  Note that cluster setup will eventually
-                    // configure the name servers specified in the cluster
-                    // definition.
+                        // Temporarily configure the public Google DNS servers as
+                        // the name servers so DNS will work after we reboot with
+                        // the static IP.  Note that cluster setup will eventually
+                        // configure the name servers specified in the cluster
+                        // definition.
 
-                    // $todo(jeff.lill):
-                    //
-                    // Is there a good reason why we're not just configuring the
-                    // DNS servers from the cluster definition here???
-                    //
-                    // Using the Google DNS seems like it could break some cluster
-                    // network configurations (i.e. for clusters that don't have
-                    // access to the public Internet).  Totally private clusters
-                    // aren't really a supported scenario right now though because
-                    // we assume we can use [apt-get]... to pull down packages.
+                        // $todo(jeff.lill):
+                        //
+                        // Is there a good reason why we're not just configuring the
+                        // DNS servers from the cluster definition here???
+                        //
+                        // Using the Google DNS seems like it could break some cluster
+                        // network configurations (i.e. for clusters that don't have
+                        // access to the public Internet).  Totally private clusters
+                        // aren't really a supported scenario right now though because
+                        // we assume we can use [apt-get]... to pull down packages.
 
-                    var resolvBaseText =
+                        var resolvBaseText =
 $@"nameserver 8.8.8.8
 nameserver 8.8.4.4
 ";
-                    nodeProxy.UploadText("/etc/resolvconf/resolv.conf.d/base", resolvBaseText);
+                        nodeProxy.UploadText("/etc/resolvconf/resolv.conf.d/base", resolvBaseText);
 
-                    // Reboot to pick up the changes.
+                        // Reboot to pick up the changes.
 
-                    sshProxy.Status = $"rebooting";
-                    nodeProxy.Reboot(wait: false);
+                        xenSshProxy.Status = $"{vmName}: reboot";
+                        nodeProxy.Reboot(wait: false);
+                    }
+                }
+                finally
+                {
+                    // Restore the node's IP address.
+
+                    node.PrivateAddress = savedNodeAddress;
                 }
             }
+        }
+
+        /// <summary>
+        /// Perform any necessary global post Hyper-V provisioning steps.
+        /// </summary>
+        private void Finish()
+        {
+            // Recreate the node proxies because we disposed them above.
+            // We need to do this so subsequent prepare steps will be
+            // able to connect to the nodes via the correct addresses.
+
+            cluster.CreateNodes();
         }
 
         /// <inheritdoc/>

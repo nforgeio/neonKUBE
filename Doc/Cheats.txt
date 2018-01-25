@@ -16,7 +16,7 @@ neon cluster prepare %NF_ROOT%\Devops\Home\home-azure.json -u=sysadmin -p=sysadm
 neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 root@azure --direct
 
 neon login rm root@xen --force
-neon cluster prepare %NF_ROOT%\Devops\Home\home-xenserver.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --force
+neon cluster prepare %NF_ROOT%\Devops\Home\home-xen.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --force
 neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 root@xen --direct
 
 # Create host VHDX template zip files that will be compatible with the [neon-cli] tool.
