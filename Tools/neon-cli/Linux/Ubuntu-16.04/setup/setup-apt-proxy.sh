@@ -43,6 +43,10 @@ if [ "${NEON_NODE_ROLE}" == "manager" ] ; then
 	systemctl restart apt-cacher-ng
 
 	set -eo pipefail	# Revert back to partial failure detection
+
+	# Give the proxy service a chance to start.
+
+	sleep 5
 fi
 
 # Configure APT proxy selection.

@@ -45,9 +45,6 @@ OPTIONS:
     --package-cache=CACHE-URI   - Optionally specifies an APT Package cache
                                   server to improve setup performance.
 
-    --upgrade                   - Applies any available Linux distribution
-                                  package updates.
-
 Server Requirements:
 --------------------
 
@@ -56,8 +53,7 @@ Server Requirements:
     * OpenSSH installed (or another SSH server)
     * [sudo] elevates permissions without a password
 ";
-        private string          packageCacheUri;
-        private bool            upgrade;
+        private string      packageCacheUri;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -87,7 +83,6 @@ Server Requirements:
         public override void Run(CommandLine commandLine)
         {
             packageCacheUri = commandLine.GetOption("--package-cache");     // This overrides the cluster definition, if specified.
-            upgrade         = commandLine.GetFlag("--upgrade");
 
             if (commandLine.Arguments.Length == 0)
             {
@@ -133,7 +128,7 @@ Server Requirements:
 
             controller.AddWaitUntilOnlineStep();
             controller.AddStep("verify OS", n => CommonSteps.VerifyOS(n));
-            controller.AddStep("prepare", server => CommonSteps.PrepareNode(server, clusterDefinition, shutdown: true, upgrade: upgrade ? OsUpgrade.Partial : OsUpgrade.None));
+            controller.AddStep("prepare", server => CommonSteps.PrepareNode(server, clusterDefinition, shutdown: true));
 
             if (!controller.Run())
             {

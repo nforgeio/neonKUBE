@@ -1076,7 +1076,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
         }
 
         /// <summary>
-        /// Complete a manager node configuration.
+        /// Completes manager node configuration.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
         private void ConfigureManager(SshProxy<NodeDefinition> node)
@@ -1084,6 +1084,32 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
             node.InvokeIdempotentAction("setup-manager",
                 () =>
                 {
+                    // Configure the APT package proxy on the managers
+                    // and configure the proxy selector for all nodes.
+
+                    node.Status = "run: setup-apt-proxy.sh";
+                    node.SudoCommand("setup-apt-proxy.sh");
+
+                    // Upgrade Linux packages if requested.  We're doing this after
+                    // deploying the APT package proxy so it'll be faster.
+
+                    switch (cluster.Definition.HostNode.Upgrade)
+                    {
+                        case OsUpgrade.Partial:
+
+                            node.Status = "package upgrade (partial)";
+
+                            node.SudoCommand("apt-get upgrade -yq --allow-unauthenticated");
+                            break;
+
+                        case OsUpgrade.Full:
+
+                            node.Status = "package upgrade (full)";
+
+                            node.SudoCommand("apt-get dist-upgrade -yq --allow-unauthenticated");
+                            break;
+                    }
+
                     // Setup NTP.
 
                     node.Status = "run: setup-ntp.sh";
@@ -1255,6 +1281,32 @@ $@"docker login \
             node.InvokeIdempotentAction($"setup-{node.Metadata.Role}",
                 () =>
                 {
+                    // Configure the APT package proxy on the managers
+                    // and configure the proxy selector for all nodes.
+
+                    node.Status = "run: setup-apt-proxy.sh";
+                    node.SudoCommand("setup-apt-proxy.sh");
+
+                    // Upgrade Linux packages if requested.  We're doing this after
+                    // deploying the APT package proxy so it'll be faster.
+
+                    switch (cluster.Definition.HostNode.Upgrade)
+                    {
+                        case OsUpgrade.Partial:
+
+                            node.Status = "package upgrade (partial)";
+
+                            node.SudoCommand("apt-get upgrade -yq --allow-unauthenticated");
+                            break;
+
+                        case OsUpgrade.Full:
+
+                            node.Status = "package upgrade (full)";
+
+                            node.SudoCommand("apt-get dist-upgrade -yq --allow-unauthenticated");
+                            break;
+                    }
+
                     // Setup NTP.
 
                     node.Status = "run: setup-ntp.sh";

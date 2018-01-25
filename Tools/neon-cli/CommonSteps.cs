@@ -311,12 +311,11 @@ ClientAliveCountMax 20
         /// <param name="node">The target cluster node.</param>
         /// <param name="clusterDefinition">The optional cluster definition.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
-        /// <param name="upgrade">Optionally applies all pending host operating system updates.</param>
         /// <returns>
         /// <c>true</c> if the method waited for the package manager to become
         /// ready before returning.
         /// </returns>
-        public static bool PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition = null, bool shutdown = false, OsUpgrade upgrade = OsUpgrade.None)
+        public static bool PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition = null, bool shutdown = false)
         {
             var waitedForPackageManager = false;
 
@@ -339,25 +338,6 @@ ClientAliveCountMax 20
             }
 
             node.SudoCommand("apt-get update");
-
-            if (clusterDefinition != null && !string.IsNullOrEmpty(clusterDefinition.PackageProxy))
-            {
-                node.Status = "run: setup-apt-proxy.sh";
-                node.SudoCommand("setup-apt-proxy.sh");
-            }
-
-            if (upgrade == OsUpgrade.Partial)
-            {
-                node.Status = "package upgrade (partial)";
-
-                node.SudoCommand("apt-get upgrade -yq --allow-unauthenticated");
-            }
-            else if (upgrade == OsUpgrade.Full)
-            {
-                node.Status = "package upgrade (full)";
-
-                node.SudoCommand("apt-get dist-upgrade -yq --allow-unauthenticated");
-            }
 
             node.InvokeIdempotentAction("setup-prep-node",
                 () =>
