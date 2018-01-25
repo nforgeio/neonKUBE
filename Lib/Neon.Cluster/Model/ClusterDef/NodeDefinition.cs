@@ -426,7 +426,7 @@ namespace Neon.Cluster
                 Azure.Validate(clusterDefinition, this.Name);
             }
 
-            if (clusterDefinition.Hosting.IsHypervisorProvider)
+            if (clusterDefinition.Hosting.IsRemoteHypervisorProvider)
             {
                 if (string.IsNullOrEmpty(VmHost))
                 {

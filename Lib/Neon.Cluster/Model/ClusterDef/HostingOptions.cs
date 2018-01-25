@@ -264,16 +264,16 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the cluster will be hosted by a hypervisor provider.
+        /// Returns <c>true</c> if the cluster will be hosted by a hypervisor provider
+        /// that supports remote hosts.
         /// </summary>
         [JsonIgnore]
-        public bool IsHypervisorProvider
+        public bool IsRemoteHypervisorProvider
         {
             get
             {
                 switch (Environment)
                 {
-                    case HostingEnvironments.HyperV:
                     case HostingEnvironments.XenServer:
 
                         return true;
@@ -281,6 +281,7 @@ namespace Neon.Cluster
                     case HostingEnvironments.Aws:
                     case HostingEnvironments.Azure:
                     case HostingEnvironments.Google:
+                    case HostingEnvironments.HyperV:    // $todo(jeff.lill): This will need to change when Hyper-V supports remote hosts.
                     case HostingEnvironments.Machine:
 
                         return false;
