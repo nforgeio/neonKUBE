@@ -40,6 +40,13 @@ namespace Neon.Cluster
         Google,
 
         /// <summary>
+        /// Microsoft Hyper-V hypervisor running on remote servers
+        /// (typically for production purposes).
+        /// </summary>
+        [EnumMember(Value = "hyper-v")]
+        HyperV,
+
+        /// <summary>
         /// Microsoft Hyper-V hypervisor running on the local workstation
         /// (typically for development or test purposes).
         /// </summary>
@@ -47,7 +54,8 @@ namespace Neon.Cluster
         LocalHyperV,
 
         /// <summary>
-        /// Citrix XenServer hypervisor.
+        /// Citrix XenServer hypervisor running on remote servers (typically
+        /// for production purposes).
         /// </summary>
         [EnumMember(Value = "xenserver")]
         XenServer

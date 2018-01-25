@@ -228,6 +228,47 @@ namespace Neon.Cluster
         public string VmDriveFolder { get; set; } = null;
 
         /// <summary>
+        /// <para>
+        /// The prefix to be prepended to virtual machine provisioned to hypervisors for the
+        /// <see cref="HostingEnvironments.HyperV"/>, <see cref="HostingEnvironments.LocalHyperV"/>,
+        /// and <see cref="HostingEnvironments.XenServer"/> environments.
+        /// </para>
+        /// <para>
+        /// When this is <c>null</c>, the cluster name followed by a dash will prefix the
+        /// provisioned virtual machine names.  When this is a non-empty string, the value
+        /// value followed by a dash will be used.  If this is empty or whitespace, machine
+        /// names will not be prefixed.
+        /// </para>
+        /// <note>
+        /// Virtual machine name prefixes will always be converted to lowercase.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "VmNamePrefix", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string VmNamePrefix { get; set; }  = null;
+
+        /// <summary>
+        /// Returns the prefix to be used when provisioning virtual machines in hypervisor environments.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <returns>The prefix.</returns>
+        internal string GetVmNamePrefix(ClusterDefinition clusterDefinition)
+        {
+            if (VmNamePrefix == null)
+            {
+                return $"{clusterDefinition.Name}-".ToLowerInvariant();
+            }
+            else if (string.IsNullOrWhiteSpace(VmNamePrefix))
+            {
+                return string.Empty;
+            }
+            else
+            {
+                return $"{VmNamePrefix}-".ToLowerInvariant();
+            }
+        }
+
+        /// <summary>
         /// Returns <c>true</c> if the cluster will be hosted by a cloud provider like AWS, Azure or Google.
         /// </summary>
         [JsonIgnore]
@@ -369,6 +410,14 @@ namespace Neon.Cluster
                 // VPN is implicitly enabled when hosting on a cloud.
 
                 clusterDefinition.Vpn.Enabled = true;
+            }
+
+            if (!string.IsNullOrWhiteSpace(VmNamePrefix))
+            {
+                if (!ClusterDefinition.IsValidName(VmNamePrefix))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(VmNamePrefix)}={VmNamePrefix}] must include only letters, digits, underscores, or periods.");
+                }
             }
         }
 

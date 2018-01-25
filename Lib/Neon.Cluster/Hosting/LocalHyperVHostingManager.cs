@@ -197,15 +197,12 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Returns the name to use for naming the virtual machine hosting the node.
-        /// currently, this is the name of the cluster (lowercase) followed by a 
-        /// dash and then the node name.  This convention will help disambiguate
-        /// nodes from multiple clusters on the same hypervisor hosts.
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <returns>The virtual machine name.</returns>
         private string GetVmName(NodeDefinition node)
         {
-            return $"{cluster.Definition.Name.ToLowerInvariant()}-{node.Name}";
+            return $"{cluster.Definition.Hosting.GetVmNamePrefix(cluster.Definition)}{node.Name}";
         }
 
         /// <summary>
@@ -218,7 +215,7 @@ namespace Neon.Cluster
         /// </returns>
         private string ExtractNodeName(string machineName)
         {
-            var clusterPrefix = $"{cluster.Definition.Name.ToUpperInvariant()}-";
+            var clusterPrefix = cluster.Definition.Hosting.GetVmNamePrefix(cluster.Definition);
 
             if (machineName.StartsWith(clusterPrefix))
             {
