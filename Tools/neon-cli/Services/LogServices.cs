@@ -128,7 +128,7 @@ namespace NeonCli
 
                     var esNodeCount = cluster.Definition.Nodes.Count(n => n.Labels.LogEsData);
 
-                    firstManager.Status = $"Waiting for [neon-log-esdata] cluster [0/{esNodeCount} nodes ready] (be patient)";
+                    firstManager.Status = $"Waiting for [neon-log-esdata] cluster [0/{esNodeCount} nodes ready] (slow)";
 
                     using (var jsonClient = new JsonClient())
                     {
@@ -150,7 +150,7 @@ namespace NeonCli
                                 {
                                     dynamic clusterStatus = response.AsDynamic();
 
-                                    firstManager.Status = $"Waiting for [neon-log-esdata] cluster [{clusterStatus.number_of_nodes}/{esNodeCount} nodes ready] (be patient)";
+                                    firstManager.Status = $"Waiting for [neon-log-esdata] cluster [{clusterStatus.number_of_nodes}/{esNodeCount} nodes ready] (slow)";
 
                                     if (clusterStatus.status == "green" && clusterStatus.number_of_nodes == esNodeCount)
                                     {

@@ -122,7 +122,7 @@ ARGS:
                 // Compression is very slow, so add a message to be patient
                 // for files >= 200MB.
 
-                patience = " (be patient)";
+                patience = " (slow)";
             }
 
             Console.WriteLine($"Creating: {zipPath}...{patience}");
