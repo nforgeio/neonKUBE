@@ -575,6 +575,28 @@ verb 3
 
             File.WriteAllText(scriptPath, $"openvpn {startInfo.Arguments}");
 
+            // Add the default OpenVPN installation folder to the PATH
+            // environment variable if it's not present already.
+
+            if (NeonHelper.IsWindows)
+            {
+                var defaultOpenVpnPath = @"C:\Program Files\OpenVPN\bin";
+                var path               = Environment.GetEnvironmentVariable("PATH");
+
+                if (path.IndexOf(defaultOpenVpnPath, StringComparison.InvariantCultureIgnoreCase) == -1)
+                {
+                    Environment.SetEnvironmentVariable("PATH", $"{path};{defaultOpenVpnPath}");
+                }
+            }
+            else if (NeonHelper.IsOSX)
+            {
+                throw new NotImplementedException("$todo(jeff.lill): Implement this.");
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+
             try
             {
                 var process = Process.Start(startInfo);
@@ -589,7 +611,7 @@ verb 3
             catch (Exception e)
             {
                 NeonHelper.DeleteFolderContents(clientFolder);
-                throw new Exception($"*** ERROR: Cannot launch [OpenVPN].  Make sure OpenVPN is installed and isl on the PATH.", e);
+                throw new Exception($"*** ERROR: Cannot launch [OpenVPN].  Make sure OpenVPN is installed to its default folder or is on the PATH.", e);
             }
 
             // Wait for the VPN connection.
