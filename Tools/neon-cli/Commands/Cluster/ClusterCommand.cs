@@ -31,16 +31,9 @@ Performs basic cluster provisioning and management.
 
 USAGE:
 
-    neon cluster add        LOGIN-PATH
     neon cluster example
     neon cluster get        USER@CLUSTER
-    neon cluster list
-    neon cluster ls
     neon cluster prepare    CLUSTER-DEF
-    neon cluster property   VALUE
-    neon cluster property   NODE.VALUE
-    neon cluster remove     USER@CLUSTER
-    neon cluster rm         USER@CLUSTER
     neon cluster setup      CLUSTER-DEF
     neon cluster verify     CLUSTER-DEF
 
@@ -48,12 +41,7 @@ ARGUMENTS:
 
     CLUSTER-DEF         - Path to a cluster definition file.  This is
                           optional for some commands when logged in.
-    LOGIN-PATH          - Path to a cluster login file including
-                          the cluster definition and user credentials.
-    NODE                - Optionally identifies a specific node.
-    PATH                - File path.
     USER@CLUSTER        - Specifies a cluster login username and cluster.
-    VALUE               - Identifies the desired value
 ";
 
         /// <inheritdoc/>
