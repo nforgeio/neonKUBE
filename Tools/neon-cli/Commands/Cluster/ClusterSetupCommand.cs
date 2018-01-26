@@ -989,7 +989,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
         /// <param name="node">The target cluster node.</param>
         private void ConfigureVpnPoolRoutes(SshProxy<NodeDefinition> node)
         {
-            if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine || !cluster.Definition.Vpn.Enabled)
+            if (!cluster.Definition.Vpn.Enabled)
             {
                 // Note that cloud deployments handle VPN return routing via routing tables setup
                 // during cluster preparation.
