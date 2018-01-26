@@ -160,7 +160,7 @@ Server Requirements:
             // corrupt the existing cluster and probably prevent the new cluster from
             // provisioning correctly.
 
-            Console.WriteLine("Verifying that node IP addresses are not in use.");
+            Console.WriteLine("Verifying that node IP addresses are already not in use.");
 
             var pingOptions   = new PingOptions(ttl: 32, dontFragment: true);
             var pingTimeout   = TimeSpan.FromSeconds(2);
