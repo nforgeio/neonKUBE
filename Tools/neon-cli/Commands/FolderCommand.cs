@@ -88,7 +88,7 @@ OPTIONS:
 
                 case "ansible-vault":
 
-                    path = NeonClusterHelper.GetAnsibleVaultFolder();
+                    path = NeonClusterHelper.GetAnsiblePasswordsFolder();
                     break;
 
                 case "logins":

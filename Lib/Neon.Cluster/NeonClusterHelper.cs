@@ -206,9 +206,9 @@ namespace Neon.Cluster
         /// Returns the path to the root folder containing the Ansible Vault password files.
         /// </summary>
         /// <returns>The folder path.</returns>
-        public static string GetAnsibleVaultFolder()
+        public static string GetAnsiblePasswordsFolder()
         {
-            var path = Path.Combine(GetRootFolder(), "ansible", "vault");
+            var path = Path.Combine(GetRootFolder(), "ansible", "passwords");
 
             Directory.CreateDirectory(path);
 

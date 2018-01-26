@@ -89,8 +89,8 @@ command installs roles to the your workstation in a user specific folder:
 Ansible vault passwords are managed via the [neon ansible vault] command which
 manages secrets on your workstation in the user specific folder:
 
-    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\vault  - for Windows
-    ~/.neonforge/neoncluster/ansible/vault              - for OSX
+    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\passwords  - for Windows
+    ~/.neonforge/neoncluster/ansible/passwords              - for OSX
 ";
 
         private const string execHelp = @"
@@ -206,8 +206,8 @@ passwords or use [--vault-password-file FILE] to specify the password.
 Note that all password files must be located at a user specific folder
 on your workstation and must be referenced without specifying a path:
 
-    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\vault  - for Windows
-    ~/.neonforge/neoncluster/ansible/vault              - for OSX
+    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\passwords  - for Windows
+    ~/.neonforge/neoncluster/ansible/passwords              - for OSX
 ";
 
         private const string passwordHelp = @"
@@ -237,8 +237,8 @@ OPTIONS:
 Passwords are simple text files that hold passwords on a single line.  These
 are stored in a user-specific folder at:
 
-    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\vault  - for Windows
-    ~/.neonforge/neoncluster/ansible/vault              - for OSX
+    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\passwords  - for Windows
+    ~/.neonforge/neoncluster/ansible/passwords              - for OSX
 ";
 
         private const string sshClientPrivateKeyPath = "/dev/shm/ansible/ssh-client.key";   // Path to the SSH private client key (on a container RAM drive)
@@ -297,7 +297,7 @@ are stored in a user-specific folder at:
                     Program.Exit(0);
                 }
 
-                string vaultFolder     = NeonClusterHelper.GetAnsibleVaultFolder();
+                string vaultFolder     = NeonClusterHelper.GetAnsiblePasswordsFolder();
                 string passwordCommand = passwordCommandLine.Arguments.First();
                 string passwordName    = passwordCommandLine.Arguments.Skip(1).FirstOrDefault();
                 string passwordValue   = passwordCommandLine.Arguments.Skip(2).FirstOrDefault();
