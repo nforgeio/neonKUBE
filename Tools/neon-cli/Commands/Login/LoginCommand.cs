@@ -31,7 +31,7 @@ Manages cluster logins for the current user on the local computer.
 
 USAGE:
 
-    neon login          [--vpn] USER@CLUSTER
+    neon login          [--no-vpn] USER@CLUSTER
     neon login export   USER@CLUSTER
     neon login import   PATH
     neon login list
@@ -42,8 +42,8 @@ USAGE:
 
 OPTIONS:
 
-    --vpn           - Connect using the cluster VPN
-                      (for on-premise clusters)
+    --no-vpn        - Don't connect using the cluster VPN
+                      (for on-premise clusters only)
                    
 ARGUMENTS:
 
@@ -60,7 +60,7 @@ ARGUMENTS:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--vpn" }; }
+            get { return new string[] { "--no-vpn" }; }
         }
 
         /// <inheritdoc/>
@@ -133,7 +133,7 @@ ARGUMENTS:
             {
                 if (clusterLogin.Definition.Vpn.Enabled)
                 {
-                    if (commandLine.HasOption("--vpn"))
+                    if (!commandLine.HasOption("--no-vpn"))
                     {
                         if (!clusterLogin.Definition.Vpn.Enabled)
                         {

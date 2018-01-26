@@ -74,7 +74,7 @@ COMMAND SUMMARY:
     neon exec               BASH-CMD
     neon folder             FOLDER
     neon get                [VALUE-EXPR]
-    neon login              [--vpn] USER@CLUSTER
+    neon login              [--no-vpn] USER@CLUSTER
     neon login export       USER@CLUSTER
     neon login import       PATH
     neon login list
