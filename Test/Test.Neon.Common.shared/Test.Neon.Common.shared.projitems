@@ -47,6 +47,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)System\Test_AsyncAutoResetEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\Test_AsyncMutex.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\Test_AsyncReaderWriterLock.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System\Test_Enum.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\Test_Exception.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\Test_ManualResetEvent.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\Test_StringBuilder.cs" />
