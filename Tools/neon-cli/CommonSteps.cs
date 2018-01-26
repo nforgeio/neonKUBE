@@ -251,7 +251,7 @@ ClientAliveCountMax 20
 
             if (clusterDefinition.Hosting != null)
             {
-                sb.AppendLine($"NEON_HOSTING={clusterDefinition.Hosting.Environment.ToString().ToLowerInvariant()}");
+                sb.AppendLine($"NEON_HOSTING={clusterDefinition.Hosting.Environment.ToMemberString().ToLowerInvariant()}");
             }
 
             sb.AppendLine($"NEON_NODE_NAME={node.Name}");
