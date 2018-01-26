@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -27,7 +28,7 @@ namespace NeonCli
     public class ClusterPrepareCommand : CommandBase
     {
         private const string usage = @"
-Configures cloud platform virtual machines  so that they are prepared 
+Configures cloud platform virtual machines so that they are prepared 
 to host a neonCLUSTER.
 
 USAGE:
@@ -149,11 +150,65 @@ Server Requirements:
                     var managerVpnSubnet    = new NetworkCidr(NetHelper.AddressIncrement(nextVpnSubnetAddress, VpnOptions.ServerAddressCount), prefixLength);
 
                     manager.VpnPoolSubnet = managerVpnSubnet.ToString();
-                    nextVpnSubnetAddress    = managerVpnSubnet.NextAddress;
+                    nextVpnSubnetAddress  = managerVpnSubnet.NextAddress;
                 }
             }
 
-            // Initialize the hosting environment manager.
+            //-----------------------------------------------------------------
+            // Try to ensure that no servers are already deployed on the IP addresses defined
+            // for cluster nodes, because provisoning over an existing cluster will likely
+            // corrupt the existing cluster and probably prevent the new cluster from
+            // provisioning correctly.
+
+            Console.WriteLine("Verifying that node IP addresses are not in use.");
+
+            var pingOptions   = new PingOptions(ttl: 32, dontFragment: true);
+            var pingTimeout   = TimeSpan.FromSeconds(2);
+            var pingConflicts = new List<NodeDefinition>();
+
+            // I'm going to use up to 20 threads at a time here for simplicity
+            // rather then doing this as async operations.
+
+            var parallelOptions = new ParallelOptions()
+            {
+                MaxDegreeOfParallelism = 20
+            };
+
+            Parallel.ForEach(cluster.Definition.NodeDefinitions.Values, parallelOptions,
+                node =>
+                {
+                    using (var pinger = new Ping())
+                    {
+                        var reply = pinger.Send(node.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
+
+                        if (reply.Status == IPStatus.Success)
+                        {
+                            lock (pingConflicts)
+                            {
+                                pingConflicts.Add(node);
+                            }
+                        }
+                    }
+                });
+
+            if (pingConflicts.Count > 0)
+            {
+                Console.Error.WriteLine($"*** ERROR: Cannot provision the cluster because [{pingConflicts.Count}] other machines conflict with the");
+                Console.Error.WriteLine($"***        following cluster nodes:");
+                Console.Error.WriteLine();
+
+                foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(IPAddress.Parse(n.PrivateAddress))))
+                {
+                    Console.Error.WriteLine($"{node.PrivateAddress, 16}:    {node.Name}");
+                }
+
+                Program.Exit(1);
+            }
+
+            //-----------------------------------------------------------------
+            // Perform basic environment provisioning.  This creates basic cluster components
+            // such as virtual machines, networks, load balancers, public IP addresses, security
+            // groups,... as required for the environment.
 
             hostingManager              = HostingManager.GetManager(cluster.Definition.Hosting.Environment, cluster, Program.LogPath);
             hostingManager.HostUsername = Program.Username;
@@ -161,11 +216,6 @@ Server Requirements:
             hostingManager.ShowStatus   = !Program.Quiet;
             hostingManager.MaxParallel  = Program.MaxParallel;
             hostingManager.WaitSeconds  = Program.WaitSeconds;
-
-            //-----------------------------------------------------------------
-            // Perform basic environment provisioning.  This creates basic cluster components
-            // such as virtual machines, networks, load balancers, public IP addresses, security
-            // groups,... as required for the environment.
 
             if (!hostingManager.Provision(force))
             {
@@ -229,11 +279,11 @@ Server Requirements:
                 controller.AddStep("vpn server", n => ConfigManagerVpn(n), n => n.Metadata.IsManager);
 
                 // Add a step to establish a VPN connection if we're provisioning to a cloud.
-                // We specifically don't want to do this if we're provisioning to a private
+                // We specifically don't want to do this if we're provisioning to a on-premise
                 // datacenter because we're assuming that we're already directly connected to
                 // the LAN while preparing and setting up the cluster.
 
-                if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine)
+                if (cluster.Definition.Hosting.IsCloudProvider)
                 {
                     controller.AddStep("vpn connect",
                         manager =>
@@ -283,7 +333,7 @@ Server Requirements:
                 Definition   = cluster.Definition,
                 SshUsername  = Program.Username,
                 SshPassword  = Program.Password,
-                PartialSetup = true
+                SetupPending = true
             };
 
             if (cluster.Definition.Vpn.Enabled)
