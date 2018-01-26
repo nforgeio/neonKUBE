@@ -398,11 +398,11 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
-            if (clusterDefinition.Hosting.Environment == HostingEnvironments.Machine)
+            if (clusterDefinition.Hosting.IsOnPremiseProvider)
             {
                 if (string.IsNullOrEmpty(PrivateAddress))
                 {
-                    throw new ClusterDefinitionException($"Node [{Name}] requires [{nameof(PrivateAddress)}] when hosting in a private facility.");
+                    throw new ClusterDefinitionException($"Node [{Name}] requires [{nameof(PrivateAddress)}] when hosting in an on-premise facility.");
                 }
 
                 if (!IPAddress.TryParse(PrivateAddress, out var nodeAddress))
@@ -411,7 +411,7 @@ namespace Neon.Cluster
                 }
             }
 
-            if (IsManager && clusterDefinition.Hosting.Environment == HostingEnvironments.Machine && clusterDefinition.Vpn.Enabled)
+            if (IsManager && clusterDefinition.Hosting.IsOnPremiseProvider && clusterDefinition.Vpn.Enabled)
             {
                 if (!NetHelper.IsValidPort(VpnFrontendPort))
                 {

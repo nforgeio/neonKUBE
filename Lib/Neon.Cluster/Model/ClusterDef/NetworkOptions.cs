@@ -764,7 +764,7 @@ namespace Neon.Cluster
 
                 if (clusterDefinition.Vpn.Enabled)
                 {
-                    if (clusterDefinition.Hosting.Environment == HostingEnvironments.Machine)
+                    if (clusterDefinition.Hosting.IsOnPremiseProvider)
                     {
                         if (string.IsNullOrEmpty(ManagerRouter))
                         {

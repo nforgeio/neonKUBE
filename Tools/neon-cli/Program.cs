@@ -916,14 +916,14 @@ that the tool requires admin priviledges for direct mode.
         /// created by the <b>neon prepare cluster</b> command that generates a login that
         /// has been initialized enough to allow setup to connect to the cluster via a VPN
         /// if necessary, has the host root account credentials, and also includes the
-        /// cluster definition.  Partially intializated logins will have <see cref="ClusterLogin.PartialSetup"/>
+        /// cluster definition.  Partially intializated logins will have <see cref="ClusterLogin.SetupPending"/>
         /// set to <c>true</c>.
         /// </remarks>
         public static ClusterLogin ConnectCluster(bool allowPreparedOnly = false)
         {
             var clusterLogin = Program.GetClusterLogin(isRequired: true);
 
-            if (clusterLogin.PartialSetup && !allowPreparedOnly)
+            if (clusterLogin.SetupPending && !allowPreparedOnly)
             {
                 throw new Exception($"Cluster login [{clusterLogin.LoginName}] does not reference a fully configured cluster.  Use the [neon cluster setup...] command to complete cluster configuration.");
             }

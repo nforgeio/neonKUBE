@@ -48,7 +48,7 @@ namespace NeonCli
                     info += "root";
                 }
 
-                if (clusterLogin.PartialSetup)
+                if (clusterLogin.SetupPending)
                 {
                     if (info.Length > 0)
                     {

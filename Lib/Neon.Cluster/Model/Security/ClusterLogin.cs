@@ -91,11 +91,12 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Indicates that the credentials are not fully initialized.  This will be <c>true</c> when
-        /// a cluster has been prepared but has not yet been fully setup.
+        /// a cluster has been prepared but has not yet been fully setup.  This defaults to <c>true</c>
+        /// and will be set to <c>false</c> after the cluster has been fully configured.
         /// </summary>
-        [JsonProperty(PropertyName = "PartialSetup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(false)]
-        public bool PartialSetup { get; set; }
+        [JsonProperty(PropertyName = "SetupPending", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(true)]
+        public bool SetupPending { get; set; } = true;
 
         /// <summary>
         /// Indicates that the login has cluster root capabilities (e.g. managing the cloud infrastructure and other user logins).

@@ -95,7 +95,7 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            var usernme    = login.Username;
+            var usernme     = login.Username;
             var clusterName = login.ClusterName;
 
             if (clusterLogin != null && 
@@ -129,7 +129,7 @@ ARGUMENTS:
 
             var useVpn = false;
 
-            if (clusterLogin.Definition.Hosting.Environment == HostingEnvironments.Machine)
+            if (clusterLogin.Definition.Hosting.IsOnPremiseProvider)
             {
                 if (clusterLogin.Definition.Vpn.Enabled)
                 {

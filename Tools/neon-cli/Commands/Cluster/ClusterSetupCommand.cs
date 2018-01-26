@@ -140,9 +140,9 @@ OPTIONS:
             clusterLogin      = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(clusterLoginPath));
             clusterLogin.Path = clusterLoginPath;
 
-            if (!clusterLogin.PartialSetup)
+            if (!clusterLogin.SetupPending)
             {
-                Console.Error.WriteLine($"*** ERROR: Cluster [{cluster.Definition.Name}] has already been setup.");
+                Console.Error.WriteLine($"*** ERROR: Cluster [{clusterLogin.ClusterName}] has already been setup.");
             }
 
             cluster = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>, RunOptions.LogOutput | RunOptions.FaultOnError);
@@ -158,7 +158,7 @@ OPTIONS:
             // not provisioning on-premise or not running in the tool container.
 
             if (clusterLogin.Definition.Vpn.Enabled && 
-                clusterLogin.Definition.Hosting.Environment != HostingEnvironments.Machine && 
+                clusterLogin.Definition.Hosting.IsCloudProvider && 
                 !NeonClusterHelper.InToolContainer)
             {
                 NeonClusterHelper.VpnOpen(clusterLogin,
@@ -407,7 +407,7 @@ OPTIONS:
 
             // Update the cluster login file.
 
-            clusterLogin.PartialSetup = false;
+            clusterLogin.SetupPending = false;
             clusterLogin.IsRoot       = true;
             clusterLogin.Username     = NeonClusterConst.RootUser;
             clusterLogin.Definition   = cluster.Definition;
@@ -426,7 +426,7 @@ OPTIONS:
             Console.WriteLine($"*** Logging into [{NeonClusterConst.RootUser}@{cluster.Definition.Name}].");
 
             // Note that we're going to login via the VPN for cloud environments
-            // but not for local hosting since the operator had to be on premise
+            // but not for local hosting since the operator had to be on-premise
             // to have just completed cluster setup.
             var currentLogin =
                 new CurrentClusterLogin()
@@ -490,7 +490,7 @@ OPTIONS:
 
             clusterLogin.Definition.Validate();
 
-            if (!clusterLogin.PartialSetup)
+            if (!clusterLogin.SetupPending)
             {
                 Console.Error.WriteLine($"*** ERROR: Cluster [{clusterName}] has already been setup.");
             }
@@ -501,7 +501,8 @@ OPTIONS:
             // On-premise clusters are always setup via local network connections
             // so we will be connecting the VPN. 
 
-            if (clusterLogin.Definition.Vpn.Enabled && clusterLogin.Definition.Hosting.Environment != HostingEnvironments.Machine)
+            if (clusterLogin.Definition.Vpn.Enabled &&
+                clusterLogin.Definition.Hosting.IsCloudProvider)
             {
                 NeonClusterHelper.VpnOpen(clusterLogin,
                     onStatus: message => Console.WriteLine($"*** {message}"),

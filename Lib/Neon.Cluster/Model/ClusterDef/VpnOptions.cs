@@ -93,7 +93,7 @@ namespace Neon.Cluster
                 return;
             }
 
-            if (clusterDefinition.Hosting.Environment == HostingEnvironments.Machine)
+            if (clusterDefinition.Hosting.IsOnPremiseProvider)
             {
                 // Ensure that the manager nodes are assigned VPN frontend ports
                 // for on-premise deployments.  We're going to assign the standard
