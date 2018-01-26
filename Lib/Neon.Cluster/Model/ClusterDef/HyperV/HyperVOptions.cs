@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    LocalHyperVOptions.cs
+// FILE:	    HyperVOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -13,9 +13,9 @@ using Newtonsoft.Json.Serialization;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Specifies hosting settings for the local Microsoft Hyper-V hypervisor.
+    /// Specifies hosting settings for the Microsoft Hyper-V hypervisor.
     /// </summary>
-    public class LocalHyperVOptions
+    public class HyperVOptions
     {
         private const string defaultHostVhdxUri      = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.vhdx.zip";
         internal const string defaultVmMinimumMemory = "2GB";
@@ -23,7 +23,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public LocalHyperVOptions()
+        public HyperVOptions()
         {
         }
 

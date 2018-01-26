@@ -123,11 +123,19 @@ namespace Neon.Cluster
         public GoogleOptions Google { get; set; } = null;
 
         /// <summary>
-        /// Specifies the hosting settings when hosting on the local workstation using the 
+        /// Specifies the Hyper-V settings when hosting on remote Hyper-V servers.  
+        /// This is typically used for production.
+        /// </summary>
+        [JsonProperty(PropertyName = "HyperV", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public HyperVOptions HyperV { get; set; } = null;
+
+        /// <summary>
+        /// Specifies the Hyper-V settings when hosting on the local workstation using the 
         /// Microsoft Hyper-V hypervisor.  This is typically used for development or
         /// test purposes.
         /// </summary>
-        [JsonProperty(PropertyName = "HyperV", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "LocalHyperV", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public LocalHyperVOptions LocalHyperV { get; set; } = null;
 
@@ -278,6 +286,7 @@ namespace Neon.Cluster
             {
                 switch (Environment)
                 {
+                    case HostingEnvironments.HyperV:
                     case HostingEnvironments.LocalHyperV:
                     case HostingEnvironments.Machine:
                     case HostingEnvironments.XenServer:
@@ -317,6 +326,7 @@ namespace Neon.Cluster
             {
                 switch (Environment)
                 {
+                    case HostingEnvironments.HyperV:
                     case HostingEnvironments.XenServer:
 
                         return true;
@@ -377,6 +387,13 @@ namespace Neon.Cluster
                     }
 
                     Google.Validate(clusterDefinition);
+                    break;
+
+                case HostingEnvironments.HyperV:
+
+                    HyperV = HyperV ?? new HyperVOptions();
+
+                    HyperV.Validate(clusterDefinition);
                     break;
 
                 case HostingEnvironments.LocalHyperV:
@@ -510,6 +527,7 @@ namespace Neon.Cluster
             Aws         = null;
             Azure       = null;
             Google      = null;
+            HyperV      = null;
             LocalHyperV = null;
             Machine     = null;
             XenServer   = null;
