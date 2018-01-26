@@ -165,6 +165,7 @@ Server Requirements:
             var pingOptions   = new PingOptions(ttl: 32, dontFragment: true);
             var pingTimeout   = TimeSpan.FromSeconds(2);
             var pingConflicts = new List<NodeDefinition>();
+            var pingAttempts  = 2;
 
             // I'm going to use up to 20 threads at a time here for simplicity
             // rather then doing this as async operations.
@@ -179,13 +180,21 @@ Server Requirements:
                 {
                     using (var pinger = new Ping())
                     {
-                        var reply = pinger.Send(node.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
+                        // We're going to try pinging up to [pingAttempts] times for each node
+                        // just in case the network it sketchy and we're loosing reply packets.
 
-                        if (reply.Status == IPStatus.Success)
+                        for (int i = 0; i < pingAttempts; i++)
                         {
-                            lock (pingConflicts)
+                            var reply = pinger.Send(node.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
+
+                            if (reply.Status == IPStatus.Success)
                             {
-                                pingConflicts.Add(node);
+                                lock (pingConflicts)
+                                {
+                                    pingConflicts.Add(node);
+                                }
+
+                                break;
                             }
                         }
                     }
