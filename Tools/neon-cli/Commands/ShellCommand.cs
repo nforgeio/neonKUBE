@@ -33,13 +33,13 @@ variables and secrets located in a specified folder.
 
 USAGE:
 
-    neon shell SECRETS-PATH -- CMD ...
+    neon shell SECRETS-PATH -- CMD...
 
 ARGUMENTS:
 
     SECRETS-PATH            - Path to the secrets folder.
     --                      - Separates the Neon and Shell commands.
-    CMD                     - Command and arguments to be executed. 
+    CMD...                  - Command and arguments to be executed. 
 
 NOTES:
 
@@ -48,7 +48,7 @@ be difficult.  Docker and neonCLUSTER provide mechanisms for persisting
 and using secrets in a cluster, but it's still necessary to provision
 the secrets securely in the first place.
 
-This command provides a way to securly manage collections of secrets 
+This command provides a way to securely manage collections of secrets 
 related to specific deployments and then execute local shell commands 
 to use the secrets to provision or manage the cluster.
 
