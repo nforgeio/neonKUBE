@@ -152,9 +152,15 @@ namespace Neon.Common
         /// Reads a password from the <see cref="Console"/> terminated by <b>Enter</b>
         /// without echoing the typed characters.
         /// </summary>
+        /// <param name="prompt">Optional prompt.</param>
         /// <returns>The password entered.</returns>
-        public static string ReadConsolePassword()
+        public static string ReadConsolePassword(string prompt = null)
         {
+            if (!string.IsNullOrEmpty(prompt))
+            {
+                Console.Write(prompt);
+            }
+
             var password = string.Empty;
 
             while (true)

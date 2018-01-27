@@ -584,9 +584,7 @@ that the tool requires admin priviledges for direct mode.
 
                     while (string.IsNullOrEmpty(Password))
                     {
-                        Console.Write("    password: ");
-
-                        Password = NeonHelper.ReadConsolePassword();
+                        Password = NeonHelper.ReadConsolePassword("    password: ");
                     }
                 }
 
