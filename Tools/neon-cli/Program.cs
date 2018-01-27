@@ -1073,41 +1073,6 @@ that the tool requires admin priviledges for direct mode.
         }
 
         /// <summary>
-        /// Returns the file path to the currently running executable.
-        /// </summary>
-        public static string PathToExecutable
-        {
-            get
-            {
-                // $hack(jeff.lill):
-                //
-                // This is a bit of hack.  There are two cases:
-                //
-                //      1. The tool is being run in the debugger, in which case
-                //         we're not running the standalone executable that has
-                //         all of the referenced assemblies merged in.  We can
-                //         tell this if the file name begins with an underscore (_).
-                //     
-                //         In this case, we're going to reference the fully merged
-                //         executable built in the post-build script and written
-                //         to %NF_BUILD%\bin.
-                //
-                //      2. The tool is running from the fully merged executable.
-                //         This will happen when running on the command line or
-                //         on a Linux box.
-
-                var path = Process.GetCurrentProcess().MainModule.FileName;
-
-                if (Path.GetFileName(path).StartsWith("_"))
-                {
-                    path = Path.Combine(BuildEnvironment.BuildArtifactPath, "neon-cli");
-                }
-
-                return path;
-            }
-        }
-
-        /// <summary>
         /// Presents the user with a yes/no question and waits for a response.
         /// </summary>
         /// <param name="prompt">The question prompt.</param>
