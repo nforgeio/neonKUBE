@@ -12,6 +12,7 @@ using System.IO.Compression;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
+using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -1270,6 +1271,44 @@ namespace Neon.Common
 
             // Do the actual conversion
             return Convert.FromBase64CharArray(base64Chars, 0, base64Chars.Length);
+        }
+
+        /// <summary>
+        /// Returns the fully qualified path to the folder holding the
+        /// assembly passed (includes the terminating "\").
+        /// </summary>
+        /// <param name="assembly">The assembly.</param>
+        /// <returns>Path to the folder holding the assembly.</returns>
+        public static string GetAssemblyFolder(Assembly assembly)
+        {
+            // Get the path to the directory hosting the assembly by
+            // stripping off the file URI scheme if present and the
+            // assembly's file name.
+
+            string path;
+            int pos;
+
+            path = NeonHelper.StripFileScheme(assembly.CodeBase);
+
+            pos = path.LastIndexOfAny(new char[] { '/', '\\' });
+            if (pos == -1)
+                throw new InvalidOperationException("Helper.GetAssemblyFolder() works only for assemblies loaded from disk.");
+
+            return path.Substring(0, pos + 1);
+        }
+
+        /// <summary>
+        /// Returns the fully qualified path to the assembly file.
+        /// </summary>
+        /// <param name="assembly">The assembly.</param>
+        /// <returns>The assembly's path.</returns>
+        public static string GetAssemblyPath(Assembly assembly)
+        {
+            // Get the path to the directory hosting the assembly by
+            // stripping off the file URI scheme if present and the
+            // assembly's file name.
+
+            return NeonHelper.StripFileScheme(assembly.CodeBase);
         }
     }
 }
