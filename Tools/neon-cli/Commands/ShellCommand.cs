@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -16,9 +17,12 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
+using YamlDotNet.RepresentationModel;
+
 using Neon.Cluster;
 using Neon.Common;
 using Neon.IO;
+using System.Diagnostics.Contracts;
 
 namespace NeonCli
 {
@@ -29,23 +33,23 @@ namespace NeonCli
     {
         private const string usage = @"
 Runs a shell command on the local workstation, in the context of environment
-variables loaded from one or more Ansible compatible YAML variable files,
-optionally decryting the secrets file first.
+variables loaded from zero or more Ansible compatible YAML variable files.
 
 USAGE:
 
-    neon shell [--password-file=PATH] [--ask-vault-pass] VARS1 [VARS2...] -- CMD...
+    neon shell [---vault-password-file=PATH] [--ask-vault-pass] [VARS1] VARS2...] -- CMD...
 
 ARGUMENTS:
 
-    VARS#                   - Path to a YAML variables file
+    VARS#                   - Path to a YAML (Ansible) variables file.
+                              (This file may optionally be encrypted)
     --                      - Indicates the start of the command/args
                               to be invoked
     CMD...                  - Command and arguments
 
 OPTIONS:
 
-    --password-file=PATH    - Optionally specifies the path to the password
+    --vault-password-file=PATH - Optionally specifies the path to the password
                               file to be used to decrypt the variable files.
                               See the notes below discussing where password
                               files are located.
@@ -55,10 +59,10 @@ OPTIONS:
 
 NOTES:
 
-This command works by reading variables from one or more files, setting
-these as environment variables and then executing a command in the 
-context of these environment variables.  The variable files are formatted
-as Ansible compatible YAML, like:
+This command works by reading variables from one or more YAMLfiles, setting
+these as environment variables and then executing a command in the context
+of these environment variables.  The variable files are formatted as Ansible
+compatible YAML, like:
 
     username: jeff
     password: super.dude
@@ -78,11 +82,11 @@ Variable files can be encrypted using the [neon ansible vault encrypt]
 command and then can be used by [neon shell] and other [neon ansible]
 commands.  Encryption passwords can be specified manually using a 
 prompt by passing [--ask-vault-pass] or by passing the PATH to a
-password file via [--password-file=PATH].
+password file via [--vault-password-file=PATH].
 
-Password files simply hold a password as a single line text file.
-[neon-cli] expects password files to be located in a user-specific
-directory on your workstation:
+Password files simply hold a password as a single line text.  [neon-cli]
+expects password files to be located in a user-specific directory on your
+workstation:
 
     %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\passwords  - for Windows
     ~/.neonforge/neoncluster/ansible/passwords              - for OSX
@@ -98,9 +102,15 @@ These folders are encrypted at rest for security.  You can use the
         }
 
         /// <inheritdoc/>
-        public override bool CheckOptions
+        public override string[] ExtendedOptions
         {
-            get { return false; }
+            get { return new string[] { "--vault-password-file", "--ask-vault-pass" }; }
+        }
+
+        /// <inheritdoc/>
+        public override string SplitItem
+        {
+            get { return "--"; }
         }
 
         /// <inheritdoc/>
@@ -124,19 +134,13 @@ These folders are encrypted at rest for security.  You can use the
                 Program.Exit(1);
             }
 
-            var shellCommandLine = Program.CommandLine.Split().Right;
+            var commandSplit     = Program.CommandLine.Split();
+            var leftCommandLine  = commandSplit.Left.Shift(1);
+            var rightCommandLine = commandSplit.Right;
 
-            if (shellCommandLine == null || shellCommandLine.Arguments.Length == 0)
+            if (rightCommandLine == null || rightCommandLine.Arguments.Length == 0)
             {
-                Console.Error.WriteLine("*** ERROR: Expecting a [--] argument followed be a shell command.");
-                Program.Exit(1);
-            }
-
-            var secretsFolder = commandLine.Arguments[0];
-
-            if (!Directory.Exists(secretsFolder))
-            {
-                Console.Error.WriteLine($"*** ERROR: Secrets folder [{secretsFolder}] does not exist.");
+                Console.Error.WriteLine("*** ERROR: Expecting a [--] argument followed by a shell command.");
                 Program.Exit(1);
             }
 
@@ -146,88 +150,137 @@ These folders are encrypted at rest for security.  You can use the
 
             try
             {
-                // Create the temporary shell folder and copy the secret files there.
+                // Create the temporary shell folder and make it the current directory.
 
-                NeonHelper.CopyFolder(secretsFolder, shellFolder);
+                Directory.CreateDirectory(shellFolder);
 
-                // Make the temporary shell folder the current directory.
+                // We need to load variables from any files specified on the command line,
+                // decrypting them as required.
 
-                Directory.SetCurrentDirectory(shellFolder);
-
-                // Load environment variables from the the special [__env.txt] file (if present).
-
-                var envFilePath = Path.Combine(shellFolder, "__env.txt");
-
-                if (File.Exists(envFilePath))
+                if (leftCommandLine.Arguments.Length > 0)
                 {
-                    // Read environment variables of the form VAR=VALUE, skipping over
-                    // whitespace, comments and invalid statements.
+                    bool    askVaultPass     = leftCommandLine.HasOption("--ask-vault-pass");
+                    string  tempPasswordPath = null;
+                    string  passwordPath     = null;
 
-                    var variables = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
-
-                    using (var reader = new StreamReader(new FileStream(envFilePath, FileMode.Open, FileAccess.Read)))
+                    try
                     {
-                        foreach (var raw in reader.Lines())
+                        if (askVaultPass)
                         {
-                            var line = raw.Trim();
+                            // Note that [--ask-vault-pass] takes presidence over [--vault-password-file].
 
-                            if (line.Length == 0 || line.StartsWith("#"))
-                            {
-                                continue;
-                            }
+                            var password = NeonHelper.ReadConsolePassword("password: ");
 
-                            var parts = line.Split(new char[] { '=' }, 2);
+                            // We need to generate a temporary password file in the
+                            // Ansible passwords folder so we can pass it to the
+                            // [neon ansible decrypt -- ...] command.
 
-                            if (parts.Length != 2)
-                            {
-                                continue;
-                            }
+                            var passwordsFolder = NeonClusterHelper.GetAnsiblePasswordsFolder();
+                            var guid            = Guid.NewGuid().ToString("D");
 
-                            var name  = parts[0].Trim();
-                            var value = parts[1].Trim();
+                            tempPasswordPath = Path.Combine(passwordsFolder, $"{guid}.tmp");
+                            passwordPath     = tempPasswordPath.Substring(passwordsFolder.Length + 1);
 
-                            if (name.Length > 0)
-                            {
-                                variables[name] = value;
-                            }
-                        }
-                    }
-
-                    // Set the local environment variables.
-
-                    // $todo(jeff.lill):
-                    //
-                    // Note that we don't attempt to expand environment variables on the value side
-                    // of the assignments.  Probably an overkill anyway.
-
-                    foreach (var item in variables)
-                    {
-                        Environment.SetEnvironmentVariable(item.Key, item.Value);
-                    }
-
-                    // Execute the command in the proper shell.
-
-                    var sbCommand = new StringBuilder();
-
-                    foreach (var arg in shellCommandLine.Items)
-                    {
-                        if (sbCommand.Length > 0)
-                        {
-                            sbCommand.Append(' ');
-                        }
-
-                        if (arg.Contains(' '))
-                        {
-                            sbCommand.Append("\"" + arg + "\"");
+                            File.WriteAllText(tempPasswordPath, password);
                         }
                         else
                         {
-                            sbCommand.Append(arg);
+                            var passwordFile = leftCommandLine.GetOption("--vault-password-file");
+
+                            if (!string.IsNullOrEmpty(passwordFile))
+                            {
+                                passwordPath = Path.Combine(NeonClusterHelper.GetAnsiblePasswordsFolder(), passwordFile);
+                            }
+                        }
+
+                        foreach (var varFile in leftCommandLine.Arguments)
+                        {
+                            var varContents = File.ReadAllText(varFile, Encoding.UTF8);
+
+                            if (varContents.StartsWith("$ANSIBLE_VAULT;"))
+                            {
+                                // The variable file is encrypted we're going recursively invoke
+                                // the following command to decrypt it:
+                                //
+                                //      neon ansible vault decrypt -- --vault-password-file PASSWORD-PATH --output - VARS-PATH
+                                //
+                                // This uses the password to decrypt the variables to STDOUT.
+
+                                if (string.IsNullOrEmpty(passwordPath))
+                                {
+                                    Console.Error.WriteLine($"*** ERROR: [{varFile}] is encrypted.  Use [--ask-vault-pass] or [--vault-password-file] to specify the password.");
+                                    Program.Exit(1);
+                                }
+
+                                var neonCliPath = NeonHelper.GetAssemblyPath(Assembly.GetExecutingAssembly());
+                                var result      = NeonHelper.ExecuteCaptureStreams(neonCliPath,
+                                    new object[]
+                                    {
+                                        "ansible",
+                                        "vault",
+                                        "--",
+                                        "decrypt",
+                                        passwordPath,
+                                        "--output", "-",
+                                        varFile
+                                    });
+
+                                if (result.ExitCode != 0)
+                                {
+                                    Console.Error.Write(result.AllText);
+                                    Program.Exit(result.ExitCode);
+                                }
+
+                                varContents = result.OutputText;
+                            }
+
+                            // [varContents] now holds the decrypted variables formatted as YAML.
+                            // We're going to parse this and set the appropriate environment
+                            // variables.
+
+                            var yaml = new YamlStream();
+                            var vars = new List<KeyValuePair<string, string>>();
+
+                            yaml.Load(new StringReader(varContents));
+                            ParseYamlVariables(vars, (YamlMappingNode)yaml.Documents.First().RootNode);
+
+                            foreach (var variable in vars)
+                            {
+                                Environment.SetEnvironmentVariable(variable.Key, variable.Value);
+                            }
                         }
                     }
-
-                    exitCode = NeonHelper.ExecuteShell(sbCommand.ToString());
+                    finally
+                    {
+                        if (tempPasswordPath != null && File.Exists(tempPasswordPath))
+                        {
+                            File.Delete(tempPasswordPath);  // Don't need this any more.
+                        }
+                    }
                 }
+
+                // Execute the command in the approperiate shell for the current workstation.
+
+                var sbCommand = new StringBuilder();
+
+                foreach (var arg in rightCommandLine.Items)
+                {
+                    if (sbCommand.Length > 0)
+                    {
+                        sbCommand.Append(' ');
+                    }
+
+                    if (arg.Contains(' '))
+                    {
+                        sbCommand.Append("\"" + arg + "\"");
+                    }
+                    else
+                    {
+                        sbCommand.Append(arg);
+                    }
+                }
+
+                exitCode = NeonHelper.ExecuteShell(sbCommand.ToString());
             }
             finally
             {
@@ -244,6 +297,49 @@ These folders are encrypted at rest for security.  You can use the
             }
 
             Program.Exit(exitCode);
+        }
+
+        /// <summary>
+        /// Recursive parses the variables in a <see cref="YamlNode"/> and 
+        /// adds the variable names and values to a list. 
+        /// </summary>
+        /// <param name="variables">Th target variables list.</param>
+        /// <param name="yamlNode">The YAML node.</param>
+        /// <param name="prefix">The variable name prefix (for nested variable definitions).</param>
+        private void ParseYamlVariables(List<KeyValuePair<string, string>> variables, YamlNode yamlNode, string prefix = "")
+        {
+            switch (yamlNode.NodeType)
+            {
+                case YamlNodeType.Scalar:
+
+                    var scalarNode = (YamlScalarNode)yamlNode;
+
+                    variables.Add(new KeyValuePair<string, string>(prefix, scalarNode.Value));
+                    break;
+
+                case YamlNodeType.Mapping:
+
+                    var mappingNode = (YamlMappingNode)yamlNode;
+
+                    foreach (var child in mappingNode.Children)
+                    {
+                        var name = prefix;
+
+                        if (!string.IsNullOrEmpty(name))
+                        {
+                            name += "_";
+                        }
+
+                        ParseYamlVariables(variables, child.Value, name + child.Key);
+                    }
+                    break;
+
+                default:
+
+                    // We're going to ignore YAML aliases and arrays
+
+                    break;
+            }
         }
 
         /// <inheritdoc/>
