@@ -19,6 +19,7 @@ using Newtonsoft.Json;
 using Neon.Cluster;
 using Neon.Common;
 using Neon.Net;
+using Neon.IO;
 
 namespace NeonCli
 {
@@ -244,7 +245,7 @@ are stored in a user-specific folder at:
         private const string sshClientPrivateKeyPath = "/dev/shm/ansible/ssh-client.key";   // Path to the SSH private client key (on a container RAM drive)
         private const string mappedCurrentDirectory  = "/cwd";                              // Path to the current working directory mapped into the container
         private const string mappedRolesPath         = "/etc/ansible/mapped-roles";         // Path where external roles are mapped into the container
-        private const string mappedVaultPath         = "/etc/ansible/mapped-vault";         // Path where external Vault passwords are mapped into the container
+        private const string mappedPasswordsPath     = "/etc/ansible/mapped-passwords";     // Path where external Vault passwords are mapped into the container
 
         /// <inheritdoc/>
         public override string[] Words
@@ -467,7 +468,7 @@ are stored in a user-specific folder at:
                 {
                     var passwordFile = item.Substring(item.IndexOf('=') + 1);
 
-                    ansibleCommandLine.Items[i] = $"--vault-password-file={Path.Combine(mappedVaultPath, passwordFile)}";
+                    ansibleCommandLine.Items[i] = $"--vault-password-file={Path.Combine(mappedPasswordsPath, passwordFile)}";
                     break;
                 }
                 else if (item == "--vault-password-file")
@@ -480,7 +481,7 @@ are stored in a user-specific folder at:
 
                     var passwordFile = ansibleCommandLine.Items[i + 1];
 
-                    ansibleCommandLine.Items[i + 1] = Path.Combine(mappedVaultPath, passwordFile);
+                    ansibleCommandLine.Items[i + 1] = Path.Combine(mappedPasswordsPath, passwordFile);
                     break;
                 }
             }
@@ -500,11 +501,11 @@ are stored in a user-specific folder at:
 
                     if (vaultIdParts.Length == 1)
                     {
-                        ansibleCommandLine.Items[i] = Path.Combine(mappedVaultPath, vaultIdParts[0]);
+                        ansibleCommandLine.Items[i] = Path.Combine(mappedPasswordsPath, vaultIdParts[0]);
                     }
                     else
                     {
-                        ansibleCommandLine.Items[i] =$"{vaultIdParts[0]}@{Path.Combine(mappedVaultPath, vaultIdParts[1])}";
+                        ansibleCommandLine.Items[i] =$"{vaultIdParts[0]}@{Path.Combine(mappedPasswordsPath, vaultIdParts[1])}";
                     }
                 }
                 else if (item == "--vault-id")
@@ -522,11 +523,11 @@ are stored in a user-specific folder at:
 
                     if (vaultIdParts.Length == 1)
                     {
-                        ansibleCommandLine.Items[i] = Path.Combine(mappedVaultPath, vaultIdParts[0]);
+                        ansibleCommandLine.Items[i] = Path.Combine(mappedPasswordsPath, vaultIdParts[0]);
                     }
                     else
                     {
-                        ansibleCommandLine.Items[i] = $"{vaultIdParts[0]}@{Path.Combine(mappedVaultPath, vaultIdParts[1])}";
+                        ansibleCommandLine.Items[i] = $"{vaultIdParts[0]}@{Path.Combine(mappedPasswordsPath, vaultIdParts[1])}";
                     }
                 }
             }
@@ -633,7 +634,40 @@ are stored in a user-specific folder at:
             // ...and also map the external Ansible roles and vault folders into the container.
 
             shim.AddMappedFolder(new DockerShimFolder(NeonClusterHelper.GetAnsibleRolesFolder(), mappedRolesPath, isReadOnly: false));
-            shim.AddMappedFolder(new DockerShimFolder(NeonClusterHelper.GetAnsibleRolesFolder(), mappedVaultPath, isReadOnly: false));
+            shim.AddMappedFolder(new DockerShimFolder(NeonClusterHelper.GetAnsiblePasswordsFolder(), mappedPasswordsPath, isReadOnly: false));
+
+            // ...finally, we need to verify that any password files specified by [--vault-password-file NAME] 
+            // actually exist in the [neon-cli] ansible passwords folder and then munge the option to reference
+            // the folder that will be mapped into the the Docker container.
+            //
+            // Note that this option can take two forms:
+            //
+            //      --vault-password-file=NAME
+            //      --vault-password-file NAME
+
+            var localPasswordFolder = NeonClusterHelper.GetAnsiblePasswordsFolder();
+
+            for (int index = 0; index < shim.CommandLine.Items.Length; index++)
+            {
+                var item = shim.CommandLine.Items[index];
+
+                if (item == "--vault-password-file" && index + 1 < shim.CommandLine.Items.Length && !shim.CommandLine.Items[index + 1].StartsWith("-"))
+                {
+                    var passwordName = shim.CommandLine.Items[index + 1];
+
+                    VerifyPassword(passwordName);
+
+                    shim.CommandLine.Items[index + 1] = LinuxPath.Combine(mappedPasswordsPath, passwordName);
+                }
+                else if (item.StartsWith("--vault-password-file="))
+                {
+                    var passwordName = item.Substring("--vault-password-file=".Length);
+
+                    VerifyPassword(passwordName);
+
+                    shim.CommandLine.Items[index] = $"--vault-password-file={LinuxPath.Combine(mappedPasswordsPath, passwordName)}";
+                }
+            }
 
             // Note that we don't shim the password command and we also don't need
             // a cluster connection.
@@ -644,6 +678,31 @@ are stored in a user-specific folder at:
             }
 
             return new ShimInfo(isShimmed: true, ensureConnection: true);
+        }
+
+        /// <summary>
+        /// Verifies that a vault password exists and is valid.
+        /// </summary>
+        /// <param name="passwordName">The password path.</param>
+        private void VerifyPassword(string passwordName)
+        {
+            if (string.IsNullOrWhiteSpace(passwordName))
+            {
+                Console.Error.WriteLine($"**** ERROR: [--vault-password-file {passwordName}] is not valid.");
+                Program.Exit(1);
+            }
+
+            if (Path.IsPathRooted(passwordName) || passwordName.IndexOfAny(new char[] { ':', '/', '\\' }) != -1)
+            {
+                Console.Error.WriteLine($"**** ERROR: [--vault-password-file {passwordName}] must be the name of the password file managed by [neon-cli].  This cannot include a file path.");
+                Program.Exit(1);
+            }
+
+            if (!File.Exists(Path.Combine(NeonClusterHelper.GetAnsiblePasswordsFolder(), passwordName)))
+            {
+                Console.Error.WriteLine($"**** ERROR: The [--vault-password-file {passwordName}] does not exist.  Use [neon ansible password set {passwordName} YOUR-PASSWORD] to initialize this password.");
+                Program.Exit(1);
+            }
         }
 
         /// <summary>
