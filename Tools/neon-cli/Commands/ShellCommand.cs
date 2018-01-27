@@ -34,7 +34,7 @@ optionally decryting the secrets file first.
 
 USAGE:
 
-    neon shell [--passwords-file=PATH] [--ask-vault-pass] VARS1 [VARS2...] -- CMD...
+    neon shell [--password-file=PATH] [--ask-vault-pass] VARS1 [VARS2...] -- CMD...
 
 ARGUMENTS:
 
@@ -45,7 +45,7 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --passwords-file=PATH   - Optionally specifies the path to the password
+    --password-file=PATH    - Optionally specifies the path to the password
                               file to be used to decrypt the variable files.
                               See the notes below discussing where password
                               files are located.
@@ -74,29 +74,21 @@ This will generate these environment variables:
     mysql_username=dbuser
     mysql_password=dbpass
 
-Notice how the 
+Variable files can be encrypted using the [neon ansible vault encrypt]
+command and then can be used by [neon shell] and other [neon ansible]
+commands.  Encryption passwords can be specified manually using a 
+prompt by passing [--ask-vault-pass] or by passing the PATH to a
+password file via [--password-file=PATH].
 
-Managing secrets for development, test, and production environments can
-be difficult.  Docker and neonCLUSTER provide mechanisms for persisting
-and using secrets in a cluster, but it's still necessary to provision
-the secrets securely in the first place.
+Password files simply hold a password as a single line text file.
+[neon-cli] expects password files to be located in a user-specific
+directory on your workstation:
 
-This command provides a way to securely manage collections of secrets 
-related to specific deployments and then execute local shell commands 
-to use the secrets to provision or manage the cluster.
+    %LOCALAPPDATA%\neonFORGE\neoncluster\ansible\passwords  - for Windows
+    ~/.neonforge/neoncluster/ansible/passwords              - for OSX
 
-Secrets are simply files in a specified folder.  Secret environment
-variables are specified in a special [__env.txt] with VAR=VALUE lines.
-Blank and comment lines beginning with ""#"" will be ignored.
-
-Other secret files such as TLS certificates may also be present.
-
-The [shell] command works by loading environment variables into
-memory, extracting any other files to a temporary folder and then
-executing the command in the local shell the environment variables
-and with the current directory set to the data folder.
-
-The shell will be CMD.EXE for Windows and Bash for OSX and Linux.
+These folders are encrypted at rest for security.  You can use the 
+[neon ansible password ...] commands to manage your passwords.
 ";
 
         /// <inheritdoc/>
