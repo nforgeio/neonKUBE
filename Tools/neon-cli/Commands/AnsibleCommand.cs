@@ -64,7 +64,7 @@ USAGE:
     neon ansible play   [OPTIONS] -- ARGS   - runs a playbook via:         ansible-playbook ARGS
     neon ansible vault  [OPTIONS] -- ARGS   - manages ansible secrets via: ansible-vault ARGS
 
-    neon ansible password CMD ARGS          - password management       
+    neon ansible password CMD ARGS          - password management
 
 ARGS: Any valid Ansible options and arguments.
 
@@ -280,18 +280,18 @@ are stored in a user-specific folder at:
             }
 
             var login              = Program.ClusterLogin;
-            var commandSplit       = commandLine.Split();
-            var neonCommandLine    = commandSplit.Left;
+            var commandSplit       = commandLine.Split("--");
+            var leftCommandLine    = commandSplit.Left;
             var ansibleCommandLine = commandSplit.Right;
-            var command            = neonCommandLine.Arguments.Skip(1).First();
+            var command            = leftCommandLine.Arguments.Skip(1).First();
 
             // The [password] command operates in [--direct] mode so we'll implement it here.
 
             if (command == "password")
             {
-                var passwordCommandLine = neonCommandLine.Shift(2);
+                var passwordCommandLine = leftCommandLine.Shift(2);
 
-                if (neonCommandLine.HasHelpOption || passwordCommandLine.Arguments.Length == 0)
+                if (leftCommandLine.HasHelpOption || passwordCommandLine.Arguments.Length == 0)
                 {
                     Console.WriteLine(passwordHelp);
                     Program.Exit(0);
@@ -433,14 +433,16 @@ are stored in a user-specific folder at:
 
             if (!NeonClusterHelper.InToolContainer)
             {
-                Console.Error.WriteLine("*** ERROR: This [ansible] command does not support [--direct] mode.");
+                Console.Error.WriteLine($"*** ERROR: [neon ansible {command}] does not support [--direct] mode.");
                 Program.Exit(1);
             }
 
+            var noAnsibleCommand = false;
+
             if (ansibleCommandLine == null)
             {
-                Console.Error.WriteLine($"*** ERROR: The [ansible] commands require the [--] argument to prefix the Ansible arguments.");
-                Program.Exit(1);
+                ansibleCommandLine = new CommandLine();
+                noAnsibleCommand   = true;
             }
 
             if (login.Definition.HostNode.SshAuth != AuthMethods.Tls)
@@ -535,7 +537,7 @@ are stored in a user-specific folder at:
             {
                 case "exec":
 
-                    if (neonCommandLine.HasHelpOption)
+                    if (leftCommandLine.HasHelpOption || noAnsibleCommand)
                     {
                         Console.WriteLine(execHelp);
                         Program.Exit(0);
@@ -548,7 +550,7 @@ are stored in a user-specific folder at:
 
                 case "play":
 
-                    if (neonCommandLine.HasHelpOption)
+                    if (leftCommandLine.HasHelpOption || noAnsibleCommand)
                     {
                         Console.WriteLine(playHelp);
                         Program.Exit(0);
@@ -561,7 +563,7 @@ are stored in a user-specific folder at:
 
                 case "galaxy":
 
-                    if (neonCommandLine.HasHelpOption)
+                    if (leftCommandLine.HasHelpOption || noAnsibleCommand)
                     {
                         Console.WriteLine(galaxyHelp);
                         Program.Exit(0);
@@ -573,13 +575,13 @@ are stored in a user-specific folder at:
 
                 case "vault":
 
-                    if (neonCommandLine.HasHelpOption)
+                    if (leftCommandLine.HasHelpOption || noAnsibleCommand)
                     {
                         Console.WriteLine(vaultHelp);
                         Program.Exit(0);
                     }
 
-                    var editor = neonCommandLine.GetOption("--editor", "nano");
+                    var editor = leftCommandLine.GetOption("--editor", "nano");
 
                     switch (editor.ToLowerInvariant())
                     {
