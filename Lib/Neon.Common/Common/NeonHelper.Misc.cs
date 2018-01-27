@@ -172,7 +172,7 @@ namespace Neon.Common
                 {
                     Console.WriteLine();
 
-                    return password;
+                    return password.Trim();
                 }
                 else if (ch == '\b' && password.Length > 0)
                 {
