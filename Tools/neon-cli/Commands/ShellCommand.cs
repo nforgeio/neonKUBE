@@ -29,19 +29,52 @@ namespace NeonCli
     {
         private const string usage = @"
 Runs a shell command on the local workstation, in the context of environment
-variables and secrets located in a specified folder.
+variables loaded from one or more Ansible compatible YAML variable files,
+optionally decryting the secrets file first.
 
 USAGE:
 
-    neon shell SECRETS-PATH -- CMD...
+    neon shell [--passwords-file=PATH] [--ask-vault-pass] VARS1 [VARS2...] -- CMD...
 
 ARGUMENTS:
 
-    SECRETS-PATH            - Path to the secrets folder.
-    --                      - Separates the Neon and Shell commands.
-    CMD...                  - Command and arguments to be executed. 
+    VARS#                   - Path to a YAML variables file
+    --                      - Indicates the start of the command/args
+                              to be invoked
+    CMD...                  - Command and arguments
+
+OPTIONS:
+
+    --passwords-file=PATH   - Optionally specifies the path to the password
+                              file to be used to decrypt the variable files.
+                              See the notes below discussing where password
+                              files are located.
+
+    --ask-vault-pass        - Optionally specifies that the user should
+                              be prompted for the decryption password.
 
 NOTES:
+
+This command works by reading variables from one or more files, setting
+these as environment variables and then executing a command in the 
+context of these environment variables.  The variable files are formatted
+as Ansible compatible YAML, like:
+
+    username: jeff
+    password: super.dude
+    mysql:
+        username: dbuser
+        password: dbpass
+
+This defines two simple passwords and two passwords in a dictionary.
+This will generate these environment variables:
+
+    username=jeff
+    password=super.dude
+    mysql_username=dbuser
+    mysql_password=dbpass
+
+Notice how the 
 
 Managing secrets for development, test, and production environments can
 be difficult.  Docker and neonCLUSTER provide mechanisms for persisting
