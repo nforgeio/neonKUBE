@@ -451,10 +451,13 @@ namespace Neon.Common
         /// Constructs an instance optionally expanding any response file specified
         /// in the arguments passed.
         /// </summary>
-        /// <param name="args">The command line arguments.</param>
-        public CommandLine(object[] args)
+        /// <param name="args">The optional command line arguments.</param>
+        public CommandLine(object[] args = null)
         {
-            Covenant.Requires<ArgumentNullException>(args != null);
+            if (args == null)
+            {
+                args = new object[0];
+            }
 
             List<string>    valueList = new List<string>();
             string          name;

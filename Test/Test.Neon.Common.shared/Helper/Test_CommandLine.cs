@@ -30,6 +30,12 @@ namespace TestCommon
             Assert.Empty(commandLine.Items);
             Assert.Empty(commandLine.Arguments);
             Assert.True(!commandLine.HasHelpOption);
+
+            commandLine = new CommandLine();
+
+            Assert.Empty(commandLine.Items);
+            Assert.Empty(commandLine.Arguments);
+            Assert.True(!commandLine.HasHelpOption);
         }
 
         [Fact]
