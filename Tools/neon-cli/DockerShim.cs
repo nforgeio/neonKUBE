@@ -214,6 +214,33 @@ namespace NeonCli
         /// </remarks>
         public void ReplaceItem(string match, string replacment)
         {
+            // $todo(jeff.lill):
+            //
+            // This method is overly simplistic.  The problem is that it could be
+            // possible replace the wrong command line item.  For example, let's 
+            // look at the hypothetical command below that uploads a file 
+            // named [upload].
+            //
+            //      upload file upload
+            //
+            // Then assume that we need to shim the last [upload] argument to be
+            // something like [/shm/upload] inside the container.
+            //
+            // The problem with this method is that it will replace the first
+            // instance of [upload] with [/shm/upload]:
+            //
+            //      /shm/upload file upload
+            //
+            // when we wanted:
+            //
+            //      upload file /shm/upload
+            //
+            // Conflicts like this will be relatively rare so I'm going to put this
+            // off for now, but eventually we'll want to fix this by somehow being
+            // able to specify exactly which item we're munging.
+            //
+            //      https://github.com/jefflill/NeonForge/issues/162
+
             for (int i = 0; i < CommandLine.Items.Length; i++)
             {
                 if (CommandLine.Items[i] == match)
