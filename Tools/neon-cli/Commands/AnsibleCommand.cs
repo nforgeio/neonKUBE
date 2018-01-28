@@ -666,7 +666,12 @@ are stored in a user-specific folder at:
             {
                 var ansibleCommandLine = shim.CommandLine.Split("--").Right;
 
-                if (ansibleCommandLine.Arguments.Length > 2)
+                if (ansibleCommandLine == null)
+                {
+                    ansibleCommandLine = new CommandLine();
+                }
+
+                if (ansibleCommandLine.Arguments.Length >= 2)
                 {
                     var externalTarget = ansibleCommandLine.Arguments.Last();
 
