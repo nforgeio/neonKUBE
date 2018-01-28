@@ -246,6 +246,7 @@ are stored in a user-specific folder at:
         private const string mappedCurrentDirectory  = "/cwd";                              // Path to the current working directory mapped into the container
         private const string mappedRolesPath         = "/etc/ansible/mapped-roles";         // Path where external roles are mapped into the container
         private const string mappedPasswordsPath     = "/etc/ansible/mapped-passwords";     // Path where external Vault passwords are mapped into the container
+        private const string copiedPasswordsPath     = "/dev/shm/copied-passwords";         // Path where copies of external Vault passwords held in the container
 
         /// <inheritdoc/>
         public override string[] Words
@@ -456,9 +457,31 @@ are stored in a user-specific folder at:
 
             Environment.CurrentDirectory = mappedCurrentDirectory;
 
+            // The user's [.../ansible/passwords] workstation folder is mapped into the container
+            // at [/etc/ansible/mapped-passwords].  For Windows at least, these files are mapped
+            // in with execute permissions which Ansible doesn't like.  Ansible appears to believe
+            // that executable password files are actually scripts that will return the password.
+            //
+            // I tried using [chmod] in the container to clear the executable permissions but it
+            // didn't work (probably a Docker mapped file thing).
+            //
+            // The workaround is to copy all of the passwords in the container the [/dev/shm/passwords]
+            // so that they'll have no execute permissions.  We'll shim the command such that the
+            // internal container command will reference passwords in copy folder.
+
+            Directory.CreateDirectory(copiedPasswordsPath);
+
+            foreach (var passwordPath in Directory.GetFiles(mappedPasswordsPath, "*", SearchOption.TopDirectoryOnly))
+            {
+                var contents = File.ReadAllBytes(passwordPath);
+                var target   = Path.Combine(copiedPasswordsPath, Path.GetFileName(passwordPath));
+
+                File.WriteAllBytes(target, contents);
+            }
+
             // Munge any [--vault-password-file=FILE] or [--vault-password-file FILE] options to use a 
-            // path prefix that is relative to the mapped external Vault folder.  Note that [--vault-password-file=FILE]
-            // may appear only once in the command line.
+            // path prefix that is relative to the internal password copies folder.  Note that
+            // [--vault-password-file=FILE] may appear only once in the command line.
 
             for (int i = 0; i < ansibleCommandLine.Items.Length; i++)
             {
@@ -468,7 +491,7 @@ are stored in a user-specific folder at:
                 {
                     var passwordFile = item.Substring(item.IndexOf('=') + 1);
 
-                    ansibleCommandLine.Items[i] = $"--vault-password-file={Path.Combine(mappedPasswordsPath, passwordFile)}";
+                    ansibleCommandLine.Items[i] = $"--vault-password-file={Path.Combine(copiedPasswordsPath, passwordFile)}";
                     break;
                 }
                 else if (item == "--vault-password-file")
@@ -481,13 +504,13 @@ are stored in a user-specific folder at:
 
                     var passwordFile = ansibleCommandLine.Items[i + 1];
 
-                    ansibleCommandLine.Items[i + 1] = Path.Combine(mappedPasswordsPath, passwordFile);
+                    ansibleCommandLine.Items[i + 1] = Path.Combine(copiedPasswordsPath, passwordFile);
                     break;
                 }
             }
 
             // We also need to munge any [--vault-id=ID@NAME] or [--vault-password-file ID@NAME] options to use a 
-            // path prefix that is relative to the mapped external Vault folder.  Note that the ID is optional
+            // path prefix that is relative to the internal password copies folder.  Note that the ID is optional
             // and that [--vault-id] may appear multiple times in the command line.
 
             for (int i = 0; i < ansibleCommandLine.Items.Length; i++)
@@ -501,11 +524,11 @@ are stored in a user-specific folder at:
 
                     if (vaultIdParts.Length == 1)
                     {
-                        ansibleCommandLine.Items[i] = Path.Combine(mappedPasswordsPath, vaultIdParts[0]);
+                        ansibleCommandLine.Items[i] = Path.Combine(copiedPasswordsPath, vaultIdParts[0]);
                     }
                     else
                     {
-                        ansibleCommandLine.Items[i] =$"{vaultIdParts[0]}@{Path.Combine(mappedPasswordsPath, vaultIdParts[1])}";
+                        ansibleCommandLine.Items[i] =$"{vaultIdParts[0]}@{Path.Combine(copiedPasswordsPath, vaultIdParts[1])}";
                     }
                 }
                 else if (item == "--vault-id")
@@ -523,11 +546,11 @@ are stored in a user-specific folder at:
 
                     if (vaultIdParts.Length == 1)
                     {
-                        ansibleCommandLine.Items[i] = Path.Combine(mappedPasswordsPath, vaultIdParts[0]);
+                        ansibleCommandLine.Items[i] = Path.Combine(copiedPasswordsPath, vaultIdParts[0]);
                     }
                     else
                     {
-                        ansibleCommandLine.Items[i] = $"{vaultIdParts[0]}@{Path.Combine(mappedPasswordsPath, vaultIdParts[1])}";
+                        ansibleCommandLine.Items[i] = $"{vaultIdParts[0]}@{Path.Combine(copiedPasswordsPath, vaultIdParts[1])}";
                     }
                 }
             }
@@ -637,8 +660,7 @@ are stored in a user-specific folder at:
             shim.AddMappedFolder(new DockerShimFolder(NeonClusterHelper.GetAnsiblePasswordsFolder(), mappedPasswordsPath, isReadOnly: false));
 
             // ...finally, we need to verify that any password files specified by [--vault-password-file NAME] 
-            // actually exist in the [neon-cli] ansible passwords folder and then munge the option to reference
-            // the folder that will be mapped into the the Docker container.
+            // actually exist in the [neon-cli] ansible passwords folder.
             //
             // Note that this option can take two forms:
             //
@@ -656,16 +678,12 @@ are stored in a user-specific folder at:
                     var passwordName = shim.CommandLine.Items[index + 1];
 
                     VerifyPassword(passwordName);
-
-                    shim.CommandLine.Items[index + 1] = LinuxPath.Combine(mappedPasswordsPath, passwordName);
                 }
                 else if (item.StartsWith("--vault-password-file="))
                 {
                     var passwordName = item.Substring("--vault-password-file=".Length);
 
                     VerifyPassword(passwordName);
-
-                    shim.CommandLine.Items[index] = $"--vault-password-file={LinuxPath.Combine(mappedPasswordsPath, passwordName)}";
                 }
             }
 
