@@ -20,5 +20,12 @@ if [ ! -f /shim/__shim.sh ] ; then
     exit 1
 fi
 
+# Ensure that the [/cwd] directory exists in case this
+# wasn't mounted into the container.
+
+mkdir -p /cwd
+
+# Invoke the command.
+
 cd /shim
 . ./__shim.sh "$@"

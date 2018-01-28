@@ -169,7 +169,7 @@ These folders are encrypted at rest for security.  You can use the
                         {
                             // Note that [--ask-vault-pass] takes presidence over [--vault-password-file].
 
-                            var password = NeonHelper.ReadConsolePassword("password: ");
+                            var password = NeonHelper.ReadConsolePassword("Vault password: ");
 
                             // We need to generate a temporary password file in the
                             // Ansible passwords folder so we can pass it to the
@@ -212,16 +212,17 @@ These folders are encrypted at rest for security.  You can use the
                                     Program.Exit(1);
                                 }
 
-                                var neonCliPath = NeonHelper.GetAssemblyPath(Assembly.GetExecutingAssembly());
-                                var result      = NeonHelper.ExecuteCaptureStreams(neonCliPath,
+                                var result = NeonHelper.ExecuteCaptureStreams(
+                                    "dotnet",
                                     new object[]
                                     {
+                                        NeonHelper.GetAssemblyPath(Assembly.GetEntryAssembly()),
                                         "ansible",
                                         "vault",
                                         "--",
                                         "decrypt",
-                                        passwordPath,
-                                        "--output", "-",
+                                        $"--vault-password-file={Path.GetFileName(passwordPath)}",
+                                        "--output=-",
                                         varFile
                                     });
 
@@ -232,6 +233,28 @@ These folders are encrypted at rest for security.  You can use the
                                 }
 
                                 varContents = result.OutputText;
+
+                                // $hack(jeff.lill):
+                                //
+                                // The [ansible-vault decrypt --output=- FILE] command writes the decrypted
+                                // data to STDOUT as expected but then follows this with the line:
+                                //
+                                //      Decryption successful
+                                //
+                                // I've reported this bug to Ansible as:
+                                //
+                                //      https://github.com/ansible/ansible/issues/35424
+                                //
+                                // I'm going to workaround this by stripping off the last line
+                                // if it's "Decryption successful".
+
+                                var badLine = "Decryption successful\r\n";
+                                var badPos  = varContents.LastIndexOf(badLine);
+
+                                if (badPos == varContents.Length - badLine.Length)
+                                {
+                                    varContents = varContents.Substring(0, badPos);
+                                }
                             }
 
                             // [varContents] now holds the decrypted variables formatted as YAML.
@@ -259,7 +282,7 @@ These folders are encrypted at rest for security.  You can use the
                     }
                 }
 
-                // Execute the command in the approperiate shell for the current workstation.
+                // Execute the command in the appropriate shell for the current workstation.
 
                 var sbCommand = new StringBuilder();
 
