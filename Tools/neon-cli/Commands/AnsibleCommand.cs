@@ -196,7 +196,6 @@ ARGS: Any valid [ansible-vault] options and arguments.
 
 OPTIONS:
 
-    --cwd=FOLDER            - Use FOLDER as the current working directory
     --editor=nano|vim|vi    - Specifies the editor to use for modifying
                               encrypted files.  This defaults to [nano].
     --vault=FOLDER          - Use FOLDER as the password file location.
@@ -646,13 +645,55 @@ are stored in a user-specific folder at:
         /// <inheritdoc/>
         public override ShimInfo Shim(DockerShim shim)
         {
-            // We need to map the current directory into the container.  Note that
-            // the [--cwd=FOLDER] command line option will override the current
-            // directory if present.
+            // For the Ansible Vault commands, we're going to map the directory
+            // containing the target file into the container as the current working
+            // directory and munge the file name argument such that it has no
+            // directory path.  Note that the target file will be the last argument
+            // in the command line.
+            //
+            // For all of the other commands, we need to map the current directory 
+            // into the container.  Note that the [--cwd=FOLDER] command line option
+            // will override the current directory if present.
 
-            var externalCurrentDirectory = shim.CommandLine.GetOption("--cwd", Environment.CurrentDirectory);
+            string command = null;
 
-            shim.AddMappedFolder(new DockerShimFolder(externalCurrentDirectory, mappedCurrentDirectory, isReadOnly: false));
+            if (shim.CommandLine.Arguments.Length >= 2)
+            {
+                command = shim.CommandLine.Arguments[1];
+            }
+
+            if (command == "vault")
+            {
+                var ansibleCommandLine = shim.CommandLine.Split("--").Right;
+
+                if (ansibleCommandLine.Arguments.Length > 2)
+                {
+                    var externalTarget = ansibleCommandLine.Arguments.Last();
+
+                    if (!File.Exists(externalTarget))
+                    {
+                        Console.Error.WriteLine($"*** ERROR: File [{externalTarget}] does not exist.");
+                        Program.Exit(1);
+                    }
+
+                    shim.AddMappedFolder(new DockerShimFolder(Path.GetDirectoryName(externalTarget), mappedCurrentDirectory, isReadOnly: false));
+
+                    // Munge the target file path to be just the file name.
+
+                    var fileName = Path.GetFileName(externalTarget);
+
+                    if (fileName != externalTarget)
+                    {
+                        shim.ReplaceItem(externalTarget, Path.GetFileName(externalTarget));
+                    }
+                }
+            }
+            else
+            {
+                var externalCurrentDirectory = shim.CommandLine.GetOption("--cwd", Environment.CurrentDirectory);
+
+                shim.AddMappedFolder(new DockerShimFolder(externalCurrentDirectory, mappedCurrentDirectory, isReadOnly: false));
+            }
 
             // ...and also map the external Ansible roles and vault folders into the container.
 
