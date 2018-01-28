@@ -336,7 +336,7 @@ USAGE:
         //                        This defaults to [0] which specifies about 290 years 
         //                        (essentially infinity).
         //
-        // AutoUnseal             Specifies whether Vault instances should be automatically
+        //  AutoUnseal            Specifies whether Vault instances should be automatically
         //                        unsealed after restart (at the cost of somewhat lower
         //                        security.  This defaults to [true].
 
