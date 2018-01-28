@@ -59,10 +59,10 @@ OPTIONS:
 
 NOTES:
 
-This command works by reading variables from one or more YAMLfiles, setting
-these as environment variables and then executing a command in the context
-of these environment variables.  The variable files are formatted as Ansible
-compatible YAML, like:
+This command works by reading variables from one or more YAML files in the 
+order they appear on the command line, setting these as environment variables 
+and then executing a command in the context of these environment variables.
+The variable files are formatted as Ansible compatible YAML, like:
 
     username: jeff
     password: super.dude
