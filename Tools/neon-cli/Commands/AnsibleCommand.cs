@@ -363,6 +363,20 @@ are stored in a user-specific folder at:
                         zipPath         = passwordCommandLine.Arguments.AtIndexOrDefault(1);
                         passwordPattern = passwordCommandLine.Arguments.AtIndexOrDefault(2);
 
+                        if (!File.Exists(zipPath))
+                        {
+                            if (Directory.Exists(zipPath))
+                            {
+                                Console.Error.WriteLine($"*** ERROR: [{zipPath}] is a directory, not a file.");
+                                Program.Exit(1);
+                            }
+                            else
+                            {
+                                Console.Error.WriteLine($"*** ERROR: [{zipPath}] file does not exist.");
+                                Program.Exit(1);
+                            }
+                        }
+
                         if (string.IsNullOrEmpty(passwordPattern))
                         {
                             passwordPattern = "*";
@@ -412,6 +426,20 @@ are stored in a user-specific folder at:
                     case "import":
 
                         zipPath = passwordCommandLine.Arguments.AtIndexOrDefault(1);
+
+                        if (!File.Exists(zipPath))
+                        {
+                            if (Directory.Exists(zipPath))
+                            {
+                                Console.Error.WriteLine($"*** ERROR: [{zipPath}] is a directory, not a file.");
+                                Program.Exit(1);
+                            }
+                            else
+                            {
+                                Console.Error.WriteLine($"*** ERROR: [{zipPath}] file does not exist.");
+                                Program.Exit(1);
+                            }
+                        }
 
                         if (string.IsNullOrEmpty(zipPath))
                         {
