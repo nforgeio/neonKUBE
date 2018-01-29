@@ -77,5 +77,44 @@ namespace TestCommon
             Assert.Throws<ArgumentException>(() => items.SelectRandom(0));
             Assert.Throws<ArgumentException>(() => items.SelectRandom(5));
         }
+
+        [Fact]
+        public void IndexedOrDefault()
+        {
+            var list = new List<string>();
+
+            Assert.Null(list.IndexedOrDefault(0));
+            Assert.Null(list.IndexedOrDefault(1));
+            Assert.Null(list.IndexedOrDefault(2));
+            Assert.Null(list.IndexedOrDefault(3));
+
+            list.Add("one");
+
+            Assert.Equal("one", list.IndexedOrDefault(0));
+            Assert.Null(list.IndexedOrDefault(1));
+            Assert.Null(list.IndexedOrDefault(2));
+            Assert.Null(list.IndexedOrDefault(3));
+
+            list.Add("two");
+
+            Assert.Equal("one", list.IndexedOrDefault(0));
+            Assert.Equal("two", list.IndexedOrDefault(1));
+            Assert.Null(list.IndexedOrDefault(2));
+            Assert.Null(list.IndexedOrDefault(3));
+
+            list.Add("three");
+
+            Assert.Equal("one", list.IndexedOrDefault(0));
+            Assert.Equal("two", list.IndexedOrDefault(1));
+            Assert.Equal("three", list.IndexedOrDefault(2));
+            Assert.Null(list.IndexedOrDefault(3));
+
+            list.Add("four");
+
+            Assert.Equal("one", list.IndexedOrDefault(0));
+            Assert.Equal("two", list.IndexedOrDefault(1));
+            Assert.Equal("three", list.IndexedOrDefault(2));
+            Assert.Equal("four", list.IndexedOrDefault(3));
+        }
     }
 }

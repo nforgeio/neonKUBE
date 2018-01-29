@@ -59,5 +59,30 @@ namespace System.Collections.Generic
 
             return outputValues;
         }
+
+        /// <summary>
+        /// Returns the zero-based indexed item from an enumeration or <c>default(T)</c> if
+        /// there is no item at the specfied index.
+        /// </summary>
+        /// <typeparam name="T">The item type.</typeparam>
+        /// <param name="items">The enumerated items.</param>
+        /// <param name="index">The zero-based index.</param>
+        /// <returns>The indexed item or <c>default(T)</c>.</returns>
+        public static T IndexedOrDefault<T>(this IEnumerable<T> items, int index)
+        {
+            Covenant.Requires<ArgumentException>(index >= 0);
+
+            foreach (var item in items)
+            {
+                if (index == 0)
+                {
+                    return item;
+                }
+
+                index--;
+            }
+
+            return default(T);
+        }
     }
 }
