@@ -316,7 +316,7 @@ namespace Neon.Common
         /// <summary>
         /// Used by <see cref="ExecuteCaptureStreams(string, string, TimeSpan?, Process)"/> to redirect process output streams.
         /// </summary>
-        private sealed class StreamRedirect
+        private sealed class ProcessStreamRedirector
         {
             private object          syncLock       = new object();
             public StringBuilder    sbOutput       = new StringBuilder();
@@ -423,7 +423,7 @@ namespace Neon.Common
         public static ExecuteResult ExecuteCaptureStreams(string path, string args, TimeSpan? timeout = null, Process process = null)
         {
             var processInfo     = new ProcessStartInfo(GetProgramPath(path), args != null ? args : string.Empty);
-            var redirect        = new StreamRedirect();
+            var redirector      = new ProcessStreamRedirector();
             var externalProcess = process != null;
 
             if (process == null)
@@ -438,8 +438,8 @@ namespace Neon.Common
                 processInfo.RedirectStandardOutput = true;
                 processInfo.CreateNoWindow         = true;
                 process.StartInfo                  = processInfo;
-                process.OutputDataReceived        += new DataReceivedEventHandler(redirect.OnOutput);
-                process.ErrorDataReceived         += new DataReceivedEventHandler(redirect.OnError);
+                process.OutputDataReceived        += new DataReceivedEventHandler(redirector.OnOutput);
+                process.ErrorDataReceived         += new DataReceivedEventHandler(redirector.OnError);
                 process.EnableRaisingEvents        = true;
 
                 process.Start();
@@ -465,14 +465,14 @@ namespace Neon.Common
                     }
                 }
 
-                redirect.Wait();    // Wait for the standard output/error streams
+                redirector.Wait();    // Wait for the standard output/error streams
                                     // to receive all the data
 
                 return new ExecuteResult()
                     {
                         ExitCode   = process.ExitCode,
-                        OutputText = redirect.sbOutput.ToString(),
-                        ErrorText  = redirect.sbError.ToString()
+                        OutputText = redirector.sbOutput.ToString(),
+                        ErrorText  = redirector.sbError.ToString()
                     };
             }
             finally
