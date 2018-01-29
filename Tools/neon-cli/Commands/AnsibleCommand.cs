@@ -290,7 +290,7 @@ are stored in a user-specific folder at:
             var commandSplit       = commandLine.Split("--");
             var leftCommandLine    = commandSplit.Left;
             var ansibleCommandLine = commandSplit.Right;
-            var command            = leftCommandLine.Arguments.IndexedOrDefault(1);
+            var command            = leftCommandLine.Arguments.AtIndexOrDefault(1);
 
             // The [password] command operates in [--direct] mode so we'll implement it here.
 
@@ -305,9 +305,9 @@ are stored in a user-specific folder at:
                 }
 
                 string  passwordsFolder = NeonClusterHelper.GetAnsiblePasswordsFolder();
-                string  passwordCommand = passwordCommandLine.Arguments.IndexedOrDefault(0);
-                string  passwordName    = passwordCommandLine.Arguments.IndexedOrDefault(1);
-                string  passwordValue   = passwordCommandLine.Arguments.IndexedOrDefault(2);
+                string  passwordCommand = passwordCommandLine.Arguments.AtIndexOrDefault(0);
+                string  passwordName    = passwordCommandLine.Arguments.AtIndexOrDefault(1);
+                string  passwordValue   = passwordCommandLine.Arguments.AtIndexOrDefault(2);
                 int     passwordCount   = 0;
                 string  passwordPath;
                 string  passwordPattern;
@@ -360,8 +360,8 @@ are stored in a user-specific folder at:
 
                     case "export":
 
-                        zipPath         = passwordCommandLine.Arguments.IndexedOrDefault(1);
-                        passwordPattern = passwordCommandLine.Arguments.IndexedOrDefault(2);
+                        zipPath         = passwordCommandLine.Arguments.AtIndexOrDefault(1);
+                        passwordPattern = passwordCommandLine.Arguments.AtIndexOrDefault(2);
 
                         if (string.IsNullOrEmpty(passwordPattern))
                         {
@@ -411,7 +411,7 @@ are stored in a user-specific folder at:
 
                     case "import":
 
-                        zipPath = passwordCommandLine.Arguments.IndexedOrDefault(1);
+                        zipPath = passwordCommandLine.Arguments.AtIndexOrDefault(1);
 
                         if (string.IsNullOrEmpty(zipPath))
                         {

@@ -68,7 +68,7 @@ namespace System.Collections.Generic
         /// <param name="items">The enumerated items.</param>
         /// <param name="index">The zero-based index.</param>
         /// <returns>The indexed item or <c>default(T)</c>.</returns>
-        public static T IndexedOrDefault<T>(this IEnumerable<T> items, int index)
+        public static T AtIndexOrDefault<T>(this IEnumerable<T> items, int index)
         {
             Covenant.Requires<ArgumentException>(index >= 0);
 

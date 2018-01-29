@@ -107,8 +107,8 @@ ARGS:
         /// <param name="commandLine">The command line with <b>zip</b> removed.</param>
         private void Create(CommandLine commandLine)
         {
-            var sourcePath = commandLine.Arguments.IndexedOrDefault(0);
-            var zipPath    = commandLine.Arguments.IndexedOrDefault(1);
+            var sourcePath = commandLine.Arguments.AtIndexOrDefault(0);
+            var zipPath    = commandLine.Arguments.AtIndexOrDefault(1);
 
             if (File.Exists(zipPath))
             {
@@ -148,8 +148,8 @@ ARGS:
         /// <param name="commandLine">The command line with <b>zip</b> removed.</param>
         private void Extract(CommandLine commandLine)
         {
-            var zipPath    = commandLine.Arguments.IndexedOrDefault(0);
-            var folderPath = commandLine.Arguments.IndexedOrDefault(1);
+            var zipPath    = commandLine.Arguments.AtIndexOrDefault(0);
+            var folderPath = commandLine.Arguments.AtIndexOrDefault(1);
 
             Console.WriteLine($"Extracting: {zipPath}");
 

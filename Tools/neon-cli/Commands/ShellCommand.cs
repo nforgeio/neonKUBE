@@ -219,7 +219,7 @@ These folders are encrypted at rest for security.  You can use the
                                     Program.Exit(1);
                                 }
 
-                                var result = Program.RecurseCaptureStreams(
+                                var result = Program.ExecuteRecurseCaptureStreams(
                                     new object[]
                                     {
                                         "ansible",

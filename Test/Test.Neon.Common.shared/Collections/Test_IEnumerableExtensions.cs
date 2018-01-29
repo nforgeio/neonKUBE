@@ -79,42 +79,42 @@ namespace TestCommon
         }
 
         [Fact]
-        public void IndexedOrDefault()
+        public void AtIndexOrDefault()
         {
             var list = new List<string>();
 
-            Assert.Null(list.IndexedOrDefault(0));
-            Assert.Null(list.IndexedOrDefault(1));
-            Assert.Null(list.IndexedOrDefault(2));
-            Assert.Null(list.IndexedOrDefault(3));
+            Assert.Null(list.AtIndexOrDefault(0));
+            Assert.Null(list.AtIndexOrDefault(1));
+            Assert.Null(list.AtIndexOrDefault(2));
+            Assert.Null(list.AtIndexOrDefault(3));
 
             list.Add("one");
 
-            Assert.Equal("one", list.IndexedOrDefault(0));
-            Assert.Null(list.IndexedOrDefault(1));
-            Assert.Null(list.IndexedOrDefault(2));
-            Assert.Null(list.IndexedOrDefault(3));
+            Assert.Equal("one", list.AtIndexOrDefault(0));
+            Assert.Null(list.AtIndexOrDefault(1));
+            Assert.Null(list.AtIndexOrDefault(2));
+            Assert.Null(list.AtIndexOrDefault(3));
 
             list.Add("two");
 
-            Assert.Equal("one", list.IndexedOrDefault(0));
-            Assert.Equal("two", list.IndexedOrDefault(1));
-            Assert.Null(list.IndexedOrDefault(2));
-            Assert.Null(list.IndexedOrDefault(3));
+            Assert.Equal("one", list.AtIndexOrDefault(0));
+            Assert.Equal("two", list.AtIndexOrDefault(1));
+            Assert.Null(list.AtIndexOrDefault(2));
+            Assert.Null(list.AtIndexOrDefault(3));
 
             list.Add("three");
 
-            Assert.Equal("one", list.IndexedOrDefault(0));
-            Assert.Equal("two", list.IndexedOrDefault(1));
-            Assert.Equal("three", list.IndexedOrDefault(2));
-            Assert.Null(list.IndexedOrDefault(3));
+            Assert.Equal("one", list.AtIndexOrDefault(0));
+            Assert.Equal("two", list.AtIndexOrDefault(1));
+            Assert.Equal("three", list.AtIndexOrDefault(2));
+            Assert.Null(list.AtIndexOrDefault(3));
 
             list.Add("four");
 
-            Assert.Equal("one", list.IndexedOrDefault(0));
-            Assert.Equal("two", list.IndexedOrDefault(1));
-            Assert.Equal("three", list.IndexedOrDefault(2));
-            Assert.Equal("four", list.IndexedOrDefault(3));
+            Assert.Equal("one", list.AtIndexOrDefault(0));
+            Assert.Equal("two", list.AtIndexOrDefault(1));
+            Assert.Equal("three", list.AtIndexOrDefault(2));
+            Assert.Equal("four", list.AtIndexOrDefault(3));
         }
     }
 }
