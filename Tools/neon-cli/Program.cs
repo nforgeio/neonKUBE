@@ -12,6 +12,7 @@ using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Reflection;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -1189,6 +1190,34 @@ that the tool requires admin priviledges for direct mode.
                 Console.WriteLine($"*** ERROR: Cannot launch [{programPath}].");
                 Program.Exit(1);
             }
+        }
+
+        /// <summary>
+        /// <para>
+        /// Recursively executes a <b>neon-cli</b> command by launching a new
+        /// instance of the tool with the arguments passed.
+        /// </para>
+        /// <note>
+        /// This currently works only on the user's workstation, not when the
+        /// tool is running in a container.
+        /// </note>
+        /// </summary>
+        /// <param name="args">The arguments.</param>
+        /// <returns>The command response.</returns>
+        public static ExecuteResult RecurseCaptureStreams(params object[] args)
+        {
+            // We need to prepend the program assembly path to the arguments.
+
+            var argList = new List<object>();
+
+            argList.Add(NeonHelper.GetAssemblyPath(Assembly.GetEntryAssembly()));
+
+            foreach (var arg in args)
+            {
+                argList.Add(arg);
+            }
+
+            return NeonHelper.ExecuteCaptureStreams("dotnet", argList.ToArray());
         }
     }
 }

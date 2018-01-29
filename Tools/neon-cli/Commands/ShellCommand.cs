@@ -37,7 +37,7 @@ variables loaded from zero or more Ansible compatible YAML variable files.
 
 USAGE:
 
-    neon shell [---vault-password-file=PATH] [--ask-vault-pass] [VARS1] VARS2...] -- CMD...
+    neon shell [---vault-password-file=NAME] [--ask-vault-pass] [VARS1] VARS2...] -- CMD...
 
 ARGUMENTS:
 
@@ -49,10 +49,12 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --vault-password-file=PATH - Optionally specifies the path to the password
+    --vault-password-file=NAME - Optionally specifies the name of the password
                               file to be used to decrypt the variable files.
                               See the notes below discussing where password
                               files are located.
+
+    -p=NAME                 - Shortcut for naming the password.
 
     --ask-vault-pass        - Optionally specifies that the user should
                               be prompted for the decryption password.
@@ -104,7 +106,7 @@ These folders are encrypted at rest for security.  You can use the
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--vault-password-file", "--ask-vault-pass" }; }
+            get { return new string[] { "--vault-password-file", "--ask-vault-pass", "-p" }; }
         }
 
         /// <inheritdoc/>
@@ -187,6 +189,11 @@ These folders are encrypted at rest for security.  You can use the
                         {
                             var passwordFile = leftCommandLine.GetOption("--vault-password-file");
 
+                            if (string.IsNullOrEmpty(passwordFile))
+                            {
+                                passwordFile = leftCommandLine.GetOption("-p");
+                            }
+
                             if (!string.IsNullOrEmpty(passwordFile))
                             {
                                 passwordPath = Path.Combine(NeonClusterHelper.GetAnsiblePasswordsFolder(), passwordFile);
@@ -202,7 +209,7 @@ These folders are encrypted at rest for security.  You can use the
                                 // The variable file is encrypted we're going recursively invoke
                                 // the following command to decrypt it:
                                 //
-                                //      neon ansible vault decrypt -- --vault-password-file PASSWORD-PATH --output - VARS-PATH
+                                //      neon ansible vault decrypt -- --vault-password-file=NAME --output - VARS-PATH
                                 //
                                 // This uses the password to decrypt the variables to STDOUT.
 
@@ -212,11 +219,9 @@ These folders are encrypted at rest for security.  You can use the
                                     Program.Exit(1);
                                 }
 
-                                var result = NeonHelper.ExecuteCaptureStreams(
-                                    "dotnet",
+                                var result = Program.RecurseCaptureStreams(
                                     new object[]
                                     {
-                                        NeonHelper.GetAssemblyPath(Assembly.GetEntryAssembly()),
                                         "ansible",
                                         "vault",
                                         "--",
