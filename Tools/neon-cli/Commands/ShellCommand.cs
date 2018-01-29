@@ -209,7 +209,7 @@ These folders are encrypted at rest for security.  You can use the
                                 // The variable file is encrypted we're going recursively invoke
                                 // the following command to decrypt it:
                                 //
-                                //      neon ansible vault decrypt -- --vault-password-file=NAME --output - VARS-PATH
+                                //      neon ansible vault view -- --vault-password-file=NAME VARS-PATH
                                 //
                                 // This uses the password to decrypt the variables to STDOUT.
 
@@ -225,9 +225,8 @@ These folders are encrypted at rest for security.  You can use the
                                         "ansible",
                                         "vault",
                                         "--",
-                                        "decrypt",
+                                        "view",
                                         $"--vault-password-file={Path.GetFileName(passwordPath)}",
-                                        "--output=-",
                                         varFile
                                     });
 
@@ -238,28 +237,6 @@ These folders are encrypted at rest for security.  You can use the
                                 }
 
                                 varContents = result.OutputText;
-
-                                // $hack(jeff.lill):
-                                //
-                                // The [ansible-vault decrypt --output=- FILE] command writes the decrypted
-                                // data to STDOUT as expected but then follows this with the line:
-                                //
-                                //      Decryption successful
-                                //
-                                // I've reported this bug to Ansible as:
-                                //
-                                //      https://github.com/ansible/ansible/issues/35424
-                                //
-                                // I'm going to workaround this by stripping off the last line
-                                // if it's "Decryption successful".
-
-                                var badLine = "Decryption successful\r\n";
-                                var badPos  = varContents.LastIndexOf(badLine);
-
-                                if (badPos == varContents.Length - badLine.Length)
-                                {
-                                    varContents = varContents.Substring(0, badPos);
-                                }
                             }
 
                             // [varContents] now holds the decrypted variables formatted as YAML.
