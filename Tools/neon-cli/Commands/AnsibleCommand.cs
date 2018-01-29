@@ -16,6 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
+using ICSharpCode.SharpZipLib.Zip;
+
 using Neon.Cluster;
 using Neon.Common;
 using Neon.Net;
@@ -65,7 +67,7 @@ USAGE:
     neon ansible play   [OPTIONS] -- ARGS   - runs a playbook via:         ansible-playbook ARGS
     neon ansible vault  [OPTIONS] -- ARGS   - manages ansible secrets via: ansible-vault ARGS
 
-    neon ansible password CMD ARGS          - password management
+    neon ansible password CMD ...           - password management
 
 ARGS: Any valid Ansible options and arguments.
 
@@ -215,18 +217,22 @@ Manages Ansible Vault passwords for neonCLUSTER.
 
 USAGE:
 
-    neon ansible password ls|list           - Lists passwords
-    neon ansible password folder [--open]   - Prints or opens password folder
-    neon ansible password get NAME          - Displays a password
-    neon ansible password set NAME          - Sets a secure generated password 
-    neon ansible password set NAME VALUE    - Sets a password to a specific value
-    neon ansible password set NAME -        - Sets a password from STDIN
-    neon ansible password rm|remove NAME    - Removes a password
+    neon ansible password ls|list               - Lists passwords
+    neon ansible password export ZIP [PATTERN]  - Exports passwords to ZIP archive
+    neon ansible password folder [--open]       - Prints or opens password folder
+    neon ansible password get NAME              - Displays a password   
+    neon ansible password import ZIP            - Imports passwords from ZIP archive
+    neon ansible password set NAME              - Sets a secure generated password 
+    neon ansible password set NAME VALUE        - Sets a password to a specific value
+    neon ansible password set NAME -            - Sets a password from STDIN
+    neon ansible password rm|remove NAME        - Removes a password
 
 ARGS:
 
     NAME        - Name of the password file
     VALUE       - Password value
+    PATTERN     - Optionally selects exported passwords via wildcards
+    ZIP         - ZIP file archive partj
     -           - Indicates that password is read from STDIN
 
 OPTIONS:
@@ -298,11 +304,15 @@ are stored in a user-specific folder at:
                     Program.Exit(0);
                 }
 
-                string vaultFolder     = NeonClusterHelper.GetAnsiblePasswordsFolder();
-                string passwordCommand = passwordCommandLine.Arguments.First();
-                string passwordName    = passwordCommandLine.Arguments.Skip(1).FirstOrDefault();
-                string passwordValue   = passwordCommandLine.Arguments.Skip(2).FirstOrDefault();
-                string passwordPath;
+                string  passwordsFolder = NeonClusterHelper.GetAnsiblePasswordsFolder();
+                string  passwordCommand = passwordCommandLine.Arguments.First();
+                string  passwordName    = passwordCommandLine.Arguments.Skip(1).FirstOrDefault();
+                string  passwordValue   = passwordCommandLine.Arguments.Skip(2).FirstOrDefault();
+                int     passwordCount   = 0;
+                string  passwordPath;
+                string  passwordPattern;
+                string  zipPath;
+                string  zipPassword;
 
                 switch (passwordCommand)
                 {
@@ -312,7 +322,7 @@ are stored in a user-specific folder at:
                         {
                             if (NeonHelper.IsWindows)
                             {
-                                Process.Start(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"), $"\"{vaultFolder}\"");
+                                Process.Start(Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "explorer.exe"), $"\"{passwordsFolder}\"");
                             }
                             else if (NeonHelper.IsOSX)
                             {
@@ -325,7 +335,7 @@ are stored in a user-specific folder at:
                         }
                         else
                         {
-                            Console.Write(vaultFolder);
+                            Console.Write(passwordsFolder);
                         }
                         break;
 
@@ -337,7 +347,7 @@ are stored in a user-specific folder at:
                             Program.Exit(1);
                         }
 
-                        passwordPath = Path.Combine(vaultFolder, passwordName);
+                        passwordPath = Path.Combine(passwordsFolder, passwordName);
 
                         if (!File.Exists(passwordPath))
                         {
@@ -348,13 +358,109 @@ are stored in a user-specific folder at:
                         Console.Write(File.ReadAllText(passwordPath));
                         break;
 
+                    case "export":
+
+                        zipPath         = passwordCommandLine.Arguments.Skip(1).FirstOrDefault();
+                        passwordPattern = passwordCommandLine.Arguments.Skip(2).FirstOrDefault();
+
+                        if (string.IsNullOrEmpty(passwordPattern))
+                        {
+                            passwordPattern = "*";
+                        }
+
+                        if (string.IsNullOrEmpty(zipPath))
+                        {
+                            Console.Error.WriteLine("*** ERROR: ZIP-PATH argument is required.");
+                            Program.Exit(1);
+                        }
+
+                    retryPassword:
+
+                        zipPassword = NeonHelper.ReadConsolePassword("Enter Password:   ");
+
+                        if (!string.IsNullOrEmpty(zipPassword) && zipPassword != NeonHelper.ReadConsolePassword("Confirm Password: "))
+                        {
+                            Console.WriteLine();
+                            Console.WriteLine("The passwords don't match.  Please try again.");
+                            Console.WriteLine();
+
+                            goto retryPassword;
+                        }
+
+                        using (var zip = ZipFile.Create(zipPath))
+                        {
+                            if (!string.IsNullOrWhiteSpace(zipPassword))
+                            {
+                                zip.Password = zipPassword;
+                            }
+
+                            zip.BeginUpdate();
+
+                            foreach (var path in Directory.GetFiles(passwordsFolder, passwordPattern, SearchOption.TopDirectoryOnly))
+                            {
+                                passwordCount++;
+                                zip.Add(path, Path.GetFileName(path));
+                            }
+
+                            zip.CommitUpdate();
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine($"[{passwordCount}] passwords exported.");
+                        break;
+
+                    case "import":
+
+                        zipPath = passwordCommandLine.Arguments.Skip(1).FirstOrDefault();
+
+                        if (string.IsNullOrEmpty(zipPath))
+                        {
+                            Console.Error.WriteLine("*** ERROR: ZIP-PATH argument is required.");
+                            Program.Exit(1);
+                        }
+
+                        zipPassword = NeonHelper.ReadConsolePassword("ZIP Password: ");
+
+                        using (var input = new FileStream(zipPath, FileMode.Open, FileAccess.ReadWrite))
+                        {
+                            using (var zip = new ZipFile(input))
+                            {
+                                if (!string.IsNullOrWhiteSpace(zipPassword))
+                                {
+                                    zip.Password = zipPassword;
+                                }
+
+                                foreach (ZipEntry zipEntry in zip)
+                                {
+                                    if (!zipEntry.IsFile)
+                                    {
+                                        continue;
+                                    }
+
+                                    passwordCount++;
+
+                                    using (var zipStream = zip.GetInputStream(zipEntry))
+                                    {
+                                        using (var passwordStream = new FileStream(Path.Combine(passwordsFolder, zipEntry.Name), FileMode.Create, FileAccess.ReadWrite))
+                                        {
+                                            zipStream.CopyTo(passwordStream);
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
+                        Console.WriteLine();
+                        Console.WriteLine($"[{passwordCount}] passwords imported.");
+                        break;
+
                     case "ls":
                     case "list":
 
-                        foreach (var file in Directory.GetFiles(vaultFolder, "*.*", SearchOption.AllDirectories)
+                        foreach (var file in Directory.GetFiles(passwordsFolder, "*.*", SearchOption.AllDirectories)
                             .OrderBy(f => f.ToLowerInvariant()))
                         {
-                            Console.WriteLine(file.Substring(vaultFolder.Length + 1));  // Strip off the Vault folder path.
+                            Console.WriteLine(file.Substring(passwordsFolder.Length + 1));  // Strip off the Vault folder path.
                         }
                         break;
 
@@ -367,7 +473,7 @@ are stored in a user-specific folder at:
                             Program.Exit(1);
                         }
 
-                        passwordPath = Path.Combine(vaultFolder, passwordName);
+                        passwordPath = Path.Combine(passwordsFolder, passwordName);
 
                         if (!File.Exists(passwordPath))
                         {
@@ -386,7 +492,7 @@ are stored in a user-specific folder at:
                             Program.Exit(1);
                         }
 
-                        passwordPath = Path.Combine(vaultFolder, passwordName);
+                        passwordPath = Path.Combine(passwordsFolder, passwordName);
 
                         if (passwordValue == null)
                         {
