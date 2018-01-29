@@ -222,10 +222,10 @@ USAGE:
     neon ansible password folder [--open]       - Prints or opens password folder
     neon ansible password get NAME              - Displays a password   
     neon ansible password import ZIP            - Imports passwords from ZIP archive
+    neon ansible password rm|remove NAME        - Removes a password
     neon ansible password set NAME              - Sets a secure generated password 
     neon ansible password set NAME VALUE        - Sets a password to a specific value
     neon ansible password set NAME -            - Sets a password from STDIN
-    neon ansible password rm|remove NAME        - Removes a password
 
 ARGS:
 
@@ -286,11 +286,11 @@ are stored in a user-specific folder at:
                 Program.Exit(0);
             }
 
-            var login              = Program.ClusterLogin;
-            var commandSplit       = commandLine.Split("--");
-            var leftCommandLine    = commandSplit.Left;
-            var ansibleCommandLine = commandSplit.Right;
-            var command            = leftCommandLine.Arguments.AtIndexOrDefault(1);
+            var login            = Program.ClusterLogin;
+            var commandSplit     = commandLine.Split("--");
+            var leftCommandLine  = commandSplit.Left;
+            var rightCommandLine = commandSplit.Right;
+            var command          = leftCommandLine.Arguments.AtIndexOrDefault(1);
 
             // The [password] command operates in [--direct] mode so we'll implement it here.
 
@@ -546,9 +546,9 @@ are stored in a user-specific folder at:
 
             var noAnsibleCommand = false;
 
-            if (ansibleCommandLine == null)
+            if (rightCommandLine == null)
             {
-                ansibleCommandLine = new CommandLine();
+                rightCommandLine = new CommandLine();
                 noAnsibleCommand   = true;
             }
 
@@ -588,28 +588,28 @@ are stored in a user-specific folder at:
             // path prefix that is relative to the internal password copies folder.  Note that
             // [--vault-password-file=FILE] may appear only once in the command line.
 
-            for (int i = 0; i < ansibleCommandLine.Items.Length; i++)
+            for (int i = 0; i < rightCommandLine.Items.Length; i++)
             {
-                var item = ansibleCommandLine.Items[i];
+                var item = rightCommandLine.Items[i];
 
                 if (item.StartsWith("--vault-password-file="))
                 {
                     var passwordFile = item.Substring(item.IndexOf('=') + 1);
 
-                    ansibleCommandLine.Items[i] = $"--vault-password-file={Path.Combine(copiedPasswordsPath, passwordFile)}";
+                    rightCommandLine.Items[i] = $"--vault-password-file={Path.Combine(copiedPasswordsPath, passwordFile)}";
                     break;
                 }
                 else if (item == "--vault-password-file")
                 {
-                    if (i + 1 >= ansibleCommandLine.Items.Length)
+                    if (i + 1 >= rightCommandLine.Items.Length)
                     {
                         Console.Error.WriteLine("*** ERROR: Missing password file after [--vault-password-file] option.");
                         Program.Exit(1);
                     }
 
-                    var passwordFile = ansibleCommandLine.Items[i + 1];
+                    var passwordFile = rightCommandLine.Items[i + 1];
 
-                    ansibleCommandLine.Items[i + 1] = Path.Combine(copiedPasswordsPath, passwordFile);
+                    rightCommandLine.Items[i + 1] = Path.Combine(copiedPasswordsPath, passwordFile);
                     break;
                 }
             }
@@ -618,9 +618,9 @@ are stored in a user-specific folder at:
             // path prefix that is relative to the internal password copies folder.  Note that the ID is optional
             // and that [--vault-id] may appear multiple times in the command line.
 
-            for (int i = 0; i < ansibleCommandLine.Items.Length; i++)
+            for (int i = 0; i < rightCommandLine.Items.Length; i++)
             {
-                var item = ansibleCommandLine.Items[i];
+                var item = rightCommandLine.Items[i];
 
                 if (item.StartsWith("--vault-id="))
                 {
@@ -629,16 +629,16 @@ are stored in a user-specific folder at:
 
                     if (vaultIdParts.Length == 1)
                     {
-                        ansibleCommandLine.Items[i] = Path.Combine(copiedPasswordsPath, vaultIdParts[0]);
+                        rightCommandLine.Items[i] = Path.Combine(copiedPasswordsPath, vaultIdParts[0]);
                     }
                     else
                     {
-                        ansibleCommandLine.Items[i] =$"{vaultIdParts[0]}@{Path.Combine(copiedPasswordsPath, vaultIdParts[1])}";
+                        rightCommandLine.Items[i] =$"{vaultIdParts[0]}@{Path.Combine(copiedPasswordsPath, vaultIdParts[1])}";
                     }
                 }
                 else if (item == "--vault-id")
                 {
-                    if (i + 1 >= ansibleCommandLine.Items.Length)
+                    if (i + 1 >= rightCommandLine.Items.Length)
                     {
                         Console.Error.WriteLine("*** ERROR: Missing password file after [--vault-id] option.");
                         Program.Exit(1);
@@ -646,16 +646,16 @@ are stored in a user-specific folder at:
 
                     i++;    // Advance to the vault ID argument.
 
-                    var vaultId      = ansibleCommandLine.Items[i];
+                    var vaultId      = rightCommandLine.Items[i];
                     var vaultIdParts = vaultId.Split('@', 2);
 
                     if (vaultIdParts.Length == 1)
                     {
-                        ansibleCommandLine.Items[i] = Path.Combine(copiedPasswordsPath, vaultIdParts[0]);
+                        rightCommandLine.Items[i] = Path.Combine(copiedPasswordsPath, vaultIdParts[0]);
                     }
                     else
                     {
-                        ansibleCommandLine.Items[i] = $"{vaultIdParts[0]}@{Path.Combine(copiedPasswordsPath, vaultIdParts[1])}";
+                        rightCommandLine.Items[i] = $"{vaultIdParts[0]}@{Path.Combine(copiedPasswordsPath, vaultIdParts[1])}";
                     }
                 }
             }
@@ -674,7 +674,7 @@ are stored in a user-specific folder at:
 
                     GenerateAnsibleConfig();
                     GenerateAnsibleFiles(login);
-                    NeonHelper.Execute("ansible", NeonHelper.NormalizeExecArgs("--user", login.SshUsername, "--private-key", sshClientPrivateKeyPath, ansibleCommandLine.Items));
+                    Program.Exit(NeonHelper.Execute("ansible", NeonHelper.NormalizeExecArgs("--user", login.SshUsername, "--private-key", sshClientPrivateKeyPath, rightCommandLine.Items)));
                     break;
 
                 case "play":
@@ -687,7 +687,7 @@ are stored in a user-specific folder at:
 
                     GenerateAnsibleConfig();
                     GenerateAnsibleFiles(login);
-                    NeonHelper.Execute("ansible-playbook", NeonHelper.NormalizeExecArgs("--user", login.SshUsername, "--private-key", sshClientPrivateKeyPath, ansibleCommandLine.Items));
+                    Program.Exit(NeonHelper.Execute("ansible-playbook", NeonHelper.NormalizeExecArgs("--user", login.SshUsername, "--private-key", sshClientPrivateKeyPath, rightCommandLine.Items)));
                     break;
 
                 case "galaxy":
@@ -699,7 +699,7 @@ are stored in a user-specific folder at:
                     }
 
                     GenerateAnsibleConfig();
-                    NeonHelper.Execute("ansible-galaxy", NeonHelper.NormalizeExecArgs(ansibleCommandLine.Items));
+                    Program.Exit(NeonHelper.Execute("ansible-galaxy", NeonHelper.NormalizeExecArgs(rightCommandLine.Items)));
                     break;
 
                 case "vault":
@@ -737,7 +737,7 @@ are stored in a user-specific folder at:
                     }
 
                     GenerateAnsibleConfig();
-                    NeonHelper.Execute("ansible-vault", NeonHelper.NormalizeExecArgs(ansibleCommandLine.Items));
+                    Program.Exit(NeonHelper.Execute("ansible-vault", NeonHelper.NormalizeExecArgs(rightCommandLine.Items)));
                     break;
 
                 default:
