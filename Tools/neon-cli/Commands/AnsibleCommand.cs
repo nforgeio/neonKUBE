@@ -731,7 +731,7 @@ are stored in a user-specific folder at:
 
                         default:
 
-                            Console.Error.WriteLine($"*** ERROR: [--editor={editor}] does not specify a known editor.  Specify one of: nano, vim, or vi.");
+                            Console.Error.WriteLine($"*** ERROR: [--editor={editor}] does not specify a known editor.  Specify one of: NANO, VIM, or VI.");
                             Program.Exit(1);
                             break;
                     }
@@ -864,7 +864,7 @@ are stored in a user-specific folder at:
 
             if (!File.Exists(Path.Combine(NeonClusterHelper.GetAnsiblePasswordsFolder(), passwordName)))
             {
-                Console.Error.WriteLine($"**** ERROR: The [--vault-password-file={passwordName}] does not exist.  Use [neon ansible password set {passwordName} YOUR-PASSWORD] to initialize this password.");
+                Console.Error.WriteLine($"**** ERROR: The [{passwordName}] password does not exist.");
                 Program.Exit(1);
             }
         }
