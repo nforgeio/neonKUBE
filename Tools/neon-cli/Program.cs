@@ -73,6 +73,7 @@ COMMAND SUMMARY:
     neon docker             ARGS
     neon download           SOURCE TARGET [NODE]
     neon exec               BASH-CMD
+    neon file               create|decrypt|edit|encrypt|view PATH PASSWORD-NAME
     neon folder             FOLDER
     neon get                [VALUE-EXPR]
     neon login              [--no-vpn] USER@CLUSTER
@@ -226,6 +227,7 @@ that the tool requires admin priviledges for direct mode.
                     new DockerCommand(),
                     new DownloadCommand(),
                     new ExecCommand(),
+                    new FileCommand(),
                     new FolderCommand(),
                     new LoginCommand(),
                     new LoginExportCommand(),
@@ -1195,29 +1197,50 @@ that the tool requires admin priviledges for direct mode.
         /// <summary>
         /// <para>
         /// Recursively executes a <b>neon-cli</b> command by launching a new
-        /// instance of the tool with the arguments passed.
+        /// instance of the tool with the arguments passed and capturing the
+        /// process output streams.
         /// </para>
         /// <note>
-        /// This currently works only on the user's workstation, not when the
-        /// tool is running in a container.
+        /// This does not recurse into  a container, it simply launches a new
+        /// process instance of the program in the current environment with
+        /// the arguments passed.
         /// </note>
         /// </summary>
         /// <param name="args">The arguments.</param>
-        /// <returns>The command response.</returns>
-        public static ExecuteResult RecurseCaptureStreams(params object[] args)
+        /// <returns>The process response.</returns>
+        public static ExecuteResult ExecuteRecurseCaptureStreams(params object[] args)
         {
             // We need to prepend the program assembly path to the arguments.
 
-            var argList = new List<object>();
+            var argList = new List<object>(args);
 
-            argList.Add(NeonHelper.GetAssemblyPath(Assembly.GetEntryAssembly()));
-
-            foreach (var arg in args)
-            {
-                argList.Add(arg);
-            }
+            argList.Insert(0, NeonHelper.GetAssemblyPath(Assembly.GetEntryAssembly()));
 
             return NeonHelper.ExecuteCaptureStreams("dotnet", argList.ToArray());
+        }
+
+        /// <summary>
+        /// <para>
+        /// Recursively executes a <b>neon-cli</b> command by launching a new
+        /// instance of the tool with the arguments passed.
+        /// </para>
+        /// <note>
+        /// This does not recurse into  a container, it simply launches a new
+        /// process instance of the program in the current environment with
+        /// the arguments passed.
+        /// </note>
+        /// </summary>
+        /// <param name="args">The arguments.</param>
+        /// <returns>The process exit code.</returns>
+        public static int ExecuteRecurse(params object[] args)
+        {
+            // We need to prepend the program assembly path to the arguments.
+
+            var argList = new List<object>(args);
+
+            argList.Insert(0, NeonHelper.GetAssemblyPath(Assembly.GetEntryAssembly()));
+
+            return NeonHelper.Execute("dotnet", argList.ToArray());
         }
     }
 }
