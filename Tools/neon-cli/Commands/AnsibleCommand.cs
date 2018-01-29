@@ -584,7 +584,7 @@ are stored in a user-specific folder at:
                 File.WriteAllBytes(target, contents);
             }
 
-            // Munge any [--vault-password-file=FILE] or [--vault-password-file FILE] options to use a 
+            // Munge any [--vault-password-file=NAME] or [--vault-password-file NAME] options to use a 
             // path prefix that is relative to the internal password copies folder.  Note that
             // [--vault-password-file=FILE] may appear only once in the command line.
 
@@ -852,19 +852,19 @@ are stored in a user-specific folder at:
         {
             if (string.IsNullOrWhiteSpace(passwordName))
             {
-                Console.Error.WriteLine($"**** ERROR: [--vault-password-file {passwordName}] is not valid.");
+                Console.Error.WriteLine($"**** ERROR: [--vault-password-file={passwordName}] is not valid.");
                 Program.Exit(1);
             }
 
             if (Path.IsPathRooted(passwordName) || passwordName.IndexOfAny(new char[] { ':', '/', '\\' }) != -1)
             {
-                Console.Error.WriteLine($"**** ERROR: [--vault-password-file {passwordName}] must be the name of the password file managed by [neon-cli].  This cannot include a file path.");
+                Console.Error.WriteLine($"**** ERROR: [--vault-password-file={passwordName}] must be the name of the password file managed by [neon-cli].  This cannot include a file path.");
                 Program.Exit(1);
             }
 
             if (!File.Exists(Path.Combine(NeonClusterHelper.GetAnsiblePasswordsFolder(), passwordName)))
             {
-                Console.Error.WriteLine($"**** ERROR: The [--vault-password-file {passwordName}] does not exist.  Use [neon ansible password set {passwordName} YOUR-PASSWORD] to initialize this password.");
+                Console.Error.WriteLine($"**** ERROR: The [--vault-password-file={passwordName}] does not exist.  Use [neon ansible password set {passwordName} YOUR-PASSWORD] to initialize this password.");
                 Program.Exit(1);
             }
         }
