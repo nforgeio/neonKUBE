@@ -781,13 +781,7 @@ are stored in a user-specific folder at:
                 {
                     var externalTarget = ansibleCommandLine.Arguments.Last();
 
-                    if (!File.Exists(externalTarget))
-                    {
-                        Console.Error.WriteLine($"*** ERROR: File [{externalTarget}] does not exist.");
-                        Program.Exit(1);
-                    }
-
-                    shim.AddMappedFolder(new DockerShimFolder(Path.GetDirectoryName(externalTarget), mappedCurrentDirectory, isReadOnly: false));
+                    shim.AddMappedFolder(new DockerShimFolder(Path.GetDirectoryName(Path.GetFullPath(externalTarget)), mappedCurrentDirectory, isReadOnly: false));
 
                     // Munge the target file path to be just the file name.
 
