@@ -167,7 +167,7 @@ ARGS:
 
                 case "view":
 
-                    exitCode = Program.ExecuteRecurse(
+                    var result = Program.ExecuteRecurseCaptureStreams(
                         new object[]
                         {
                             "ansible",
@@ -178,10 +178,13 @@ ARGS:
                             path
                         });
 
-                    if (exitCode != 0)
+                    if (result.ExitCode != 0)
                     {
-                        Program.Exit(exitCode);
+                        Console.Error.WriteLine(CleanAnsibleError(result.AllText));
+                        Program.Exit(result.ExitCode);
                     }
+
+                    Console.Write(result.OutputText);
                     break;
 
                 default:
@@ -196,6 +199,30 @@ ARGS:
         public override ShimInfo Shim(DockerShim shim)
         {
             return new ShimInfo(isShimmed: false);
+        }
+
+        /// <summary>
+        /// Strips off a weird prefix and suffix from Ansible error messages 
+        /// if present.  I'm  assuming that these are TTY formatting codes.
+        /// </summary>
+        /// <param name="message"></param>
+        /// <returns></returns>
+        private string CleanAnsibleError(string message)
+        {
+            const string prefix = "\u001b[0;31m";
+            const string suffix = "\u001b[0m\r\n";
+
+            if (message.StartsWith(prefix))
+            {
+                message = message.Substring(prefix.Length);
+            }
+
+            if (message.EndsWith(suffix))
+            {
+                message = message.Substring(0, message.Length - suffix.Length);
+            }
+
+            return message;
         }
     }
 }
