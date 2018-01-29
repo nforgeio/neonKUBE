@@ -131,8 +131,8 @@ the [neon exec] command.
 
             if (!leftCommandLine.HasOption("--no-upload"))
             {
-                var arg1 = rightCommandLine.Arguments.FirstOrDefault();
-                var arg2 = rightCommandLine.Arguments.Skip(1).FirstOrDefault();
+                var arg1 = rightCommandLine.Arguments.IndexedOrDefault(0);
+                var arg2 = rightCommandLine.Arguments.IndexedOrDefault(1);
 
                 if (arg1 == "deploy")
                 {
@@ -311,7 +311,7 @@ the [neon exec] command.
             }
 
             var arg1 = rightCommandLine.Arguments.FirstOrDefault();
-            var arg2 = rightCommandLine.Arguments.Skip(1).FirstOrDefault();
+            var arg2 = rightCommandLine.Arguments.IndexedOrDefault(1);
 
             switch (arg1)
             {
