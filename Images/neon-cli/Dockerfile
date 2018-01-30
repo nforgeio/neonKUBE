@@ -42,7 +42,7 @@ ENV NEON_TOOL_CONTAINER=1
 ENV EDITOR=/bin/nano
 
 RUN apt-get update \
-    && apt-get install -yq nano vim \
+    && apt-get install -yq nano vim zip \
     && apt-get clean -yq
 
 # Install OpenVPN in it's own layer.

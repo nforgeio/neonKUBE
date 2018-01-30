@@ -20,8 +20,8 @@ using ICSharpCode.SharpZipLib.Zip;
 
 using Neon.Cluster;
 using Neon.Common;
-using Neon.Net;
 using Neon.IO;
+using Neon.Net;
 
 namespace NeonCli
 {
@@ -67,9 +67,14 @@ USAGE:
     neon ansible play   [OPTIONS] -- ARGS   - runs a playbook via:         ansible-playbook ARGS
     neon ansible vault  [OPTIONS] -- ARGS   - manages ansible secrets via: ansible-vault ARGS
 
+    neon ansible config   ZIP-PATH          - returns Ansible configuration files to ZIP archive
     neon ansible password CMD ...           - password management
 
-ARGS: Any valid Ansible options and arguments.
+ARGUMENTS:
+
+    ARGS                - Ansible compatible arguments
+    CMD                 - Password command
+    ZIP-PATH            - Path to the output ZIP archive
 
 OPTIONS:
 
@@ -103,7 +108,9 @@ USAGE:
 
     neon ansible exec [OPTIONS] -- ARGS
 
-ARGS: Any valid [ansible] options and arguments.
+ARGUMENTS:
+
+    ARGS                - Any valid [ansible] options and arguments
 
 OPTIONS:
 
@@ -137,7 +144,9 @@ USAGE:
 
     neon ansible play [OPTIONS] -- ARGS
 
-ARGS: Any valid [ansible-playbook] options and arguments.
+ARGUMENTS:
+
+    ARGS                - Any valid [ansible] options and arguments
 
 OPTIONS:
 
@@ -171,7 +180,9 @@ USAGE:
 
     neon ansible galaxy [OPTIONS] -- ARGS
 
-ARGS: Any valid [ansible-galaxy] options and arguments.
+ARGUMENTS:
+
+    ARGS                - Any valid [ansible] options and arguments
 
 OPTIONS:
 
@@ -194,7 +205,9 @@ USAGE:
 
     neon ansible vault [OPTIONS] -- ARGS
 
-ARGS: Any valid [ansible-vault] options and arguments.
+ARGUMENTS:
+
+    ARGS                - Any valid [ansible] options and arguments
 
 OPTIONS:
 
@@ -227,7 +240,7 @@ USAGE:
     neon ansible password set NAME VALUE        - Sets a password to a specific value
     neon ansible password set NAME -            - Sets a password from STDIN
 
-ARGS:
+ARGUMENTS:
 
     NAME        - Name of the password file
     VALUE       - Password value
@@ -247,10 +260,31 @@ are stored in a user-specific folder at:
     ~/.neonforge/neoncluster/ansible/passwords              - for OSX
 ";
 
+        private const string inventoryHelp = @"
+Writes the Ansible inventory and variables files generated for the current
+cluster to a ZIP archive.
+
+USAGE:
+
+    neon ansible inventory ZIP-PATH
+
+ARGUMENTS:
+
+    ZIP-PATH            - Path to the output ZIP archive
+
+This command is handy when you're developing Ansible playbooks and scripts
+for a cluster.  Use this command to write a ZIP archive including the
+inventory and variable files that will be used when Ansible commands
+will be run on the cluster.
+
+You can open the returned ZIP archive to inspect these file.
+";
+
         private const string sshClientPrivateKeyPath = "/dev/shm/ansible/ssh-client.key";   // Path to the SSH private client key (on a container RAM drive)
         private const string mappedCurrentDirectory  = "/cwd";                              // Path to the current working directory mapped into the container
         private const string mappedRolesPath         = "/etc/ansible/mapped-roles";         // Path where external roles are mapped into the container
         private const string mappedPasswordsPath     = "/etc/ansible/mapped-passwords";     // Path where external Vault passwords are mapped into the container
+        private const string mappedZipPath           = "/zip";                              // Path where the [inventory] command will write the zipped Ansible files
         private const string copiedPasswordsPath     = "/dev/shm/copied-passwords";         // Path where copies of external Vault passwords held in the container
 
         /// <inheritdoc/>
@@ -480,7 +514,7 @@ are stored in a user-specific folder at:
 
                         Console.WriteLine();
                         Console.WriteLine($"[{passwordCount}] passwords imported.");
-                        break;
+                        break;                    
 
                     case "ls":
                     case "list":
@@ -577,7 +611,7 @@ are stored in a user-specific folder at:
             if (rightCommandLine == null)
             {
                 rightCommandLine = new CommandLine();
-                noAnsibleCommand   = true;
+                noAnsibleCommand = true;
             }
 
             if (login.Definition.HostNode.SshAuth != AuthMethods.Tls)
@@ -692,6 +726,48 @@ are stored in a user-specific folder at:
 
             switch (command)
             {
+                case "config":
+
+                    var zipFileName = leftCommandLine.Arguments.AtIndexOrDefault(2);
+
+                    if (zipFileName == null)
+                    {
+                        Console.Error.WriteLine("*** ERROR: ZIP-PATH argument is required.");
+                        Program.Exit(1);
+                    }
+
+                    var zipPath = Path.Combine(mappedZipPath, zipFileName);
+
+                    GenerateAnsibleConfig();
+                    GenerateAnsibleFiles(login);
+
+                    // Remove any existing ZIP file.
+
+                    if (File.Exists(zipPath))
+                    {
+                        File.Delete(zipPath);
+                    }
+
+                    // Recursively ZIP the contents of the [/etc/ansible] directory.
+                    // Note that we need to change the current directory so the ZIP
+                    // file won't include the [/etc/ansible] directories.
+
+                    Environment.CurrentDirectory = "/etc/ansible";
+
+                    var result = NeonHelper.ExecuteCaptureStreams("zip", $"-r \"{zipPath}\" .");
+
+                    if (result.ExitCode != 0)
+                    {
+                        Console.Error.WriteLine(result.ErrorText);
+                        Program.Exit(result.ExitCode);
+                    }
+                    else
+                    {
+                        Console.WriteLine();
+                        Console.WriteLine($"Ansible configuration written to [{zipFileName}]");
+                    }
+                    break;
+
                 case "exec":
 
                     if (leftCommandLine.HasHelpOption || noAnsibleCommand)
@@ -861,12 +937,40 @@ are stored in a user-specific folder at:
                 }
             }
 
-            // Note that we don't shim the password command and we also don't need
+            // Note that we don't shim the [password] command and that also doesn't need
             // a cluster connection.
 
-            if (shim.CommandLine.Arguments.Length >= 2 && shim.CommandLine.Items.Skip(1).First() == "password")
+            if (shim.CommandLine.Arguments.AtIndexOrDefault(1) == "password")
             {
                 return new ShimInfo(isShimmed: false, ensureConnection: false);
+            }
+
+            // For the [config] command, we're going to shim the folder
+            // where the ZIP file is to be written to [/cwd] inside the
+            // container and then strip the directory path off of the 
+            // ZIP-FILE argument.
+
+            if (shim.CommandLine.Arguments.AtIndexOrDefault(1) == "config")
+            {
+                var zipPath = shim.CommandLine.Arguments.AtIndexOrDefault(2);
+
+                if (zipPath == null)
+                {
+                    // The ZIP-PATH argument isn't present, which is an error.
+                    // We're going to go ahead and map the current directory
+                    // to [/zip] and then let [neon] running in the container
+                    // report the error.
+
+                    shim.AddMappedFolder(new DockerShimFolder(Environment.CurrentDirectory, mappedZipPath, isReadOnly: false));
+                }
+                else
+                {
+                    var zipFolder = Path.GetDirectoryName(Path.GetFullPath(zipPath));
+                    var zipFile   = Path.GetFileName(zipPath);
+
+                    shim.AddMappedFolder(new DockerShimFolder(zipFolder, mappedZipPath, isReadOnly: false));
+                    shim.ReplaceItem(zipPath, zipFile);
+                }
             }
 
             return new ShimInfo(isShimmed: true, ensureConnection: true);
@@ -1391,16 +1495,16 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
         private void GenerateAnsibleFiles(ClusterLogin login)
         {
             // Write the cluster's SSH client private key to [/dev/shm/ssh-client.key],
-            // which is on a container RAM drive for security.  Note that the key file
-            // must be locked down or else be rejected by Ansible.
+            // which is on the container RAM drive for security.  Note that the key file
+            // must be restricted to the ROOT account to be accepted by Ansible.
 
             Directory.CreateDirectory(Path.GetDirectoryName(sshClientPrivateKeyPath));
             File.WriteAllText(sshClientPrivateKeyPath, login.SshClientKey.PrivatePEM);
             NeonHelper.Execute("chmod", $"600 \"{sshClientPrivateKeyPath}\"");
 
             // Generate the [/etc/ssh/ssh_known_hosts] file with the public SSH key of the cluster
-            // nodes so Ansible will be able to verify host identity.  Note that all nodes share 
-            // the same key.  This documented here:
+            // nodes so Ansible will be able to verify host identity when connecting via SSH.  
+            // Note that all nodes share the same key.  This documented here:
             //
             //      http://man.openbsd.org/sshd.8
 
@@ -1423,12 +1527,12 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
             Environment.CurrentDirectory = mappedCurrentDirectory;
 
             // Generate the Ansible inventory and variable files.  We're going to use the cluster node
-            // name for each host and then generate some standard ansible variables and then a generate
-            // variable for host label.  Each label variable will be prefixed by "label_" with the the
+            // name for each host and then generate some standard Ansible variables and then generate a
+            // variable for the host label.  Each label variable will be prefixed by "label_" with the
             // label name appended and with any embedded periods converted to underscores.
             //
             // The hosts will be organized into four groups: managers, workers, pets, and swarm (where
-            // swarm includes the managers and workers but not the pets.
+            // swarm includes the managers and workers but not the pets).
 
             const string ansibleConfigFolder = "/etc/ansible";
             const string ansibleVarsFolder   = ansibleConfigFolder + "/host_vars";
