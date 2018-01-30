@@ -87,6 +87,12 @@ ARGS:
                 Program.Exit(1);
             }
 
+            if (command != "create" && !File.Exists(path))
+            {
+                Console.Error.WriteLine($"*** ERROR: File [{path}] does not exist.");
+                Program.Exit(1);
+            }
+
             var passwordPath = Path.Combine(NeonClusterHelper.GetAnsiblePasswordsFolder(), passwordName);
 
             if (!File.Exists(passwordPath))
@@ -95,12 +101,31 @@ ARGS:
                 Program.Exit(1);
             }
 
+            // $note(jeff.lill):
+            //
+            // I tried to call [Program.ExecuteRecurse()] here to recurse into
+            // the [neon vault -- COMMAND --vault-password-file=NAME PATH] commands
+            // but it didn't work for [edit].  It looks like the command did run but then
+            // gets stuck.  I could have sworn that I had this working at one
+            // point but I can't get it working again.  I think the standard 
+            // I/O streams being redirect might be confusing Docker and Ansible,
+            // since Ansible needs to access the Docker TTY.
+            //
+            // The [view] command was also a bit wonky.  For example, two blank
+            // lines in the encrypted file would be returned as only a single
+            // blank line.
+            //
+            // The (not so bad) workaround is to simply recurse into 
+            // [Program.Main()].  It's a little sloppy but should be OK
+            // (and will be faster to boot).  I'm going to do this for
+            // all of the commands.
+
             switch (command)
             {
                 case "create":
 
-                    exitCode = Program.ExecuteRecurse(
-                        new object[]
+                    Program.Main(
+                        new string[]
                         {
                             "ansible",
                             "vault",
@@ -110,16 +135,12 @@ ARGS:
                             path
                         });
 
-                    if (exitCode != 0)
-                    {
-                        Program.Exit(exitCode);
-                    }
                     break;
 
                 case "decrypt":
 
-                    exitCode = Program.ExecuteRecurse(
-                        new object[]
+                    Program.Main(
+                        new string[]
                         {
                             "ansible",
                             "vault",
@@ -129,16 +150,12 @@ ARGS:
                             path
                         });
 
-                    if (exitCode != 0)
-                    {
-                        Program.Exit(exitCode);
-                    }
                     break;
 
                 case "edit":
 
-                    exitCode = Program.ExecuteRecurse(
-                        new object[]
+                    Program.Main(
+                        new string[]
                         {
                             "ansible",
                             "vault",
@@ -148,16 +165,12 @@ ARGS:
                             path
                         });
 
-                    if (exitCode != 0)
-                    {
-                        Program.Exit(exitCode);
-                    }
                     break;
 
                 case "encrypt":
 
-                    exitCode = Program.ExecuteRecurse(
-                        new object[]
+                    Program.Main(
+                        new string[]
                         {
                             "ansible",
                             "vault",
@@ -167,16 +180,12 @@ ARGS:
                             path
                         });
 
-                    if (exitCode != 0)
-                    {
-                        Program.Exit(exitCode);
-                    }
                     break;
 
                 case "view":
 
-                    var result = Program.ExecuteRecurseCaptureStreams(
-                        new object[]
+                    Program.Main(
+                        new string[]
                         {
                             "ansible",
                             "vault",
@@ -186,13 +195,6 @@ ARGS:
                             path
                         });
 
-                    if (result.ExitCode != 0)
-                    {
-                        Console.Error.WriteLine(CleanAnsibleError(result.AllText));
-                        Program.Exit(result.ExitCode);
-                    }
-
-                    Console.Write(result.OutputText);
                     break;
 
                 default:

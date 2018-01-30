@@ -1218,29 +1218,5 @@ that the tool requires admin priviledges for direct mode.
 
             return NeonHelper.ExecuteCaptureStreams("dotnet", argList.ToArray());
         }
-
-        /// <summary>
-        /// <para>
-        /// Recursively executes a <b>neon-cli</b> command by launching a new
-        /// instance of the tool with the arguments passed.
-        /// </para>
-        /// <note>
-        /// This does not recurse into  a container, it simply launches a new
-        /// process instance of the program in the current environment with
-        /// the arguments passed.
-        /// </note>
-        /// </summary>
-        /// <param name="args">The arguments.</param>
-        /// <returns>The process exit code.</returns>
-        public static int ExecuteRecurse(params object[] args)
-        {
-            // We need to prepend the program assembly path to the arguments.
-
-            var argList = new List<object>(args);
-
-            argList.Insert(0, NeonHelper.GetAssemblyPath(Assembly.GetEntryAssembly()));
-
-            return NeonHelper.Execute("dotnet", argList.ToArray());
-        }
     }
 }
