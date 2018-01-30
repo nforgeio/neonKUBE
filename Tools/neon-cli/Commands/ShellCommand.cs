@@ -206,7 +206,7 @@ These folders are encrypted at rest for security.  You can use the
 
                             if (varContents.StartsWith("$ANSIBLE_VAULT;"))
                             {
-                                // The variable file is encrypted we're going recursively invoke
+                                // The variable file is encrypted so we're going recursively invoke
                                 // the following command to decrypt it:
                                 //
                                 //      neon ansible vault view -- --vault-password-file=NAME VARS-PATH
