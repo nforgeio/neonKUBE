@@ -728,7 +728,7 @@ You can open the returned ZIP archive to inspect these file.
             {
                 case "config":
 
-                    if (leftCommandLine.HasHelpOption || noAnsibleCommand)
+                    if (leftCommandLine.HasHelpOption)
                     {
                         Console.WriteLine(configHelp);
                         Program.Exit(0);
@@ -871,12 +871,7 @@ You can open the returned ZIP archive to inspect these file.
             // into the container.  Note that the [--cwd=FOLDER] command line option
             // will override the current directory if present.
 
-            string command = null;
-
-            if (shim.CommandLine.Arguments.Length >= 2)
-            {
-                command = shim.CommandLine.Arguments[1];
-            }
+            string command = shim.CommandLine.Arguments.AtIndexOrDefault(1);
 
             if (command == "vault")
             {
@@ -979,7 +974,21 @@ You can open the returned ZIP archive to inspect these file.
                 }
             }
 
-            return new ShimInfo(isShimmed: true, ensureConnection: true);
+            // Determine which commands don't require cluster connections.
+
+            var ensureConnection = true;
+
+            switch (command)
+            {
+                case "galaxy":
+                case "password":
+                case "vault":
+
+                    ensureConnection = false;
+                    break;
+            }
+
+            return new ShimInfo(isShimmed: true, ensureConnection: ensureConnection);
         }
 
         /// <summary>
