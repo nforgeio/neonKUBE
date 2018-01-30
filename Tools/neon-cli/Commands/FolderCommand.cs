@@ -34,7 +34,7 @@ USAGE:
 
     neon folder [--open] FOLDER
 
-ARGS:
+ARGUMENTS:
 
     FOLDER              - Specifies the desired folder, one of:
 

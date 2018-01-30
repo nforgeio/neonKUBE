@@ -8,7 +8,7 @@
 #
 #       logging-loop.sh SCRIPT MESSAGE
 #
-# ARGS:
+# ARGUMENTS:
 #
 #       SCRIPT      - the file name of the script to be used to log the message
 #                     (e.g. "log-warning.sh")

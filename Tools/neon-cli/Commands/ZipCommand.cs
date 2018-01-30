@@ -38,7 +38,7 @@ USAGE:
     neon zip create SOURCE ARCHIVE      - Creates archive from a file/folder
     neon zip extract ARCHIVE FOLDER     - Extracts archive to a folder
 
-ARGS:
+ARGUMENTS:
 
     ARCHIVE     - Path to the ZIP archive file.
     SOURCE      - Path to the source file or folder.

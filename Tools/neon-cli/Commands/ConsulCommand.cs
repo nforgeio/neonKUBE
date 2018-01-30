@@ -34,7 +34,9 @@ USAGE:
 
     neon [OPTIONS] consul [ARGS...]     - Invokes a Consul command
 
-ARGS: The standard HashCorp Consul command arguments and options.
+ARGUMENTS:
+
+    ARGS    - The standard HashCorp Consul command arguments and options
 
 OPTIONS :
 

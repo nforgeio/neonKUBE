@@ -41,7 +41,9 @@ USAGE:
 
     neon [OPTIONS] vault [ARGS...]  - Invokes a Vault command
 
-ARGS: The standard HashCorp Vault command arguments and options.
+ARGUMENTS:
+
+    ARGS        -The standard HashCorp Vault command arguments and options
 
 OPTIONS:
 

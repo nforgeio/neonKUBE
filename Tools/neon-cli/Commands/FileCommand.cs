@@ -38,7 +38,7 @@ USAGE:
     neon file encrypt        PATH PASSWORD-NAME
     neon file view           PATH PASSWORD-NAME
 
-ARGS:
+ARGUMENTS:
 
     PATH            - Path to the target file
     PASSWORD-NAME   - Identifies the Ansible password

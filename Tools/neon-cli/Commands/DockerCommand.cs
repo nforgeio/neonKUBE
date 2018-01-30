@@ -34,7 +34,9 @@ USAGE:
 
     neon [OPTIONS] docker [ARGS...]     - Invokes a Docker command
 
-ARGS: The standard Docker command arguments and options.
+ARGUMENTS:
+
+    ARGS        - The standard Docker command arguments and options
 
 OPTIONS :
 
