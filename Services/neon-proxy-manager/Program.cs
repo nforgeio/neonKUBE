@@ -74,6 +74,8 @@ namespace NeonProxyManager
             log.LogInfo(() => $"Starting [{serviceName}]");
             log.LogInfo(() => $"LOG_LEVEL={LogManager.Default.LogLevel.ToString().ToUpper()}");
 
+            // Create process terminator that handles process termination signals.
+
             terminator = new ProcessTerminator(log);
 
             // Establish the cluster connections.
@@ -390,7 +392,7 @@ namespace NeonProxyManager
 
         /// <summary>
         /// Rebuilds the configurations for a public or private proxy and persists them
-        /// to Consul if they differs from the previous version.
+        /// to Consul if they differ from the previous version.
         /// </summary>
         /// <param name="proxyName">The proxy name: <b>public</b> or <b>private</b>.</param>
         /// <param name="clusterCerts">The cluster certificate information.</param>
@@ -1039,7 +1041,7 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
                         {
                             // If any of the routes on this port require logging we'll have to
                             // enable logging for all of the routes, since they'll end up sharing
-                            // share the same proxy frontend.
+                            // the same proxy frontend.
 
                             haProxyFrontend.Log = true;
                         }
@@ -1496,7 +1498,7 @@ global
 # We're going to disable bridge proxy logging for now because I'm not entirely 
 # sure that this will be useful.  If we decide to enable this in the future, we
 # should probably specify a different SYSLOG facility so we can distinguish 
-# between problems with the bridge and normal proxies. 
+# between problems with bridges and normal proxies. 
 
 #   log                 ""${{NEON_NODE_IP}}:{NeonHostPorts.LogHostSysLog}"" len 65535 {NeonSysLogFacility.ProxyName}
 
@@ -1629,12 +1631,12 @@ listen tcp:port-{port}
                 zipBytes = ms.ToArray();
             }
 
-            // Compute the MD5 hash for the combined configuration ZIP and the referenced certificates.
+            // Compute the MD5 hash for the configuration ZIP.
 
             hasher       = MD5.Create();
             combinedHash = Convert.ToBase64String(hasher.ComputeHash(zipBytes));
 
-            // Compare the combined hash against what's already published to Consul
+            // Compare the hash against what's already published to Consul
             // for the proxy and update these keys if the hashes differ.
 
             publish = false;

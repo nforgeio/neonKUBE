@@ -63,6 +63,8 @@ namespace NeonClusterManager
             log.LogInfo(() => $"Starting [{serviceName}:{Program.GitVersion}]");
             log.LogInfo(() => $"LOG_LEVEL={LogManager.Default.LogLevel.ToString().ToUpper()}");
 
+            // Create process terminator that handles process termination signals.
+
             terminator = new ProcessTerminator(log);
 
             try
