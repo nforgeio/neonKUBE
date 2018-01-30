@@ -260,13 +260,13 @@ are stored in a user-specific folder at:
     ~/.neonforge/neoncluster/ansible/passwords              - for OSX
 ";
 
-        private const string inventoryHelp = @"
-Writes the Ansible inventory and variables files generated for the current
-cluster to a ZIP archive.
+        private const string configHelp = @"
+Writes the Ansible configuration, inventory, and variables files generated for 
+the current cluster to a ZIP archive.
 
 USAGE:
 
-    neon ansible inventory ZIP-PATH
+    neon ansible config ZIP-PATH
 
 ARGUMENTS:
 
@@ -284,7 +284,7 @@ You can open the returned ZIP archive to inspect these file.
         private const string mappedCurrentDirectory  = "/cwd";                              // Path to the current working directory mapped into the container
         private const string mappedRolesPath         = "/etc/ansible/mapped-roles";         // Path where external roles are mapped into the container
         private const string mappedPasswordsPath     = "/etc/ansible/mapped-passwords";     // Path where external Vault passwords are mapped into the container
-        private const string mappedZipPath           = "/zip";                              // Path where the [inventory] command will write the zipped Ansible files
+        private const string mappedZipPath           = "/zip";                              // Path where the [config] command will write the zipped Ansible files
         private const string copiedPasswordsPath     = "/dev/shm/copied-passwords";         // Path where copies of external Vault passwords held in the container
 
         /// <inheritdoc/>
@@ -727,6 +727,12 @@ You can open the returned ZIP archive to inspect these file.
             switch (command)
             {
                 case "config":
+
+                    if (leftCommandLine.HasHelpOption || noAnsibleCommand)
+                    {
+                        Console.WriteLine(configHelp);
+                        Program.Exit(0);
+                    }
 
                     var zipFileName = leftCommandLine.Arguments.AtIndexOrDefault(2);
 
