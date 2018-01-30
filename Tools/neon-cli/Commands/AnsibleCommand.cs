@@ -1605,7 +1605,7 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
                     writer.WriteLine($"ansible_user: \"{login.SshUsername}\"");
                     writer.WriteLine($"ansible_ssh_private_key_file: \"{sshClientPrivateKeyPath}\"");
                     writer.WriteLine();
-                    writer.WriteLine("# neonCLUSTER node variables:");
+                    writer.WriteLine("# Docker node labels:");
                     writer.WriteLine();
 
                     foreach (var label in node.Labels.Standard
