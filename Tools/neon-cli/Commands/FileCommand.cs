@@ -32,21 +32,32 @@ These commands are shortcuts for the [neon ansible vault] commands.
 
 USAGE:
 
-    neon file create    PATH PASSWORD-NAME
-    neon file decrypt   PATH PASSWORD-NAME
-    neon file edit      PATH PASSWORD-NAME
-    neon file encrypt   PATH PASSWORD-NAME
-    neon file view      PATH PASSWORD-NAME
+    neon file create         PATH PASSWORD-NAME
+    neon file decrypt        PATH PASSWORD-NAME
+    neon file edit [OPTIONS] PATH PASSWORD-NAME
+    neon file encrypt        PATH PASSWORD-NAME
+    neon file view           PATH PASSWORD-NAME
 
 ARGS:
 
     PATH            - Path to the target file
     PASSWORD-NAME   - Identifies the Ansible password
+
+OPTIONS:
+
+    --editor=nano|vim|vi    - Specifies the editor to use for modifying
+                              encrypted files.  This defaults to [nano].
 ";
         /// <inheritdoc/>
         public override string[] Words
         {
             get { return new string[] { "file" }; }
+        }
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions
+        {
+            get { return new string[] { "--editor" }; }
         }
 
         /// <inheritdoc/>
@@ -73,7 +84,6 @@ ARGS:
             string  command      = commandLine.Arguments.AtIndexOrDefault(0);
             string  path         = commandLine.Arguments.AtIndexOrDefault(1);
             string  passwordName = commandLine.Arguments.AtIndexOrDefault(2);
-            int     exitCode;
 
             if (string.IsNullOrEmpty(path))
             {
@@ -99,6 +109,32 @@ ARGS:
             {
                 Console.Error.WriteLine($"*** ERROR: Password [{passwordName}] does not exist.");
                 Program.Exit(1);
+            }
+
+            var editor = commandLine.GetOption("--editor", "nano");
+
+            switch (editor.ToLowerInvariant())
+            {
+                case "nano":
+
+                    Environment.SetEnvironmentVariable("EDITOR", "/bin/nano");
+                    break;
+
+                case "vim":
+
+                    Environment.SetEnvironmentVariable("EDITOR", "/usr/bin/vim");
+                    break;
+
+                case "vi":
+
+                    Environment.SetEnvironmentVariable("EDITOR", "/usr/bin/vi");
+                    break;
+
+                default:
+
+                    Console.Error.WriteLine($"*** ERROR: [--editor={editor}] does not specify a known editor.  Specify one of: NANO, VIM, or VI.");
+                    Program.Exit(1);
+                    break;
             }
 
             // $note(jeff.lill):
@@ -159,6 +195,7 @@ ARGS:
                         {
                             "ansible",
                             "vault",
+                            $"--editor={editor}",
                             "--",
                             "edit",
                             $"--vault-password-file={passwordName}",
