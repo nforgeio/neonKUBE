@@ -137,17 +137,6 @@ ARGS:
 
                 case "edit":
 
-                    //var r = Program.ExecuteRecurseCaptureStreams(
-                    //    new object[]
-                    //    {
-                    //        "ansible",
-                    //        "vault",
-                    //        "--",
-                    //        "edit",
-                    //        $"--vault-password-file={passwordName}",
-                    //        path
-                    //    });
-
                     exitCode = Program.ExecuteRecurse(
                         new object[]
                         {
