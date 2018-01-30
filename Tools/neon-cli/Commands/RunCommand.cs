@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ShellCommand.cs
+// FILE:	    RunCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -27,9 +27,9 @@ using System.Diagnostics.Contracts;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>shell</b> command.
+    /// Implements the <b>run</b> command.
     /// </summary>
-    public class ShellCommand : CommandBase
+    public class RunCommand : CommandBase
     {
         private const string usage = @"
 Runs a shell command on the local workstation, in the context of environment
@@ -37,7 +37,7 @@ variables loaded from zero or more Ansible compatible YAML variable files.
 
 USAGE:
 
-    neon shell [---vault-password-file=NAME] [--ask-vault-pass] [VARS1] VARS2...] -- CMD...
+    neon run [OPTIONS] [VARS1] VARS2...] -- CMD...
 
 ARGUMENTS:
 
@@ -81,7 +81,7 @@ This will generate these environment variables:
     mysql_password=dbpass
 
 Variable files can be encrypted using the [neon ansible vault encrypt]
-command and then can be used by [neon shell] and other [neon ansible]
+command and then can be used by [neon run] and other [neon ansible]
 commands.  Encryption passwords can be specified manually using a 
 prompt by passing [--ask-vault-pass] or by passing the PATH to a
 password file via [--vault-password-file=PATH].
@@ -100,7 +100,7 @@ These folders are encrypted at rest for security.  You can use the
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "shell" }; }
+            get { return new string[] { "run" }; }
         }
 
         /// <inheritdoc/>
@@ -147,14 +147,14 @@ These folders are encrypted at rest for security.  You can use the
             }
 
             var orgDirectory = Directory.GetCurrentDirectory();
-            var shellFolder  = Path.Combine(NeonClusterHelper.GetShellFolder(), Guid.NewGuid().ToString("D"));
+            var runFolder    = Path.Combine(NeonClusterHelper.GetRunFolder(), Guid.NewGuid().ToString("D"));
             var exitCode     = 1;
 
             try
             {
-                // Create the temporary shell folder and make it the current directory.
+                // Create the temporary run folder and make it the current directory.
 
-                Directory.CreateDirectory(shellFolder);
+                Directory.CreateDirectory(runFolder);
 
                 // We need to load variables from any files specified on the command line,
                 // decrypting them as required.
@@ -295,9 +295,9 @@ These folders are encrypted at rest for security.  You can use the
 
                 // Cleanup
 
-                if (Directory.Exists(shellFolder))
+                if (Directory.Exists(runFolder))
                 {
-                    Directory.Delete(shellFolder, true);
+                    Directory.Delete(runFolder, true);
                 }
             }
 

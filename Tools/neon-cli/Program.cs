@@ -87,8 +87,8 @@ COMMAND SUMMARY:
     neon node               ARGS
     neon proxy              CMD...
     neon reboot             NODE...
+    neon run                -- CMD...
     neon scp                [NODE]
-    neon shell              -- CMD...
     neon ssh                [NODE]
     neon validate           CLUSTER-DEF
     neon version            [-n] [-git]
@@ -240,8 +240,8 @@ that the tool requires admin priviledges for direct mode.
                     new NodePrepareCommand(),
                     new ProxyCommand(),
                     new RebootCommand(),
+                    new RunCommand(),
                     new ScpCommand(),
-                    new ShellCommand(),
                     new SshCommand(),
                     new UploadCommand(),
                     new VaultCommand(),

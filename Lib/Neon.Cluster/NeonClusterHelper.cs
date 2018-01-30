@@ -151,12 +151,12 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns the root path where the [neon shell CMD ...] will copy secrets and run the command.
+        /// Returns the root path where the [neon run CMD ...] will copy secrets and run the command.
         /// </summary>
         /// <returns>The folder path.</returns>
-        public static string GetShellFolder()
+        public static string GetRunFolder()
         {
-            var path = Path.Combine(GetRootFolder(), "shell");
+            var path = Path.Combine(GetRootFolder(), "run");
 
             Directory.CreateDirectory(path);
 
