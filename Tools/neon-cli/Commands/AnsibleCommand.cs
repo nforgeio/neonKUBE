@@ -892,7 +892,7 @@ are stored in a user-specific folder at:
 
             if (!File.Exists(Path.Combine(NeonClusterHelper.GetAnsiblePasswordsFolder(), passwordName)))
             {
-                Console.Error.WriteLine($"**** ERROR: The [{passwordName}] password does not exist.");
+                Console.Error.WriteLine($"*** ERROR: Password [{passwordName}] does not exist.");
                 Program.Exit(1);
             }
         }
@@ -1431,7 +1431,7 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
             // swarm includes the managers and workers but not the pets.
 
             const string ansibleConfigFolder = "/etc/ansible";
-            const string ansibleVarsFolder = ansibleConfigFolder + "/host_vars";
+            const string ansibleVarsFolder   = ansibleConfigFolder + "/host_vars";
 
             Directory.CreateDirectory(ansibleConfigFolder);
             Directory.CreateDirectory(ansibleVarsFolder);

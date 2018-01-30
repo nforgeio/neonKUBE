@@ -91,7 +91,7 @@ ARGS:
 
             if (!File.Exists(passwordPath))
             {
-                Console.Error.WriteLine($"*** ERROR: Password [{passwordName}] does not exist at [{passwordPath}].");
+                Console.Error.WriteLine($"*** ERROR: Password [{passwordName}] does not exist.");
                 Program.Exit(1);
             }
 
@@ -136,6 +136,17 @@ ARGS:
                     break;
 
                 case "edit":
+
+                    //var r = Program.ExecuteRecurseCaptureStreams(
+                    //    new object[]
+                    //    {
+                    //        "ansible",
+                    //        "vault",
+                    //        "--",
+                    //        "edit",
+                    //        $"--vault-password-file={passwordName}",
+                    //        path
+                    //    });
 
                     exitCode = Program.ExecuteRecurse(
                         new object[]
