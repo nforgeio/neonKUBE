@@ -87,6 +87,14 @@ ARGS:
                 Program.Exit(1);
             }
 
+            var passwordPath = Path.Combine(NeonClusterHelper.GetAnsiblePasswordsFolder(), passwordName);
+
+            if (!File.Exists(passwordPath))
+            {
+                Console.Error.WriteLine($"*** ERROR: Password [{passwordName}] does not exist at [{passwordPath}].");
+                Program.Exit(1);
+            }
+
             switch (command)
             {
                 case "create":
