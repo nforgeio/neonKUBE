@@ -359,7 +359,7 @@ certificates, and then finally the private key.
 
                 default:
 
-                    Console.Error.WriteLine($"*** ERROR: Unknown subcommand [{command}].");
+                    Console.Error.WriteLine($"*** ERROR: Unknown [{command}] subcommand.");
                     Program.Exit(1);
                     break;
             }

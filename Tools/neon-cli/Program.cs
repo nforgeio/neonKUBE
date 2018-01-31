@@ -267,7 +267,7 @@ that the tool requires admin priviledges for direct mode.
 
                     if (command == null)
                     {
-                        Console.Error.WriteLine($"*** ERROR: Unexpected command [{CommandLine.Arguments[0]}].");
+                        Console.Error.WriteLine($"*** ERROR: Unexpected [{CommandLine.Arguments[0]}] command.");
                         Console.Error.WriteLine(usage);
                         Program.Exit(1);
                     }
@@ -282,7 +282,7 @@ that the tool requires admin priviledges for direct mode.
 
                 if (command == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: Unexpected command [{CommandLine.Arguments[0]}].");
+                    Console.Error.WriteLine($"*** ERROR: Unexpected [{CommandLine.Arguments[0]}] command.");
                     Console.Error.WriteLine(usage);
                     Program.Exit(1);
                 }
@@ -312,7 +312,7 @@ that the tool requires admin priviledges for direct mode.
 
                 if (command == null)
                 {
-                    Console.Error.WriteLine($"*** ERROR: Unexpected command [{CommandLine.Arguments[0]}].");
+                    Console.Error.WriteLine($"*** ERROR: Unexpected [{CommandLine.Arguments[0]}] command.");
                     Program.Exit(1);
                 }
 
@@ -575,7 +575,7 @@ that the tool requires admin priviledges for direct mode.
                                 commandWords += word;
                             }
 
-                            Console.WriteLine($"*** ERROR: Command [{commandWords}] does not support [{option.Key}].");
+                            Console.WriteLine($"*** ERROR: [{commandWords}] command does not support [{option.Key}].");
                             Program.Exit(1);
                         }
                     }

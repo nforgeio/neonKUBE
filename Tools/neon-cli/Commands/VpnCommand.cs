@@ -236,7 +236,7 @@ USAGE:
 
                         default:
 
-                            Console.Error.WriteLine($"*** ERROR: Unexpected command [{command}].");
+                            Console.Error.WriteLine($"*** ERROR: Unexpected [{command}] command.");
                             Program.Exit(1);
                             break;
                     }

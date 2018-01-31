@@ -452,7 +452,7 @@ See the documentation for more proxy route and setting details.
 
                 default:
 
-                    Console.Error.WriteLine($"*** ERROR: Unknown subcommand [{command}].");
+                    Console.Error.WriteLine($"*** ERROR: Unknown [{command}] subcommand.");
                     Program.Exit(1);
                     break;
             }

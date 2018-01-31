@@ -87,7 +87,7 @@ ARGUMENTS:
 
                 default:
 
-                    Console.Error.WriteLine($"*** ERROR: Unexpected command [{commandLine.Arguments.First()}].");
+                    Console.Error.WriteLine($"*** ERROR: Unexpected [{commandLine.Arguments.First()}] command.");
                     Program.Exit(1);
                     break;
             }

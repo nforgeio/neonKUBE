@@ -590,7 +590,7 @@ You can open the returned ZIP archive to inspect these file.
 
                     default:
 
-                        Console.Error.WriteLine($"*** ERROR: Unexpected Ansible password command [{passwordCommand}].");
+                        Console.Error.WriteLine($"*** ERROR: Unexpected Ansible password  [{passwordCommand}]command.");
                         Program.Exit(1);
                         break;
                 }
@@ -859,7 +859,7 @@ You can open the returned ZIP archive to inspect these file.
 
                 default:
 
-                    Console.WriteLine($"*** ERROR: Unexpected Ansible command [{command}].");
+                    Console.WriteLine($"*** ERROR: Unexpected Ansible [{command}] command.");
                     Program.Exit(1);
                     break;
             }
