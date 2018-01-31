@@ -10,7 +10,7 @@
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="pubcore &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot;" />
+    <Exec Command="mkdir -p &quot;$(NF_BUILD)&quot;&#xD;&#xA;pubcore &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot;" />
   </Target>
 
   <ItemGroup>

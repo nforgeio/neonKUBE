@@ -51,6 +51,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy $(TargetPath) "$(NF_BUILD)"</PostBuildEvent>
+    <PostBuildEvent>mkdir -p "$(NF_BUILD)"
+copy $(TargetPath) "$(NF_BUILD)"</PostBuildEvent>
   </PropertyGroup>
 </Project>
