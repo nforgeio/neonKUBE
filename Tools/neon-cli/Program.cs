@@ -84,7 +84,6 @@ COMMAND SUMMARY:
     neon login remove       USER@CLUSTER
     neon login rm           USER@CLUSTER
     neon login status
-    neon node               ARGS
     neon proxy              CMD...
     neon reboot             NODE...
     neon run                -- CMD...
@@ -236,8 +235,6 @@ that the tool requires admin priviledges for direct mode.
                     new LoginRemoveCommand(),
                     new LoginStatusCommand(),
                     new LogoutCommand(),
-                    new NodeCommand(),
-                    new NodePrepareCommand(),
                     new ProxyCommand(),
                     new RebootCommand(),
                     new RunCommand(),
