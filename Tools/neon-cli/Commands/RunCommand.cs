@@ -49,12 +49,10 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --vault-password=NAME   - Optionally specifies the name of the password
+    --vault-password-file=NAME - Optionally specifies the name of the password
                               file to be used to decrypt the variable files.
                               See the notes below discussing where password
                               files are located.
-
-    -p=NAME                 - Shortcut for naming the password.
 
     --ask-vault-pass        - Optionally specifies that the user should
                               be prompted for the decryption password.
@@ -85,7 +83,7 @@ Variable files can be encrypted using the [neon ansible vault encrypt]
 command and then can be used by [neon run] and other [neon ansible]
 commands.  Encryption passwords can be specified manually using a 
 prompt by passing [--ask-vault-pass] or by passing the PATH to a
-password file via [--vault-password=NAME] or [-p=NAME].
+password file via [--vault-password-file=NAME].
 
 Password files simply hold a password as a single line text.  [neon-cli]
 expects password files to be located in a user-specific directory on your
@@ -113,7 +111,7 @@ NOTE: The [neon run ...] command cannot be run recursively.  For example,
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--vault-password", "--ask-vault-pass", "-p" }; }
+            get { return new string[] { "--vault-password-file", "--ask-vault-pass" }; }
         }
 
         /// <inheritdoc/>
@@ -185,7 +183,7 @@ NOTE: The [neon run ...] command cannot be run recursively.  For example,
                     {
                         if (askVaultPass)
                         {
-                            // Note that [--ask-vault-pass] takes presidence over [--vault-password].
+                            // Note that [--ask-vault-pass] takes presidence over [--vault-password-file].
 
                             var password = NeonHelper.ReadConsolePassword("Vault password: ");
 
@@ -203,12 +201,7 @@ NOTE: The [neon run ...] command cannot be run recursively.  For example,
                         }
                         else
                         {
-                            passwordName = leftCommandLine.GetOption("--vault-password");
-
-                            if (string.IsNullOrEmpty(passwordName))
-                            {
-                                passwordName = leftCommandLine.GetOption("-p");
-                            }
+                            passwordName = leftCommandLine.GetOption("--vault-password-file");
                         }
 
                         if (!string.IsNullOrEmpty(passwordName))
@@ -235,7 +228,7 @@ NOTE: The [neon run ...] command cannot be run recursively.  For example,
 
                                 if (string.IsNullOrEmpty(passwordName))
                                 {
-                                    Console.Error.WriteLine($"*** ERROR: [{varFile}] is encrypted.  Use [--ask-vault-pass] or [--vault-password] to specify the password.");
+                                    Console.Error.WriteLine($"*** ERROR: [{varFile}] is encrypted.  Use [--ask-vault-pass] or [--vault-password-file] to specify the password.");
                                     Program.Exit(1);
                                 }
 
