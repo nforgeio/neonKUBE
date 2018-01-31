@@ -386,6 +386,26 @@ that the tool requires admin priviledges for direct mode.
                         var shimMount    = $"-v \"{shim.ShimExternalFolder}:/shim\"";
                         var options      = shim.Terminal ? "-it" : "-i";
 
+                        // If the NEON_RUN_ENV=PATH environment variable exists and references an 
+                        // existing file, then this instance of [neon] is running within the context 
+                        // of a [neon run ...] command.  In this case, we need to forward the run
+                        // environment variables into the container we're launching.
+                        //
+                        // The NEON_RUN_ENV file defines these variables and is compatible with the
+                        // [docker run --env-file=PATH] option so we'll use that.
+
+                        var runEnvPath = Environment.GetEnvironmentVariable("NEON_RUN_ENV");
+
+                        if (!string.IsNullOrWhiteSpace(runEnvPath) && File.Exists(runEnvPath))
+                        {
+                            if (options.Length > 0)
+                            {
+                                options += " ";
+                            }
+
+                            options += $"--env-file \"{runEnvPath}\"";
+                        }
+
                         // Mount any mapped client folders.
 
                         var sbMappedMount = new StringBuilder();

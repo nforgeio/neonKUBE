@@ -59,7 +59,7 @@ OPTIONS:
     --ask-vault-pass        - Optionally specifies that the user should
                               be prompted for the decryption password.
 
-NOTES:
+REMARKS:
 
 This command works by reading variables from one or more YAML files in the 
 order they appear on the command line, setting these as environment variables 
@@ -72,13 +72,14 @@ The variable files are formatted as Ansible compatible YAML, like:
         username: dbuser
         password: dbpass
 
-This defines two simple passwords and two passwords in a dictionary.
-This will generate these environment variables:
+This will generate four environment variables plus the [neon_run_id] which
+is discussed in a note below.
 
     username=jeff
     password=super.dude
     mysql_username=dbuser
     mysql_password=dbpass
+    NEON_RUN_ENV=PATH
 
 Variable files can be encrypted using the [neon ansible vault encrypt]
 command and then can be used by [neon run] and other [neon ansible]
@@ -95,6 +96,12 @@ workstation:
 
 These folders are encrypted at rest for security.  You can use the 
 [neon ansible password ...] commands to manage your passwords.
+
+NOTE: The [neon run ...] command cannot be run recursively.  For example,
+      you can't have one run command execute a script that executes a 
+      nested run command.  This is enforced by the presence of the 
+      [NEON_RUN_ENV] environment variable which references a file with
+      the environment variables loaded by the current [run] command.
 ";
 
         /// <inheritdoc/>
@@ -136,6 +143,12 @@ These folders are encrypted at rest for security.  You can use the
                 Program.Exit(1);
             }
 
+            if (Environment.GetEnvironmentVariable("NEON_RUN_ENV") != null)
+            {
+                Console.Error.WriteLine("*** ERROR: [neon run ...] cannot be executed recursively.");
+                Program.Exit(1);
+            }
+
             var commandSplit     = Program.CommandLine.Split();
             var leftCommandLine  = commandSplit.Left.Shift(1);
             var rightCommandLine = commandSplit.Right;
@@ -148,6 +161,7 @@ These folders are encrypted at rest for security.  You can use the
 
             var orgDirectory = Directory.GetCurrentDirectory();
             var runFolder    = Path.Combine(NeonClusterHelper.GetRunFolder(), Guid.NewGuid().ToString("D"));
+            var runEnvPath   = Path.Combine(runFolder, "__runenv.txt");
             var exitCode     = 1;
 
             try
@@ -158,6 +172,8 @@ These folders are encrypted at rest for security.  You can use the
 
                 // We need to load variables from any files specified on the command line,
                 // decrypting them as required.
+
+                var allVars = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
                 if (leftCommandLine.Arguments.Length > 0)
                 {
@@ -200,6 +216,10 @@ These folders are encrypted at rest for security.  You can use the
                             AnsibleCommand.VerifyPassword(passwordName);
                         }
 
+                        // Decrypt the variables files, add the variables to the environment
+                        // and also to the [allVars] dictionary which we'll use below to
+                        // create the run variables file.
+
                         foreach (var varFile in leftCommandLine.Arguments)
                         {
                             var varContents = File.ReadAllText(varFile, Encoding.UTF8);
@@ -238,11 +258,6 @@ These folders are encrypted at rest for security.  You can use the
 
                                 varContents = result.OutputText;
                             }
-                            else if (!string.IsNullOrEmpty(passwordName))
-                            {
-                                Console.Error.WriteLine($"*** ERROR: A psssword was specified but [{varFile}] is not encrypted.");
-                                Program.Exit(1);
-                            }
 
                             // [varContents] now holds the decrypted variables formatted as YAML.
                             // We're going to parse this and set the appropriate environment
@@ -256,6 +271,7 @@ These folders are encrypted at rest for security.  You can use the
 
                             foreach (var variable in vars)
                             {
+                                allVars.Add(variable.Key, variable.Value);
                                 Environment.SetEnvironmentVariable(variable.Key, variable.Value);
                             }
                         }
@@ -266,6 +282,21 @@ These folders are encrypted at rest for security.  You can use the
                         {
                             File.Delete(tempPasswordPath);  // Don't need this any more.
                         }
+                    }
+                }
+
+                // We need to generate the NEON_RUN_ENV file defining the environment variables
+                // loaded by the command.  This file format is compatible with the Docker
+                // [run] command's [--env-file=PATH] option and will be used by nested calls to
+                // [neon] to pass these variables through to the tool container as required.
+
+                Environment.SetEnvironmentVariable("NEON_RUN_ENV", runEnvPath);
+
+                using (var runEnvWriter = new StreamWriter(runEnvPath, false, Encoding.UTF8))
+                {
+                    foreach (var item in allVars)
+                    {
+                        runEnvWriter.WriteLine($"{item.Key}={item.Value}");
                     }
                 }
 
