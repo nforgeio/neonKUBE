@@ -216,7 +216,7 @@ OPTIONS:
     --vault=FOLDER          - Use FOLDER as the password file location.
 
 You can use [--ask-vault-pass] so that Ansible commands prompt for 
-passwords or use [--vault-password-file FILE] to specify the password.
+passwords or use [--vault-password-file NAME] to specify the password.
 
 Note that all password files must be located at a user specific folder
 on your workstation and must be referenced without specifying a path:
@@ -614,11 +614,6 @@ You can open the returned ZIP archive to inspect these file.
                 noAnsibleCommand = true;
             }
 
-            if (login.Definition.HostNode.SshAuth != AuthMethods.Tls)
-            {
-                Console.Error.WriteLine($"*** ERROR: The [ansible] commands require that the cluster nodes were deployed with [{nameof(HostNodeOptions)}.{nameof(HostNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
-                Program.Exit(1);
-            }
 
             // Change the current directory to the mapped external directory.
 
@@ -648,7 +643,7 @@ You can open the returned ZIP archive to inspect these file.
 
             // Munge any [--vault-password-file=NAME] or [--vault-password-file NAME] options to use a 
             // path prefix that is relative to the internal password copies folder.  Note that
-            // [--vault-password-file=FILE] may appear only once in the command line.
+            // [--vault-password-file=NAME] may appear only once in the command line.
 
             for (int i = 0; i < rightCommandLine.Items.Length; i++)
             {
@@ -782,6 +777,12 @@ You can open the returned ZIP archive to inspect these file.
                         Program.Exit(0);
                     }
 
+                    if (login.Definition.HostNode.SshAuth != AuthMethods.Tls)
+                    {
+                        Console.Error.WriteLine($"*** ERROR: The [ansible exec] command requires that the cluster nodes were deployed with [{nameof(HostNodeOptions)}.{nameof(HostNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
+                        Program.Exit(1);
+                    }
+
                     GenerateAnsibleConfig();
                     GenerateAnsibleFiles(login);
                     Program.Exit(NeonHelper.Execute("ansible", NeonHelper.NormalizeExecArgs("--user", login.SshUsername, "--private-key", sshClientPrivateKeyPath, rightCommandLine.Items)));
@@ -793,6 +794,12 @@ You can open the returned ZIP archive to inspect these file.
                     {
                         Console.WriteLine(playHelp);
                         Program.Exit(0);
+                    }
+
+                    if (login.Definition.HostNode.SshAuth != AuthMethods.Tls)
+                    {
+                        Console.Error.WriteLine($"*** ERROR: The [ansible play] command requires that the cluster nodes were deployed with [{nameof(HostNodeOptions)}.{nameof(HostNodeOptions.SshAuth)}.{nameof(AuthMethods.Tls)}].");
+                        Program.Exit(1);
                     }
 
                     GenerateAnsibleConfig();
@@ -910,7 +917,7 @@ You can open the returned ZIP archive to inspect these file.
             shim.AddMappedFolder(new DockerShimFolder(NeonClusterHelper.GetAnsibleRolesFolder(), mappedRolesPath, isReadOnly: false));
             shim.AddMappedFolder(new DockerShimFolder(NeonClusterHelper.GetAnsiblePasswordsFolder(), mappedPasswordsPath, isReadOnly: false));
 
-            // ...finally, we need to verify that any password files specified by [--vault-password-file NAME] 
+            // ...finally, we need to verify that any password files specified by [--vault-password-file PATH] 
             // actually exist in the [neon-cli] ansible passwords folder.
             //
             // Note that this option can take two forms:
@@ -994,8 +1001,8 @@ You can open the returned ZIP archive to inspect these file.
         /// <summary>
         /// Verifies that a vault password exists and is valid.
         /// </summary>
-        /// <param name="passwordName">The password path.</param>
-        private void VerifyPassword(string passwordName)
+        /// <param name="passwordName">The password name.</param>
+        public static void VerifyPassword(string passwordName)
         {
             if (string.IsNullOrWhiteSpace(passwordName))
             {

@@ -49,7 +49,7 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --vault-password-file=NAME - Optionally specifies the name of the password
+    --vault-password=NAME   - Optionally specifies the name of the password
                               file to be used to decrypt the variable files.
                               See the notes below discussing where password
                               files are located.
@@ -84,7 +84,7 @@ Variable files can be encrypted using the [neon ansible vault encrypt]
 command and then can be used by [neon run] and other [neon ansible]
 commands.  Encryption passwords can be specified manually using a 
 prompt by passing [--ask-vault-pass] or by passing the PATH to a
-password file via [--vault-password-file=PATH].
+password file via [--vault-password=NAME] or [-p=NAME].
 
 Password files simply hold a password as a single line text.  [neon-cli]
 expects password files to be located in a user-specific directory on your
@@ -106,7 +106,7 @@ These folders are encrypted at rest for security.  You can use the
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--vault-password-file", "--ask-vault-pass", "-p" }; }
+            get { return new string[] { "--vault-password", "--ask-vault-pass", "-p" }; }
         }
 
         /// <inheritdoc/>
@@ -163,13 +163,13 @@ These folders are encrypted at rest for security.  You can use the
                 {
                     bool    askVaultPass     = leftCommandLine.HasOption("--ask-vault-pass");
                     string  tempPasswordPath = null;
-                    string  passwordPath     = null;
+                    string  passwordName     = null;
 
                     try
                     {
                         if (askVaultPass)
                         {
-                            // Note that [--ask-vault-pass] takes presidence over [--vault-password-file].
+                            // Note that [--ask-vault-pass] takes presidence over [--vault-password].
 
                             var password = NeonHelper.ReadConsolePassword("Vault password: ");
 
@@ -181,23 +181,23 @@ These folders are encrypted at rest for security.  You can use the
                             var guid            = Guid.NewGuid().ToString("D");
 
                             tempPasswordPath = Path.Combine(passwordsFolder, $"{guid}.tmp");
-                            passwordPath     = tempPasswordPath.Substring(passwordsFolder.Length + 1);
+                            passwordName     = Path.GetFileName(tempPasswordPath);
 
                             File.WriteAllText(tempPasswordPath, password);
                         }
                         else
                         {
-                            var passwordFile = leftCommandLine.GetOption("--vault-password-file");
+                            passwordName = leftCommandLine.GetOption("--vault-password");
 
-                            if (string.IsNullOrEmpty(passwordFile))
+                            if (string.IsNullOrEmpty(passwordName))
                             {
-                                passwordFile = leftCommandLine.GetOption("-p");
+                                passwordName = leftCommandLine.GetOption("-p");
                             }
+                        }
 
-                            if (!string.IsNullOrEmpty(passwordFile))
-                            {
-                                passwordPath = Path.Combine(NeonClusterHelper.GetAnsiblePasswordsFolder(), passwordFile);
-                            }
+                        if (!string.IsNullOrEmpty(passwordName))
+                        {
+                            AnsibleCommand.VerifyPassword(passwordName);
                         }
 
                         foreach (var varFile in leftCommandLine.Arguments)
@@ -209,13 +209,13 @@ These folders are encrypted at rest for security.  You can use the
                                 // The variable file is encrypted so we're going recursively invoke
                                 // the following command to decrypt it:
                                 //
-                                //      neon ansible vault view -- --vault-password-file=NAME VARS-PATH
+                                //      neon ansible vault view -- --vault-password=NAME VARS-PATH
                                 //
                                 // This uses the password to decrypt the variables to STDOUT.
 
-                                if (string.IsNullOrEmpty(passwordPath))
+                                if (string.IsNullOrEmpty(passwordName))
                                 {
-                                    Console.Error.WriteLine($"*** ERROR: [{varFile}] is encrypted.  Use [--ask-vault-pass] or [--vault-password-file] to specify the password.");
+                                    Console.Error.WriteLine($"*** ERROR: [{varFile}] is encrypted.  Use [--ask-vault-pass] or [--vault-password] to specify the password.");
                                     Program.Exit(1);
                                 }
 
@@ -226,7 +226,7 @@ These folders are encrypted at rest for security.  You can use the
                                         "vault",
                                         "--",
                                         "view",
-                                        $"--vault-password-file={Path.GetFileName(passwordPath)}",
+                                        $"--vault-password-file={passwordName}",
                                         varFile
                                     });
 
@@ -237,6 +237,11 @@ These folders are encrypted at rest for security.  You can use the
                                 }
 
                                 varContents = result.OutputText;
+                            }
+                            else if (!string.IsNullOrEmpty(passwordName))
+                            {
+                                Console.Error.WriteLine($"*** ERROR: A psssword was specified but [{varFile}] is not encrypted.");
+                                Program.Exit(1);
                             }
 
                             // [varContents] now holds the decrypted variables formatted as YAML.
