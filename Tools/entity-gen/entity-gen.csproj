@@ -18,7 +18,7 @@
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="mkdir -p &quot;$(NF_BUILD)&quot;&#xD;&#xA;pubcore &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot;" />
+    <Exec Command="if not exist &quot;$(NF_BUILD)&quot; mkdir &quot;$(NF_BUILD)&quot;&#xD;&#xA;pubcore &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot;" />
   </Target>
 
 </Project>
