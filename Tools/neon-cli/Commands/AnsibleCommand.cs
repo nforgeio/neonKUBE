@@ -1563,7 +1563,7 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
             Directory.CreateDirectory(ansibleVarsFolder);
 
             // Generate the hosts file using the INI format.  Note that we'll be organizing these
-            // into standard groups as well as groups explicitly assigned in node definitions.
+            // into standard groups as well as groups explicitly assigned by node definitions.
 
             var explicitGroupAssignments = new Dictionary<string, List<NodeDefinition>>(StringComparer.InvariantCultureIgnoreCase);
 
