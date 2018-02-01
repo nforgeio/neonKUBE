@@ -49,7 +49,7 @@ namespace Neon.Cluster
         /// The Ansible group name regex validator.  Group names must start with a letter
         /// and then can be followed by zero or more letters, digits, or underscores.
         /// </summary>
-        private static readonly Regex groupNameRegex = new Regex(@"^[a-z][a-z0-9\_]*$", RegexOptions.IgnoreCase);
+        private static readonly Regex groupNameRegex = new Regex(@"^[a-z][a-z0-9\-_]*$", RegexOptions.IgnoreCase);
 
         /// <summary>
         /// Parses a <see cref="NodeDefinition"/> from Docker node labels.
@@ -463,7 +463,7 @@ namespace Neon.Cluster
                 }
                 else if (!groupNameRegex.IsMatch(group))
                 {
-                    throw new ClusterDefinitionException($"Node [{Name}] assigns the invalid group [{group}] in [{nameof(HostGroups)}].  Group names must start with a letter and then can be followed by zero or more letters, digits, or underscores.");
+                    throw new ClusterDefinitionException($"Node [{Name}] assigns the invalid group [{group}] in [{nameof(HostGroups)}].  Group names must start with a letter and then can be followed by zero or more letters, digits, dashes, and underscores.");
                 }
             }
 
