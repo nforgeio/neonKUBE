@@ -33,6 +33,25 @@ namespace Neon.Cluster
         // Static methods
 
         /// <summary>
+        /// Set of the standard built-in Ansible host groups.
+        /// </summary>
+        private static readonly HashSet<string> standardHostGroups =
+            new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
+            {
+                "all",
+                "managers",
+                "workers",
+                "swarm",
+                "pets"
+            };
+
+        /// <summary>
+        /// The Ansible group name regex validator.  Group names must start with a letter
+        /// and then can be followed by zero or more letters, digits, or underscores.
+        /// </summary>
+        private static readonly Regex groupNameRegex = new Regex(@"^[a-z][a-z0-9\_]*$", RegexOptions.IgnoreCase);
+
+        /// <summary>
         /// Parses a <see cref="NodeDefinition"/> from Docker node labels.
         /// </summary>
         /// <param name="labels">The Docker labels.</param>
@@ -243,6 +262,16 @@ namespace Neon.Cluster
         public NodeLabels Labels { get; set; }
 
         /// <summary>
+        /// Specifies the Ansible host groups to which this node belongs.  This can be used to organize
+        /// nodes (most likely pets) into groups that will be managed by Ansible playbooks.  These
+        /// group are in addition to the standard host groups automatically supported by <b>neoncli</b>:
+        /// <b>all</b>, <b>managers</b>, <b>workers</b>, <b>swarm</b>, and <b>pets</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "HostGroups", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public List<string> HostGroups { get; set; } = new List<string>();
+
+        /// <summary>
         /// Azure provisioning options for this node, or <c>null</c> to use reasonable defaults.
         /// </summary>
         [JsonProperty(PropertyName = "Azure")]
@@ -386,7 +415,8 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
-            Labels = Labels ?? new NodeLabels(this);
+            Labels     = Labels ?? new NodeLabels(this);
+            HostGroups = HostGroups ?? new List<string>();
 
             if (Name == null)
             {
@@ -420,6 +450,22 @@ namespace Neon.Cluster
             }
 
             Labels.Validate(clusterDefinition);
+
+            foreach (var group in HostGroups)
+            {
+                if (string.IsNullOrWhiteSpace(group))
+                {
+                    throw new ClusterDefinitionException($"Node [{Name}] assigns an empty group in [{nameof(HostGroups)}].");
+                }
+                else if (standardHostGroups.Contains(group))
+                {
+                    throw new ClusterDefinitionException($"Node [{Name}] assigns the standard [{group}] in [{nameof(HostGroups)}].  Standard groups cannot be explicitly assigned since [neon-cli] handles them automatically.");
+                }
+                else if (!groupNameRegex.IsMatch(group))
+                {
+                    throw new ClusterDefinitionException($"Node [{Name}] assigns the invalid group [{group}] in [{nameof(HostGroups)}].  Group names must start with a letter and then can be followed by zero or more letters, digits, or underscores.");
+                }
+            }
 
             if (Azure != null)
             {

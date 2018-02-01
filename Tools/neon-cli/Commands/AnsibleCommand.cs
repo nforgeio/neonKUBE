@@ -1562,7 +1562,24 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
             Directory.CreateDirectory(ansibleConfigFolder);
             Directory.CreateDirectory(ansibleVarsFolder);
 
-            // Generate the hosts file using the INI format.
+            // Generate the hosts file using the INI format.  Note that we'll be organizing these
+            // into standard groups as well as groups explicitly assigned in node definitions.
+
+            var explicitGroupAssignments = new Dictionary<string, List<NodeDefinition>>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var node in login.Definition.Nodes)
+            {
+                foreach (var group in node.HostGroups)
+                {
+                    if (!explicitGroupAssignments.TryGetValue(group, out var groupAssignments))
+                    {
+                        groupAssignments = new List<NodeDefinition>();
+                        explicitGroupAssignments.Add(group, groupAssignments);
+                    }
+
+                    groupAssignments.Add(node);
+                }
+            }
 
             using (var writer = new StreamWriter(new FileStream(Path.Combine(ansibleConfigFolder, "hosts"), FileMode.Create, FileAccess.ReadWrite), Encoding.ASCII))
             {
@@ -1595,6 +1612,17 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
                 foreach (var node in login.Definition.SortedNodes.Where(n => n.IsPet))
                 {
                     writer.WriteLine(node.Name);
+                }
+
+                foreach (var explicitGroup in explicitGroupAssignments.OrderBy(item => item.Key.ToLowerInvariant()))
+                {
+                    writer.WriteLine();
+                    writer.WriteLine($"[{explicitGroup.Key.ToLowerInvariant()}]");
+
+                    foreach (var node in explicitGroup.Value.OrderBy(n => n.Name))
+                    {
+                        writer.WriteLine(node.Name);
+                    }
                 }
             }
 
