@@ -117,7 +117,7 @@ ARGUMENTS:
 
             var patience = string.Empty;
 
-            if (new FileInfo(sourcePath).Length > 200 * 1024 * 1024)
+            if (new FileInfo(sourcePath).Length > 200 * NeonHelper.Mega)
             {
                 // Compression is very slow, so add a message to be patient
                 // for files >= 200MB.

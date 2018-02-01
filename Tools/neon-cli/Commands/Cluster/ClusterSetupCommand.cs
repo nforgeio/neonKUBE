@@ -936,7 +936,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
             // bloat if the log pipeline stalls.  We're going to have Docker limit
             // containers to 5MB RAM buffer before logging to disk.
 
-            logOptions.Add("fluentd-buffer-limit", $"{5 * 1024 * 1024}");
+            logOptions.Add("fluentd-buffer-limit", $"{5 * NeonHelper.Mega}");
 
             settings.Add("log-opts", logOptions);
 
