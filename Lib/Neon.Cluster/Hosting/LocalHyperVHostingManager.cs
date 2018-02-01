@@ -127,6 +127,38 @@ namespace Neon.Cluster
                 return true;
             }
 
+            // Update the node labels with the actual capabilities of the 
+            // virtual machines being provisioned.
+
+            foreach (var node in cluster.Definition.Nodes)
+            {
+                if (string.IsNullOrEmpty(node.Labels.PhysicalMachine))
+                {
+                    node.Labels.PhysicalMachine = Environment.MachineName;
+                }
+
+                if (node.Labels.ComputeCores == 0)
+                {
+                    node.Labels.ComputeCores = cluster.Definition.Hosting.VmProcessors;
+                }
+
+                if (node.Labels.ComputeRamMB == 0)
+                {
+                    node.Labels.ComputeRamMB = (int)(HostingOptions.ValidateVMSize(cluster.Definition.Hosting.VmMemory, typeof(HostingOptions), nameof(HostingOptions.VmMemory))/NeonHelper.Mega);
+                }
+
+                if (node.Labels.StorageCapacityGB == 0)
+                {
+                    // $todo(jeff.lill): 
+                    //
+                    // This is currently hardcoded to 127GB because that's the size
+                    // of the template VHDX.  Eventually, we should figure out a 
+                    // way to inspect the VHDX size and set the value from that.
+
+                    node.Labels.StorageCapacityGB = 127;
+                }
+            }
+
             // If a public address isn't explicitly specified, we'll assume that the
             // tool is running inside the network and we can access the private address.
 

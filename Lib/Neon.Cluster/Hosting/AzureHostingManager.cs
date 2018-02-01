@@ -410,7 +410,7 @@ namespace Neon.Cluster
         public override bool Provision(bool force)
         {
             // Update the node labels with the actual capabilities of the 
-            // virtual machine being provisioned for it.
+            // virtual machines being provisioned.
 
             foreach (var node in cluster.Definition.Nodes)
             {

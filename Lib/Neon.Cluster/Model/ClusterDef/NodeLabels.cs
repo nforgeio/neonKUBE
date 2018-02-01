@@ -172,8 +172,8 @@ namespace Neon.Cluster
 
         /// <summary>
         /// <b>io.neon.storage.capacity</b> [<c>int</c>]: Specifies the node storage capacity
-        /// in gigabytes.  This defaults to <b>0</b> for on-premise clusters and is computed for
-        /// cloud deployments.
+        /// in gigabytes.  This defaults to <b>0.0</b> for <see cref="HostingEnvironments.Machine"/>
+        /// and is intialized for cloud and Hypervisor based hosting environments.
         /// </summary>
         [JsonProperty(PropertyName = "StorageCapacityGB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(0)]
@@ -240,8 +240,8 @@ namespace Neon.Cluster
 
         /// <summary>
         /// <b>io.neon.compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
-        /// This defaults to <b>zero</b> for on-premise clusters and is computed for cloud
-        /// deployments.
+        /// This defaults to <b>0.0</b> for <see cref="HostingEnvironments.Machine"/>
+        /// and is intialized for cloud and Hypervisor based hosting environments.
         /// </summary>
         [JsonProperty(PropertyName = "ComputeCores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(0)]
@@ -257,8 +257,8 @@ namespace Neon.Cluster
 
         /// <summary>
         /// <b>io.neon.compute.ram</b> [<c>int</c>]: Specifies the the available RAM in
-        /// megabytes.  This defaults to <b>zero</b> for on-premise clusters and is computed
-        /// for cloud deployments.
+        /// megabytes.  This defaults to <b>0.0</b> for <see cref="HostingEnvironments.Machine"/>
+        /// and is intialized for cloud and Hypervisor based hosting environments.
         /// </summary>
         [JsonProperty(PropertyName = "ComputeRamMB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(0)]

@@ -116,6 +116,32 @@ namespace Neon.Cluster
                 return true;
             }
 
+            // Update the node labels with the actual capabilities of the 
+            // virtual machines being provisioned.
+
+            foreach (var node in cluster.Definition.Nodes)
+            {
+                if (string.IsNullOrEmpty(node.Labels.PhysicalMachine))
+                {
+                    node.Labels.PhysicalMachine = Environment.MachineName;
+                }
+
+                if (node.Labels.ComputeCores == 0)
+                {
+                    node.Labels.ComputeCores = node.GetVmProcessors(cluster.Definition);
+                }
+
+                if (node.Labels.ComputeRamMB == 0)
+                {
+                    node.Labels.ComputeRamMB = (int)(node.GetVmMemory(cluster.Definition) / NeonHelper.Mega);
+                }
+
+                if (node.Labels.StorageCapacityGB == 0)
+                {
+                    node.Labels.StorageCapacityGB = (int)(node.GetVmDisk(cluster.Definition) / NeonHelper.Giga);
+                }
+            }
+
             // Build a list of [SshProxy] instances that map to the specified XenServer
             // hosts.  We'll use the [XenClient] instances as proxy metadata.
 
