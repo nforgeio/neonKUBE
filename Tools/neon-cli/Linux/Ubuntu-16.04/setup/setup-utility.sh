@@ -12,7 +12,7 @@
 #------------------------------------------------------------------------------
 # Returns the IP address currently assigned to the specified network
 # interface into the global [$INTERFACE_IP] variable.  The variable
-# return as empty if the interface doesn't exist or if it doesn't
+# returns as empty if the interface doesn't exist or if it doesn't
 # have an IP address assigned.
 #
 # Example:

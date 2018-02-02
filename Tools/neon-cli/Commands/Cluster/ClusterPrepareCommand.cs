@@ -722,9 +722,9 @@ WantedBy=multi-user.target
             // and then they'd disappear.
             //
             // The solution is simply to disable the spoofing filter.  I'm going to go ahead and do this
-            // for all interfaces such should be fine for clusters hosted in cloud environments, because the
+            // for all interfaces which should be fine for clusters hosted in cloud environments, because the
             // VNET/Load Balancer/Security Groups will be used to lock things down.  Local clusters will
-            // need to be manuallp placed behind a suitable router/firewall as well.
+            // need to be manually placed behind a suitable router/firewall as well.
             //
             // For robustness, I'm going to deploy this as a service daemon that polls the filter state
             // for each interface every 5 seconds, and disables any enabled filters.  This will ensure
