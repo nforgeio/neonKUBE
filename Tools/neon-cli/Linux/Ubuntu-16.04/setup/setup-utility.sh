@@ -10,22 +10,6 @@
 # Misc utility functions intended to be consumed by other scripts.
 
 #------------------------------------------------------------------------------
-# Returns the IP address currently assigned to the specified network
-# interface into the global [$INTERFACE_IP] variable.  The variable
-# returns as empty if the interface doesn't exist or if it doesn't
-# have an IP address assigned.
-#
-# Example:
-#
-#       getinterfaceaddress "eth0"
-#       echo $INTERFACE_IP
-
-function getinterfaceaddress()
-{
-    INTERFACE_IP=$(ifconfig $1 | grep 'inet addr:' | cut -d: -f2 | awk '{ print $1}')
-}
-
-#------------------------------------------------------------------------------
 # Invokes the command and arguments passed and checks the exit code.
 # If the code is non-zero, the command and its output will be written
 # to the standard error stream and then cause the calling script to
