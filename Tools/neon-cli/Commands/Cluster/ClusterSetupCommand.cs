@@ -1013,11 +1013,12 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
 
             // Create a list of route commands for the current node.
 
-            var routeCommands = new List<string>();
+            var primaryInterface = node.GetNetworkInterface(node.PrivateAddress);
+            var routeCommands    = new List<string>();
 
             foreach (var manager in cluster.Managers.Where(m => m != node))
             {
-                routeCommands.Add($"ip route add {manager.Metadata.VpnPoolSubnet} via {manager.PrivateAddress} dev eth0 || true");
+                routeCommands.Add($"ip route add {manager.Metadata.VpnPoolSubnet} via {manager.PrivateAddress} dev {primaryInterface} || true");
             }
 
             // Execute the route commands on the node so they will be 

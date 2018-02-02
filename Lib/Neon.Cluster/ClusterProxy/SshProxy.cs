@@ -10,6 +10,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -2456,6 +2457,74 @@ echo $? > {cmdFolder}/exit
             shell.WriteLine("sudo");
 
             return shell;
+        }
+
+        /// <summary>
+        /// Returns the name of the network interface assigned to a specific IP address.
+        /// </summary>
+        /// <param name="address">The target IP address.</param>
+        /// <returns>The network interface name.</returns>
+        /// <exception cref="NeonClusterException">Thrown if the interface was not found.</exception>
+        /// <remarks>
+        /// <para>
+        /// In the olden days, network devices were assigned names like <b>eth0</b>,
+        /// <b>eth1</b>,... during boot somewhat randomly and there was no guarantee
+        /// that the same assignments would be made on subsequent server restarts.
+        /// </para>
+        /// <para>
+        /// Modern Linux systems generate predictable network interfaces names during
+        /// boot by enumerating the physical devices installed and generating device
+        /// names based on the topology of the system (e.g. slots, channels,...).
+        /// This is discussed <a href="https://www.freedesktop.org/wiki/Software/systemd/PredictableNetworkInterfaceNames/">here</a>.
+        /// </para>
+        /// <note>
+        /// Cloud environments as well as environments where nodes hosted on hypervisors 
+        /// like Hyper-V or XenServer will still assign interface names like <b>eth0</b>...
+        /// This method will still work for these environments.
+        /// </note>
+        /// </remarks>
+        public string GetNetworkInterface(IPAddress address)
+        {
+            Covenant.Requires<ArgumentNullException>(address != null);
+            Covenant.Requires<ArgumentException>(address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork, "Only IPv4 addresses are currently supported.");
+
+            var result = SudoCommand("ip addr -o");
+
+            if (result.ExitCode != 0)
+            {
+                throw new Exception($"Cannot determine primary network interface via [ip addr -o]: [exitcode={result.ExitCode}] {result.AllText}");
+            }
+
+            // $note(jeff.lill): We support only IPv4 addresses.
+
+            // The [ip addr -o] returns network interfaces on single lines that
+            // will look something like:
+            // 
+            // 1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
+            // 1: lo    inet6 ::1/128 scope host \       valid_lft forever preferred_lft forever
+            // 2: enp2s0f0    inet 10.0.0.188/8 brd 10.255.255.255 scope global enp2s0f0\       valid_lft forever preferred_lft forever
+            // 2: enp2s0f0    inet6 2601:600:a07f:fd61:1ec1:deff:fe6f:4a4/64 scope global mngtmpaddr dynamic \       valid_lft 308725sec preferred_lft 308725sec
+            // 2: enp2s0f0    inet6 fe80::1ec1:deff:fe6f:4a4/64 scope link \       valid_lft forever preferred_lft forever
+            //
+            // We're going to look for the line with an [inet] (aka IPv4) address
+            // that matches the node's private address.
+
+            var regex = new Regex(@"^\d+:\s*(?<interface>[^\s]+)\s*inet\s*(?<address>[^/]+)", RegexOptions.IgnoreCase);
+
+            using (var reader = new StringReader(result.OutputText))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    var match = regex.Match(line);
+
+                    if (match.Success && match.Groups["address"].Value == address.ToString())
+                    {
+                        return match.Groups["interface"].Value;
+                    }
+                }
+            }
+
+            throw new NeonClusterException($"Cannot find network interface for [address={address}].");
         }
     }
 }

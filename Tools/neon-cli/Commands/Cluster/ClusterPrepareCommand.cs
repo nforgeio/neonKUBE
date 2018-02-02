@@ -159,61 +159,68 @@ Server Requirements:
             // for cluster nodes, because provisoning over an existing cluster will likely
             // corrupt the existing cluster and probably prevent the new cluster from
             // provisioning correctly.
+            //
+            // Note that we're not going to perform this check for the [Machine] hosting 
+            // environment because we're expecting the bare machines to be already running 
+            // with the assigned addresses.
 
-            Console.WriteLine();
-            Console.WriteLine("Verifying that node IP addresses are already not in use...");
-            Console.WriteLine();
-
-            var pingOptions   = new PingOptions(ttl: 32, dontFragment: true);
-            var pingTimeout   = TimeSpan.FromSeconds(2);
-            var pingConflicts = new List<NodeDefinition>();
-            var pingAttempts  = 2;
-
-            // I'm going to use up to 20 threads at a time here for simplicity
-            // rather then doing this as async operations.
-
-            var parallelOptions = new ParallelOptions()
+            if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine)
             {
-                MaxDegreeOfParallelism = 20
-            };
+                Console.WriteLine();
+                Console.WriteLine("Verifying that node IP addresses are not already in use...");
+                Console.WriteLine();
 
-            Parallel.ForEach(cluster.Definition.NodeDefinitions.Values, parallelOptions,
-                node =>
+                var pingOptions   = new PingOptions(ttl: 32, dontFragment: true);
+                var pingTimeout   = TimeSpan.FromSeconds(2);
+                var pingConflicts = new List<NodeDefinition>();
+                var pingAttempts  = 2;
+
+                // I'm going to use up to 20 threads at a time here for simplicity
+                // rather then doing this as async operations.
+
+                var parallelOptions = new ParallelOptions()
                 {
-                    using (var pinger = new Ping())
+                    MaxDegreeOfParallelism = 20
+                };
+
+                Parallel.ForEach(cluster.Definition.NodeDefinitions.Values, parallelOptions,
+                    node =>
                     {
-                        // We're going to try pinging up to [pingAttempts] times for each node
-                        // just in case the network it sketchy and we're loosing reply packets.
-
-                        for (int i = 0; i < pingAttempts; i++)
+                        using (var pinger = new Ping())
                         {
-                            var reply = pinger.Send(node.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
+                            // We're going to try pinging up to [pingAttempts] times for each node
+                            // just in case the network it sketchy and we're loosing reply packets.
 
-                            if (reply.Status == IPStatus.Success)
+                            for (int i = 0; i < pingAttempts; i++)
                             {
-                                lock (pingConflicts)
-                                {
-                                    pingConflicts.Add(node);
-                                }
+                                var reply = pinger.Send(node.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
 
-                                break;
+                                if (reply.Status == IPStatus.Success)
+                                {
+                                    lock (pingConflicts)
+                                    {
+                                        pingConflicts.Add(node);
+                                    }
+
+                                    break;
+                                }
                             }
                         }
-                    }
-                });
+                    });
 
-            if (pingConflicts.Count > 0)
-            {
-                Console.Error.WriteLine($"*** ERROR: Cannot provision the cluster because [{pingConflicts.Count}] other machines conflict with the");
-                Console.Error.WriteLine($"***        following cluster nodes:");
-                Console.Error.WriteLine();
-
-                foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(IPAddress.Parse(n.PrivateAddress))))
+                if (pingConflicts.Count > 0)
                 {
-                    Console.Error.WriteLine($"{node.PrivateAddress, 16}:    {node.Name}");
-                }
+                    Console.Error.WriteLine($"*** ERROR: Cannot provision the cluster because [{pingConflicts.Count}] other machines conflict with the");
+                    Console.Error.WriteLine($"***        following cluster nodes:");
+                    Console.Error.WriteLine();
 
-                Program.Exit(1);
+                    foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(IPAddress.Parse(n.PrivateAddress))))
+                    {
+                        Console.Error.WriteLine($"{node.PrivateAddress, 16}:    {node.Name}");
+                    }
+
+                    Program.Exit(1);
+                }
             }
 
             //-----------------------------------------------------------------

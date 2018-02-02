@@ -130,6 +130,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Home", "Home", "{A7E3360B-CCAA-449B-9BCE-B56BAF0C3CA0}"
 	ProjectSection(SolutionItems) = preProject
 		Devops\Home\home-azure.json = Devops\Home\home-azure.json
+		Devops\Home\home-bare.json = Devops\Home\home-bare.json
 		Devops\Home\home-large.json = Devops\Home\home-large.json
 		Devops\Home\home-small.json = Devops\Home\home-small.json
 		Devops\Home\home-xen.json = Devops\Home\home-xen.json

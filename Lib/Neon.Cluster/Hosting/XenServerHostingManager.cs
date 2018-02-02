@@ -352,6 +352,8 @@ namespace Neon.Cluster
                         // Replace the [/etc/network/interfaces] file to configure the static
                         // IP and then reboot to reinitialize networking subsystem.
 
+                        var primaryInterface = node.GetNetworkInterface(node.PrivateAddress);
+
                         xenSshProxy.Status = $"{vmName}: set static ip [{node.PrivateAddress}]";
 
                         var interfacesText =
@@ -365,8 +367,8 @@ auto lo
 iface lo inet loopback
 
 # The primary network interface
-auto eth0
-iface eth0 inet static
+auto {primaryInterface}
+iface {primaryInterface} inet static
 address {savedNodeAddress}
 netmask {subnet.Mask}
 gateway {gateway}
