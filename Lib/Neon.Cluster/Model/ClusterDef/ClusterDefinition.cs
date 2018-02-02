@@ -210,7 +210,7 @@ namespace Neon.Cluster
         /// </para>
         /// <note>
         /// <b>WARNING:</b> This should not be enabled for production clusters because it may 
-        /// enable potential security threads.
+        /// enable potential security threats.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "DebugMode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
