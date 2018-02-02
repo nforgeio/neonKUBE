@@ -123,7 +123,7 @@ namespace Neon.Cluster
             {
                 if (string.IsNullOrEmpty(node.Labels.PhysicalMachine))
                 {
-                    node.Labels.PhysicalMachine = Environment.MachineName;
+                    node.Labels.PhysicalMachine = node.VmHost;
                 }
 
                 if (node.Labels.ComputeCores == 0)
