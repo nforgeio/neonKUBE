@@ -2488,16 +2488,16 @@ echo $? > {cmdFolder}/exit
             Covenant.Requires<ArgumentNullException>(address != null);
             Covenant.Requires<ArgumentException>(address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork, "Only IPv4 addresses are currently supported.");
 
-            var result = SudoCommand("ip addr -o");
+            var result = SudoCommand("ip -o address");
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot determine primary network interface via [ip addr -o]: [exitcode={result.ExitCode}] {result.AllText}");
+                throw new Exception($"Cannot determine primary network interface via [ip -o address]: [exitcode={result.ExitCode}] {result.AllText}");
             }
 
             // $note(jeff.lill): We support only IPv4 addresses.
 
-            // The [ip addr -o] returns network interfaces on single lines that
+            // The [ip -o address] returns network interfaces on single lines that
             // will look something like:
             // 
             // 1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
