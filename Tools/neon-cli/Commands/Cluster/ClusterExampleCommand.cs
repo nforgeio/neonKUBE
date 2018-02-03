@@ -107,7 +107,8 @@ USAGE:
     ""Hosting"": {
 
         // Identifies the hosting provider.  The possible values are [aws],
-        // [azure], [google], or [bare].  This defaults to [machine].
+        // [azure], [google], [hyper-v], [local-hyper-v], [machine], o
+        // [xenserver].  This defaults to [machine].
         //
         // You may need to uncomment and initialize the corresponding section
         // below.  See the documentation for the details.
@@ -119,7 +120,88 @@ USAGE:
         // ""Aws"": { ... }
         // ""Azure"": { ... }
         // ""Google"": { ... }
+        // ""HyperV"": { ... }
+        // ""LocalHyperV"": { ... }
         // ""Machine"": { ... }
+        // ""XenServer"": { ... }
+
+        // The following options are available for on-premise clusters deployed
+        // to hypervisor based environments such as [hyper-v], [local-hyper-v],
+        // and [xenserver].
+
+        // Describes the hypervisor host machines for [hyper-v] and [xenserver]
+        // based environments so that the neonCLUSTER tooling will be able to
+        // connect to and manage the hypervisor host machines.  Cluster node
+        // definitions will set [node.VmHost=Name] to the name of the host below
+        // where the node should be provisioned for these environments.
+        //
+        // ""VmHosts"": [
+        //   {
+        //     ""Name"": ""XEN-00"",
+        //     ""Address"": ""10.0.0.20"",
+        //     ""Username"": ""root"",
+        //     ""Password"": ""sysadmin0000""
+        //   }
+        // ]
+    
+        // The default hypervisor host username to use when this is not specified
+        // explicitly in [VmHosts].
+        //
+        // ""VmHostUsername"" : ""sysadmin""
+    
+        // The default hypervisor host password to use when this is not specified
+        // explicitly in [VmHosts].
+        //
+        // ""VmHostPassword"" : ""sysadmin0000""
+
+        // The default number of virtual processors to assign to each cluster virtual 
+        // machine.  This defaults to [4].
+        //
+        // "" VmProcessors"": 4
+
+        // Specifies the default maximum amount of memory to allocate to each cluster 
+        // virtual machine.  This is specified as a string that can be a long byte count 
+        // or a long with units like [512MB] or [2GB].  This defaults to [4GB].
+        //
+        // ""VmMemory"": ""4GB""
+
+        // Specifies the minimum amount of memory to allocate to each cluster virtual machine.  This is specified as a string that
+        // can be a a long byte count or a long with units like [512MB] or [2GB] or may be set to [>null<] to set
+        // the same value as [VmMemory].  This defaults to [2GB], which is half of the default value of [VmMemory].
+        // which is [4GB].
+        //
+        // This is currently honored only when provisioning to a local Hyper-V instance 
+        // (typically as a developer).  This is ignored for XenServer and when provisioning 
+        // to remote Hyper-V or XenServer instances.
+        //
+        // ""VmMinimumMemory"": ""2GB""
+
+        // Specifies the maximum amount of memory to allocate to each cluster virtual machine.
+        // This is specified as a string that can be a long byte count or a long with units like 
+        // [512MB] or [2GB].  This defaults to[64GB]>.
+        // 
+        // ""VmDisk"": ""64GB""
+
+        // Path to the folder where virtual machine hard drive folders are to be persisted.
+        // This defaults to the local Hyper-V folder for Windows.
+        //
+        // This is recognized only when deploying on a local Hyper-V hypervisor, typically
+        // for development and test poruposes.  This is ignored when provisioning on remote
+        // Hyper-V instances or for hypervisors.
+        //
+        // ""VmDriveFolder"": null
+
+        // The prefix to be prepended to virtual machine provisioned to hypervisors for the
+        // <see [hyper-v], [local-hyper-v], and [xenserver] environments.
+        // 
+        // When this is [null] (the default), the cluster name followed by a dash will prefix the
+        // provisioned virtual machine names.  When this is a non-empty string, the value
+        // value followed by a dash will be used.  If this is empty or whitespace, machine
+        // names will not be prefixed.
+        //
+        // Virtual machine name prefixes will always be converted to lowercase.
+        //
+        // ""VmNamePrefix"": null
     },
 
     // Built-in 
@@ -150,9 +232,15 @@ USAGE:
         // ""CertOrganization"" : ""my-authority""
     },
 
-    // Cluster host authentication options:
+    // Cluster host node options:
 
-    ""HostAuth"": {
+    ""HostNode"": {
+
+        // Specifies whether the host node operating system should be upgraded
+        // during cluster preparation.  The possible values are [full], [partial],
+        // and [none].  This defaults to [full] to pick up most criticial updates.
+
+        ""Upgrade"": ""full"",
 
         // Specifies the authentication method to be used to secure SSH sessions
         // to the cluster host nodes.  The possible values are:
@@ -161,7 +249,7 @@ USAGE:
         //      tls         - mutual TLS via public certificates and private keys
         //
         // This defaults to [tls] for better security.
-        
+
         ""SshAuth"": ""tls"",
 
         // Cluster hosts are configured with a random root account password.
@@ -173,7 +261,20 @@ USAGE:
         // (if enabled).  Think very carefully before doing this for a 
         // production cluster.
 
-        ""PasswordLength"": 20
+        ""PasswordLength"": 20,
+
+        // Enables client NFS on the host and installs the Docker ContainX 
+        // [docker-volume-netshare] volume plugin so that Docker containers 
+        // can mount NFS, AWS EFS, and Samaba/CIFS based volumes.
+        // This defaults to [true].
+        //
+`       // ""EnableVolumeNetShare"": true,
+
+        // Specifies the ContainX <b>docker-volume-netshare</b> package version to install
+        // when [EnableVolumeNetShare=true]. This defaults to a reasonable 
+        // recent version.
+        //
+        // ""VolumeNetShareVersion"": ""0.34""
     },
 
     // Docker related options:
@@ -249,45 +350,54 @@ USAGE:
 
     ""network"": {
         
-        //  PublicSubnet                IP subnet assigned to the standard public cluster
-        //                              overlay network.  This defaults to [10.249.0.0/16].
-        //
-        //  PublicAttachable            Allow non-Docker Swarm mode service containers to 
-        //                              attach to the standard public cluster overlay network.
-        //                              This defaults to [true] for flexibility but you may 
-        //                              consider disabling this for better security.
-        //
-        //  PrivateSubnet               IP subnet assigned to the standard private cluster
-        //                              overlay network.  This defaults to [10.248.0.0/16].
-        //
-        //  PrivateAttachable           Allow non-Docker Swarm mode service containers to 
-        //                              attach to the standard private cluster overlay network.
-        //                              This defaults to [true] for flexibility but you may 
-        //                              consider disabling this for better security.
-        //
-        //  Nameservers                 The IP addresses of the upstream DNS nameservers to be 
-        //                              used by the cluster.  This defaults to the Google Public
-        //                              DNS servers: [ ""8.8.8.8"", ""8.8.4.4"" ] when the
-        //                              property is NULL or empty.
-        //
-        //  IMPORTANT: [PdnsServerPackageUri] and [PdnsBackendRemotePackageUri] must reference
-        //             packages from the same PowerDNS build.
-        //
-        //  PdnsServerPackageUri         URI for the PowerDNS Authoritative Server package to
-        //                              be installed on manager nodes.  This defaults to
-        //                              a known good release.
-        //
-        //  PdnsBackendRemotePackageUri URI for the PowerDNS Authoritative Server remote
-        //                              backend package to be installed on manager nodes.  
-        //                              This defaults to a known good release.
-        //
-        //
-        //  PdnsRecursorPackageUri      URI for the PowerDNS Recursor package to be installed 
-        //                              on all cluster nodes.  This defaults to a known good 
-        //                              release.
-        //
-        //  DynamicDns                  Enables the dynamic DNS services.  This defaults to [true].
-    },
+            //  NodesSubnet                 Specifies where the neonCLUSTER Docker host node IP addresses
+            //                              will be located.  This may be any valid subnet for on-premise 
+            //                              deployments but will typically a <b>/24</b> or larger.
+            //                              This is determined automatically for cloud environments.
+            //
+            //  PremiseSubnet               Specifies the subnet for entire host network for on-premise
+            //                              environments like [hyper-v], [local-hyper-v], [machine] and
+            //                              [xenserver].  This is required for those environments.
+            //
+            //  PublicSubnet                IP subnet assigned to the standard public cluster
+            //                              overlay network.  This defaults to [10.249.0.0/16].
+            //
+            //  PublicAttachable            Allow non-Docker Swarm mode service containers to 
+            //                              attach to the standard public cluster overlay network.
+            //                              This defaults to [true] for flexibility but you may 
+            //                              consider disabling this for better security.
+            //
+            //  PrivateSubnet               IP subnet assigned to the standard private cluster
+            //                              overlay network.  This defaults to [10.248.0.0/16].
+            //
+            //  PrivateAttachable           Allow non-Docker Swarm mode service containers to 
+            //                              attach to the standard private cluster overlay network.
+            //                              This defaults to [true] for flexibility but you may 
+            //                              consider disabling this for better security.
+            //
+            //  Nameservers                 The IP addresses of the upstream DNS nameservers to be 
+            //                              used by the cluster.  This defaults to the Google Public
+            //                              DNS servers: [ ""8.8.8.8"", ""8.8.4.4"" ] when the
+            //                              property is NULL or empty.
+            //
+            //  IMPORTANT: [PdnsServerPackageUri] and [PdnsBackendRemotePackageUri] must reference
+            //             packages from the same PowerDNS build.
+            //
+            //  PdnsServerPackageUri         URI for the PowerDNS Authoritative Server package to
+            //                              be installed on manager nodes.  This defaults to
+            //                              a known good release.
+            //
+            //  PdnsBackendRemotePackageUri URI for the PowerDNS Authoritative Server remote
+            //                              backend package to be installed on manager nodes.  
+            //                              This defaults to a known good release.
+            //
+            //
+            //  PdnsRecursorPackageUri      URI for the PowerDNS Recursor package to be installed 
+            //                              on all cluster nodes.  This defaults to a known good 
+            //                              release.
+            //
+            //  DynamicDns                  Enables the dynamic DNS services.  This defaults to [true].
+        },
 
     // Options describing the default overlay network created for the 
 
@@ -467,7 +577,7 @@ USAGE:
     // The following reserved labels are currently supported (see the documentation
     // for more details):
     //
-    //      StorageCapacityDB             Storage in GB (int)
+    //      StorageCapacityGB             Storage in GB (int)
     //      StorageLocal                  Storage is local (bool)
     //      StorageSSD                    Storage is backed by SSD (bool)
     //      StorageRedundant              Storage is redundant (bool)
@@ -517,6 +627,8 @@ USAGE:
         // Only an odd number of management nodes are allowed up to a
         // maximum of five.  A majority of these must be healthy for the 
         // cluster as a whole to function.
+        //
+        // $todo(jeff.lill): Document the [HostGroups] and the [Vm*] properties.
 
         ""manager-0"": {
             ""PrivateAddress"": ""10.0.0.30"",
