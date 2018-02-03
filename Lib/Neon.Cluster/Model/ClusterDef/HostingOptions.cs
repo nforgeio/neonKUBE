@@ -182,14 +182,14 @@ namespace Neon.Cluster
         public string VmHostPassword { get; set; }
 
         /// <summary>
-        /// The number of virtual processors to assign to each virtual machine.
+        /// The default number of virtual processors to assign to each cluster virtual machine.
         /// </summary>
         [JsonProperty(PropertyName = "VmProcessors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(4)]
         public int VmProcessors { get; set; } = 4;
 
         /// <summary>
-        /// Specifies the maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
+        /// Specifies the default maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
         /// that can be a long byte count or a long with units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>4GB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VmMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -205,7 +205,7 @@ namespace Neon.Cluster
         /// </para>
         /// <note>
         /// This is currently honored only when provisioning to a local Hyper-V instance (typically as a developer).  This is ignored
-        /// for XenServer and when provisioning to remote Hyper-V instances.
+        /// for XenServer and when provisioning to remote Hyper-V or XenServer instances.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VmMinimumMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -214,7 +214,7 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Specifies the maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
-        /// that can be a long byte count or a long with units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>4GB</b>.
+        /// that can be a long byte count or a long with units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>64GB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VmDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(DefaultVmMemory)]
@@ -242,8 +242,8 @@ namespace Neon.Cluster
         /// and <see cref="HostingEnvironments.XenServer"/> environments.
         /// </para>
         /// <para>
-        /// When this is <c>null</c>, the cluster name followed by a dash will prefix the
-        /// provisioned virtual machine names.  When this is a non-empty string, the value
+        /// When this is <c>null</c> (the default), the cluster name followed by a dash will 
+        /// prefix the provisioned virtual machine names.  When this is a non-empty string, the
         /// value followed by a dash will be used.  If this is empty or whitespace, machine
         /// names will not be prefixed.
         /// </para>

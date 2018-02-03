@@ -59,8 +59,9 @@ namespace Neon.Cluster
     /// <item>
     ///     <term><see cref="NodesSubnet"/></term>
     ///     <description>
-    ///     This subnet describes where the neonCLUSTER Docker host node IP addresses will be allocated.  This may
-    ///     be any valid subnet for on-premise deployments but will typically a <b>/24</b> or larger.
+    ///     This subnet describes where the neonCLUSTER Docker host node IP addresses will be located.  This may
+    ///     be any valid subnet for on-premise deployments but will typically a <b>/24</b> or larger.  This
+    ///     is determined automatically for cloud environments.
     ///     </description>
     /// </item>
     /// <item>
