@@ -695,7 +695,7 @@ OPTIONS:
                     //
                     //      https://github.com/ContainX/docker-volume-netshare
 
-                    if (cluster.Definition.HostNode.EnableNfs)
+                    if (cluster.Definition.HostNode.EnableVolumeNetShare)
                     {
                         node.Status = "run: containx volume plugin";
                         node.SudoCommand("setup-containx.sh");

@@ -30,17 +30,17 @@ namespace Neon.Cluster
     /// </summary>
     public class HostNodeOptions
     {
-        private const AuthMethods   defaultSshAuth         = AuthMethods.Tls;
-        private const OsUpgrade     defaultUpgrade         = OsUpgrade.Full;
-        private const int           defaultPasswordLength  = 20;
-        private const bool          defaultPasswordAuth    = true;
-        private const bool          defaultEnableNfs       = true;
-        private const string        defaultContainXVersion = "0.34";
+        private const AuthMethods   defaultSshAuth               = AuthMethods.Tls;
+        private const OsUpgrade     defaultUpgrade               = OsUpgrade.Full;
+        private const int           defaultPasswordLength        = 20;
+        private const bool          defaultPasswordAuth          = true;
+        private const bool          defaultEnableVolumeNetshare  = true;
+        private const string        defaultVolumeNetshareVersion = "0.34";
 
         /// <summary>
         /// Specifies whether the host node operating system should be upgraded
         /// during cluster preparation.  This defaults to <see cref="OsUpgrade.Full"/>
-        /// to pick up the most criticial updates.
+        /// to pick up most criticial updates.
         /// </summary>
         [JsonProperty(PropertyName = "Upgrade", Required = Required.Default)]
         [DefaultValue(defaultUpgrade)]
@@ -71,14 +71,16 @@ namespace Neon.Cluster
         public int PasswordLength { get; set; } = defaultPasswordLength;
 
         /// <summary>
-        /// Enables client NFS on the host and install the Docker <a href="https://github.com/ContainX/docker-volume-netshare">ContainX</a> 
+        /// Enables client NFS on the host and installs the Docker ContainX 
+        /// <a href="https://github.com/ContainX/docker-volume-netshare">docker-volume-netshare</a> 
         /// volume plugin so that Docker containers can mount NFS, AWS EFS, and Samaba/CIFS based volumes.
         /// This defaults to <c>true</c>.
         /// </summary>
         /// <remarks>
         /// <para>
         /// Enable this to install the <b>NFS Common</b> package on all Docker hosts notes
-        /// including the managers, wokers, and pets.  This also installs the <a href="https://github.com/ContainX/docker-volume-netshare">ContainX</a>
+        /// including the managers, wokers, and pets.  This also installs the ContainX 
+        /// <a href="https://github.com/ContainX/docker-volume-netshare">docker-volume-netshare</a>
         /// Docker plugin and configures it to run as a service in NFS mode.  This means that
         /// you'll be able to immediately launch a Docker container or service that mounts
         /// the NFS share like:
@@ -93,17 +95,18 @@ namespace Neon.Cluster
         /// <a href="https://github.com/ContainX/docker-volume-netshare">here</a>.
         /// </para>
         /// </remarks>
-        [JsonProperty(PropertyName = "EnableNfs", Required = Required.Default)]
-        [DefaultValue(defaultEnableNfs)]
-        public bool EnableNfs { get; set; } = defaultEnableNfs;
+        [JsonProperty(PropertyName = "EnableVolumeNetShare", Required = Required.Default)]
+        [DefaultValue(defaultEnableVolumeNetshare)]
+        public bool EnableVolumeNetShare { get; set; } = defaultEnableVolumeNetshare;
 
         /// <summary>
-        /// Specifies the <b>ContainX</b> package version to install when <see cref="EnableNfs"/> is <c>true</c>.
-        /// This defaults to a reasonable version.
+        /// Specifies the ContainX <b>docker-volume-netshare</b> package version to install
+        /// when <see cref="EnableVolumeNetShare"/> is <c>true</c>. This defaults to a reasonable 
+        /// recent version.
         /// </summary>
-        [JsonProperty(PropertyName = "ContainXVersion", Required = Required.Default)]
-        [DefaultValue(defaultContainXVersion)]
-        public string ContainXVersion = defaultContainXVersion;
+        [JsonProperty(PropertyName = "VolumeNetShareVersion", Required = Required.Default)]
+        [DefaultValue(defaultVolumeNetshareVersion)]
+        public string VolumeNetShareVersion = defaultVolumeNetshareVersion;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -119,7 +122,7 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"[{nameof(HostNodeOptions)}.{nameof(PasswordLength)}={PasswordLength}] is not zero and is less than the minimum [8].");
             }
 
-            ContainXVersion = ContainXVersion ?? defaultContainXVersion;
+            VolumeNetShareVersion = VolumeNetShareVersion ?? defaultVolumeNetshareVersion;
         }
     }
 }
