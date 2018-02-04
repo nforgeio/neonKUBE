@@ -50,7 +50,7 @@ namespace Neon.Time
     /// </para>
     /// <para>
     /// The <see cref="Reset()"/> and <see cref="Reset(DateTime)"/> methods may be used to explictly
-    /// reset the timer to fire a the next scheduled time.  This may be useful for ensuring that
+    /// reset the timer to fire at the next scheduled time.  This may be useful for ensuring that
     /// short duration timers are properly reset after an operation that may take longer to
     /// complete than the timer interval.
     /// </para>
