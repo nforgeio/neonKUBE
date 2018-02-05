@@ -54,6 +54,7 @@ namespace Neon.Cluster
         private string                      logFolder;
         private List<XenClient>             xenHosts;
         private SetupController<XenClient>  controller;
+        private int                         maxVmNameWidth;
 
         /// <summary>
         /// Constructor.
@@ -68,6 +69,7 @@ namespace Neon.Cluster
             this.cluster                = cluster;
             this.cluster.HostingManager = this;
             this.logFolder              = logFolder;
+            this.maxVmNameWidth         = cluster.Definition.Nodes.Max(n => n.Name.Length) + cluster.Definition.Hosting.GetVmNamePrefix(cluster.Definition).Length;
         }
 
         /// <inheritdoc/>
@@ -208,7 +210,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns the name to use for naming the virtual machine hosting the node.
+        /// Returns the name to use when naming the virtual machine hosting the node.
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <returns>The virtual machine name.</returns>
@@ -271,6 +273,26 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Formats a nice docker node machine status message.
+        /// </summary>
+        /// <param name="vmName">The name of the virtual machine used to host the cluster node.</param>
+        /// <param name="message">The status message.</param>
+        /// <returns>The formatted status message.</returns>
+        private string FormatVmStatus(string vmName, string message)
+        {
+            var namePart     = $"[{vmName}]:";
+            var desiredWidth = maxVmNameWidth + 3;
+            var actualWidth  = namePart.Length;
+
+            if (desiredWidth > actualWidth)
+            {
+                namePart += new string(' ', desiredWidth - actualWidth);
+            }
+
+            return $"{namePart} {message}";
+        }
+
+        /// <summary>
         /// Provision the virtual machines on the XenServer.
         /// </summary>
         /// <param name="xenSshProxy">The XenServer SSH proxy.</param>
@@ -285,14 +307,14 @@ namespace Neon.Cluster
                 var memoryBytes = node.Metadata.GetVmMemory(cluster.Definition);
                 var diskBytes   = node.Metadata.GetVmDisk(cluster.Definition);
 
-                xenSshProxy.Status = $"{vmName}: create vm";
+                xenSshProxy.Status = FormatVmStatus(vmName, "create vm");
 
                 var vm = xenHost.Machine.Install(vmName, cluster.Definition.Hosting.XenServer.TemplateName,
                     processors: processors,
                     memoryBytes: memoryBytes,
                     diskBytes: diskBytes);
 
-                xenSshProxy.Status = $"{vmName}: start vm";
+                xenSshProxy.Status = FormatVmStatus(vmName, "start vm");
 
                 xenHost.Machine.Start(vm);
 
@@ -301,7 +323,7 @@ namespace Neon.Cluster
 
                 var address = string.Empty;
 
-                xenSshProxy.Status = $"{vmName}: fetch ip address";
+                xenSshProxy.Status = FormatVmStatus(vmName, "fetch ip address");
 
                 try
                 {
@@ -346,7 +368,7 @@ namespace Neon.Cluster
 
                     using (var nodeProxy = cluster.GetNode(node.Name))
                     {
-                        xenSshProxy.Status = $"{vmName}: connect";
+                        xenSshProxy.Status = FormatVmStatus(vmName, "connect");
                         nodeProxy.WaitForBoot();
 
                         // Replace the [/etc/network/interfaces] file to configure the static
@@ -354,7 +376,7 @@ namespace Neon.Cluster
 
                         var primaryInterface = node.GetNetworkInterface(node.PrivateAddress);
 
-                        xenSshProxy.Status = $"{vmName}: set static ip [{node.PrivateAddress}]";
+                        xenSshProxy.Status = FormatVmStatus(vmName, $"set static ip [{node.PrivateAddress}]");
 
                         var interfacesText =
 $@"# This file describes the network interfaces available on your system
@@ -401,7 +423,7 @@ nameserver 8.8.4.4
 
                         // Reboot to pick up the changes.
 
-                        xenSshProxy.Status = $"{vmName}: reboot";
+                        xenSshProxy.Status = FormatVmStatus(vmName, "reboot");
                         nodeProxy.Reboot(wait: false);
                     }
                 }
