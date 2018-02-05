@@ -171,7 +171,7 @@ Note that the tool requires admin priviledges for direct mode.
             }
             else
             {
-                Console.Error.WriteLine("*** ERROR: [neon] supports only Windows and OSX.");
+                Console.Error.WriteLine("*** ERROR: [neon] requires Windows or Apple OSX.");
                 Program.Exit(1);
             }
 
