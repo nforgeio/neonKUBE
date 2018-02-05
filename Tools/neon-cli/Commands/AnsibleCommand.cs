@@ -326,7 +326,7 @@ You can open the returned ZIP archive to inspect these file.
             var rightCommandLine = commandSplit.Right;
             var command          = leftCommandLine.Arguments.AtIndexOrDefault(1);
 
-            // The [password] command operates in [--direct] mode so we'll implement it here.
+            // The [password] command operates in [--no-tool-container] mode so we'll implement it here.
 
             if (command == "password")
             {
@@ -602,7 +602,7 @@ You can open the returned ZIP archive to inspect these file.
 
             if (!NeonClusterHelper.InToolContainer)
             {
-                Console.Error.WriteLine($"*** ERROR: [neon ansible {command}] does not support [--direct] mode.");
+                Console.Error.WriteLine($"*** ERROR: [neon ansible {command}] does not support [--no-tool-container] mode.");
                 Program.Exit(1);
             }
 

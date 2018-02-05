@@ -154,12 +154,12 @@ USAGE:
         /// </summary>
         private void DirectNotAllowed()
         {
-            // This command cannot run in [--direct] mode because OpenSSL
+            // This command cannot run in [--no-tool-container] mode because OpenSSL
             // has issues with Windows style file paths.
 
             if (!NeonClusterHelper.InToolContainer)
             {
-                Console.Error.WriteLine("*** ERROR: This VPN command cannot be run in [--direct] mode.");
+                Console.Error.WriteLine("*** ERROR: This VPN command cannot be run in [--no-tool-container] mode.");
                 Program.Exit(1);
             }
         }

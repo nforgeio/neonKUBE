@@ -119,7 +119,7 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --direct                            - See note below.
+    --no-tool-container                 - See note below.
     --help                              - Display help
     --image-tag=TAG                     - Replaces any [:latest] Docker image
                                           tags when deploying a cluster (usually
@@ -145,8 +145,8 @@ is just acting as a shim.
 
 For limited circumstances, it may be desirable to have the tool actually
 perform the command on the operator's workstation rather than within a
-Docker container.  You can accomplish this by using the [--direct].  Note
-that the tool requires admin priviledges for direct mode.
+Docker container.  You can accomplish this by using the [--no-tool-container].
+Note that the tool requires admin priviledges for direct mode.
 ";
             // Disable any logging that might be performed by library classes.
 
@@ -198,7 +198,7 @@ that the tool requires admin priviledges for direct mode.
                 validOptions.Add("--max-parallel");
                 validOptions.Add("-w");
                 validOptions.Add("--wait");
-                validOptions.Add("--direct");
+                validOptions.Add("--no-tool-container");
                 validOptions.Add("--image-tag");
 
                 if (CommandLine.Arguments.Length == 0)
@@ -249,11 +249,11 @@ that the tool requires admin priviledges for direct mode.
 
                 // Determine whether we're running in direct mode or shimming to a Docker container.
 
-                DirectMode = NeonClusterHelper.InToolContainer || CommandLine.GetOption("--direct") != null;
+                NoToolContainer = NeonClusterHelper.InToolContainer || CommandLine.GetOption("--no-tool-container") != null;
 
                 // Short-circuit the help command.
 
-                if (!DirectMode && CommandLine.Arguments[0] == "help")
+                if (!NoToolContainer && CommandLine.Arguments[0] == "help")
                 {
                     if (CommandLine.Arguments.Length == 1)
                     {
@@ -319,7 +319,7 @@ that the tool requires admin priviledges for direct mode.
                 // When not running in direct mode, we're going to act as a shim
                 // and run the command in a Docker container.
 
-                if (!DirectMode)
+                if (!NoToolContainer)
                 {
                     int exitCode;
 
@@ -826,7 +826,7 @@ that the tool requires admin priviledges for direct mode.
                 // and a special file is present with the original command line presented
                 // to the external shim.
 
-                if (DirectMode && File.Exists("__shim.org"))
+                if (NoToolContainer && File.Exists("__shim.org"))
                 {
                     return NeonHelper.ReadAllTextReadOnly("__shim.org").Trim();
                 }
@@ -999,10 +999,10 @@ that the tool requires admin priviledges for direct mode.
         public static bool Quiet { get; set; }
 
         /// <summary>
-        /// Indicates whether the tool executes the command directly or acts as a shim to
-        /// a tool running in a Docker container.
+        /// Indicates whether the tool executes the command directly (when <c>true</c>)
+        /// or acts as a shim to (when <c>false</c>) a tool running in a Docker container.
         /// </summary>
-        public static bool DirectMode { get; private set; }
+        public static bool NoToolContainer { get; private set; }
 
         /// <summary>
         /// Creates a <see cref="SshProxy{TMetadata}"/> for the specified host and server name,

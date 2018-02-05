@@ -6,22 +6,22 @@
 
 neon login rm root@home --force
 neon cluster prepare %NF_ROOT%\Devops\Home\home-small.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --force
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --unredacted root@home --direct
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --unredacted root@home --no-tool-container
 
 neon login rm root@home --force
 neon cluster prepare %NF_ROOT%\Devops\Home\home-large.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --force
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 root@home --direct
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 root@home --no-tool-container
 
 neon cluster prepare %NF_ROOT%\Devops\Home\home-azure.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 root@azure --direct
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 root@azure --no-tool-container
 
 neon login rm root@xen --force
 neon cluster prepare %NF_ROOT%\Devops\Home\home-xen.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --force
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 root@xen --direct
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 root@xen --no-tool-container
 
 neon login rm root@home-bare --force
 neon cluster prepare %NF_ROOT%\Devops\Home\home-bare.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --force
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --unredacted root@home-bare --direct
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --unredacted root@home-bare --no-tool-container
 
 # Create host VHDX template zip files that will be compatible with the [neon-cli] tool.
 
