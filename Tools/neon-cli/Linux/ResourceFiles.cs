@@ -66,7 +66,7 @@ namespace NeonCli
             /// </summary>
             public string Contents
             {
-                get { return File.ReadAllText(Path); }
+                get { return System.IO.File.ReadAllText(Path); }
             }
 
             /// <summary>
