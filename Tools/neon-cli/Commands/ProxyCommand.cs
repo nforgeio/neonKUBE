@@ -371,7 +371,7 @@ See the documentation for more proxy route and setting details.
                     }
                     else
                     {
-                        routeJson = NeonHelper.ReadAllTextReadOnly(routeFile);
+                        routeJson = File.ReadAllText(routeFile);
                     }
 
                     var proxyRoute = ProxyRoute.Parse(routeJson);
@@ -412,7 +412,7 @@ See the documentation for more proxy route and setting details.
                     }
                     else
                     {
-                        settingsJson = NeonHelper.ReadAllTextReadOnly(settingsFile);
+                        settingsJson = File.ReadAllText(settingsFile);
                     }
 
                     var proxySettings = NeonHelper.JsonDeserialize<ProxySettings>(settingsJson);

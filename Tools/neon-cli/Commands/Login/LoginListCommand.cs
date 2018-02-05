@@ -124,7 +124,7 @@ USAGE:
             {
                 try
                 {
-                    var login  = NeonHelper.JsonDeserialize<ClusterLogin>(NeonHelper.ReadAllTextReadOnly(file));
+                    var login  = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(file));
                     var useVpn = false;
 
                     if (current != null && string.Equals(current.Login, login.LoginName, StringComparison.OrdinalIgnoreCase))

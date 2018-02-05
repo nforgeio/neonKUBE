@@ -389,7 +389,7 @@ You can open the returned ZIP archive to inspect these file.
                             Program.Exit(1);
                         }
 
-                        Console.Write(NeonHelper.ReadAllTextReadOnly(passwordPath));
+                        Console.Write(File.ReadAllText(passwordPath));
                         break;
 
                     case "export":

@@ -59,7 +59,7 @@ namespace Neon.Cryptography
         /// <returns>The parsed <see cref="TlsCertificate"/>.</returns>
         public static TlsCertificate Load(string pemCombinedPath)
         {
-            return new TlsCertificate(NeonHelper.ReadAllTextReadOnly(pemCombinedPath));
+            return new TlsCertificate(File.ReadAllText(pemCombinedPath));
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace Neon.Cryptography
         /// <returns>The parsed <see cref="TlsCertificate"/>.</returns>
         public static TlsCertificate Load(string certPath, string keyPath)
         {
-            return new TlsCertificate(NeonHelper.ReadAllTextReadOnly(certPath), NeonHelper.ReadAllTextReadOnly(keyPath));
+            return new TlsCertificate(File.ReadAllText(certPath), File.ReadAllText(keyPath));
         }
 
         /// <summary>
@@ -131,7 +131,7 @@ namespace Neon.Cryptography
                     throw new Exception($"Certificate Error: {result.ErrorText}");
                 }
 
-                File.WriteAllText(combinedPath, NeonHelper.ReadAllTextReadOnly(certPath) + NeonHelper.ReadAllTextReadOnly(keyPath));
+                File.WriteAllText(combinedPath, File.ReadAllText(certPath) + File.ReadAllText(keyPath));
 
                 var certificate = TlsCertificate.Load(combinedPath);
 

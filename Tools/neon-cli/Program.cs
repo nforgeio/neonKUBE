@@ -828,7 +828,7 @@ Note that the tool requires admin priviledges for direct mode.
 
                 if (NoToolContainer && File.Exists("__shim.org"))
                 {
-                    return NeonHelper.ReadAllTextReadOnly("__shim.org").Trim();
+                    return File.ReadAllText("__shim.org").Trim();
                 }
 
                 // Obscure the [-p=xxxx] and [--password=xxxx] options.
@@ -1151,7 +1151,7 @@ Note that the tool requires admin priviledges for direct mode.
                     Program.Exit(result.ExitCode);
                 }
 
-                return NeonHelper.ReadAllTextReadOnly(ppkKeyPath);
+                return File.ReadAllText(ppkKeyPath);
             }
             catch (Win32Exception)
             {

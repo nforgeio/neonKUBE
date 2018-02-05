@@ -214,7 +214,7 @@ does this on the first manager node:
                     Program.Exit(1);
                 }
 
-                bundle.AddFile(Path.GetFileName(scriptPath), NeonHelper.ReadAllTextReadOnly(scriptPath), isExecutable: true);
+                bundle.AddFile(Path.GetFileName(scriptPath), File.ReadAllText(scriptPath), isExecutable: true);
             }
 
             foreach (var textPath in leftCommandLine.GetOptionValues("--text"))
@@ -225,7 +225,7 @@ does this on the first manager node:
                     Program.Exit(1);
                 }
 
-                bundle.AddFile(Path.GetFileName(textPath), NeonHelper.ReadAllTextReadOnly(textPath));
+                bundle.AddFile(Path.GetFileName(textPath), File.ReadAllText(textPath));
             }
 
             foreach (var dataPath in leftCommandLine.GetOptionValues("--data"))

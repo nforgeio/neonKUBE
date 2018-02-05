@@ -322,10 +322,10 @@ USAGE:
                     {
                         if (exitCode == 0)
                         {
-                            var loginName          = NeonHelper.ReadAllTextReadOnly(Path.Combine(shim.ShimExternalFolder, "new-login.txt"));
+                            var loginName          = File.ReadAllText(Path.Combine(shim.ShimExternalFolder, "new-login.txt"));
                             var generatedLoginPath = Path.Combine(shim.ShimExternalFolder, loginName);
                             var outputLoginPath    = Path.GetFullPath(loginName);
-                            var generatedLoginText = NeonHelper.ReadAllTextReadOnly(generatedLoginPath);
+                            var generatedLoginText = File.ReadAllText(generatedLoginPath);
 
                             File.WriteAllText(outputLoginPath, generatedLoginText);
                             Console.WriteLine($"*** Created login: {outputLoginPath}");

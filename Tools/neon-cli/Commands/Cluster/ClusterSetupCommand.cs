@@ -137,7 +137,7 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            clusterLogin      = NeonHelper.JsonDeserialize<ClusterLogin>(NeonHelper.ReadAllTextReadOnly(clusterLoginPath));
+            clusterLogin      = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(clusterLoginPath));
             clusterLogin.Path = clusterLoginPath;
 
             if (!clusterLogin.SetupPending)
@@ -485,7 +485,7 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            clusterLogin      = NeonHelper.JsonDeserialize<ClusterLogin>(NeonHelper.ReadAllTextReadOnly(clusterLoginPath));
+            clusterLogin      = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(clusterLoginPath));
             clusterLogin.Path = clusterLoginPath;
 
             clusterLogin.Definition.Validate();
@@ -554,7 +554,7 @@ OPTIONS:
                             Program.Exit(result.ExitCode);
                         }
 
-                        clusterLogin.SshClientKey.PrivatePPK = NeonHelper.ReadAllTextReadOnly(ppkKeyPath);
+                        clusterLogin.SshClientKey.PrivatePPK = File.ReadAllText(ppkKeyPath);
 
                         clusterLogin.Save();
                     }
@@ -1969,7 +1969,7 @@ chmod 666 /run/ssh-key*
                         Program.Exit(result.ExitCode);
                     }
 
-                    clusterLogin.SshClientKey.PrivatePPK = NeonHelper.ReadAllTextReadOnly(ppkKeyPath);
+                    clusterLogin.SshClientKey.PrivatePPK = File.ReadAllText(ppkKeyPath);
 
                     // Persist the SSH client key.
 

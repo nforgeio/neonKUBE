@@ -123,7 +123,7 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            clusterLogin = NeonHelper.JsonDeserialize<ClusterLogin>(NeonHelper.ReadAllTextReadOnly(clusterLoginPath));
+            clusterLogin = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(clusterLoginPath));
 
             // Determine whether we're going to use the VPN.
 

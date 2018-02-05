@@ -74,7 +74,7 @@ ARGUMENTS:
             if (File.Exists(clusterLoginPath))
             {
                 var outputPath = Path.GetFullPath(Path.GetFileName(clusterLoginPath));
-                var loginJson  = NeonHelper.ReadAllTextReadOnly(clusterLoginPath);
+                var loginJson  = File.ReadAllText(clusterLoginPath);
 
                 File.WriteAllText(outputPath, loginJson);
                 Console.WriteLine($"Login exported to: {outputPath}");
