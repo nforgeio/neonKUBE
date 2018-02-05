@@ -161,7 +161,7 @@ Note that the tool requires admin priviledges for direct mode.
 
                 if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
                 {
-                    Console.Error.WriteLine("*** ERROR: [neon] requires elevated administror privileges.");
+                    Console.Error.WriteLine("*** ERROR: [neon] requires elevated administor privileges.");
                     Program.Exit(1);
                 }
             }
