@@ -713,8 +713,8 @@ namespace Neon.Cluster
                     .Create();
             }
 
-            cluster.Definition.Network.ManagerRouter        = pipLbManager.Fqdn;
-            cluster.Definition.Network.WorkerRouterAddress  = pipLbWorker.Fqdn;
+            cluster.Definition.Network.ManagerPublicAddress = pipLbManager.Fqdn;
+            cluster.Definition.Network.WorkerPublicAddress  = pipLbWorker.Fqdn;
 
             //-----------------------------------------------------------------
             // Create dynamic public addresses for individual node VMs if requested.

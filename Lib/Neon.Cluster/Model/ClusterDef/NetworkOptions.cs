@@ -318,8 +318,8 @@ namespace Neon.Cluster
         public bool DynamicDns { get; set; } = true;
 
         /// <summary>
-        /// The cluster's manager load balancer's FQDN or IP address during cluster
-        /// provisioning or <c>null</c> if the cluster does not have load balancers.
+        /// Optionally specifies the cluster's public FQDN or IP address where inbound 
+        /// cluster VPN traffic should be directed from VPN clients.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -334,13 +334,13 @@ namespace Neon.Cluster
         /// the inbound VPN traffic.
         /// </para>
         /// </remarks>
-        [JsonProperty(PropertyName = "ManagerRouter", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "ManagerPublicAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
-        public string ManagerRouter { get; set; }
+        public string ManagerPublicAddress { get; set; }
 
         /// <summary>
-        /// The cluster's worker load balancer's FQDN or IP address during cluster
-        /// provisioning or <c>null</c> if the cluster does not have load balancers.
+        /// Optionally specifies the cluster's worker public FQDN or IP address during 
+        /// cluster provisioning.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -352,9 +352,9 @@ namespace Neon.Cluster
         /// This is not required for on-premise deployments.
         /// </para>
         /// </remarks>
-        [JsonProperty(PropertyName = "WorkerRouterAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonProperty(PropertyName = "WorkerPublicAddress", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
-        public string WorkerRouterAddress { get; set; }
+        public string WorkerPublicAddress { get; set; }
 
         /// <summary>
         /// <para>
@@ -767,9 +767,9 @@ namespace Neon.Cluster
                 {
                     if (clusterDefinition.Hosting.IsOnPremiseProvider)
                     {
-                        if (string.IsNullOrEmpty(ManagerRouter))
+                        if (string.IsNullOrEmpty(ManagerPublicAddress))
                         {
-                            throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(ManagerRouter)}] is required for on-premise deployments that enable VPN.  Set the public IP address or FQDN of your cluster router.");
+                            throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(ManagerPublicAddress)}] is required for on-premise deployments that enable VPN.  Set the public IP address or FQDN of your cluster router.");
                         }
                     }
 

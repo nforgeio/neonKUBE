@@ -412,7 +412,7 @@ namespace Neon.Cluster
             // VPN servers are reached via the manager load balancer or router
             // using the forwarding port rule assigned to each manager node.
 
-            Covenant.Assert(clusterLogin.Definition.Network.ManagerRouter != null, "Manager router address is required.");
+            Covenant.Assert(clusterLogin.Definition.Network.ManagerPublicAddress != null, "Manager router address is required.");
 
             var servers     = string.Empty;
             var firstServer = true;
@@ -428,7 +428,7 @@ namespace Neon.Cluster
                     servers += "\r\n";
                 }
 
-                servers += $"remote {clusterLogin.Definition.Network.ManagerRouter} {manager.VpnFrontendPort}";
+                servers += $"remote {clusterLogin.Definition.Network.ManagerPublicAddress} {manager.VpnFrontendPort}";
             }
 
             // Generate the configuration.
