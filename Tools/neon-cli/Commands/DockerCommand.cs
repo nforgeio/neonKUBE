@@ -237,7 +237,7 @@ the [neon exec] command.
 
             var bundle = new CommandBundle("docker", rightCommandLine.Items);
 
-            bundle.AddFile(Path.GetFileName(path), File.ReadAllText(path));
+            bundle.AddFile(Path.GetFileName(path), NeonHelper.ReadAllTextReadOnly(path));
 
             var response = node.SudoCommand(bundle);
 

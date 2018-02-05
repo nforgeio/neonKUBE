@@ -828,7 +828,7 @@ that the tool requires admin priviledges for direct mode.
 
                 if (DirectMode && File.Exists("__shim.org"))
                 {
-                    return File.ReadAllText("__shim.org").Trim();
+                    return NeonHelper.ReadAllTextReadOnly("__shim.org").Trim();
                 }
 
                 // Obscure the [-p=xxxx] and [--password=xxxx] options.
@@ -1151,7 +1151,7 @@ that the tool requires admin priviledges for direct mode.
                     Program.Exit(result.ExitCode);
                 }
 
-                return File.ReadAllText(ppkKeyPath);
+                return NeonHelper.ReadAllTextReadOnly(ppkKeyPath);
             }
             catch (Win32Exception)
             {

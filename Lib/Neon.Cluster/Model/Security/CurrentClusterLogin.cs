@@ -46,7 +46,7 @@ namespace Neon.Cluster
 
             try
             {
-                return NeonHelper.JsonDeserialize<CurrentClusterLogin>(File.ReadAllText(NeonClusterHelper.CurrentPath));
+                return NeonHelper.JsonDeserialize<CurrentClusterLogin>(NeonHelper.ReadAllTextReadOnly(NeonClusterHelper.CurrentPath));
             }
             catch
             {

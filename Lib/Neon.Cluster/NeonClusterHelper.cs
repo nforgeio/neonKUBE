@@ -361,7 +361,7 @@ namespace Neon.Cluster
             {
                 try
                 {
-                    cachedDefinition = NeonHelper.JsonDeserialize<ClusterDefinition>(File.ReadAllText(cachedDefinitionPath));
+                    cachedDefinition = NeonHelper.JsonDeserialize<ClusterDefinition>(NeonHelper.ReadAllTextReadOnly(cachedDefinitionPath));
                 }
                 catch
                 {
@@ -423,7 +423,7 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
 
             var path         = Path.Combine(GetLoginFolder(), $"{username}@{clusterName}.login.json");
-            var clusterLogin = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(path));
+            var clusterLogin = NeonHelper.JsonDeserialize<ClusterLogin>(NeonHelper.ReadAllTextReadOnly(path));
 
             clusterLogin.Path = path;
 
@@ -581,7 +581,7 @@ namespace Neon.Cluster
 
             if (loginPath != null)
             {
-                ClusterLogin      = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(loginPath));
+                ClusterLogin      = NeonHelper.JsonDeserialize<ClusterLogin>(NeonHelper.ReadAllTextReadOnly(loginPath));
                 ClusterLogin.Path = loginPath;
             }
             else
@@ -869,7 +869,7 @@ namespace Neon.Cluster
             {
                 if (File.Exists(secretPath))
                 {
-                    return File.ReadAllText(Path.Combine(NodeHostFolders.DockerSecrets, name));
+                    return NeonHelper.ReadAllTextReadOnly(Path.Combine(NodeHostFolders.DockerSecrets, name));
                 }
             }
             catch (IOException)

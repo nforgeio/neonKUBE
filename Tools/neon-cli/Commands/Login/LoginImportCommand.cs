@@ -60,7 +60,7 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            var clusterLogin     = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(commandLine.Arguments[0]));
+            var clusterLogin     = NeonHelper.JsonDeserialize<ClusterLogin>(NeonHelper.ReadAllTextReadOnly(commandLine.Arguments[0]));
             var clusterLoginPath = Program.GetClusterLoginPath(clusterLogin.Username, clusterLogin.ClusterName);
             var exists           = File.Exists(clusterLoginPath);
             var newLoginJson     = NeonHelper.JsonSerialize(clusterLogin, Formatting.Indented);

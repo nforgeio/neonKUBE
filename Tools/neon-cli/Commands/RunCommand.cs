@@ -215,7 +215,7 @@ NOTE: The [neon run ...] command cannot be run recursively.  For example,
 
                         foreach (var varFile in leftCommandLine.Arguments)
                         {
-                            var varContents = File.ReadAllText(varFile, Encoding.UTF8);
+                            var varContents = NeonHelper.ReadAllTextReadOnly(varFile);
 
                             if (varContents.StartsWith("$ANSIBLE_VAULT;"))
                             {

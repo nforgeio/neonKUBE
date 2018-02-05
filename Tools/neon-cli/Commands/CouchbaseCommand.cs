@@ -182,7 +182,7 @@ COMMANDS:
                         {
                             // Read the query from the file.
 
-                            query = File.ReadAllText(query.Substring(1));
+                            query = NeonHelper.ReadAllTextReadOnly(query.Substring(1));
                         }
 
                         var queryResults = bucket.Query<JToken>(query);
@@ -210,7 +210,7 @@ COMMANDS:
                         {
                             // Read the query from the file.
 
-                            jsonText = File.ReadAllText(jsonText.Substring(1));
+                            jsonText = NeonHelper.ReadAllTextReadOnly(jsonText.Substring(1));
                         }
 
                         var jToken  = JsonConvert.DeserializeObject<JToken>(jsonText);

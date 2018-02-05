@@ -188,7 +188,7 @@ namespace Neon.Cluster
                 // set map to VPN clients that are no longer running.  These
                 // folders will be deleted and ignored.
 
-                if (!int.TryParse(File.ReadAllText(pidPath), out var pid) || !openVpnProcessIds.Contains(pid))
+                if (!int.TryParse(NeonHelper.ReadAllTextReadOnly(pidPath), out var pid) || !openVpnProcessIds.Contains(pid))
                 {
                     NeonHelper.DeleteFolderContents(clientFolder);
                     continue;

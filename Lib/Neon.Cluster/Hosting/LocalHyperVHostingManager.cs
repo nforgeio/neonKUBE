@@ -311,7 +311,7 @@ namespace Neon.Cluster
             {
                 try
                 {
-                    driveTemplateInfo = NeonHelper.JsonDeserialize<DriveTemplateInfo>(File.ReadAllText(driveTemplateInfoPath));
+                    driveTemplateInfo = NeonHelper.JsonDeserialize<DriveTemplateInfo>(NeonHelper.ReadAllTextReadOnly(driveTemplateInfoPath));
 
                     if (new FileInfo(driveTemplatePath).Length != driveTemplateInfo.Length)
                     {

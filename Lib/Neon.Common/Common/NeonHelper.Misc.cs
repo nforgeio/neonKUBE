@@ -984,6 +984,35 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Opens a file as read-only and reads all of is as text.
+        /// </summary>
+        /// <param name="path">Path to the file.</param>
+        /// <returns>The text read.</returns>
+        /// <remarks>
+        /// <para>
+        /// <see cref="File.ReadAllText(string)"/> appears to open files in read/write mode
+        /// which works OK in most circumstancs, but I've run into rare situations where
+        /// I have multiple threads trying to read a file at the same time and the second
+        /// read fails because the other thread still has the file open.
+        /// </para>
+        /// <para>
+        /// This method opens the file as read-only to avoid these conflicts.
+        /// </para>
+        /// </remarks>
+        public static string ReadAllTextReadOnly(string path)
+        {
+            var sb = new StringBuilder();
+
+            using (var input = new FileStream(path, FileMode.Open, FileAccess.Read))
+            {
+                using (var reader = new StreamReader(input))
+                {
+                    return reader.ReadToEnd();
+                }
+            }
+        }
+
+        /// <summary>
         /// Uses deflate to commpress a string.
         /// </summary>
         /// <param name="input">The input string or <c>null</c>.</param>
