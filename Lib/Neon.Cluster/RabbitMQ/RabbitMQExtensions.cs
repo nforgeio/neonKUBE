@@ -37,8 +37,8 @@ namespace RabbitMQ.Client
             var connectionFactory = new ConnectionFactory();
 
             connectionFactory.VirtualHost = settings.VirtualHost;
-            connectionFactory.UserName = username;
-            connectionFactory.Password = password;
+            connectionFactory.UserName    = username;
+            connectionFactory.Password    = password;
 
             return connectionFactory.CreateConnection(settings.Hostnames);
         }
