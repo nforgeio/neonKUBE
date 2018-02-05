@@ -13,6 +13,7 @@ using System.IO;
 using System.Linq;
 using System.Net;
 using System.Reflection;
+using System.Security.Principal;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -151,6 +152,28 @@ Note that the tool requires admin priviledges for direct mode.
             // Disable any logging that might be performed by library classes.
 
             LogManager.Default.LogLevel = LogLevel.None;
+
+            // Ensure that we're running with admin .
+
+            if (NeonHelper.IsWindows)
+            {
+                var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+
+                if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
+                {
+                    Console.Error.WriteLine("*** ERROR: [neon] requires elevated administror privileges.");
+                    Program.Exit(1);
+                }
+            }
+            else if (NeonHelper.IsOSX)
+            {
+                // $todo(jeff.lill): Implement this
+            }
+            else
+            {
+                Console.Error.WriteLine("*** ERROR: [neon] supports only Windows and OSX.");
+                Program.Exit(1);
+            }
 
             // Configure the encrypted user-specific application data folder and initialize
             // the subfolders.
