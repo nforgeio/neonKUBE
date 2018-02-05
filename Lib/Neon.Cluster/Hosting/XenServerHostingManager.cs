@@ -233,7 +233,7 @@ namespace Neon.Cluster
             var xenHost = xenSshProxy.Metadata;
             var nodes   = GetHostedNodes(xenHost);
 
-            xenSshProxy.Status = "check VMs";
+            xenSshProxy.Status = "check virtual machines";
 
             var vmNames = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -263,11 +263,11 @@ namespace Neon.Cluster
             var xenHost      = xenSshProxy.Metadata;
             var templateName = cluster.Definition.Hosting.XenServer.TemplateName;
 
-            xenSshProxy.Status = "check VM template";
+            xenSshProxy.Status = "check machine template";
 
             if (xenHost.Template.Find(templateName) == null)
             {
-                xenSshProxy.Status = "download vm template (slow)";
+                xenSshProxy.Status = "download machine template (slow)";
                 xenHost.Template.Install(cluster.Definition.Hosting.XenServer.HostXvaUri, templateName);
             }
         }
@@ -307,14 +307,14 @@ namespace Neon.Cluster
                 var memoryBytes = node.Metadata.GetVmMemory(cluster.Definition);
                 var diskBytes   = node.Metadata.GetVmDisk(cluster.Definition);
 
-                xenSshProxy.Status = FormatVmStatus(vmName, "create vm");
+                xenSshProxy.Status = FormatVmStatus(vmName, "create virtual machine");
 
                 var vm = xenHost.Machine.Install(vmName, cluster.Definition.Hosting.XenServer.TemplateName,
                     processors: processors,
                     memoryBytes: memoryBytes,
                     diskBytes: diskBytes);
 
-                xenSshProxy.Status = FormatVmStatus(vmName, "start vm");
+                xenSshProxy.Status = FormatVmStatus(vmName, "start virtual machine");
 
                 xenHost.Machine.Start(vm);
 
