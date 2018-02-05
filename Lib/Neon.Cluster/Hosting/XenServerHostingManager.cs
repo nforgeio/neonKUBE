@@ -246,7 +246,7 @@ namespace Neon.Cluster
 
                 if (vmNames.Contains(vmName))
                 {
-                    xenSshProxy.Fault($"XenServer [{xenHost.Name}] is already hosting a virtual machine named [{vmName}].");
+                    xenSshProxy.Fault($"XenServer [{xenHost.Name}] already hosts a virtual machine named [{vmName}].");
                     return;
                 }
             }
