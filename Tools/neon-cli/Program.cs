@@ -153,7 +153,7 @@ Note that the tool requires admin priviledges for direct mode.
 
             LogManager.Default.LogLevel = LogLevel.None;
 
-            // Ensure that we're running with admin .
+            // Ensure that we're running with admin.
 
             if (NeonHelper.IsWindows)
             {
