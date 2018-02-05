@@ -660,7 +660,7 @@ namespace Neon.Cluster
                     {
                         var xenHost = node.Metadata as XenClient;
 
-                        sbDisplay.AppendLine($"    {xenHost.Name}{new string(' ', maxNameWidth - xenHost.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
+                        sbDisplay.AppendLine($"    {xenHost.Name}{new string(' ', maxNameWidth - xenHost.Name.Length)}: {GetStatus(stepNodeNamesSet, node)}");
                     }
                 }
             }
