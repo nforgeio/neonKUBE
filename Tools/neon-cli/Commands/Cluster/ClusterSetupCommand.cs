@@ -224,7 +224,7 @@ OPTIONS:
 
             if (sshTlsAuth)
             {
-                controller.AddStep("ssh client cert", n => GenerateClientSshKey(n), n => n.Metadata.IsManager);
+                controller.AddStep("ssh client cert", n => GenerateClientSshKey(n), n => n == cluster.FirstManager);
             }
 
             controller.AddStep("verify OS", n => CommonSteps.VerifyOS(n));
@@ -1898,7 +1898,8 @@ $@"docker login \
             // We're going to generate a 2048 bit key pair on one of the
             // manager nodes and then download and then delete it.  This
             // means that the private key will be persisted to disk (tmpfs)
-            // for a moment but I'm going to worry about this too much.
+            // for a moment but I'm going to worry about that too much
+            // since we'll be rebooting the manager later on during setup.
             //
             // Technically, I could have installed OpenSSL or something
             // on Windows or figured out the .NET Crypto libraries but
