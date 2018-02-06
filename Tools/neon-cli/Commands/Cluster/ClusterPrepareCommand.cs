@@ -167,7 +167,7 @@ Server Requirements:
             if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine)
             {
                 Console.WriteLine();
-                Console.WriteLine("Verify that node IP addresses don't conflict with existing machines...");
+                Console.WriteLine("Verify that cluster IP addresses don't conflict with existing machines...");
                 Console.WriteLine();
 
                 var pingOptions   = new PingOptions(ttl: 32, dontFragment: true);
