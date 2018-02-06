@@ -69,7 +69,7 @@ USAGE:
     //  Datacenter        Datacenter name
     //  Environment       Describes the type of environment, one of:
     //
-    //                      other, dev, test, stage, or prod
+    //                      other, development, test, staging, or production
     //
     //  TimeSources       The FQDNs or IP addresses of the NTP time sources
     //                    used to synchronize the cluster as an array of
@@ -80,8 +80,8 @@ USAGE:
     //                    HTTP URL including the port (generally [3142]) of
     //                    the servers to be used for proxying and caching 
     //                    Ubuntu and Debian APT packages.  This defaults to 
-    //                    proxies running on the cluster managers if empty
-    //                    (the default).
+    //                    proxies running on the cluster managers if null
+    //                    or empty (the default).
     //
     //  BareDocker        Optionally indicates that a basic Docker cluster without
     //                    most of the extra neonCLUSTER features should be deployed.
@@ -98,8 +98,8 @@ USAGE:
 
     ""Name"": ""my-cluster"",
     ""Datacenter"": ""Seattle"",
-    ""Environment"": ""Development"",
-    ""TimeSources"": [ ""0.pool.ntp.org"", ""1.pool.ntp.org"", ""2.pool.ntp.org"" ],
+    ""Environment"": ""development"",
+    ""TimeSources"": [ ""pool.ntp.org"" ],
     ""PackageProxy"": null,
 
     // Cluster hosting provider options:
@@ -107,7 +107,7 @@ USAGE:
     ""Hosting"": {
 
         // Identifies the hosting provider.  The possible values are [aws],
-        // [azure], [google], [hyper-v], [local-hyper-v], [machine], o
+        // [azure], [google], [hyper-v], [local-hyper-v], [machine], or
         // [xenserver].  This defaults to [machine].
         //
         // You may need to uncomment and initialize the corresponding section
@@ -268,7 +268,7 @@ USAGE:
         // can mount NFS, AWS EFS, and Samaba/CIFS based volumes.
         // This defaults to [true].
         //
-`       // ""EnableVolumeNetShare"": true,
+        // ""EnableVolumeNetShare"": true,
 
         // Specifies the ContainX <b>docker-volume-netshare</b> package version to install
         // when [EnableVolumeNetShare=true]. This defaults to a reasonable 
@@ -298,7 +298,7 @@ USAGE:
         // IMPORTANT!
         //
         // It is not possible for the [neon-cli] to upgrade Docker on clusters
-        // that deployed the [test] or [experimental]> build.
+        // that deployed the [test] or [experimental] builds.
 
         ""Version"": ""latest"",
 
@@ -350,15 +350,19 @@ USAGE:
 
     ""network"": {
         
+            //  PremiseSubnet               Specifies the subnet for entire host network for on-premise
+            //                              environments like [hyper-v], [local-hyper-v], [machine] and
+            //                              [xenserver].  This is required for those environments.
+
+            ""PremiseSubnet"": ""10.0.0.0/24"",
+            
             //  NodesSubnet                 Specifies where the neonCLUSTER Docker host node IP addresses
             //                              will be located.  This may be any valid subnet for on-premise 
             //                              deployments but will typically a <b>/24</b> or larger.
             //                              This is determined automatically for cloud environments.
-            //
-            //  PremiseSubnet               Specifies the subnet for entire host network for on-premise
-            //                              environments like [hyper-v], [local-hyper-v], [machine] and
-            //                              [xenserver].  This is required for those environments.
-            //
+            
+            ""NodesSubnet"": ""10.0.0.0/24""
+
             //  PublicSubnet                IP subnet assigned to the standard public cluster
             //                              overlay network.  This defaults to [10.249.0.0/16].
             //
@@ -649,7 +653,7 @@ USAGE:
             }
         },
         ""manager-2"": {
-            ""PrivateAddress"": ""10.0.0.30"",
+            ""PrivateAddress"": ""10.0.0.32"",
             ""Role"": ""manager"",
             ""Labels"": {
                 ""StorageSSD"": true
@@ -661,28 +665,28 @@ USAGE:
         // is the default).  Worker nodes are provisioned in the Docker Swarm.
 
         ""worker-0"": {
-            ""Role"": ""manager"",
+            ""Role"": ""worker"",
             ""PrivateAddress"": ""10.0.0.40"",
             ""Labels"": {
                 ""StorageSSD"": true
             }
         },
         ""worker-1"": {
-            ""Role"": ""manager"",
+            ""Role"": ""worker"",
             ""PrivateAddress"": ""10.0.0.41"",
             ""Labels"": {
                 ""StorageSSD"": true
             }
         },
         ""worker-2"": {
-            ""Role"": ""manager"",
+            ""Role"": ""worker"",
             ""PrivateAddress"": ""10.0.0.42"",
             ""Labels"": {
                 ""StorageSSD"": true
             }
         },
         ""worker-3"": {
-            ""Role"": ""manager"",
+            ""Role"": ""worker"",
             ""PrivateAddress"": ""10.0.0.43"",
             ""Labels"": {
                 ""StorageSSD"": true
