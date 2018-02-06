@@ -1223,12 +1223,12 @@ Note that the tool requires admin priviledges for direct mode.
 
             try
             {
-                var response = NeonHelper.ExecuteCaptureStreams(programPath, sbArgs.ToString());
+                var result = NeonHelper.ExecuteCaptureStreams(programPath, sbArgs.ToString());
 
-                if (response.ExitCode != 0)
+                if (result.ExitCode != 0)
                 {
-                    Console.Write(response.AllText);
-                    Program.Exit(response.ExitCode);
+                    Console.Error.Write(result.AllText);
+                    Program.Exit(result.ExitCode);
                 }
             }
             catch (Win32Exception)
