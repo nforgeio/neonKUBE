@@ -381,7 +381,7 @@ namespace Neon.Cluster
                                 {
                                     step.NodeAction(node);
 
-                                    node.Status  = "[step done]";
+                                    node.Status  = "[x] DONE";
                                     node.IsReady = true;
                                 }
                                 catch (Exception e)
@@ -562,12 +562,12 @@ namespace Neon.Cluster
 
                     case StepStatus.Done:
 
-                        sbDisplay.AppendLine($"     {FormatStepNumber(stepNumber)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [done]");
+                        sbDisplay.AppendLine($"     {FormatStepNumber(stepNumber)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [x] DONE");
                         break;
 
                     case StepStatus.Failed:
 
-                        sbDisplay.AppendLine($"     {FormatStepNumber(stepNumber)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [fail]"); ;
+                        sbDisplay.AppendLine($"     {FormatStepNumber(stepNumber)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [!] FAIL"); ;
                         break;
                 }
             }
