@@ -306,7 +306,7 @@ namespace Neon.Cluster
         /// <summary>
         /// <para>
         /// Specifies the minimum amount of memory to allocate to each cluster virtual machine.  This is specified as a string that
-        /// can be a a long byte count or a long with units like <b>512MB</b> or <b>2GB</b> or may be set to <c>null</c> to set
+        /// can be a long byte count or a long with units like <b>512MB</b> or <b>2GB</b> or may be set to <c>null</c> to set
         /// the same value as <see cref="VmMemory"/>.  This defaults to the value specified by <see cref="HostingOptions.VmMinimumMemory"/>.
         /// </para>
         /// <note>

@@ -38,13 +38,6 @@ namespace Couchbase.Lite
         /// <inheritdoc/>
         public override void Resolve(ConflictDetails details)
         {
-#if NETCORE
-            // $todo(jeff.lill): 
-            //
-            // Get rid of this once CouchbaseException no longer derives from ApplicationException.
-
-            throw new NotImplementedException();
-#else
             // Delete all conflicting revisions except for the current one.
 
             foreach (var conflict in details.ConflictingRevisions)
@@ -66,7 +59,6 @@ namespace Couchbase.Lite
 
             unsavedRevision.SetProperties(details.EntityDocument.Properties);
             details.SavedRevision = unsavedRevision.Save();
-#endif
         }
     }
 }

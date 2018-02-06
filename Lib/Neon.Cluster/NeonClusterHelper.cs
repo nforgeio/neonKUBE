@@ -697,11 +697,6 @@ namespace Neon.Cluster
             // a space separated list of hostname/ports.  Note that we'll use the proxy
             // caches on the manager nodes if no cache URIs are specified.
 
-            // $todo(jeff.lill):
-            //
-            // Consider being able to specify something like "DIRECT" to avoid caching
-            // completely.  I'm not entirely convinced that this is useful though.
-
             var packageProxy     = clusterDefinition.PackageProxy ?? string.Empty;
             var packageCacheRefs = string.Empty;
 

@@ -21,7 +21,7 @@ using Neon.Common;
 using Neon.DynamicData;
 using System.Collections;
 
-// $todo(jeff.lill):
+// NOTE:
 //
 // This implementation is quite clean.  One thing developers should avoid is
 // having more that one instance of a given item in a list.  This doesn't

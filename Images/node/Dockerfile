@@ -17,8 +17,6 @@ ARG         TINI_VERSION
 COPY docker-entrypoint.sh   /
 COPY program.js             /
 
-# $todo(jeff.lill): Shouldn't hardcode the TINI version here.
-
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 
 RUN chmod 700 /docker-entrypoint.sh \

@@ -348,7 +348,7 @@ USAGE:
 
     // Cluster Network options:
 
-    ""network"": {
+    ""Network"": {
         
             //  PremiseSubnet               Specifies the subnet for entire host network for on-premise
             //                              environments like [hyper-v], [local-hyper-v], [machine] and
@@ -559,6 +559,7 @@ USAGE:
     // ---------------
     //
     //      Name                The unique node name (case insensitive)
+    //
     //      PrivateAddress      Internal cluster IP address of the node
     //
     //      PublicAddress       Optional public IP address or FQDN of the
@@ -566,7 +567,46 @@ USAGE:
     //                          configured automatically for cloud deployments
     //                          to AWS, Azure, Google,...
     //
-    //      manager             [true] for manager nodes (default=false)
+    //      Role                Identifies the type of node being deployed,
+    //                          one of:
+    //
+    //                              manager, worker, or pet
+    //
+    //      HostGroups          Optional array of string identifing the
+    //                          non-standard Ansible group memberships for
+    //                          the node.  These groups will be available
+    //                          in the Ansible host inventory file when
+    //                          executing running Ansible playbooks.
+    //
+    //      The following properties are honored when provisioning nodes
+    //      as virtual machines to the the [local-hyper-v] and [xenserver]
+    //      hosting environmewnts.  Many of these will override the matching
+    //      [Hosting] options, allowing you to override those defaults for
+    //      specific nodes.
+    //
+    //      VmHost              Identifies the hypervisor host machine from
+    //                          [Hosting.VmHosts] by name where the node
+    //                          is to be provisioned as a virtual machine.
+    //
+    //      VmProcessors        The number of virtual processors assigned.
+    //
+    //      VmMemory            Specifies the maximum amount of memory to 
+    //                          allocate to this node when provisioned on a 
+    //                          hypervisor.   This is specified as a string 
+    //                          that can be a long byte count or a long with
+    //                          units like [512MB] or [2GB].
+    //
+    //      VmMinimumMemory     Specifies the minimum amount of memory to 
+    //                          allocate to each cluster virtual machine.  
+    //                          This is specified as a string that can be 
+    //                          a long byte count or a long with units like
+    //                          [512MB] or [2GB].
+    //
+    //      VmDisk              The amount of disk space to allocate to this
+    //                          node when when provisioned on a hypervisor.  
+    //                          This is specified as a string that can be a
+    //                          long byte count or a long with units like 
+    //                          [512MB] or [2GB].
     //
     // Node Labels
     // -----------
@@ -619,7 +659,7 @@ USAGE:
     //            Note that the prefix The [node.labels.io.neoncluster] prefix
     //            is reserved for neonCLUSTER related labels.
 
-    ""Nodes"": {
+            ""Nodes"": {
 
         //---------------------------------------------------------------------
         // Define the cluster management nodes by setting [Manager=true].
@@ -631,8 +671,6 @@ USAGE:
         // Only an odd number of management nodes are allowed up to a
         // maximum of five.  A majority of these must be healthy for the 
         // cluster as a whole to function.
-        //
-        // $todo(jeff.lill): Document the [HostGroups] and the [Vm*] properties.
 
         ""manager-0"": {
             ""PrivateAddress"": ""10.0.0.30"",

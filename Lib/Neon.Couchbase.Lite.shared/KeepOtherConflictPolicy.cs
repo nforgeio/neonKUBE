@@ -38,13 +38,6 @@ namespace Couchbase.Lite
         /// <inheritdoc/>
         public override void Resolve(ConflictDetails details)
         {
-#if NETCORE
-            // $todo(jeff.lill): 
-            //
-            // Get rid of this once CouchbaseException no longer derives from ApplicationException.
-
-            throw new NotImplementedException();
-#else
             var currentRevision    = details.Document.CurrentRevision;
             var unsavedRevision    = currentRevision.CreateRevision();
             var mostRecentConflict = details.ConflictingRevisions.First();
@@ -53,7 +46,6 @@ namespace Couchbase.Lite
             unsavedRevision.ReplaceAttachmentsFrom(mostRecentConflict);
 
             details.SavedRevision = unsavedRevision.Save();
-#endif
         }
     }
 }
