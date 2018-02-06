@@ -278,7 +278,7 @@ namespace Neon.Cluster
 
                 foreach (var node in nodes)
                 {
-                    node.Status = "ready";
+                    node.Status = "[x] ready";
                 }
 
                 DisplayStatus();
