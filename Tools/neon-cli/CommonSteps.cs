@@ -372,7 +372,7 @@ ClientAliveCountMax 20
             // Clear any DHCP leases to be super sure that cloned node
             // VMs will obtain fresh IP addresses.
 
-            node.Status = "clearing DHCP leases";
+            node.Status = "clear DHCP leases";
             node.SudoCommand("rm -f /var/lib/dhcp/*");
 
             // Indicate that the node has been fully prepared.

@@ -472,16 +472,16 @@ namespace Neon.Cluster
             }
             else
             {
-                // We mark completed steps with a "* " prefix and indent
-                // non-completed steps status with two blanks.
+                // We mark completed steps with a "[x] " or "[!] " prefix and
+                // indent non-completed steps status with four blanks.
 
-                if (node.Status.StartsWith("* "))
+                if (node.Status.StartsWith("[x] ") || node.Status.StartsWith("[!] "))
                 {
                     return node.Status;
                 }
                 else
                 {
-                    return "  " + node.Status;
+                    return "    " + node.Status;
                 }
             }
         }
