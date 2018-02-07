@@ -16,7 +16,7 @@
 # Execute the shimmed command.
 
 if [ ! -f /shim/__shim.sh ] ; then
-    echo "*** ERROR: The [neon-cli] image can only be invoked by a [neon-cli] shim running on the workstation."
+    echo "*** ERROR: The [neon-cli] container cannot locate the script created by the [neon] tool."
     exit 1
 fi
 
