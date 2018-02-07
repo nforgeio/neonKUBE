@@ -273,7 +273,7 @@ namespace Neon.Cluster
             }
             else
             {
-                vmDriveFolder = @"C:\Users\Public\Documents\Hyper-V\Virtual Hard Disks\";
+                vmDriveFolder = HyperVClient.DefaultDriveFolder;
             }
 
             Directory.CreateDirectory(vmDriveFolder);
@@ -445,7 +445,7 @@ namespace Neon.Cluster
                 controller.SetOperationStatus("Scanning virtual machines");
 
                 var existingMachines = hyperv.ListVMs();
-                var conflicts = string.Empty;
+                var conflicts        = string.Empty;
 
                 controller.SetOperationStatus("Stopping virtual machines");
 

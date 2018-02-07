@@ -32,6 +32,20 @@ namespace Neon.Cluster.HyperV
     /// <threadsafety instance="false"/>
     public class HyperVClient : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Returns the path to the default Hyper-V virtual drive folder.
+        /// </summary>
+        public static string DefaultDriveFolder
+        {
+            get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), "Public Documents", "Hyper-V", "Virtual hard disks"); }
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private PowerShell      powershell;
 
         /// <summary>
@@ -145,25 +159,39 @@ namespace Neon.Cluster.HyperV
         /// The number of virutal processors to assign to the machine.  This defaults to <b>4</b>.</param>
         /// <param name="drivePath">
         /// Optionally specifies the path where the virtual hard drive will be located.  Pass 
-        /// <c>null</c> to  have Hyper-V create the drive file or specify a path to the existing 
-        /// drive file to be used.
+        /// <c>null</c> or empty to to default to <b>MACHINE-NAME.vhdx</b> located in the default
+        /// Hyper-V virtual machine drive folder.
         /// </param>
-        /// <param name="checkpointDrive">Optionally enables drive checkpoints.  This defaults to <c>false</c>.</param>
+        /// <param name="checkpointDrives">Optionally enables drive checkpoints.  This defaults to <c>false</c>.</param>
         /// <param name="templateDrivePath">
         /// If this is specified and <paramref name="drivePath"/> is not <c>null</c> then
         /// the hard drive template at <paramref name="templateDrivePath"/> will be copied
         /// to <paramref name="drivePath"/> before creating the machine.
         /// </param>
         /// <param name="switchName">Optional name of the virtual switch.</param>
+        /// <param name="drives">
+        /// Optionally specifies any virtual drives to be created (if necessary) and 
+        /// then attached to the new virtual machine.
+        /// </param>
+        /// <remarks>
+        /// <note>
+        /// The <see cref="VirtualDrive.Path"/> property of <paramref name="drives"/> may be
+        /// passed as <c>null</c> or empty.  In this case, the drive name will default to
+        /// being located in the standard Hyper-V virtual drivers folder and will be named
+        /// <b>MACHINE-NAME-#.vhdx</b>, where <b>#</b> is the one-based index of the drive
+        /// in the enumeration.
+        /// </note>
+        /// </remarks>
         public void AddVM(
             string  machineName, 
             string  memorySize = "2GB", 
             string  minimumMemorySize = null, 
             int     processorCount = 4, 
             string  drivePath = null,
-            bool    checkpointDrive = false,
+            bool    checkpointDrives = false,
             string  templateDrivePath = null, 
-            string  switchName = null)
+            string  switchName = null,
+            IEnumerable<VirtualDrive> drives = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
             CheckDisposed();
@@ -171,6 +199,11 @@ namespace Neon.Cluster.HyperV
             if (string.IsNullOrEmpty(minimumMemorySize))
             {
                 minimumMemorySize = memorySize;
+            }
+
+            if (string.IsNullOrEmpty(drivePath))
+            {
+                drivePath = Path.Combine(DefaultDriveFolder, $"{machineName}.vhdx");
             }
 
             if (VMExists(machineName))
@@ -205,10 +238,41 @@ namespace Neon.Cluster.HyperV
 
             powershell.Execute($"Set-VM -Name \"{machineName}\" -ProcessorCount {processorCount} -MemoryMinimumBytes {minimumMemorySize} -MemoryMaximumBytes {memorySize}");
 
-            // Builds of Windows 10 since the August 2017 Creators Update enable automatic
+            // Create and attach any additional drives as required.
+
+            if (drives != null)
+            {
+                var driveIndex = 1;
+
+                foreach (var drive in drives.Where(d => d != null))
+                {
+                    if (string.IsNullOrEmpty(drive.Path))
+                    {
+                        drive.Path = Path.Combine(HyperVClient.DefaultDriveFolder, $"{machineName}-{driveIndex}.vhdx");
+                    }
+
+                    if (drive.Size <= 0)
+                    {
+                        throw new ArgumentException("Virtual drive size must be greater than 0.");
+                    }
+
+                    driveIndex++;
+
+                    if (!File.Exists(drive.Path))
+                    {
+                        powershell.Execute($"New-VHD -Path \"{drive.Path}\" -SizeBytes {drive.Size}");
+                    }
+
+                    var fixedOrDynamic = drive.IsDynamic ? "-Dynamic" : "-Fixed";
+
+                    powershell.Execute($"Add-VMHardDiskDrive -VMName \"{machineName}\" -Path \"{drive.Path}\" {fixedOrDynamic}");
+                }
+            }
+
+            // Windows 10 releases since the August 2017 Creators Update enable automatic
             // virtual drive checkpointing (which is annoying).
 
-            if (!checkpointDrive)
+            if (!checkpointDrives)
             {
                 powershell.Execute($"Set-VM -CheckpointType Disabled -Name \"{machineName}\"");
             }
