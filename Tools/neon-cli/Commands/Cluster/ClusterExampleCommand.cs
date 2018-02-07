@@ -536,6 +536,30 @@ USAGE:
         ""Consul"": true
     },
 
+    // Integrated Ceph Storage Cluster settings.
+
+`   ""Ceph"": {
+
+        // Indicates whether Ceph storage is to be enabled for the cluster.  
+        // This defaults to [false].
+
+        ""Enabled"": false,
+
+        // Specifies the default size of the Ceph drive created for cloud and
+        // hypervisor based environments.  This can be an long byte count or a long
+        // with units like [512MB] or [2GB].  This can be overridden 
+        // for specific nodes.  This defaults to [128GB].
+
+        ""DriveSize"": ""128GB"", 
+
+        // Specifies the default amount of RAM to allocate to Ceph for caching.
+        // This can be an long byte count or a long with units like [512MB]
+        // or [2GB].  This can be overridden for specific nodes.  This defaults
+        // to [1GB].
+
+        ""CacheSize"": ""1GB""
+    },
+
     //-------------------------------------------------------------------------
     // This section describes the physical and/or virtual machines that 
     // will host your cluster.  There are three basic types of nodes:
@@ -578,11 +602,11 @@ USAGE:
     //                          in the Ansible host inventory file when
     //                          executing running Ansible playbooks.
     //
-    //      The following properties are honored when provisioning nodes
-    //      as virtual machines to the the [local-hyper-v] and [xenserver]
-    //      hosting environmewnts.  Many of these will override the matching
-    //      [Hosting] options, allowing you to override those defaults for
-    //      specific nodes.
+    //  The following properties are honored when provisioning nodes
+    //  as virtual machines to the the [local-hyper-v] and [xenserver]
+    //  hosting environmewnts.  Many of these will override the matching
+    //  [Hosting] options, allowing you to override those defaults for
+    //  specific nodes.
     //
     //      VmHost              Identifies the hypervisor host machine from
     //                          [Hosting.VmHosts] by name where the node
@@ -607,6 +631,8 @@ USAGE:
     //                          This is specified as a string that can be a
     //                          long byte count or a long with units like 
     //                          [512MB] or [2GB].
+    //
+    //  
     //
     // Node Labels
     // -----------

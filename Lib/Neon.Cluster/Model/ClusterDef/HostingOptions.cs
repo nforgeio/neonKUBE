@@ -37,53 +37,6 @@ namespace Neon.Cluster
         internal const string DefaultVmMinimumMemory = "2GB";
         internal const string DefaultVmDisk          = "64GB";
 
-        /// <summary>
-        /// Ensures that a VM memory or disk size specification is valid and also
-        /// converts the value to the corresponding long count.
-        /// </summary>
-        /// <param name="sizeValue">The size value string.</param>
-        /// <param name="optionsType">Type of the property holding the size property (used for error reporting).</param>
-        /// <param name="propertyName">The size property name (used for error reporting).</param>
-        /// <returns>The size converted into a <c>long</c>.</returns>
-        internal static long ValidateVMSize(string sizeValue, Type optionsType, string propertyName)
-        {
-            long size;
-
-            if (string.IsNullOrEmpty(sizeValue))
-            {
-                throw new ClusterDefinitionException($"[{optionsType.Name}.{propertyName}] cannot be NULL or empty.");
-            }
-
-            if (sizeValue.EndsWith("MB", StringComparison.InvariantCultureIgnoreCase))
-            {
-                var count = sizeValue.Substring(0, sizeValue.Length - 2);
-
-                if (!long.TryParse(count, out size) || size <= 0)
-                {
-                    throw new ClusterDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] is not valid.");
-                }
-
-                size *= NeonHelper.Mega;
-            }
-            else if (sizeValue.EndsWith("GB", StringComparison.InvariantCultureIgnoreCase))
-            {
-                var count = sizeValue.Substring(0, sizeValue.Length - 2);
-
-                if (!long.TryParse(count, out size) || size <= 0)
-                {
-                    throw new ClusterDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] is not valid.");
-                }
-
-                size *= NeonHelper.Giga;
-            }
-            else if (!long.TryParse(sizeValue, out size) || size <= 0)
-            {
-                throw new ClusterDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] is not valid.");
-            }
-
-            return size;
-        }
-
         //---------------------------------------------------------------------
         // Instance members
 
@@ -462,9 +415,9 @@ namespace Neon.Cluster
             VmDisk          = VmDisk ?? DefaultVmMinimumMemory;
             VmHosts         = VmHosts ?? new List<VmHost>();
 
-            HostingOptions.ValidateVMSize(VmMemory, this.GetType(), nameof(VmMemory));
-            HostingOptions.ValidateVMSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
-            HostingOptions.ValidateVMSize(VmDisk, this.GetType(), nameof(VmDisk));
+            ClusterDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
+            ClusterDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
+            ClusterDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
 
             // Verify that the hypervisor host machines have unique names and addresses.
 

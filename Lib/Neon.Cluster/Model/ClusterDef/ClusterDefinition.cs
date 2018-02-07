@@ -182,6 +182,53 @@ namespace Neon.Cluster
             return name != null && NameRegex.IsMatch(name);
         }
 
+        /// <summary>
+        /// Ensures that a VM memory or disk size specification is valid and also
+        /// converts the value to the corresponding long count.
+        /// </summary>
+        /// <param name="sizeValue">The size value string.</param>
+        /// <param name="optionsType">Type of the property holding the size property (used for error reporting).</param>
+        /// <param name="propertyName">The size property name (used for error reporting).</param>
+        /// <returns>The size converted into a <c>long</c>.</returns>
+        internal static long ValidateSize(string sizeValue, Type optionsType, string propertyName)
+        {
+            long size;
+
+            if (string.IsNullOrEmpty(sizeValue))
+            {
+                throw new ClusterDefinitionException($"[{optionsType.Name}.{propertyName}] cannot be NULL or empty.");
+            }
+
+            if (sizeValue.EndsWith("MB", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var count = sizeValue.Substring(0, sizeValue.Length - 2);
+
+                if (!long.TryParse(count, out size) || size <= 0)
+                {
+                    throw new ClusterDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] is not valid.");
+                }
+
+                size *= NeonHelper.Mega;
+            }
+            else if (sizeValue.EndsWith("GB", StringComparison.InvariantCultureIgnoreCase))
+            {
+                var count = sizeValue.Substring(0, sizeValue.Length - 2);
+
+                if (!long.TryParse(count, out size) || size <= 0)
+                {
+                    throw new ClusterDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] is not valid.");
+                }
+
+                size *= NeonHelper.Giga;
+            }
+            else if (!long.TryParse(sizeValue, out size) || size <= 0)
+            {
+                throw new ClusterDefinitionException($"[{optionsType.Name}.{propertyName}={sizeValue}] is not valid.");
+            }
+
+            return size;
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
@@ -350,6 +397,13 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "Dashboard", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(null)]
         public DashboardOptions Dashboard { get; set; } = new DashboardOptions();
+
+        /// <summary>
+        /// Integrated Ceph storage cluster options.
+        /// </summary>
+        [JsonProperty(PropertyName = "Ceph", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(null)]
+        public CephOptions Ceph { get; set; } = new CephOptions();
 
         /// <summary>
         /// The Docker image to be used to provision public and private proxies and proxy bridges.
@@ -541,6 +595,7 @@ namespace Neon.Cluster
             Vault     = Vault ?? new VaultOptions();
             Log       = Log ?? new LogOptions();
             Dashboard = Dashboard ?? new DashboardOptions();
+            Ceph      = Ceph ?? new CephOptions();
 
             ProxyImage          = ProxyImage ?? defaultProxyImage;
             ProxyVaultImage     = ProxyVaultImage ?? defaultProxyVaultImage;
@@ -556,6 +611,7 @@ namespace Neon.Cluster
             Vault.Validate(this);
             Log.Validate(this);
             Dashboard.Validate(this);
+            Ceph.Validate(this);
 
             if (TimeSources == null || TimeSources.Length == 0 || TimeSources.Count(ts => string.IsNullOrWhiteSpace(ts)) > 0)
             {

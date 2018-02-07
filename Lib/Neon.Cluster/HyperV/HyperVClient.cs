@@ -134,8 +134,8 @@ namespace Neon.Cluster.HyperV
         /// </summary>
         /// <param name="machineName">The machine name.</param>
         /// <param name="memorySize">
-        /// A string specifying the memory size.  This can be an integer byte count or an integer with
-        /// units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>2GB</b>.
+        /// A string specifying the memory size.  This can be an long byte count or a
+        /// long with units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>2GB</b>.
         /// </param>
         /// <param name="minimumMemorySize">
         /// Optionally specifies the minimum memory size.  This defaults to <c>null</c> which will

@@ -353,13 +353,13 @@ namespace Neon.Cluster
         /// <returns>The size in bytes.</returns>
         internal long GetVmMemory(ClusterDefinition clusterDefinition)
         {
-            if (VmMemory != null)
+            if (!string.IsNullOrEmpty(VmMemory))
             {
-                return HostingOptions.ValidateVMSize(VmMemory, this.GetType(), nameof(VmMemory));
+                return ClusterDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
             }
             else
             {
-                return HostingOptions.ValidateVMSize(clusterDefinition.Hosting.VmMemory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmMemory));
+                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.VmMemory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmMemory));
             }
         }
 
@@ -371,13 +371,13 @@ namespace Neon.Cluster
         /// <returns>The size in bytes.</returns>
         internal long GetVmMinimumMemory(ClusterDefinition clusterDefinition)
         {
-            if (VmMinimumMemory != null)
+            if (!string.IsNullOrEmpty(VmMinimumMemory))
             {
-                return HostingOptions.ValidateVMSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
+                return ClusterDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
             }
-            else if (clusterDefinition.Hosting.VmMinimumMemory != null)
+            else if (!string.IsNullOrEmpty(clusterDefinition.Hosting.VmMinimumMemory))
             {
-                return HostingOptions.ValidateVMSize(clusterDefinition.Hosting.VmMinimumMemory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmMinimumMemory));
+                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.VmMinimumMemory, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmMinimumMemory));
             }
             else
             {
@@ -395,13 +395,146 @@ namespace Neon.Cluster
         /// <returns>The size in bytes.</returns>
         internal long GetVmDisk(ClusterDefinition clusterDefinition)
         {
-            if (VmDisk != null)
+            if (!string.IsNullOrEmpty(VmDisk))
             {
-                return HostingOptions.ValidateVMSize(VmDisk, this.GetType(), nameof(VmDisk));
+                return ClusterDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
             }
             else
             {
-                return HostingOptions.ValidateVMSize(clusterDefinition.Hosting.VmDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmDisk));
+                return ClusterDefinition.ValidateSize(clusterDefinition.Hosting.VmDisk, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Hosting.VmDisk));
+            }
+        }
+
+        /// <summary>
+        /// Indicates that a Ceph monitor will be deployed to this node if 
+        /// <see cref="CephOptions.Enabled"/> is <c>true</c>.  This defaults
+        /// to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// Monitors maintain maps of the cluster state, including the monitor map, 
+        /// manager map, the OSD map, and the CRUSH map. These maps are critical
+        /// cluster state required for Ceph daemons to coordinate with each other. 
+        /// Monitors are also responsible for managing authentication between
+        /// daemons and clients. At least three monitors are normally required 
+        /// for redundancy and high availability.
+        /// </remarks>
+        [JsonProperty(PropertyName = "CephMonitor", Required = Required.Default)]
+        [DefaultValue(false)]
+        public bool CephMonitor { get; set; } = false;
+
+        /// <summary>
+        /// Indicates that a Ceph manager will be deployed to this node if 
+        /// <see cref="CephOptions.Enabled"/> is <c>true</c>.  This defaults
+        /// to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// Managers are responsible for keeping track of runtime metrics and the
+        /// current state of the Ceph cluster, including storage utilization, 
+        /// current performance metrics, and system load. The Ceph Manager daemons
+        /// also host python-based plugins to manage and expose Ceph cluster information,
+        /// including a web-based dashboard and REST API. At least two managers are
+        /// normally required for high availability.
+        /// </remarks>
+        [JsonProperty(PropertyName = "CephManager", Required = Required.Default)]
+        [DefaultValue(false)]
+        public bool CephManager { get; set; } = false;
+
+        /// <summary>
+        /// Indicates that a Ceph OSD (object storage daemon) will be deployed to this
+        /// if <see cref="CephOptions.Enabled"/> is <c>true</c>.  This defaults
+        /// to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// OSDs store data, handles data replication, recovery, rebalancing, and
+        /// provides some monitoring information to Ceph Monitors and Managers by 
+        /// checking other Ceph OSD Daemons for a heartbeat. At least 3 Ceph OSDs 
+        /// are normally required for redundancy and high availability.
+        /// </remarks>
+        [JsonProperty(PropertyName = "CephOSD", Required = Required.Default)]
+        [DefaultValue(false)]
+        public bool CephOSD { get; set; } = false;
+
+        /// <summary>
+        /// Indicates that a Ceph MDS (metadata server) will be deployed to this
+        /// if <see cref="CephOptions.Enabled"/> is <c>true</c>.  This defaults
+        /// to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// Metadata servers store metadata on behalf of the Ceph Filesystem 
+        /// (i.e. Ceph Block Devices and Ceph Object Storage do not use MDS). 
+        /// Ceph Metadata Servers allow POSIX file system users to execute basic 
+        /// commands (like ls, find, etc.) without placing an enormous burden on
+        /// the Ceph Storage Cluster.
+        /// </remarks>
+        [JsonProperty(PropertyName = "CaphMSD", Required = Required.Default)]
+        [DefaultValue(false)]
+        public bool CaphMSD { get; set; } = false;
+
+        /// <summary>
+        /// Specifies the size of the Ceph drive created for cloud and
+        /// hypervisor based environments if the integrated Ceph storage cluster is
+        /// enabled.  This can be an long byte count or a long with units like 
+        /// <b>512MB</b> or <b>2GB</b>.  This can be overridden for specific nodes.
+        /// This defaults to <see cref="CephOptions.DriveSize"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "CephDriveSize", Required = Required.Default)]
+        [DefaultValue(null)]
+        public string CephDriveSize { get; set; } = null;
+
+        /// <summary>
+        /// Specifies the default amount of RAM to assign to Ceph for caching if
+        /// the integrated Ceph storage cluster is enabled.  This can be an long 
+        /// byte count or a long with units like <b>512MB</b>  or <b>2GB</b>.
+        /// This can be overridden for specific nodes.  This defaults
+        /// to <see cref="CephOptions.CacheSize"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "CephCacheSize", Required = Required.Default)]
+        [DefaultValue(null)]
+        public string CephCacheSize { get; set; } = null;
+
+        /// <summary>
+        /// Returns the size of the Ceph drive created for cloud and hypervisor
+        /// based environments if the integrated Ceph storage cluster is enabled.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
+        internal long GetCephDriveSize(ClusterDefinition clusterDefinition)
+        {
+            if (!clusterDefinition.Ceph.Enabled)
+            {
+                return 0;
+            }
+
+            if (!string.IsNullOrEmpty(CephDriveSize))
+            {
+                return ClusterDefinition.ValidateSize(CephDriveSize, this.GetType(), nameof(CephDriveSize));
+            }
+            else
+            {
+                return ClusterDefinition.ValidateSize(clusterDefinition.Ceph.DriveSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.DriveSize));
+            }
+        }
+
+        /// <summary>
+        /// Returns the size of the Ceph drive created for cloud and hypervisor
+        /// based environments if the integrated Ceph storage cluster is enabled.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
+        internal long GetCephCacheSize(ClusterDefinition clusterDefinition)
+        {
+            if (!clusterDefinition.Ceph.Enabled)
+            {
+                return 0;
+            }
+
+            if (!string.IsNullOrEmpty(CephDriveSize))
+            {
+                return ClusterDefinition.ValidateSize(CephCacheSize, this.GetType(), nameof(CephCacheSize));
+            }
+            else
+            {
+                return ClusterDefinition.ValidateSize(clusterDefinition.Ceph.CacheSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.CacheSize));
             }
         }
 
@@ -486,17 +619,17 @@ namespace Neon.Cluster
 
             if (VmMemory != null)
             {
-                HostingOptions.ValidateVMSize(VmMemory, this.GetType(), nameof(VmMemory));
+                ClusterDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
             }
 
             if (VmMinimumMemory != null)
             {
-                HostingOptions.ValidateVMSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
+                ClusterDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
             }
 
             if (VmDisk != null)
             {
-                HostingOptions.ValidateVMSize(VmDisk, this.GetType(), nameof(VmDisk));
+                ClusterDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
             }
         }
     }

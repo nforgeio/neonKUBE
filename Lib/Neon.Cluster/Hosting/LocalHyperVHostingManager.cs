@@ -144,7 +144,7 @@ namespace Neon.Cluster
 
                 if (node.Labels.ComputeRamMB == 0)
                 {
-                    node.Labels.ComputeRamMB = (int)(HostingOptions.ValidateVMSize(cluster.Definition.Hosting.VmMemory, typeof(HostingOptions), nameof(HostingOptions.VmMemory))/NeonHelper.Mega);
+                    node.Labels.ComputeRamMB = (int)(ClusterDefinition.ValidateSize(cluster.Definition.Hosting.VmMemory, typeof(HostingOptions), nameof(HostingOptions.VmMemory))/NeonHelper.Mega);
                 }
 
                 if (node.Labels.StorageCapacityGB == 0)
