@@ -43,7 +43,7 @@ namespace Neon.Cluster
         public bool Enabled { get; set; } = false;
 
         /// <summary>
-        /// Specifies the default size of the Ceph drive created for cloud and
+        /// Specifies the default size of the Ceph OSD drives created for cloud and
         /// hypervisor based environments.  This can be an long byte count or a long
         /// with units like <b>512MB</b> or <b>2GB</b>.  This can be overridden 
         /// for specific nodes.  This defaults to <b>128GB</b>.
@@ -53,8 +53,8 @@ namespace Neon.Cluster
         public string DriveSize { get; set; } = defaultDriveSize;
 
         /// <summary>
-        /// Specifies the default amount of RAM to allocate to Ceph for caching.
-        /// This can be an long byte count or a long with units like <b>512MB</b> 
+        /// Specifies the default amount of RAM to allocate to Ceph OSD processes for 
+        /// caching.  This can be an long byte count or a long with units like <b>512MB</b> 
         /// or <b>2GB</b>.  This can be overridden for specific nodes.  This defaults
         /// to <b>1GB</b>.
         /// </summary>

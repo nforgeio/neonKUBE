@@ -437,6 +437,127 @@ namespace Neon.Cluster
         [DefaultValue(false)]
         public bool LogEsData { get; set; } = false;
 
+        //---------------------------------------------------------------------
+        // Ceph Storage Cluster related labels.
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephMonitor"/>.
+        /// </summary>
+        public const string LabelCephMonitor = ClusterDefinition.ReservedLabelPrefix + ".ceph.monitor";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephManager"/>.
+        /// </summary>
+        public const string LabelCephManager = ClusterDefinition.ReservedLabelPrefix + ".ceph.manager";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephOSD"/>.
+        /// </summary>
+        public const string LabelCephOSD = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephMSD"/>.
+        /// </summary>
+        public const string LabelCephMSD = ClusterDefinition.ReservedLabelPrefix + ".ceph.msd";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephDriveSizeGB"/>.
+        /// </summary>
+        public const string LabelCephDriveSizeGB = ClusterDefinition.ReservedLabelPrefix + ".ceph.drivesize";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephCacheSizeMB"/>.
+        /// </summary>
+        public const string LabelCephCacheSizeMB = ClusterDefinition.ReservedLabelPrefix + ".ceph.cachesize";
+
+        /// <summary>
+        /// <b>io.neon.ceph.monitor</b> [<c>bool</c>]: Indicates that a Ceph monitor will be 
+        /// deployed to this node if <see cref="CephOptions.Enabled"/> is <c>true</c>.  This 
+        /// defaults to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// Monitors maintain maps of the cluster state, including the monitor map, 
+        /// manager map, the OSD map, and the CRUSH map. These maps are critical
+        /// cluster state required for Ceph daemons to coordinate with each other. 
+        /// Monitors are also responsible for managing authentication between
+        /// daemons and clients. At least three monitors are normally required 
+        /// for redundancy and high availability.
+        /// </remarks>
+        [JsonProperty(PropertyName = "CephMonitor", Required = Required.Default)]
+        [DefaultValue(false)]
+        public bool CephMonitor { get; set; } = false;
+
+        /// <summary>
+        /// <b>io.neon.ceph.manager</b> [<c>bool</c>]: Indicates that a Ceph manager
+        /// will be deployed to this node if  <see cref="CephOptions.Enabled"/> is 
+        /// <c>true</c>.  This defaults to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// Managers are responsible for keeping track of runtime metrics and the
+        /// current state of the Ceph cluster, including storage utilization, 
+        /// current performance metrics, and system load. The Ceph Manager daemons
+        /// also host python-based plugins to manage and expose Ceph cluster information,
+        /// including a web-based dashboard and REST API. At least two managers are
+        /// normally required for high availability.
+        /// </remarks>
+        [JsonProperty(PropertyName = "CephManager", Required = Required.Default)]
+        [DefaultValue(false)]
+        public bool CephManager { get; set; } = false;
+
+        /// <summary>
+        /// <b>io.neon.ceph.osd</b> [<c>bool</c>]: Indicates that a Ceph OSD 
+        /// (object storage daemon) will be deployed to this if 
+        /// <see cref="CephOptions.Enabled"/> is <c>true</c>.  
+        /// This defaults to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// OSDs store data, handles data replication, recovery, rebalancing, and
+        /// provides some monitoring information to Ceph Monitors and Managers by 
+        /// checking other Ceph OSD Daemons for a heartbeat. At least 3 Ceph OSDs 
+        /// are normally required for redundancy and high availability.
+        /// </remarks>
+        [JsonProperty(PropertyName = "CephOSD", Required = Required.Default)]
+        [DefaultValue(false)]
+        public bool CephOSD { get; set; } = false;
+
+        /// <summary>
+        /// <b>io.neon.ceph.msd</b> [<c>bool</c>]: Indicates that a Ceph MDS 
+        /// (metadata server) will be deployed to this if <see cref="CephOptions.Enabled"/> 
+        /// is <c>true</c>.  This defaults to <c>false</c>.
+        /// </summary>
+        /// <remarks>
+        /// Metadata servers store metadata on behalf of the Ceph Filesystem 
+        /// (i.e. Ceph Block Devices and Ceph Object Storage do not use MDS). 
+        /// Ceph Metadata Servers allow POSIX file system users to execute basic 
+        /// commands (like ls, find, etc.) without placing an enormous burden on
+        /// the Ceph Storage Cluster.
+        /// </remarks>
+        [JsonProperty(PropertyName = "CaphMSD", Required = Required.Default)]
+        [DefaultValue(false)]
+        public bool CephMSD { get; set; } = false;
+
+        /// <summary>
+        /// <b>io.neon.ceph.drivesize</b> [<c>int</c>]: Specifies the size in gigabytes
+        /// of the Ceph OSD drive created for cloud and hypervisor based environments if the
+        /// integrated Ceph storage cluster is enabled and <see cref="CephOSD"/>
+        /// is <c>true</c> for this node.  This defaults to <see cref="CephOptions.DriveSize"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "CephDriveSizeGB", Required = Required.Default)]
+        [DefaultValue(null)]
+        public int CephDriveSizeGB { get; set; } = 0;
+
+        /// <summary>
+        /// <b>io.neon.ceph.cachesize</b> [<c>int</c>]: Specifies the RAM in megabytes
+        /// to assign to the Ceph OSD for caching if the integrated Ceph storage cluster 
+        /// is enabled  and<see cref="CephOSD"/> is <c>true</c> for this node.
+        /// This defaults to <see cref="CephOptions.CacheSize"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "CephCacheSizeMB", Required = Required.Default)]
+        [DefaultValue(null)]
+        public int CephCacheSizeMB { get; set; } = 0;
+
+        //---------------------------------------------------------------------
+
         /// <summary>
         /// Custom node labels.
         /// </summary>
@@ -496,15 +617,25 @@ namespace Neon.Cluster
                 list.Add(new KeyValuePair<string, object>(LabelStorageSSD,              StorageSSD));
                 list.Add(new KeyValuePair<string, object>(LabelStorageRedundant,        StorageRedundant));
                 list.Add(new KeyValuePair<string, object>(LabelStorageEphemeral,        StorageEphemeral));
+
                 list.Add(new KeyValuePair<string, object>(LabelComputeCores,            ComputeCores));
                 list.Add(new KeyValuePair<string, object>(LabelComputeArchitecture,     ComputeArchitecture));
                 list.Add(new KeyValuePair<string, object>(LabelComputeRamMB,            ComputeRamMB));
                 list.Add(new KeyValuePair<string, object>(LabelComputeSwap,             ComputeSwap));
+
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalLocation,        PhysicalLocation));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalMachine,         PhysicalMachine));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalFaultDomain,     PhysicalFaultDomain));
                 list.Add(new KeyValuePair<string, object>(LabelPhysicalPower,           PhysicalPower));
+
                 list.Add(new KeyValuePair<string, object>(LabelLogEsData,               LogEsData));
+
+                list.Add(new KeyValuePair<string, object>(LabelCephMonitor,             CephMonitor));
+                list.Add(new KeyValuePair<string, object>(LabelCephManager,             CephManager));
+                list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 CephOSD));
+                list.Add(new KeyValuePair<string, object>(LabelCephMSD,                 CephMSD));
+                list.Add(new KeyValuePair<string, object>(LabelCephDriveSizeGB,         CephDriveSizeGB));
+                list.Add(new KeyValuePair<string, object>(LabelCephCacheSizeMB,         CephCacheSizeMB));
 
                 return list;
             }
@@ -590,6 +721,12 @@ namespace Neon.Cluster
 
                         break;
 
+                    case LabelCephManager:              node.Labels.CephManager = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelCephOSD:                  node.Labels.CephOSD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelCephMSD:                  node.Labels.CephMSD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelCephDriveSizeGB:          ParseCheck(label, () => { node.Labels.CephDriveSizeGB = int.Parse(label.Value); }); break;
+                    case LabelCephCacheSizeMB:          ParseCheck(label, () => { node.Labels.CephCacheSizeMB = int.Parse(label.Value); }); break;
+
                     default:
 
                         // Must be a custom label.
@@ -617,7 +754,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Performs a deep copy of the current cluster node to another instance.
+        /// Copies the label properties to another instance.
         /// </summary>
         /// <param name="target">The target instance.</param>
         internal void CopyTo(NodeLabels target)
@@ -641,6 +778,12 @@ namespace Neon.Cluster
             target.PhysicalPower       = this.PhysicalPower;
 
             target.LogEsData           = this.LogEsData;
+
+            target.CephManager         = this.CephManager;
+            target.CephOSD             = this.CephOSD;
+            target.CephMSD             = this.CephMSD;
+            target.CephDriveSizeGB     = this.CephDriveSizeGB;
+            target.CephCacheSizeMB     = this.CephCacheSizeMB;
 
             foreach (var item in this.Custom)
             {
