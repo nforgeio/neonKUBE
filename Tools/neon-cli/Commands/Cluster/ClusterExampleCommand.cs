@@ -666,6 +666,13 @@ USAGE:
     //      LogEsData                     Host Elasticsearch node for cluster
     //                                    logging data (bool)
     //
+    //      CephManager                   Deploy Ceph Manager to the node (bool)
+    //      CephMonitor                   Deploy Ceph Monitor the node (bool)
+    //      CephOSD                       Deploy Ceph OSD to the node (bool)
+    //      CephMSD                       Deploy Ceph MSD to the node (bool)
+    //      CephDriveSizeGB               Ceph OSD drive size in GB (int)
+    //      CephCacheSizeMB               Caph OSD cache size in MB (int)
+    //
     // IMPORTANT: Be sure to set [StorageSSD=true] if your node is backed 
     //            by a SSD so that cluster setup will tune Linux for better 
     //            performance.
@@ -685,7 +692,7 @@ USAGE:
     //            Note that the prefix The [node.labels.io.neoncluster] prefix
     //            is reserved for neonCLUSTER related labels.
 
-            ""Nodes"": {
+    ""Nodes"": {
 
         //---------------------------------------------------------------------
         // Define the cluster management nodes by setting [Manager=true].
