@@ -122,13 +122,18 @@ into the container as the current directory there.  Any installed Ansible
 roles or vault passwords are also mapped into the container.
 
 The Ansible hosts will be set to the nodes in the current cluster.  These
-are organized into four groups:
+are organized into these predefined host groups:
 
     all             - all cluster nodes
     managers        - manager nodes
     workers         - worker nodes
     swarm           - manager or worker nodes
     pets            - pet nodes
+    ceph            - nodes hosting any Ceph storage service
+    ceph-manager    - nodes hosting Ceph manager service
+    ceph-monitor    - nodes hosting Ceph monitor service
+    ceph-osd        - nodes hosting Ceph OSD service
+    ceph-msd        - nodes hosting Ceph MSD service
 
 Host variables will be generated for each cluster node.  These will include
 the variables used by Ansible to establish the SSH connections as well as
@@ -1610,6 +1615,54 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
                 writer.WriteLine("[pets]");
 
                 foreach (var node in login.Definition.SortedNodes.Where(n => n.IsPet))
+                {
+                    writer.WriteLine(node.Name);
+                }
+
+                writer.WriteLine();
+                writer.WriteLine("[ceph]");
+
+                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephManager || n.Labels.CephMonitor || n.Labels.CephOSD || n.Labels.CephMSD))
+                {
+                    writer.WriteLine(node.Name);
+                }
+
+                writer.WriteLine();
+                writer.WriteLine("[ceph]");
+
+                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephManager || n.Labels.CephMonitor || n.Labels.CephOSD || n.Labels.CephMSD))
+                {
+                    writer.WriteLine(node.Name);
+                }
+
+                writer.WriteLine();
+                writer.WriteLine("[ceph-manager]");
+
+                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephManager))
+                {
+                    writer.WriteLine(node.Name);
+                }
+
+                writer.WriteLine();
+                writer.WriteLine("[ceph-monitor]");
+
+                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephMonitor))
+                {
+                    writer.WriteLine(node.Name);
+                }
+
+                writer.WriteLine();
+                writer.WriteLine("[ceph-osd]");
+
+                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephOSD))
+                {
+                    writer.WriteLine(node.Name);
+                }
+
+                writer.WriteLine();
+                writer.WriteLine("[ceph-msd]");
+
+                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephMSD))
                 {
                     writer.WriteLine(node.Name);
                 }
