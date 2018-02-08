@@ -76,8 +76,15 @@ namespace Neon.Cluster
                 return;
             }
 
-            ClusterDefinition.ValidateSize(DriveSize, this.GetType(), nameof(DriveSize));
-            ClusterDefinition.ValidateSize(CacheSize, this.GetType(), nameof(CacheSize));
+            if (ClusterDefinition.ValidateSize(DriveSize, this.GetType(), nameof(DriveSize)) < NeonHelper.Giga)
+            {
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(DriveSize)}={DriveSize}] is cannot be less than [1GB].");
+            }
+
+            if (ClusterDefinition.ValidateSize(CacheSize, this.GetType(), nameof(CacheSize)) < 100 * NeonHelper.Mega)
+            {
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(CacheSize)}={CacheSize}] is cannot be less than [100MB].");
+            }
         }
     }
 }

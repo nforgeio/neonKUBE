@@ -407,8 +407,8 @@ namespace Neon.Cluster
 
 
         /// <summary>
-        /// Returns the size of the Ceph drive created for cloud and hypervisor
-        /// based environments if the integrated Ceph storage cluster is enabled.
+        /// Returns the size in bytes of the Ceph drive created for this node if 
+        /// integrated Ceph storage cluster is enabled.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
@@ -425,13 +425,16 @@ namespace Neon.Cluster
             }
             else
             {
-                return Labels.CephDriveSizeGB = (int)(ClusterDefinition.ValidateSize(clusterDefinition.Ceph.DriveSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.DriveSize))/NeonHelper.Giga);
+                Labels.CephDriveSizeGB = (int)(ClusterDefinition.ValidateSize(clusterDefinition.Ceph.DriveSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.DriveSize))/NeonHelper.Giga);
+
+                return (long)Labels.CephDriveSizeGB * NeonHelper.Giga;
             }
         }
 
         /// <summary>
-        /// Returns the size of the Ceph drive created for cloud and hypervisor
-        /// based environments if the integrated Ceph storage cluster is enabled.
+        /// Returns the size in bytes of RAM to allocate to the OSD cache
+        /// on this node integrated Ceph storage cluster is enabled and
+        /// OSD is deployed to the node.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
@@ -448,7 +451,9 @@ namespace Neon.Cluster
             }
             else
             {
-                return Labels.CephCacheSizeMB = (int)(ClusterDefinition.ValidateSize(clusterDefinition.Ceph.CacheSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.CacheSize))/NeonHelper.Mega);
+                Labels.CephCacheSizeMB = (int)(ClusterDefinition.ValidateSize(clusterDefinition.Ceph.CacheSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.CacheSize))/NeonHelper.Mega);
+
+                return (long)Labels.CephCacheSizeMB * NeonHelper.Mega;
             }
         }
 

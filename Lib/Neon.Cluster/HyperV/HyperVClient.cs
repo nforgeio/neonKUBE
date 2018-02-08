@@ -40,7 +40,7 @@ namespace Neon.Cluster.HyperV
         /// </summary>
         public static string DefaultDriveFolder
         {
-            get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), "Public Documents", "Hyper-V", "Virtual hard disks"); }
+            get { return Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.CommonDocuments), "Hyper-V", "Virtual hard disks"); }
         }
 
         //---------------------------------------------------------------------
@@ -169,13 +169,13 @@ namespace Neon.Cluster.HyperV
         /// to <paramref name="drivePath"/> before creating the machine.
         /// </param>
         /// <param name="switchName">Optional name of the virtual switch.</param>
-        /// <param name="drives">
-        /// Optionally specifies any virtual drives to be created (if necessary) and 
-        /// then attached to the new virtual machine.
+        /// <param name="extraDrives">
+        /// Optionally specifies any additional virtual drives to be created and 
+        /// then attached to the new virtual machine (e.g. for Ceph OSD).
         /// </param>
         /// <remarks>
         /// <note>
-        /// The <see cref="VirtualDrive.Path"/> property of <paramref name="drives"/> may be
+        /// The <see cref="VirtualDrive.Path"/> property of <paramref name="extraDrives"/> may be
         /// passed as <c>null</c> or empty.  In this case, the drive name will default to
         /// being located in the standard Hyper-V virtual drivers folder and will be named
         /// <b>MACHINE-NAME-#.vhdx</b>, where <b>#</b> is the one-based index of the drive
@@ -183,15 +183,15 @@ namespace Neon.Cluster.HyperV
         /// </note>
         /// </remarks>
         public void AddVM(
-            string  machineName, 
-            string  memorySize = "2GB", 
-            string  minimumMemorySize = null, 
-            int     processorCount = 4, 
-            string  drivePath = null,
-            bool    checkpointDrives = false,
-            string  templateDrivePath = null, 
-            string  switchName = null,
-            IEnumerable<VirtualDrive> drives = null)
+            string                      machineName, 
+            string                      memorySize        = "2GB", 
+            string                      minimumMemorySize = null, 
+            int                         processorCount    = 4, 
+            string                      drivePath         = null,
+            bool                        checkpointDrives  = false,
+            string                      templateDrivePath = null, 
+            string                      switchName        = null,
+            IEnumerable<VirtualDrive>   extraDrives       = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(machineName));
             CheckDisposed();
@@ -201,9 +201,15 @@ namespace Neon.Cluster.HyperV
                 minimumMemorySize = memorySize;
             }
 
+            var driveFolder = DefaultDriveFolder;
+
             if (string.IsNullOrEmpty(drivePath))
             {
-                drivePath = Path.Combine(DefaultDriveFolder, $"{machineName}.vhdx");
+                drivePath = Path.Combine(driveFolder, $"{machineName}-[0].vhdx");
+            }
+            else
+            {
+                driveFolder = Path.GetDirectoryName(Path.GetFullPath(drivePath));
             }
 
             if (VMExists(machineName))
@@ -213,7 +219,7 @@ namespace Neon.Cluster.HyperV
 
             // Copy the template VHDX file.
 
-            if (!string.IsNullOrEmpty(drivePath) && templateDrivePath != null)
+            if (templateDrivePath != null)
             {
                 File.Copy(templateDrivePath, drivePath);
             }
@@ -240,15 +246,15 @@ namespace Neon.Cluster.HyperV
 
             // Create and attach any additional drives as required.
 
-            if (drives != null)
+            if (extraDrives != null)
             {
-                var driveIndex = 1;
+                var diskNumber = 1;
 
-                foreach (var drive in drives.Where(d => d != null))
+                foreach (var drive in extraDrives.Where(d => d != null))
                 {
                     if (string.IsNullOrEmpty(drive.Path))
                     {
-                        drive.Path = Path.Combine(HyperVClient.DefaultDriveFolder, $"{machineName}-{driveIndex}.vhdx");
+                        drive.Path = Path.Combine(driveFolder, $"{machineName}-[{diskNumber}].vhdx");
                     }
 
                     if (drive.Size <= 0)
@@ -256,16 +262,17 @@ namespace Neon.Cluster.HyperV
                         throw new ArgumentException("Virtual drive size must be greater than 0.");
                     }
 
-                    driveIndex++;
-
-                    if (!File.Exists(drive.Path))
+                    if (File.Exists(drive.Path))
                     {
-                        powershell.Execute($"New-VHD -Path \"{drive.Path}\" -SizeBytes {drive.Size}");
+                        File.Delete(drive.Path);
                     }
 
                     var fixedOrDynamic = drive.IsDynamic ? "-Dynamic" : "-Fixed";
 
-                    powershell.Execute($"Add-VMHardDiskDrive -VMName \"{machineName}\" -Path \"{drive.Path}\" {fixedOrDynamic}");
+                    powershell.Execute($"New-VHD -Path \"{drive.Path}\" {fixedOrDynamic} -SizeBytes {drive.Size}");
+                    powershell.Execute($"Add-VMHardDiskDrive -VMName \"{machineName}\" -Path \"{drive.Path}\"");
+
+                    diskNumber++;
                 }
             }
 

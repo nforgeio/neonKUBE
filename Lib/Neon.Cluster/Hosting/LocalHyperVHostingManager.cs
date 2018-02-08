@@ -544,7 +544,7 @@ namespace Neon.Cluster
                 // Extract the template file contents to the virtual machine's
                 // virtual hard drive file.
 
-                var drivePath = Path.Combine(vmDriveFolder, $"{vmName}.vhdx");
+                var drivePath = Path.Combine(vmDriveFolder, $"{vmName}-[0].vhdx");
 
                 using (var zip = new ZipFile(driveTemplatePath))
                 {
@@ -610,18 +610,39 @@ namespace Neon.Cluster
                     }
                 }
 
+                // Stop and delete the virtual machine if one exists.
+
+                if (hyperv.VMExists(vmName))
+                {
+                    hyperv.StopVM(vmName);
+                    hyperv.RemoveVM(vmName);
+                }
+
+                // We need to create a raw drive if the node hosts a Ceph OSD.
+
+                var extraDrives = new List<VirtualDrive>();
+
+                if (node.Metadata.Labels.CephOSD)
+                {
+                    extraDrives.Add(
+                        new VirtualDrive()
+                        {
+                            IsDynamic = true,
+                            Size      = node.Metadata.GetCephDriveSize(cluster.Definition),
+                            Path      = Path.Combine(vmDriveFolder, $"{vmName}-[1].vhdx")
+                        });
+                }
+
                 // Create the virtual machine if it doesn't already exist.
 
-                if (!hyperv.VMExists(vmName))
-                {
-                    node.Status = $"create virtual machine";
-                    hyperv.AddVM(
-                        vmName,
-                        memorySize: cluster.Definition.Hosting.VmMemory,
-                        minimumMemorySize: cluster.Definition.Hosting.VmMinimumMemory,
-                        drivePath: drivePath,
-                        switchName: switchName);
-                }
+                node.Status = $"create virtual machine";
+                hyperv.AddVM(
+                    vmName,
+                    memorySize: cluster.Definition.Hosting.VmMemory,
+                    minimumMemorySize: cluster.Definition.Hosting.VmMinimumMemory,
+                    drivePath: drivePath,
+                    switchName: switchName,
+                    extraDrives: extraDrives);
 
                 node.Status = $"start virtual machine";
 

@@ -803,6 +803,19 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
+            if (clusterDefinition.Ceph.Enabled)
+            {
+                if (CephDriveSizeGB > 0 && CephDriveSizeGB < NeonHelper.Giga)
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephDriveSizeGB)}={CephDriveSizeGB}] is cannot be less than [1GB].");
+                }
+
+                if (CephCacheSizeMB > 0 && CephCacheSizeMB < 100 * NeonHelper.Mega)
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephCacheSizeMB)}={CephCacheSizeMB}] is cannot be less than [100MB].");
+                }
+            }
+
             // Verify that custom node label names satisfy the 
             // following criteria:
             // 
