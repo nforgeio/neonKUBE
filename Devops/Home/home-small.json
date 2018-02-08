@@ -37,12 +37,16 @@
   "Log": {
     "Enabled": true
   },
+  "Ceph": {
+    "Enabled": true
+  },
   "Nodes": {
     "manager-0": {
       "Role": "manager",
       "PrivateAddress": "10.0.0.30",
       "Labels": {
-        "StorageSSD": true
+        "StorageSSD": true,
+        "CephOSD": true
       }
     },
     "worker-0": {

@@ -31,6 +31,7 @@ namespace Neon.Cluster
     /// </summary>
     public class CephOptions
     {
+        private const string defaultVersion   = "luminous/12.2.2";
         private const string defaultDriveSize = "128GB";
         private const string defaultCacheSize = "1GB";
 
@@ -41,6 +42,16 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "Enabled", Required = Required.Default)]
         [DefaultValue(false)]
         public bool Enabled { get; set; } = false;
+
+        /// <summary>
+        /// Specifies the Ceph software release name and version, formatted like
+        /// "<b>luminous/12.2.2</b>".  The Ceph software releases are documented 
+        /// <a href="http://docs.ceph.com/docs/master/releases/">here</a>.  This
+        /// defaults to a reasonable recent version.
+        /// </summary>
+        [JsonProperty(PropertyName = "Version", Required = Required.Default)]
+        [DefaultValue(defaultVersion)]
+        public string Version { get; set; } = defaultVersion;
 
         /// <summary>
         /// Specifies the default size of the Ceph OSD drives created for cloud and
@@ -74,6 +85,18 @@ namespace Neon.Cluster
             if (!Enabled)
             {
                 return;
+            }
+
+            if (string.IsNullOrWhiteSpace(Version))
+            {
+                Version = defaultVersion;
+            }
+
+            var parts = Version.Split('/');
+
+            if (parts.Length != 2 || parts[0] == string.Empty || parts[1] == string.Empty)
+            {
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(Version)}={Version}] is not a valid.  Please use something like [{defaultVersion}].");
             }
 
             if (ClusterDefinition.ValidateSize(DriveSize, this.GetType(), nameof(DriveSize)) < NeonHelper.Giga)

@@ -278,6 +278,11 @@ OPTIONS:
 
             if (!cluster.Definition.BareDocker)
             {
+                if (cluster.Definition.Ceph.Enabled)
+                {
+                    controller.AddStep("ceph install", n => CephInstall(n));
+                }
+
                 controller.AddStep("networks", n => CreateClusterNetworks(n), n => n == cluster.FirstManager);
                 controller.AddStep("node labels", n => AddNodeLabels(n), n => n == cluster.FirstManager);
 
@@ -1558,6 +1563,61 @@ $@"docker login \
                 });
 
             node.Status = "joined";
+        }
+
+        /// <summary>
+        /// Installs the required Ceph Storage Cluster components on the node without
+        /// configuring them.
+        /// </summary>
+        /// <param name="node">The target cluster node.</param>
+        private void CephInstall (SshProxy<NodeDefinition> node)
+        {
+            // Exit if Ceph isn't enabled for the cluster or if this
+            // node hosts no Ceph components.
+
+            if (!cluster.Definition.Ceph.Enabled)
+            {
+                return;
+            }
+
+            // We're going to configure the Ceph release key, repository and packages
+            // on all nodes to make it easier to reconfigure the Ceph cluster manually or 
+            // via tools in the future.  Then, we'll configure the required components 
+            // file all nodes.
+
+            // Extract the Ceph release and version from the configuration.
+
+            var parts       = cluster.Definition.Ceph.Version.Split('/');
+            var cephRelease = parts[0].Trim().ToLowerInvariant();
+            var cephVersion = parts[1].Trim().ToLowerInvariant();
+
+            // We're going to explicitly download the Ceph package and install it
+            // without using the Ceph package repository.  We're doing this to 
+            // avoid problems in the future where somebody does an [apt-get dist-upgrade]
+            // and unintentionally upgrades to a Ceph version that's not directly
+            // compatible with the existing data.
+
+            var linuxRelease = node.SudoCommand("lsb_release -sc").OutputText;
+
+            // $note(jeff.lill):
+            //
+            // I needed to add a "-1" after the Ceph version in the download URL.  The manual
+            // setup documentation indirectly implies that this is part of the Ceph version 
+            // but this seems to conflict with other documentation.  It appears that the
+            // "-1" is present in all of the relevant DEB package URLs so I'm going to 
+            // append that if there isn't already a dash in the version to future proof
+            // this code.
+
+            if (!cephVersion.Contains('-'))
+            {
+                cephVersion += "-1";
+            }
+
+            // https://download.ceph.com/debian-luminous/pool/main/c/ceph/
+
+            node.SudoCommand($"curl -4fsSLv --retry 10 --retry-delay 30 https://download.ceph.com/debian-{cephRelease}/pool/main/c/ceph/ceph_{cephVersion}{linuxRelease}_amd64.deb -o /tmp/ceph.deb");
+            node.SudoCommand($"dpkg --install /tmp/ceph.deb");
+            node.SudoCommand("rm /tmp/ceph.deb");
         }
 
         /// <summary>
