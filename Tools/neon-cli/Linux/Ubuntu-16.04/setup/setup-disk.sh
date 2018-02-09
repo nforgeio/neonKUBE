@@ -13,7 +13,7 @@
 #
 #		http://blog.nuclex-games.com/2009/12/aligning-an-ssd-on-linux/
 
-# $hack(jeff.lill):
+# $todo(jeff.lill):
 #
 # This script is not entirely general purpose.  It will initialize RAID for multiple
 # mounted disks on Azure VMs but it doesn't do this for Hyper-V VMs or physical machines.
