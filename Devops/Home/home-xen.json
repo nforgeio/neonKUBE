@@ -11,13 +11,13 @@
     "VmHosts": [
       {
         "Name": "xentest",
-        "Address": "10.50.0.217"
+        "Address": "10.0.0.188"
       }
     ]
   },
   "Network": {
-    "PremiseSubnet": "10.50.0.0/24",
-    "NodesSubnet": "10.50.0.0/24"
+    "PremiseSubnet": "10.0.0.0/24",
+    "NodesSubnet": "10.0.0.0/24"
   },
   "Vpn": {
     "Enabled": false
@@ -48,7 +48,7 @@
   "Nodes": {
     "manager-0": {
       "Role": "manager",
-      "PrivateAddress": "10.50.0.50",
+      "PrivateAddress": "10.0.0.50",
       "VmHost":  "xentest",
       "VmProcessors": 4,
       "VmMemory": "4GB",
