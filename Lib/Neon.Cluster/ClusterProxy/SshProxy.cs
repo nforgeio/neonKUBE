@@ -952,6 +952,23 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Downloads a file as bytes from the Linux server .
+        /// </summary>
+        /// <param name="path">The source path of the file on the Linux server.</param>
+        /// <returns>The file contents as UTF8 text.</returns>
+        public byte[] DownloadBytes(string path)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+
+            using (var ms = new MemoryStream())
+            {
+                Download(path, ms);
+
+                return ms.ToArray();
+            }
+        }
+
+        /// <summary>
         /// Downloads a file as text from the Linux server .
         /// </summary>
         /// <param name="path">The source path of the file on the Linux server.</param>
