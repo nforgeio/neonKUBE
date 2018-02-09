@@ -263,11 +263,11 @@ namespace Neon.Cluster
             var xenHost      = xenSshProxy.Metadata;
             var templateName = cluster.Definition.Hosting.XenServer.TemplateName;
 
-            xenSshProxy.Status = "check machine template";
+            xenSshProxy.Status = "check template";
 
             if (xenHost.Template.Find(templateName) == null)
             {
-                xenSshProxy.Status = "download machine template (slow)";
+                xenSshProxy.Status = "download template (slow)";
                 xenHost.Template.Install(cluster.Definition.Hosting.XenServer.HostXvaUri, templateName);
             }
         }
@@ -351,7 +351,8 @@ namespace Neon.Cluster
                 }
 
                 // SSH into the VM using the DHCP address, configure the static IP
-                // address and then reboot.
+                // address and extend the primary partition and file system to fill
+                // the drive and then reboot.
 
                 var subnet    = NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet);
                 var gateway   = cluster.Definition.Network.Gateway;
@@ -420,6 +421,13 @@ $@"nameserver 8.8.8.8
 nameserver 8.8.4.4
 ";
                         nodeProxy.UploadText("/etc/resolvconf/resolv.conf.d/base", resolvBaseText);
+
+                        // Extend the primary partition and file system to fill the drive. 
+
+                        xenSshProxy.Status = FormatVmStatus(vmName, $"resize primary partition");
+
+                        nodeProxy.SudoCommand("growpart /dev/xvda 1");
+                        nodeProxy.SudoCommand("resize2fs /dev/xvda1");
 
                         // Reboot to pick up the changes.
 

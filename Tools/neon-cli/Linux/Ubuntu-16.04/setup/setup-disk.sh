@@ -13,10 +13,16 @@
 #
 #		http://blog.nuclex-games.com/2009/12/aligning-an-ssd-on-linux/
 
-# $hack(jeff.lill):
+# $todo(jeff.lill):
 #
 # This script is not entirely general purpose.  It will initialize RAID for multiple
 # mounted disks on Azure VMs but it doesn't do this for Hyper-V VMs or physical machines.
+# One problem is that I'm assuming that the mount disks will be named:
+#
+#	/dev/sdc, /dev/sdd, /dev/sde...
+#
+# which is true on Azure but XenServer mounts these as /xvd#...  I'm not sure what
+# Hyper-V does.
 
 # Configure Bash strict mode so that the entire script will fail if 
 # any of the commands fail.

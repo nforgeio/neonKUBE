@@ -528,8 +528,14 @@ namespace Neon.Cluster
 
             var underline         = " " + new string('-', 39);
             var maxStepLabelWidth = steps.Max(n => n.Label.Length);
-            var maxNameWidth      = nodes.Max(n => n.Name.Length);
+            var maxNodeNameWidth  = nodes.Max(n => n.Name.Length);
+            var maxHostNameWidth  = 0;
             var stepNumber        = 0;
+
+            if (typeof(NodeMetadata) == typeof(XenClient))
+            {
+                maxHostNameWidth = nodes.Max(n => (n.Metadata as XenClient).Name.Length);
+            }
 
             sbDisplay.Clear();
 
@@ -600,7 +606,7 @@ namespace Neon.Cluster
 
                             foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsManager))
                             {
-                                sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
+                                sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNodeNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
                             }
                         }
 
@@ -614,7 +620,7 @@ namespace Neon.Cluster
 
                             foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsWorker))
                             {
-                                sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
+                                sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNodeNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
                             }
                         }
 
@@ -628,7 +634,7 @@ namespace Neon.Cluster
 
                             foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsPet))
                             {
-                                sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
+                                sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNodeNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
                             }
                         }
                     }
@@ -642,7 +648,7 @@ namespace Neon.Cluster
 
                         foreach (var node in nodes)
                         {
-                            sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
+                            sbDisplay.AppendLine($"    {node.Name}{new string(' ', maxNodeNameWidth - node.Name.Length)}   {GetStatus(stepNodeNamesSet, node)}");
                         }
                     }
                 }
@@ -660,7 +666,7 @@ namespace Neon.Cluster
                     {
                         var xenHost = node.Metadata as XenClient;
 
-                        sbDisplay.AppendLine($"    {xenHost.Name}{new string(' ', maxNameWidth - xenHost.Name.Length)}: {GetStatus(stepNodeNamesSet, node)}");
+                        sbDisplay.AppendLine($"    {xenHost.Name}{new string(' ', maxHostNameWidth - xenHost.Name.Length)}: {GetStatus(stepNodeNamesSet, node)}");
                     }
                 }
             }
