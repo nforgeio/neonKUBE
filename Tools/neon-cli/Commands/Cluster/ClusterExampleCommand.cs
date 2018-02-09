@@ -546,18 +546,25 @@ USAGE:
         ""Enabled"": false,
 
         // Specifies the default size of the Ceph drive created for cloud and
-        // hypervisor based environments.  This can be an long byte count or a long
+        // hypervisor based environments.  This can be a long byte count or a long
         // with units like [512MB] or [2GB].  This can be overridden 
         // for specific nodes.  This defaults to [128GB].
 
         ""DriveSize"": ""128GB"", 
 
         // Specifies the default amount of RAM to allocate to Ceph for caching.
-        // This can be an long byte count or a long with units like [512MB]
+        // This can be a long byte count or a long with units like [512MB]
         // or [2GB].  This can be overridden for specific nodes.  This defaults
         // to [1GB].
 
-        ""CacheSize"": ""1GB""
+        ""CacheSize"": ""1GB"",
+
+        // Specifies the disk capacity in megabytes to assign to the Ceph OSD 
+        // journal This can be a long byte count or a long with units like [512MB]
+        // or [2GB].  This can be overridden for specific nodes.  This defaults
+        // to [5GB].
+
+        ""JournalSize"": ""5GB""
     },
 
     //-------------------------------------------------------------------------
