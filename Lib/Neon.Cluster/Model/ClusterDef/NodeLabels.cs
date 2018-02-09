@@ -441,11 +441,6 @@ namespace Neon.Cluster
         // Ceph Storage Cluster related labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="CephMonitor"/>.
-        /// </summary>
-        public const string LabelCephMonitor = ClusterDefinition.ReservedLabelPrefix + ".ceph.monitor";
-
-        /// <summary>
         /// Reserved label name for <see cref="CephManager"/>.
         /// </summary>
         public const string LabelCephManager = ClusterDefinition.ReservedLabelPrefix + ".ceph.manager";
@@ -471,9 +466,14 @@ namespace Neon.Cluster
         public const string LabelCephCacheSizeMB = ClusterDefinition.ReservedLabelPrefix + ".ceph.cachesize_mb";
 
         /// <summary>
+        /// <para>
         /// <b>io.neon.ceph.manager</b> [<c>bool</c>]: Indicates that a Ceph manager
         /// will be deployed to this node if  <see cref="CephOptions.Enabled"/> is 
         /// <c>true</c>.  This defaults to <c>false</c>.
+        /// </para>
+        /// <note>
+        /// neonCLUSTER also deploys the <b>Ceph Monitor</b> service on manager nodes.
+        /// </note>
         /// </summary>
         /// <remarks>
         /// Managers are responsible for keeping track of runtime metrics and the
@@ -631,7 +631,6 @@ namespace Neon.Cluster
                 list.Add(new KeyValuePair<string, object>(LabelLogEsData,               LogEsData));
 
                 list.Add(new KeyValuePair<string, object>(LabelCephManager,             CephManager));
-                list.Add(new KeyValuePair<string, object>(LabelCephMonitor,             CephMonitor));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 CephOSD));
                 list.Add(new KeyValuePair<string, object>(LabelCephMSD,                 CephMSD));
                 list.Add(new KeyValuePair<string, object>(LabelCephDriveSizeGB,         CephDriveSizeGB));
@@ -722,7 +721,6 @@ namespace Neon.Cluster
                         break;
 
                     case LabelCephManager:              node.Labels.CephManager = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelCephMonitor:              node.Labels.CephMonitor = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelCephOSD:                  node.Labels.CephOSD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelCephMSD:                  node.Labels.CephMSD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelCephDriveSizeGB:          ParseCheck(label, () => { node.Labels.CephDriveSizeGB = int.Parse(label.Value); }); break;

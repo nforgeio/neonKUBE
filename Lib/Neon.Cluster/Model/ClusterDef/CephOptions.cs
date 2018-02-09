@@ -44,10 +44,17 @@ namespace Neon.Cluster
         public bool Enabled { get; set; } = false;
 
         /// <summary>
-        /// Specifies the Ceph software release name and version, formatted like
-        /// "<b>luminous/12.2.2</b>".  The Ceph software releases are documented 
-        /// <a href="http://docs.ceph.com/docs/master/releases/">here</a>.  This
-        /// defaults to a reasonable recent version.
+        /// <para>
+        /// Specifies the Ceph software release name and optional version, formatted
+        /// like <b>luminous</b> or <b>luminous/12.2.2</b>.  The Ceph software releases
+        /// are documented <a href="http://docs.ceph.com/docs/master/releases/">here</a>.
+        /// This defaults to a reasonable recent release without a version number.
+        /// </para>
+        /// <note>
+        /// The version number is currently ignored but may be honored in future
+        /// neonCLUSTER releases such that you can install a specific version of
+        /// a Ceph release.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Version", Required = Required.Default)]
         [DefaultValue(defaultVersion)]

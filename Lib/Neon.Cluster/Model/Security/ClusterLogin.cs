@@ -205,6 +205,13 @@ namespace Neon.Cluster
         public Dictionary<string, string> RegistryKeys { get; set; }
 
         /// <summary>
+        /// Ceph Storage Cluster configuration.
+        /// </summary>
+        [JsonProperty(PropertyName = "Ceph", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public CephConfig Ceph { get; set; }
+
+        /// <summary>
         /// Returns the <see cref="SshCredentials"/> for the cluster that can be used
         /// by <see cref="SshProxy{TMetadata}"/> and the <b>SSH.NET</b> Nuget package.
         /// </summary>
@@ -226,12 +233,13 @@ namespace Neon.Cluster
         /// </summary>
         public void ClearRootSecrets()
         {
-            IsRoot            = false;
-            SwarmManagerToken = null;
-            SwarmWorkerToken  = null;
-            SshClusterHostPrivateKey      = null;
-            RegistryCerts     = null;
-            RegistryKeys      = null;
+            IsRoot                   = false;
+            SwarmManagerToken        = null;
+            SwarmWorkerToken         = null;
+            SshClusterHostPrivateKey = null;
+            RegistryCerts            = null;
+            RegistryKeys             = null;
+            Ceph                     = null;
 
             if (VpnCredentials != null)
             {

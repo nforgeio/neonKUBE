@@ -281,6 +281,7 @@ OPTIONS:
                 if (cluster.Definition.Ceph.Enabled)
                 {
                     controller.AddStep("ceph install", n => CephInstall(n));
+                    controller.AddGlobalStep("ceph settings", () => CephSettings(), quiet: true);
                 }
 
                 controller.AddStep("networks", n => CreateClusterNetworks(n), n => n == cluster.FirstManager);
@@ -1572,52 +1573,114 @@ $@"docker login \
         /// <param name="node">The target cluster node.</param>
         private void CephInstall (SshProxy<NodeDefinition> node)
         {
-            // Exit if Ceph isn't enabled for the cluster or if this
-            // node hosts no Ceph components.
-
             if (!cluster.Definition.Ceph.Enabled)
             {
                 return;
             }
 
+            // IMPLEMENTATION NOTE:
+            //
             // We're going to configure the Ceph release key, repository and packages
             // on all nodes to make it easier to reconfigure the Ceph cluster manually or 
-            // via tools in the future.  Then, we'll configure the required components 
-            // file all nodes.
-
-            // Extract the Ceph release and version from the configuration.
-
-            var parts       = cluster.Definition.Ceph.Version.Split('/');
-            var cephRelease = parts[0].Trim().ToLowerInvariant();
-            var cephVersion = parts[1].Trim().ToLowerInvariant();
-
-            // We're going to explicitly download the Ceph package and install it
-            // without using the Ceph package repository.  We're doing this to 
-            // avoid problems in the future where somebody does an [apt-get dist-upgrade]
-            // and unintentionally upgrades to a Ceph version that's not directly
-            // compatible with the existing data.
-
-            var linuxRelease = node.SudoCommand("lsb_release -sc").OutputText;
-
-            // $note(jeff.lill):
+            // via tools in the future.  This also installs [ceph-common] which is
+            // required to actually mount the file system, which will probably be 
+            // required on all nodes.
             //
-            // I needed to add a "-1" after the Ceph version in the download URL.  The manual
-            // setup documentation indirectly implies that this is part of the Ceph version 
-            // but this seems to conflict with other documentation.  It appears that the
-            // "-1" is present in all of the relevant DEB package URLs so I'm going to 
-            // append that if there isn't already a dash in the version to future proof
-            // this code.
+            // Note that the full Ceph install consumes about 411MB of disk space
+            // where as the common components add about 100MB.  So the full install
+            // consumes an additional 311MB.  I'm not going to worry about allowing
+            // operators tune what's installed.  Perhaps something for the future.
 
-            if (!cephVersion.Contains('-'))
+            // $todo(jeff.lill): Consider allowing customization of which Ceph components are installed.
+            // $todo(jeff.lill): We're currently ignoring the Ceph release version.
+
+            node.InvokeIdempotentAction("setup-ceph-install",
+                () =>
+                {
+                    // Extract the Ceph release and version from the configuration.
+
+                    var parts       = cluster.Definition.Ceph.Version.Split('/');
+                    var cephRelease = parts[0].Trim().ToLowerInvariant();
+                    var cephVersion = parts[1].Trim().ToLowerInvariant();
+
+                    // Configure the Ceph Debian package repositories.
+
+                    // $todo(jeff.lill): 
+                    //
+                    // Do we need to pin to the Ceph version to avoid automatically updating 
+                    // to a new release via [apt-get dist-upgrade]?
+
+                    var linuxRelease = node.SudoCommand("lsb_release -sc").OutputText;
+
+                    node.SudoCommand($"wget -q -O- https://download.ceph.com/keys/release.asc | sudo apt-key add -");
+                    node.SudoCommand($"apt-add-repository \"deb https://download.ceph.com/debian-{cephRelease}/ {linuxRelease} main\"");
+                    node.SudoCommand($"apt-get update");
+                    node.SudoCommand($"apt-get install -yq ceph");
+                });
+        }
+
+        /// <summary>
+        /// Generates the Ceph related configuration settings as a global step.  This
+        /// assumes that <see cref="CephInstall"/> has already been run on all nodes.
+        /// </summary>
+        private void CephSettings()
+        {
+            if (!cluster.Definition.Ceph.Enabled)
             {
-                cephVersion += "-1";
+                return;
             }
 
-            // https://download.ceph.com/debian-luminous/pool/main/c/ceph/
+            if (clusterLogin.Ceph != null)
+            {
+                return; // We've already done this.
+            }
 
-            node.SudoCommand($"curl -4fsSLv --retry 10 --retry-delay 30 https://download.ceph.com/debian-{cephRelease}/pool/main/c/ceph/ceph_{cephVersion}{linuxRelease}_amd64.deb -o /tmp/ceph.deb");
-            node.SudoCommand($"dpkg --install /tmp/ceph.deb");
-            node.SudoCommand("rm /tmp/ceph.deb");
+            // Use the first manager node to access the Ceph admin tools.
+
+            var manager          = cluster.FirstManager;
+            var cephConfig       = new CephConfig();
+            var tmpPath          = "/dev/shm/ceph";
+            var monKeyringPath   = LinuxPath.Combine(tmpPath, "mon.keyring");
+            var adminKeyringPath = LinuxPath.Combine(tmpPath, "admin.keyring");
+            var osdKeyringPath   = LinuxPath.Combine(tmpPath, "osd.keyring");
+
+            clusterLogin.Ceph = cephConfig;
+
+            cephConfig.Name = "ceph";
+            cephConfig.Fsid = Guid.NewGuid().ToString("D");
+
+            manager.SudoCommand($"mkdir -p /etc/ceph");
+
+            // Generate an initial monitor keyring (we'll be adding additional keys below).
+
+            manager.SudoCommand($"ceph-authtool --create-keyring {monKeyringPath} --gen-key -n mon. --cap mon \"allow *\"");
+
+            // Generate the client admin keyring. 
+
+            manager.SudoCommand($"ceph-authtool --create-keyring {adminKeyringPath} --gen-key -n client.admin --set-uid=0 --cap mon \"allow *\" --cap osd \"allow *\" --cap mds \"allow *\" --cap mgr \"allow *\"");
+            cephConfig.AdminKeyring = manager.DownloadText(adminKeyringPath);
+
+            // Generate the bootstrap OSD keyring.
+
+            manager.SudoCommand($"ceph-authtool --create-keyring {osdKeyringPath} --gen-key -n client.bootstrap-osd --cap mon \"profile bootstrap-osd\"");
+            cephConfig.OSDKeyring = manager.DownloadText(adminKeyringPath);
+
+            // Add the client admin and OSD bootstrap keyrings to the monitor keyring
+            // and then download the result.
+
+            manager.SudoCommand($"ceph-authtool {monKeyringPath} --import-keyring {adminKeyringPath}");
+            manager.SudoCommand($"ceph-authtool {monKeyringPath} --import-keyring {osdKeyringPath}");
+            cephConfig.MonitorKeyring = manager.DownloadText(monKeyringPath);
+
+            // Generate the monitor map.
+
+            var sb = new StringBuilder();
+
+            manager.SudoCommand($"");
+
+            // Make sure we've deleted any temporary files.
+
+            manager.SudoCommand($"rm -r {tmpPath}");
         }
 
         /// <summary>
