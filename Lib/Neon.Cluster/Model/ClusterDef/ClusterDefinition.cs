@@ -523,12 +523,31 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Enumerates the cluster worker node definitions sorted in ascending order by name..
+        /// Enumerates the cluster worker node definitions sorted in ascending order by name.
         /// </summary>
         [JsonIgnore]
         public IEnumerable<NodeDefinition> SortedWorkers
         {
             get { return Workers.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
+        }
+
+        /// <summary>
+        /// Enumerates the cluster swarm node definitions (the managers and workers).
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<NodeDefinition> Swarm
+        {
+            get { return Nodes.Where(n => n.InSwarm); }
+        }
+
+        /// <summary>
+        /// Enumerates the cluster swarm node definitions (the managers and workers)
+        /// sorted in ascending order by name.
+        /// </summary>
+        [JsonIgnore]
+        public IEnumerable<NodeDefinition> SortedSwarm
+        {
+            get { return Swarm.OrderBy(n => n.Name, StringComparer.OrdinalIgnoreCase); }
         }
 
         /// <summary>
