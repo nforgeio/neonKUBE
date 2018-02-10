@@ -53,7 +53,8 @@ OPTIONS:
 
     --remove-templates  - Removes any cached local virtual machine templates
                           without actually setting up a cluster.  You can
-                          use this to ensure that the 
+                          use this to ensure that cluster will be created 
+                          from the most recent template.
 
     --unredacted        - Runs Vault related commands without redacting logs.
                           This is useful for debugging cluster setup issues.
