@@ -969,7 +969,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Downloads a file as text from the Linux server .
+        /// Downloads a file as text from the Linux server.
         /// </summary>
         /// <param name="path">The source path of the file on the Linux server.</param>
         /// <returns>The file contents as UTF8 text.</returns>
@@ -1067,6 +1067,26 @@ namespace Neon.Cluster
             {
                 LogException("*** ERROR Uploading", e);
                 throw;
+            }
+        }
+
+        /// <summary>
+        /// Uploads a byte array to a Linux server file.
+        /// </summary>
+        /// <param name="path">The target path of the file on the Linux server.</param>
+        /// <param name="bytes">The bytes to be uploaded.</param>
+        public void UploadBytes(string path, byte[] bytes)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+
+            if (bytes == null)
+            {
+                bytes = new byte[0];
+            }
+
+            using (var ms = new MemoryStream(bytes))
+            {
+                Upload(path, ms);
             }
         }
 
