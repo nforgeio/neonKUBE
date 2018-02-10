@@ -2166,6 +2166,89 @@ echo $? > {cmdFolder}/exit
         }
 
         /// <summary>
+        /// Runs a shell command on the Linux server under <b>sudo</b> as a specific user.
+        /// </summary>
+        /// <param name="user">The username.</param>
+        /// <param name="command">The command.</param>
+        /// <param name="args">The optional command arguments.</param>
+        /// <returns>The <see cref="CommandResponse"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// <paramref name="command"/> may not include single quotes or redirect
+        /// angle brackets such as <b>&lt;</b> or <b>>&gt;</b>.  For more complex
+        /// command, try uploading and executing a <see cref="CommandBundle"/> instead.
+        /// </note>
+        /// <para>
+        /// This method uses the <see cref="DefaultRunOptions"/> when executing the command.
+        /// </para>
+        /// <para>
+        /// You can override this behavior by passing an <see cref="RunOptions"/> to
+        /// the <see cref="RunCommand(string, RunOptions, object[])"/> override.
+        /// </para>
+        /// <note>
+        /// Any <c>null</c> arguments will be ignored.
+        /// </note>
+        /// </remarks>
+        public CommandResponse SudoCommandAsUser(string user, string command, params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(user));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
+
+            return SudoCommandAsUser(user, command, DefaultRunOptions, args);
+        }
+
+        /// <summary>
+        /// Runs a shell command on the Linux server under <b>sudo</b> as a specific user
+        /// and with <see cref="RunOptions"/>.
+        /// </summary>
+        /// <param name="user">The username.</param>
+        /// <param name="command">The command.</param>
+        /// <param name="runOptions">The execution options.</param>
+        /// <param name="args">The optional command arguments.</param>
+        /// <returns>The <see cref="CommandResponse"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// <paramref name="command"/> may not include single quotes or redirect
+        /// angle brackets such as <b>&lt;</b> or <b>>&gt;</b>.  For more complex
+        /// command, try uploading and executing a <see cref="CommandBundle"/> instead.
+        /// </note>
+        /// <para>
+        /// The <paramref name="runOptions"/> flags control how this command functions.
+        /// If <see cref="RunOptions.FaultOnError"/> is set, then commands that return
+        /// a non-zero exit code will put the server into the faulted state by setting
+        /// <see cref="IsFaulted"/>=<c>true</c>.  This means that <see cref="IsReady"/> will 
+        /// always return <c>false</c> afterwards and subsequent command executions will be 
+        /// ignored unless  <see cref="RunOptions.RunWhenFaulted"/> is specified for the 
+        /// future command.
+        /// </para>
+        /// <para>
+        /// <see cref="RunOptions.LogOnErrorOnly"/> indicates that command output should
+        /// be logged only for non-zero exit codes.
+        /// </para>
+        /// <note>
+        /// Any <c>null</c> arguments will be ignored.
+        /// </note>
+        /// </remarks>
+        public CommandResponse SudoCommandAsUser(string user, string command, RunOptions runOptions, params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(user));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
+
+            command = FormatCommand(command, args);
+
+            if (!string.IsNullOrWhiteSpace(RemotePath) && (runOptions & RunOptions.IgnoreRemotePath) == 0)
+            {
+                command = $"export PATH={RemotePath} && {command}";
+            }
+
+            var response = RunCommand($"sudo -u {user} bash -c '{command}'", runOptions | RunOptions.IgnoreRemotePath);
+
+            response.BashCommand = ToBash(command, args);
+
+            return response;
+        }
+
+        /// <summary>
         /// Runs a <see cref="CommandBundle"/> under <b>sudo</b> on the remote machine.
         /// </summary>
         /// <param name="bundle">The bundle.</param>
