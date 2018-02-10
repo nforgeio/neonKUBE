@@ -45,8 +45,7 @@
       "Role": "manager",
       "PrivateAddress": "10.0.0.30",
       "Labels": {
-        "StorageSSD": true,
-        "CephOSD": true
+        "StorageSSD": true
       }
     },
     "worker-0": {

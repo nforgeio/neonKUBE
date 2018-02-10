@@ -250,7 +250,7 @@ namespace Neon.Cluster.HyperV
             {
                 var diskNumber = 1;
 
-                foreach (var drive in extraDrives.Where(d => d != null))
+                foreach (var drive in extraDrives)
                 {
                     if (string.IsNullOrEmpty(drive.Path))
                     {

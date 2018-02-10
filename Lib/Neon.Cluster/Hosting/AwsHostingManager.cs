@@ -96,5 +96,11 @@ namespace Neon.Cluster
         public override void UpdatePublicEndpoints(List<HostedEndpoint> endpoints)
         {
         }
+
+        /// <inheritdoc/>
+        public override string GetOSDDevice(NodeDefinition node)
+        {
+            throw new NotImplementedException("$todo(jeff.lill): Implement this.");
+        }
     }
 }

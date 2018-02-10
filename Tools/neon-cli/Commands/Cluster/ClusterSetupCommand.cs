@@ -280,8 +280,9 @@ OPTIONS:
             {
                 if (cluster.Definition.Ceph.Enabled)
                 {
-                    controller.AddStep("ceph install", n => CephInstall(n));
-                    controller.AddGlobalStep("ceph settings", () => CephSettings(), quiet: true);
+                    controller.AddStep("ceph packages", n => CephPackages(n));
+                    controller.AddGlobalStep("ceph settings", () => CephSettings());
+                    controller.AddStep("ceph bootstrap", n => CephBootstrap(n), n => n.Metadata.Labels.CephMonitor);
                 }
 
                 controller.AddStep("networks", n => CreateClusterNetworks(n), n => n == cluster.FirstManager);
@@ -1567,11 +1568,11 @@ $@"docker login \
         }
 
         /// <summary>
-        /// Installs the required Ceph Storage Cluster components on the node without
+        /// Installs the required Ceph Storage Cluster packages on the node without
         /// configuring them.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void CephInstall (SshProxy<NodeDefinition> node)
+        private void CephPackages (SshProxy<NodeDefinition> node)
         {
             if (!cluster.Definition.Ceph.Enabled)
             {
@@ -1583,7 +1584,7 @@ $@"docker login \
             // We're going to configure the Ceph release key, repository and packages
             // on all nodes to make it easier to reconfigure the Ceph cluster manually or 
             // via tools in the future.  This also installs [ceph-common] which is
-            // required to actually mount the file system, which will probably be 
+            // required to actually mount the file system, which will also probably be 
             // required on all nodes.
             //
             // Note that the full Ceph install consumes about 411MB of disk space
@@ -1622,7 +1623,7 @@ $@"docker login \
 
         /// <summary>
         /// Generates the Ceph related configuration settings as a global step.  This
-        /// assumes that <see cref="CephInstall"/> has already been run on all nodes.
+        /// assumes that <see cref="CephPackages"/> has already been completed.
         /// </summary>
         private void CephSettings()
         {
@@ -1671,12 +1672,14 @@ $@"docker login \
 
             manager.SudoCommand($"ceph-authtool --create-keyring {adminKeyringPath} --gen-key -n client.admin --set-uid=0 --cap mon \"allow *\" --cap osd \"allow *\" --cap mds \"allow *\" --cap mgr \"allow *\"", runOptions);
             manager.SudoCommand($"chmod 666 {adminKeyringPath}", runOptions);
+
             cephConfig.AdminKeyring = manager.DownloadText(adminKeyringPath);
 
             // Generate the bootstrap OSD keyring.
 
             manager.SudoCommand($"ceph-authtool --create-keyring {osdKeyringPath} --gen-key -n client.bootstrap-osd --cap mon \"profile bootstrap-osd\"", runOptions);
             manager.SudoCommand($"chmod 666 {osdKeyringPath}", runOptions);
+
             cephConfig.OSDKeyring = manager.DownloadText(osdKeyringPath);
 
             // Add the client admin and OSD bootstrap keyrings to the monitor keyring
@@ -1685,6 +1688,7 @@ $@"docker login \
             manager.SudoCommand($"ceph-authtool {monKeyringPath} --import-keyring {adminKeyringPath}", runOptions);
             manager.SudoCommand($"ceph-authtool {monKeyringPath} --import-keyring {osdKeyringPath}", runOptions);
             manager.SudoCommand($"chmod 666 {monKeyringPath}", runOptions);
+
             cephConfig.MonitorKeyring = manager.DownloadText(monKeyringPath);
 
             // Generate the monitor map.
@@ -1698,16 +1702,28 @@ $@"docker login \
 
             manager.SudoCommand($"monmaptool --create {sbAddOptions} --fsid {cephConfig.Fsid} {monMapPath}", runOptions);
             manager.SudoCommand($"chmod 666 {monMapPath}", runOptions);
+
             cephConfig.MonitorMap = manager.DownloadBytes(monMapPath);
 
             // Make sure we've deleted any temporary files.
 
             manager.SudoCommand($"rm -r {tmpPath}", runOptions);
 
-            // Persist the cluster login so we'll have the keyrings in case
-            // we had to restart setup.
+            // Persist the cluster login so we'll have the keyrings and monmap
+            // in case we have to restart setup.
 
             clusterLogin.Save();
+        }
+
+        /// <summary>
+        /// Bootstraps the Ceph monitor nodes.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        private void CephBootstrap(SshProxy<NodeDefinition> node)
+        {
+            // Create the monitor data directory.
+
+            
         }
 
         /// <summary>

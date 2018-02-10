@@ -1500,5 +1500,11 @@ iface eth1 inet dhcp
             CreateNetworkSecurityGroups(NetworkUpdateSets.Worker, endpoints);
             CreateLoadbalancers(NetworkUpdateSets.Worker, endpoints);
         }
+
+        /// <inheritdoc/>
+        public override string GetOSDDevice(NodeDefinition node)
+        {
+            throw new NotImplementedException("$todo(jeff.lill): Implement this.");
+        }
     }
 }

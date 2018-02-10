@@ -97,5 +97,19 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="endpoints">The endpoints.</param>
         void UpdatePublicEndpoints(List<HostedEndpoint> endpoints);
+
+        /// <summary>
+        /// Returns the path to the block device (e.g. <b>/dev/sdb</b>) where the 
+        /// Ceph OSD service will persist its data on a specified node.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <returns>
+        /// The device path or <c>null</c> if the node doesn't host an OSD (<see cref="NodeLabels.CephOSD"/> is <c>false</c>).
+        /// </returns>
+        /// <exception cref="ClusterDefinitionException">
+        /// Thrown if the <see cref="NodeLabels.CephOSDDevice"/> wasn't manually set 
+        /// for the current hosting environment when required.
+        /// </exception>
+        string GetOSDDevice(NodeDefinition node);
     }
 }

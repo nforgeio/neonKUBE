@@ -441,9 +441,9 @@ namespace Neon.Cluster
         // Ceph Storage Cluster related labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="CephManager"/>.
+        /// Reserved label name for <see cref="CephMonitor"/>.
         /// </summary>
-        public const string LabelCephManager = ClusterDefinition.ReservedLabelPrefix + ".ceph.manager";
+        public const string LabelCephMonitor = ClusterDefinition.ReservedLabelPrefix + ".ceph.monitor";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSD"/>.
@@ -451,9 +451,14 @@ namespace Neon.Cluster
         public const string LabelCephOSD = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd";
 
         /// <summary>
-        /// Reserved label name for <see cref="CephMSD"/>.
+        /// Reserved label name for <see cref="CephOSDDevice"/>.
         /// </summary>
-        public const string LabelCephMSD = ClusterDefinition.ReservedLabelPrefix + ".ceph.msd";
+        public const string LabelCephOSDDevice = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_device";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephMDS"/>.
+        /// </summary>
+        public const string LabelCephMDS = ClusterDefinition.ReservedLabelPrefix + ".ceph.mds";
 
         /// <summary>
         /// Reserved label name for <see cref="CephDriveSizeGB"/>.
@@ -466,44 +471,33 @@ namespace Neon.Cluster
         public const string LabelCephCacheSizeMB = ClusterDefinition.ReservedLabelPrefix + ".ceph.cachesize_mb";
 
         /// <summary>
-        /// Reserved label name for <see cref="LabelCephJournalSizeMB"/>.
+        /// Reserved label name for <see cref="CephJournalSizeMB"/>.
         /// </summary>
         public const string LabelCephJournalSizeMB = ClusterDefinition.ReservedLabelPrefix + ".ceph.journalsize_mb";
 
         /// <summary>
-        /// <para>
-        /// <b>io.neon.ceph.manager</b> [<c>bool</c>]: Indicates that a Ceph manager
-        /// will be deployed to this node if  <see cref="CephOptions.Enabled"/> is 
-        /// <c>true</c>.  This defaults to <c>false</c>.
-        /// </para>
-        /// <note>
-        /// neonCLUSTER also deploys the <b>Ceph Monitor</b> service on manager nodes.
-        /// </note>
+        /// <b>io.neon.ceph.monitor</b> [<c>bool</c>]: Indicates that the Ceph 
+        /// monitor and manager services  will be deployed to this node if 
+        /// <see cref="CephOptions.Enabled"/> is <c>true</c>.  This defaults 
+        /// to <c>false</c>.
         /// </summary>
         /// <remarks>
+        /// <para>
+        /// Monitors maintain maps of the cluster state, including the monitor map, 
+        /// manager map, the OSD map, and the CRUSH map. These maps are critical 
+        /// cluster state required for Ceph daemons to coordinate with each other. 
+        /// Monitors are also responsible for managing authentication between 
+        /// daemons and clients. At least three monitors are normally required 
+        /// for redundancy and high availability.
+        /// </para>
+        /// <para>
         /// Managers are responsible for keeping track of runtime metrics and the
         /// current state of the Ceph cluster, including storage utilization, 
         /// current performance metrics, and system load. The Ceph Manager daemons
         /// also host python-based plugins to manage and expose Ceph cluster information,
         /// including a web-based dashboard and REST API. At least two managers are
         /// normally required for high availability.
-        /// </remarks>
-        [JsonProperty(PropertyName = "CephManager", Required = Required.Default)]
-        [DefaultValue(false)]
-        public bool CephManager { get; set; } = false;
-
-        /// <summary>
-        /// <b>io.neon.ceph.monitor</b> [<c>bool</c>]: Indicates that a Ceph monitor will be 
-        /// deployed to this node if <see cref="CephOptions.Enabled"/> is <c>true</c>.  This 
-        /// defaults to <c>false</c>.
-        /// </summary>
-        /// <remarks>
-        /// Monitors maintain maps of the cluster state, including the monitor map, 
-        /// manager map, the OSD map, and the CRUSH map. These maps are critical
-        /// cluster state required for Ceph daemons to coordinate with each other. 
-        /// Monitors are also responsible for managing authentication between
-        /// daemons and clients. At least three monitors are normally required 
-        /// for redundancy and high availability.
+        /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "CephMonitor", Required = Required.Default)]
         [DefaultValue(false)]
@@ -526,7 +520,16 @@ namespace Neon.Cluster
         public bool CephOSD { get; set; } = false;
 
         /// <summary>
-        /// <b>io.neon.ceph.msd</b> [<c>bool</c>]: Indicates that a Ceph MDS 
+        /// <b>io.neon.ceph.osd_device</b> (<c>string</c>]: The path to the block
+        /// device where the OSD data will be persisted (like: <b>/dev/sdb</b>)
+        /// when <see cref="CephOSD"/> is <c>true</c>.  This will be initialized 
+        /// automatically for most hosting environments but will need to be specified 
+        /// explicitly for <see cref="HostingEnvironments.Machine"/>.
+        /// </summary>
+        public string CephOSDDevice { get; set; } = null;
+
+        /// <summary>
+        /// <b>io.neon.ceph.mds</b> [<c>bool</c>]: Indicates that a Ceph MDS 
         /// (metadata server) will be deployed to this if <see cref="CephOptions.Enabled"/> 
         /// is <c>true</c>.  This defaults to <c>false</c>.
         /// </summary>
@@ -537,9 +540,9 @@ namespace Neon.Cluster
         /// commands (like ls, find, etc.) without placing an enormous burden on
         /// the Ceph Storage Cluster.
         /// </remarks>
-        [JsonProperty(PropertyName = "CaphMSD", Required = Required.Default)]
+        [JsonProperty(PropertyName = "CephMSD", Required = Required.Default)]
         [DefaultValue(false)]
-        public bool CephMSD { get; set; } = false;
+        public bool CephMDS { get; set; } = false;
 
         /// <summary>
         /// <b>io.neon.ceph.drivesize_gb</b> [<c>int</c>]: Specifies the size in gigabytes
@@ -645,9 +648,10 @@ namespace Neon.Cluster
 
                 list.Add(new KeyValuePair<string, object>(LabelLogEsData,               LogEsData));
 
-                list.Add(new KeyValuePair<string, object>(LabelCephManager,             CephManager));
+                list.Add(new KeyValuePair<string, object>(LabelCephMonitor,             CephMonitor));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 CephOSD));
-                list.Add(new KeyValuePair<string, object>(LabelCephMSD,                 CephMSD));
+                list.Add(new KeyValuePair<string, object>(LabelCephOSDDevice,           CephOSDDevice));
+                list.Add(new KeyValuePair<string, object>(LabelCephMDS,                 CephMDS));
                 list.Add(new KeyValuePair<string, object>(LabelCephDriveSizeGB,         CephDriveSizeGB));
                 list.Add(new KeyValuePair<string, object>(LabelCephCacheSizeMB,         CephCacheSizeMB));
                 list.Add(new KeyValuePair<string, object>(LabelCephJournalSizeMB,       CephJournalSizeMB));
@@ -728,6 +732,14 @@ namespace Neon.Cluster
 
                     case LabelLogEsData:                node.Labels.LogEsData = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
 
+                    case LabelCephMonitor:              node.Labels.CephMonitor = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelCephOSD:                  node.Labels.CephOSD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelCephOSDDevice:            node.Labels.CephOSDDevice = label.Value; break;
+                    case LabelCephMDS:                  node.Labels.CephMDS = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelCephDriveSizeGB:          ParseCheck(label, () => { node.Labels.CephDriveSizeGB = int.Parse(label.Value); }); break;
+                    case LabelCephCacheSizeMB:          ParseCheck(label, () => { node.Labels.CephCacheSizeMB = int.Parse(label.Value); }); break;
+                    case LabelCephJournalSizeMB:        ParseCheck(label, () => { node.Labels.CephJournalSizeMB = int.Parse(label.Value); }); break;
+
                     case LabelDatacenter:
                     case LabelEnvironment:
 
@@ -735,13 +747,6 @@ namespace Neon.Cluster
                         // we'll ignore them.
 
                         break;
-
-                    case LabelCephManager:              node.Labels.CephManager = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelCephOSD:                  node.Labels.CephOSD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelCephMSD:                  node.Labels.CephMSD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelCephDriveSizeGB:          ParseCheck(label, () => { node.Labels.CephDriveSizeGB = int.Parse(label.Value); }); break;
-                    case LabelCephCacheSizeMB:          ParseCheck(label, () => { node.Labels.CephCacheSizeMB = int.Parse(label.Value); }); break;
-                    case LabelCephJournalSizeMB:        ParseCheck(label, () => { node.Labels.CephJournalSizeMB = int.Parse(label.Value); }); break;
 
                     default:
 
@@ -795,10 +800,10 @@ namespace Neon.Cluster
 
             target.LogEsData           = this.LogEsData;
 
-            target.CephManager         = this.CephManager;
+            target.CephMonitor         = this.CephMonitor;
             target.CephMonitor         = this.CephMonitor;
             target.CephOSD             = this.CephOSD;
-            target.CephMSD             = this.CephMSD;
+            target.CephMDS             = this.CephMDS;
             target.CephDriveSizeGB     = this.CephDriveSizeGB;
             target.CephCacheSizeMB     = this.CephCacheSizeMB;
 

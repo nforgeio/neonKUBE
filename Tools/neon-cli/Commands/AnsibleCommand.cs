@@ -1622,7 +1622,7 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
                 writer.WriteLine();
                 writer.WriteLine("[ceph]");
 
-                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephManager || n.Labels.CephMonitor || n.Labels.CephOSD || n.Labels.CephMSD))
+                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephMonitor || n.Labels.CephMonitor || n.Labels.CephOSD || n.Labels.CephMDS))
                 {
                     writer.WriteLine(node.Name);
                 }
@@ -1630,7 +1630,7 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
                 writer.WriteLine();
                 writer.WriteLine("[ceph]");
 
-                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephManager || n.Labels.CephMonitor || n.Labels.CephOSD || n.Labels.CephMSD))
+                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephMonitor || n.Labels.CephMonitor || n.Labels.CephOSD || n.Labels.CephMDS))
                 {
                     writer.WriteLine(node.Name);
                 }
@@ -1638,7 +1638,7 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
                 writer.WriteLine();
                 writer.WriteLine("[ceph-manager]");
 
-                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephManager))
+                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephMonitor))
                 {
                     writer.WriteLine(node.Name);
                 }
@@ -1662,7 +1662,7 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
                 writer.WriteLine();
                 writer.WriteLine("[ceph-msd]");
 
-                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephMSD))
+                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephMDS))
                 {
                     writer.WriteLine(node.Name);
                 }

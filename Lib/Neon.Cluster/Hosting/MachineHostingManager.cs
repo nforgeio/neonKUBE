@@ -110,5 +110,21 @@ namespace Neon.Cluster
             // Note that public endpoints have to be managed manually for
             // on-premise cluster deployments.
         }
+
+        /// <inheritdoc/>
+        public override string GetOSDDevice(NodeDefinition node)
+        {
+            if (!node.Labels.CephOSD)
+            {
+                return null;
+            }
+
+            if (string.IsNullOrWhiteSpace(node.Labels.CephOSDDevice))
+            {
+                throw new ClusterDefinitionException($"Node [{node.Name}] cannot be configured as a Ceph OSD because [{nameof(NodeDefinition)}.{nameof(NodeDefinition.Labels)}.{nameof(NodeLabels.CephOSDDevice)}] isn't manually configured for the [{HostingEnvironments.Machine}] hosting environment.");
+            }
+
+            return node.Labels.CephOSDDevice;
+        }
     }
 }

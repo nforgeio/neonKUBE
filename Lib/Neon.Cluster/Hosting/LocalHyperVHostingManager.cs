@@ -756,5 +756,19 @@ nameserver 8.8.4.4
 
             cluster.CreateNodes();
         }
+
+        /// <inheritdoc/>
+        public override string GetOSDDevice(NodeDefinition node)
+        {
+            if (!node.Labels.CephOSD)
+            {
+                return null;
+            }
+
+            // The current provisioning implementation above configures this
+            // as the following device.
+
+            return "/dev/sdb";
+        }
     }
 }
