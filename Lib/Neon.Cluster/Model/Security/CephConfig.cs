@@ -67,10 +67,10 @@ namespace Neon.Cluster
         public string OSDKeyring { get; set; } = null;
 
         /// <summary>
-        /// The monitor map.  This defaults to <c>null</c>.
+        /// The monitor map (byte array).  This defaults to <c>null</c>.
         /// </summary>
         [JsonProperty(PropertyName = "MonitorMap", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string MonitorMap { get; set; } = null;
+        public byte[] MonitorMap { get; set; } = null;
     }
 }

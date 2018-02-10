@@ -158,8 +158,8 @@ namespace Neon.Cluster
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Worker nodes within a cluster are where application containers will be deployed.
-        /// Any node that is not a <see cref="IsManager"/> is considered to be a worker.
+        /// Worker nodes are part of the Docker Swarm but do not perform any Swarm
+        /// management activties.
         /// </para>
         /// </remarks>
         [JsonIgnore]
@@ -169,7 +169,8 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns <c>true</c> for nodes that are part of the neonCLUSTER but in the Docker Swarm.
+        /// Returns <c>true</c> for nodes that are part of the neonCLUSTER but not 
+        /// within the Docker Swarm.
         /// </summary>
         [JsonIgnore]
         public bool IsPet
@@ -454,6 +455,32 @@ namespace Neon.Cluster
                 Labels.CephCacheSizeMB = (int)(ClusterDefinition.ValidateSize(clusterDefinition.Ceph.CacheSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.CacheSize))/NeonHelper.Mega);
 
                 return (long)Labels.CephCacheSizeMB * NeonHelper.Mega;
+            }
+        }
+
+        /// <summary>
+        /// Returns the size in bytes of drive space to allocate to the
+        /// OSD journal on this node integrated Ceph storage cluster is 
+        /// enabled and OSD is deployed to the node.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
+        internal long GetCephJournalSize(ClusterDefinition clusterDefinition)
+        {
+            if (!clusterDefinition.Ceph.Enabled)
+            {
+                return 0;
+            }
+
+            if (Labels.CephJournalSizeMB > 0)
+            {
+                return Labels.CephJournalSizeMB;
+            }
+            else
+            {
+                Labels.CephJournalSizeMB = (int)(ClusterDefinition.ValidateSize(clusterDefinition.Ceph.JournalSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.JournalSize)) / NeonHelper.Mega);
+
+                return (long)Labels.CephJournalSizeMB * NeonHelper.Mega;
             }
         }
 

@@ -466,6 +466,11 @@ namespace Neon.Cluster
         public const string LabelCephCacheSizeMB = ClusterDefinition.ReservedLabelPrefix + ".ceph.cachesize_mb";
 
         /// <summary>
+        /// Reserved label name for <see cref="LabelCephJournalSizeMB"/>.
+        /// </summary>
+        public const string LabelCephJournalSizeMB = ClusterDefinition.ReservedLabelPrefix + ".ceph.journalsize_mb";
+
+        /// <summary>
         /// <para>
         /// <b>io.neon.ceph.manager</b> [<c>bool</c>]: Indicates that a Ceph manager
         /// will be deployed to this node if  <see cref="CephOptions.Enabled"/> is 
@@ -543,18 +548,28 @@ namespace Neon.Cluster
         /// is <c>true</c> for this node.  This defaults to <see cref="CephOptions.DriveSize"/>.
         /// </summary>
         [JsonProperty(PropertyName = "CephDriveSizeGB", Required = Required.Default)]
-        [DefaultValue(null)]
+        [DefaultValue(0)]
         public int CephDriveSizeGB { get; set; } = 0;
 
         /// <summary>
         /// <b>io.neon.ceph.cachesize_mb</b> [<c>int</c>]: Specifies the RAM in megabytes
         /// to assign to the Ceph OSD for caching if the integrated Ceph storage cluster 
-        /// is enabled  and<see cref="CephOSD"/> is <c>true</c> for this node.
+        /// is enabled and <see cref="CephOSD"/> is <c>true</c> for this node.
         /// This defaults to <see cref="CephOptions.CacheSize"/>.
         /// </summary>
         [JsonProperty(PropertyName = "CephCacheSizeMB", Required = Required.Default)]
-        [DefaultValue(null)]
+        [DefaultValue(0)]
         public int CephCacheSizeMB { get; set; } = 0;
+
+        /// <summary>
+        /// <b>io.neon.ceph.journalsize_mb</b> [<c>int</c>]: Specifies the disk capacity
+        /// in megabytes to assign to the Ceph OSD journal if the integrated Ceph storage 
+        /// cluster is enabled and <see cref="CephOSD"/> is <c>true</c> for this node.
+        /// This defaults to <see cref="CephOptions.JournalSize"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "CephJournalSizeMB", Required = Required.Default)]
+        [DefaultValue(0)]
+        public int CephJournalSizeMB { get; set; } = 0;
 
         //---------------------------------------------------------------------
 
@@ -635,6 +650,7 @@ namespace Neon.Cluster
                 list.Add(new KeyValuePair<string, object>(LabelCephMSD,                 CephMSD));
                 list.Add(new KeyValuePair<string, object>(LabelCephDriveSizeGB,         CephDriveSizeGB));
                 list.Add(new KeyValuePair<string, object>(LabelCephCacheSizeMB,         CephCacheSizeMB));
+                list.Add(new KeyValuePair<string, object>(LabelCephJournalSizeMB,       CephJournalSizeMB));
 
                 return list;
             }
@@ -725,6 +741,7 @@ namespace Neon.Cluster
                     case LabelCephMSD:                  node.Labels.CephMSD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelCephDriveSizeGB:          ParseCheck(label, () => { node.Labels.CephDriveSizeGB = int.Parse(label.Value); }); break;
                     case LabelCephCacheSizeMB:          ParseCheck(label, () => { node.Labels.CephCacheSizeMB = int.Parse(label.Value); }); break;
+                    case LabelCephJournalSizeMB:        ParseCheck(label, () => { node.Labels.CephJournalSizeMB = int.Parse(label.Value); }); break;
 
                     default:
 
@@ -792,7 +809,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Validates the node definition.
+        /// Validates the node labels.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
@@ -809,6 +826,11 @@ namespace Neon.Cluster
                 }
 
                 if (CephCacheSizeMB > 0 && CephCacheSizeMB < 100 * NeonHelper.Mega)
+                {
+                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephCacheSizeMB)}={CephCacheSizeMB}] is cannot be less than [100MB].");
+                }
+
+                if (CephJournalSizeMB > 0 && CephJournalSizeMB < 100 * NeonHelper.Mega)
                 {
                     throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephCacheSizeMB)}={CephCacheSizeMB}] is cannot be less than [100MB].");
                 }

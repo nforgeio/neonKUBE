@@ -1592,16 +1592,17 @@ $@"docker login \
             // operators tune what's installed.  Perhaps something for the future.
 
             // $todo(jeff.lill): Consider allowing customization of which Ceph components are installed.
-            // $todo(jeff.lill): We're currently ignoring the Ceph release version.
+            // $todo(jeff.lill): We're currently ignoring the Ceph version number.
 
             node.InvokeIdempotentAction("setup-ceph-install",
                 () =>
                 {
                     // Extract the Ceph release and version from the configuration.
+                    // Note that the version is optional and is currently ignored.
 
                     var parts       = cluster.Definition.Ceph.Version.Split('/');
                     var cephRelease = parts[0].Trim().ToLowerInvariant();
-                    var cephVersion = parts[1].Trim().ToLowerInvariant();
+                    // var cephVersion = parts[1].Trim().ToLowerInvariant();
 
                     // Configure the Ceph Debian package repositories.
 
@@ -1630,57 +1631,83 @@ $@"docker login \
                 return;
             }
 
-            if (clusterLogin.Ceph != null)
-            {
-                return; // We've already done this.
-            }
+            //if (clusterLogin.Ceph != null)
+            //{
+            //    return; // We've already done this.
+            //}
+
+            // IMPLEMENTATION NOTE:
+            //
+            // We're going to follow the steps keyring generation steps from the link
+            // below to obtain the monitor, client admin, and OSD keyrings in addition
+            // to the monitor map which we'll then persist in the cluser login so 
+            // we'll be able to complete Ceph configuration in subsequent setup steps.
+            //
+            //      http://docs.ceph.com/docs/master/install/manual-deployment/
 
             // Use the first manager node to access the Ceph admin tools.
 
             var manager          = cluster.FirstManager;
             var cephConfig       = new CephConfig();
-            var tmpPath          = "/dev/shm/ceph";
+            var tmpPath          = "/tmp/ceph";
             var monKeyringPath   = LinuxPath.Combine(tmpPath, "mon.keyring");
             var adminKeyringPath = LinuxPath.Combine(tmpPath, "admin.keyring");
             var osdKeyringPath   = LinuxPath.Combine(tmpPath, "osd.keyring");
+            var monMapPath       = LinuxPath.Combine(tmpPath, "monmap");
+            var runOptions       = RunOptions.Defaults | RunOptions.FaultOnError;
 
             clusterLogin.Ceph = cephConfig;
 
             cephConfig.Name = "ceph";
             cephConfig.Fsid = Guid.NewGuid().ToString("D");
 
-            manager.SudoCommand($"mkdir -p /etc/ceph");
+            manager.SudoCommand($"mkdir -p {tmpPath}", RunOptions.Defaults | RunOptions.FaultOnError);
 
             // Generate an initial monitor keyring (we'll be adding additional keys below).
 
-            manager.SudoCommand($"ceph-authtool --create-keyring {monKeyringPath} --gen-key -n mon. --cap mon \"allow *\"");
+            manager.SudoCommand($"ceph-authtool --create-keyring {monKeyringPath} --gen-key -n mon. --cap mon \"allow *\"", runOptions);
 
             // Generate the client admin keyring. 
 
-            manager.SudoCommand($"ceph-authtool --create-keyring {adminKeyringPath} --gen-key -n client.admin --set-uid=0 --cap mon \"allow *\" --cap osd \"allow *\" --cap mds \"allow *\" --cap mgr \"allow *\"");
+            manager.SudoCommand($"ceph-authtool --create-keyring {adminKeyringPath} --gen-key -n client.admin --set-uid=0 --cap mon \"allow *\" --cap osd \"allow *\" --cap mds \"allow *\" --cap mgr \"allow *\"", runOptions);
+            manager.SudoCommand($"chmod 666 {adminKeyringPath}", runOptions);
             cephConfig.AdminKeyring = manager.DownloadText(adminKeyringPath);
 
             // Generate the bootstrap OSD keyring.
 
-            manager.SudoCommand($"ceph-authtool --create-keyring {osdKeyringPath} --gen-key -n client.bootstrap-osd --cap mon \"profile bootstrap-osd\"");
-            cephConfig.OSDKeyring = manager.DownloadText(adminKeyringPath);
+            manager.SudoCommand($"ceph-authtool --create-keyring {osdKeyringPath} --gen-key -n client.bootstrap-osd --cap mon \"profile bootstrap-osd\"", runOptions);
+            manager.SudoCommand($"chmod 666 {osdKeyringPath}", runOptions);
+            cephConfig.OSDKeyring = manager.DownloadText(osdKeyringPath);
 
             // Add the client admin and OSD bootstrap keyrings to the monitor keyring
             // and then download the result.
 
-            manager.SudoCommand($"ceph-authtool {monKeyringPath} --import-keyring {adminKeyringPath}");
-            manager.SudoCommand($"ceph-authtool {monKeyringPath} --import-keyring {osdKeyringPath}");
+            manager.SudoCommand($"ceph-authtool {monKeyringPath} --import-keyring {adminKeyringPath}", runOptions);
+            manager.SudoCommand($"ceph-authtool {monKeyringPath} --import-keyring {osdKeyringPath}", runOptions);
+            manager.SudoCommand($"chmod 666 {monKeyringPath}", runOptions);
             cephConfig.MonitorKeyring = manager.DownloadText(monKeyringPath);
 
             // Generate the monitor map.
 
-            var sb = new StringBuilder();
+            var sbAddOptions = new StringBuilder();
 
-            manager.SudoCommand($"");
+            foreach (var monNode in cluster.Nodes.Where(n => n.Metadata.Labels.CephMonitor))
+            {
+                sbAddOptions.AppendWithSeparator($"--add {monNode.Name} {monNode.PrivateAddress}");
+            }
+
+            manager.SudoCommand($"monmaptool --create {sbAddOptions} --fsid {cephConfig.Fsid} {monMapPath}", runOptions);
+            manager.SudoCommand($"chmod 666 {monMapPath}", runOptions);
+            cephConfig.MonitorMap = manager.DownloadBytes(monMapPath);
 
             // Make sure we've deleted any temporary files.
 
-            manager.SudoCommand($"rm -r {tmpPath}");
+            manager.SudoCommand($"rm -r {tmpPath}", runOptions);
+
+            // Persist the cluster login so we'll have the keyrings in case
+            // we had to restart setup.
+
+            clusterLogin.Save();
         }
 
         /// <summary>

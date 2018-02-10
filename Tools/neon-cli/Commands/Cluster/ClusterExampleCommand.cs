@@ -564,7 +564,31 @@ USAGE:
         // or [2GB].  This can be overridden for specific nodes.  This defaults
         // to [5GB].
 
-        ""JournalSize"": ""5GB""
+        ""JournalSize"": ""5GB"",
+
+        // Specifies the maximum size of a Ceph RADOS object in bytes.  This can be a 
+        // long byte count or a long with units like [512MB] or [2GB].  This 
+        // is a global cluster setting that defaults to [5GB].
+
+        ""ObjectSizeMax"": ""5GB"",
+
+        // Specifies the default number of object replicas to be stored in the cluster.
+        // This defaults to the minimum of 3 or the number of OSD nodes provisioned
+        // in the cluster.
+
+        ""ReplicaCount"": ""3"",
+
+        // Specifies the minimum number of objects replicas required when the
+        // Ceph storage cluster is operating in a degraded state.  This defaults
+        // to [ReplicaCount-1] unless [ReplicaCount==1] in which case this will 
+        // also default to 1.
+
+        ""ReplicaCountMin"": ""2"",
+
+        // Specifies the default number of placement groups assigned to each OSD.
+        // This defaults to [100].
+
+        ""PlacementGroupCount"": ""100""
     },
 
     //-------------------------------------------------------------------------
