@@ -228,7 +228,7 @@ Server Requirements:
             // such as virtual machines, networks, load balancers, public IP addresses, security
             // groups,... as required for the environment.
 
-            hostingManager              = HostingManager.GetManager(cluster.Definition.Hosting.Environment, cluster, Program.LogPath);
+            hostingManager              = HostingManager.GetManager(cluster, Program.LogPath);
             hostingManager.HostUsername = Program.Username;
             hostingManager.HostPassword = Program.Password;
             hostingManager.ShowStatus   = !Program.Quiet;

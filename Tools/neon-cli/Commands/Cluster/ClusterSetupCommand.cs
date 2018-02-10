@@ -1596,9 +1596,11 @@ $@"docker login \
             // $todo(jeff.lill): Consider allowing customization of which Ceph components are installed.
             // $todo(jeff.lill): We're currently ignoring the Ceph version number.
 
-            node.InvokeIdempotentAction("setup-ceph-install",
+            node.InvokeIdempotentAction("setup-ceph-packages",
                 () =>
                 {
+                    node.Status = "ceph package install";
+
                     // Extract the Ceph release and version from the configuration.
                     // Note that the version is optional and is currently ignored.
 
@@ -1633,10 +1635,10 @@ $@"docker login \
                 return;
             }
 
-            //if (clusterLogin.Ceph != null)
-            //{
-            //    return; // We've already done this.
-            //}
+            if (clusterLogin.Ceph != null)
+            {
+                return; // We've already done this.
+            }
 
             // IMPLEMENTATION NOTE:
             //
@@ -1672,14 +1674,14 @@ $@"docker login \
             // Generate the client admin keyring. 
 
             manager.SudoCommand($"ceph-authtool --create-keyring {adminKeyringPath} --gen-key -n client.admin --set-uid=0 --cap mon \"allow *\" --cap osd \"allow *\" --cap mds \"allow *\" --cap mgr \"allow *\"", runOptions);
-            manager.SudoCommand($"chmod 666 {adminKeyringPath}", runOptions);
+            manager.SudoCommand($"chmod 660 {adminKeyringPath}", runOptions);
 
             cephConfig.AdminKeyring = manager.DownloadText(adminKeyringPath);
 
             // Generate the bootstrap OSD keyring.
 
             manager.SudoCommand($"ceph-authtool --create-keyring {osdKeyringPath} --gen-key -n client.bootstrap-osd --cap mon \"profile bootstrap-osd\"", runOptions);
-            manager.SudoCommand($"chmod 666 {osdKeyringPath}", runOptions);
+            manager.SudoCommand($"chmod 660 {osdKeyringPath}", runOptions);
 
             cephConfig.OSDKeyring = manager.DownloadText(osdKeyringPath);
 
@@ -1688,7 +1690,7 @@ $@"docker login \
 
             manager.SudoCommand($"ceph-authtool {monKeyringPath} --import-keyring {adminKeyringPath}", runOptions);
             manager.SudoCommand($"ceph-authtool {monKeyringPath} --import-keyring {osdKeyringPath}", runOptions);
-            manager.SudoCommand($"chmod 666 {monKeyringPath}", runOptions);
+            manager.SudoCommand($"chmod 660 {monKeyringPath}", runOptions);
 
             cephConfig.MonitorKeyring = manager.DownloadText(monKeyringPath);
 
@@ -1702,7 +1704,7 @@ $@"docker login \
             }
 
             manager.SudoCommand($"monmaptool --create {sbAddOptions} --fsid {cephConfig.Fsid} {monMapPath}", runOptions);
-            manager.SudoCommand($"chmod 666 {monMapPath}", runOptions);
+            manager.SudoCommand($"chmod 660 {monMapPath}", runOptions);
 
             cephConfig.MonitorMap = manager.DownloadBytes(monMapPath);
 
@@ -1722,9 +1724,88 @@ $@"docker login \
         /// <param name="node">The target node.</param>
         private void CephBootstrap(SshProxy<NodeDefinition> node)
         {
-            // Create the monitor data directory.
+            node.InvokeIdempotentAction("setup-ceph-bootstrap",
+                () =>
+                {
+                    // Create a temporary folder.
 
-            
+                    var tempPath = "/tmp/ceph";
+
+                    node.SudoCommand(tempPath, $"mkdir -p {tempPath}");
+
+                    // Generate the Ceph configuration file.
+
+                    node.Status = "ceph config file";
+
+                    var sbHostNames     = new StringBuilder();
+                    var sbHostAddresses = new StringBuilder();
+
+                    foreach (var monitorNode in cluster.Definition.SortedNodes.Where(n => n.Labels.CephMonitor))
+                    {
+                        sbHostNames.AppendWithSeparator(monitorNode.Name, ", ");
+                        sbHostAddresses.AppendWithSeparator(monitorNode.PrivateAddress, ", ");
+                    }
+
+                    var clusterSubnet =
+                        HostingManager.IsCloudEnvironment(cluster.Definition.Hosting.Environment)
+                            ? cluster.Definition.Network.CloudSubnet
+                            : cluster.Definition.Network.PremiseSubnet;
+
+                    node.UploadText("/etc/ceph/ceph.conf",
+$@"[global]
+fsid = {clusterLogin.Ceph.Fsid}
+mon initial members = {sbHostNames}
+mon host = {sbHostAddresses}
+public network = {clusterSubnet}
+auth cluster required = cephx
+auth service required = cephx
+auth client required = cephx
+osd journal size = {ClusterDefinition.ValidateSize(cluster.Definition.Ceph.JournalSize, cluster.Definition.Ceph.GetType(), nameof(cluster.Definition.Ceph.JournalSize)) / NeonHelper.Mega}
+osd pool default size = {cluster.Definition.Ceph.ReplicaCount}
+osd pool default min size = {cluster.Definition.Ceph.ReplicaCountMin}
+osd pool default pg num = {cluster.Definition.Ceph.PlacementGroupCount}
+osd pool default pgp num = {cluster.Definition.Ceph.PlacementGroupCount}
+osd crush chooseleaf type = 1
+");
+
+                    // Create the monitor data directory and load the monitor map and keyring.
+
+                    node.Status = "ceph monitor folder";
+                    node.SudoCommandAsUser(cluster.Definition.Ceph.Username, $"mkdir -p /var/lib/ceph/mon/{clusterLogin.Ceph.Name}-{node.Name}");
+
+                    node.Status = "ceph monitor config";
+
+                    var monitorMapPath     = LinuxPath.Combine(tempPath, "monmap");
+                    var monitorKeyringPath = LinuxPath.Combine(tempPath, "ceph.mon.keyring");
+
+                    node.UploadBytes("monitorMapPath", clusterLogin.Ceph.MonitorMap);
+                    node.UploadText("monitorKeyringPath", clusterLogin.Ceph.MonitorKeyring);
+                    node.SudoCommandAsUser(cluster.Definition.Ceph.Username, $"ceph-mon --mkfs -i {node.Name} --monmap {monitorMapPath} --keyring {monitorKeyringPath}");
+
+                    // Indicate that we're done configuring and start the monitor.
+
+                    node.Status = "ceph monitor start";
+                    node.SudoCommand($"touch /var/lib/ceph/mon/ceph-{node.Name}/done");
+                    node.SudoCommand($"systemctl start ceph-mon@{node.Name}");
+
+                    // Wait for the monitor to indicate that it's healthy.
+
+                    NeonHelper.WaitFor(
+                        () =>
+                        {
+                            var result = node.SudoCommand("ceph -s");
+
+
+
+                            return true;
+                        },
+                        timeout: TimeSpan.FromSeconds(120), 
+                        pollTime: TimeSpan.FromSeconds(2));
+
+                    // Remove the temp folder.
+
+                    node.SudoCommand($"rm -r {tempPath}");
+                });
         }
 
         /// <summary>

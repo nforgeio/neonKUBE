@@ -47,6 +47,15 @@ namespace Neon.Cluster
         public bool Enabled { get; set; } = false;
 
         /// <summary>
+        /// Returns the Linux user for the Ceph components.
+        /// </summary>
+        [JsonIgnore]
+        public string Username
+        {
+            get { return "ceph"; }
+        }
+
+        /// <summary>
         /// <para>
         /// Specifies the Ceph software release name and optional version, formatted
         /// like <b>luminous</b> or <b>luminous/12.2.2</b>.  The Ceph software releases

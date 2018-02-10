@@ -190,7 +190,7 @@ namespace Neon.Cluster
         /// <param name="optionsType">Type of the property holding the size property (used for error reporting).</param>
         /// <param name="propertyName">The size property name (used for error reporting).</param>
         /// <returns>The size converted into a <c>long</c>.</returns>
-        internal static long ValidateSize(string sizeValue, Type optionsType, string propertyName)
+        public static long ValidateSize(string sizeValue, Type optionsType, string propertyName)
         {
             long size;
 

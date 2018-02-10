@@ -41,14 +41,13 @@ namespace Neon.Cluster
         /// <summary>
         /// Returns the <see cref="HostingManager"/> for a specific environment.
         /// </summary>
-        /// <param name="provider">The target hosting provider.</param>
         /// <param name="cluster">The cluster being managed.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
         /// <returns>The <see cref="HostingManager"/>.</returns>
-        public static HostingManager GetManager(HostingEnvironments provider, ClusterProxy cluster, string logFolder = null)
+        public static HostingManager GetManager(ClusterProxy cluster, string logFolder = null)
         {
             switch (cluster.Definition.Hosting.Environment)
             {
@@ -83,6 +82,34 @@ namespace Neon.Cluster
                 default:
 
                     throw new NotImplementedException($"Hosting manager for [{cluster.Definition.Hosting.Environment}] is not implemented.");
+            }
+        }
+
+        /// <summary>
+        /// Determines whether a hosting environment is hosted in the cloud.
+        /// </summary>
+        /// <param name="environment">The target hosting environment.</param>
+        /// <returns><c>true</c> for cloud environments.</returns>
+        public static bool IsCloudEnvironment(HostingEnvironments environment)
+        {
+            switch (environment)
+            {
+                case HostingEnvironments.Aws:
+                case HostingEnvironments.Azure:
+                case HostingEnvironments.Google:
+
+                    return true;
+
+                case HostingEnvironments.HyperV:
+                case HostingEnvironments.LocalHyperV:
+                case HostingEnvironments.Machine:
+                case HostingEnvironments.XenServer:
+
+                    return false;
+
+                default:
+
+                    throw new NotImplementedException($"Hosting manager for [{environment}] is not implemented.");
             }
         }
 
