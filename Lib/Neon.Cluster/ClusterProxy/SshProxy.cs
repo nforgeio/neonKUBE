@@ -2185,6 +2185,22 @@ echo $? > {cmdFolder}/exit
             return response;
         }
 
+#if TODO
+        // $todo(jeff.lill):
+        //
+        // I couldn't get these commands to work.  [sudo -u USER] is trying to prompt
+        // for a password even though we're logged in as ROOT and it's not required
+        // to enter passwords.  I tried the [sudo -S] option to read the password
+        // from STDIN but that's not working either.
+        //
+        // Ideas:
+        //
+        //      * Try explicitly piping an empty line into STDIN.  Perhaps
+        //        sudo is waiting for a new line to be entered.
+        //
+        //      * Trying setting the SUDO_ASKPASS environment variable to
+        //        a simple script that returns an empty password.
+
         /// <summary>
         /// Runs a shell command on the Linux server under <b>sudo</b> as a specific user.
         /// </summary>
@@ -2261,12 +2277,25 @@ echo $? > {cmdFolder}/exit
                 command = $"export PATH={RemotePath} && {command}";
             }
 
-            var response = RunCommand($"sudo -u {user} bash -c '{command}'", runOptions | RunOptions.IgnoreRemotePath);
+            // Note: 
+            //
+            // We're using the [-S] option to tell [sudo] to read the
+            // password from STDIN which mitigates the:
+            //
+            //      sudo: no tty present and no askpass program specified
+            //
+            // error we'll see if we don't use this option.  Note that
+            // We're not actually sending a password because we're logged
+            // in as the root user and the target machine is configured
+            // to allow root elevate permissions without a password.
+
+            var response = RunCommand($"sudo -S -u {user} bash -c '{command}'", runOptions | RunOptions.IgnoreRemotePath);
 
             response.BashCommand = ToBash(command, args);
 
             return response;
         }
+#endif
 
         /// <summary>
         /// Runs a <see cref="CommandBundle"/> under <b>sudo</b> on the remote machine.
