@@ -1902,7 +1902,7 @@ echo $? > {cmdFolder}/exit
 
             if (shutdown)
             {
-                // We're just run commands that shutdown or reboot the server 
+                // We just ran commands that shutdown or rebooted the server 
                 // directly to prevent continuously rebooting the server.
                 //
                 // Because we're not using [SafeRunCommand()], there's some

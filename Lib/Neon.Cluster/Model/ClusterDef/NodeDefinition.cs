@@ -406,7 +406,6 @@ namespace Neon.Cluster
             }
         }
 
-
         /// <summary>
         /// Returns the size in bytes of the Ceph drive created for this node if 
         /// integrated Ceph storage cluster is enabled.
