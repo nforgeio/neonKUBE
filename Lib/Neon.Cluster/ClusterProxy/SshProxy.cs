@@ -2185,7 +2185,6 @@ echo $? > {cmdFolder}/exit
             return response;
         }
 
-#if TODO
         // $todo(jeff.lill):
         //
         // I couldn't get these commands to work.  [sudo -u USER] is trying to prompt
@@ -2270,32 +2269,31 @@ echo $? > {cmdFolder}/exit
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(user));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
 
-            command = FormatCommand(command, args);
+            command = $"sudo -S -u {user} bash -c '{command}'";
+
+            var sbScript = new StringBuilder();
+
+            sbScript.AppendLine("#!/bin/bash");
 
             if (!string.IsNullOrWhiteSpace(RemotePath) && (runOptions & RunOptions.IgnoreRemotePath) == 0)
             {
-                command = $"export PATH={RemotePath} && {command}";
+                sbScript.AppendLine($"export PATH={RemotePath}");
             }
 
-            // Note: 
-            //
-            // We're using the [-S] option to tell [sudo] to read the
-            // password from STDIN which mitigates the:
-            //
-            //      sudo: no tty present and no askpass program specified
-            //
-            // error we'll see if we don't use this option.  Note that
-            // We're not actually sending a password because we're logged
-            // in as the root user and the target machine is configured
-            // to allow root elevate permissions without a password.
+            sbScript.AppendLine($"{command} <<__EOF__");
+            sbScript.AppendLine("");
+            sbScript.AppendLine("__EOF__");
 
-            var response = RunCommand($"sudo -S -u {user} bash -c '{command}'", runOptions | RunOptions.IgnoreRemotePath);
+            var bundle = new CommandBundle("./script.sh");
+
+            bundle.AddFile("script.sh", sbScript.ToString(), isExecutable: true);
+
+            var response = SudoCommand(bundle, runOptions | RunOptions.IgnoreRemotePath);
 
             response.BashCommand = ToBash(command, args);
 
             return response;
         }
-#endif
 
         /// <summary>
         /// Runs a <see cref="CommandBundle"/> under <b>sudo</b> on the remote machine.
