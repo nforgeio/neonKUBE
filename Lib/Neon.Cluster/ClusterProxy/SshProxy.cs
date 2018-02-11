@@ -2269,7 +2269,7 @@ echo $? > {cmdFolder}/exit
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(user));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
 
-            command = $"sudo -S -u {user} bash -c '{command}'";
+            command = $"sudo -u {user} bash -c '{command}'";
 
             var sbScript = new StringBuilder();
 
@@ -2280,9 +2280,7 @@ echo $? > {cmdFolder}/exit
                 sbScript.AppendLine($"export PATH={RemotePath}");
             }
 
-            sbScript.AppendLine($"{command} <<__EOF__");
-            sbScript.AppendLine("");
-            sbScript.AppendLine("__EOF__");
+            sbScript.AppendLine(command);
 
             var bundle = new CommandBundle("./script.sh");
 
