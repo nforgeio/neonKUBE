@@ -31,12 +31,19 @@ namespace Neon.Cluster
     /// </summary>
     public class CephOptions
     {
-        private const string defaultVersion             = "luminous";
-        private const string defaultDriveSize           = "128GB";
-        private const string defaultCacheSize           = "1GB";
-        private const string defaultJournalSize         = "5GB";
-        private const string defaultObjectSizeMax       = "5GB";
-        private const int    defaultPlacementGroupCount = 100;
+        private const string defaultVersion            = "luminous";
+        private const string defaultOSDDriveSize       = "128GB";
+        private const string defaultOSDCacheSize       = "1GB";
+        private const string defaultOSDJournalSize     = "5GB";
+        private const string defaultOSDObjectSizeMax   = "5GB";
+        private const int    defaultOSDPlacementGroups = 100;
+        private const string defaultMDSCacheSize       = "1GB";
+
+        /// <summary>
+        /// The fudge factor to apply to Ceph cache sizes before actually
+        /// configuring the services.
+        /// </summary>
+        public const double CacheSizeFudge = 1.0/1.5;
 
         /// <summary>
         /// Indicates whether Ceph storage is to be enabled for the cluster.  
@@ -78,9 +85,9 @@ namespace Neon.Cluster
         /// with units like <b>512MB</b> or <b>2GB</b>.  This can be overridden 
         /// for specific nodes.  This defaults to <b>128GB</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "DriveSize", Required = Required.Default)]
-        [DefaultValue(defaultDriveSize)]
-        public string DriveSize { get; set; } = defaultDriveSize;
+        [JsonProperty(PropertyName = "OSDDriveSize", Required = Required.Default)]
+        [DefaultValue(defaultOSDDriveSize)]
+        public string OSDDriveSize { get; set; } = defaultOSDDriveSize;
 
         /// <summary>
         /// <para>
@@ -92,9 +99,9 @@ namespace Neon.Cluster
         /// <note>
         /// <para>
         /// The <a href="https://ceph.com/community/new-luminous-bluestore/">Ceph documentation</a>
-        /// states that OSDs may tend to underestimate the RAM it's using by up to 1.5 times.
+        /// states that OSD may tend to underestimate the RAM it's using by up to 1.5 times.
         /// To avoid potential memory issues, neonCLUSTER  will adjust this value by dividing it 
-        /// by 1.5 to when actually configuring the OSDs.
+        /// by 1.5 to when actually configuring OSD services.
         /// </para>
         /// <para>
         /// You should also take care to leave 1-2GB of RAM for the host Linux operating system
@@ -102,54 +109,78 @@ namespace Neon.Cluster
         /// </para>
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "CacheSize", Required = Required.Default)]
-        [DefaultValue(defaultCacheSize)]
-        public string CacheSize { get; set; } = defaultCacheSize;
+        [JsonProperty(PropertyName = "OSDCacheSize", Required = Required.Default)]
+        [DefaultValue(defaultOSDCacheSize)]
+        public string OSDCacheSize { get; set; } = defaultOSDCacheSize;
 
         /// <summary>
         /// Specifies the default size to allocate for the OSD journals.  This can be a 
         /// long byte count or a long with units like <b>512MB</b> or <b>2GB</b>.  This 
         /// can be overridden for specific nodes.  This defaults to <b>5GB</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "JournalSize", Required = Required.Default)]
-        [DefaultValue(defaultJournalSize)]
-        public string JournalSize { get; set; } = defaultJournalSize;
+        [JsonProperty(PropertyName = "OSDJournalSize", Required = Required.Default)]
+        [DefaultValue(defaultOSDJournalSize)]
+        public string OSDJournalSize { get; set; } = defaultOSDJournalSize;
 
         /// <summary>
         /// Specifies the maximum size of a Ceph RADOS object in bytes.  This can be a 
         /// long byte count or a long with units like <b>512MB</b> or <b>2GB</b>.  This 
         /// can be overridden for specific nodes.  This defaults to <b>5GB</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "ObjectSizeMax", Required = Required.Default)]
-        [DefaultValue(defaultObjectSizeMax)]
-        public string ObjectSizeMax { get; set; } = defaultObjectSizeMax;
+        [JsonProperty(PropertyName = "OSDObjectSizeMax", Required = Required.Default)]
+        [DefaultValue(defaultOSDObjectSizeMax)]
+        public string OSDObjectSizeMax { get; set; } = defaultOSDObjectSizeMax;
 
         /// <summary>
         /// Specifies the default number of object replicas to be stored in the cluster.
         /// This defaults to the minimum of 3 or the number of OSD nodes provisioned
         /// in the cluster.
         /// </summary>
-        [JsonProperty(PropertyName = "ReplicaCount", Required = Required.Default)]
+        [JsonProperty(PropertyName = "OSDReplicaCount", Required = Required.Default)]
         [DefaultValue(0)]
-        public int ReplicaCount { get; set; } = 0;
+        public int OSDReplicaCount { get; set; } = 0;
 
         /// <summary>
         /// Specifies the minimum number of objects replicas required when the
         /// Ceph storage cluster is operating in a degraded state.  This defaults
-        /// to <see cref="ReplicaCount"/><b>-1</b> unless <see cref="ReplicaCount"/><b>==1</b>
+        /// to <see cref="OSDReplicaCount"/><b>-1</b> unless <see cref="OSDReplicaCount"/><b>==1</b>
         /// in which case this will also default to 1.
         /// </summary>
-        [JsonProperty(PropertyName = "ReplicaCountMin", Required = Required.Default)]
+        [JsonProperty(PropertyName = "OSDReplicaCountMin", Required = Required.Default)]
         [DefaultValue(0)]
-        public int ReplicaCountMin { get; set; }
+        public int OSDReplicaCountMin { get; set; }
 
         /// <summary>
         /// Specifies the default number of placement groups assigned to each OSD.
         /// This defaults to <b>100</b>.
         /// </summary>
-        [JsonProperty(PropertyName = "PlacementGroupCount", Required = Required.Default)]
-        [DefaultValue(defaultPlacementGroupCount)]
-        public int PlacementGroupCount { get; set; } = defaultPlacementGroupCount;
+        [JsonProperty(PropertyName = "OSDPlacementGroups", Required = Required.Default)]
+        [DefaultValue(defaultOSDPlacementGroups)]
+        public int OSDPlacementGroups { get; set; } = defaultOSDPlacementGroups;
+
+        /// <summary>
+        /// <para>
+        /// Specifies the default amount of RAM to allocate to Ceph MDS processes for 
+        /// caching.  This can be a long byte count or a long with units like <b>512MB</b> 
+        /// or <b>2GB</b>.  This can be overridden for specific nodes.  This defaults
+        /// to <b>1GB</b> (which is probably too small for production clusters).
+        /// </para>
+        /// <note>
+        /// <para>
+        /// The Ceph documentation states that MDS may tend to underestimate the RAM it's 
+        /// using by up to 1.5 times.  To avoid potential memory issues, neonCLUSTER  will 
+        /// adjust this value by dividing it  by 1.5 to when actually configuring the 
+        /// MDS services.
+        /// </para>
+        /// <para>
+        /// You should also take care to leave 1-2GB of RAM for the host Linux operating system
+        /// as well as the OSD non-cache related memory when you're configuring this property.
+        /// </para>
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "MDSCacheSize", Required = Required.Default)]
+        [DefaultValue(defaultMDSCacheSize)]
+        public string MDSCacheSize { get; set; } = defaultMDSCacheSize;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
@@ -245,24 +276,29 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(Version)}={Version}] is not a valid.  Please use something like [{defaultVersion}].");
             }
 
-            if (ClusterDefinition.ValidateSize(DriveSize, this.GetType(), nameof(DriveSize)) < NeonHelper.Giga)
+            if (ClusterDefinition.ValidateSize(OSDDriveSize, this.GetType(), nameof(OSDDriveSize)) < NeonHelper.Giga)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(DriveSize)}={DriveSize}] cannot be less than [1GB].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDDriveSize)}={OSDDriveSize}] cannot be less than [1GB].");
             }
 
-            if (ClusterDefinition.ValidateSize(CacheSize, this.GetType(), nameof(CacheSize)) < 100 * NeonHelper.Mega)
+            if (ClusterDefinition.ValidateSize(OSDCacheSize, this.GetType(), nameof(OSDCacheSize)) < 100 * NeonHelper.Mega)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(CacheSize)}={CacheSize}] cannot be less than [100MB].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDCacheSize)}={OSDCacheSize}] cannot be less than [100MB].");
             }
 
-            if (ClusterDefinition.ValidateSize(JournalSize, this.GetType(), nameof(JournalSize)) < 100 * NeonHelper.Mega)
+            if (ClusterDefinition.ValidateSize(OSDJournalSize, this.GetType(), nameof(OSDJournalSize)) < 100 * NeonHelper.Mega)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(JournalSize)}={JournalSize}] cannot be less than [100MB].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDJournalSize)}={OSDJournalSize}] cannot be less than [100MB].");
             }
 
-            if (ClusterDefinition.ValidateSize(ObjectSizeMax, this.GetType(), nameof(ObjectSizeMax)) < 100 * NeonHelper.Mega)
+            if (ClusterDefinition.ValidateSize(OSDObjectSizeMax, this.GetType(), nameof(OSDObjectSizeMax)) < 100 * NeonHelper.Mega)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(ObjectSizeMax)}={ObjectSizeMax}] cannot be less than [100MB].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDObjectSizeMax)}={OSDObjectSizeMax}] cannot be less than [100MB].");
+            }
+
+            if (ClusterDefinition.ValidateSize(MDSCacheSize, this.GetType(), nameof(MDSCacheSize)) < 100 * NeonHelper.Mega)
+            {
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(MDSCacheSize)}={MDSCacheSize}] cannot be less than [100MB].");
             }
 
             if (cephMonitorCount == 0)
@@ -280,55 +316,55 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"Ceph storage cluster requires at least one MDS (metadata) node.");
             }
 
-            if (ReplicaCount == 0)
+            if (OSDReplicaCount == 0)
             {
                 // Set a reasonable default.
 
-                ReplicaCount = Math.Min(3, cephOSDCount);
+                OSDReplicaCount = Math.Min(3, cephOSDCount);
             }
 
-            if (ReplicaCount < 0)
+            if (OSDReplicaCount < 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(ReplicaCount)}={ReplicaCount}] cannot be less than zero.");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCount)}={OSDReplicaCount}] cannot be less than zero.");
             }
 
-            if (ReplicaCount > cephOSDCount)
+            if (OSDReplicaCount > cephOSDCount)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(ReplicaCount)}={ReplicaCount}] cannot be greater than the number of OSD nodes [{cephOSDCount}].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCount)}={OSDReplicaCount}] cannot be greater than the number of OSD nodes [{cephOSDCount}].");
             }
 
-            if (ReplicaCountMin == 0)
+            if (OSDReplicaCountMin == 0)
             {
                 // Set a reasonable default.
 
-                if (ReplicaCount == 1)
+                if (OSDReplicaCount == 1)
                 {
-                    ReplicaCountMin = 1;
+                    OSDReplicaCountMin = 1;
                 }
                 else
                 {
-                    ReplicaCountMin = ReplicaCount - 1;
+                    OSDReplicaCountMin = OSDReplicaCount - 1;
                 }
             }
 
-            if (ReplicaCountMin < 0)
+            if (OSDReplicaCountMin < 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(ReplicaCountMin)}={ReplicaCountMin}] cannot be less than zero.");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be less than zero.");
             }
 
-            if (ReplicaCountMin > ReplicaCount)
+            if (OSDReplicaCountMin > OSDReplicaCount)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(ReplicaCountMin)}={ReplicaCountMin}] cannot be less than [{nameof(ReplicaCount)}={ReplicaCount}].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be less than [{nameof(OSDReplicaCount)}={OSDReplicaCount}].");
             }
 
-            if (ReplicaCountMin > cephOSDCount)
+            if (OSDReplicaCountMin > cephOSDCount)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(ReplicaCountMin)}={ReplicaCountMin}] cannot be greater than the number of OSD nodes [{cephOSDCount}].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be greater than the number of OSD nodes [{cephOSDCount}].");
             }
 
-            if (PlacementGroupCount < 8)
+            if (OSDPlacementGroups < 8)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(PlacementGroupCount)}={PlacementGroupCount}] cannot be less than [8].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDPlacementGroups)}={OSDPlacementGroups}] cannot be less than [8].");
             }
         }
     }

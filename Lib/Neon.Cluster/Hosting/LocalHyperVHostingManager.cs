@@ -642,7 +642,7 @@ namespace Neon.Cluster
                         new VirtualDrive()
                         {
                             IsDynamic = true,
-                            Size      = node.Metadata.GetCephDriveSize(cluster.Definition),
+                            Size      = node.Metadata.GetCephOSDDriveSize(cluster.Definition),
                             Path      = Path.Combine(vmDriveFolder, $"{vmName}-[1].vhdx")
                         });
                 }

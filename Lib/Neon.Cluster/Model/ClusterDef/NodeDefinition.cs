@@ -412,22 +412,22 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        public long GetCephDriveSize(ClusterDefinition clusterDefinition)
+        public long GetCephOSDDriveSize(ClusterDefinition clusterDefinition)
         {
             if (!clusterDefinition.Ceph.Enabled)
             {
                 return 0;
             }
 
-            if (Labels.CephDriveSizeGB > 0)
+            if (Labels.CephOSDDriveSizeGB > 0)
             {
-                return Labels.CephDriveSizeGB;
+                return Labels.CephOSDDriveSizeGB;
             }
             else
             {
-                Labels.CephDriveSizeGB = (int)(ClusterDefinition.ValidateSize(clusterDefinition.Ceph.DriveSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.DriveSize))/NeonHelper.Giga);
+                Labels.CephOSDDriveSizeGB = (int)(ClusterDefinition.ValidateSize(clusterDefinition.Ceph.OSDDriveSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.OSDDriveSize))/NeonHelper.Giga);
 
-                return (long)Labels.CephDriveSizeGB * NeonHelper.Giga;
+                return (long)Labels.CephOSDDriveSizeGB * NeonHelper.Giga;
             }
         }
 
@@ -438,22 +438,22 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        public long GetCephCacheSize(ClusterDefinition clusterDefinition)
+        public long GetCephOSDCacheSize(ClusterDefinition clusterDefinition)
         {
             if (!clusterDefinition.Ceph.Enabled)
             {
                 return 0;
             }
 
-            if (Labels.CephDriveSizeGB > 0)
+            if (Labels.CephOSDCacheSizeMB > 0)
             {
-                return Labels.CephCacheSizeMB;
+                return Labels.CephOSDCacheSizeMB;
             }
             else
             {
-                Labels.CephCacheSizeMB = (int)(ClusterDefinition.ValidateSize(clusterDefinition.Ceph.CacheSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.CacheSize))/NeonHelper.Mega);
+                Labels.CephOSDCacheSizeMB = (int)(ClusterDefinition.ValidateSize(clusterDefinition.Ceph.OSDCacheSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.OSDCacheSize))/NeonHelper.Mega);
 
-                return (long)Labels.CephCacheSizeMB * NeonHelper.Mega;
+                return (long)Labels.CephOSDCacheSizeMB * NeonHelper.Mega;
             }
         }
 
@@ -464,22 +464,48 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        public long GetCephJournalSize(ClusterDefinition clusterDefinition)
+        public long GetCephOSDJournalSize(ClusterDefinition clusterDefinition)
         {
             if (!clusterDefinition.Ceph.Enabled)
             {
                 return 0;
             }
 
-            if (Labels.CephJournalSizeMB > 0)
+            if (Labels.CephOSDJournalSizeMB > 0)
             {
-                return Labels.CephJournalSizeMB;
+                return Labels.CephOSDJournalSizeMB;
             }
             else
             {
-                Labels.CephJournalSizeMB = (int)(ClusterDefinition.ValidateSize(clusterDefinition.Ceph.JournalSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.JournalSize)) / NeonHelper.Mega);
+                Labels.CephOSDJournalSizeMB = (int)(ClusterDefinition.ValidateSize(clusterDefinition.Ceph.OSDJournalSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.OSDJournalSize)) / NeonHelper.Mega);
 
-                return (long)Labels.CephJournalSizeMB * NeonHelper.Mega;
+                return (long)Labels.CephOSDJournalSizeMB * NeonHelper.Mega;
+            }
+        }
+
+        /// <summary>
+        /// Returns the size in bytes of RAM to allocate to the MDS cache
+        /// on this node integrated Ceph storage cluster is enabled and
+        /// MDS is deployed to the node.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
+        public long GetCephMDSCacheSize(ClusterDefinition clusterDefinition)
+        {
+            if (!clusterDefinition.Ceph.Enabled)
+            {
+                return 0;
+            }
+
+            if (Labels.CephMDSCacheSizeMB > 0)
+            {
+                return Labels.CephMDSCacheSizeMB;
+            }
+            else
+            {
+                Labels.CephMDSCacheSizeMB = (int)(ClusterDefinition.ValidateSize(clusterDefinition.Ceph.MDSCacheSize, clusterDefinition.Hosting.GetType(), nameof(clusterDefinition.Ceph.MDSCacheSize)) / NeonHelper.Mega);
+
+                return (long)Labels.CephMDSCacheSizeMB * NeonHelper.Mega;
             }
         }
 

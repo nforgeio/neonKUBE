@@ -461,19 +461,24 @@ namespace Neon.Cluster
         public const string LabelCephMDS = ClusterDefinition.ReservedLabelPrefix + ".ceph.mds";
 
         /// <summary>
-        /// Reserved label name for <see cref="CephDriveSizeGB"/>.
+        /// Reserved label name for <see cref="CephOSDDriveSizeGB"/>.
         /// </summary>
-        public const string LabelCephDriveSizeGB = ClusterDefinition.ReservedLabelPrefix + ".ceph.drivesize_gb";
+        public const string LabelCephOSDDriveSizeGB = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_drivesize_gb";
 
         /// <summary>
-        /// Reserved label name for <see cref="CephCacheSizeMB"/>.
+        /// Reserved label name for <see cref="CephOSDCacheSizeMB"/>.
         /// </summary>
-        public const string LabelCephCacheSizeMB = ClusterDefinition.ReservedLabelPrefix + ".ceph.cachesize_mb";
+        public const string LabelCephOSDCacheSizeMB = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_cachesize_mb";
 
         /// <summary>
-        /// Reserved label name for <see cref="CephJournalSizeMB"/>.
+        /// Reserved label name for <see cref="CephOSDJournalSizeMB"/>.
         /// </summary>
-        public const string LabelCephJournalSizeMB = ClusterDefinition.ReservedLabelPrefix + ".ceph.journalsize_mb";
+        public const string LabelCephOSDJournalSizeMB = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_journalsize_mb";
+
+        /// <summary>
+        /// Reserved label name for <see cref="CephOSDJournalSizeMB"/>.
+        /// </summary>
+        public const string LabelCephMDSCacheSizeMB = ClusterDefinition.ReservedLabelPrefix + ".ceph.mds_cachesize_mb";
 
         /// <summary>
         /// <b>io.neon.ceph.monitor</b> [<c>bool</c>]: Indicates that the Ceph 
@@ -548,19 +553,19 @@ namespace Neon.Cluster
         /// <b>io.neon.ceph.drivesize_gb</b> [<c>int</c>]: Specifies the size in gigabytes
         /// of the Ceph OSD drive created for cloud and hypervisor based environments if the
         /// integrated Ceph storage cluster is enabled and <see cref="CephOSD"/>
-        /// is <c>true</c> for this node.  This defaults to <see cref="CephOptions.DriveSize"/>
+        /// is <c>true</c> for this node.  This defaults to <see cref="CephOptions.OSDDriveSize"/>
         /// (<b>128GB</b>).
         /// </summary>
-        [JsonProperty(PropertyName = "CephDriveSizeGB", Required = Required.Default)]
+        [JsonProperty(PropertyName = "CephOSDDriveSizeGB", Required = Required.Default)]
         [DefaultValue(0)]
-        public int CephDriveSizeGB { get; set; } = 0;
+        public int CephOSDDriveSizeGB { get; set; } = 0;
 
         /// <summary>
         /// <para>
         /// <b>io.neon.ceph.cachesize_mb</b> [<c>int</c>]: Specifies the RAM in megabytes
         /// to assign to the Ceph OSDs for caching if the integrated Ceph storage cluster 
         /// is enabled and <see cref="CephOSD"/> is <c>true</c> for this node.
-        /// This defaults to <see cref="CephOptions.CacheSize"/> (<b>1GB</b>) (which is 
+        /// This defaults to <see cref="CephOptions.OSDCacheSize"/> (<b>1GB</b>) (which is 
         /// probably too small for production clusters).
         /// </para>
         /// <note>
@@ -568,7 +573,7 @@ namespace Neon.Cluster
         /// The <a href="https://ceph.com/community/new-luminous-bluestore/">Ceph documentation</a>
         /// states that OSDs may tend to underestimate the RAM it's using by up to 1.5 times.
         /// To avoid potential memory issues, neonCLUSTER  will adjust this value by dividing it 
-        /// by 1.5 to when actually configuring the OSDs.
+        /// by 1.5 to when actually configuring the OSD services.
         /// </para>
         /// <para>
         /// You should also take care to leave 1-2GB of RAM for the host Linux operating system
@@ -576,19 +581,43 @@ namespace Neon.Cluster
         /// </para>
         /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "CephCacheSizeMB", Required = Required.Default)]
+        [JsonProperty(PropertyName = "CephOSDCacheSizeMB", Required = Required.Default)]
         [DefaultValue(0)]
-        public int CephCacheSizeMB { get; set; } = 0;
+        public int CephOSDCacheSizeMB { get; set; } = 0;
 
         /// <summary>
         /// <b>io.neon.ceph.journalsize_mb</b> [<c>int</c>]: Specifies the disk capacity
         /// in megabytes to assign to the Ceph OSD journal if the integrated Ceph storage 
         /// cluster is enabled and <see cref="CephOSD"/> is <c>true</c> for this node.
-        /// This defaults to <see cref="CephOptions.JournalSize"/>.
+        /// This defaults to <see cref="CephOptions.OSDJournalSize"/>.
         /// </summary>
-        [JsonProperty(PropertyName = "CephJournalSizeMB", Required = Required.Default)]
+        [JsonProperty(PropertyName = "CephOSDJournalSizeMB", Required = Required.Default)]
         [DefaultValue(0)]
-        public int CephJournalSizeMB { get; set; } = 0;
+        public int CephOSDJournalSizeMB { get; set; } = 0;
+
+        /// <summary>
+        /// <para>
+        /// <b>io.neon.ceph.mds_cachesize_mb</b> [<c>int</c>]: Specifies the RAM in megabytes
+        /// to assign to the Ceph MDS services for caching if the integrated Ceph storage cluster 
+        /// is enabled and <see cref="CephMDS"/> is <c>true</c> for this node.
+        /// This defaults to <see cref="CephOptions.MDSCacheSize"/> (<b>1GB</b>) (which is 
+        /// probably too small for production clusters).
+        /// </para>
+        /// <note>
+        /// <para>
+        /// The Ceph documentation states that OSDs may tend to underestimate the RAM it's using
+        /// by up to 1.5 times.  To avoid potential memory issues, neonCLUSTER  will adjust this
+        /// value by dividing it  by 1.5 to when actually configuring the MDS services.
+        /// </para>
+        /// <para>
+        /// You should also take care to leave 1-2GB of RAM for the host Linux operating system
+        /// as well as the OSD non-cache related memory when you're configuring this property.
+        /// </para>
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "CephMDSCacheSizeMB", Required = Required.Default)]
+        [DefaultValue(0)]
+        public int CephMDSCacheSizeMB { get; set; } = 0;
 
         //---------------------------------------------------------------------
 
@@ -668,9 +697,10 @@ namespace Neon.Cluster
                 list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 CephOSD));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDDevice,           CephOSDDevice));
                 list.Add(new KeyValuePair<string, object>(LabelCephMDS,                 CephMDS));
-                list.Add(new KeyValuePair<string, object>(LabelCephDriveSizeGB,         CephDriveSizeGB));
-                list.Add(new KeyValuePair<string, object>(LabelCephCacheSizeMB,         CephCacheSizeMB));
-                list.Add(new KeyValuePair<string, object>(LabelCephJournalSizeMB,       CephJournalSizeMB));
+                list.Add(new KeyValuePair<string, object>(LabelCephOSDDriveSizeGB,      CephOSDDriveSizeGB));
+                list.Add(new KeyValuePair<string, object>(LabelCephOSDCacheSizeMB,      CephOSDCacheSizeMB));
+                list.Add(new KeyValuePair<string, object>(LabelCephOSDJournalSizeMB,    CephOSDJournalSizeMB));
+                list.Add(new KeyValuePair<string, object>(LabelCephMDSCacheSizeMB,      CephMDSCacheSizeMB));
 
                 return list;
             }
@@ -752,9 +782,10 @@ namespace Neon.Cluster
                     case LabelCephOSD:                  node.Labels.CephOSD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelCephOSDDevice:            node.Labels.CephOSDDevice = label.Value; break;
                     case LabelCephMDS:                  node.Labels.CephMDS = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
-                    case LabelCephDriveSizeGB:          ParseCheck(label, () => { node.Labels.CephDriveSizeGB = int.Parse(label.Value); }); break;
-                    case LabelCephCacheSizeMB:          ParseCheck(label, () => { node.Labels.CephCacheSizeMB = int.Parse(label.Value); }); break;
-                    case LabelCephJournalSizeMB:        ParseCheck(label, () => { node.Labels.CephJournalSizeMB = int.Parse(label.Value); }); break;
+                    case LabelCephOSDDriveSizeGB:       ParseCheck(label, () => { node.Labels.CephOSDDriveSizeGB = int.Parse(label.Value); }); break;
+                    case LabelCephOSDCacheSizeMB:       ParseCheck(label, () => { node.Labels.CephOSDCacheSizeMB = int.Parse(label.Value); }); break;
+                    case LabelCephOSDJournalSizeMB:     ParseCheck(label, () => { node.Labels.CephOSDJournalSizeMB = int.Parse(label.Value); }); break;
+                    case LabelCephMDSCacheSizeMB:       ParseCheck(label, () => { node.Labels.CephMDSCacheSizeMB = int.Parse(label.Value); }); break;
 
                     case LabelDatacenter:
                     case LabelEnvironment:
@@ -820,8 +851,8 @@ namespace Neon.Cluster
             target.CephMonitor         = this.CephMonitor;
             target.CephOSD             = this.CephOSD;
             target.CephMDS             = this.CephMDS;
-            target.CephDriveSizeGB     = this.CephDriveSizeGB;
-            target.CephCacheSizeMB     = this.CephCacheSizeMB;
+            target.CephOSDDriveSizeGB     = this.CephOSDDriveSizeGB;
+            target.CephOSDCacheSizeMB     = this.CephOSDCacheSizeMB;
 
             foreach (var item in this.Custom)
             {
@@ -841,19 +872,19 @@ namespace Neon.Cluster
 
             if (clusterDefinition.Ceph.Enabled)
             {
-                if (CephDriveSizeGB > 0 && CephDriveSizeGB < NeonHelper.Giga)
+                if (CephOSDDriveSizeGB > 0 && CephOSDDriveSizeGB < NeonHelper.Giga)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephDriveSizeGB)}={CephDriveSizeGB}] is cannot be less than [1GB].");
+                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephOSDDriveSizeGB)}={CephOSDDriveSizeGB}] is cannot be less than [1GB].");
                 }
 
-                if (CephCacheSizeMB > 0 && CephCacheSizeMB < 100 * NeonHelper.Mega)
+                if (CephOSDCacheSizeMB > 0 && CephOSDCacheSizeMB < 100 * NeonHelper.Mega)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephCacheSizeMB)}={CephCacheSizeMB}] is cannot be less than [100MB].");
+                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephOSDCacheSizeMB)}={CephOSDCacheSizeMB}] is cannot be less than [100MB].");
                 }
 
-                if (CephJournalSizeMB > 0 && CephJournalSizeMB < 100 * NeonHelper.Mega)
+                if (CephOSDJournalSizeMB > 0 && CephOSDJournalSizeMB < 100 * NeonHelper.Mega)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephCacheSizeMB)}={CephCacheSizeMB}] is cannot be less than [100MB].");
+                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephOSDCacheSizeMB)}={CephOSDCacheSizeMB}] is cannot be less than [100MB].");
                 }
             }
 
