@@ -407,6 +407,17 @@ namespace Neon.Cluster
         }
 
         /// <inheritdoc/>
+        public override void Validate(ClusterDefinition clusterDefinition)
+        {
+            // Identify the OSD Bluestore block device for OSD nodes.
+
+            if (cluster.Definition.Ceph.Enabled)
+            {
+                throw new NotImplementedException("$todo(jeff.lill): Implement this.");
+            }
+        }
+
+        /// <inheritdoc/>
         public override bool Provision(bool force)
         {
             // Update the node labels with the actual capabilities of the 
@@ -1499,12 +1510,6 @@ iface eth1 inet dhcp
 
             CreateNetworkSecurityGroups(NetworkUpdateSets.Worker, endpoints);
             CreateLoadbalancers(NetworkUpdateSets.Worker, endpoints);
-        }
-
-        /// <inheritdoc/>
-        public override string GetOSDDevice(NodeDefinition node)
-        {
-            throw new NotImplementedException("$todo(jeff.lill): Implement this.");
         }
     }
 }

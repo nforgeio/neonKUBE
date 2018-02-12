@@ -49,6 +49,8 @@ namespace Neon.Cluster
         /// <returns>The <see cref="HostingManager"/>.</returns>
         public static HostingManager GetManager(ClusterProxy cluster, string logFolder = null)
         {
+            Covenant.Requires<ArgumentNullException>(cluster != null);
+
             switch (cluster.Definition.Hosting.Environment)
             {
                 case HostingEnvironments.Aws:
@@ -83,6 +85,22 @@ namespace Neon.Cluster
 
                     throw new NotImplementedException($"Hosting manager for [{cluster.Definition.Hosting.Environment}] is not implemented.");
             }
+        }
+
+        /// <summary>
+        /// Verifies that a cluster is valid for the hosting manager, customizing 
+        /// properties as required.
+        /// </summary>
+        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <exception cref="ClusterDefinitionException">Thrown if any problems were detected.</exception>
+        public static void ValidateCluster(ClusterDefinition clusterDefinition)
+        {
+            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+
+            var cluster = new ClusterProxy(clusterDefinition);
+            var manager = HostingManager.GetManager(cluster);
+
+            manager.Validate(clusterDefinition);
         }
 
         /// <summary>
@@ -173,6 +191,9 @@ namespace Neon.Cluster
         }
 
         /// <inheritdoc/>
+        public abstract void Validate(ClusterDefinition clusterDefinition);
+
+        /// <inheritdoc/>
         public abstract bool Provision(bool force);
 
         /// <inheritdoc/>
@@ -192,8 +213,5 @@ namespace Neon.Cluster
 
         /// <inheritdoc/>
         public abstract void UpdatePublicEndpoints(List<HostedEndpoint> endpoints);
-
-        /// <inheritdoc/>
-        public abstract string GetOSDDevice(NodeDefinition node);
     }
 }

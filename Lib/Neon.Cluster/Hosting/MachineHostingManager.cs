@@ -68,6 +68,23 @@ namespace Neon.Cluster
         }
 
         /// <inheritdoc/>
+        public override void Validate(ClusterDefinition clusterDefinition)
+        {
+            // Ensure that the OSD Bluestore block device have been specified.
+
+            if (cluster.Definition.Ceph.Enabled)
+            {
+                foreach (var node in cluster.Definition.Nodes.Where(n => n.Labels.CephOSD))
+                {
+                    if (string.IsNullOrEmpty(node.Labels.CephOSDDevice))
+                    {
+                        throw new ClusterDefinitionException($"[{HostingEnvironments.Machine}] requires that the OSD node [{node.Name}] explicitly set [{nameof(NodeLabels)}.{nameof(NodeLabels.CephOSDDevice)}] to the target OSD block device.");
+                    }
+                }
+            }
+        }
+
+        /// <inheritdoc/>
         public override bool Provision(bool force)
         {
             // There's nothing to do here.
@@ -109,22 +126,6 @@ namespace Neon.Cluster
         {
             // Note that public endpoints have to be managed manually for
             // on-premise cluster deployments.
-        }
-
-        /// <inheritdoc/>
-        public override string GetOSDDevice(NodeDefinition node)
-        {
-            if (!node.Labels.CephOSD)
-            {
-                return null;
-            }
-
-            if (string.IsNullOrWhiteSpace(node.Labels.CephOSDDevice))
-            {
-                throw new ClusterDefinitionException($"Node [{node.Name}] cannot be configured as a Ceph OSD because [{nameof(NodeDefinition)}.{nameof(NodeDefinition.Labels)}.{nameof(NodeLabels.CephOSDDevice)}] isn't manually configured for the [{HostingEnvironments.Machine}] hosting environment.");
-            }
-
-            return node.Labels.CephOSDDevice;
         }
     }
 }

@@ -334,7 +334,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The number of cores.</returns>
-        internal int GetVmProcessors(ClusterDefinition clusterDefinition)
+        public int GetVmProcessors(ClusterDefinition clusterDefinition)
         {
             if (VmProcessors != 0)
             {
@@ -352,7 +352,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes.</returns>
-        internal long GetVmMemory(ClusterDefinition clusterDefinition)
+        public long GetVmMemory(ClusterDefinition clusterDefinition)
         {
             if (!string.IsNullOrEmpty(VmMemory))
             {
@@ -370,7 +370,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes.</returns>
-        internal long GetVmMinimumMemory(ClusterDefinition clusterDefinition)
+        public long GetVmMinimumMemory(ClusterDefinition clusterDefinition)
         {
             if (!string.IsNullOrEmpty(VmMinimumMemory))
             {
@@ -394,7 +394,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes.</returns>
-        internal long GetVmDisk(ClusterDefinition clusterDefinition)
+        public long GetVmDisk(ClusterDefinition clusterDefinition)
         {
             if (!string.IsNullOrEmpty(VmDisk))
             {
@@ -412,7 +412,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        internal long GetCephDriveSize(ClusterDefinition clusterDefinition)
+        public long GetCephDriveSize(ClusterDefinition clusterDefinition)
         {
             if (!clusterDefinition.Ceph.Enabled)
             {
@@ -438,7 +438,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        internal long GetCephCacheSize(ClusterDefinition clusterDefinition)
+        public long GetCephCacheSize(ClusterDefinition clusterDefinition)
         {
             if (!clusterDefinition.Ceph.Enabled)
             {
@@ -464,7 +464,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>
         /// <returns>The size in bytes or zero if Ceph is not enabled.</returns>
-        internal long GetCephJournalSize(ClusterDefinition clusterDefinition)
+        public long GetCephJournalSize(ClusterDefinition clusterDefinition)
         {
             if (!clusterDefinition.Ceph.Enabled)
             {

@@ -632,6 +632,8 @@ namespace Neon.Cluster
             Dashboard.Validate(this);
             Ceph.Validate(this);
 
+            HostingManager.ValidateCluster(this);
+
             if (TimeSources == null || TimeSources.Length == 0 || TimeSources.Count(ts => string.IsNullOrWhiteSpace(ts)) > 0)
             {
                 TimeSources = new string[] { "pool.ntp.org" };

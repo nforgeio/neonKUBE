@@ -548,17 +548,33 @@ namespace Neon.Cluster
         /// <b>io.neon.ceph.drivesize_gb</b> [<c>int</c>]: Specifies the size in gigabytes
         /// of the Ceph OSD drive created for cloud and hypervisor based environments if the
         /// integrated Ceph storage cluster is enabled and <see cref="CephOSD"/>
-        /// is <c>true</c> for this node.  This defaults to <see cref="CephOptions.DriveSize"/>.
+        /// is <c>true</c> for this node.  This defaults to <see cref="CephOptions.DriveSize"/>
+        /// (<b>128GB</b>).
         /// </summary>
         [JsonProperty(PropertyName = "CephDriveSizeGB", Required = Required.Default)]
         [DefaultValue(0)]
         public int CephDriveSizeGB { get; set; } = 0;
 
         /// <summary>
+        /// <para>
         /// <b>io.neon.ceph.cachesize_mb</b> [<c>int</c>]: Specifies the RAM in megabytes
-        /// to assign to the Ceph OSD for caching if the integrated Ceph storage cluster 
+        /// to assign to the Ceph OSDs for caching if the integrated Ceph storage cluster 
         /// is enabled and <see cref="CephOSD"/> is <c>true</c> for this node.
-        /// This defaults to <see cref="CephOptions.CacheSize"/>.
+        /// This defaults to <see cref="CephOptions.CacheSize"/> (<b>1GB</b>) (which is 
+        /// probably too small for production clusters).
+        /// </para>
+        /// <note>
+        /// <para>
+        /// The <a href="https://ceph.com/community/new-luminous-bluestore/">Ceph documentation</a>
+        /// states that OSDs may tend to underestimate the RAM it's using by up to 1.5 times.
+        /// To avoid potential memory issues, neonCLUSTER  will adjust this value by dividing it 
+        /// by 1.5 to when actually configuring the OSDs.
+        /// </para>
+        /// <para>
+        /// You should also take care to leave 1-2GB of RAM for the host Linux operating system
+        /// as well as the OSD non-cache related memory when you're configuring this property.
+        /// </para>
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "CephCacheSizeMB", Required = Required.Default)]
         [DefaultValue(0)]

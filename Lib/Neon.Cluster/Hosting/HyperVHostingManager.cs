@@ -62,6 +62,20 @@ namespace Neon.Cluster
         }
 
         /// <inheritdoc/>
+        public override void Validate(ClusterDefinition clusterDefinition)
+        {
+            // Identify the OSD Bluestore block device for OSD nodes.
+
+            if (cluster.Definition.Ceph.Enabled)
+            {
+                foreach (var node in cluster.Definition.Nodes.Where(n => n.Labels.CephOSD))
+                {
+                    node.Labels.CephOSDDevice = "/dev/sdb";
+                }
+            }
+        }
+
+        /// <inheritdoc/>
         public override bool Provision(bool force)
         {
             throw new NotImplementedException("$todo(jeff.lill): Implement this.");
@@ -95,12 +109,6 @@ namespace Neon.Cluster
         /// <inheritdoc/>
         public override void UpdatePublicEndpoints(List<HostedEndpoint> endpoints)
         {
-        }
-
-        /// <inheritdoc/>
-        public override string GetOSDDevice(NodeDefinition node)
-        {
-            throw new NotImplementedException("$todo(jeff.lill): Implement this.");
         }
     }
 }

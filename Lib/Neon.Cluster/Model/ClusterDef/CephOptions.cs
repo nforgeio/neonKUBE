@@ -83,10 +83,24 @@ namespace Neon.Cluster
         public string DriveSize { get; set; } = defaultDriveSize;
 
         /// <summary>
+        /// <para>
         /// Specifies the default amount of RAM to allocate to Ceph OSD processes for 
         /// caching.  This can be a long byte count or a long with units like <b>512MB</b> 
         /// or <b>2GB</b>.  This can be overridden for specific nodes.  This defaults
-        /// to <b>1GB</b>.
+        /// to <b>1GB</b> (which is probably too small for production clusters).
+        /// </para>
+        /// <note>
+        /// <para>
+        /// The <a href="https://ceph.com/community/new-luminous-bluestore/">Ceph documentation</a>
+        /// states that OSDs may tend to underestimate the RAM it's using by up to 1.5 times.
+        /// To avoid potential memory issues, neonCLUSTER  will adjust this value by dividing it 
+        /// by 1.5 to when actually configuring the OSDs.
+        /// </para>
+        /// <para>
+        /// You should also take care to leave 1-2GB of RAM for the host Linux operating system
+        /// as well as the OSD non-cache related memory when you're configuring this property.
+        /// </para>
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "CacheSize", Required = Required.Default)]
         [DefaultValue(defaultCacheSize)]

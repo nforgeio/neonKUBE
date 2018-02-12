@@ -284,7 +284,7 @@ OPTIONS:
                     controller.AddStep("ceph packages", n => CephPackages(n));
                     controller.AddGlobalStep("ceph settings", () => CephSettings());
                     controller.AddStep("ceph bootstrap", n => CephBootstrap(n), n => n.Metadata.Labels.CephMonitor);
-                    controller.AddStep("ceph config", n => CephConfig(n));
+                    controller.AddStep("ceph cluster", n => CephCluster(n));
                 }
 
                 controller.AddStep("networks", n => CreateClusterNetworks(n), n => n == cluster.FirstManager);
@@ -1722,7 +1722,9 @@ $@"docker login \
         /// <summary>
         /// Generates and uploads the Ceph configuration file to a node.
         /// </summary>
-        private void UploadCephConf(SshProxy<NodeDefinition> node)
+        /// <param name="node">The target node.</param>
+        /// <param name="confOnly">Optionally specifies that only the <b>ceph.conf</b> file is to be uploaded.</param>
+        private void UploadCephConf(SshProxy<NodeDefinition> node, bool confOnly = false)
         {
             node.Status = "ceph config file";
 
@@ -1768,8 +1770,18 @@ osd pool default min size = {cluster.Definition.Ceph.ReplicaCountMin}
 osd pool default pg num = {cluster.Definition.Ceph.PlacementGroupCount}
 osd pool default pgp num = {cluster.Definition.Ceph.PlacementGroupCount}
 osd crush chooseleaf type = 1
+bluestore_cache_size = {(int)(node.Metadata.GetCephCacheSize(cluster.Definition) / 1.5) / NeonHelper.Mega}
 {mdsConf}
 ");
+            if (!confOnly)
+            {
+                var cephUser         = cluster.Definition.Ceph.Username;
+                var adminKeyringPath = "/etc/ceph/ceph.client.admin.keyring";
+
+                node.UploadText(adminKeyringPath, clusterLogin.Ceph.AdminKeyring);
+                node.SudoCommand($"chown {cephUser}:{cephUser} {adminKeyringPath}");
+                node.SudoCommand($"chown 660 {adminKeyringPath}");
+            }
         }
 
         /// <summary>
@@ -1792,7 +1804,7 @@ osd crush chooseleaf type = 1
 
                     // Upload the Ceph config file here because we'll need it below.
 
-                    UploadCephConf(node);
+                    UploadCephConf(node, confOnly: true);
 
                     // Create the monitor data directory and load the monitor map and keyring.
 
@@ -1813,7 +1825,11 @@ osd crush chooseleaf type = 1
 
                     // Upload the client admin keyring.
 
-                    node.UploadText("/etc/ceph/ceph.client.admin.keyring", clusterLogin.Ceph.AdminKeyring);
+                    var adminKeyringPath = "/etc/ceph/ceph.client.admin.keyring";
+
+                    node.UploadText(adminKeyringPath, clusterLogin.Ceph.AdminKeyring);
+                    node.SudoCommand($"chown {cephUser}:{cephUser} {adminKeyringPath}");
+                    node.SudoCommand($"chown 660 {adminKeyringPath}");
 
                     // Indicate that we're done configuring the monitor and start it.
 
@@ -1864,10 +1880,11 @@ osd crush chooseleaf type = 1
         }
 
         /// <summary>
-        /// Configures the Ceph OSD and MSD nodes.
+        /// Configures the Ceph cluster by configuring and starting the OSD and MSD 
+        /// services and then creating and mounting a CephFS file system.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void CephConfig(SshProxy<NodeDefinition> node)
+        private void CephCluster(SshProxy<NodeDefinition> node)
         {
             node.InvokeIdempotentAction("setup-ceph-config",
                 () =>
@@ -1881,10 +1898,10 @@ osd crush chooseleaf type = 1
                     if (node.Metadata.Labels.CephOSD)
                     {
                         node.UploadText("/var/lib/ceph/bootstrap-osd/ceph.keyring", clusterLogin.Ceph.OSDKeyring);
-                        node.SudoCommand($"ceph-volume lvm create --data {node.Metadata.Labels.CephOSDDevice}");
+                        node.SudoCommand($"ceph-volume lvm create --bluestore --data {node.Metadata.Labels.CephOSDDevice}");
                     }
 
-                    // Configure MDS is enabled for this node.
+                    // Configure MDS if enabled for this node.
 
                     if (node.Metadata.Labels.CephMDS)
                     {
@@ -1892,7 +1909,7 @@ osd crush chooseleaf type = 1
                 });
         }
 
-        /// <summary>
+        /// <summary>--bluestore 
         /// Configures the Vault load balancer service: <b>neon-proxy-vault</b>.
         /// </summary>
         private void VaultProxy()

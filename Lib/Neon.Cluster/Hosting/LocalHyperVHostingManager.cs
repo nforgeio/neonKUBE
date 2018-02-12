@@ -106,6 +106,20 @@ namespace Neon.Cluster
         }
 
         /// <inheritdoc/>
+        public override void Validate(ClusterDefinition clusterDefinition)
+        {
+            // Identify the OSD Bluestore block device for OSD nodes.
+
+            if (cluster.Definition.Ceph.Enabled)
+            {
+                foreach (var node in cluster.Definition.Nodes.Where(n => n.Labels.CephOSD))
+                {
+                    node.Labels.CephOSDDevice = "/dev/sdb";
+                }
+            }
+        }
+
+        /// <inheritdoc/>
         public override bool Provision(bool force)
         {
             // $todo(jeff.lill):
@@ -755,20 +769,6 @@ nameserver 8.8.4.4
             // able to connect to the nodes via the correct addresses.
 
             cluster.CreateNodes();
-        }
-
-        /// <inheritdoc/>
-        public override string GetOSDDevice(NodeDefinition node)
-        {
-            if (!node.Labels.CephOSD)
-            {
-                return null;
-            }
-
-            // The current provisioning implementation above configures this
-            // as the following device.
-
-            return "/dev/sdb";
         }
     }
 }
