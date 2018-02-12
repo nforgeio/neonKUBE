@@ -15,6 +15,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -1180,7 +1181,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
 
                     node.SudoCommand("mkdir -p /etc/docker");
                     node.UploadText("/etc/docker/daemon.json", GetDockerConfig(node));
-                    node.SudoCommand("chmod 660 /etc/docker/daemon.json");
+                    node.SudoCommand("chmod 640 /etc/docker/daemon.json");
                     node.SudoCommand("setup-docker.sh");
 
                     if (!string.IsNullOrEmpty(cluster.Definition.Docker.RegistryUsername))
@@ -1782,18 +1783,39 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
                 node.UploadText(adminKeyringPath, clusterLogin.Ceph.AdminKeyring);
                 node.SudoCommand($"chown {cephUser}:{cephUser} {adminKeyringPath}");
-                node.SudoCommand($"chown 660 {adminKeyringPath}");
+                node.SudoCommand($"chown 640 {adminKeyringPath}");
             }
         }
 
         /// <summary>
-        /// Generates the Ceph service common keyring for a node.
+        /// Generates the Ceph manager service keyring for a node.
         /// </summary>
         /// <param name="node">The target node.</param>
         /// <returns>The keyring.</returns>
-        private string GetCephServiceKeyring(SshProxy<NodeDefinition> node)
+        private string GetManagerKeyring(SshProxy<NodeDefinition> node)
         {
             var result = node.SudoCommand($"ceph auth get-or-create mgr.{node.Name} mon \"allow profile mgr\" osd \"allow *\" mds \"allow *\"");
+
+            if (result.ExitCode == 0)
+            {
+                return result.OutputText;
+            }
+            else
+            {
+                // We shouldn't ever get here.
+
+                return string.Empty;
+            }
+        }
+
+        /// <summary>
+        /// Generates the Ceph MDS service keyring for a node.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <returns>The keyring.</returns>
+        private string GetMDSKeyring(SshProxy<NodeDefinition> node)
+        {
+            var result = node.SudoCommand($"ceph auth get-or-create mds.{node.Name} mds \"allow \" osd \"allow *\" mon \"allow rwx\"");
 
             if (result.ExitCode == 0)
             {
@@ -1852,7 +1874,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
                     node.UploadText(adminKeyringPath, clusterLogin.Ceph.AdminKeyring);
                     node.SudoCommand($"chown {cephUser}:{cephUser} {adminKeyringPath}");
-                    node.SudoCommand($"chown 660 {adminKeyringPath}");
+                    node.SudoCommand($"chown 640 {adminKeyringPath}");
 
                     // Indicate that we're done configuring the monitor and start it.
 
@@ -1883,9 +1905,9 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
                     var mgrKeyringPath = $"{mgrFolder}/keyring";
 
-                    node.UploadText(mgrKeyringPath, GetCephServiceKeyring(node));
+                    node.UploadText(mgrKeyringPath, GetManagerKeyring(node));
                     node.SudoCommand($"chown {cephUser}:{cephUser} {mgrKeyringPath}");
-                    node.SudoCommand($"chown 660 {mgrKeyringPath}");
+                    node.SudoCommand($"chown 640 {mgrKeyringPath}");
 
                     node.Status = "ceph manager start";
                     node.SudoCommand($"systemctl enable ceph-mgr@{node.Name}");
@@ -1904,7 +1926,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
         /// <param name="node">The target node.</param>
         private void CephCluster(SshProxy<NodeDefinition> node)
         {
-            node.InvokeIdempotentAction("setup-ceph-config",
+            node.InvokeIdempotentAction("setup-ceph-osd",
                 () =>
                 {
                     var cephUser = cluster.Definition.Ceph.Username;
@@ -1918,36 +1940,66 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
                     if (node.Metadata.Labels.CephOSD)
                     {
                         node.Status = "ceph OSD";
-
-                        //node.SudoCommand($"mkdir /p /var/lib/ceph/osd/ceph-{node.Name}");
                         node.UploadText("/var/lib/ceph/bootstrap-osd/ceph.keyring", clusterLogin.Ceph.OSDKeyring);
                         node.SudoCommand($"ceph-volume lvm create --bluestore --data {node.Metadata.Labels.CephOSDDevice}");
+                        node.Status = string.Empty;
+                    }
+                });
 
-                        //node.Status = "ceph OSD start";
-                        //node.SudoCommand($"systemctl enable ceph-osd@{node.Name}");
-                        //node.SudoCommand($"systemctl start ceph-osd@{node.Name}");
+            // Wait for the cluster OSD services to come up.  We're going to have
+            // all nodes wait but only the first manager will report status to
+            // the UX.
+
+            var osdCount = cluster.Definition.Nodes.Count(n => n.Labels.CephOSD);
+            var osdRegex = new Regex(@"^\s+osd:\s+(?<osdtotal>\d+)\s+osds:\s+(?<osdup>\d+)\s+up", RegexOptions.Multiline);
+
+            if (node == cluster.FirstManager)
+            {
+                node.Status = $"OSD status: [0 of {osdCount}] ready";
+            }
+            else
+            {
+                node.Status = string.Empty;
+            }
+
+            NeonHelper.WaitFor(
+                () =>
+                {
+                    var result = node.SudoCommand("ceph status");
+                    var match  = osdRegex.Match(result.OutputText);
+
+                    if (result.ExitCode != 0)
+                    {
+                        node.Status = $"[ceph status] failed with [exitcode={result.ExitCode}].";
+                        return false;
                     }
 
-                    // Wait for the cluster OSD services to come up.
+                    if (!match.Success)
+                    {
+                        node.Status = $"[ceph status] returned an unexpected result.";
+                        return false;
+                    }
 
-                    var osdCount       = cluster.Definition.Nodes.Count(n => n.Labels.CephOSD);
-                    var requiredStatus = $"osd: {osdCount}: osds: {osdCount},";
+                    var osdsUp = match.Groups["osdup"].Value;
 
-                    node.Status = $"waiting for [{osdCount}] OSD instances";
+                    if (node == cluster.FirstManager)
+                    {
+                        node.Status = $"OSD status: [{osdsUp} of {osdCount}] ready";
+                    }
 
-                    NeonHelper.WaitFor(
-                        () =>
-                        {
-                            var result = node.SudoCommand("ceph status");
+                    return osdsUp == osdCount.ToString();
+                },
+                timeout: TimeSpan.FromSeconds(120),
+                pollTime: TimeSpan.FromSeconds(2));
 
-                            return result.ExitCode == 0 && result.OutputText.Contains(requiredStatus);
-                        },
-                        timeout: TimeSpan.FromSeconds(120),
-                        pollTime: TimeSpan.FromSeconds(2));
+            node.Status = string.Empty;
 
-                    // Configure MDS if enabled for this node.
+            // Configure MDS if enabled for this node.
 
-                    if (node.Metadata.Labels.CephMDS)
+            if (node.Metadata.Labels.CephMDS)
+            {
+                node.InvokeIdempotentAction("setup-ceph-mds",
+                    () =>
                     {
                         node.Status = "ceph MDS";
 
@@ -1957,15 +2009,16 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
                         var mdsKeyringPath = $"{mdsFolder}/keyring";
 
-                        node.UploadText(mdsKeyringPath, GetCephServiceKeyring(node));
+                        node.UploadText(mdsKeyringPath, GetMDSKeyring(node));
 
                         node.SudoCommand($"systemctl enable ceph-mds@{node.Name}");
                         node.SudoCommand($"systemctl start ceph-mds@{node.Name}");
-                    }
-                });
+                        node.Status = string.Empty;
+                    });
+            }
         }
 
-        /// <summary>--bluestore 
+        /// <summary> 
         /// Configures the Vault load balancer service: <b>neon-proxy-vault</b>.
         /// </summary>
         private void VaultProxy()
