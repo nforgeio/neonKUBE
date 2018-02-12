@@ -203,7 +203,7 @@ namespace Neon.Cluster
             // $hack(jeff.lill):
             //
             // It's not super clean to be doing this here but it's easy and I believe
-            // I've already done this sort of thing already.
+            // I've already done this sort of thing elsewhere.
 
             var cephMonitorCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMonitor);
             var cephOSDCount     = clusterDefinition.Nodes.Count(n => n.Labels.CephOSD);
@@ -249,9 +249,9 @@ namespace Neon.Cluster
             if (cephMonitorCount == 0)
             {
                 // No Ceph MSD nodes are explicitly assigned so we're going to provision
-                // these on the OSD servers.
+                // these on the Ceph Monitor servers.
 
-                foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.CephOSD))
+                foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.CephMonitor))
                 {
                     node.Labels.CephMDS = true;
                 }
