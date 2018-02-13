@@ -2244,6 +2244,7 @@ StartLimitBurst=3
 
 [Install]
 WantedBy=ceph-fuse.target
+WantedBy=docker.service
 ");
             node.SudoCommand("chmod 644 /lib/systemd/system/ceph-fuse-cfs.service");
             node.SudoCommand($"systemctl enable ceph-fuse-cfs.service");
