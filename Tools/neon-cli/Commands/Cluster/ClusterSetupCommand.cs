@@ -15,7 +15,6 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
-using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -1763,6 +1762,7 @@ $@"[global]
 fsid = {clusterLogin.Ceph.Fsid}
 mon initial members = {sbHostNames}
 mon host = {sbHostAddresses}
+mon health preluminous compat warning = false
 public network = {clusterSubnet}
 auth cluster required = cephx
 auth service required = cephx
@@ -1885,15 +1885,20 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
                     // Wait for the monitor to indicate that it has started.
 
-                    NeonHelper.WaitFor(
-                        () =>
-                        {
-                            result = node.SudoCommand("ceph status");
-
-                            return result.ExitCode == 0 && result.OutputText.Contains("health: HEALTH_OK");
-                        },
-                        timeout: TimeSpan.FromSeconds(120), 
-                        pollTime: TimeSpan.FromSeconds(2));
+                    try
+                    {
+                        NeonHelper.WaitFor(
+                            () =>
+                            {
+                                return GetCephClusterStatus(node).IsHealthy;
+                            },
+                            timeout: TimeSpan.FromSeconds(120),
+                            pollTime: TimeSpan.FromSeconds(2));
+                    }
+                    catch (TimeoutException)
+                    {
+                        node.Fault("Timeout waiting for Ceph Monitor.");
+                    }
 
                     // Configure and start the manager service.
 
@@ -1917,6 +1922,132 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
                     node.SudoCommand($"rm -r {tempPath}");
                 });
+        }
+
+        /// <summary>
+        /// Summarizes the Ceph cluster status.
+        /// </summary>
+        private class CephClusterStatus
+        {
+            /// <summary>
+            /// Indicates that the neonCLUSTER includes a Caph cluster.
+            /// </summary>
+            public bool IsEnabled { get; set; }
+
+            /// <summary>
+            /// Indicates that the cluster is healthy.
+            /// </summary>
+            public bool IsHealthy { get; set; }
+
+            /// <summary>
+            /// The number of Monitor servers configured for the cluster.
+            /// </summary>
+            public int MONCount { get; set; }
+
+            /// <summary>
+            /// The number of OSD servers configured for the cluster.
+            /// </summary>
+            public int OSDCount { get; set; }
+
+            /// <summary>
+            /// The current number of active OSD servers.
+            /// </summary>
+            public int OSDActiveCount { get; set; }
+
+            /// <summary>
+            /// The number of MDS servers configured for the cluster.
+            /// </summary>
+            public int MDSCount { get; set; }
+
+            /// <summary>
+            /// The number of active MDS servers configured for the cluster.
+            /// </summary>
+            public int MDSActiveCount { get; set; }
+
+            /// <summary>
+            /// Indicates that the <b>cfs</b> file system is ready.
+            /// </summary>
+            public bool IsCfsReady { get; set; }
+        }
+
+        /// <summary>
+        /// Queries a node for the current Ceph cluster status.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <returns>The <cref cref="CephClusterStatus"/>.</returns>
+        private CephClusterStatus GetCephClusterStatus(SshProxy<NodeDefinition> node)
+        {
+            var status = new CephClusterStatus();
+
+            if (!cluster.Definition.Ceph.Enabled)
+            {
+                return status;
+            }
+
+            status.IsEnabled = true;
+
+            // Get the Ceph cluster status as JSON to determine the number of
+            // monitors as well as the number total and active OSD servers. 
+
+            var result = node.SudoCommand("ceph status --format=json-pretty");
+
+            if (result.ExitCode == 0)
+            {
+                var cephStatus = JObject.Parse(result.OutputText);
+
+                var health   = (JObject)cephStatus.GetValue("health");
+                var monMap   = (JObject)cephStatus.GetValue("monmap");
+                var monArray = (JArray)monMap.GetValue("mons");
+                var monCount = monArray.Count();
+                var osdMap   = (JObject)cephStatus.GetValue("osdmap");
+                var osdMap2  = (JObject)osdMap.GetValue("osdmap");
+
+                status.IsHealthy      = (string)health.GetValue("status") == "HEALTH_OK";
+                status.OSDCount       = (int)osdMap2.GetValue("num_osds");
+                status.OSDActiveCount = (int)osdMap2.GetValue("num_up_osds");
+            }
+
+            // Get the Ceph MDS status as JSON to determine the number of
+            // running MDS servers. 
+
+            result = node.SudoCommand("ceph mds stat --format=json-pretty");
+
+            if (result.ExitCode == 0)
+            {
+                var mdsStatus = JObject.Parse(result.OutputText);
+
+                var fsMap    = (JObject)mdsStatus.GetValue("fsmap");
+                var standbys = (JArray)fsMap.GetValue("standbys");
+
+                foreach (JObject standby in standbys)
+                {
+                    var state = (string)standby.GetValue("state");
+
+                    status.MDSCount++;
+
+                    if (state.StartsWith("up:"))
+                    {
+                        status.MDSActiveCount++;
+                    }
+                }
+            }
+
+            // $hack(jeff.lill):
+            //
+            // Detect if the [cfs] file system is ready.  There's probably a
+            // way to detect this from the JSON status above but I need to
+            // move on to other things.  This is fragile because it assumes
+            // that there's only one file deployed system.
+
+            result = node.SudoCommand("ceph mds stat");
+
+            if (result.ExitCode == 0)
+            {
+                status.IsCfsReady = result.OutputText.StartsWith("cfs-") &&
+                                    result.OutputText.Contains("up:active");
+            }
+
+            return status;
         }
 
         /// <summary>
@@ -1951,46 +2082,37 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
             // the UX.
 
             var osdCount = cluster.Definition.Nodes.Count(n => n.Labels.CephOSD);
-            var osdRegex = new Regex(@"^\s+osd:\s+(?<osdtotal>\d+)\s+osds:\s+(?<osdup>\d+)\s+up", RegexOptions.Multiline);
 
             if (node == cluster.FirstManager)
             {
-                node.Status = $"OSD status: [0 of {osdCount}] ready";
+                node.Status = $"OSD servers: [0 of {osdCount}] ready";
             }
             else
             {
                 node.Status = string.Empty;
             }
 
-            NeonHelper.WaitFor(
-                () =>
-                {
-                    var result = node.SudoCommand("ceph status");
-                    var match  = osdRegex.Match(result.OutputText);
-
-                    if (result.ExitCode != 0)
+            try
+            {
+                NeonHelper.WaitFor(
+                    () =>
                     {
-                        node.Status = $"[ceph status] failed with [exitcode={result.ExitCode}].";
-                        return false;
-                    }
+                        var clusterStatus = GetCephClusterStatus(node);
 
-                    if (!match.Success)
-                    {
-                        node.Status = $"[ceph status] returned an unexpected result.";
-                        return false;
-                    }
+                        if (node == cluster.FirstManager)
+                        {
+                            node.Status = $"OSD servers: [{clusterStatus.OSDActiveCount} of {osdCount}] ready";
+                        }
 
-                    var osdsUp = match.Groups["osdup"].Value;
-
-                    if (node == cluster.FirstManager)
-                    {
-                        node.Status = $"OSD status: [{osdsUp} of {osdCount}] ready";
-                    }
-
-                    return osdsUp == osdCount.ToString();
-                },
-                timeout: TimeSpan.FromSeconds(120),
-                pollTime: TimeSpan.FromSeconds(2));
+                        return clusterStatus.OSDActiveCount == osdCount;
+                    },
+                    timeout: TimeSpan.FromSeconds(120),
+                    pollTime: TimeSpan.FromSeconds(2));
+            }
+            catch (TimeoutException)
+            {
+                node.Fault("Timeout waiting for Ceph OSD servers.");
+            }
 
             node.Status = string.Empty;
 
@@ -2016,6 +2138,125 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
                         node.Status = string.Empty;
                     });
             }
+
+            // Wait for the cluster MDS services to come up.  We're going to have
+            // all nodes wait but only the first manager will report status to
+            // the UX.
+
+            var mdsCount = cluster.Definition.Nodes.Count(n => n.Labels.CephMDS);
+
+            if (node == cluster.FirstManager)
+            {
+                node.Status = $"MDS servers: [0 of {mdsCount}] ready";
+            }
+            else
+            {
+                node.Status = string.Empty;
+            }
+
+            try
+            {
+                NeonHelper.WaitFor(
+                    () =>
+                    {
+                        var clusterStatus = GetCephClusterStatus(node);
+
+                        if (node == cluster.FirstManager)
+                        {
+                            node.Status = $"MDS servers: [{clusterStatus.MDSActiveCount} of {mdsCount}] ready";
+                        }
+
+                        return clusterStatus.MDSActiveCount == mdsCount;
+                    },
+                    timeout: TimeSpan.FromSeconds(120),
+                    pollTime: TimeSpan.FromSeconds(2));
+            }
+            catch (TimeoutException)
+            {
+                node.Fault("Timeout waiting for Ceph MDS servers.");
+            }
+
+            node.Status = string.Empty;
+
+            // We're going to have the first manager create the [cfs_data] and [cfs_metadata] storage 
+            // pools and then the [cfs] filesystem on top of those pools.  Then we'll have the first
+            // manager wait for the filesystem to be created.
+
+            if (node == cluster.FirstManager)
+            {
+                node.Status = "create file system";
+                node.SudoCommand($"ceph osd pool create cfs_data {cluster.Definition.Ceph.OSDPlacementGroups}");
+                node.SudoCommand($"ceph osd pool create cfs_metadata {cluster.Definition.Ceph.OSDPlacementGroups}");
+                node.SudoCommand($"ceph fs new cfs cfs_metadata cfs_data");
+            }
+
+            // Wait for the file system to start.
+
+            try
+            {
+                NeonHelper.WaitFor(
+                    () =>
+                    {
+                        return GetCephClusterStatus(node).IsCfsReady;
+                    },
+                    timeout: TimeSpan.FromSeconds(120),
+                    pollTime: TimeSpan.FromSeconds(2));
+            }
+            catch (TimeoutException)
+            {
+                node.Fault("Timeout waiting for Ceph file system.");
+            }
+
+            // We're going to use the FUSE client to mount the file system at [/cfs].
+
+            var monNode = cluster.Definition.SortedNodes.First(n => n.Labels.CephMonitor);
+
+            node.Status = "mount file system";
+            node.SudoCommand($"mkdir -p /cfs");
+            node.SudoCommand($"ceph-fuse -m {monNode.PrivateAddress}:6789 /cfs");
+
+            // $hack(jeff.lill):
+            //
+            // I couldn't enable the built-in [ceph-fuse@/*.service] to have
+            // [/cfs] mount on reboot via:
+            //
+            //      systemctl enable ceph-fuse@/cfs.service
+            //
+            // I was seeing an "Invalid argument" error.  I'm going to workaround
+            // this by creating and emabling my own service.
+
+            node.UploadText("/lib/systemd/system/ceph-fuse-cfs.service",
+@"[Unit]
+Description=Ceph FUSE client (for /cfs)
+After=network-online.target local-fs.target time-sync.target
+Wants=network-online.target local-fs.target time-sync.target
+Conflicts=umount.target
+PartOf=ceph-fuse.target
+
+[Service]
+EnvironmentFile=-/etc/default/ceph
+Environment=CLUSTER=ceph
+ExecStart=/usr/bin/ceph-fuse -f --cluster ${CLUSTER} /cfs
+TasksMax=infinity
+Restart=on-failure
+StartLimitInterval=30min
+StartLimitBurst=3
+
+[Install]
+WantedBy=ceph-fuse.target
+");
+            node.SudoCommand("chmod 644 /lib/systemd/system/ceph-fuse-cfs.service");
+            node.SudoCommand($"systemctl enable ceph-fuse-cfs.service");
+
+            // Initialize [/cfs]:
+            //
+            //      /cfs/READY  - Read-only file whose presence indicates that the file system is mounted
+            //      /cfs/docker - Holds mapped Docker volumes
+            //      /cfs/neon   - Reserved for neonCLUSTER
+
+            node.SudoCommand($"touch /cfs/READY && chmod 444 /cfs/READY");
+            node.SudoCommand($"mkdir -p /cfs/docker && chown root:root /cfs/docker && chmod 770 /cfs/docker");
+            node.SudoCommand($"mkdir -p /cfs/neon && chown root:root /cfs/neon && chmod 770 /cfs/neon");
         }
 
         /// <summary> 
