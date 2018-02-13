@@ -139,6 +139,7 @@ if $summary ; then
     echo "NEON_HOSTING                       = ${NEON_HOSTING}" 1>&2
     echo "NEON_NODE_NAME                     = ${NEON_NODE_NAME}" 1>&2
     echo "NEON_NODE_ROLE                     = ${NEON_NODE_ROLE}" 1>&2
+    echo "NEON_NODE_CFS                      = ${NEON_NODE_CFS}" 1>&2
     echo "NEON_NODE_IP                       = ${NEON_NODE_IP}" 1>&2
     echo "NEON_NODE_SSD                      = ${NEON_NODE_SSD}" 1>&2
     echo "NEON_NODE_SWAP                     = ${NEON_NODE_SWAP}" 1>&2

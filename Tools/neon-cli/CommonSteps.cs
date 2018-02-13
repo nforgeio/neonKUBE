@@ -255,6 +255,7 @@ ClientAliveCountMax 20
             }
 
             sb.AppendLine($"NEON_NODE_NAME={node.Name}");
+            sb.AppendLine($"NEON_NODE_CFS={clusterDefinition.Ceph.Enabled.ToString().ToLowerInvariant()}");
 
             if (node.Metadata != null)
             {
