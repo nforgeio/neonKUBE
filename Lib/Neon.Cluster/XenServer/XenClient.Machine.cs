@@ -166,13 +166,14 @@ namespace Neon.Cluster.XenServer
 
                 // Configure any additional disks.
 
-                if (extraDrives != null)
+                if (extraDrives != null && extraDrives.Count() > 0)
                 {
                     var driveIndex = 1; // The boot device has index=0
+                    var sr         = client.Repository.Find("Local storage");
 
                     foreach (var drive in extraDrives)
                     {
-                        client.SafeInvoke("vm-diskadd", $"uuid={uuid}", $"disk-size={drive.Size}", $"device={driveIndex}");
+                        client.SafeInvoke("vm-disk-add", $"uuid={uuid}", $"sr-uuid={sr.Uuid}", $"disk-size={drive.Size}", $"device={driveIndex}");
                         driveIndex++;
                     }
                 }

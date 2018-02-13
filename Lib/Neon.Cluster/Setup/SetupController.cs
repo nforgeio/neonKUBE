@@ -654,7 +654,7 @@ namespace Neon.Cluster
                 }
                 else if (typeof(NodeMetadata) == typeof(XenClient))
                 {
-                    // Provisioning cluster nodes on XenServer and remote Hyper-V hosts.
+                    // Provisioning cluster nodes on XenServer hosts.
 
                     sbDisplay.AppendLine();
                     sbDisplay.AppendLine();

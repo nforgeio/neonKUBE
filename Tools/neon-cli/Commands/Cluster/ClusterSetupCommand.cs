@@ -283,7 +283,7 @@ OPTIONS:
                 {
                     controller.AddStep("ceph packages", n => CephPackages(n));
                     controller.AddGlobalStep("ceph settings", () => CephSettings());
-                    controller.AddStep("ceph bootstrap", n => CephBootstrap(n), n => n.Metadata.Labels.CephMonitor);
+                    controller.AddStep("ceph bootstrap", n => CephBootstrap(n), n => n.Metadata.Labels.CephMON);
                     controller.AddStep("ceph cluster", n => CephCluster(n));
                 }
 
@@ -1699,7 +1699,7 @@ $@"docker login \
 
             var sbAddOptions = new StringBuilder();
 
-            foreach (var monNode in cluster.Nodes.Where(n => n.Metadata.Labels.CephMonitor))
+            foreach (var monNode in cluster.Nodes.Where(n => n.Metadata.Labels.CephMON))
             {
                 sbAddOptions.AppendWithSeparator($"--add {monNode.Name} {monNode.PrivateAddress}");
             }
@@ -1731,7 +1731,7 @@ $@"docker login \
             var sbHostNames     = new StringBuilder();
             var sbHostAddresses = new StringBuilder();
 
-            foreach (var monitorNode in cluster.Definition.SortedNodes.Where(n => n.Labels.CephMonitor))
+            foreach (var monitorNode in cluster.Definition.SortedNodes.Where(n => n.Labels.CephMON))
             {
                 sbHostNames.AppendWithSeparator(monitorNode.Name, ", ");
                 sbHostAddresses.AppendWithSeparator(monitorNode.PrivateAddress, ", ");
@@ -2209,7 +2209,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
             // We're going to use the FUSE client to mount the file system at [/cfs].
 
-            var monNode = cluster.Definition.SortedNodes.First(n => n.Labels.CephMonitor);
+            var monNode = cluster.Definition.SortedNodes.First(n => n.Labels.CephMON);
 
             node.Status = "mount file system";
             node.SudoCommand($"mkdir -p /cfs");

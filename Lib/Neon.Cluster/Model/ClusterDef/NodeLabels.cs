@@ -441,9 +441,9 @@ namespace Neon.Cluster
         // Ceph Storage Cluster related labels.
 
         /// <summary>
-        /// Reserved label name for <see cref="CephMonitor"/>.
+        /// Reserved label name for <see cref="CephMON"/>.
         /// </summary>
-        public const string LabelCephMonitor = ClusterDefinition.ReservedLabelPrefix + ".ceph.monitor";
+        public const string LabelCephMON = ClusterDefinition.ReservedLabelPrefix + ".ceph.mon";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSD"/>.
@@ -504,9 +504,9 @@ namespace Neon.Cluster
         /// normally required for high availability.
         /// </para>
         /// </remarks>
-        [JsonProperty(PropertyName = "CephMonitor", Required = Required.Default)]
+        [JsonProperty(PropertyName = "CephMON", Required = Required.Default)]
         [DefaultValue(false)]
-        public bool CephMonitor { get; set; } = false;
+        public bool CephMON { get; set; } = false;
 
         /// <summary>
         /// <b>io.neon.ceph.osd</b> [<c>bool</c>]: Indicates that a Ceph OSD 
@@ -545,7 +545,7 @@ namespace Neon.Cluster
         /// commands (like ls, find, etc.) without placing an enormous burden on
         /// the Ceph Storage Cluster.
         /// </remarks>
-        [JsonProperty(PropertyName = "CephMSD", Required = Required.Default)]
+        [JsonProperty(PropertyName = "CephMDS", Required = Required.Default)]
         [DefaultValue(false)]
         public bool CephMDS { get; set; } = false;
 
@@ -693,7 +693,7 @@ namespace Neon.Cluster
 
                 list.Add(new KeyValuePair<string, object>(LabelLogEsData,               LogEsData));
 
-                list.Add(new KeyValuePair<string, object>(LabelCephMonitor,             CephMonitor));
+                list.Add(new KeyValuePair<string, object>(LabelCephMON,                 CephMON));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSD,                 CephOSD));
                 list.Add(new KeyValuePair<string, object>(LabelCephOSDDevice,           CephOSDDevice));
                 list.Add(new KeyValuePair<string, object>(LabelCephMDS,                 CephMDS));
@@ -778,7 +778,7 @@ namespace Neon.Cluster
 
                     case LabelLogEsData:                node.Labels.LogEsData = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
 
-                    case LabelCephMonitor:              node.Labels.CephMonitor = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
+                    case LabelCephMON:                  node.Labels.CephMON = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelCephOSD:                  node.Labels.CephOSD = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
                     case LabelCephOSDDevice:            node.Labels.CephOSDDevice = label.Value; break;
                     case LabelCephMDS:                  node.Labels.CephMDS = label.Value.Equals("true", StringComparison.OrdinalIgnoreCase); break;
@@ -847,12 +847,12 @@ namespace Neon.Cluster
 
             target.LogEsData           = this.LogEsData;
 
-            target.CephMonitor         = this.CephMonitor;
-            target.CephMonitor         = this.CephMonitor;
+            target.CephMON             = this.CephMON;
+            target.CephMON             = this.CephMON;
             target.CephOSD             = this.CephOSD;
             target.CephMDS             = this.CephMDS;
-            target.CephOSDDriveSizeGB     = this.CephOSDDriveSizeGB;
-            target.CephOSDCacheSizeMB     = this.CephOSDCacheSizeMB;
+            target.CephOSDDriveSizeGB  = this.CephOSDDriveSizeGB;
+            target.CephOSDCacheSizeMB  = this.CephOSDCacheSizeMB;
 
             foreach (var item in this.Custom)
             {

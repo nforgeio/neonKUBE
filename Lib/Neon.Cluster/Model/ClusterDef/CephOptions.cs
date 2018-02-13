@@ -205,18 +205,18 @@ namespace Neon.Cluster
             // It's not super clean to be doing this here but it's easy and I believe
             // I've already done this sort of thing elsewhere.
 
-            var cephMonitorCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMonitor);
-            var cephOSDCount     = clusterDefinition.Nodes.Count(n => n.Labels.CephOSD);
-            var cephMDSCount     = clusterDefinition.Nodes.Count(n => n.Labels.CephMDS);
+            var cephMONCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMON);
+            var cephOSDCount = clusterDefinition.Nodes.Count(n => n.Labels.CephOSD);
+            var cephMDSCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMDS);
 
-            if (cephMonitorCount == 0)
+            if (cephMONCount == 0)
             {
                 // No Ceph monitor/manager nodes are explicitly assigned so we're going to
                 // automatically place these on the cluster managers.
 
                 foreach (var node in clusterDefinition.Nodes.Where(n => n.IsManager))
                 {
-                    node.Labels.CephMonitor = true;
+                    node.Labels.CephMON = true;
                 }
             }
 
@@ -246,12 +246,12 @@ namespace Neon.Cluster
                 }
             }
 
-            if (cephMonitorCount == 0)
+            if (cephMONCount == 0)
             {
                 // No Ceph MSD nodes are explicitly assigned so we're going to provision
                 // these on the Ceph Monitor servers.
 
-                foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.CephMonitor))
+                foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.CephMON))
                 {
                     node.Labels.CephMDS = true;
                 }
@@ -260,9 +260,9 @@ namespace Neon.Cluster
             // Recount the Ceph component instances to account for any the automatic
             // provisioning assignments that may have been performed above.
 
-            cephMonitorCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMonitor);
-            cephOSDCount     = clusterDefinition.Nodes.Count(n => n.Labels.CephOSD);
-            cephMDSCount     = clusterDefinition.Nodes.Count(n => n.Labels.CephMDS);
+            cephMONCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMON);
+            cephOSDCount = clusterDefinition.Nodes.Count(n => n.Labels.CephOSD);
+            cephMDSCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMDS);
 
             // Validate the properties.
 
@@ -301,7 +301,7 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(MDSCacheSize)}={MDSCacheSize}] cannot be less than [100MB].");
             }
 
-            if (cephMonitorCount == 0)
+            if (cephMONCount == 0)
             {
                 throw new ClusterDefinitionException($"Ceph storage cluster requires at least one monitor node.");
             }
