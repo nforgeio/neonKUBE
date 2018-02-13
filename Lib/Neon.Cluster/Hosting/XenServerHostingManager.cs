@@ -323,10 +323,24 @@ namespace Neon.Cluster
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "create virtual machine");
 
+                // We need to create a raw drive if the node hosts a Ceph OSD.
+
+                var extraDrives = new List<XenVirtualDrive>();
+
+                if (node.Metadata.Labels.CephOSD)
+                {
+                    extraDrives.Add(
+                        new XenVirtualDrive()
+                        {
+                            Size = node.Metadata.GetCephOSDDriveSize(cluster.Definition)
+                        });
+                }
+
                 var vm = xenHost.Machine.Install(vmName, cluster.Definition.Hosting.XenServer.TemplateName,
                     processors: processors,
                     memoryBytes: memoryBytes,
-                    diskBytes: diskBytes);
+                    diskBytes: diskBytes,
+                    extraDrives: extraDrives);
 
                 xenSshProxy.Status = FormatVmStatus(vmName, "start virtual machine");
 
@@ -361,7 +375,7 @@ namespace Neon.Cluster
                 }
                 catch (TimeoutException)
                 {
-                    xenSshProxy.Fault("Timeout waiting for virtual machine to start and be assigned a DHCP address.");
+                    xenSshProxy.Fault("Timeout waiting for virtual machine to start and set an IP address.");
                 }
 
                 // SSH into the VM using the DHCP address, configure the static IP

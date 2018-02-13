@@ -101,9 +101,19 @@ namespace Neon.Cluster.XenServer
             /// <param name="processors">Optionally specifies the number of processors to assign.  This defaults to <b>2</b>.</param>
             /// <param name="memoryBytes">Optionally specifies the memory assigned to the machine (overriding the template).</param>
             /// <param name="diskBytes">Optionally specifies the disk assigned to the machine (overriding the template).</param>
+            /// <param name="extraDrives">
+            /// Optionally specifies any additional virtual drives to be created and 
+            /// then attached to the new virtual machine (e.g. for Ceph OSD).
+            /// </param>
             /// <returns>The new <see cref="XenVirtualMachine"/>.</returns>
             /// <exception cref="XenException">Thrown if the operation failed.</exception>
-            public XenVirtualMachine Install(string name, string templateName, int processors = 2, long memoryBytes = 0, long diskBytes = 0)
+            public XenVirtualMachine Install(
+                string                          name, 
+                string                          templateName, 
+                int                             processors  = 2, 
+                long                            memoryBytes = 0, 
+                long                            diskBytes   = 0, 
+                IEnumerable<XenVirtualDrive>    extraDrives = null)
             {
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(templateName));
                 Covenant.Requires<ArgumentException>(processors > 0);
@@ -137,7 +147,7 @@ namespace Neon.Cluster.XenServer
                         $"static-min={memoryBytes}");
                 }
 
-                // Configure disk.
+                // Configure the primary disk.
 
                 if (diskBytes > 0)
                 {
@@ -152,6 +162,19 @@ namespace Neon.Cluster.XenServer
                     var vdiUuid = vdi["uuid"];
 
                     client.SafeInvoke("vdi-resize", $"uuid={vdiUuid}", $"disk-size={diskBytes}");
+                }
+
+                // Configure any additional disks.
+
+                if (extraDrives != null)
+                {
+                    var driveIndex = 1; // The boot device has index=0
+
+                    foreach (var drive in extraDrives)
+                    {
+                        client.SafeInvoke("vm-diskadd", $"uuid={uuid}", $"disk-size={drive.Size}", $"device={driveIndex}");
+                        driveIndex++;
+                    }
                 }
 
                 return client.Machine.Find(uuid: uuid);
