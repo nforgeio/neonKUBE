@@ -66,6 +66,7 @@ function Publish
 Publish "$image_root\\ubuntu-16.04"
 Publish "$image_root\\ubuntu-16.04-dotnet"
 Publish "$image_root\\alpine"
+Publish "$image_root\\golang"
 Publish "$image_root\\dotnet"
 Publish "$image_root\\openjdk"
 Publish "$image_root\\elasticsearch"

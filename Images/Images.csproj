@@ -62,6 +62,15 @@
     </None>
     <None Include="elasticsearch6\publish.ps1" />
     <None Include="elasticsearch6\README.md" />
+    <Content Include="golang\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="golang\build.ps1" />
+    <None Include="golang\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="golang\publish.ps1" />
+    <None Include="golang\README.md" />
     <None Include="neon-cli\XenServer\README.md" />
     <None Include="neon-cli\XenServer\xapi-xe_1.30.0-2_amd64.deb" />
     <None Include="neon-cluster-manager\build.ps1" />
