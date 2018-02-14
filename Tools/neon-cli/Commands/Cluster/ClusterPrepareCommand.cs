@@ -210,8 +210,8 @@ Server Requirements:
 
                 if (pingConflicts.Count > 0)
                 {
-                    Console.Error.WriteLine($"*** ERROR: Cannot provision the cluster because [{pingConflicts.Count}] other machines conflict with the");
-                    Console.Error.WriteLine($"***        following cluster nodes:");
+                    Console.Error.WriteLine($"*** ERROR: Cannot provision the cluster because [{pingConflicts.Count}] other");
+                    Console.Error.WriteLine($"***        machines conflict with the following cluster nodes:");
                     Console.Error.WriteLine();
 
                     foreach (var node in pingConflicts.OrderBy(n => NetHelper.AddressToUint(IPAddress.Parse(n.PrivateAddress))))

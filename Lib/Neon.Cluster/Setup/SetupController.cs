@@ -126,38 +126,15 @@ namespace Neon.Cluster
         /// or <c>null</c> to select all nodes.
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
+        /// <param name="noParallelLimit">
+        /// Optionally ignores the global <see cref="SetupController{T}.MaxParallel"/> 
+        /// limit for the new step when greater.
+        /// </param>
         public void AddStep(string stepLabel,
                             Action<SshProxy<NodeMetadata>> nodeAction,
                             Func<SshProxy<NodeMetadata>, bool> nodePredicate = null,
-                            bool quiet = false)
-        {
-            nodeAction    = nodeAction ?? new Action<SshProxy<NodeMetadata>>(n => { });
-            nodePredicate = nodePredicate ?? new Func<SshProxy<NodeMetadata>, bool>(n => true);
-
-            steps.Add(
-                new Step()
-                {
-                    Label      = stepLabel,
-                    Quiet      = quiet,
-                    NodeAction = nodeAction,
-                    Predicate  = nodePredicate
-                });
-        }
-
-        /// <summary>
-        /// Appends a configuration step that will not be limited by <see cref="MaxParallel"/>.
-        /// </summary>
-        /// <param name="stepLabel">Brief step summary.</param>
-        /// <param name="nodeAction">The action to be performed on each node.</param>
-        /// <param name="nodePredicate">
-        /// Optional predicate used to select the nodes that participate in the step
-        /// or <c>null</c> to select all nodes.
-        /// </param>
-        /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
-        public void AddStepNoParallelLimit(string stepLabel,
-                                           Action<SshProxy<NodeMetadata>> nodeAction,
-                                           Func<SshProxy<NodeMetadata>, bool> nodePredicate = null,
-                                           bool quiet = false)
+                            bool quiet = false,
+                            bool noParallelLimit = false)
         {
             nodeAction    = nodeAction ?? new Action<SshProxy<NodeMetadata>>(n => { });
             nodePredicate = nodePredicate ?? new Func<SshProxy<NodeMetadata>, bool>(n => true);
@@ -169,7 +146,7 @@ namespace Neon.Cluster
                     Quiet           = quiet,
                     NodeAction      = nodeAction,
                     Predicate       = nodePredicate,
-                    NoParallelLimit = true
+                    NoParallelLimit = noParallelLimit
                 });
         }
 
@@ -209,7 +186,7 @@ namespace Neon.Cluster
                 timeout = TimeSpan.FromMinutes(10);
             }
 
-            AddStepNoParallelLimit(stepLabel,
+            AddStep(stepLabel,
                 n =>
                 {
                     n.Status = status ?? "connecting";
@@ -217,7 +194,8 @@ namespace Neon.Cluster
                     n.IsReady = true;
                 },
                 nodePredicate,
-                quiet);
+                quiet,
+                noParallelLimit: true);
         }
 
         /// <summary>
@@ -233,14 +211,16 @@ namespace Neon.Cluster
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
         public void AddDelayStep(string stepLabel, TimeSpan delay, string status = null, Func<SshProxy<NodeMetadata>, bool> nodePredicate = null, bool quiet = false)
         {
-            AddStepNoParallelLimit(stepLabel,
+            AddStep(stepLabel,
                 n =>
                 {
                     n.Status = status ?? $"delay: [{delay.TotalSeconds}] seconds";
                     Thread.Sleep(delay);
                     n.IsReady = true;
                 },
-                nodePredicate, quiet);
+                nodePredicate, 
+                quiet,
+                noParallelLimit: true);
         }
 
         /// <summary>

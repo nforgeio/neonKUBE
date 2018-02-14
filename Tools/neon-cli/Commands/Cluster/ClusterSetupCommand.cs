@@ -239,12 +239,13 @@ OPTIONS:
 
             controller.AddStep("manager initialize", n => ConfigureCommon(n), n => n.Metadata.IsManager);
 
-            controller.AddStepNoParallelLimit("manager restart", 
+            controller.AddStep("manager restart", 
                 n =>
                 {
                     n.InvokeIdempotentAction("setup-common-restart", () => RebootAndWait(n));
                 },
-                n => n.Metadata.IsManager);
+                n => n.Metadata.IsManager,
+                noParallelLimit: true);
 
             controller.AddStep("manager config", n => ConfigureManager(n), n => n.Metadata.IsManager);
 
@@ -284,7 +285,7 @@ OPTIONS:
                     controller.AddStep("ceph packages", n => CephPackages(n));
                     controller.AddGlobalStep("ceph settings", () => CephSettings());
                     controller.AddStep("ceph bootstrap", n => CephBootstrap(n), n => n.Metadata.Labels.CephMON);
-                    controller.AddStep("ceph cluster", n => CephCluster(n));
+                    controller.AddStep("ceph cluster", n => CephCluster(n), noParallelLimit: true);
                 }
 
                 controller.AddStep("networks", n => CreateClusterNetworks(n), n => n == cluster.FirstManager);
@@ -297,39 +298,24 @@ OPTIONS:
                     controller.AddStep("registry cache", n => registryCacheConfigurator.Configure(n));
                 }
 
-                var managerPulledEvent = new ManualResetEvent(false);
+                if (cluster.Definition.Docker.RegistryCache)
+                {
+                    // The cluster deploys a local registry cache so we're
+                    // going to pull images on the first manager first so they get
+                    // loaded into the cluster's register's registry cache 
+                    // and then pull for all of the other nodes in a subsequent
+                    // step.
 
-                controller.AddStep("pull images",
-                    n =>
-                    {
-                        if (cluster.Definition.Docker.RegistryCache)
-                        {
-                            // If the cluster deploys a local registry cache then
-                            // pull images on the first manager first so they get
-                            // loaded into the cluster's register's registry cache 
-                            // and then pull for all of the other nodes.
-                            //
-                            // I'm going to use a bit of thread synchronization so
-                            // this will appear to be a single step to the operator.
+                    controller.AddStep("pull images to cache", n => PullImages(n), n => n == cluster.FirstManager);
+                    controller.AddStep("pull images", n => PullImages(n), n => n != cluster.FirstManager);
+                }
+                else
+                {
+                    // Just pull the images to all nodes in parallel if there's 
+                    // no registry cache deployed.
 
-                            if (n == cluster.FirstManager)
-                            {
-                                PullImages(n);
-                                managerPulledEvent.Set();
-                            }
-                            else
-                            {
-                                managerPulledEvent.WaitOne();
-                                PullImages(n);
-                            }
-                        }
-                        else
-                        {
-                            // Simply pull in parallel if there's no local registry cache.
-
-                            PullImages(n);
-                        }
-                    });
+                    controller.AddStep("pull images", n => PullImages(n));
+                }
 
                 controller.AddGlobalStep("cluster key/value",
                     () =>
@@ -1838,8 +1824,6 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
             node.InvokeIdempotentAction("setup-ceph-bootstrap",
                 () =>
                 {
-                    CommandResponse result;
-
                     var cephUser = cluster.Definition.Ceph.Username;
                     var tempPath = "/tmp/ceph";
 
@@ -2016,6 +2000,9 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
             {
                 var mdsStatus = JObject.Parse(result.OutputText);
 
+                // This counts the number of MDS servers that are running
+                // in cold standby mode.
+
                 var fsMap    = (JObject)mdsStatus.GetValue("fsmap");
                 var standbys = (JArray)fsMap.GetValue("standbys");
 
@@ -2028,6 +2015,31 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
                     if (state.StartsWith("up:"))
                     {
                         status.MDSActiveCount++;
+                    }
+                }
+
+                // This counts the number of MDS servers that are active
+                // or are running in hot standby mode.
+
+                var filesystems     = (JArray)fsMap.GetValue("filesystems");
+                var firstFileSystem = (JObject)filesystems.FirstOrDefault();
+
+                if (firstFileSystem != null)
+                {
+                    var mdsMap = (JObject)firstFileSystem.GetValue("mdsmap");
+                    var info   = (JObject)mdsMap.GetValue("info");
+
+                    foreach (var property in info.Properties())
+                    {
+                        var item  = (JObject)property.Value;
+                        var state = (string)item.GetValue("state");
+
+                        status.MDSCount++;
+
+                        if (state.StartsWith("up:"))
+                        {
+                            status.MDSActiveCount++;
+                        }
                     }
                 }
             }
@@ -2184,10 +2196,14 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
             if (node == cluster.FirstManager)
             {
-                node.Status = "create file system";
-                node.SudoCommand($"ceph osd pool create cfs_data {cluster.Definition.Ceph.OSDPlacementGroups}");
-                node.SudoCommand($"ceph osd pool create cfs_metadata {cluster.Definition.Ceph.OSDPlacementGroups}");
-                node.SudoCommand($"ceph fs new cfs cfs_metadata cfs_data");
+                node.InvokeIdempotentAction("setup-ceph-fs",
+                    () =>
+                    {
+                        node.Status = "create file system";
+                        node.SudoCommand($"ceph osd pool create cfs_data {cluster.Definition.Ceph.OSDPlacementGroups}");
+                        node.SudoCommand($"ceph osd pool create cfs_metadata {cluster.Definition.Ceph.OSDPlacementGroups}");
+                        node.SudoCommand($"ceph fs new cfs cfs_metadata cfs_data");
+                    });
             }
 
             // Wait for the file system to start.
@@ -2209,11 +2225,15 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
             // We're going to use the FUSE client to mount the file system at [/cfs].
 
-            var monNode = cluster.Definition.SortedNodes.First(n => n.Labels.CephMON);
+            node.InvokeIdempotentAction("setup-ceph-mount",
+                () =>
+                {
+                    var monNode = cluster.Definition.SortedNodes.First(n => n.Labels.CephMON);
 
-            node.Status = "mount file system";
-            node.SudoCommand($"mkdir -p /cfs");
-            node.SudoCommand($"ceph-fuse -m {monNode.PrivateAddress}:6789 /cfs");
+                    node.Status = "mount file system";
+                    node.SudoCommand($"mkdir -p /cfs");
+                    node.SudoCommand($"ceph-fuse -m {monNode.PrivateAddress}:6789 /cfs");
+                });
 
             // $hack(jeff.lill):
             //
@@ -2225,7 +2245,11 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
             // I was seeing an "Invalid argument" error.  I'm going to workaround
             // this by creating and emabling my own service.
 
-            node.UploadText("/lib/systemd/system/ceph-fuse-cfs.service",
+            node.InvokeIdempotentAction("setup-ceph-fuse-service",
+                () =>
+                {
+                    node.Status = "create fuse service";
+                    node.UploadText("/lib/systemd/system/ceph-fuse-cfs.service",
 @"[Unit]
 Description=Ceph FUSE client (for /cfs)
 After=network-online.target local-fs.target time-sync.target
@@ -2246,18 +2270,27 @@ StartLimitBurst=3
 WantedBy=ceph-fuse.target
 WantedBy=docker.service
 ");
-            node.SudoCommand("chmod 644 /lib/systemd/system/ceph-fuse-cfs.service");
-            node.SudoCommand($"systemctl enable ceph-fuse-cfs.service");
+                    node.SudoCommand("chmod 644 /lib/systemd/system/ceph-fuse-cfs.service");
+                    node.SudoCommand($"systemctl enable ceph-fuse-cfs.service");
+                });
 
-            // Initialize [/cfs]:
-            //
-            //      /cfs/READY  - Read-only file whose presence indicates that the file system is mounted
-            //      /cfs/docker - Holds mapped Docker volumes
-            //      /cfs/neon   - Reserved for neonCLUSTER
+            if (node == cluster.FirstManager)
+            {
+                node.InvokeIdempotentAction("setup-ceph-fs-init",
+                    () =>
+                    {
+                        // Initialize [/cfs]:
+                        //
+                        //      /cfs/READY  - Read-only file whose presence indicates that the file system is mounted
+                        //      /cfs/docker - Holds mapped Docker volumes
+                        //      /cfs/neon   - Reserved for neonCLUSTER
 
-            node.SudoCommand($"touch /cfs/READY && chmod 444 /cfs/READY");
-            node.SudoCommand($"mkdir -p /cfs/docker && chown root:root /cfs/docker && chmod 770 /cfs/docker");
-            node.SudoCommand($"mkdir -p /cfs/neon && chown root:root /cfs/neon && chmod 770 /cfs/neon");
+                        node.Status = "populate file system";
+                        node.SudoCommand($"touch /cfs/READY && chmod 444 /cfs/READY");
+                        node.SudoCommand($"mkdir -p /cfs/docker && chown root:root /cfs/docker && chmod 770 /cfs/docker");
+                        node.SudoCommand($"mkdir -p /cfs/neon && chown root:root /cfs/neon && chmod 770 /cfs/neon");
+                    });
+            }
         }
 
         /// <summary> 
