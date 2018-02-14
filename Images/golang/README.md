@@ -8,14 +8,15 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 This image is intended for developing GOLANG based applications:
 
-* Alpine image with GOLANG installed
-* Assumes that GOLANG source code is mapped in at `/src`
+* Ubuntu-16.04 based image with GOLANG installed
+* Assumes that GOLANG source code is mapped in at `/src` where `PROJECT` is the go project name.
+* Container sets the current directory to `/src/PROJECT` before running the command.
 * Simply pass `go` commands, like:
 
-&nbsp;&nbsp;&nbsp;&nbsp;`docker run --rm -v:SRC-PATH:/src neoncluster/golang go build`
+&nbsp;&nbsp;&nbsp;&nbsp;`docker run --rm -v PROJECT-PATH:/src neoncluster/golang PROJECT go build`
 
-# Additional Packages
+# Build Outputs
 
-This image also includes the following packages:
-
-* [nano](https://www.nano-editor.org/dist/v2.6/nano.html) is a simple text editor.
+The `go build` command generates an executable named PROJECT within the `PROJECT` directory by default.  This is inconvenient when using source control because we don't want to check in build outputs.  This script works around this:
+ 
+If `COMMAND` completes with `exitcode=0` and a `src/PROJECT/PROJECT` file exists afterwards, then this file will be moved to the `bin` subdirectory (creating the directory if necessary).  This works well for environments where `bin` folders have been added to `.gitignore`.

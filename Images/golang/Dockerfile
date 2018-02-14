@@ -9,16 +9,16 @@
 #
 #   VERSION         - The GOLANG version (e.g. "1.9.4")
 
-FROM        neoncluster/alpine:3.7
+FROM        neoncluster/ubuntu-16.04
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION
 
-ENV GOPATH /src
+COPY docker-entrypoint.sh   /
 
-RUN wget -O /tmp/golan.tar.gz https://dl.google.com/go/go${VERSION}.linux-amd64.tar.gz \
+RUN wget -q -O /tmp/golan.tar.gz https://dl.google.com/go/go${VERSION}.linux-amd64.tar.gz \
     && tar -C /usr/local -xzf /tmp/golan.tar.gz \
     && rm /tmp/golan.tar.gz \
-    && apk add --update nano
+    && chmod 700 /*.sh
 
-CMD /bin/sh
+ENTRYPOINT ["/docker-entrypoint.sh"]
