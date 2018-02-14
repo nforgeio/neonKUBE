@@ -7,7 +7,7 @@
 #
 # ARGUMENTS:
 #
-#   VERSION         - The HAProxy image tag (e.g. "1.6.9")
+#   VERSION         - The base HAProxy image tag (e.g. "1.6.9")
 
 ARG         VERSION
 FROM        haproxy:${VERSION}-alpine

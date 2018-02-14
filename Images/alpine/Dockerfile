@@ -3,11 +3,11 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# HAProxy image that loads its configuration from a mounted file.
+# Base Alpine image.
 #
 # ARGUMENTS:
 #
-#   VERSION         - The HAProxy image tag (e.g. "1.6.9")
+#   VERSION         - The base ALPINE image tag (e.g. "3.4")
 
 ARG         VERSION
 FROM        alpine:${VERSION}
