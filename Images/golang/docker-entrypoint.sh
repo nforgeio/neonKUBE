@@ -55,11 +55,6 @@ if [ ! -d /src/${project} ]; then
     exit 1
 fi
 
-# Setup the environment variables.
-
-export GOPATH=/src
-export PATH=$PATH:/usr/local/go/bin
-
 # Change the directory and then execute the command.
 
 cd /src/${project}
