@@ -17,17 +17,17 @@ import (
 )
 
 var (
-    // red = color.New(color.FgRed).SprintfFunc()
-    // green = color.New(color.FgGreen).SprintfFunc()
-    yellow = color.New(color.FgYellow).SprintfFunc()
-    cyan = color.New(color.FgCyan).SprintfFunc()
-    blue = color.New(color.FgBlue).SprintfFunc()
+    // red     = color.New(color.FgRed).SprintfFunc()
+    // green   = color.New(color.FgGreen).SprintfFunc()
+    yellow  = color.New(color.FgYellow).SprintfFunc()
+    cyan    = color.New(color.FgCyan).SprintfFunc()
+    blue    = color.New(color.FgBlue).SprintfFunc()
     magenta = color.New(color.FgMagenta).SprintfFunc()
-    white = color.New(color.FgWhite).SprintfFunc()
+    white   = color.New(color.FgWhite).SprintfFunc()
 )
 
 const (
-    stateDir = "/var/lib/docker/plugin-data/"
+    stateDir  = "/var/lib/docker/plugin-data/"
     stateFile = "neon-volume.json"
 )
 
