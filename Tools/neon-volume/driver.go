@@ -28,10 +28,10 @@ var (
 
 const (
     stateDir = "/var/lib/docker/plugin-data/"
-    stateFile = "local-persist.json"
+    stateFile = "neon-volume.json"
 )
 
-type localPersistDriver struct {
+type neonVolumeDriver struct {
     volumes    map[string]string
     mutex      *sync.Mutex
     debug      bool
@@ -42,14 +42,14 @@ type saveData struct {
     State map[string]string `json:"state"`
 }
 
-func newLocalPersistDriver() localPersistDriver {
+func newneonVolumeDriver() neonVolumeDriver {
     fmt.Printf(white("%-18s", "Starting... "))
 
-    driver := localPersistDriver{
+    driver := neonVolumeDriver{
         volumes : map[string]string{},
 		mutex   : &sync.Mutex{},
         debug   : true,
-        name    : "local-persist",
+        name    : "neon-volume",
     }
 
     os.Mkdir(stateDir, 0700)
@@ -60,7 +60,7 @@ func newLocalPersistDriver() localPersistDriver {
     return driver
 }
 
-func (driver localPersistDriver) Get(req volume.Request) volume.Response {
+func (driver neonVolumeDriver) Get(req volume.Request) volume.Response {
     fmt.Print(white("%-18s", "Get Called... "))
 
     if driver.exists(req.Name) {
@@ -76,7 +76,7 @@ func (driver localPersistDriver) Get(req volume.Request) volume.Response {
     }
 }
 
-func (driver localPersistDriver) List(req volume.Request) volume.Response {
+func (driver neonVolumeDriver) List(req volume.Request) volume.Response {
     fmt.Print(white("%-18s", "List Called... "))
 
     var volumes []*volume.Volume
@@ -91,7 +91,7 @@ func (driver localPersistDriver) List(req volume.Request) volume.Response {
     }
 }
 
-func (driver localPersistDriver) Create(req volume.Request) volume.Response {
+func (driver neonVolumeDriver) Create(req volume.Request) volume.Response {
     fmt.Print(white("%-18s", "Create Called... "))
 
     mountpoint := req.Options["mountpoint"]
@@ -126,7 +126,7 @@ func (driver localPersistDriver) Create(req volume.Request) volume.Response {
     return volume.Response{}
 }
 
-func (driver localPersistDriver) Remove(req volume.Request) volume.Response {
+func (driver neonVolumeDriver) Remove(req volume.Request) volume.Response {
     fmt.Print(white("%-18s", "Remove Called... "))
     driver.mutex.Lock()
     defer driver.mutex.Unlock()
@@ -143,7 +143,7 @@ func (driver localPersistDriver) Remove(req volume.Request) volume.Response {
     return volume.Response{}
 }
 
-func (driver localPersistDriver) Mount(req volume.MountRequest) volume.Response {
+func (driver neonVolumeDriver) Mount(req volume.MountRequest) volume.Response {
     fmt.Print(white("%-18s", "Mount Called... "))
 
     fmt.Printf("Mounted %s\n", cyan(req.Name))
@@ -151,7 +151,7 @@ func (driver localPersistDriver) Mount(req volume.MountRequest) volume.Response 
     return driver.Path(volume.Request{Name: req.Name})
 }
 
-func (driver localPersistDriver) Path(req volume.Request) volume.Response {
+func (driver neonVolumeDriver) Path(req volume.Request) volume.Response {
     fmt.Print(white("%-18s", "Path Called... "))
 
     fmt.Printf("Returned path %s\n", magenta(driver.volumes[req.Name]))
@@ -159,7 +159,7 @@ func (driver localPersistDriver) Path(req volume.Request) volume.Response {
     return volume.Response{ Mountpoint:  driver.volumes[req.Name] }
 }
 
-func (driver localPersistDriver) Unmount(req volume.UnmountRequest) volume.Response {
+func (driver neonVolumeDriver) Unmount(req volume.UnmountRequest) volume.Response {
     fmt.Print(white("%-18s", "Unmount Called... "))
 
     fmt.Printf("Unmounted %s\n", cyan(req.Name))
@@ -167,7 +167,7 @@ func (driver localPersistDriver) Unmount(req volume.UnmountRequest) volume.Respo
     return driver.Path(volume.Request{Name: req.Name})
 }
 
-func (driver localPersistDriver) Capabilities(req volume.Request) volume.Response {
+func (driver neonVolumeDriver) Capabilities(req volume.Request) volume.Response {
     fmt.Print(white("%-18s", "Capabilities Called... "))
 
     return volume.Response{
@@ -175,19 +175,18 @@ func (driver localPersistDriver) Capabilities(req volume.Request) volume.Respons
     }
 }
 
-
-func (driver localPersistDriver) exists(name string) bool {
+func (driver neonVolumeDriver) exists(name string) bool {
     return driver.volumes[name] != ""
 }
 
-func (driver localPersistDriver) volume(name string) *volume.Volume {
+func (driver neonVolumeDriver) volume(name string) *volume.Volume {
     return &volume.Volume{
         Name: name,
         Mountpoint: driver.volumes[name],
     }
 }
 
-func (driver localPersistDriver) findExistingVolumesFromDockerDaemon() (error, map[string]string) {
+func (driver neonVolumeDriver) findExistingVolumesFromDockerDaemon() (error, map[string]string) {
     // set up the ability to make API calls to the daemon
     defaultHeaders := map[string]string{"User-Agent": "engine-api-cli-1.0"}
     // need at least Docker 1.9 (API v1.21) for named Volume support
@@ -228,7 +227,7 @@ func (driver localPersistDriver) findExistingVolumesFromDockerDaemon() (error, m
     return nil, volumes
 }
 
-func (driver localPersistDriver) findExistingVolumesFromStateFile() (error, map[string]string) {
+func (driver neonVolumeDriver) findExistingVolumesFromStateFile() (error, map[string]string) {
     path := path.Join(stateDir, stateFile)
     fileData, err := ioutil.ReadFile(path)
     if err != nil {
@@ -244,7 +243,7 @@ func (driver localPersistDriver) findExistingVolumesFromStateFile() (error, map[
     return nil, data.State
 }
 
-func (driver localPersistDriver) saveState(volumes map[string]string) error {
+func (driver neonVolumeDriver) saveState(volumes map[string]string) error {
     data := saveData{
         State: volumes,
     }
