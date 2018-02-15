@@ -10,10 +10,12 @@
   </Target>
 
   <ItemGroup>
+    <None Remove="driver.go" />
     <None Remove="main.go" />
   </ItemGroup>
 
   <ItemGroup>
+    <Content Include="driver.go" />
     <Content Include="main.go" />
   </ItemGroup>
 
