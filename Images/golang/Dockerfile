@@ -14,11 +14,29 @@ MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION
 
-COPY docker-entrypoint.sh   /
+# Git layer
+
+RUN apt-get update \
+    && apt-get install -yq git \
+    && apt-get clean -yq
+
+# Go layer
 
 RUN wget -q -O /tmp/golan.tar.gz https://dl.google.com/go/go${VERSION}.linux-amd64.tar.gz \
     && tar -C /usr/local -xzf /tmp/golan.tar.gz \
-    && rm /tmp/golan.tar.gz \
-    && chmod 700 /*.sh
+    && rm /tmp/golan.tar.gz
+
+ENV GOPATH  /src
+ENV PATH    $PATH:/usr/local/go/bin
+
+# Go tools layer
+
+RUN go get -u github.com/golang/dep/cmd/dep
+
+# Entry point layer
+
+COPY docker-entrypoint.sh   /
+
+RUN chmod 770 /*.sh
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
