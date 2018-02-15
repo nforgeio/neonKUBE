@@ -261,20 +261,7 @@ USAGE:
         // (if enabled).  Think very carefully before doing this for a 
         // production cluster.
 
-        ""PasswordLength"": 20,
-
-        // Enables client NFS on the host and installs the Docker ContainX 
-        // [docker-volume-netshare] volume plugin so that Docker containers 
-        // can mount NFS, AWS EFS, and Samaba/CIFS based volumes.
-        // This defaults to [true].
-        //
-        // ""EnableVolumeNetShare"": true,
-
-        // Specifies the ContainX <b>docker-volume-netshare</b> package version to install
-        // when [EnableVolumeNetShare=true]. This defaults to a reasonable 
-        // recent version.
-        //
-        // ""VolumeNetShareVersion"": ""0.34""
+        ""PasswordLength"": 20
     },
 
     // Docker related options:

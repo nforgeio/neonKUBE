@@ -397,9 +397,6 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "cluster.schema", ClusterDefinition.ClusterSchema);
             SetBashVariable(preprocessReader, "cluster.rootuser", Program.Username);
 
-            SetBashVariable(preprocessReader, "host.containx.enabled", clusterDefinition.HostNode.EnableVolumeNetShare);
-            SetBashVariable(preprocessReader, "host.containx.packageurl", $"https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/docker-volume-netshare_{clusterDefinition.HostNode.VolumeNetShareVersion}_amd64.deb");
-
             SetBashVariable(preprocessReader, "neon.folders.config", NodeHostFolders.Config);
             SetBashVariable(preprocessReader, "neon.folders.secrets", NodeHostFolders.Secrets);
             SetBashVariable(preprocessReader, "neon.folders.setup", NodeHostFolders.Setup);

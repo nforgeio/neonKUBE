@@ -258,7 +258,6 @@ namespace NeonCli
                                     new File("setup-apt-proxy.sh", hasVariables: true),
                                     new File("setup-consul-proxy.sh", hasVariables: true),
                                     new File("setup-consul-server.sh", hasVariables: true),
-                                    new File("setup-containx.sh", hasVariables: true),
                                     new File("setup-disk.sh", hasVariables: true),
                                     new File("setup-docker.sh", hasVariables: true),
                                     new File("setup-environment.sh", hasVariables: true),

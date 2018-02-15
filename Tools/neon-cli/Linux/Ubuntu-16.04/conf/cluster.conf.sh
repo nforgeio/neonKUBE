@@ -99,11 +99,6 @@ export NEON_NTP_WORKER_SOURCES=( $<ntp.worker.sources> )
 
 export NEON_DOCKER_VERSION=$<docker.version>
 
-# Host node settings
-
-export NEON_HOST_CONTAINX_ENABLED=$<host.containx.enabled>
-export NEON_HOST_CONTAINX_PACKAGEURL=$<host.containx.packageurl>
-
 # Consul settings
 
 export NEON_CONSUL_VERSION=$<consul.version>
