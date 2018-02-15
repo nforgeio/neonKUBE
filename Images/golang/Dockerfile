@@ -26,17 +26,34 @@ RUN wget -q -O /tmp/golan.tar.gz https://dl.google.com/go/go${VERSION}.linux-amd
     && tar -C /usr/local -xzf /tmp/golan.tar.gz \
     && rm /tmp/golan.tar.gz
 
-ENV GOPATH  /src
-ENV PATH    $PATH:/usr/local/go/bin
+ENV PATH $PATH:/usr/local/go/bin
 
-# Go tools layer
+# Go tools layer.
+# 
+# Note that we're going to temporarily set GOPATH to [/tmp]
+# directory so the tools will install there first.  Then we'll
+# copy the binaries to the GO binaries folder.
+#
+# Note also that we're installing the latest [dep] build
+# rather than a specific release version.
 
-RUN go get -u github.com/golang/dep/cmd/dep
+ENV GOPATH /tmp
 
-# Entry point layer
+RUN go get -u github.com/golang/dep/cmd/dep \
+    && mv /tmp/bin/* /usr/local/go/bin \
+    && rm -r /tmp/*
+
+# Entry point layer.  Note that we're going to set
+# [GOPATH=/] because we expect GO projects to be mounted
+# at [/src].
+
+ENV GOPATH /
 
 COPY docker-entrypoint.sh   /
+COPY go-build.sh            /
 
-RUN chmod 770 /*.sh
+RUN chmod 770 /docker-entrypoint.sh \
+    && mv go-build.sh go-build \
+    && chmod 770 go-build
 
 ENTRYPOINT ["/docker-entrypoint.sh"]

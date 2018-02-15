@@ -1,11 +1,11 @@
 [Unit]
-Description=docker-volume-neon-volume
+Description=neon-volume
 Before=docker.service
 Wants=docker.service
 
 [Service]
 TimeoutStartSec=0
-ExecStart=/usr/bin/docker-volume-neon-volume
+ExecStart=/usr/bin/neon-volume
 
 [Install]
 WantedBy=multi-user.target

@@ -28,6 +28,10 @@ function usage {
     echo
 }
 
+# Add any scripts in the root folder to the PATH.
+
+export PATH=$PATH:/
+
 # Verify that we have at least two arguments.
 
 if [ $# -lt 2 ] ; then
@@ -35,7 +39,7 @@ if [ $# -lt 2 ] ; then
     exit 1
 fi
 
-project=${1}
+export PROJECT=${1}
 
 # Verify that the source folder was mapped into the container.
 
@@ -46,8 +50,8 @@ fi
 
 # Verify that the project subfolder actually exists.
 
-if [ ! -d /src/${project} ]; then
-    echo "*** ERROR: The [${project}] sub-folder doesn't exist.  Be sure to"
+if [ ! -d /src/${PROJECT} ]; then
+    echo "*** ERROR: The [${PROJECT}] sub-folder doesn't exist.  Be sure to"
     echo "           map the parent folder into the container and then specify"
     echo "           the PROJECT folder as the first parameter."
     echo
@@ -57,7 +61,7 @@ fi
 
 # Change the directory and then execute the command.
 
-cd /src/${project}
+cd /src/${PROJECT}
 ${*:2}
 exitcode=$?
 
