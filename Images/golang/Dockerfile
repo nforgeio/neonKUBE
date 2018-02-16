@@ -14,10 +14,10 @@ MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VERSION
 
-# Git layer
+# Git and Nano layer
 
 RUN apt-get update \
-    && apt-get install -yq git \
+    && apt-get install -yq git nano \
     && apt-get clean -yq
 
 # Go layer
@@ -31,11 +31,14 @@ ENV PATH $PATH:/usr/local/go/bin
 # Go tools layer.
 # 
 # Note that we're going to temporarily set GOPATH to [/tmp]
-# directory so the tools will install there first.  Then we'll
-# copy the binaries to the GO binaries folder.
+# directory so the tools will install there first.  Then 
+# we'll copy the binaries to the GO binaries folder.
+
+# $todo(jeff.lill):
 #
-# Note also that we're installing the latest [dep] build
-# rather than a specific release version.
+# Note also that we're installing the latest [dep] development
+# build rather than a specific release version.  We'll probably
+# want to change this in the future.
 
 ENV GOPATH /tmp
 
@@ -50,10 +53,7 @@ RUN go get -u github.com/golang/dep/cmd/dep \
 ENV GOPATH /
 
 COPY docker-entrypoint.sh   /
-COPY go-build.sh            /
 
-RUN chmod 770 /docker-entrypoint.sh \
-    && mv go-build.sh go-build \
-    && chmod 770 go-build
+RUN chmod 770 /docker-entrypoint.sh
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
