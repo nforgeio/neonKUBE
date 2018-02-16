@@ -92,39 +92,43 @@ Follow steps below to configure a development or test workstation.
   * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
   * Close the DOS window when the script is finished
 
-16. Configure the neonFORGE Nuget CLI API key (so that batch publishing scripts will work).
+16. Enable PowerShell script execution via:
+
+  `powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser`
+
+17. Configure the neonFORGE Nuget CLI API key (so that batch publishing scripts will work).
 
   * Obtain the API key from another developer (or follow these [instructions](https://docs.microsoft.com/en-us/nuget/create-packages/publish-a-package) to get your API key from Nuget.org).
   * Run this DOS command passing the key:
 
   `setx NF_NUGET_API_KEY <API-KEY> /M`
 
-17. You'll need to create persistent environment variables with your Azure account secrets if you're going to use the [$/Devops/Home/home-azure.json] cluster configuration to test Azure deployments.  Use commands that look something like this:
+18. You'll need to create persistent environment variables with your Azure account secrets if you're going to use the [$/Devops/Home/home-azure.json] cluster configuration to test Azure deployments.  Use commands that look something like this:
 
   `setx NF_AZURE_SUBSCRIPTIONID <SUBSCRIPTION-ID> /M`
   `setx NF_AZURE_TENANTID <TENANT-ID> /M`
   `setx NF_AZURE_APPLICATIONID <APPLICATION-ID> /M`
   `setx NF_AZURE_PASSWORD <PASSWORD> /M`
 
-18. Restart Visual Studio and/or any command windows to pick up the change the environment variable changes above.
+19. Restart Visual Studio and/or any command windows to pick up the change the environment variable changes above.
 
-19. Confirm that the solution builds:
+20. Confirm that the solution builds:
 
   * Run **Visual Studio** as **administrator**
   * Open **$/neonFORGE.sln** (where **$** is the repo root directory)
   * Select **Build/Rebuild** Solution
 
-20. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)s
+21. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)s
 
-21. Install **OpenVPN** from (using the Windows Installer): [here](https://openvpn.net/index.php/open-source/downloads.html)
+22. Install **OpenVPN** from (using the Windows Installer): [here](https://openvpn.net/index.php/open-source/downloads.html)
 
-22. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
+23. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
 
-23. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+24. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-24. *Optional*: In Chrome, install the **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
+25. *Optional*: In Chrome, install the **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
 
-25. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+26. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
 # Git Branches and Docker Image Tagging Conventions
 
