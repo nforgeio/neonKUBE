@@ -136,7 +136,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Home", "Home", "{A7E3360B-C
 		Devops\Home\home-xen.json = Devops\Home\home-xen.json
 	EndProjectSection
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "neon-volume", "Tools\neon-volume\neon-volume.csproj", "{1253D575-7978-45EA-934C-DC827FA34C06}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-volume-plugin", "Tools\neon-volume-plugin\neon-volume-plugin.csproj", "{1253D575-7978-45EA-934C-DC827FA34C06}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
