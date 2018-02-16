@@ -66,18 +66,19 @@ ${*:2}
 exitcode=$?
 
 # Check for build executable output and move it to a
-# [bin] subdirectory if present.
+# [bin] subdirectory.
 
 if [ ${exitcode} -ne 0 ]; then
     exit ${exitcode}
 fi
 
-if [ -f /src/${project}/${project} ]; then
+if [ -f /src/${PROJECT}/${PROJECT} ]; then
 
-    if [ ! -d /src/${project}/bin ]; then
-        mkdir /src/${project}/bin
+    if [ ! -d /src/${PROJECT}/bin ]; then
+        mkdir /src/${PROJECT}/bin
     fi
 
-    cp /src/${project}/${project} /src/${project}/bin
-    rm /src/${project}/${project}
+echo "*** 6"
+    cp /src/${PROJECT}/${PROJECT} /src/${PROJECT}/bin
+    rm /src/${PROJECT}/${PROJECT}
 fi
