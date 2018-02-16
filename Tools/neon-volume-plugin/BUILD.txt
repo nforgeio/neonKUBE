@@ -1,8 +1,8 @@
-﻿Rebuild Dependencies
---------------------
+﻿Vendor Dependencies
+-------------------
 
 This project uses the GO [dep] tool to manage reference vendor packages.
-Ocassionally, you may need to update these packages.  This can be accomplished
+Occasionally, you may need to update these packages.  This can be accomplished
 via the following commands:
 
 # Start the GOLANG container, mounting the project directory:
@@ -11,6 +11,9 @@ docker run -it --rm --entrypoint=bash -v %NF_ROOT%\Tools:/src neoncluster/golang
 
 # Run these commands inside the container.
 
-cd /src/neon-volume
+cd /src/neon-volume-plugin
+rm Gopkg.*
+rm -r vendor/*
 dep init
 exit
+
