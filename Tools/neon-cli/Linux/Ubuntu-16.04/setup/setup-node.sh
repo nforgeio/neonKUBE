@@ -767,7 +767,7 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 15 21 * * * root /usr/local/bin/neon-host-maintenance
 EOF
 
-chmod 644 /usr/local/bin/neon-host-maintenance
+chmod 644 /etc/cron.d/neon-host-maintenance
 
 # Indicate that the script has completed.
 
