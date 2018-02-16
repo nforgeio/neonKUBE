@@ -1,4 +1,15 @@
-﻿Rebuild Dependencies
+﻿Build Debian Package
+--------------------
+The Debian package is built automatically in the project post-build
+event using the [package-deb\package.ps1] script.  Note that you
+need to update [version.txt] to be the Debian package version including
+the "-REVISION" suffix (most likely set to "-1").
+
+The package will be created in the [/bin] folder and also copied
+to the solution's Build folder.  You'll need to manually upload
+the package to the public download site.
+
+Rebuild Dependencies
 --------------------
 
 This project uses the GO [dep] tool to manage reference vendor packages.
