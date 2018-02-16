@@ -6,7 +6,7 @@
   </PropertyGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="docker run --rm -v &quot;$(NF_ROOT)\Tools:/src&quot; neoncluster/golang $(ProjectName) go build&#xD;&#xA;if not exist &quot;$(NF_BUILD)&quot; mkdir &quot;$(NF_BUILD)&quot;&#xD;&#xA;if exist bin\$(ProjectName) copy bin\$(ProjectName) %NF_BUILD%&#xD;&#xA;" />
+    <Exec Command="docker run --rm -v &quot;$(NF_ROOT)\Tools:/src&quot; neoncluster/golang $(ProjectName) go build&#xD;&#xA;if not exist &quot;$(NF_BUILD)&quot; mkdir &quot;$(NF_BUILD)&quot;&#xD;&#xA;if exist bin\$(ProjectName) copy bin\$(ProjectName) %NF_BUILD%&#xD;&#xA;powershell -file &quot;$(ProjectDir)package-deb\package.ps1&quot; -projectPath &quot;$(ProjectDir)&quot;&#xD;&#xA;" />
   </Target>
 
   <ItemGroup>

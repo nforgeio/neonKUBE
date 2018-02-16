@@ -1,5 +1,5 @@
 [Unit]
-Description=neon-volume
+Description=Docker volume plugin driver for neonCLUSTER integrated CephFS.
 Before=docker.service
 Wants=docker.service
 

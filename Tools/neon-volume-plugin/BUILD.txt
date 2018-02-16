@@ -1,18 +1,19 @@
-﻿Build and Package
------------------
+﻿Build Debian Package
+--------------------
+The Debian package is built automatically in the project post-build
+event using the [package-deb\package.ps1] script.  Note that you
+need to update [version.txt] to be the Debian package version including
+the "-REVISION" suffix (most likely set to "-1").
 
-The instructions below describe how to build the plugin as well
-as its Debian package.
+The package will be created in the [/bin] folder and also copied
+to the solution's Build folder.  You'll need to manually upload
+the package to the public download site.
 
-	1. Edit [version.txt] to have version number (as a single line)
-	2. 
-
-
-Vendor Dependencies
--------------------
+Rebuild Dependencies
+--------------------
 
 This project uses the GO [dep] tool to manage reference vendor packages.
-Occasionally, you may need to update these packages.  This can be accomplished
+Ocassionally, you may need to update these packages.  This can be accomplished
 via the following commands:
 
 # Start the GOLANG container, mounting the project directory:
@@ -21,9 +22,6 @@ docker run -it --rm --entrypoint=bash -v %NF_ROOT%\Tools:/src neoncluster/golang
 
 # Run these commands inside the container.
 
-cd /src/neon-volume-plugin
-rm Gopkg.*
-rm -r vendor/*
+cd /src/neon-volume
 dep init
 exit
-
