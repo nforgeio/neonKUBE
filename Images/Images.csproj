@@ -66,7 +66,6 @@
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
     <None Include="golang\build.ps1" />
-    <None Include="golang\go-build.sh" />
     <None Include="golang\docker-entrypoint.sh" />
     <None Include="golang\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
