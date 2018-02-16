@@ -78,7 +78,6 @@ if [ -f /src/${PROJECT}/${PROJECT} ]; then
         mkdir /src/${PROJECT}/bin
     fi
 
-echo "*** 6"
     cp /src/${PROJECT}/${PROJECT} /src/${PROJECT}/bin
     rm /src/${PROJECT}/${PROJECT}
 fi
