@@ -1,4 +1,14 @@
-﻿Vendor Dependencies
+﻿Build and Package
+-----------------
+
+The instructions below describe how to build the plugin as well
+as its Debian package.
+
+	1. Edit [version.txt] to have version number (as a single line)
+	2. 
+
+
+Vendor Dependencies
 -------------------
 
 This project uses the GO [dep] tool to manage reference vendor packages.
