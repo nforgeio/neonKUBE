@@ -1,9 +1,13 @@
 package main
 
 import (
+	"fmt"
 	"io/ioutil"
 	"log"
 	"os"
+	"os/exec"
+	"strconv"
+	"strings"
 	
 	"github.com/docker/go-plugins-helpers/volume"
 )
@@ -90,9 +94,92 @@ func (driver *neonDriver) Create(request *volume.CreateRequest) error {
 		return nil
 	}
 
-	error = os.MkdirAll(mountPath(request.Name), 770)
+	// Parse any driver options.  We currently support:
+	//
+	//		max-bytes	- a simple <long> value or <long>MB <long>GB
+	//		max-files	- a simple <long> count
+
+	maxBytes := int64(-1)
+	maxFiles := int64(-1)
+
+	if value, ok := request.Options["max-bytes"]; ok {
+
+		value = strings.ToUpper(value)
+
+		if (strings.HasSuffix(value, "MB")) {
+
+			value = value[:len(value) - 2]		// Strip the units
+
+			size, err := strconv.ParseInt(value, 10, 64)
+
+			if (err != nil || size <= 0) {
+				return toError(fmt.Sprintf("[max-bytes=%v] option is invalid.", value))
+			}
+
+			maxBytes = size * 1024 * 1024;
+		
+		} else if (strings.HasSuffix(value, "GB")) {
+		
+			value = value[:len(value) - 2]		// Strip the units
+
+			size, err := strconv.ParseInt(value, 10, 64)
+
+			if (err != nil || size <= 0) {
+				return toError(fmt.Sprintf("[max-bytes=%v] option is invalid.", value))
+			}
+
+			maxBytes = size * 1024 * 1024 * 1024;
+
+		} else {
+		
+			size, err := strconv.ParseInt(value, 10, 64)
+
+			if (err != nil || size <= 0) {
+				return toError(fmt.Sprintf("[max-bytes=%v] option is invalid.", value))
+			}
+
+			maxBytes = size
+		}
+	}
+
+	if value, ok := request.Options["max-files"]; ok {
+	
+		count, err := strconv.ParseInt(value, 10, 64)
+
+		if (err != nil || count <= 0) {
+			return toError(fmt.Sprintf("[max-files=%v] option is invalid.", value))
+		}
+
+		maxFiles = count
+	}
+
+	// Create the volume folder.
+
+	mountPath := mountPath(request.Name)
+
+	error = os.MkdirAll(mountPath, 770)
 	if (error != nil) {
 		log.Println("create error:", error)
+	}
+
+	// Set any extended attributes.
+
+	if (maxBytes > 0) {
+
+		maxBytesArg := fmt.Sprintf("%v", maxBytes)
+
+		if err := exec.Command("setfattr", "-n", "ceph.quota.max_bytes", maxBytesArg, mountPath).Run(); err != nil {
+			return err
+		}
+	}
+
+	if (maxFiles > 0) {
+	
+		maxFilesArg := fmt.Sprintf("%v", maxFiles)
+
+		if err := exec.Command("setfattr", "-n", "ceph.quota.max_files", maxFilesArg, mountPath).Run(); err != nil {
+			return err
+		}
 	}
 
 	return error;

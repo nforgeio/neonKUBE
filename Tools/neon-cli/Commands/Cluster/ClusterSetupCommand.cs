@@ -1585,7 +1585,8 @@ $@"docker login \
                     var cephRelease = parts[0].Trim().ToLowerInvariant();
                     // var cephVersion = parts[1].Trim().ToLowerInvariant();
 
-                    // Configure the Ceph Debian package repositories.
+                    // Configure the Ceph Debian package repositories and install
+                    // the required packages.
 
                     // $todo(jeff.lill): 
                     //
@@ -1598,6 +1599,12 @@ $@"docker login \
                     node.SudoCommand($"apt-add-repository \"deb https://download.ceph.com/debian-{cephRelease}/ {linuxRelease} main\"");
                     node.SudoCommand($"apt-get update");
                     node.SudoCommand($"apt-get install -yq ceph");
+
+                    // We also need need support for extended file system attributes
+                    // so we can set the maximum size in bytes and/or maximum number
+                    // files in a directory via [setfattr] and [getfattr].
+
+                    node.SudoCommand($"apt-get install -yq attr");
                 });
 
             // Download and install the [neon-volume-plugin].
