@@ -8,4 +8,4 @@ TimeoutStartSec=0
 ExecStart=/usr/local/bin/neon-volume-plugin
 
 [Install]
-WantedBy=multi-user.target
+WantedBy=sockets.target
