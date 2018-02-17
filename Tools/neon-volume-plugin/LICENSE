@@ -1,11 +1,5 @@
 The MIT License (MIT)
 
-This project was adapted from the Cameron Spear's [local-persist]
-Docker volume plugin at:
-
-	https://github.com/CWSpear/local-persist
-
-Copyright (c) 2016 Cameron Spear
 Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
