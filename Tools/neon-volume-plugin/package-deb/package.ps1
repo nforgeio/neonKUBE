@@ -152,3 +152,8 @@ docker run --rm -v "${binPath}:/src" neoncluster/ubuntu-16.04 bash /src/package.
 
 $packagePath = [io.path]::combine($binPath, "$packageName.deb")
 copy "$packagePath" "$env:NF_BUILD"
+
+# Copy it again as the latest version.
+
+$targetPath = [io.path]::combine($env:NF_BUILD, "neon-volume-plugin_latest.deb")
+copy "$packagePath" "$targetPath"

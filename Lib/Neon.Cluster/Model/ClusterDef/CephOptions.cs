@@ -31,13 +31,14 @@ namespace Neon.Cluster
     /// </summary>
     public class CephOptions
     {
-        private const string defaultVersion            = "luminous";
-        private const string defaultOSDDriveSize       = "128GB";
-        private const string defaultOSDCacheSize       = "1GB";
-        private const string defaultOSDJournalSize     = "5GB";
-        private const string defaultOSDObjectSizeMax   = "5GB";
-        private const int    defaultOSDPlacementGroups = 100;
-        private const string defaultMDSCacheSize       = "1GB";
+        private const string defaultVersion             = "luminous";
+        private const string defaultOSDDriveSize        = "128GB";
+        private const string defaultOSDCacheSize        = "1GB";
+        private const string defaultOSDJournalSize      = "5GB";
+        private const string defaultOSDObjectSizeMax    = "5GB";
+        private const int    defaultOSDPlacementGroups  = 100;
+        private const string defaultMDSCacheSize        = "1GB";
+        private const string defaultVolumePluginPackage = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-volume-plugin_latest.deb";
 
         /// <summary>
         /// The fudge factor to apply to Ceph cache sizes before actually
@@ -183,6 +184,14 @@ namespace Neon.Cluster
         public string MDSCacheSize { get; set; } = defaultMDSCacheSize;
 
         /// <summary>
+        /// URL for the Docker volume plugin package to be installed on all cluster
+        /// nodes when Ceph is enabled.  This defaults to the latest released version.
+        /// </summary>
+        [JsonProperty(PropertyName = "VolumePluginPackage", Required = Required.Default)]
+        [DefaultValue(defaultVolumePluginPackage)]
+        public string VolumePluginPackage { get; set; } = defaultVolumePluginPackage;
+
+        /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
@@ -193,6 +202,13 @@ namespace Neon.Cluster
             if (!Enabled)
             {
                 return;
+            }
+
+            VolumePluginPackage = VolumePluginPackage ?? defaultVolumePluginPackage;
+
+            if (string.IsNullOrEmpty(VolumePluginPackage) || !Uri.TryCreate(VolumePluginPackage, UriKind.Absolute, out var uri))
+            {
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(VolumePluginPackage)}={VolumePluginPackage}] must be set to a valid package URL.");
             }
 
             // Examine the Ceph related labels for the cluster nodes to verify that any 

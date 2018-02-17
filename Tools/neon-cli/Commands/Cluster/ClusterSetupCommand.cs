@@ -307,7 +307,7 @@ OPTIONS:
                     // step.
 
                     controller.AddStep("pull images to cache", n => PullImages(n), n => n == cluster.FirstManager);
-                    controller.AddStep("pull images", n => PullImages(n), n => n != cluster.FirstManager);
+                    controller.AddStep("pull images to nodes", n => PullImages(n), n => n != cluster.FirstManager);
                 }
                 else
                 {
@@ -1598,6 +1598,32 @@ $@"docker login \
                     node.SudoCommand($"apt-add-repository \"deb https://download.ceph.com/debian-{cephRelease}/ {linuxRelease} main\"");
                     node.SudoCommand($"apt-get update");
                     node.SudoCommand($"apt-get install -yq ceph");
+                });
+
+            // Download and install the [neon-volume-plugin].
+
+            node.InvokeIdempotentAction("setup-neon-volume-plugin",
+                () =>
+                {
+                    node.Status = "neon-volume-plugin install";
+
+                    var installCommand = new CommandBundle("./install.sh");
+
+                    installCommand.AddFile("install.sh",
+$@"# Download and install the plugin.
+
+curl -4fsSLv --retry 10 --retry-delay 30 {cluster.Definition.Ceph.VolumePluginPackage} -o /tmp/neon-volume-plugin-deb 1>&2
+dpkg --install /tmp/neon-volume-plugin-deb
+rm /tmp/neon-volume-plugin-deb
+
+# Enable and start the plugin service.
+
+# systemctl enable neon-volume-plugin
+# systemctl start neon-volume-plugin
+",
+                        isExecutable: true);
+
+                    node.SudoCommand(installCommand);
                 });
         }
 

@@ -32,7 +32,7 @@
   branch = "master"
   name = "golang.org/x/net"
   packages = ["proxy"]
-  revision = "dc948dff8834a7fe1ca525f8d04e261c2b56e70d"
+  revision = "136a25c244d3019482a795d728110278d6ba09a4"
 
 [[projects]]
   branch = "master"
