@@ -21,6 +21,7 @@
 
 function usage {
 
+    echo
     echo "usage: docker run --rm -v PROJECT-PATH:/src neoncluster/golang PROJECT go build" 
     echo
     echo "where: PROJECT-PATH   - path to the GO project folder on your workstation"
