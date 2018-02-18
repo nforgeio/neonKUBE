@@ -26,6 +26,11 @@ using ICSharpCode.SharpZipLib.Zip;
 using Renci.SshNet;
 using Renci.SshNet.Common;
 
+// $todo(jeff.lill):
+//
+// The download methods don't seem to be working for paths like [/proc/meminfo].
+// They return an empty stream.
+
 namespace Neon.Cluster
 {
     /// <summary>
