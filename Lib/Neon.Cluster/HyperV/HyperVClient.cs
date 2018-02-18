@@ -156,7 +156,12 @@ namespace Neon.Cluster.HyperV
         /// set this to <paramref name="memorySize"/>.
         /// </param>
         /// <param name="processorCount">
-        /// The number of virutal processors to assign to the machine.  This defaults to <b>4</b>.</param>
+        /// The number of virutal processors to assign to the machine.  This defaults to <b>4</b>.
+        /// </param>
+        /// <param name="diskSize">
+        /// A string specifying the primary disk size.  This can be a long byte count or a
+        /// long with units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>64GB</b>.
+        /// </param>
         /// <param name="drivePath">
         /// Optionally specifies the path where the virtual hard drive will be located.  Pass 
         /// <c>null</c> or empty to to default to <b>MACHINE-NAME.vhdx</b> located in the default
@@ -186,7 +191,8 @@ namespace Neon.Cluster.HyperV
             string                      machineName, 
             string                      memorySize        = "2GB", 
             string                      minimumMemorySize = null, 
-            int                         processorCount    = 4, 
+            int                         processorCount    = 4,
+            string                      diskSize          = "64GB",
             string                      drivePath         = null,
             bool                        checkpointDrives  = false,
             string                      templateDrivePath = null, 
@@ -222,6 +228,30 @@ namespace Neon.Cluster.HyperV
             if (templateDrivePath != null)
             {
                 File.Copy(templateDrivePath, drivePath);
+            }
+
+            // Resize the VHDX.
+
+            // $hack(jeff.lill):
+            //
+            // For some reason, the PowerShell [Resize-VHD] command does not like 
+            // hard disk file names formatted as we're doing (e.g. with embedded
+            // square brackets).  We're going to work around this by temporarily
+            // renaming the disk file while we're resizing it.
+
+            var tempDrivePath = Path.Combine(driveFolder, Guid.NewGuid().ToString("D") + ".vhdx");
+
+            File.Move(drivePath, tempDrivePath);
+
+            try
+            {
+                powershell.Execute($"Resize-VHD -Path \"{tempDrivePath}\" -SizeBytes {diskSize}");
+            }
+            finally
+            {
+                // Restore the drive to its original file name.
+
+                File.Move(tempDrivePath, drivePath);
             }
 
             // Create the virtual machine.

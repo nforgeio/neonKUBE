@@ -163,13 +163,7 @@ namespace Neon.Cluster
 
                 if (node.Labels.StorageCapacityGB == 0)
                 {
-                    // $todo(jeff.lill): 
-                    //
-                    // This is currently hardcoded to 127GB because that's the size
-                    // of the template VHDX.  Eventually, we should figure out a 
-                    // way to inspect the VHDX size and set the value from that.
-
-                    node.Labels.StorageCapacityGB = 127;
+                    node.Labels.StorageCapacityGB = (int)(node.GetVmMemory(cluster.Definition) / NeonHelper.Giga);
                 }
             }
 
@@ -649,11 +643,18 @@ namespace Neon.Cluster
 
                 // Create the virtual machine if it doesn't already exist.
 
+                var processors     = node.Metadata.GetVmProcessors(cluster.Definition);
+                var memoryBytes    = node.Metadata.GetVmMemory(cluster.Definition);
+                var minMemoryBytes = node.Metadata.GetVmMinimumMemory(cluster.Definition);
+                var diskBytes      = node.Metadata.GetVmDisk(cluster.Definition);
+
                 node.Status = $"create virtual machine";
                 hyperv.AddVM(
                     vmName,
-                    memorySize: cluster.Definition.Hosting.VmMemory,
-                    minimumMemorySize: cluster.Definition.Hosting.VmMinimumMemory,
+                    processorCount: processors,
+                    diskSize: diskBytes.ToString(),
+                    memorySize: memoryBytes.ToString(),
+                    minimumMemorySize: minMemoryBytes.ToString(),
                     drivePath: drivePath,
                     switchName: switchName,
                     extraDrives: extraDrives);
@@ -743,6 +744,14 @@ $@"nameserver 8.8.8.8
 nameserver 8.8.4.4
 ";
                         nodeProxy.UploadText("/etc/resolvconf/resolv.conf.d/base", resolvBaseText);
+
+                        // Extend the primary partition and file system to fill 
+                        // the virtual the drive. 
+
+                        node.Status = $"resize primary partition";
+
+                        nodeProxy.SudoCommand("growpart /dev/sda 1");
+                        nodeProxy.SudoCommand("resize2fs /dev/sda1");
 
                         // Reboot to pick up the changes.
 
