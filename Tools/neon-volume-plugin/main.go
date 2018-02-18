@@ -90,7 +90,7 @@ func (driver *neonDriver) Create(request *volume.CreateRequest) error {
 		// distributed and its likely that folks may have 
 		// already created the volume on another host.
 
-		log.Println("volume [" + request.Name + "] already exists.")
+		log.Println("create: volume [" + request.Name + "] already exists.")
 		return nil
 	}
 
@@ -104,6 +104,8 @@ func (driver *neonDriver) Create(request *volume.CreateRequest) error {
 
 	if value, ok := request.Options["max-bytes"]; ok {
 
+		log.Println("create: max-bytes =", value);
+
 		value = strings.ToUpper(value)
 
 		if (strings.HasSuffix(value, "MB")) {
@@ -113,18 +115,22 @@ func (driver *neonDriver) Create(request *volume.CreateRequest) error {
 			size, err := strconv.ParseInt(value, 10, 64)
 
 			if (err != nil || size <= 0) {
+
+				log.Println("create: max-bytes is invalid.")
 				return toError(fmt.Sprintf("[max-bytes=%v] option is invalid.", value))
 			}
 
 			maxBytes = size * 1024 * 1024;
 		
 		} else if (strings.HasSuffix(value, "GB")) {
-		
+
 			value = value[:len(value) - 2]		// Strip the units
 
 			size, err := strconv.ParseInt(value, 10, 64)
 
 			if (err != nil || size <= 0) {
+
+				log.Println("create: max-bytes is invalid.")
 				return toError(fmt.Sprintf("[max-bytes=%v] option is invalid.", value))
 			}
 
@@ -135,6 +141,8 @@ func (driver *neonDriver) Create(request *volume.CreateRequest) error {
 			size, err := strconv.ParseInt(value, 10, 64)
 
 			if (err != nil || size <= 0) {
+
+				log.Println("create: max-bytes is invalid.")
 				return toError(fmt.Sprintf("[max-bytes=%v] option is invalid.", value))
 			}
 
@@ -143,10 +151,14 @@ func (driver *neonDriver) Create(request *volume.CreateRequest) error {
 	}
 
 	if value, ok := request.Options["max-files"]; ok {
+
+		log.Println("create: max-files =", value);
 	
 		count, err := strconv.ParseInt(value, 10, 64)
 
 		if (err != nil || count <= 0) {
+
+			log.Println("create: max-files is invalid.")
 			return toError(fmt.Sprintf("[max-files=%v] option is invalid.", value))
 		}
 
@@ -205,7 +217,7 @@ func (driver *neonDriver) Remove(request *volume.RemoveRequest) error {
 		return error
 
 	} else {
-		return toError("volume [" + request.Name + "] does not exist.")
+		return toError("remove: volume [" + request.Name + "] does not exist.")
 	}
 }
 
@@ -239,6 +251,8 @@ func (driver *neonDriver) Mount(request *volume.MountRequest) (*volume.MountResp
 	if (volumeExists(request.Name)) {
 		return &volume.MountResponse{Mountpoint: mountPath(request.Name)}, nil
 	} else {
+
+		log.Println("path: volume does not exist");
 		return nil, volumeDoesNotExist(request.Name)
 	}
 }
@@ -256,6 +270,8 @@ func (driver *neonDriver) Unmount(request *volume.UnmountRequest) error {
 	if (volumeExists(request.Name)) {
 		return nil
 	} else {
+
+		log.Println("unmount: volume does not exist");
 		return volumeDoesNotExist(request.Name)
 	}
 }
@@ -273,6 +289,8 @@ func (driver *neonDriver) Get(request *volume.GetRequest) (*volume.GetResponse, 
 	if (volumeExists(request.Name)) {
 		return &volume.GetResponse{Volume: &volume.Volume{Name: request.Name, Mountpoint: mountPath(request.Name)}}, nil
 	} else {
+
+		log.Println("get: volume does not exist");
 		return nil, volumeDoesNotExist(request.Name)
 	}
 }
