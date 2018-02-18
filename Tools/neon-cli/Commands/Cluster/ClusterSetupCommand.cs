@@ -1625,8 +1625,9 @@ rm /tmp/neon-volume-plugin-deb
 
 # Enable and start the plugin service.
 
-# systemctl enable neon-volume-plugin
-# systemctl start neon-volume-plugin
+systemctl daemon-reload
+systemctl enable neon-volume-plugin
+systemctl start neon-volume-plugin
 ",
                         isExecutable: true);
 

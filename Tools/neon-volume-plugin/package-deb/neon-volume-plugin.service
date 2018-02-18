@@ -8,4 +8,5 @@ TimeoutStartSec=0
 ExecStart=/usr/local/bin/neon-volume-plugin
 
 [Install]
-WantedBy=sockets.target
+WantedBy=multi-user.target
+WantedBy=docker.service
