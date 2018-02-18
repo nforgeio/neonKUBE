@@ -171,9 +171,8 @@ namespace Neon.Cluster
         public const string LabelStorageEphemeral = ClusterDefinition.ReservedLabelPrefix + ".storage.ephemral";
 
         /// <summary>
-        /// <b>io.neon.storage.capacity_gb</b> [<c>int</c>]: Specifies the node storage capacity
-        /// in gigabytes.  This defaults to <b>0</b> for <see cref="HostingEnvironments.Machine"/>
-        /// and is intialized for cloud and Hypervisor based hosting environments.
+        /// <b>io.neon.storage.capacity_gb</b> [<c>int</c>]: Specifies the node primary drive 
+        /// storage capacity in gigabytes.
         /// </summary>
         [JsonProperty(PropertyName = "StorageCapacityGB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(0)]
