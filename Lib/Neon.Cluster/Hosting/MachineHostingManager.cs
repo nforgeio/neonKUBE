@@ -15,6 +15,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -35,7 +36,8 @@ namespace Neon.Cluster
     /// </summary>
     public partial class MachineHostingManager : HostingManager
     {
-        private ClusterProxy        cluster;
+        private ClusterProxy                    cluster;
+        private SetupController<NodeDefinition> controller;
 
         /// <summary>
         /// Constructor.
@@ -64,7 +66,7 @@ namespace Neon.Cluster
         /// <inheritdoc/>
         public override bool IsProvisionNOP
         {
-            get { return true; }
+            get { return false; }
         }
 
         /// <inheritdoc/>
@@ -87,7 +89,21 @@ namespace Neon.Cluster
         /// <inheritdoc/>
         public override bool Provision(bool force)
         {
-            // There's nothing to do here.
+            // Perform the provisioning operations.
+
+            controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
+            {
+                ShowStatus  = this.ShowStatus,
+                MaxParallel = this.MaxParallel
+            };
+
+            controller.AddStep("node labels", n => SetLabels(n));
+
+            if (!controller.Run())
+            {
+                Console.Error.WriteLine("*** ERROR: One or more configuration steps failed.");
+                return false;
+            }
 
             return true;
         }
@@ -126,6 +142,87 @@ namespace Neon.Cluster
         {
             // Note that public endpoints have to be managed manually for
             // on-premise cluster deployments.
+        }
+
+        /// <summary>
+        /// Inspects the node to determine physical machine capabilities like
+        /// processor count, RAM, and primary disk capacity and then sets the
+        /// corresponding node labels.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        private void SetLabels(SshProxy<NodeDefinition> node)
+        {
+            CommandResponse result;
+
+            // Download [/proc/meminfo] and extract the [MemTotal] value (in kB).
+
+            result = node.SudoCommand("cat /proc/meminfo");
+
+            if (result.ExitCode == 0)
+            {
+                var memInfo       = result.OutputText;
+                var memTotalRegex = new Regex(@"^MemTotal:\s*(?<size>\d+)\s*kB", RegexOptions.Multiline);
+                var memMatch      = memTotalRegex.Match(memInfo);
+
+                if (memMatch.Success && long.TryParse(memMatch.Groups["size"].Value, out var memSizeKB))
+                {
+                    // Note that the RAM reported by Linux is somewhat less than the
+                    // physical RAM installed.
+
+                    node.Metadata.Labels.ComputeRamMB = (int)(memSizeKB / 1024);    // Convert KB --> MB
+                }
+            }
+
+            // Download [/proc/cpuinfo] and count the number of processors.
+
+            result = node.SudoCommand("cat /proc/cpuinfo");
+
+            if (result.ExitCode == 0)
+            {
+                var cpuInfo          = result.OutputText;
+                var processorRegex   = new Regex(@"^processor\s*:\s*\d+", RegexOptions.Multiline);
+                var processorMatches = processorRegex.Matches(cpuInfo);
+
+                node.Metadata.Labels.ComputeCores = processorMatches.Count;
+            }
+
+            // Determine the primary disk size.
+
+            // $hack(jeff.lill):
+            //
+            // I'm not entirely sure how to determine which block device is hosting
+            // the primary file system for all systems.  For now, I'm just going to
+            // assume that this can be one of:
+            //
+            //      /dev/sda1
+            //      /dev/sda
+            //      /dev/xvda1
+            //      /dev/xvda
+            //
+            // I'll try each of these in order and setting the label for the
+            // first reasonable result we get back.
+
+            var blockDevices = new string[]
+                {
+                    "/dev/sda1",
+                    "/dev/sda",
+                    "/dev/xvda1",
+                    "/dev/xvda"
+                };
+
+            foreach (var blockDevice in blockDevices)
+            {
+                result = node.SudoCommand($"lsblk -b --output SIZE -n -d {blockDevice}", RunOptions.LogOutput);
+
+                if (result.ExitCode == 0)
+                {
+                    if (long.TryParse(result.OutputText.Trim(), out var deviceSize) && deviceSize > 0)
+                    {
+                        node.Metadata.Labels.StorageCapacityGB = (int)(deviceSize / NeonHelper.Giga);
+                        break;
+                    }
+                }
+            }
         }
     }
 }
