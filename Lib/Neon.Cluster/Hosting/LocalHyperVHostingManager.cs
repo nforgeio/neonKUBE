@@ -178,7 +178,7 @@ namespace Neon.Cluster
                 }
             }
 
-            // Initialize and perform the provisioning operations.
+            // Perform the provisioning operations.
 
             controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
             {
