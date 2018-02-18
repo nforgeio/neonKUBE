@@ -528,54 +528,78 @@ USAGE:
 `   ""Ceph"": {
 
         // Indicates whether Ceph storage is to be enabled for the cluster.  
-        // This defaults to [false].
+        // This defaults to [true].
 
-        ""Enabled"": false,
+        ""Enabled"": true,
 
         // Specifies the default size of the Ceph drive created for cloud and
         // hypervisor based environments.  This can be a long byte count or a long
         // with units like [512MB] or [2GB].  This can be overridden 
-        // for specific nodes.  This defaults to [128GB].
+        // for specific nodes.  This defaults to [16GB].
+        //
+        // NOTE: The default is probably too small for production environments.
 
-        ""DriveSize"": ""128GB"", 
+        ""OSDDriveSize"": ""16GB"", 
 
         // Specifies the default amount of RAM to allocate to Ceph for caching.
         // This can be a long byte count or a long with units like [512MB]
         // or [2GB].  This can be overridden for specific nodes.  This defaults
-        // to [1GB].
+        // to [256MB].
+        //
+        // NOTE: The default is probably too small for production environments.
 
-        ""CacheSize"": ""1GB"",
+        ""OSDCacheSize"": ""256MB"",
 
         // Specifies the disk capacity in megabytes to assign to the Ceph OSD 
         // journal This can be a long byte count or a long with units like [512MB]
         // or [2GB].  This can be overridden for specific nodes.  This defaults
-        // to [5GB].
+        // to [1GB].
+        //
+        // NOTE: The default is probably too small for production environments.
 
-        ""JournalSize"": ""5GB"",
+        ""OSDJournalSize"": ""1GB"",
 
         // Specifies the maximum size of a Ceph RADOS object in bytes.  This can be a 
         // long byte count or a long with units like [512MB] or [2GB].  This 
         // is a global cluster setting that defaults to [5GB].
 
-        ""ObjectSizeMax"": ""5GB"",
+        ""OSDObjectSizeMax"": ""5GB"",
 
         // Specifies the default number of object replicas to be stored in the cluster.
         // This defaults to the minimum of 3 or the number of OSD nodes provisioned
         // in the cluster.
 
-        ""ReplicaCount"": ""3"",
+        ""OSDReplicaCount"": ""3"",
 
         // Specifies the minimum number of objects replicas required when the
         // Ceph storage cluster is operating in a degraded state.  This defaults
         // to [ReplicaCount-1] unless [ReplicaCount==1] in which case this will 
         // also default to 1.
 
-        ""ReplicaCountMin"": ""2"",
+        ""OSDReplicaCountMin"": ""2"",
 
         // Specifies the default number of placement groups assigned to each OSD.
         // This defaults to [100].
 
-        ""PlacementGroupCount"": ""100""
+        ""OSDPlacementGroups"": ""100"",
+
+        // Specifies the default amount of RAM to allocate to Ceph MDS processes for 
+        // caching.  This can be a long byte count or a long with units like [512MB] 
+        // or [2GB].  This can be overridden for specific nodes.  This defaults
+        // to [64MB].
+        //
+        // NOTE: The Ceph documentation states that MDS may tend to underestimate the 
+        //       RAM it's  using by up to 1.5 times.  To avoid potential memory issues, 
+        //       neonCLUSTER will adjust this value by dividing it  by 1.5 to when 
+        //       actually configuring the  MDS services.
+        //
+        // NOTE: You should also take care to leave 1-2GB of RAM for the host Linux 
+        //       operating system as well as the OSD non-cache related memory when 
+        //       you're configuring this property.
+        //
+        // NOTE: The default is probably too small for production environments
+
+        ""MDSCacheSize"": ""64MB""
     },
 
     //-------------------------------------------------------------------------

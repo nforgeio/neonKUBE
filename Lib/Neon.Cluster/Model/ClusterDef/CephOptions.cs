@@ -32,12 +32,12 @@ namespace Neon.Cluster
     public class CephOptions
     {
         private const string defaultVersion             = "luminous";
-        private const string defaultOSDDriveSize        = "128GB";
-        private const string defaultOSDCacheSize        = "1GB";
-        private const string defaultOSDJournalSize      = "5GB";
+        private const string defaultOSDDriveSize        = "16GB";
+        private const string defaultOSDCacheSize        = "256MB";
+        private const string defaultOSDJournalSize      = "1GB";
         private const string defaultOSDObjectSizeMax    = "5GB";
         private const int    defaultOSDPlacementGroups  = 100;
-        private const string defaultMDSCacheSize        = "1GB";
+        private const string defaultMDSCacheSize        = "64MB";
         private const string defaultVolumePluginPackage = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-volume-plugin_latest.deb";
 
         /// <summary>
@@ -48,11 +48,11 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Indicates whether Ceph storage is to be enabled for the cluster.  
-        /// This defaults to <c>false</c>.
+        /// This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Enabled", Required = Required.Default)]
-        [DefaultValue(false)]
-        public bool Enabled { get; set; } = false;
+        [DefaultValue(true)]
+        public bool Enabled { get; set; } = true;
 
         /// <summary>
         /// Returns the Linux user for the Ceph components.
@@ -81,10 +81,15 @@ namespace Neon.Cluster
         public string Version { get; set; } = defaultVersion;
 
         /// <summary>
+        /// <para>
         /// Specifies the default size of the Ceph OSD drives created for cloud and
         /// hypervisor based environments.  This can be a long byte count or a long
         /// with units like <b>512MB</b> or <b>2GB</b>.  This can be overridden 
-        /// for specific nodes.  This defaults to <b>128GB</b>.
+        /// for specific nodes.  This defaults to <b>16GB</b>.
+        /// </para>
+        /// <note>
+        /// The default is probably too small for production environments
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "OSDDriveSize", Required = Required.Default)]
         [DefaultValue(defaultOSDDriveSize)]
@@ -95,7 +100,7 @@ namespace Neon.Cluster
         /// Specifies the default amount of RAM to allocate to Ceph OSD processes for 
         /// caching.  This can be a long byte count or a long with units like <b>512MB</b> 
         /// or <b>2GB</b>.  This can be overridden for specific nodes.  This defaults
-        /// to <b>1GB</b> (which is probably too small for production clusters).
+        /// to <b>256MB</b>.
         /// </para>
         /// <note>
         /// <para>
@@ -108,6 +113,9 @@ namespace Neon.Cluster
         /// You should also take care to leave 1-2GB of RAM for the host Linux operating system
         /// as well as the OSD non-cache related memory when you're configuring this property.
         /// </para>
+        /// <note>
+        /// The default is probably too small for production environments
+        /// </note>
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "OSDCacheSize", Required = Required.Default)]
@@ -115,9 +123,14 @@ namespace Neon.Cluster
         public string OSDCacheSize { get; set; } = defaultOSDCacheSize;
 
         /// <summary>
+        /// <para>
         /// Specifies the default size to allocate for the OSD journals.  This can be a 
         /// long byte count or a long with units like <b>512MB</b> or <b>2GB</b>.  This 
-        /// can be overridden for specific nodes.  This defaults to <b>5GB</b>.
+        /// can be overridden for specific nodes.  This defaults to <b>1GB</b>.
+        /// </para>
+        /// <note>
+        /// The default is probably too small for production environments
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "OSDJournalSize", Required = Required.Default)]
         [DefaultValue(defaultOSDJournalSize)]
@@ -164,19 +177,22 @@ namespace Neon.Cluster
         /// Specifies the default amount of RAM to allocate to Ceph MDS processes for 
         /// caching.  This can be a long byte count or a long with units like <b>512MB</b> 
         /// or <b>2GB</b>.  This can be overridden for specific nodes.  This defaults
-        /// to <b>1GB</b> (which is probably too small for production clusters).
+        /// to <b>64MB</b>.
         /// </para>
         /// <note>
         /// <para>
         /// The Ceph documentation states that MDS may tend to underestimate the RAM it's 
-        /// using by up to 1.5 times.  To avoid potential memory issues, neonCLUSTER  will 
-        /// adjust this value by dividing it  by 1.5 to when actually configuring the 
+        /// using by up to 1.5 times.  To avoid potential memory issues, neonCLUSTER will 
+        /// adjust this value by dividing it by 1.5 to when actually configuring the 
         /// MDS services.
         /// </para>
         /// <para>
         /// You should also take care to leave 1-2GB of RAM for the host Linux operating system
         /// as well as the OSD non-cache related memory when you're configuring this property.
         /// </para>
+        /// </note>
+        /// <note>
+        /// The default is probably too small for production environments
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "MDSCacheSize", Required = Required.Default)]
@@ -297,24 +313,24 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDDriveSize)}={OSDDriveSize}] cannot be less than [1GB].");
             }
 
-            if (ClusterDefinition.ValidateSize(OSDCacheSize, this.GetType(), nameof(OSDCacheSize)) < 100 * NeonHelper.Mega)
+            if (ClusterDefinition.ValidateSize(OSDCacheSize, this.GetType(), nameof(OSDCacheSize)) < 64 * NeonHelper.Mega)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDCacheSize)}={OSDCacheSize}] cannot be less than [100MB].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDCacheSize)}={OSDCacheSize}] cannot be less than [64MB].");
             }
 
-            if (ClusterDefinition.ValidateSize(OSDJournalSize, this.GetType(), nameof(OSDJournalSize)) < 100 * NeonHelper.Mega)
+            if (ClusterDefinition.ValidateSize(OSDJournalSize, this.GetType(), nameof(OSDJournalSize)) < 64 * NeonHelper.Mega)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDJournalSize)}={OSDJournalSize}] cannot be less than [100MB].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDJournalSize)}={OSDJournalSize}] cannot be less than [64MB].");
             }
 
-            if (ClusterDefinition.ValidateSize(OSDObjectSizeMax, this.GetType(), nameof(OSDObjectSizeMax)) < 100 * NeonHelper.Mega)
+            if (ClusterDefinition.ValidateSize(OSDObjectSizeMax, this.GetType(), nameof(OSDObjectSizeMax)) < 64 * NeonHelper.Mega)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDObjectSizeMax)}={OSDObjectSizeMax}] cannot be less than [100MB].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDObjectSizeMax)}={OSDObjectSizeMax}] cannot be less than [64MB].");
             }
 
-            if (ClusterDefinition.ValidateSize(MDSCacheSize, this.GetType(), nameof(MDSCacheSize)) < 100 * NeonHelper.Mega)
+            if (ClusterDefinition.ValidateSize(MDSCacheSize, this.GetType(), nameof(MDSCacheSize)) < 64 * NeonHelper.Mega)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(MDSCacheSize)}={MDSCacheSize}] cannot be less than [100MB].");
+                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(MDSCacheSize)}={MDSCacheSize}] cannot be less than [64MB].");
             }
 
             if (cephMONCount == 0)
