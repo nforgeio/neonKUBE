@@ -12,6 +12,7 @@ import (
 	"github.com/docker/go-plugins-helpers/volume"
 )
 
+const version       = "0.5"
 const socketAddress = "/run/docker/plugins/neon.sock"
 
 type neonDriver struct {
@@ -137,7 +138,7 @@ func (driver *neonDriver) Create(request *volume.CreateRequest) error {
 			maxBytes = size * 1024 * 1024 * 1024;
 
 		} else {
-		
+
 			size, err := strconv.ParseInt(value, 10, 64)
 
 			if (err != nil || size <= 0) {
@@ -180,7 +181,7 @@ func (driver *neonDriver) Create(request *volume.CreateRequest) error {
 
 		maxBytesArg := fmt.Sprintf("%v", maxBytes)
 
-		if err := exec.Command("setfattr", "-n", "ceph.quota.max_bytes", maxBytesArg, mountPath).Run(); err != nil {
+		if err := exec.Command("/usr/bin/setfattr", "-n", "ceph.quota.max_bytes", "-v", maxBytesArg, mountPath).Run(); err != nil {
 			return err
 		}
 	}
@@ -189,7 +190,7 @@ func (driver *neonDriver) Create(request *volume.CreateRequest) error {
 	
 		maxFilesArg := fmt.Sprintf("%v", maxFiles)
 
-		if err := exec.Command("setfattr", "-n", "ceph.quota.max_files", maxFilesArg, mountPath).Run(); err != nil {
+		if err := exec.Command("/usr/bin/setfattr", "-n", "ceph.quota.max_files", "-v", maxFilesArg, mountPath).Run(); err != nil {
 			return err
 		}
 	}
@@ -332,7 +333,7 @@ func (driver *neonDriver) Capabilities() *volume.CapabilitiesResponse {
 
 func main() {
 
-	log.Println("Starting Docker [neon-volume] driver plugin")
+	log.Println(fmt.Sprintf("Starting: neon-volume-plugin v%v", version))
 
 	driver  := &neonDriver{ }
 	handler := volume.NewHandler(driver)

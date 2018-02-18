@@ -1,8 +1,0 @@
-Package: neon-volume-plugin
-Version: 0.5-1
-Section: base
-Priority: optional
-Architecture: amd64
-Depends: 
-Maintainer: Jeff Lill <jeff@lilltek.com>
-Description: Docker volume plugin driver for neonCLUSTER integrated CephFS.
