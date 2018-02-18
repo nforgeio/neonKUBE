@@ -28,32 +28,34 @@ namespace TestCommon
             }
         }
 
-        private Regex       variableRegex   = null;
-        private string      defaultVariable = null;
-        private int         tabStop         = 0;
-        private bool        expandVariables = true;
-        private bool        stripComments   = true;
-        private bool        removeComments  = false;
-        private bool        removeBlank     = false;
-        private bool        processCommands = true;
-        private char        statementMarker = '#';
-        private int         indent          = 0;
-        private LineEnding  lineEnding      = LineEnding.Platform;
+        private Regex       variableRegex              = null;
+        private string      defaultVariable            = null;
+        private string      defaultEnvironmentVariable = null;
+        private int         tabStop                    = 0;
+        private bool        expandVariables            = true;
+        private bool        stripComments              = true;
+        private bool        removeComments             = false;
+        private bool        removeBlank                = false;
+        private bool        processCommands            = true;
+        private char        statementMarker            = '#';
+        private int         indent                     = 0;
+        private LineEnding  lineEnding                 = LineEnding.Platform;
 
         private PreprocessReader CreateReader(string input)
         {
             var reader = new PreprocessReader(input)
             {
-                DefaultVariable = defaultVariable,
-                TabStop         = tabStop,
-                ExpandVariables = expandVariables,
-                StripComments   = stripComments,
-                RemoveComments  = removeComments,
-                RemoveBlank     = removeBlank,
-                ProcessCommands = processCommands,
-                StatementMarker = statementMarker,
-                Indent          = indent,
-                LineEnding      = lineEnding
+                DefaultVariable            = defaultVariable,
+                DefaultEnvironmentVariable = defaultEnvironmentVariable,
+                TabStop                    = tabStop,
+                ExpandVariables            = expandVariables,
+                StripComments              = stripComments,
+                RemoveComments             = removeComments,
+                RemoveBlank                = removeBlank,
+                ProcessCommands            = processCommands,
+                StatementMarker            = statementMarker,
+                Indent                     = indent,
+                LineEnding                 = lineEnding
             };
 
             if (variableRegex != null)
@@ -132,6 +134,8 @@ namespace TestCommon
             Assert.Equal(LineEnding.Platform, reader.LineEnding);
             Assert.True(reader.ExpandVariables);
             Assert.Equal(0, reader.Indent);
+            Assert.Null(reader.DefaultVariable);
+            Assert.Null(reader.DefaultEnvironmentVariable);
         }
 
         [Fact]
@@ -338,20 +342,68 @@ Hello World! Goodbye!
                 });
 
 
-            // Verify that undefined environment variables are replaced with
-            // an empty string.
+            // Verify that undefined environment variables throw a [KeyNotFoundException].
 
-            Environment.SetEnvironmentVariable("NF_TEST_VARIABLE", "Hello World!");
-
-            await VerifyAsync(
+            await Assert.ThrowsAsync<KeyNotFoundException>(
+                async () =>
+                {
+                    await VerifyAsync(
 @"
 ---$<<NF_TEST_VARIABLE>>---
 ---$<<NF_UNDEFINED_VARIABLE>>---
 ",
 @"
 ---Hello World!---
-------
+---DEFAULT-VALUE---
 ");
+                });
+
+            // Verify that undefined environment variables are replaced with
+            // a default value.
+
+            Environment.SetEnvironmentVariable("NF_TEST_VARIABLE", "Hello World!");
+
+            defaultEnvironmentVariable = "DEFAULT-VALUE";
+
+            try
+            {
+                await VerifyAsync(
+@"
+---$<<NF_TEST_VARIABLE>>---
+---$<<NF_UNDEFINED_VARIABLE>>---
+",
+@"
+---Hello World!---
+---DEFAULT-VALUE---
+");
+            }
+            finally
+            {
+                defaultEnvironmentVariable = null;
+            }
+            // Verify that undefined environment variables are replaced with
+            // a default value.
+
+            Environment.SetEnvironmentVariable("NF_TEST_VARIABLE", "Hello World!");
+
+            defaultEnvironmentVariable = "DEFAULT-VALUE";
+
+            try
+            {
+                await VerifyAsync(
+@"
+---$<<NF_TEST_VARIABLE>>---
+---$<<NF_UNDEFINED_VARIABLE>>---
+",
+@"
+---Hello World!---
+---DEFAULT-VALUE---
+");
+            }
+            finally
+            {
+                defaultEnvironmentVariable = null;
+            }
         }
 
         [Fact]

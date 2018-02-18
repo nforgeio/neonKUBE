@@ -153,9 +153,17 @@ namespace Neon.IO
     /// </para>
     /// <note>
     /// By default, the reader will throw a <see cref="KeyNotFoundException"/> if an
-    /// undefined normal value is encountered.  This behavior can be modified by setting
+    /// undefined normal variable is encountered.  This behavior can be modified by setting
     /// <see cref="DefaultVariable"/> to a non-<c>null</c> string.  In this case,
+    /// undefined variable references will always be replaced by the value set.
+    /// <see cref="DefaultVariable"/> defaults to <c>null</c>.
+    /// </note>
+    /// <note>
+    /// By default, the reader will throw a <see cref="KeyNotFoundException"/> if an
+    /// undefined environment variable is encountered.  This behavior can be modified by setting
+    /// <see cref="DefaultEnvironmentVariable"/> to a non-<c>null</c> string.  In this case,
     /// undefined environment variable references will always be replaced by the value set.
+    /// <see cref="DefaultEnvironmentVariable"/> defaults to <c>null</c>.
     /// </note>
     /// <para>
     /// Processing can also be customized via the <see cref="StripComments"/>, <see cref="RemoveComments"/>,
@@ -348,19 +356,20 @@ namespace Neon.IO
         public bool ExpandVariables { get; set; } = true;
 
         /// <summary>
-        /// The default value to use for an undefined variable or <c>null</c>
+        /// The default value to use for an undefined normal variable or <c>null</c>
         /// if a <see cref="KeyNotFoundException"/> is to be thrown when a
         /// undefined non-environment variable is referenced.  This defaults to 
         /// <c>null</c>.
         /// </summary>
-        /// <remarks>
-        /// <note>
-        /// A <see cref="KeyNotFoundException"/> will never be thrown for undefined
-        /// environment variables.  In these cases, the variable will be replaced
-        /// by an empty string.
-        /// </note>
-        /// </remarks>
         public string DefaultVariable { get; set; } = null;
+
+        /// <summary>
+        /// The default value to use for an undefined environment variable or <c>null</c>
+        /// if a <see cref="KeyNotFoundException"/> is to be thrown when a
+        /// undefined environment variable is referenced.  This defaults to 
+        /// <c>null</c>.
+        /// </summary>
+        public string DefaultEnvironmentVariable { get; set; } = null;
 
         /// <summary>
         /// Controls whether comments are stripped out while reading.  This defaults
@@ -747,6 +756,16 @@ namespace Neon.IO
 
                     name  = name.Substring(1, name.Length - 2);
                     value = Environment.GetEnvironmentVariable(name);
+
+                    if (value == null)
+                    {
+                        if (DefaultEnvironmentVariable == null)
+                        {
+                            throw new KeyNotFoundException($"Line {lineNumber}: Undefined environment variable reference [{match.Value}].");
+                        }
+
+                        value = DefaultEnvironmentVariable;
+                    }
                 }
                 else
                 {
