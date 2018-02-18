@@ -8,6 +8,7 @@ import (
 	"os/exec"
 	"strconv"
 	"strings"
+	"time"
 	
 	"github.com/docker/go-plugins-helpers/volume"
 )
@@ -46,10 +47,94 @@ func cfsReady() (bool, error) {
 	stat, err := os.Stat("/cfs/READY")
 
 	if (err == nil && !stat.IsDir()) {
+
 		return true, nil
+
 	} else {
+
 		log.Println("[/cfs] is not ready.");
 		return false, cfsNotReady()
+	}
+}
+
+func cfsNotReady() error {
+
+	return toError("Cluster distributed filesystem [/cfs] is not ready.")
+}
+
+func stub(err error) {
+	
+	// $hack(jeff.lill)
+	//
+	// I don't completely understand the how GO works and I need
+	// a way to workaround the [VARIABLE is declared but not used]
+	// compiler errors.  I'm going to handle those by passig them
+	// to this "do nothing" function.
+}
+
+func cfsReadyWait() error {
+
+	// Check if CFS is already ready.
+
+	isReady, err := cfsReady()
+	if (isReady) {
+		return nil;
+	}
+
+	stub(err)
+
+	// We're going to wait for a period of time for CFS
+	// to become ready.  This most likely happens during
+	// cluster boot where it may take a minute or two for
+	// all of the Ceph services to initialize.
+
+	// We'll send [true] on this channel when CFS is ready.
+
+	readyChannel := make(chan bool, 1)	
+	defer close(readyChannel)
+
+	// This timer will be used to signal a timeout. 
+
+	timer := time.NewTimer(3 * time.Minute)	// 3 minute timeout
+	defer timer.Stop()
+
+	// Start a go function that polls for CFS to become
+	// ready and then signals on the [readyChannel].
+
+	exit := false
+
+	go func() {
+		
+		for {
+
+			time.Sleep(5 * time.Second)
+			
+			if (exit) {
+				return;
+			}
+
+			isReady, err := cfsReady()
+			if (isReady) {
+				readyChannel <- true
+				return;
+			}
+
+			stub(err)
+		}
+	}()
+
+	// Wait for a ready signal or a timeout.
+
+	select {
+		case <- readyChannel:
+		
+			log.Println("[/cfs] IS READY NOW ***.")
+			return nil
+
+		case <- timer.C:
+
+			exit = true
+			return toError("Timeout waiting for CFS to become ready.")
 	}
 }
 
@@ -65,11 +150,6 @@ func volumeExists(volumeName string) bool {
 	}
 }
 
-func cfsNotReady() error {
-
-	return toError("Cluster distributed filesystem [/cfs] is not ready.")
-}
-
 func volumeDoesNotExist(volumeName string) error {
 
 	return toError("volume [" + volumeName + "] does not exist.")
@@ -79,9 +159,9 @@ func (driver *neonDriver) Create(request *volume.CreateRequest) error {
 
 	log.Println("create:", request.Name);
 
-	ready, error := cfsReady()
+	error := cfsReadyWait()
 
-	if (!ready) {
+	if (error != nil) {
 		return error
 	}
 	
@@ -202,9 +282,9 @@ func (driver *neonDriver) Remove(request *volume.RemoveRequest) error {
 
 	log.Println("remove:", request.Name);
 
-	ready, error := cfsReady()
+	error := cfsReadyWait()
 
-	if (!ready) {
+	if (error != nil) {
 		return error
 	}
 	
@@ -226,12 +306,12 @@ func (driver *neonDriver) Path(request *volume.PathRequest) (*volume.PathRespons
 
 	log.Println("path:", request.Name);
 
-	ready, error := cfsReady()
+	error := cfsReadyWait()
 
-	if (!ready) {
+	if (error != nil) {
 		return nil, error
 	}
-	
+
 	if (volumeExists(request.Name)) {
 		return &volume.PathResponse{Mountpoint: mountPath(request.Name)}, nil
 	} else {
@@ -243,9 +323,9 @@ func (driver *neonDriver) Mount(request *volume.MountRequest) (*volume.MountResp
 
 	log.Println("mount:", request.Name);
 
-	ready, error := cfsReady()
+	error := cfsReadyWait()
 
-	if (!ready) {
+	if (error != nil) {
 		return nil, error
 	}
 	
@@ -262,9 +342,9 @@ func (driver *neonDriver) Unmount(request *volume.UnmountRequest) error {
 
 	log.Println("unmount:", request.Name);
 
-	ready, error := cfsReady()
+	error := cfsReadyWait()
 
-	if (!ready) {
+	if (error != nil) {
 		return error
 	}
 	
@@ -281,9 +361,9 @@ func (driver *neonDriver) Get(request *volume.GetRequest) (*volume.GetResponse, 
 
 	log.Println("get:", request.Name);
 
-	ready, error := cfsReady()
+	error := cfsReadyWait()
 
-	if (!ready) {
+	if (error != nil) {
 		return nil, error
 	}
 	
@@ -300,10 +380,10 @@ func (driver *neonDriver) List() (*volume.ListResponse, error) {
 
 	log.Println("list");
 
-	ready, error := cfsReady()
+	error := cfsReadyWait()
 
-	if (!ready) {
-		return nil, error;
+	if (error != nil) {
+		return nil, error
 	}
 	
 	var volumes []*volume.Volume
