@@ -450,7 +450,8 @@ nameserver 8.8.4.4
 ";
                         nodeProxy.UploadText("/etc/resolvconf/resolv.conf.d/base", resolvBaseText);
 
-                        // Extend the primary partition and file system to fill the drive. 
+                        // Extend the primary partition and file system to fill 
+                        // the virtual the drive. 
 
                         xenSshProxy.Status = FormatVmStatus(vmName, $"resize primary partition");
 
