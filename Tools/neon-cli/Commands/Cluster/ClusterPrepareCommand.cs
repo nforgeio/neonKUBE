@@ -55,6 +55,12 @@ OPTIONS:
                                   This is useful for debugging cluster setup 
                                   issues.  Do not use for production clusters.
 
+    --remove-templates          - Removes any cached local virtual machine 
+                                  templates without actually setting up a 
+                                  cluster.  You can use this to ensure that 
+                                  cluster will be created  from the most recent
+                                  template.
+
 Server Requirements:
 --------------------
 
@@ -80,13 +86,13 @@ Server Requirements:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--force", "--package-cache", "--unredacted" }; }
+            get { return new string[] { "--force", "--package-cache", "--unredacted", "--remove-templates" }; }
         }
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine)
         {
-            return true;
+            return !commandLine.HasOption("--remove-templates");
         }
 
         /// <inheritdoc/>
@@ -98,6 +104,22 @@ Server Requirements:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
+            // Special-case handling of the [--remove-templates] option.
+
+            if (commandLine.HasOption("--remove-templates"))
+            {
+                Console.WriteLine("Removing cached virtual machine templates.");
+
+                foreach (var fileName in Directory.GetFiles(NeonClusterHelper.GetVmTemplatesFolder(), "*.*", SearchOption.TopDirectoryOnly))
+                {
+                    File.Delete(fileName);
+                }
+
+                Program.Exit(0);
+            }
+
+            // Implement the command.
+
             packageCacheUri = commandLine.GetOption("--package-cache");     // This overrides the cluster definition, if specified.
 
             if (Program.ClusterLogin != null)

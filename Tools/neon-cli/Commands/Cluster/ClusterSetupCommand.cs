@@ -51,11 +51,6 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --remove-templates  - Removes any cached local virtual machine templates
-                          without actually setting up a cluster.  You can
-                          use this to ensure that cluster will be created 
-                          from the most recent template.
-
     --unredacted        - Runs Vault related commands without redacting logs.
                           This is useful for debugging cluster setup issues.
                           Do not use for production clusters.
@@ -77,13 +72,13 @@ OPTIONS:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--remove-templates", "--unredacted" }; }
+            get { return new string[] { "--unredacted" }; }
         }
 
         /// <inheritdoc/>
         public override bool NeedsSshCredentials(CommandLine commandLine)
         {
-            return !commandLine.HasOption("--remove-templates");
+            return true;
         }
 
         /// <inheritdoc/>
@@ -95,18 +90,6 @@ OPTIONS:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            if (commandLine.HasOption("--remove-templates"))
-            {
-                Console.WriteLine("Removing cached virtual machine templates.");
-
-                foreach (var fileName in Directory.GetFiles(NeonClusterHelper.GetVmTemplatesFolder(), "*.*", SearchOption.TopDirectoryOnly))
-                {
-                    File.Delete(fileName);
-                }
-
-                Program.Exit(0);
-            }
-
             if (Program.ClusterLogin != null)
             {
                 Console.Error.WriteLine("*** ERROR: You are logged into a cluster.  You need to logout before setting up another.");
