@@ -170,7 +170,7 @@ namespace Neon.Cluster
         /// that can be a long byte count or a long with units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>64GB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VmDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(DefaultVmMemory)]
+        [DefaultValue(DefaultVmDisk)]
         public string VmDisk { get; set; } = DefaultVmDisk;
 
         /// <summary>
