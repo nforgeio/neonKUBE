@@ -12,7 +12,7 @@ import (
 	"github.com/docker/go-plugins-helpers/volume"
 )
 
-const socketAddress = "/run/docker/plugins/neon-volume.sock"
+const socketAddress = "/run/docker/plugins/neon.sock"
 
 type neonDriver struct {
 
