@@ -42,6 +42,7 @@ namespace Neon.Cluster
         private const string        defaultProxyVaultImage     = "neoncluster/neon-proxy-vault:latest";
         private const string        defaultProxyManagerImage   = "neoncluster/neon-proxy-manager:latest";
         private const string        defaultClusterManagerImage = "neoncluster/neon-cluster-manager:latest";
+        private const string        defaultDrivePrefix         = "sd";
 
         internal static Regex NameRegex { get; private set; }    = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
         internal static Regex DnsHostRegex { get; private set; } = new Regex(@"^([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9])(\.([a-z0-9]|[a-z0-9][a-z0-9\-]{0,61}[a-z0-9]))*$", RegexOptions.IgnoreCase);
@@ -249,6 +250,26 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "Schema", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(ClusterSchema)]
         public string Schema { get; set; } = ClusterSchema;
+
+        /// <summary>
+        /// <para>
+        /// Returns the prefix for block devices that will be attached to
+        /// the host machines.  For many hosting environments this will be
+        /// <b>sd</b>, indicating that drives will be attached like: 
+        /// <b>/dev/sda</b>, <b>/dev/sdb</b>, <b>/dev/sdc</b>...
+        /// </para>
+        /// <para>
+        /// This may be different though for some hosting environment.
+        /// XenServer for example, uses the <b>xvd</b> prefix and attaches
+        /// drives as <b>/dev/sda</b>, <b>/dev/sdb</b>, <b>/dev/sdc</b>...
+        /// </para>
+        /// <note>
+        /// This property is set automatically during cluster provisioning.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "DrivePrefix", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultDrivePrefix)]
+        public string DrivePrefix { get; set; } = defaultDrivePrefix;
 
         /// <summary>
         /// <para>
@@ -605,16 +626,18 @@ namespace Neon.Cluster
         [Pure]
         public void Validate()
         {
-            Hosting   = Hosting ?? new HostingOptions();
-            Vpn       = Vpn ?? new VpnOptions();
-            HostNode  = HostNode ?? new HostNodeOptions();
-            Docker    = Docker ?? new DockerOptions();
-            Network   = Network ?? new NetworkOptions();
-            Consul    = Consul ?? new ConsulOptions();
-            Vault     = Vault ?? new VaultOptions();
-            Log       = Log ?? new LogOptions();
-            Dashboard = Dashboard ?? new DashboardOptions();
-            Ceph      = Ceph ?? new CephOptions();
+            Schema      = Schema ?? ClusterSchema;
+            DrivePrefix = DrivePrefix ?? defaultDrivePrefix;
+            Hosting     = Hosting ?? new HostingOptions();
+            Vpn         = Vpn ?? new VpnOptions();
+            HostNode    = HostNode ?? new HostNodeOptions();
+            Docker      = Docker ?? new DockerOptions();
+            Network     = Network ?? new NetworkOptions();
+            Consul      = Consul ?? new ConsulOptions();
+            Vault       = Vault ?? new VaultOptions();
+            Log         = Log ?? new LogOptions();
+            Dashboard   = Dashboard ?? new DashboardOptions();
+            Ceph        = Ceph ?? new CephOptions();
 
             ProxyImage          = ProxyImage ?? defaultProxyImage;
             ProxyVaultImage     = ProxyVaultImage ?? defaultProxyVaultImage;

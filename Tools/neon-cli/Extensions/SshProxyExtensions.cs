@@ -397,6 +397,8 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "cluster.schema", ClusterDefinition.ClusterSchema);
             SetBashVariable(preprocessReader, "cluster.rootuser", Program.Username);
 
+            SetBashVariable(preprocessReader, "node.driveprefix", clusterDefinition.DrivePrefix);
+
             SetBashVariable(preprocessReader, "neon.folders.config", NodeHostFolders.Config);
             SetBashVariable(preprocessReader, "neon.folders.secrets", NodeHostFolders.Secrets);
             SetBashVariable(preprocessReader, "neon.folders.setup", NodeHostFolders.Setup);

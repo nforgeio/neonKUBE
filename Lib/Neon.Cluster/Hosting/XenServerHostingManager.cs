@@ -208,6 +208,12 @@ namespace Neon.Cluster
             return true;
         }
 
+        /// <inheritdoc/>
+        public override string DrivePrefix
+        {
+            get { return "xvd"; }
+        }
+
         /// <summary>
         /// Returns the list of <see cref="NodeDefinition"/> instances describing which cluster
         /// nodes are to be hosted by a specific XenServer.

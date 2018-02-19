@@ -213,5 +213,8 @@ namespace Neon.Cluster
 
         /// <inheritdoc/>
         public abstract void UpdatePublicEndpoints(List<HostedEndpoint> endpoints);
+
+        /// <inheritdoc/>
+        public abstract string DrivePrefix { get; }
     }
 }

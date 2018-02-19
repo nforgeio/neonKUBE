@@ -512,6 +512,12 @@ namespace Neon.Cluster
             return (Address: azureNode.PublicSshAddress, Port: azureNode.PublicSshPort);
         }
 
+        /// <inheritdoc/>
+        public override string DrivePrefix
+        {
+            get { return "sd"; }
+        }
+
         /// <summary>
         /// Assigns IP addresses from the cluster subnet to the virtual machines and/or 
         /// verifies that already assigned addresses are valid.

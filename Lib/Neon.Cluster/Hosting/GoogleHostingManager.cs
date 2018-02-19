@@ -107,5 +107,11 @@ namespace Neon.Cluster
         public override void UpdatePublicEndpoints(List<HostedEndpoint> endpoints)
         {
         }
+
+        /// <inheritdoc/>
+        public override string DrivePrefix
+        {
+            get { return "sd"; }
+        }
     }
 }

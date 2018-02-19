@@ -235,6 +235,12 @@ namespace Neon.Cluster
             // on-premise cluster deployments.
         }
 
+        /// <inheritdoc/>
+        public override string DrivePrefix
+        {
+            get { return "sd"; }
+        }
+
         /// <summary>
         /// Returns the name to use for naming the virtual machine hosting the node.
         /// </summary>

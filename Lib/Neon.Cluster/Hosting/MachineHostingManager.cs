@@ -144,6 +144,12 @@ namespace Neon.Cluster
             // on-premise cluster deployments.
         }
 
+        /// <inheritdoc/>
+        public override string DrivePrefix
+        {
+            get { return "sd"; }
+        }
+
         /// <summary>
         /// Inspects the node to determine physical machine capabilities like
         /// processor count, RAM, and primary disk capacity and then sets the

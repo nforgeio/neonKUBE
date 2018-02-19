@@ -64,7 +64,11 @@ if ${NEON_NODE_SSD} ; then
     echo "# This script is generated during setup by [setup-ssd.sh] to execute"         > /usr/local/bin/neon-tune-ssd.sh
     echo "# the commands necessary to properly tune any attached SSDs"                 >> /usr/local/bin/neon-tune-ssd.sh
 
-    for DEVICE in sda sdb sdc sdd sde sdf sdg sdh sdi sdj
+	# Note that $<node.driveprefix> will be replaced with something
+	# like [sd] or [xvd].  This comes from the hosting manager used to
+	# provision the cluster.
+
+    for DEVICE in $<node.driveprefix>a $<node.driveprefix>b $<node.driveprefix>c $<node.driveprefix>d $<node.driveprefix>e $<node.driveprefix>f $<node.driveprefix>g $<node.driveprefix>h $<node.driveprefix>i $<node.driveprefix>j
     do
         if [ -d /sys/block/$DEVICE ]; then
             echo " "                                                                   >> /usr/local/bin/neon-tune-ssd.sh
