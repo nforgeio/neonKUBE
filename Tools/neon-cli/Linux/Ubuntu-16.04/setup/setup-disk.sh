@@ -21,8 +21,9 @@
 #
 #	/dev/sdc, /dev/sdd, /dev/sde...
 #
-# which is true on Azure but XenServer mounts these as /xvd#...  I'm not sure what
-# Hyper-V does.
+# which is true on Azure but XenServer mounts these as [/xvd*]...  Hyper-V 
+# does mount the disks as [/dev/sd*] but this script will likely conflict
+# with disks created for Ceph OSD.
 
 # Configure Bash strict mode so that the entire script will fail if 
 # any of the commands fail.
