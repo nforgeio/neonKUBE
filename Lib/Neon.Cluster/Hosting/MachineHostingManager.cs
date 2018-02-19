@@ -80,7 +80,7 @@ namespace Neon.Cluster
                 {
                     if (string.IsNullOrEmpty(node.Labels.CephOSDDevice))
                     {
-                        throw new ClusterDefinitionException($"[{HostingEnvironments.Machine}] requires that the OSD node [{node.Name}] explicitly set [{nameof(NodeLabels)}.{nameof(NodeLabels.CephOSDDevice)}] to the target OSD block device.");
+                        throw new ClusterDefinitionException($"Hosting environment [{HostingEnvironments.Machine}] requires that the OSD node [{node.Name}] explicitly set [{nameof(NodeLabels)}.{nameof(NodeLabels.CephOSDDevice)}] to the target OSD block device (like: [/dev/sdb]).");
                     }
                 }
             }
