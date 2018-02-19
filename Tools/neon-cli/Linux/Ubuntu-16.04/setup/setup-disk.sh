@@ -24,6 +24,32 @@
 # which is true on Azure but XenServer mounts these as [/xvd*]...  Hyper-V 
 # does mount the disks as [/dev/sd*] but this script will likely conflict
 # with disks created for Ceph OSD.
+#
+# It turns out that by pure luck, this script seems to work OK for now:
+#
+#	* We don't currently (probably never) need to create a RAID
+#     data drive for XenServer and because Xen uses [/dev/xvd*]
+#     names, the script below assumes that the machine has just
+#	  ephemeral drives.  Any drives created for OSD are ignored.
+#
+#	* For some reason, Azure mounts the first drive as [/dev/sdc]
+#	  instead of [/dev/sdb] so the script below looks to create
+#     the RAID array from drives starting at [/dev/sdc]...  This
+#     means that any OSD drive mounted in Hyper-V on [/dev/sdb]
+#	  won't be inadvertently combined into the RAID array.
+#
+#	* This may be OK for AWS too, depending on where mounted 
+#     EBS drives show up.  
+#
+# This will need to change though to support OSD on Azure and
+# AWS.  The idea is to create two partitions in the RAID array,
+# one for the primary file system and the other for OSD.
+#
+# I'm not entirely sure what I'll do when there are no mounted 
+# cloud drives.  Perhaps, I could create a block device in the
+# file system and mount OSD there.  I could just require mounted
+# cloud drives, but I really don't want to do that now that Ceph
+# is enabled by default.
 
 # Configure Bash strict mode so that the entire script will fail if 
 # any of the commands fail.
