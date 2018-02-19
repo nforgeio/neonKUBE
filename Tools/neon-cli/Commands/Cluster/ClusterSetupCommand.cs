@@ -234,25 +234,28 @@ OPTIONS:
 
             // Configure the workers and pets.
 
-            var workerPetStepLabel = "worker/pet config";
-
-            if (cluster.Workers.Count() == 0)
+            if (cluster.Workers.Count() > 0 || cluster.Pets.Count() > 0)
             {
-                workerPetStepLabel = "pet config";
-            }
-            else if (cluster.Pets.Count() == 0)
-            {
-                workerPetStepLabel = "worker config";
-            }
+                var workerPetStepLabel = "worker/pet config";
 
-            controller.AddStep(workerPetStepLabel, 
-                n =>
+                if (cluster.Workers.Count() == 0)
                 {
-                    ConfigureCommon(n);
-                    n.InvokeIdempotentAction("setup-common-restart", () => RebootAndWait(n));
-                    ConfigureNonManager(n);
-                },
-                n => n.Metadata.IsWorker || n.Metadata.IsPet);
+                    workerPetStepLabel = "pet config";
+                }
+                else if (cluster.Pets.Count() == 0)
+                {
+                    workerPetStepLabel = "worker config";
+                }
+
+                controller.AddStep(workerPetStepLabel,
+                    n =>
+                    {
+                        ConfigureCommon(n);
+                        n.InvokeIdempotentAction("setup-common-restart", () => RebootAndWait(n));
+                        ConfigureNonManager(n);
+                    },
+                    n => n.Metadata.IsWorker || n.Metadata.IsPet);
+            }
 
             // Create the Swarm.
 
@@ -281,13 +284,13 @@ OPTIONS:
                     controller.AddStep("registry cache", n => registryCacheConfigurator.Configure(n));
                 }
 
-                if (cluster.Definition.Docker.RegistryCache)
+                if (cluster.Definition.Docker.RegistryCache && cluster.Definition.NodeDefinitions.Count > 1)
                 {
-                    // The cluster deploys a local registry cache so we're
-                    // going to pull images on the first manager first so they get
-                    // loaded into the cluster's register's registry cache 
-                    // and then pull for all of the other nodes in a subsequent
-                    // step.
+                    // The cluster deploys a local registry cache and we have multiple
+                    // nodes, so we're going to pull images on the first manager first 
+                    // so they get loaded into the cluster's register's registry cache 
+                    // and then pull for all of the other nodes in a subsequent step
+                    // (so we don't slam the Internet connection and the package mirrors.
 
                     controller.AddStep("pull images to cache", n => PullImages(n), n => n == cluster.FirstManager);
                     controller.AddStep("pull images to nodes", n => PullImages(n), n => n != cluster.FirstManager);
