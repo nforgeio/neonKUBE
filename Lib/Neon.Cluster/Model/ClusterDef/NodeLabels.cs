@@ -871,19 +871,19 @@ namespace Neon.Cluster
 
             if (clusterDefinition.Ceph.Enabled)
             {
-                if (CephOSDDriveSizeGB > 0 && CephOSDDriveSizeGB < NeonHelper.Giga)
+                if (CephOSDDriveSizeGB > 0 && CephOSDDriveSizeGB < 1)
                 {
                     throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephOSDDriveSizeGB)}={CephOSDDriveSizeGB}] is cannot be less than [1GB].");
                 }
 
-                if (CephOSDCacheSizeMB > 0 && CephOSDCacheSizeMB < 100 * NeonHelper.Mega)
+                if (CephOSDCacheSizeMB > 0 && CephOSDCacheSizeMB < 64)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephOSDCacheSizeMB)}={CephOSDCacheSizeMB}] is cannot be less than [100MB].");
+                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephOSDCacheSizeMB)}={CephOSDCacheSizeMB}] is cannot be less than [64MB].");
                 }
 
-                if (CephOSDJournalSizeMB > 0 && CephOSDJournalSizeMB < 100 * NeonHelper.Mega)
+                if (CephOSDJournalSizeMB > 0 && CephOSDJournalSizeMB < 64)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephOSDCacheSizeMB)}={CephOSDCacheSizeMB}] is cannot be less than [100MB].");
+                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephOSDCacheSizeMB)}={CephOSDCacheSizeMB}] is cannot be less than [64MB].");
                 }
             }
 
