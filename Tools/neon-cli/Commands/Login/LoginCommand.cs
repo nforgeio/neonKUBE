@@ -100,7 +100,7 @@ ARGUMENTS:
                 string.Equals(clusterLogin.ClusterName, clusterName, StringComparison.OrdinalIgnoreCase) &&
                 string.Equals(clusterLogin.Username, username, StringComparison.OrdinalIgnoreCase))
             {
-                Console.WriteLine($"You are already logged into [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
+                Console.WriteLine($"*** You are already logged into [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
                 Program.Exit(0);
             }
 
