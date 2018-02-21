@@ -103,7 +103,7 @@ USAGE:
 ";
 
         private const string MustHaveRootPrivileges = "*** ERROR: Root cluster privileges are required.";
-        private const string VpnNotEnabled          = "*** ERROR: The VPN is not enabled for this cluster.";
+        private const string VpnNotEnabled          = "*** ERROR: VPN is not enabled for this cluster.";
 
         private string          caFolder;
         private ClusterLogin    clusterLogin;
@@ -758,7 +758,7 @@ nsCertType              = server
         /// <returns>The <see cref="VpnCaFiles"/>.</returns>
         private VpnCaFiles GetVpnCaFiles()
         {
-            var manager  = cluster.FirstManager;
+            var manager  = cluster.GetHealthyManager();
             var response = manager.SudoCommand($"export VAULT_TOKEN={clusterLogin.VaultCredentials.RootToken} && vault read -format=json /neon-secret/vpn/ca.zip.encrypted");
 
             if (response.ExitCode != 0)

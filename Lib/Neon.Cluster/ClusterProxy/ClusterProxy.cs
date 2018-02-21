@@ -9,6 +9,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -32,7 +33,7 @@ namespace Neon.Cluster
         private VaultClient                                                 vaultClient;
         private ConsulClient                                                consulClient;
         private RunOptions                                                  defaultRunOptions;
-        private Func<string, string, IPAddress, SshProxy<NodeDefinition>>  nodeProxyCreator;
+        private Func<string, string, IPAddress, SshProxy<NodeDefinition>>   nodeProxyCreator;
 
         /// <summary>
         /// Constructs a cluster proxy from a cluster login.
@@ -193,8 +194,7 @@ namespace Neon.Cluster
         public IReadOnlyList<SshProxy<NodeDefinition>> Nodes { get; private set; }
 
         /// <summary>
-        /// Returns the first cluster manager node that will be used for global
-        /// cluster setup.
+        /// Returns the first cluster manager node as sorted by name.
         /// </summary>
         public SshProxy<NodeDefinition> FirstManager { get; private set; }
 
@@ -303,6 +303,47 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Returns a manager node that appears to be healthy.
+        /// </summary>
+        /// <returns>The healthy manager node.</returns>
+        /// <exception cref="NeonClusterException">Thrown if no healthy managers are present.</exception>
+        public SshProxy<NodeDefinition> GetHealthyManager()
+        {
+            // Try sending up to three pings to each manager node in parallel
+            // and return the first manager that responds.
+
+            const int tryCount = 3;
+
+            var healthyManager = (SshProxy<NodeDefinition>)null;
+            var pingOptions    = new PingOptions(ttl: 32, dontFragment: true);
+            var pingTimeout    = TimeSpan.FromSeconds(1);
+
+            using (var pinger = new Ping())
+            {
+                for (int i = 0; i < tryCount; i++)
+                {
+                    Parallel.ForEach(Nodes.Where(n => n.Metadata.IsManager),
+                        manager =>
+                        {
+                            var reply = pinger.Send(manager.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
+
+                            if (reply.Status == IPStatus.Success)
+                            {
+                                healthyManager = manager;
+                            }
+                        });
+
+                    if (healthyManager != null)
+                    {
+                        return healthyManager;
+                    }
+                }
+            }
+
+            throw new NeonClusterException("Could not locate a healthy cluster manager node.");
+        }
+
+        /// <summary>
         /// Performs cluster configuration steps.
         /// </summary>
         /// <param name="steps">The configuration steps.</param>
@@ -380,7 +421,7 @@ namespace Neon.Cluster
                         return vaultClient;
                     }
 
-                    vaultClient = VaultClient.OpenWithToken(new Uri(Definition.Vault.GetDirectUri(FirstManager.Name)), ClusterLogin.VaultCredentials.RootToken);
+                    vaultClient = VaultClient.OpenWithToken(new Uri(Definition.Vault.GetDirectUri(GetHealthyManager().Name)), ClusterLogin.VaultCredentials.RootToken);
                 }
 
                 return vaultClient;
@@ -419,7 +460,7 @@ export VAULT_TOKEN={ClusterLogin.VaultCredentials.RootToken}
 ",
                 isExecutable: true);
 
-            var response = FirstManager.SudoCommand(bundle, VaultRunOptions);
+            var response = GetHealthyManager().SudoCommand(bundle, VaultRunOptions);
 
             response.BashCommand = bundle.ToBash();
 
@@ -448,7 +489,7 @@ vault policy-write {policy.Name} policy.hcl
 
             bundle.AddFile("policy.hcl", policy);
 
-            var response = FirstManager.SudoCommand(bundle, VaultRunOptions);
+            var response = GetHealthyManager().SudoCommand(bundle, VaultRunOptions);
 
             response.BashCommand = bundle.ToBash();
 

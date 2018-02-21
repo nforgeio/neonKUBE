@@ -131,7 +131,7 @@ NOTE: The following Vault commands are not supported:
             }
             else
             {
-                node = cluster.FirstManager;
+                node = cluster.GetHealthyManager();
             }
 
             var command = rightCommandLine.Arguments.FirstOrDefault(); ;

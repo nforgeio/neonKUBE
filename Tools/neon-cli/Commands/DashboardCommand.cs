@@ -77,7 +77,7 @@ names are reserved for use as dashboard commands:
 
             if (nodeName == null)
             {
-                node = cluster.FirstManager;
+                node = cluster.GetHealthyManager();
             }
             else
             {

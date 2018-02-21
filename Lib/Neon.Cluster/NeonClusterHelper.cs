@@ -764,7 +764,7 @@ namespace Neon.Cluster
             // Initialize some properties.
 
             var clusterDefinition = Cluster.Definition;
-            var node              = Cluster.FirstManager;
+            var manager           = Cluster.GetHealthyManager();
 
             // Simulate the environment variables initialized by a mounted [env-host] script.
 
@@ -779,12 +779,12 @@ namespace Neon.Cluster
             Environment.SetEnvironmentVariable("NEON_DATACENTER", clusterDefinition.Datacenter);
             Environment.SetEnvironmentVariable("NEON_ENVIRONMENT", clusterDefinition.Environment.ToString().ToUpperInvariant());
             Environment.SetEnvironmentVariable("NEON_HOSTING", hostingProvider);
-            Environment.SetEnvironmentVariable("NEON_NODE_NAME", node.Name);
-            Environment.SetEnvironmentVariable("NEON_NODE_ROLE", node.Metadata.Role);
-            Environment.SetEnvironmentVariable("NEON_NODE_IP", node.Metadata.PrivateAddress.ToString());
-            Environment.SetEnvironmentVariable("NEON_NODE_SSD", node.Metadata.Labels.StorageSSD ? "true" : "false");
-            Environment.SetEnvironmentVariable("VAULT_ADDR", $"{clusterDefinition.Vault.GetDirectUri(Cluster.FirstManager.Name)}");
-            Environment.SetEnvironmentVariable("VAULT_DIRECT_ADDR", $"{clusterDefinition.Vault.GetDirectUri(Cluster.FirstManager.Name)}");
+            Environment.SetEnvironmentVariable("NEON_NODE_NAME", manager.Name);
+            Environment.SetEnvironmentVariable("NEON_NODE_ROLE", manager.Metadata.Role);
+            Environment.SetEnvironmentVariable("NEON_NODE_IP", manager.Metadata.PrivateAddress.ToString());
+            Environment.SetEnvironmentVariable("NEON_NODE_SSD", manager.Metadata.Labels.StorageSSD ? "true" : "false");
+            Environment.SetEnvironmentVariable("VAULT_ADDR", $"{clusterDefinition.Vault.GetDirectUri(manager.Name)}");
+            Environment.SetEnvironmentVariable("VAULT_DIRECT_ADDR", $"{clusterDefinition.Vault.GetDirectUri(manager.Name)}");
             Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"{NeonHosts.Consul}:{clusterDefinition.Consul.Port}");
             Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{NeonHosts.Consul}:{clusterDefinition.Consul.Port}");
             Environment.SetEnvironmentVariable("NEON_APT_PROXY", GetPackageProxyReferences(clusterDefinition));
@@ -794,10 +794,10 @@ namespace Neon.Cluster
 
             var hosts = new Dictionary<string, IPAddress>();
 
-            hosts.Add(NeonHosts.Consul, node.PrivateAddress);
-            hosts.Add(NeonHosts.Vault, node.PrivateAddress);
-            hosts.Add($"{node.Name}.{NeonHosts.Vault}", node.PrivateAddress);
-            hosts.Add(NeonHosts.LogEsData, node.PrivateAddress);
+            hosts.Add(NeonHosts.Consul, manager.PrivateAddress);
+            hosts.Add(NeonHosts.Vault, manager.PrivateAddress);
+            hosts.Add($"{manager.Name}.{NeonHosts.Vault}", manager.PrivateAddress);
+            hosts.Add(NeonHosts.LogEsData, manager.PrivateAddress);
 
             NeonHelper.ModifyHostsFile(hosts);
 
@@ -976,7 +976,7 @@ namespace Neon.Cluster
 
             if (externalConnection)
             {
-                settings = new DockerSettings(Cluster.FirstManager.PrivateAddress);
+                settings = new DockerSettings(Cluster.GetHealthyManager().PrivateAddress);
             }
             else
             {
