@@ -66,7 +66,7 @@ func stub(err error) {
 	
 	// $hack(jeff.lill)
 	//
-	// I don't completely understand the how GO works and I need
+	// I don't completely understand how GO works and I need
 	// a way to workaround the [VARIABLE is declared but not used]
 	// compiler errors.  I'm going to handle those by passig them
 	// to this "do nothing" function.
