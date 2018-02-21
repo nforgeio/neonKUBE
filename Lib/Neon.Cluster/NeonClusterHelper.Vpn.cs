@@ -217,7 +217,7 @@ namespace Neon.Cluster
                     //
                     // Note that it's possible for this operation to fail when
                     // OpenVPN just happens to try to update the status file at
-                    // the exact moment we're reading it.  To mitegate this, we're
+                    // the exact moment we're reading it.  To mitigate this, we're
                     // going to try this up to three times, with a small delay 
                     // between attempts.
 
@@ -431,7 +431,7 @@ namespace Neon.Cluster
                 servers += $"remote {clusterLogin.Definition.Network.ManagerPublicAddress} {manager.VpnFrontendPort}";
             }
 
-            // Generate the configuration.
+            // Generate the client side configuration.
 
             var config =
 $@"##############################################
@@ -563,13 +563,15 @@ verb 3
 
             File.WriteAllText(configPath, config.Replace("\r", string.Empty));  // Linux-style line endings
 
-            // Launch OpenVPN to establish a connection.
+            // Launch OpenVPN via a script to establish a connection.
 
             var startInfo = new ProcessStartInfo("openvpn")
             {
                 Arguments      = $"--config \"{configPath}\" --status \"{statusPath}\" {VpnStatusSeconds}",
                 CreateNoWindow = true
             };
+
+            // Write a script for manual debugging VPN purposes.
 
             var scriptPath = Path.Combine(clientFolder, NeonHelper.IsWindows ? "open.cmd" : "open.sh");
 
@@ -580,12 +582,12 @@ verb 3
 
             if (NeonHelper.IsWindows)
             {
-                var defaultOpenVpnPath = @"C:\Program Files\OpenVPN\bin";
-                var path               = Environment.GetEnvironmentVariable("PATH");
+                var defaultOpenVpnFolder = @"C:\Program Files\OpenVPN\bin";
+                var path                 = Environment.GetEnvironmentVariable("PATH");
 
-                if (path.IndexOf(defaultOpenVpnPath, StringComparison.InvariantCultureIgnoreCase) == -1)
+                if (path.IndexOf(defaultOpenVpnFolder, StringComparison.InvariantCultureIgnoreCase) == -1)
                 {
-                    Environment.SetEnvironmentVariable("PATH", $"{path};{defaultOpenVpnPath}");
+                    Environment.SetEnvironmentVariable("PATH", $"{path};{defaultOpenVpnFolder}");
                 }
             }
             else if (NeonHelper.IsOSX)
@@ -603,8 +605,8 @@ verb 3
 
                 File.WriteAllText(pidPath, $"{process.Id}");
 
-                // This detaches the OpenVPN process from this process so OpenVPN
-                // will continue running after this process terminates.
+                // This detaches the OpenVPN process from the current process so OpenVPN
+                // will continue running after the current process terminates.
 
                 process.Dispose();
             }
@@ -613,6 +615,26 @@ verb 3
                 NeonHelper.DeleteFolderContents(clientFolder);
                 throw new Exception($"*** ERROR: Cannot launch [OpenVPN].  Make sure OpenVPN is installed to its default folder or is on the PATH.", e);
             }
+
+            // $hack(jeff.lill):
+            //
+            // Marcus had VPN problems on his workstation when logging into a cluster.
+            // The VPN would appear to connect but the SSH connection would fail.  The
+            // underlying issue turned out be that the Windows-TAP driver wasn't
+            // installed and the OpenVPN client failed to start.
+            //
+            //      https://github.com/jefflill/NeonForge/issues/161
+            //
+            // I'm not entirely sure why my VPN health checks didn't detect this
+            // problem.  I believe this may have occurred because the OpenVPN
+            // process hasn't terminated yet when I did the first health check
+            // and so it appear healthy (a race condition).
+            //
+            // I'm going to hack around this by moving the 5000 second delay
+            // from further down in this method to here so hopefully OpenVPN
+            // will terminate in time to detect the problem.
+
+            Thread.Sleep(5000);
 
             // Wait for the VPN connection.
 
@@ -657,11 +679,6 @@ verb 3
                         }
                     },
                     TimeSpan.FromSeconds(timeoutSeconds));
-
-                // Wait an extra bit to give the VPN connection a chance to settle in.
-                // This can help avoid some additional delays higher up the stack.
-
-                Thread.Sleep(5000);
 
                 onStatus?.Invoke($"Connected to [{clusterLogin.ClusterName}] VPN");
                 return;
