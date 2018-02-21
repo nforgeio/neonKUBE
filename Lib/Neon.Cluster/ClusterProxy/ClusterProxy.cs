@@ -309,6 +309,14 @@ namespace Neon.Cluster
         /// <exception cref="NeonClusterException">Thrown if no healthy managers are present.</exception>
         public SshProxy<NodeDefinition> GetHealthyManager()
         {
+            // $todo(jeff.lill): 
+            //
+            // Figure out why the pings aren't working when logging into
+            // a cluster via VPN.
+
+            return FirstManager;
+
+#if TODO
             // Try sending up to three pings to each manager node in parallel
             // and return the first manager that responds.
 
@@ -318,12 +326,12 @@ namespace Neon.Cluster
             var pingOptions    = new PingOptions(ttl: 32, dontFragment: true);
             var pingTimeout    = TimeSpan.FromSeconds(1);
 
-            using (var pinger = new Ping())
+            for (int i = 0; i < tryCount; i++)
             {
-                for (int i = 0; i < tryCount; i++)
-                {
-                    Parallel.ForEach(Nodes.Where(n => n.Metadata.IsManager),
-                        manager =>
+                Parallel.ForEach(Nodes.Where(n => n.Metadata.IsManager),
+                    manager =>
+                    {
+                        using (var pinger = new Ping())
                         {
                             var reply = pinger.Send(manager.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
 
@@ -331,16 +339,17 @@ namespace Neon.Cluster
                             {
                                 healthyManager = manager;
                             }
-                        });
+                        }
+                    });
 
-                    if (healthyManager != null)
-                    {
-                        return healthyManager;
-                    }
+                if (healthyManager != null)
+                {
+                    return healthyManager;
                 }
             }
 
             throw new NeonClusterException("Could not locate a healthy cluster manager node.");
+#endif
         }
 
         /// <summary>
