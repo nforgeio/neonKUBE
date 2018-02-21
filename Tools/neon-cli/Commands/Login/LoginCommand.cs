@@ -106,8 +106,11 @@ ARGUMENTS:
 
             // Logout of the current cluster.
 
-            Console.WriteLine($"Logging out of [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
-            CurrentClusterLogin.Delete();
+            if (clusterLogin != null)
+            {
+                Console.WriteLine($"Logging out of [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
+                CurrentClusterLogin.Delete();
+            }
 
             // We're passing NULL to close all cluster VPN connections to ensure that 
             // we're only connected to one at a time.  It's very possible for a operator
