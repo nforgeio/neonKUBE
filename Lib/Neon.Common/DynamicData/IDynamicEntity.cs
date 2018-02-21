@@ -61,7 +61,7 @@ namespace Neon.DynamicData
 
         /// <summary>
         /// Initializes the model's entity properties, collections, etc. so they
-        /// map to the to JSON data in the <see cref="JObject"/> passed.
+        /// map to the JSON data in the <see cref="JObject"/> passed.
         /// </summary>
         /// <param name="jObject">The dynamic model data.</param>
         /// <param name="reload">Optionally specifies that the model is being reloaded.</param>

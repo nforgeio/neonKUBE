@@ -620,7 +620,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Simulates connecting the current application to the to the cluster.
+        /// Simulates connecting the current application to the cluster.
         /// </summary>
         /// <param name="login">The cluster login information.</param>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
@@ -654,7 +654,7 @@ namespace Neon.Cluster
 
         /// <summary>
         /// <para>
-        /// Connects the current application to the to the cluster.
+        /// Connects the current application to the cluster.
         /// </para>
         /// <note>
         /// This should only be called by services that are actually deployed in running 
