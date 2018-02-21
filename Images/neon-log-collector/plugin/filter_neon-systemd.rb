@@ -103,7 +103,7 @@ module Fluent
                         #       dns: QName invalid: neon-vault.
                         #
                         # These appear to be innocuous and I don't have any idea
-                        # where these lookups are coming from.  I'm going to mitegate
+                        # where these lookups are coming from.  I'm going to mitigate
                         # this by dropping these specific events here.
                         #
                         # This is the tracking issue:
