@@ -31,7 +31,7 @@ Manages cluster logins for the current user on the local computer.
 
 USAGE:
 
-    neon login          [--no-vpn] USER@CLUSTER
+    neon login          [--no-vpn] [--show-vpn] USER@CLUSTER
     neon login export   USER@CLUSTER
     neon login import   PATH
     neon login list
@@ -44,6 +44,9 @@ OPTIONS:
 
     --no-vpn        - Don't connect using the cluster VPN
                       (for on-premise clusters only)
+
+    --show-vpn      - Displays the OpenVPN connection window
+                      (for debugging purposes)
                    
 ARGUMENTS:
 
@@ -60,7 +63,7 @@ ARGUMENTS:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--no-vpn" }; }
+            get { return new string[] { "--no-vpn", "--show-vpn" }; }
         }
 
         /// <inheritdoc/>
@@ -133,7 +136,8 @@ ARGUMENTS:
 
             // Determine whether we're going to use the VPN.
 
-            var useVpn = false;
+            var useVpn  = false;
+            var showVpn = commandLine.HasOption("--show-vpn");
 
             if (clusterLogin.Definition.Hosting.IsOnPremiseProvider)
             {
@@ -171,7 +175,8 @@ ARGUMENTS:
             {
                 NeonClusterHelper.VpnOpen(clusterLogin,
                     onStatus: message => Console.WriteLine($"{message}"),
-                    onError: message => Console.Error.WriteLine($"*** ERROR {message}"));
+                    onError: message => Console.Error.WriteLine($"*** ERROR {message}"),
+                    show: showVpn);
             }
 
             // Verify the credentials by logging into a manager node.

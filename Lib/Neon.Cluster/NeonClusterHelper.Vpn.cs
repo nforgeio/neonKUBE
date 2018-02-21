@@ -332,6 +332,10 @@ namespace Neon.Cluster
         /// <param name="timeoutSeconds">Maximum seconds to wait for the VPN connection (defaults to 120 seconds).</param>
         /// <param name="onStatus">Optional callback that will be passed a status string.</param>
         /// <param name="onError">Optional callback that will be passed a error string.</param>
+        /// <param name="show">
+        /// Optionally prints the OpenVPN connection status to the console for connection
+        /// debugging purposes.
+        /// </param>
         /// <returns><c>true</c> if the connection was established (or has already been established).</returns>
         /// <exception cref="TimeoutException">
         /// Thrown if the VPN connection could not be established before the timeout expired.
@@ -339,7 +343,7 @@ namespace Neon.Cluster
         /// <exception cref="Exception">
         /// Thrown if the VPN connection is unhealthy.
         /// </exception>
-        public static void VpnOpen(ClusterLogin clusterLogin, int timeoutSeconds = 120, Action<string> onStatus = null, Action<string> onError = null)
+        public static void VpnOpen(ClusterLogin clusterLogin, int timeoutSeconds = 120, Action<string> onStatus = null, Action<string> onError = null, bool show = false)
         {
             Covenant.Requires<ArgumentNullException>(clusterLogin != null);
 
@@ -348,6 +352,11 @@ namespace Neon.Cluster
 
             if (vpnClient != null)
             {
+                if (show)
+                {
+                    throw new NeonClusterException("A VPN connection already exists for this cluster.");
+                }
+
                 switch (vpnClient.State)
                 {
                     case VpnState.Healthy:
@@ -568,7 +577,7 @@ verb 3
             var startInfo = new ProcessStartInfo("openvpn")
             {
                 Arguments      = $"--config \"{configPath}\" --status \"{statusPath}\" {VpnStatusSeconds}",
-                CreateNoWindow = true
+                CreateNoWindow = !show,
             };
 
             // Write a script for manual debugging VPN purposes.
@@ -616,6 +625,10 @@ verb 3
                 throw new Exception($"*** ERROR: Cannot launch [OpenVPN].  Make sure OpenVPN is installed to its default folder or is on the PATH.", e);
             }
 
+            // Wait for the VPN connection.
+
+            onStatus?.Invoke($"Connecting [{clusterLogin.ClusterName}] VPN...");
+
             // $hack(jeff.lill):
             //
             // Marcus had VPN problems on his workstation when logging into a cluster.
@@ -636,9 +649,7 @@ verb 3
 
             Thread.Sleep(5000);
 
-            // Wait for the VPN connection.
-
-            onStatus?.Invoke($"Connecting [{clusterLogin.ClusterName}] VPN...");
+            // Wait for the VPN to connect.
 
             vpnClient = VpnGetClient(clusterLogin.ClusterName);
 
