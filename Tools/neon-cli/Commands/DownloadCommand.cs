@@ -80,7 +80,7 @@ ARGUMENTS:
 
             if (commandLine.Arguments.Length == 1)
             {
-                node = cluster.FirstManager;
+                node = cluster.GetHealthyManager();
             }
             else if (commandLine.Arguments.Length == 2)
             {

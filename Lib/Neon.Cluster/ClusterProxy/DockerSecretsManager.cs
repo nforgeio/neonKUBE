@@ -67,7 +67,7 @@ namespace Neon.Cluster
 
             bundle.AddFile("secret.dat", value);
 
-            cluster.FirstManager.SudoCommand(bundle, options);
+            cluster.GetHealthyManager().SudoCommand(bundle, options);
         }
 
         /// <summary>
@@ -79,7 +79,7 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(secretName));
 
-            cluster.FirstManager.SudoCommand($"docker secret rm {secretName}");
+            cluster.GetHealthyManager().SudoCommand($"docker secret rm {secretName}");
         }
     }
 }

@@ -27,21 +27,24 @@ namespace NeonCli
     public class DashboardCommand : CommandBase
     {
         private const string usage = @"
-Displays a named cluster dashboard.
+Manages cluster dashboards.  Dashboards are simply URLs registered with
+a name.
 
 USAGE:
 
-    neon dashboard [OPTIONS] DASHBOARD
+    neon dashboard NAME             - Display dashboard in a browser
+    neon dashboard ls|list          - Lists the dashboards
+    neon dashboard rm|remove NAME   - Removes a dashboard
+    neon dashboard set NAME URL     - Registers a dashboard
+    neon dashboard url NAME         - Returns a dashboard's URL
 
-AVAILABLE DASHBOARDS:
+REMARKS:
 
-    consul          Consul K/V store
-    kibana          Kibana cluster logs and metrics
-    
-OPTIONS:
+Many dashboards will require proxy routes.  These will need to be 
+registered elsewhere using [proxy] commands.  Note that the following
+names are reserved for use as dashboard commands:
 
-    --node=NODE     Specify a specific target node (rather than
-                    the first manager node).
+    list, ls, rm, remove, set, url
 ";
 
         /// <inheritdoc/>
@@ -74,7 +77,7 @@ OPTIONS:
 
             if (nodeName == null)
             {
-                node = cluster.FirstManager;
+                node = cluster.GetHealthyManager();
             }
             else
             {

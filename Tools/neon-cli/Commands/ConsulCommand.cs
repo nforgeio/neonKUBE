@@ -114,7 +114,7 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
             }
             else
             {
-                node = cluster.FirstManager;
+                node = cluster.GetHealthyManager();
             }
 
             var command = rightCommandLine.Arguments.FirstOrDefault();

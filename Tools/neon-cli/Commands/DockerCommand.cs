@@ -126,7 +126,7 @@ the [neon exec] command.
             }
             else
             {
-                node = cluster.FirstManager;
+                node = cluster.GetHealthyManager();
             }
 
             // A handful commands upload files and need to be run as a bundle.

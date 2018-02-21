@@ -188,7 +188,7 @@ ARGUMENTS:
 
             try
             {
-                clusterProxy.FirstManager.Connect();
+                clusterProxy.GetHealthyManager().Connect();
 
                 var currentLogin =
                     new CurrentClusterLogin()

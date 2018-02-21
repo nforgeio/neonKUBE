@@ -120,7 +120,7 @@ USAGE:
 
                 try
                 {
-                    clusterProxy.FirstManager.Connect();
+                    clusterProxy.GetHealthyManager().Connect();
                     Console.WriteLine("Authenticated");
                 }
                 catch (Exception e)

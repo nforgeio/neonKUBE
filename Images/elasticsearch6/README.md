@@ -55,7 +55,7 @@ This container is designed be run as a standard Docker container connected to th
 
 # Data Volume
 
-For production deployments, you should mount a Docker host volume to the to the container at:
+For production deployments, you should mount a Docker host volume to the container at:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`/mnt/esdata`
 
