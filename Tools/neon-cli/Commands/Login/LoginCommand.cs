@@ -83,11 +83,7 @@ ARGUMENTS:
             Console.WriteLine();
 
             var clusterLogin = Program.ClusterLogin;
-
-            // Logout from the current cluster (if any) and if the current cluster
-            // is different from the new one.
-
-            var login = NeonClusterHelper.SplitLogin(commandLine.Arguments[0]);
+            var login        = NeonClusterHelper.SplitLogin(commandLine.Arguments[0]);
 
             if (!login.IsOK)
             {
@@ -95,16 +91,23 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            var usernme     = login.Username;
+            // Simply return if we're already logged into the cluster.
+
+            var username    = login.Username;
             var clusterName = login.ClusterName;
 
             if (clusterLogin != null && 
-                (!string.Equals(clusterLogin.ClusterName, clusterName, StringComparison.OrdinalIgnoreCase) ||
-                 !string.Equals(clusterLogin.Username, usernme, StringComparison.OrdinalIgnoreCase)))
+                string.Equals(clusterLogin.ClusterName, clusterName, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(clusterLogin.Username, username, StringComparison.OrdinalIgnoreCase))
             {
-                Console.WriteLine($"Logging out of [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
-                CurrentClusterLogin.Delete();
+                Console.WriteLine($"You are already logged into [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
+                Program.Exit(0);
             }
+
+            // Logout of the current cluster.
+
+            Console.WriteLine($"Logging out of [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
+            CurrentClusterLogin.Delete();
 
             // We're passing NULL to close all cluster VPN connections to ensure that 
             // we're only connected to one at a time.  It's very possible for a operator
@@ -115,11 +118,11 @@ ARGUMENTS:
 
             // Fetch the new cluster login.
 
-            var clusterLoginPath = Program.GetClusterLoginPath(usernme, clusterName);
+            var clusterLoginPath = Program.GetClusterLoginPath(username, clusterName);
 
             if (!File.Exists(clusterLoginPath))
             {
-                Console.Error.WriteLine($"*** ERROR: Cannot find login [{usernme}@{clusterName}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot find login [{username}@{clusterName}].");
                 Program.Exit(1);
             }
 
