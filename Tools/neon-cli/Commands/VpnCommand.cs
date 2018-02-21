@@ -255,16 +255,6 @@ USAGE:
         {
             var commandLine = shim.CommandLine;
 
-            // We don't shim the [vpn connection] commands because we we're
-            // managing VPN connections on the operator's workstation.
-
-            if (commandLine.Arguments.Length >= 2 &&
-                commandLine.Arguments[0] == "vpn" &&
-                commandLine.Arguments[1] == "connection")
-            {
-                return new ShimInfo(isShimmed: false);
-            }
-
             // Shim command: neon vpn ca CLUSTER-DEF CA-FOLDER
             //
             // We need to copy the [CLUSTER-DEF] and the contents of the 
