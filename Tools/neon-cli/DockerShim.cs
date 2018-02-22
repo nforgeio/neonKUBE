@@ -109,6 +109,15 @@ namespace NeonCli
         public List<DockerShimFolder> MappedFolders { get; private set; } = new List<DockerShimFolder>();
 
         /// <summary>
+        /// The list of environment variables to be passed into the container.
+        /// These strings can take the form of <b>NAME</b> which will pass the
+        /// current value of the environment variable on the workstation in or
+        /// as <b>NAME=VALUE</b> which will pass in the environment variable
+        /// with a specific value.
+        /// </summary>
+        public List<string> EnvironmentVariables { get; private set; } = new List<string>();
+
+        /// <summary>
         /// Returns the shim folder path on the operator's workstation.
         /// </summary>
         public string ShimExternalFolder { get; private set; }
@@ -140,6 +149,30 @@ namespace NeonCli
             }
 
             MappedFolders.Add(folder);
+        }
+
+        /// <summary>
+        /// Adds an environment variable specification of the form <b>NAME</b> or
+        /// <b>NAME=VALUE</b> to the shim to be passed on to the Docker container.
+        /// </summary>
+        /// <param name="variable">The variable specification.</param>
+        public void AddEnvironmentVariable(string variable)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(variable));
+
+            var fields = variable.Split(new char[] { '=' }, 2);
+
+            if (fields.Length == 2)
+            {
+                var name = fields[0];
+
+                if (string.IsNullOrWhiteSpace(name) || name.Contains(' '))
+                {
+                    throw new ArgumentException($"Environment variable [{variable}] specification is not valid.");
+                }
+            }
+
+            EnvironmentVariables.Add(variable);
         }
 
         /// <summary>

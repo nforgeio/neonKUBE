@@ -452,11 +452,20 @@ Note that the tool requires admin priviledges for direct mode.
                             imageTag = $"{ThisAssembly.Git.Branch}-{Program.Version}";
                         }
 
+                        // Generate any [--env] options to be passed to the container.
+
+                        var sbEnvOptions = new StringBuilder();
+
+                        foreach (var envOption in shim.EnvironmentVariables)
+                        {
+                            sbEnvOptions.AppendWithSeparator(NeonHelper.NormalizeExecArgs($"--env={envOption}"));
+                        }
+
                         Process process;
 
                         try
                         {
-                            process = Process.Start("docker", $"run {options} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} --network host neoncluster/neon-cli:{imageTag}");
+                            process = Process.Start("docker", $"run {options} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} {sbEnvOptions} --network host neoncluster/neon-cli:{imageTag}");
                         }
                         catch (Win32Exception)
                         {

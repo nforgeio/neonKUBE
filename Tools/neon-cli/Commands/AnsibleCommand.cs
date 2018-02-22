@@ -79,6 +79,11 @@ ARGUMENTS:
 OPTIONS:
 
     --cwd=FOLDER        - Use FOLDER as the current working directory
+    --env=NAME          - Makes a workstation environment variable available
+                          to the Ansible command.
+    --env=NAME=VALUE    - Sets an environment variable for Ansible commands
+
+    You can specify multiple [--env] options.
 
 NOTE: 
 
@@ -307,7 +312,7 @@ You can open the returned ZIP archive to inspect these file.
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--cwd", "--editor", "--open" }; }
+            get { return new string[] { "--cwd", "--editor", "--open", "--env" }; }
         }
 
         /// <inheritdoc/>
@@ -618,7 +623,6 @@ You can open the returned ZIP archive to inspect these file.
                 rightCommandLine = new CommandLine();
                 noAnsibleCommand = true;
             }
-
 
             // Change the current directory to the mapped external directory.
 
@@ -948,6 +952,13 @@ You can open the returned ZIP archive to inspect these file.
 
                     VerifyPassword(passwordName);
                 }
+            }
+
+            // Add any [--env] options to the shim so they can be passed to the container.
+
+            foreach (var envOption in shim.CommandLine.GetOptionValues("--env"))
+            {
+                shim.AddEnvironmentVariable(envOption);
             }
 
             // Note that we don't shim the [password] command and that also doesn't need
