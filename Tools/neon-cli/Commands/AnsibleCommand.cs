@@ -956,7 +956,9 @@ You can open the returned ZIP archive to inspect these file.
 
             // Add any [--env] options to the shim so they can be passed to the container.
 
-            foreach (var envOption in shim.CommandLine.GetOptionValues("--env"))
+            var leftCommandLine = shim.CommandLine.Split("--").Left;
+
+            foreach (var envOption in leftCommandLine.GetOptionValues("--env"))
             {
                 shim.AddEnvironmentVariable(envOption);
             }
