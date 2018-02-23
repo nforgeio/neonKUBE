@@ -157,6 +157,7 @@ UsePAM yes
 
 ClientAliveInterval 30
 ClientAliveCountMax 20
+TCPKeepAlive yes
 ";
             node.UploadText("/etc/ssh/ssh_config", openSshConfig);
             node.SudoCommand("systemctl restart sshd");
