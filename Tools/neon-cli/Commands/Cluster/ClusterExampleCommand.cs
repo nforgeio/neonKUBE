@@ -166,7 +166,7 @@ USAGE:
         // ""VmMemory"": ""4GB""
 
         // Specifies the minimum amount of memory to allocate to each cluster virtual machine.  This is specified as a string that
-        // can be a a long byte count or a long with units like [512MB] or [2GB] or may be set to [>null<] to set
+        // can be a a long byte count or a long with units like [512MB] or [2GB] or may be set to [null] to set
         // the same value as [VmMemory].  This defaults to [2GB], which is half of the default value of [VmMemory].
         // which is [4GB].
         //
