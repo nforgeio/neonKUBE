@@ -57,8 +57,8 @@ USAGE:
 // the bottom of the file for more information.
 
 //-----------------------------------------------------------------------------
-// The JSON below defines a Docker cluster with three manager and ten worker
-// host nodes.
+// The JSON below defines a Docker cluster with three manager and four worker
+// and one pet node.
 //
 // Naming: Cluster, datacenter and node names may be one or more characters 
 //         including case insensitive letters, numbers, dashes, underscores,
@@ -810,7 +810,7 @@ USAGE:
         // Define the pet cluster nodes by setting [Role=pet].  Individual nodes 
         // are part of the neonCLUSTER but not the Docker Swarm.
 
-        ""individual-0"": {
+        ""pet-0"": {
             ""Role"": ""pet"",
             ""PrivateAddress"": ""10.0.0.44"",
             ""Labels"": {
