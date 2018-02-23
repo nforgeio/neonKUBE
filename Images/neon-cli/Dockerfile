@@ -100,13 +100,20 @@ RUN echo ** NEW LAYER **
 # App files:
 
 COPY bin/__app              /usr/bin/$APPNAME.dotnet/
-COPY conf/ssh_config.conf   /etc/ssh/ssh_config
 COPY docker-entrypoint.sh   /
+COPY conf/ssh_config.conf   /etc/ssh/ssh_config
+COPY modules/*              /usr/share/ansible/plugins/modules/
+
+# NOTE: The [rename] command below strips the [.sh] off the Ansible module script names.
+#       We included the [*.sh] file types to make it easy to convert to Linux line endings
+#       before building the image.
 
 RUN chmod 700 /docker-entrypoint.sh \
     && chmod 666 /etc/ssh/ssh_config \
     && echo "#!/bin/bash" > /usr/bin/$APPNAME \ 
     && echo "dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
-    && chmod 770 /usr/bin/$APPNAME
+    && chmod 770 /usr/bin/$APPNAME \
+    && rename 's/^(.+)\.sh/$1/' /usr/share/ansible/plugins/modules/* \
+    && chmod 770 /usr/share/ansible/plugins/modules/*
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
