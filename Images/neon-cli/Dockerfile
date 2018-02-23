@@ -80,9 +80,11 @@ RUN echo ** NEW LAYER **
 # App files:
 
 COPY bin/__app              /usr/bin/$APPNAME.dotnet/
+COPY conf/ssh_config.conf   /etc/ssh/ssh_config
 COPY docker-entrypoint.sh   /
 
 RUN chmod 700 /docker-entrypoint.sh \
+    && chmod 666 /etc/ssh/ssh_config \
     && echo "#!/bin/bash" > /usr/bin/$APPNAME \ 
     && echo "dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
     && chmod 770 /usr/bin/$APPNAME

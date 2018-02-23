@@ -47,6 +47,7 @@
   </ItemGroup>
   <ItemGroup>
     <None Include="dotnet\resolv.conf.head.sh" />
+    <None Include="neon-cli\conf\ssh_config.conf" />
     <Content Include="neon-cluster-manager\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
