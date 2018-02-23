@@ -309,14 +309,6 @@ namespace Neon.Cluster
         /// <exception cref="NeonClusterException">Thrown if no healthy managers are present.</exception>
         public SshProxy<NodeDefinition> GetHealthyManager()
         {
-            // $todo(jeff.lill): 
-            //
-            // Figure out why the pings aren't working when logging into
-            // a cluster via VPN.
-
-            return FirstManager;
-
-#if TODO
             // Try sending up to three pings to each manager node in parallel
             // and return the first manager that responds.
 
@@ -349,7 +341,6 @@ namespace Neon.Cluster
             }
 
             throw new NeonClusterException("Could not locate a healthy cluster manager node.");
-#endif
         }
 
         /// <summary>
