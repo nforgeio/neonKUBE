@@ -77,6 +77,26 @@ RUN echo ** NEW LAYER **
 COPY bin/__dep              /usr/bin/$APPNAME.dotnet/
 RUN echo ** NEW LAYER **
 
+# Uncomment these lines to install the Ansible [test-module] script
+# that can be used for testing custom modules.  This installation
+# is documented here:
+#
+#       http://ansible-docs.readthedocs.io/zh/stable-2.0/rst/developing_modules.html
+#
+# This assumes that you'll be running [neon-cli] manually with [--entrypoint=bash]
+# and that after to connect, then you'll use [test-module] when from within the
+# container to test any new modules.
+#
+# WARNING: This should never be installed for production images to keep
+#          the image size as small as possible (it's already huge).
+
+RUN apt-get update && apt-get install -yq git && apt-get clean -yq \
+    && git clone git://github.com/ansible/ansible.git --recursive /ansible \
+    && chmod +x ansible/hacking/test-module \
+    && cp /ansible/hacking/test-module /usr/local/bin
+
+RUN echo ** NEW LAYER **
+
 # App files:
 
 COPY bin/__app              /usr/bin/$APPNAME.dotnet/
