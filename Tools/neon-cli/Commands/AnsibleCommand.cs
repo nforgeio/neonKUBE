@@ -140,6 +140,9 @@ are organized into these predefined host groups:
     ceph-osd        - nodes hosting Ceph OSD service
     ceph-msd        - nodes hosting Ceph MSD service
 
+The special reserved [swarm-manager] host name can be used to target 
+Docker Swarm related tasks as a healthy Swarm manager node.
+
 Host variables will be generated for each cluster node.  These will include
 the variables used by Ansible to establish the SSH connections as well as
 all of the node labels specified in the cluster configuration.  The node
@@ -175,6 +178,14 @@ are organized into four groups:
     workers         - worker nodes
     swarm           - manager or worker nodes
     pets            - pet nodes
+    ceph            - nodes hosting any Ceph storage service
+    ceph-manager    - nodes hosting Ceph manager service
+    ceph-monitor    - nodes hosting Ceph monitor service
+    ceph-osd        - nodes hosting Ceph OSD service
+    ceph-msd        - nodes hosting Ceph MSD service
+
+The special reserved [swarm-manager] host name can be used to target 
+Docker Swarm related tasks as a healthy Swarm manager node.
 
 Host variables will be generated for each cluster node.  These will include
 the variables used by Ansible to establish the SSH connections as well as
@@ -1534,6 +1545,33 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
         /// <param name="login">The cluster login.</param>
         private void GenerateAnsibleFiles(ClusterLogin login)
         {
+            var clusterLogin = Program.ConnectCluster();
+            var cluster      = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>);
+
+            // IMPLEMENTATION NOTE:
+            //
+            // We need a clean way to target Docker Swarm related modules at a healthy
+            // swarm manager node.  We're going to use [NeonClusterHelper.GetHealthyManager()]
+            // to look for a healthy node (via pings) and add this to the inventory as
+            // the [swarm-manager] host and also generate related host variables.
+            // 
+            // If [NeonClusterHelper.GetHealthyManager()] fails, we'll create a host
+            // for the first manager as a fallback.  In this case, any playbooks 
+            // targeting the unhealthy first manager will fail with a timeout, which
+            // is what the operator should expect.
+
+            var swarmManager = cluster.FirstManager;
+
+            try
+            {
+                swarmManager = cluster.GetHealthyManager();
+            }
+            catch (NeonClusterException)
+            {
+                // We didn't find a healthy manager so we'll just fallback
+                // to the first manager as initialized above.
+            }
+
             // Write the cluster's SSH client private key to [/dev/shm/ssh-client.key],
             // which is on the container RAM drive for security.  Note that the key file
             // must be restricted to the ROOT account to be accepted by Ansible.
@@ -1568,11 +1606,11 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
 
             // Generate the Ansible inventory and variable files.  We're going to use the cluster node
             // name for each host and then generate some standard Ansible variables and then generate a
-            // variable for the host label.  Each label variable will be prefixed by "label_" with the
+            // variable for each host label.  These label variables will be prefixed by "label_" with the
             // label name appended and with any embedded periods converted to underscores.
             //
             // The hosts will be organized into four groups: managers, workers, pets, and swarm (where
-            // swarm includes the managers and workers but not the pets).
+            // swarm includes the managers and workers, but not the pets).
 
             const string ansibleConfigFolder = "/etc/ansible";
             const string ansibleVarsFolder   = ansibleConfigFolder + "/host_vars";
@@ -1582,6 +1620,9 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
 
             // Generate the hosts file using the INI format.  Note that we'll be organizing these
             // into standard groups as well as groups explicitly assigned by node definitions.
+            //
+            // Note that we're going to special-case the [swarm-manager] host, which won't
+            // belong to any groups.
 
             var explicitGroupAssignments = new Dictionary<string, List<NodeDefinition>>(StringComparer.InvariantCultureIgnoreCase);
 
@@ -1601,12 +1642,21 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
 
             using (var writer = new StreamWriter(new FileStream(Path.Combine(ansibleConfigFolder, "hosts"), FileMode.Create, FileAccess.ReadWrite), Encoding.ASCII))
             {
+                // Special-case Docker Swarm manager node (not in a group).
+
+                writer.WriteLine("swarm-manager");
+
+                // Swarm nodes group:
+
+                writer.WriteLine();
                 writer.WriteLine("[swarm]");
 
                 foreach (var node in login.Definition.SortedNodes.Where(n => n.InSwarm))
                 {
                     writer.WriteLine(node.Name);
                 }
+
+                // Docker Swarm managers group:
 
                 writer.WriteLine();
                 writer.WriteLine("[managers]");
@@ -1616,6 +1666,8 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
                     writer.WriteLine(node.Name);
                 }
 
+                // Docker Swarm workers group:
+
                 writer.WriteLine();
                 writer.WriteLine("[workers]");
 
@@ -1624,6 +1676,8 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
                     writer.WriteLine(node.Name);
                 }
 
+                // Pets group:
+
                 writer.WriteLine();
                 writer.WriteLine("[pets]");
 
@@ -1631,6 +1685,8 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
                 {
                     writer.WriteLine(node.Name);
                 }
+
+                // Ceph related groups.
 
                 writer.WriteLine();
                 writer.WriteLine("[ceph]");
@@ -1694,7 +1750,14 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
 
             // Generate host variable files as YAML.
 
-            foreach (var node in login.Definition.Nodes)
+            var swarmManagerNodes = new List<NodeDefinition>();  // Create a list with a faked up Swarm manager node
+            var swarmManagerNode  = NeonHelper.JsonClone(swarmManager.Metadata);
+
+            swarmManagerNode.Name = ClusterDefinition.VirtualSwarmManagerName;
+            swarmManagerNodes.Add(swarmManagerNode);
+
+            foreach (var node in login.Definition.Nodes
+                .Union(swarmManagerNodes))
             {
                 using (var writer = new StreamWriter(new FileStream(Path.Combine(ansibleConfigFolder, "host_vars", node.Name), FileMode.Create, FileAccess.ReadWrite), Encoding.UTF8))
                 {

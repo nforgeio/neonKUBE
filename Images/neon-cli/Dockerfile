@@ -19,23 +19,6 @@ ARG         APPNAME
 
 ENV NEON_TOOL_CONTAINER=1
 
-# NOTE: I decided against using the XE client locally for XenServer provisoning but 
-#       am just going to comment this out in case I change my mind in the future.
-#
-# Install the XenServer XE client.  This is required for provisioning XenServer based
-# clusters.  Note that Citrix ships XE as a RedHat/Centos RPM package that is not compatible
-# with Debian/Ubuntu.  It is possible to convert RPM packages to DEB format and so we'll
-# use the a converted package from the [./XenServer] folder.  See the [README.md] there
-# to learn how this conversion was accomplished.
-
-# COPY XenServer/xapi-xe_1.30.0-2_amd64.deb /xapi-xe.deb
-
-# RUN apt-get update \
-#     && apt-get install -yq stunnel4 \
-#     && dpkg -i xapi-xe.deb \
-#     && apt-get clean -yq \
-#     && rm xapi-xe.deb
-
 # We're going to configure NANO as the default editor used by Ansible Vault
 # to edit encrypted files.  We're also going to install VIM/VI as an option.
 
@@ -59,7 +42,6 @@ RUN apt-get update \
 RUN apt-get update \
     && apt-get install -yq software-properties-common \
     && apt-add-repository ppa:ansible/ansible \
-    && apt-get update \
     && apt-get install -yq ansible \
     && apt-get clean -yq
 
@@ -77,26 +59,6 @@ RUN echo ** NEW LAYER **
 COPY bin/__dep              /usr/bin/$APPNAME.dotnet/
 RUN echo ** NEW LAYER **
 
-# Uncomment these lines to install the Ansible [test-module] script
-# that can be used for testing custom modules.  This installation
-# is documented here:
-#
-#       http://ansible-docs.readthedocs.io/zh/stable-2.0/rst/developing_modules.html
-#
-# This assumes that you'll be running [neon-cli] manually with [--entrypoint=bash]
-# and that after to connect, then you'll use [test-module] when from within the
-# container to test any new modules.
-#
-# WARNING: This should never be installed for production images to keep
-#          the image size as small as possible (it's already huge).
-
-RUN apt-get update && apt-get install -yq git && apt-get clean -yq \
-    && git clone git://github.com/ansible/ansible.git --recursive /ansible \
-    && chmod +x ansible/hacking/test-module \
-    && cp /ansible/hacking/test-module /usr/local/bin
-
-RUN echo ** NEW LAYER **
-
 # App files:
 
 COPY bin/__app              /usr/bin/$APPNAME.dotnet/
@@ -104,16 +66,18 @@ COPY docker-entrypoint.sh   /
 COPY conf/ssh_config.conf   /etc/ssh/ssh_config
 COPY modules/*              /usr/share/ansible/plugins/modules/
 
-# NOTE: The [rename] command below strips the [.sh] off the Ansible module script names.
-#       We included the [*.sh] file types to make it easy to convert to Linux line endings
-#       before building the image.
-
 RUN chmod 700 /docker-entrypoint.sh \
     && chmod 666 /etc/ssh/ssh_config \
     && echo "#!/bin/bash" > /usr/bin/$APPNAME \ 
     && echo "dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
     && chmod 770 /usr/bin/$APPNAME \
-    && rename 's/^(.+)\.sh/$1/' /usr/share/ansible/plugins/modules/* \
+    && find /usr/share/ansible/plugins/modules -type f -name '*.sh' | while read f; do mv "$f" "${f%%.*}"; done \
     && chmod 770 /usr/share/ansible/plugins/modules/*
+
+# NOTE: The second to the last line above renames the Ansible module
+#       Bash scripts by stripping off the [.sh] extension.  These
+#       script have the extension in source control so that we 
+#       can easily use the [unix-text] tool to convert to Linux
+#       line endings before building the image.
 
 ENTRYPOINT ["/docker-entrypoint.sh"]
