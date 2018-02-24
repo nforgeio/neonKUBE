@@ -61,6 +61,7 @@ namespace UnixText
             commandLine.DefineOption("-r", "--recursive");
 
             if (commandLine.HasHelpOption ||
+                commandLine.Arguments.Length == 0 ||
                 commandLine.Arguments.Contains("help", StringComparer.OrdinalIgnoreCase) ||
                 commandLine.Arguments.Contains("--help", StringComparer.OrdinalIgnoreCase))
             {
@@ -69,7 +70,8 @@ $@"
 Neon Linux Text File Converter: unix-text [v{Build.Version}]
 {Build.Copyright}
 
-USAGE: unix-text [OPTIONS] [FILE...]
+USAGE: unix-text [OPTIONS] FILE...      - Converts one or more files
+       unix-text [OPTIONS] -            - Converts STDIN to STDOUT
        unix-text help   
 
 OPTIONS:
@@ -97,9 +99,9 @@ Converts a text file into a Unix/Linux compatible form by:
                 Program.Exit(0);
             }
 
-            if (commandLine.Arguments.Length == 0)
+            if (commandLine.Arguments[0] == "-")
             {
-                // Process standared input.
+                // Process standard input.
 
                 ProcessInput();
                 Program.Exit(0);
