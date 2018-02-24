@@ -26,6 +26,11 @@ namespace EntityGen
         //---------------------------------------------------------------------
         // Static members
 
+        /// <summary>
+        /// Tool version number.
+        /// </summary>
+        public const string Version = "1.0";
+
         private static bool quiet = false;
 
         /// <summary>
@@ -37,7 +42,7 @@ namespace EntityGen
             var commandLine = new CommandLine(args);
             var usage =
 $@"
-Entity Code Generator v{Build.Version}
+Entity Code Generator v{Version}
 {Build.Copyright}
 
 usage: entity-gen SOURCES OUTPUT 

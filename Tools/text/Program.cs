@@ -30,6 +30,11 @@ namespace Text
     public static class Program
     {
         /// <summary>
+        /// Tool version number.
+        /// </summary>
+        public const string Version = "1.0";
+
+        /// <summary>
         /// Program entry point.
         /// </summary>
         /// <param name="args">The list of files to be processed with optional wildcards.</param>
@@ -89,7 +94,7 @@ namespace Text
         {
             Console.WriteLine(
 $@"
-Neon Text File Utility: text [v{Build.Version}]
+Neon Text File Utility: text [v{Version}]
 {Build.Copyright}
 
 usage: text replace     -TEXT=VALUE... FILE

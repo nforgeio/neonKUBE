@@ -51,6 +51,11 @@ namespace UnixText
     public static class Program
     {
         /// <summary>
+        /// Tool version number.
+        /// </summary>
+        public const string Version = "1.0";
+
+        /// <summary>
         /// Program entry point.
         /// </summary>
         /// <param name="args">The list of files to be processed with optional wildcards.</param>
@@ -67,11 +72,11 @@ namespace UnixText
             {
                 Console.WriteLine(
 $@"
-Neon Linux Text File Converter: unix-text [v{Build.Version}]
+Neon Linux Text File Converter: unix-text [v{Version}]
 {Build.Copyright}
 
-USAGE: unix-text [OPTIONS] FILE...      - Converts one or more files
-       unix-text [OPTIONS] -            - Converts STDIN to STDOUT
+USAGE: unix-text [OPTIONS] FILE...  - Converts one or more files in place
+       unix-text [OPTIONS] -        - Converts STDIN to STDOUT
        unix-text help   
 
 OPTIONS:

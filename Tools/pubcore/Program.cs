@@ -24,6 +24,11 @@ namespace pubcore
     public static class Program
     {
         /// <summary>
+        /// Tool version number.
+        /// </summary>
+        public const string Version = "1.0";
+
+        /// <summary>
         /// Program entrypoint.
         /// </summary>
         /// <param name="args">Command line arguments.</param>
@@ -32,9 +37,12 @@ namespace pubcore
             if (args.Length != 2)
             {
                 Console.WriteLine(
-@"
+$@"
+.NET Core Publishing Utility: pubcore [v{Version}]
+
 usage: pubcore CSPROJ-PATH BIN-PATH PUBLISH-PATH
 
+    CSPROJ-PATH     - Path to the project (*.csproj)
     TARGET-PATH     - Path to the build target.
     PUBLISH-PATH    - Path to the output folder. 
 ");

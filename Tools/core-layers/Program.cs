@@ -44,14 +44,25 @@ namespace CoreLayers
     public static class Program
     {
         /// <summary>
+        /// Tool version number.
+        /// </summary>
+        public const string Version = "1.0";
+
+        /// <summary>
         /// Main entry point.
         /// </summary>
         /// <param name="args">Command line arguments.</param>
         public static void Main(string[] args)
         {
+            var usage = 
+$@"
+Entity Code Generator v{Version}
+
+usage: core-layers ASSEMBLY PATH";
+
             if (args.Length != 2)
             {
-                Console.WriteLine("Usage: core-layers ASSEMBLY PATH");
+                Console.WriteLine(usage);
                 Program.Exit(1);
             }
 
