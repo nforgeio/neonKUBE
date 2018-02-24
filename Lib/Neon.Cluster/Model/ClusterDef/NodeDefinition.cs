@@ -532,6 +532,11 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
+            if (Name.Equals(ClusterDefinition.VirtualSwarmManagerName, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  [{ClusterDefinition.VirtualSwarmManagerName}] is reserved for targeting Swarm related Ansible tasks.");
+            }
+
             if (clusterDefinition.Hosting.IsOnPremiseProvider)
             {
                 if (string.IsNullOrEmpty(PrivateAddress))

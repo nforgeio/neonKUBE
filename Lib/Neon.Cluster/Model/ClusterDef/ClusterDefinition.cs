@@ -36,6 +36,13 @@ namespace Neon.Cluster
         //---------------------------------------------------------------------
         // Static members
 
+        /// <summary>
+        /// Special cluster node name reserved for identifying the healthy Swarm
+        /// manager node where Ansible Docker modules should perform Swarm related
+        /// activities.
+        /// </summary>
+        public const string VirtualSwarmManagerName = "swarm-manager";
+
         private const string        defaultDatacenter          = "DATACENTER";
         private readonly string[]   defaultTimeSources         = new string[] { "pool.ntp.org" };
         private const string        defaultProxyImage          = "neoncluster/neon-proxy:latest";
