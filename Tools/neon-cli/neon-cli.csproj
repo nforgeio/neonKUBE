@@ -142,10 +142,6 @@
     </None>
   </ItemGroup>
 
-  <Target Name="PreBuild" AfterTargets="PostBuildEvent">
-    <Exec Command="unix-text --recursive &quot;--recursive $(ProjectDir)Linux\*.sh.txt&quot;" />
-  </Target>
-
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
     <Exec Command="if not exist &quot;$(NF_BUILD)&quot; mkdir &quot;$(NF_BUILD)&quot;&#xD;&#xA;pubcore &quot;$(TargetPath)&quot; &quot;$(NF_BUILD)&quot;" />
   </Target>
