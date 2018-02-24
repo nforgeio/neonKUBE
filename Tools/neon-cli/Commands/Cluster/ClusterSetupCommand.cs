@@ -292,7 +292,7 @@ OPTIONS:
                     // and then pull for all of the other nodes in a subsequent step
                     // (so we don't slam the Internet connection and the package mirrors.
 
-                    controller.AddStep("pull images to cache", n => PullImages(n), n => n == cluster.FirstManager);
+                    controller.AddStep("pull images to cache", n => PullImages(n, pullAll: true), n => n == cluster.FirstManager);
                     controller.AddStep("pull images to nodes", n => PullImages(n), n => n != cluster.FirstManager);
                 }
                 else
@@ -1466,7 +1466,12 @@ $@"docker login \
         /// Pulls common images to the node.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void PullImages(SshProxy<NodeDefinition> node)
+        /// <param name="pullAll">
+        /// Optionally specifies that all cluster images should be pulled to the
+        /// node regardless of the node properties.  This is used to pull images
+        /// into the cache.
+        /// </param>
+        private void PullImages(SshProxy<NodeDefinition> node, bool pullAll = false)
         {
             node.InvokeIdempotentAction("setup-pull-images",
                 () =>
@@ -1479,12 +1484,32 @@ $@"docker login \
                         Program.ResolveDockerImage(cluster.Definition.ProxyVaultImage)
                     };
 
+                    if (node.Metadata.IsManager)
+                    {
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.ClusterManagerImage));
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.ProxyManagerImage));
+                    }
+
                     if (cluster.Definition.Log.Enabled)
                     {
+                        // All nodes pull these images:
+
                         images.Add(Program.ResolveDockerImage(cluster.Definition.Log.HostImage));
-                        images.Add(Program.ResolveDockerImage(cluster.Definition.Log.CollectorImage));
-                        images.Add(Program.ResolveDockerImage(cluster.Definition.Log.EsImage));
                         images.Add(Program.ResolveDockerImage(cluster.Definition.Log.MetricbeatImage));
+
+                        // [neon-log-collector] only runs on managers.
+
+                        if (pullAll || node.Metadata.IsManager)
+                        {
+                            images.Add(Program.ResolveDockerImage(cluster.Definition.Log.CollectorImage));
+                        }
+
+                        // [elasticsearch] only runs on designated nodes.
+
+                        if (pullAll || node.Metadata.Labels.LogEsData)
+                        {
+                            images.Add(Program.ResolveDockerImage(cluster.Definition.Log.EsImage));
+                        }
                     }
 
                     foreach (var image in images)
