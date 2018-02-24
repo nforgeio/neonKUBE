@@ -187,6 +187,7 @@ function IsDirty
 exec { unix-text --recursive $image_root\Dockerfile }
 exec { unix-text --recursive $image_root\*.sh }
 exec { unix-text --recursive $image_root\*.yml }
+exec { unix-text --recursive $image_root\*.yaml }
 exec { unix-text --recursive .\*.cfg }
 exec { unix-text --recursive .\*.js }
 exec { unix-text --recursive .\*.conf }
