@@ -32,11 +32,6 @@ namespace Neon
         public const string Product = "neonCLUSTER";
 
         /// <summary>
-        /// The build version for all neonCLUSTER assemblies.
-        /// </summary>
-        public const string Version = "0.0.0.0";
-
-        /// <summary>
         /// The build configuration.
         /// </summary>
         public const string Configuration =
