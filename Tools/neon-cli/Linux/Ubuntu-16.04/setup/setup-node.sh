@@ -729,6 +729,14 @@ echo "nameserver ${NEON_NODE_IP}" > /etc/resolvconf/resolv.conf.d/base
 resolvconf -u
 
 #------------------------------------------------------------------------------
+# Install Ansible related packages so common playbooks (like Docker related ones)
+# will run out-of-the-box.
+
+apt-get install -yq python-pip
+pip install docker
+pip install PyYAML
+
+#------------------------------------------------------------------------------
 # Configure a CRON job that performs daily node maintenance including purging
 # unreferenced Docker images.
 
