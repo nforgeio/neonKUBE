@@ -173,6 +173,14 @@ TCPKeepAlive yes
         /// </remarks>
         public static void WaitForPackageManager(SshProxy<NodeDefinition> node)
         {
+            // $todo(jeff.lill): Remove this method in the future.
+            //
+            // I finally figured out that I can disable the [apt-daily] service
+            // to avoid having to perform this lengthly (and fragile) check.
+            //
+            // I'm going to make this a NOP and retain the calls to this method
+            // for the time being, in case I need to revert this for some reason.
+#if TODO
             node.Status = "package manager check";
 
             // Pause to give Linux a chance to boot and actually start any
@@ -193,6 +201,7 @@ TCPKeepAlive yes
             }
 
             node.Status = "package manager ready";
+#endif
         }
 
         /// <summary>
