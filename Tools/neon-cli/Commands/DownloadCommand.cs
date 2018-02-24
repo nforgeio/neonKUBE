@@ -64,7 +64,7 @@ ARGUMENTS:
 
             // Process the command arguments.
 
-            SshProxy<NodeDefinition>   node;
+            SshProxy<NodeDefinition>    node;
             string                      source;
 
             if (commandLine.Arguments.Length < 1)
