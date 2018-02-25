@@ -313,14 +313,21 @@ OPTIONS:
                         ConsulInitialize();
                     });
 
-                controller.AddGlobalStep("cluster services", () => new ClusterServices(cluster).Configure(cluster.FirstManager));
+                var clusterServices = new ClusterServices(cluster);
+
+                controller.AddGlobalStep("cluster services", () => clusterServices.Configure(cluster.FirstManager));
+
+                if (cluster.Pets.Count() > 0)
+                {
+                    controller.AddStep("cluster containers", n => clusterServices.DeployContainers(n));
+                }
 
                 if (cluster.Definition.Log.Enabled)
                 {
                     var logServices = new LogServices(cluster);
 
                     controller.AddGlobalStep("log services", () => logServices.Configure(cluster.FirstManager));
-                    controller.AddStep("metricbeat", n => logServices.DeployMetricbeat(n));
+                    controller.AddStep("log containers", n => logServices.DeployContainers(n));
                 }
 
                 controller.AddStep("check managers", n => ClusterDiagnostics.CheckManager(n, cluster.Definition), n => n.Metadata.IsManager);

@@ -268,50 +268,60 @@ namespace NeonCli
 
                     firstManager.Status = string.Empty;
                 });
+        }
 
-            // Start the [neon-proxy-public-bridge] and [neon-proxy-private-bridge] containers
-            // on the cluster pets.
+        /// <summary>
+        /// Deploys cluster service containers to a node.
+        /// </summary>
+        /// <param name="node">The target cluster node.</param>
+        public void DeployContainers(SshProxy<NodeDefinition> node)
+        {
+            // NOTE: A this time, we only need to deploy the proxy bridges to the
+            //       pet nodes, because these will be deployed as global services
+            //       on the swarm nodes.
 
-            foreach (var pet in cluster.Pets)
+            if (!node.Metadata.IsPet)
             {
-                pet.InvokeIdempotentAction("setup-neon-proxy-public-bridge",
-                    () =>
-                    {
-                        pet.Status = "start: neon-proxy-public-bridge";
-
-                        var response = pet.DockerCommand(
-                            "docker run",
-                                "--detach",
-                                "--name", "neon-proxy-public-bridge",
-                                "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public-bridge/conf",
-                                "--env", "LOG_LEVEL=INFO",
-                                "--network", "host",
-                                "--restart", "always",
-                                Program.ResolveDockerImage(cluster.Definition.ProxyImage));
-
-                        pet.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-public-bridge.sh"), response.BashCommand);
-                        pet.Status = string.Empty;
-                    });
-
-                pet.InvokeIdempotentAction("setup-neon-proxy-private-bridge",
-                    () =>
-                    {
-                        pet.Status = "start: neon-proxy-private-bridge";
-
-                        var response = pet.DockerCommand(
-                            "docker run",
-                                "--detach",
-                                "--name", "neon-proxy-private-bridge",
-                                "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private-bridge/conf",
-                                "--env", "LOG_LEVEL=INFO",
-                                "--network", "host",
-                                "--restart", "always",
-                                Program.ResolveDockerImage(cluster.Definition.ProxyImage));
-
-                        pet.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-private-bridge.sh"), response.BashCommand);
-                        pet.Status = string.Empty;
-                    });
+                return;
             }
+
+            node.InvokeIdempotentAction("setup-neon-proxy-public-bridge",
+                () =>
+                {
+                    node.Status = "start: neon-proxy-public-bridge";
+
+                    var response = node.DockerCommand(
+                        "docker run",
+                        "--detach",
+                        "--name", "neon-proxy-public-bridge",
+                        "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public-bridge/conf",
+                        "--env", "LOG_LEVEL=INFO",
+                        "--network", "host",
+                        "--restart", "always",
+                        Program.ResolveDockerImage(cluster.Definition.ProxyImage));
+
+                    node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-public-bridge.sh"), response.BashCommand);
+                    node.Status = string.Empty;
+                });
+
+            node.InvokeIdempotentAction("setup-neon-proxy-private-bridge",
+                () =>
+                {
+                    node.Status = "start: neon-proxy-private-bridge";
+
+                    var response = node.DockerCommand(
+                        "docker run",
+                        "--detach",
+                        "--name", "neon-proxy-private-bridge",
+                        "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private-bridge/conf",
+                        "--env", "LOG_LEVEL=INFO",
+                        "--network", "host",
+                        "--restart", "always",
+                        Program.ResolveDockerImage(cluster.Definition.ProxyImage));
+
+                    node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-private-bridge.sh"), response.BashCommand);
+                    node.Status = string.Empty;
+                });
         }
     }
 }

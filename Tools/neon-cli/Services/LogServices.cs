@@ -118,7 +118,6 @@ namespace NeonCli
                     }
 
                     AddCollectorSteps(steps);
-                    AddHostSteps(steps);
 
                     cluster.Configure(steps);
 
@@ -368,36 +367,6 @@ $@"
 
             steps.Add(command);
             steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-collector.sh"), command.ToBash()));
-        }
-
-        /// <summary>
-        /// Adds the steps required to configure the [neon-log-host] containers
-        /// to every cluster node.
-        /// </summary>
-        /// <param name="steps">The configuration step list.</param>
-        private void AddHostSteps(ConfigStepList steps)
-        {
-            // $todo(jeff.lill):
-            //
-            // It would be nice to start these in parallel.  Perhaps a new
-            // CommandStep.CreateParallel() method or something?
-
-            foreach (var node in cluster.Nodes)
-            {
-                var command = CommandStep.CreateIdempotentDocker(node.Name, "setup-neon-log-host",
-                    "docker run",
-                    "--name", "neon-log-host",
-                    "--detach",
-                    "--restart", "always",
-                    "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
-                    "--volume", "/var/log:/hostfs/var/log",
-                    "--network", "host",
-                    "--log-driver", "json-file",        // Ensure that we don't log to the pipeline to avoid cascading events.
-                    Program.ResolveDockerImage(cluster.Definition.Log.HostImage));
-
-                steps.Add(command);
-                steps.Add(UploadStep.Text(node.Name, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-host.sh"), command.ToBash()));
-            }
 
             // Configure a private cluster proxy TCP route so the [neon-log-host] containers
             // will be able to reach the collectors.
@@ -425,15 +394,34 @@ $@"
         }
 
         /// <summary>
-        /// Deploys <b>Elastic Metricbeat</b> to the node.
+        /// Deploys the log related containers on a node.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        public void DeployMetricbeat(SshProxy<NodeDefinition> node)
+        public void DeployContainers(SshProxy<NodeDefinition> node)
         {
+            node.InvokeIdempotentAction("setup-neon-log-host",
+                () =>
+                {
+                    node.Status = "start: neon-log-host";
+
+                    var response = node.DockerCommand(
+                        "docker run",
+                        "--name", "neon-log-host",
+                        "--detach",
+                        "--restart", "always",
+                        "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
+                        "--volume", "/var/log:/hostfs/var/log",
+                        "--network", "host",
+                        "--log-driver", "json-file",        // Ensure that we don't log to the pipeline to avoid cascading events.
+                        Program.ResolveDockerImage(cluster.Definition.Log.HostImage));
+
+                    node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-host.sh"), response.BashCommand);
+                });
+
             node.InvokeIdempotentAction("setup-metricbeat",
                 () =>
                 {
-                    node.Status = "metricbeat deploy";
+                    node.Status = "start: neon-log-metricbeat";
 
                     var response = node.DockerCommand(
                         "docker run",
