@@ -50,6 +50,7 @@
     <Compile Include="$(MSBuildThisFileDirectory)System\Test_Enum.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\Test_Exception.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\Test_ManualResetEvent.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)System\Test_String.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)System\Test_StringBuilder.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Time\Test_GatedTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Time\Test_GoTimeSpan.cs" />
