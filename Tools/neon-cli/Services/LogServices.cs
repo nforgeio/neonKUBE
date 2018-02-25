@@ -255,36 +255,36 @@ namespace NeonCli
 
                 steps.Add(volumeCommand);
 
-                var runCommand = CommandStep.CreateIdempotentDocker(esNode.Name, "setup-neon-log-esdata",
+                var command = CommandStep.CreateIdempotentDocker(esNode.Name, "setup-neon-log-esdata",
                     "docker run",
-                        "--name", containerName,
-                        "--detach",
-                        "--restart", "always",
-                        "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
-                        "--volume", $"{containerName}:/mnt/esdata",
-                        "--env", $"ELASTICSEARCH_CLUSTER={cluster.Definition.Datacenter}.{cluster.Definition.Name}.neon-log-esdata",
-                        "--env", $"ELASTICSEARCH_NODE_MASTER={isMaster}",
-                        "--env", $"ELASTICSEARCH_NODE_DATA=true",
-                        "--env", $"ELASTICSEARCH_NODE_COUNT={esNodes.Count}",
-                        "--env", $"ELASTICSEARCH_HTTP_PORT={NeonHostPorts.LogEsDataHttp}",
-                        "--env", $"ELASTICSEARCH_TCP_PORT={NeonHostPorts.LogEsDataTcp}",
-                        "--env", $"ELASTICSEARCH_QUORUM={quorumCount}",
-                        "--env", $"ELASTICSEARCH_BOOTSTRAP_NODES={esBootstrapNodes}",
-                        "--env", $"ES_JAVA_OPTS=-Xms{esHeapBytes / NeonHelper.Mega}M -Xmx{esHeapBytes / NeonHelper.Mega}M",
-                        "--memory", $"{esContainerRam / NeonHelper.Mega}M",
-                        "--memory-reservation", $"{esContainerRam / NeonHelper.Mega}M",
-                        "--memory-swappiness", "0",
-                        "--network", "host",
-                        "--log-driver", "json-file",
-                        Program.ResolveDockerImage(cluster.Definition.Log.EsImage));
+                    "--name", containerName,
+                    "--detach",
+                    "--restart", "always",
+                    "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
+                    "--volume", $"{containerName}:/mnt/esdata",
+                    "--env", $"ELASTICSEARCH_CLUSTER={cluster.Definition.Datacenter}.{cluster.Definition.Name}.neon-log-esdata",
+                    "--env", $"ELASTICSEARCH_NODE_MASTER={isMaster}",
+                    "--env", $"ELASTICSEARCH_NODE_DATA=true",
+                    "--env", $"ELASTICSEARCH_NODE_COUNT={esNodes.Count}",
+                    "--env", $"ELASTICSEARCH_HTTP_PORT={NeonHostPorts.LogEsDataHttp}",
+                    "--env", $"ELASTICSEARCH_TCP_PORT={NeonHostPorts.LogEsDataTcp}",
+                    "--env", $"ELASTICSEARCH_QUORUM={quorumCount}",
+                    "--env", $"ELASTICSEARCH_BOOTSTRAP_NODES={esBootstrapNodes}",
+                    "--env", $"ES_JAVA_OPTS=-Xms{esHeapBytes / NeonHelper.Mega}M -Xmx{esHeapBytes / NeonHelper.Mega}M",
+                    "--memory", $"{esContainerRam / NeonHelper.Mega}M",
+                    "--memory-reservation", $"{esContainerRam / NeonHelper.Mega}M",
+                    "--memory-swappiness", "0",
+                    "--network", "host",
+                    "--log-driver", "json-file",
+                    Program.ResolveDockerImage(cluster.Definition.Log.EsImage));
 
-                steps.Add(runCommand);
+                steps.Add(command);
 
                 var scriptText =
 $@"
 {volumeCommand.ToBash()}
 
-{runCommand.ToBash()}
+{command.ToBash()}
 ";
                 steps.Add(UploadStep.Text(esNode.Name, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-esdata.sh"), scriptText));
             }
@@ -327,21 +327,20 @@ $@"
             // This is super simple: All we need to do is to launch the Kibana 
             // service on the cluster managers.
 
-            var command =
-                CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-log-kibana",
-                    "docker service create",
-                        "--name", "neon-log-kibana",
-                        "--detach=false",
-                        "--mode", "global",
-                        "--endpoint-mode", "vip",
-                        "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                        "--network", NeonClusterConst.PrivateNetwork,
-                        "--constraint", $"node.role==manager",
-                        "--publish", $"{NeonHostPorts.Kibana}:{NetworkPorts.Kibana}",
-                        "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
-                        "--env", $"ELASTICSEARCH_URL=http://{NeonHosts.LogEsData}:{NeonHostPorts.ProxyPrivateHttpLogEsData}",
-                        "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
-                        Program.ResolveDockerImage(cluster.Definition.Log.KibanaImage));
+            var command =  CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-log-kibana",
+                "docker service create",
+                "--name", "neon-log-kibana",
+                "--detach=false",
+                "--mode", "global",
+                "--endpoint-mode", "vip",
+                "--restart-delay", cluster.Definition.Docker.RestartDelay,
+                "--network", NeonClusterConst.PrivateNetwork,
+                "--constraint", $"node.role==manager",
+                "--publish", $"{NeonHostPorts.Kibana}:{NetworkPorts.Kibana}",
+                "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
+                "--env", $"ELASTICSEARCH_URL=http://{NeonHosts.LogEsData}:{NeonHostPorts.ProxyPrivateHttpLogEsData}",
+                "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
+                Program.ResolveDockerImage(cluster.Definition.Log.KibanaImage));
 
             steps.Add(command);
             steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-kibana.sh"), command.ToBash()));
@@ -354,19 +353,18 @@ $@"
         /// <param name="steps">The configuration step list.</param>
         private void AddCollectorSteps(ConfigStepList steps)
         {
-            var command =
-                CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-log-collector",
-                    "docker service create",
-                        "--name", "neon-log-collector",
-                        "--detach=false",
-                        "--mode", "global",
-                        "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                        "--endpoint-mode", "vip",
-                        "--network", $"{NeonClusterConst.PrivateNetwork}",
-                        "--constraint", $"node.role==manager",
-                        "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
-                        "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
-                        Program.ResolveDockerImage(cluster.Definition.Log.CollectorImage));
+            var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-log-collector",
+                "docker service create",
+                "--name", "neon-log-collector",
+                "--detach=false",
+                "--mode", "global",
+                "--restart-delay", cluster.Definition.Docker.RestartDelay,
+                "--endpoint-mode", "vip",
+                "--network", $"{NeonClusterConst.PrivateNetwork}",
+                "--constraint", $"node.role==manager",
+                "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
+                "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
+                Program.ResolveDockerImage(cluster.Definition.Log.CollectorImage));
 
             steps.Add(command);
             steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-collector.sh"), command.ToBash()));
@@ -386,7 +384,7 @@ $@"
 
             foreach (var node in cluster.Nodes)
             {
-                var runCommand = CommandStep.CreateIdempotentDocker(node.Name, "setup-neon-log-host",
+                var command = CommandStep.CreateIdempotentDocker(node.Name, "setup-neon-log-host",
                     "docker run",
                     "--name", "neon-log-host",
                     "--detach",
@@ -397,8 +395,8 @@ $@"
                     "--log-driver", "json-file",        // Ensure that we don't log to the pipeline to avoid cascading events.
                     Program.ResolveDockerImage(cluster.Definition.Log.HostImage));
 
-                steps.Add(runCommand);
-                steps.Add(UploadStep.Text(node.Name, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-host.sh"), runCommand.ToBash()));
+                steps.Add(command);
+                steps.Add(UploadStep.Text(node.Name, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-host.sh"), command.ToBash()));
             }
 
             // Configure a private cluster proxy TCP route so the [neon-log-host] containers
@@ -439,15 +437,15 @@ $@"
 
                     var response = node.DockerCommand(
                         "docker run",
-                            "--name", "neon-log-metricbeat",
-                            "--detach",
-                            "--net", "host",
-                            "--restart", "always",
-                            "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
-                            "--volume", "/proc:/hostfs/proc:ro",
-                            "--volume", "/:/hostfs:ro",
-                            "--log-driver", "json-file",
-                            Program.ResolveDockerImage(cluster.Definition.Log.MetricbeatImage));
+                        "--name", "neon-log-metricbeat",
+                        "--detach",
+                        "--net", "host",
+                        "--restart", "always",
+                        "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
+                        "--volume", "/proc:/hostfs/proc:ro",
+                        "--volume", "/:/hostfs:ro",
+                        "--log-driver", "json-file",
+                        Program.ResolveDockerImage(cluster.Definition.Log.MetricbeatImage));
 
                     node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-metricbeat.sh"), response.BashCommand);
                 });
