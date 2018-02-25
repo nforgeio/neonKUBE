@@ -846,7 +846,7 @@ MODULES:
 
                 case "module":
 
-                    ExecuteModule(login, leftCommandLine.Shift(1));
+                    ExecuteModule(login, leftCommandLine.Shift(2));
                     break;
 
                 case "play":

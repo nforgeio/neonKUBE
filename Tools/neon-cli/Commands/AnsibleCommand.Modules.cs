@@ -187,7 +187,8 @@ namespace NeonCli
                 {
                     case "neon_certificate":
 
-                        output = ImplementCertificateModule(args);
+                        //output = ImplementCertificateModule(args);
+                        output.StdOut = args;
                         break;
 
                     case "neon_route":
@@ -225,6 +226,10 @@ namespace NeonCli
         /// <returns>The <see cref="ModuleOutput"/>.</returns>
         private ModuleOutput ImplementCertificateModule(string args)
         {
+            var output = new ModuleOutput();
+
+            output.StdOut = args;
+
             throw new NotImplementedException();
         }
 
