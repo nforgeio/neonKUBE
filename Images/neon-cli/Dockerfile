@@ -42,6 +42,7 @@ RUN apt-get update \
 RUN apt-get update \
     && apt-get install -yq software-properties-common \
     && apt-add-repository ppa:ansible/ansible \
+    && apt-get update \
     && apt-get install -yq ansible \
     && apt-get clean -yq
 
