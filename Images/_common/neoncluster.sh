@@ -211,40 +211,43 @@ export NeonClusterConst_HAProxyUidFormat="%{+X}o%ci:%cp_%fi:%fp_%Ts_%rt"
 #
 # These must match the definitions in [Neon.Cluster.NeonHostPorts].
 
-# The main neonCLUSTER dashboard.
-export NeonHostPorts_Dashboard=5000
-
-# The [neon-log-kibana] (Kibana) log analysis dashboard.
-export NeonHostPorts_Kibana=5001
+# The local cluster Docker registry port.
+export NeonHostPorts_DockerRegistryLocal=5000;
 
 # The HTTP port exposed by the manager [neon-registry-cache] containers.
-export NeonHostPorts_RegistryCache=5002
+export NeonHostPorts_DockerRegistryCache=5001
+
+# The main neonCLUSTER dashboard.
+export NeonHostPorts_Dashboard=5002
+
+# The [neon-log-kibana] (Kibana) log analysis dashboard.
+export NeonHostPorts_Kibana=5003
 
 # The [neon-proxy-vault] service port used for routing HTTP traffic to the
 # Vault servers running on the manager nodes.
-export NeonHostPorts_ProxyVault=5003
+export NeonHostPorts_ProxyVault=5004
 
 # The public HTTP API port exposed by individual [neon-log-esdata-#]>
 # Elasticsearch log repository containers.
-export NeonHostPorts_LogEsDataHttp=5004
+export NeonHostPorts_LogEsDataHttp=5005
 
 # The TCP port exposed by individual [neon-log-esdata-#] Elasticsearch
 # log repository containers for internal inter-node communication.
-export NeonHostPorts_LogEsDataTcp=5005
+export NeonHostPorts_LogEsDataTcp=5006
 
 # The UDP port exposed by the [neon-log-host] containers that receives
 # SYSLOG events from the HAProxy based services and perhaps other sources.
-export NeonHostPorts_LogHostSysLog=5006
+export NeonHostPorts_LogHostSysLog=5007
 
 # The port where the PowerDNS Authoritative Server listens if the
 # cluster's Dynamic DNS feature is enabled.  These servers are deployed
 # to the manager nodes if enabled.
-export NeonHostPorts_PowerDNS=5007
+export NeonHostPorts_PowerDNS=5008
 
 # The port where the <b>neon-dns</b> service listens on the manager
 # node host network for dynamic DNS HTTP requests if the cluster's 
 # Dynamic DNS feature is enabled.
-export NeonHostPorts_DynamicDNS=5008
+export NeonHostPorts_DynamicDNS=5009
 
 # This port is reserved and must not be assigned to any service.  This is
 # currently referenced by the manager load balancer rule for Azure deployments

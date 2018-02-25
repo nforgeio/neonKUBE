@@ -949,7 +949,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
             {
                 foreach (var manager in cluster.Definition.SortedManagers)
                 {
-                    registries.Add($"https://{manager.Name}.{NeonHosts.RegistryCache}:{NeonHostPorts.RegistryCache}");
+                    registries.Add($"https://{manager.Name}.{NeonHosts.RegistryCache}:{NeonHostPorts.DockerRegistryCache}");
                 }
             }
 

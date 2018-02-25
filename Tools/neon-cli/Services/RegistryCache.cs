@@ -146,7 +146,7 @@ namespace NeonCli
                             "--name", "neon-registry-cache",
                             "--detach",
                             "--restart", "always",
-                            "--publish", $"{NeonHostPorts.RegistryCache}:5000",
+                            "--publish", $"{NeonHostPorts.DockerRegistryCache}:5000",
                             "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",
                             "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",
                             "--env", $"HOSTNAME={node.Name}.{NeonHosts.RegistryCache}",
@@ -190,8 +190,8 @@ namespace NeonCli
 
                         var cacheHostName = GetCacheHost(manager);
 
-                        sbScript.AppendLine($"mkdir -p /etc/docker/certs.d/{cacheHostName}:{NeonHostPorts.RegistryCache}");
-                        sbScript.AppendLine($"cp {manager.Name}.crt /etc/docker/certs.d/{cacheHostName}:{NeonHostPorts.RegistryCache}/ca.crt");
+                        sbScript.AppendLine($"mkdir -p /etc/docker/certs.d/{cacheHostName}:{NeonHostPorts.DockerRegistryCache}");
+                        sbScript.AppendLine($"cp {manager.Name}.crt /etc/docker/certs.d/{cacheHostName}:{NeonHostPorts.DockerRegistryCache}/ca.crt");
                         sbScript.AppendLine($"cp {manager.Name}.crt /usr/local/share/ca-certificates/{cacheHostName}.crt");
                     }
 

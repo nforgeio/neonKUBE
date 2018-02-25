@@ -70,57 +70,62 @@ namespace Neon.Cluster
         // Cluster dashboard ports.
 
         /// <summary>
-        /// The main neonCLUSTER dashboard.
+        /// The local cluster Docker registry port.
         /// </summary>
-        public const int Dashboard = 5000;
-
-        /// <summary>
-        /// The <b>neon-log-kibana</b> (Kibana) log analysis dashboard.
-        /// </summary>
-        public const int Kibana = 5001;
+        public const int DockerRegistryLocal = 5000;
 
         /// <summary>
         /// The HTTP port exposed by the manager <b>neon-registry-cache</b> containers.
         /// </summary>
-        public const int RegistryCache = 5002;
+        public const int DockerRegistryCache = 5001;
+
+        /// <summary>
+        /// The main neonCLUSTER dashboard.
+        /// </summary>
+        public const int Dashboard = 5002;
+
+        /// <summary>
+        /// The <b>neon-log-kibana</b> (Kibana) log analysis dashboard.
+        /// </summary>
+        public const int Kibana = 5003;
 
         /// <summary>
         /// The <b>neon-proxy-vault</b> service port used for routing HTTP traffic to the
         /// Vault servers running on the manager nodes.
         /// </summary>
-        public const int ProxyVault = 5003;
+        public const int ProxyVault = 5004;
 
         /// <summary>
         /// The public HTTP API port exposed by individual <b>neon-log-esdata-#</b>
         /// Elasticsearch log repository containers.
         /// </summary>
-        public const int LogEsDataHttp = 5004;
+        public const int LogEsDataHttp = 5005;
 
         /// <summary>
         /// The TCP port exposed by individual <b>neon-log-esdata-#</b> Elasticsearch
         /// log repository containers for internal inter-node communication.
         /// </summary>
-        public const int LogEsDataTcp = 5005;
+        public const int LogEsDataTcp = 5006;
 
         /// <summary>
         /// The UDP port exposed by the <b>neon-log-host</b> containers that receives
         /// SYSLOG events from the HAProxy based services and perhaps other sources.
         /// </summary>
-        public const int LogHostSysLog = 5006;
+        public const int LogHostSysLog = 5007;
 
         /// <summary>
         /// The port where the PowerDNS Authoritative Server listens if the
         /// cluster's Dynamic DNS feature is enabled.  These servers are deployed
         /// to the manager nodes if enabled.
         /// </summary>
-        public const int PowerDNS = 5007;
+        public const int PowerDNS = 5008;
 
         /// <summary>
         /// The port where the <b>neon-dns</b> service listens on the manager
         /// node host network for dynamic DNS HTTP requests if the cluster's 
         /// Dynamic DNS feature is enabled.
         /// </summary>
-        public const int DynamicDNS = 5008;
+        public const int DynamicDNS = 5009;
 
         /// <summary>
         /// This port is reserved and must not be assigned to any service.  This is
