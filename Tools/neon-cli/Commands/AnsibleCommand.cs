@@ -369,7 +369,7 @@ MODULES:
             var commandSplit     = commandLine.Split("--");
             var leftCommandLine  = commandSplit.Left;
             var rightCommandLine = commandSplit.Right;
-            var command          = leftCommandLine.Arguments.AtIndexOrDefault(1);
+            var command          = leftCommandLine.Arguments.ElementAtOrDefault(1);
 
             // The [password] command operates in [--no-tool-container] mode so we'll implement it here.
 
@@ -384,9 +384,9 @@ MODULES:
                 }
 
                 string  passwordsFolder = NeonClusterHelper.GetAnsiblePasswordsFolder();
-                string  passwordCommand = passwordCommandLine.Arguments.AtIndexOrDefault(0);
-                string  passwordName    = passwordCommandLine.Arguments.AtIndexOrDefault(1);
-                string  passwordValue   = passwordCommandLine.Arguments.AtIndexOrDefault(2);
+                string  passwordCommand = passwordCommandLine.Arguments.ElementAtOrDefault(0);
+                string  passwordName    = passwordCommandLine.Arguments.ElementAtOrDefault(1);
+                string  passwordValue   = passwordCommandLine.Arguments.ElementAtOrDefault(2);
                 int     passwordCount   = 0;
                 string  passwordPath;
                 string  passwordPattern;
@@ -439,8 +439,8 @@ MODULES:
 
                     case "export":
 
-                        zipPath         = passwordCommandLine.Arguments.AtIndexOrDefault(1);
-                        passwordPattern = passwordCommandLine.Arguments.AtIndexOrDefault(2);
+                        zipPath         = passwordCommandLine.Arguments.ElementAtOrDefault(1);
+                        passwordPattern = passwordCommandLine.Arguments.ElementAtOrDefault(2);
 
                         if (!File.Exists(zipPath))
                         {
@@ -504,7 +504,7 @@ MODULES:
 
                     case "import":
 
-                        zipPath = passwordCommandLine.Arguments.AtIndexOrDefault(1);
+                        zipPath = passwordCommandLine.Arguments.ElementAtOrDefault(1);
 
                         if (!File.Exists(zipPath))
                         {
@@ -773,7 +773,7 @@ MODULES:
                         Program.Exit(0);
                     }
 
-                    var zipFileName = leftCommandLine.Arguments.AtIndexOrDefault(2);
+                    var zipFileName = leftCommandLine.Arguments.ElementAtOrDefault(2);
 
                     if (zipFileName == null)
                     {
@@ -927,7 +927,7 @@ MODULES:
             // into the container.  Note that the [--cwd=FOLDER] command line option
             // will override the current directory if present.
 
-            string command = shim.CommandLine.Arguments.AtIndexOrDefault(1);
+            string command = shim.CommandLine.Arguments.ElementAtOrDefault(1);
 
             if (command == "vault")
             {
@@ -1006,7 +1006,7 @@ MODULES:
             // Note that we don't shim the [password] command and that also doesn't need
             // a cluster connection.
 
-            if (shim.CommandLine.Arguments.AtIndexOrDefault(1) == "password")
+            if (shim.CommandLine.Arguments.ElementAtOrDefault(1) == "password")
             {
                 return new ShimInfo(isShimmed: false, ensureConnection: false);
             }
@@ -1016,9 +1016,9 @@ MODULES:
             // container and then strip the directory path off of the 
             // ZIP-FILE argument.
 
-            if (shim.CommandLine.Arguments.AtIndexOrDefault(1) == "config")
+            if (shim.CommandLine.Arguments.ElementAtOrDefault(1) == "config")
             {
-                var zipPath = shim.CommandLine.Arguments.AtIndexOrDefault(2);
+                var zipPath = shim.CommandLine.Arguments.ElementAtOrDefault(2);
 
                 if (zipPath == null)
                 {

@@ -81,9 +81,9 @@ OPTIONS:
                 Program.Exit(0);
             }
 
-            string  command      = commandLine.Arguments.AtIndexOrDefault(0);
-            string  path         = commandLine.Arguments.AtIndexOrDefault(1);
-            string  passwordName = commandLine.Arguments.AtIndexOrDefault(2);
+            string  command      = commandLine.Arguments.ElementAtOrDefault(0);
+            string  path         = commandLine.Arguments.ElementAtOrDefault(1);
+            string  passwordName = commandLine.Arguments.ElementAtOrDefault(2);
 
             if (string.IsNullOrEmpty(path))
             {

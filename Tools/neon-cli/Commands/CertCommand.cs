@@ -328,7 +328,7 @@ certificates, and then finally the private key.
                             Program.Exit(1);
                         }
 
-                        certificate = TlsCertificate.Load(commandLine.Arguments.AtIndexOrDefault(1));
+                        certificate = TlsCertificate.Load(commandLine.Arguments.ElementAtOrDefault(1));
 
                         certificate.Parse();
                         vault.WriteJsonAsync(NeonClusterHelper.GetVaultCertificateKey(commandLine.Arguments[0]), certificate).Wait();
@@ -369,7 +369,7 @@ certificates, and then finally the private key.
         public override ShimInfo Shim(DockerShim shim)
         {
             var commandLine = shim.CommandLine;
-            var command     = commandLine.Arguments.AtIndexOrDefault(1);
+            var command     = commandLine.Arguments.ElementAtOrDefault(1);
 
             switch (command)
             {
