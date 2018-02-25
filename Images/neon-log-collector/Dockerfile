@@ -19,8 +19,7 @@ EXPOSE 24224/tcp 24224/udp 9880/tcp
 # Install required Ruby gems and the Nano editor because it's
 # handy for debugging.
 
-RUN /usr/sbin/td-agent-gem install fluent-plugin-elasticsearch --no-document \
-    && /usr/sbin/td-agent-gem install fluent-plugin-record-modifier --no-document \
+RUN /usr/sbin/td-agent-gem install fluent-plugin-record-modifier --no-document \
     && /usr/sbin/td-agent-gem install browser --no-document \
     && /usr/sbin/td-agent-gem install maxminddb --no-document \
     && apt-get update \
