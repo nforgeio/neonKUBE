@@ -57,7 +57,7 @@ namespace NeonCli
     /// folder.
     /// </note>
     /// </remarks>
-    public class AnsibleCommand : CommandBase
+    public partial class AnsibleCommand : CommandBase
     {
         private const string usage = @"
 USAGE:
@@ -69,6 +69,7 @@ USAGE:
 
     neon ansible config   ZIP-PATH          - returns Ansible configuration files to ZIP archive
     neon ansible password CMD ...           - password management
+    neon ansible module   MODULE ARGS       - implements built-in neonCLUSTER Ansible modules
 
 ARGUMENTS:
 
@@ -299,6 +300,29 @@ inventory and variable files that will be used when Ansible commands
 will be run on the cluster.
 
 You can open the returned ZIP archive to inspect these file.
+";
+
+
+        private const string moduleHelp = @"
+WARNING: FOR INTERNAL USE ONLY
+
+Implements built-in neonCLUSTER Ansible modules that can be invoked via
+[neon ansible exec -- ARGS] or [neon ansible play -- ARGS].  This command
+should never need to be called directly by cluster operators.
+
+USAGE:
+
+    neon ansible module MODULE ARGS
+
+ARGUMENTS:
+
+    MODULE              - Identifies the built-in module (see list below)
+    ARGS                - Module arguments passed by Ansible
+
+MODULES:
+
+    neon_certificate    - Manages cluster TLS certificates
+    neon_proxy          - Manager cluster proxy routes
 ";
 
         private const string sshClientPrivateKeyPath = "/dev/shm/ansible/ssh-client.key";   // Path to the SSH private client key (on a container RAM drive)
@@ -808,6 +832,23 @@ You can open the returned ZIP archive to inspect these file.
                     Program.Exit(NeonHelper.Execute("ansible", NeonHelper.NormalizeExecArgs("--user", login.SshUsername, "--private-key", sshClientPrivateKeyPath, rightCommandLine.Items)));
                     break;
 
+                case "galaxy":
+
+                    if (leftCommandLine.HasHelpOption || noAnsibleCommand)
+                    {
+                        Console.WriteLine(galaxyHelp);
+                        Program.Exit(0);
+                    }
+
+                    GenerateAnsibleConfig();
+                    Program.Exit(NeonHelper.Execute("ansible-galaxy", NeonHelper.NormalizeExecArgs(rightCommandLine.Items)));
+                    break;
+
+                case "module":
+
+                    ExecuteModule(login, leftCommandLine.Shift(1));
+                    break;
+
                 case "play":
 
                     if (leftCommandLine.HasHelpOption || noAnsibleCommand)
@@ -825,18 +866,6 @@ You can open the returned ZIP archive to inspect these file.
                     GenerateAnsibleConfig();
                     GenerateAnsibleFiles(login);
                     Program.Exit(NeonHelper.Execute("ansible-playbook", NeonHelper.NormalizeExecArgs("--user", login.SshUsername, "--private-key", sshClientPrivateKeyPath, rightCommandLine.Items)));
-                    break;
-
-                case "galaxy":
-
-                    if (leftCommandLine.HasHelpOption || noAnsibleCommand)
-                    {
-                        Console.WriteLine(galaxyHelp);
-                        Program.Exit(0);
-                    }
-
-                    GenerateAnsibleConfig();
-                    Program.Exit(NeonHelper.Execute("ansible-galaxy", NeonHelper.NormalizeExecArgs(rightCommandLine.Items)));
                     break;
 
                 case "vault":
