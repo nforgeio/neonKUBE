@@ -149,6 +149,89 @@ namespace Neon.Cryptography
             }
         }
 
+
+        /// <summary>
+        /// Verifies certificate file.
+        /// </summary>
+        /// <param name="path">Path to the certificate.</param>
+        /// <exception cref="ArgumentException">Thrown if the certificate is not valid.</exception>
+        public static void Validate(string path)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+
+            var certificate = TlsCertificate.Load(path);
+
+            // We're going to split the certificate into two files, the issued
+            // certificate and the certificate authority's certificate chain
+            // (AKA the CA bundle).
+
+            var tempCertPath = Path.GetTempFileName();
+            var tempCaPath   = Path.GetTempFileName();
+            var tool         = "openssl";
+
+            try
+            {
+                var pos = certificate.Cert.IndexOf("-----END CERTIFICATE-----");
+
+                if (pos == -1)
+                {
+                    throw new ArgumentNullException("The certificate is not formatted properly.");
+                }
+
+                pos = certificate.Cert.IndexOf("-----BEGIN CERTIFICATE-----", pos);
+
+                var issuedCert = certificate.Cert.Substring(0, pos);
+                var caBundle   = certificate.Cert.Substring(pos);
+
+                File.WriteAllText(tempCertPath, issuedCert);
+                File.WriteAllText(tempCaPath, caBundle);
+
+                var sbArgs = new StringBuilder();
+
+                // We're going to use [certutil] for Windows and [OpenSSL]
+                // for everything else.
+
+                if (NeonHelper.IsWindows)
+                {
+                    tool = "certutil";
+
+                    sbArgs.Append("-verify ");
+                    sbArgs.Append($"\"{tempCertPath}\" ");
+                    sbArgs.Append($"\"{tempCaPath}\"");
+
+                    var result = NeonHelper.ExecuteCaptureStreams("certutil", sbArgs.ToString());
+
+                    if (result.ExitCode != 0)
+                    {
+                        throw new ArgumentException("Invalid certificate.");
+                    }
+                }
+                else
+                {
+                    sbArgs.Append("verify ");
+                    sbArgs.Append("-purpose sslserver ");
+                    sbArgs.Append($"-CAfile \"{tempCaPath}\" ");
+                    sbArgs.Append($"\"{tempCertPath}\"");
+
+                    var result = NeonHelper.ExecuteCaptureStreams("openssl", sbArgs.ToString());
+
+                    if (result.ExitCode != 0)
+                    {
+                        throw new ArgumentException("Invalid certificate.");
+                    }
+                }
+            }
+            catch (Win32Exception)
+            {
+                throw new ArgumentException($"INTERNAL ERROR: Cannot find the [{tool}] SSL certificate utility on the PATH.");
+            }
+            finally
+            {
+                File.Delete(tempCertPath);
+                File.Delete(tempCaPath);
+            }
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
