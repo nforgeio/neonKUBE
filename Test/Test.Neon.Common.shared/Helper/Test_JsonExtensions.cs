@@ -1,0 +1,73 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:	    Test_Helper.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+
+using System;
+using System.Collections.Generic;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
+using Neon.Common;
+
+using Xunit;
+
+namespace TestCommon
+{
+    public class Test_JsonExtensions
+    {
+        [Fact]
+        public void TryGetValue()
+        {
+            const string jsonText =
+@"{
+    ""int"": 10,
+    ""long"": 6000000000,
+    ""string"": ""Hello World!"",
+    ""null"": null,
+    ""bool-true"": true,
+    ""bool-false"": false,
+    ""float"": 123.456
+}
+";
+            var jObject = JObject.Parse(jsonText);
+
+            Assert.True(jObject.TryGetValue<int>("int", out var iValue));
+            Assert.Equal(10, iValue);
+            Assert.Throws<FormatException>(() => jObject.TryGetValue<int>("string", out iValue));
+
+            Assert.True(jObject.TryGetValue<long>("long", out var lValue));
+            Assert.Equal(6000000000L, lValue);
+            Assert.Throws<FormatException>(() => jObject.TryGetValue<int>("string", out iValue));
+
+            Assert.True(jObject.TryGetValue<string>("string", out var sValue));
+            Assert.Equal("Hello World!", sValue);
+            Assert.True(jObject.TryGetValue<string>("bool-true", out sValue));
+            Assert.Equal("True", sValue);
+            Assert.True(jObject.TryGetValue<string>("null", out sValue));
+            Assert.Null(sValue);
+
+            Assert.True(jObject.TryGetValue<bool>("bool-true", out var bValue));
+            Assert.True(bValue);
+            Assert.True(jObject.TryGetValue<bool>("bool-false", out bValue));
+            Assert.False(bValue);
+
+            var delta = 0.0001;     // Floating point operations aren't precise.
+
+            Assert.True(jObject.TryGetValue<float>("float", out var fValue));
+            Assert.InRange(fValue, 123.456 - delta, 123.456 + delta);
+
+            Assert.True(jObject.TryGetValue<double>("float", out var dValue));
+            Assert.InRange(fValue, 123.456 - delta, 123.456 + delta);
+
+            // Verify that we detect when a property doesn't exist.
+
+            Assert.False(jObject.TryGetValue<int>("does-not-exist", out iValue));
+        }
+    }
+}

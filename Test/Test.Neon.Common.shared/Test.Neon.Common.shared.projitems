@@ -11,6 +11,7 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Collections\Test_Bits.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Collections\Test_IEnumerableExtensions.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Helper\Test_JsonExtensions.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Helper\Test_ServicesContainer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Cryptography\Test_TlsCertificate.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Csv\Test_CsvReader.cs" />
