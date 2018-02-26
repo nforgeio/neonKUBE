@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -38,6 +39,9 @@ namespace NeonCli
         /// </summary>
         private class ModuleOutput
         {
+            private List<string> output = new List<string>();
+            private List<string> error  = new List<string>();
+
             // These values are describer here:
             //
             //      http://docs.ansible.com/ansible/latest/common_return_values.html
@@ -131,6 +135,24 @@ namespace NeonCli
             public List<string> StdOutLines { get; set; } = null;
 
             /// <summary>
+            /// Writes a line of text to the standard output lines.
+            /// </summary>
+            /// <param name="value">The text to be written.</param>
+            public void WriteLine(string value = null)
+            {
+                output.Add(value ?? string.Empty);
+            }
+
+            /// <summary>
+            /// Writes a line of text to the standard error lines.
+            /// </summary>
+            /// <param name="value">The text to be written.</param>
+            public void WriteErrorLine(string value = null)
+            {
+                error.Add(value ?? string.Empty);
+            }
+
+            /// <summary>
             /// Renders the instance as a JSON string.
             /// </summary>
             public override string ToString()
@@ -141,10 +163,18 @@ namespace NeonCli
                 {
                     StdErrLines = StdErr.ToLines().ToList();
                 }
+                else if (error.Count > 0)
+                {
+                    StdErrLines = error;
+                }
 
                 if (!string.IsNullOrEmpty(StdOut))
                 {
                     StdOutLines = StdOut.ToLines().ToList();
+                }
+                else if (output.Count > 0)
+                {
+                    StdOutLines = output;
                 }
 
                 return NeonHelper.JsonSerialize(this, Formatting.Indented);
@@ -255,7 +285,7 @@ namespace NeonCli
             //
             // I'm not doing anything special for unicode characters, if these
             // can be present in the argument values.  Investigate to see if
-            // this is something we should handle.
+            // this is something we need to support.
 
             while (pos < argsText.Length)
             {
@@ -364,7 +394,8 @@ namespace NeonCli
                 }
                 else
                 {
-                    // Parse the value up to the next space (or EOF).
+                    // The value is not quoted so we'll just parse the value up 
+                    // to the next space (or EOF).
 
                     var posSpace = argsText.IndexOf(' ', pos);
 
@@ -395,7 +426,8 @@ namespace NeonCli
         {
             // $todo(jeff.lill):
             //
-            // Scan the Ansible source code and use the same conventions here.
+            // Scan the Ansible source code and use the same conventions here
+            // (if we're not doing so already).
 
             switch (value.ToLowerInvariant())
             {
@@ -485,7 +517,7 @@ namespace NeonCli
 
             TlsCertificate.Validate(value);
 
-            var certificate = new TlsCertificate(value);    // This validates the certificate/key
+            var certificate = new TlsCertificate(value);    // This validates the certificate/private key
 
             if (!args.TryGetValue("state", out var state))
             {
@@ -508,19 +540,60 @@ namespace NeonCli
                 throw new ArgumentException("Access Denied: Vault root credentials are required.");
             }
 
+            var path = NeonClusterHelper.GetVaultCertificateKey(name);
+
+            output.WriteLine($"Vault: vertificate path is [{path}]");
+
             using (var vault = NeonClusterHelper.OpenVault(login.VaultCredentials.RootToken))
             {
                 switch (state)
                 {
                     case "absent":
 
-                        //vault.ReadJsonAsync();
+                        output.WriteLine($"Vault: checking for [{name}] certificate");
 
-                        vault.DeleteAsync(NeonClusterHelper.GetVaultCertificateKey(name)).Wait();
-                        TouchCertChanged();
+                        if (vault.ExistsAsync(path).Result)
+                        {
+                            output.WriteLine($"Vault: [{name}] certificate exists");
+                            output.WriteLine($"Vault: Deleting [{name}]");
+
+                            vault.DeleteAsync(path).Wait();
+                            output.WriteLine($"Vault: [{name}] certificate deleted");
+
+                            TouchCertChanged();
+                            output.WriteLine($"Consul: Indicate certificate change.");
+
+                            output.Changed = true;
+                        }
                         break;
 
                     case "present":
+
+                        output.WriteLine($"Vault: Reading [{name}]");
+
+                        var existingCert = vault.ReadJsonAsync<TlsCertificate>(path, noException: true).Result;
+
+                        if (existingCert == null)
+                        {
+                            output.WriteLine($"Vault: [{name}] certificate does not exist");
+                            output.Changed = true;
+                        }
+                        else if (!NeonHelper.JsonEquals(existingCert, certificate))
+                        {
+                            output.WriteLine($"Vault: [{name}] certificate does exists but is different");
+                            output.Changed = true;
+                        }
+                        else
+                        {
+                            output.WriteLine($"Vault: [{name}] certificate is unchanged");
+                        }
+
+                        if (output.Changed)
+                        {
+                            output.WriteLine($"Vault: Saving [{name}] certificate");
+                            vault.WriteJsonAsync(path, certificate).Wait();
+                            output.WriteLine($"Vault: [{name}] certificate saved");
+                        }
 
                         break;
 
