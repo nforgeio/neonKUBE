@@ -247,6 +247,31 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Determines whether a Vault object exists.
+        /// </summary>
+        /// <param name="path">The object path.</param>
+        /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
+        /// <returns><c>true</c> if the object exists.</returns>
+        public async Task<bool> ExistsAsync(string path, CancellationToken cancellationToken = default)
+        {
+            try
+            {
+                await ReadDynamicAsync(path, cancellationToken);
+
+                return true;
+            }
+            catch (HttpException e)
+            {
+                if (e.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return false;
+                }
+
+                throw;
+            }
+        }
+
+        /// <summary>
         /// Reads the Vault object located at the specified path as a dynamic.
         /// </summary>
         /// <param name="path">The object path.</param>
