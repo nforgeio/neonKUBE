@@ -256,7 +256,7 @@ namespace Neon.Cluster
         {
             try
             {
-                await ReadDynamicAsync(path, cancellationToken);
+                await ReadDynamicAsync(path, cancellationToken: cancellationToken);
 
                 return true;
             }
@@ -275,15 +275,41 @@ namespace Neon.Cluster
         /// Reads the Vault object located at the specified path as a dynamic.
         /// </summary>
         /// <param name="path">The object path.</param>
+        /// <param name="noException">
+        /// Optionally specifies that <c>null</c> should be returned if the object doesn't 
+        /// exist rather than throwning a <see cref="KeyNotFoundException"/>.
+        /// </param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The result as a <c>dynamic</c> object.</returns>
-        public async Task<dynamic> ReadDynamicAsync(string path, CancellationToken cancellationToken = default)
+        /// <exception cref="KeyNotFoundException">Thrown if no object is present at <paramref name="path"/>.</exception>
+        public async Task<dynamic> ReadDynamicAsync(string path, bool noException = false, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
-            return (await jsonClient.GetAsync($"/{vaultApiVersion}/{Normalize(path)}", null, cancellationToken))
-                .AsDynamic()
-                .data;
+            try
+            {
+                return (await jsonClient.GetAsync($"/{vaultApiVersion}/{Normalize(path)}", null, cancellationToken))
+                    .AsDynamic()
+                    .data;
+            }
+            catch (HttpException e)
+            {
+                if (e.StatusCode == HttpStatusCode.NotFound)
+                {
+                    if (noException)
+                    {
+                        return default(dynamic);
+                    }
+                    else
+                    {
+                        throw new KeyNotFoundException($"Vault [path={path}] not found.");
+                    }
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
 
         /// <summary>
@@ -291,18 +317,44 @@ namespace Neon.Cluster
         /// </summary>
         /// <typeparam name="T">The type being read.</typeparam>
         /// <param name="path">The object path.</param>
+        /// <param name="noException">
+        /// Optionally specifies that <c>null</c> should be returned if the object doesn't 
+        /// exist rather than throwning a <see cref="KeyNotFoundException"/>.
+        /// </param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The result as a <c>dynamic</c> object.</returns>
-        public async Task<T> ReadJsonAsync<T>(string path, CancellationToken cancellationToken = default)
+        /// <exception cref="KeyNotFoundException">Thrown if no object is present at <paramref name="path"/>.</exception>
+        public async Task<T> ReadJsonAsync<T>(string path, bool noException = false, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
-            var jsonText = (await jsonClient.GetAsync($"/{vaultApiVersion}/{Normalize(path)}", null, cancellationToken))
-                .AsDynamic()
-                .data
-                .ToString();
+            try
+            {
+                var jsonText = (await jsonClient.GetAsync($"/{vaultApiVersion}/{Normalize(path)}", null, cancellationToken))
+                    .AsDynamic()
+                    .data
+                    .ToString();
 
-            return NeonHelper.JsonDeserialize<T>(jsonText);
+                return NeonHelper.JsonDeserialize<T>(jsonText);
+            }
+            catch (HttpException e)
+            {
+                if (e.StatusCode == HttpStatusCode.NotFound)
+                {
+                    if (noException)
+                    {
+                        return default(T);
+                    }
+                    else
+                    {
+                        throw new KeyNotFoundException($"Vault [path={path}] not found.");
+                    }
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
 
         /// <summary>
@@ -344,17 +396,43 @@ namespace Neon.Cluster
         /// Reads the Vault object located at the specified path as a decoded base-64 byte array.
         /// </summary>
         /// <param name="path">The object path.</param>
+        /// <param name="noException">
+        /// Optionally specifies that <c>null</c> should be returned if the object doesn't 
+        /// exist rather than throwning a <see cref="KeyNotFoundException"/>.
+        /// </param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The byte array.</returns>
-        public async Task<byte[]> ReadBytesAsync(string path, CancellationToken cancellationToken = default)
+        /// <exception cref="KeyNotFoundException">Thrown if no object is present at <paramref name="path"/>.</exception>
+        public async Task<byte[]> ReadBytesAsync(string path, bool noException = false, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
-            var bytesObject = (await jsonClient.GetAsync($"/{vaultApiVersion}/{Normalize(path)}", null, cancellationToken))
-                .AsDynamic()
-                .data;
+            try
+            {
+                var bytesObject = (await jsonClient.GetAsync($"/{vaultApiVersion}/{Normalize(path)}", null, cancellationToken))
+                    .AsDynamic()
+                    .data;
 
-            return Convert.FromBase64String((string)bytesObject.value);
+                return Convert.FromBase64String((string)bytesObject.value);
+            }
+            catch (HttpException e)
+            {
+                if (e.StatusCode == HttpStatusCode.NotFound)
+                {
+                    if (noException)
+                    {
+                        return default(byte[]);
+                    }
+                    else
+                    {
+                        throw new KeyNotFoundException($"Vault [path={path}] not found.");
+                    }
+                }
+                else
+                {
+                    throw;
+                }
+            }
         }
 
         /// <summary>
@@ -430,7 +508,7 @@ namespace Neon.Cluster
 
             try
             {
-                await ReadDynamicAsync($"auth/approle/role/{roleName}", cancellationToken);
+                await ReadDynamicAsync($"auth/approle/role/{roleName}", cancellationToken: cancellationToken);
             }
             catch (Exception e)
             {
@@ -441,7 +519,7 @@ namespace Neon.Cluster
 
             try
             {
-                var response = await ReadDynamicAsync($"auth/approle/role/{roleName}/role-id", cancellationToken);
+                var response = await ReadDynamicAsync($"auth/approle/role/{roleName}/role-id", cancellationToken: cancellationToken);
 
                 roleId = response.role_id;
             }

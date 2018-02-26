@@ -1709,7 +1709,7 @@ listen tcp:port-{port}
                 // a cluster proxy.
 
                 cachedClusterDefinition         = await NeonClusterHelper.GetDefinitionAsync(cachedClusterDefinition, cancellationToken);
-                cachedClusterDefinition.Hosting = await vault.ReadJsonAsync<HostingOptions>("neon-secret/hosting/options", cancellationToken);
+                cachedClusterDefinition.Hosting = await vault.ReadJsonAsync<HostingOptions>("neon-secret/hosting/options", cancellationToken: cancellationToken);
 
                 var cluster = new ClusterProxy(cachedClusterDefinition);
 
