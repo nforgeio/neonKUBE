@@ -1453,6 +1453,11 @@ roles_path = {mappedRolesPath}:/etc/ansible/roles
 
 [ssh_connection]
 
+# Adds the option to retry failed ssh executions if the failure is encountered 
+# in ssh itself, not the remote command. This can be helpful if there are transient 
+# network issues. Enabled by setting retries to an integer greater than 1. Defaults to 0.
+retries = 4
+
 # ssh arguments to use
 # Leaving off ControlPersist will result in poor performance, so use
 # paramiko on older platforms rather than removing it, -C controls compression use
