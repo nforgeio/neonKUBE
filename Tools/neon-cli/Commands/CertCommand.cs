@@ -85,15 +85,16 @@ USAGE:
     neon cert get NAME
     neon cert list|ls [--expired | --expiring]
     neon cert put NAME PATH
-    neon cert put NAME PATH-CERT PATH-KEY
     neon cert remove|rm NAME
     neon cert split PATH PATH-CERT PATH-KEY 
     neon verify PATH
 
 ARGUMENTS:
 
-    NAME    - Identifies the certificate in the cluster.
-    PATH    - Local file system path.
+    NAME        - Identifies the certificate in the cluster
+    PATH        - Local file system path
+    PATH-CERT   - Certificate path (without the private key)
+    PATH-KEY    = Private key path
 
 DETAILS:
 
@@ -415,6 +416,15 @@ certificates, and then finally the private key.
         /// <param name="commandLine">The command line.</param>
         private void VerifyLocalCertificate(CommandLine commandLine)
         {
+            // $todo(jeff.lill):
+            //
+            // Consider using the new [TlsCertificate.Validate()] method.  The only
+            // disadvantage of this method is that it doesn't output the error
+            // messages from the certificate tool.
+            //
+            // On the other hand, this code might become moot when we upgrade
+            // to use the built-in .NET X.509 classes.
+
             if (commandLine.Arguments.Length != 1)
             {
                 Console.Error.WriteLine("*** ERROR: Expected argument: PATH");
