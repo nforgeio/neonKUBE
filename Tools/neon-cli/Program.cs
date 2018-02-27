@@ -35,7 +35,7 @@ namespace NeonCli
         /// <summary>
         /// The <b>neon-cli</b> version.
         /// </summary>
-        public const string Version = "1.2.43";
+        public const string Version = "1.2.44";
 
         /// <summary>
         /// Program entry point.
