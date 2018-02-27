@@ -310,13 +310,17 @@ namespace Neon.Cluster
         public SshProxy<NodeDefinition> GetHealthyManager()
         {
             // Try sending up to three pings to each manager node in parallel
-            // and return the first manager that responds.
+            // to get a list of the health ones.  Then we'll return the first
+            // healthy manager from the list (as sorted by name).
+            //
+            // This will consistently return the first manager node by name
+            // if it's health, otherwise it will fail over to the next, etc.
 
             const int tryCount = 3;
 
-            var healthyManager = (SshProxy<NodeDefinition>)null;
-            var pingOptions    = new PingOptions(ttl: 32, dontFragment: true);
-            var pingTimeout    = TimeSpan.FromSeconds(1);
+            var healthyManagers = new List<SshProxy<NodeDefinition>>();
+            var pingOptions     = new PingOptions(ttl: 32, dontFragment: true);
+            var pingTimeout     = TimeSpan.FromSeconds(1);
 
             for (int i = 0; i < tryCount; i++)
             {
@@ -329,14 +333,17 @@ namespace Neon.Cluster
 
                             if (reply.Status == IPStatus.Success)
                             {
-                                healthyManager = manager;
+                                lock (healthyManagers)
+                                {
+                                    healthyManagers.Add(manager);
+                                }
                             }
                         }
                     });
 
-                if (healthyManager != null)
+                if (healthyManagers.Count > 0)
                 {
-                    return healthyManager;
+                    return healthyManagers.OrderBy(n => n.Name).First();
                 }
             }
 
