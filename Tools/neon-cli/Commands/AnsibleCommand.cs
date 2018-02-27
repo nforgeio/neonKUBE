@@ -1092,11 +1092,11 @@ MODULES:
         /// </summary>
         private void GenerateAnsibleConfig()
         {
-            // We're going to set the [IN_NEON_ANSIBLE_COMMAND=true] environment 
+            // We're going to set the [IN_NEON_ANSIBLE_COMMAND=1] environment 
             // variable so that built-in module code will be able to verify that
             // it's running in the context of another ansible command.
 
-            Environment.SetEnvironmentVariable("IN_NEON_ANSIBLE_COMMAND", "true");
+            Environment.SetEnvironmentVariable("IN_NEON_ANSIBLE_COMMAND", "1");
 
             // This is the default configuration installed by the Ansible package
             // with a few modifications.

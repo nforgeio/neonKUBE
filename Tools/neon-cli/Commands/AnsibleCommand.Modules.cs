@@ -36,14 +36,41 @@ namespace NeonCli
         // Private types
 
         /// <summary>
+        /// Enumerates the output verbosity levels.
+        /// </summary>
+        private enum Verbosity : int
+        {
+            /// <summary>
+            /// Always writes output.
+            /// </summary>
+            Important = 0,
+
+            /// <summary>
+            /// Writes information messages.
+            /// </summary>
+            Info = 1,
+
+            /// <summary>
+            /// Writes trace messages.
+            /// </summary>
+            Trace = 2
+        }
+
+        /// <summary>
         /// Standard Ansible module outputs.
         /// </summary>
         private class ModuleOutput
         {
-            private List<string> output = new List<string>();
-            private List<string> error  = new List<string>();
+            private List<string>    output = new List<string>();
+            private List<string>    error  = new List<string>();
 
-            // These values are describer here:
+            /// <summary>
+            /// The output verbosity.
+            /// </summary>
+            [JsonIgnore]
+            public Verbosity Verbosity { get; set; } = Verbosity.Important;
+
+            // These values are described here:
             //
             //      http://docs.ansible.com/ansible/latest/common_return_values.html
             //
@@ -138,10 +165,14 @@ namespace NeonCli
             /// <summary>
             /// Writes a line of text to the standard output lines.
             /// </summary>
+            /// <param name="verbosity">The verbosity level for this message.</param>
             /// <param name="value">The text to be written.</param>
-            public void WriteLine(string value = null)
+            public void WriteLine(Verbosity verbosity, string value = null)
             {
-                output.Add(value ?? string.Empty);
+                if (verbosity <= this.Verbosity)
+                {
+                    output.Add(value ?? string.Empty);
+                }
             }
 
             /// <summary>
@@ -240,6 +271,11 @@ namespace NeonCli
 
                 var args = JObject.Parse(File.ReadAllText(argsPath));
 
+                if (args.TryGetValue<int>("_ansible_verbosity", out var ansibleVerbosity))
+                {
+                    output.Verbosity = (Verbosity)ansibleVerbosity;
+                }
+
                 switch (module.ToLowerInvariant())
                 {
                     case "neon_certificate":
@@ -336,9 +372,9 @@ namespace NeonCli
         //
         // name         yes                                 neonCLUSTER certificate name
         //
-        // value        yes                                 public certificate plus any intermediate
+        // value        see comment                         public certificate, any intermediate
         //                                                  certificates and the private key in PEM 
-        //                                                  format
+        //                                                  format.  Required when [state=present]
         //
         // state        no          present     absent      indicates whether the certificate should
         //                                      present     be created or removed
@@ -394,10 +430,10 @@ namespace NeonCli
                 throw new ArgumentException("Access Denied: Vault root credentials are required.");
             }
 
-            var path = NeonClusterHelper.GetVaultCertificateKey(name);
+            var vaultPath = NeonClusterHelper.GetVaultCertificateKey(name);
 
-            output.WriteLine($"Vault: Certificate path is [{path}]");
-            output.WriteLine($"Vault: Opening Vault");
+            output.WriteLine(Verbosity.Trace, $"Vault: Certificate path is [{vaultPath}]");
+            output.WriteLine(Verbosity.Trace, $"Vault: Opening Vault");
 
             using (var vault = NeonClusterHelper.OpenVault(login.VaultCredentials.RootToken))
             {
@@ -405,20 +441,24 @@ namespace NeonCli
                 {
                     case "absent":
 
-                        output.WriteLine($"Vault: checking for [{name}] certificate");
+                        output.WriteLine(Verbosity.Trace, $"Vault: checking for [{name}] certificate");
 
-                        if (vault.ExistsAsync(path).Result)
+                        if (vault.ExistsAsync(vaultPath).Result)
                         {
-                            output.WriteLine($"Vault: [{name}] certificate exists");
-                            output.WriteLine($"Vault: Deleting [{name}]");
+                            output.WriteLine(Verbosity.Trace, $"Vault: [{name}] certificate exists");
+                            output.WriteLine(Verbosity.Trace, $"Vault: Deleting [{name}]");
 
-                            vault.DeleteAsync(path).Wait();
-                            output.WriteLine($"Vault: [{name}] certificate deleted");
+                            vault.DeleteAsync(vaultPath).Wait();
+                            output.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate deleted");
 
                             TouchCertChanged();
-                            output.WriteLine($"Consul: Signal the certificate change");
+                            output.WriteLine(Verbosity.Trace, $"Consul: Signal the certificate change");
 
                             output.Changed = true;
+                        }
+                        else
+                        {
+                            output.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does not exist");
                         }
                         break;
 
@@ -429,34 +469,34 @@ namespace NeonCli
                             throw new ArgumentException($"[value] module argument is required.");
                         }
 
-                        TlsCertificate.Validate(value);
-
                         var certificate = new TlsCertificate(value);    // This validates the certificate/private key
 
-                        output.WriteLine($"Vault: Reading [{name}]");
+                        certificate.Parse();
 
-                        var existingCert = vault.ReadJsonAsync<TlsCertificate>(path, noException: true).Result;
+                        output.WriteLine(Verbosity.Trace, $"Vault: Reading [{name}]");
+
+                        var existingCert = vault.ReadJsonAsync<TlsCertificate>(vaultPath, noException: true).Result;
 
                         if (existingCert == null)
                         {
-                            output.WriteLine($"Vault: [{name}] certificate does not exist");
+                            output.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does not exist");
                             output.Changed = true;
                         }
                         else if (!NeonHelper.JsonEquals(existingCert, certificate))
                         {
-                            output.WriteLine($"Vault: [{name}] certificate does exists but is different");
+                            output.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does exists but is different");
                             output.Changed = true;
                         }
                         else
                         {
-                            output.WriteLine($"Vault: [{name}] certificate is unchanged");
+                            output.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate is unchanged");
                         }
 
                         if (output.Changed)
                         {
-                            output.WriteLine($"Vault: Saving [{name}] certificate");
-                            vault.WriteJsonAsync(path, certificate).Wait();
-                            output.WriteLine($"Vault: [{name}] certificate saved");
+                            output.WriteLine(Verbosity.Trace, $"Vault: Saving [{name}] certificate");
+                            vault.WriteJsonAsync(vaultPath, certificate).Wait();
+                            output.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate saved");
                         }
 
                         break;
