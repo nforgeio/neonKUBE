@@ -76,7 +76,7 @@ OPTIONS:
 
             if (commandLine.Arguments.Length == 0)
             {
-                node = clusterLogin.Definition.SortedManagers.First();
+                node = NeonClusterHelper.Cluster.GetHealthyManager().Metadata;
             }
             else
             {
