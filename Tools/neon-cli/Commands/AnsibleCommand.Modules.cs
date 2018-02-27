@@ -18,6 +18,7 @@ using System.Threading.Tasks;
 using Consul;
 using Newtonsoft;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using ICSharpCode.SharpZipLib.Zip;
 
@@ -220,7 +221,21 @@ namespace NeonCli
                     throw new ArgumentException("Expected a path to the module arguments file.");
                 }
 
-                var args = ParseModuleArgs(argsPath);
+                // $todo(jeff.lill): DELETE THIS!
+
+                if (File.Exists("_args.json"))
+                {
+                    File.Delete("_args.json");
+                }
+
+                File.Copy(argsPath, Path.Combine(Environment.CurrentDirectory, "_args.json"));
+
+                //-------------------------------
+
+                var args = JObject.Parse(File.ReadAllText(argsPath));
+
+                //Console.WriteLine(output.ToString());
+                //return;
 
                 switch (module.ToLowerInvariant())
                 {
@@ -255,166 +270,6 @@ namespace NeonCli
             // Exit right now to be sure that nothing else is written to STDOUT.
 
             Program.Exit(0);
-        }
-
-        /// <summary>
-        /// Parses an Ansible module arguments file and returns a dictionary.
-        /// </summary>
-        /// <param name="argsPath">Path to the arguments.</param>
-        /// <returns>The argument dictionary.</returns>
-        private Dictionary<string, string> ParseModuleArgs(string argsPath)
-        {
-            var argsText = File.ReadAllText(argsPath);
-            var args     = new Dictionary<string, string>();
-            var pos      = 0;
-
-            // I haven't found a formal specification for the module argument
-            // file format.  Here are my observations from trying a few things:
-            //
-            //      * Arguments are simple NAME=VALUE strings terminated by a space.
-            //  
-            //      * VALUE is quoted with single quotes (') for embdedded spaces.
-            //
-            //      * Special characters like CR/LF are stripped from VALUE.
-            //
-            //      * Double quotes are escaped like you'd expect: \"
-            //
-            //      * Single quotes are escaped strangely: '\"'\"'
-
-            // $todo(jeff.lill):
-            //
-            // I'm not doing anything special for unicode characters, if these
-            // can be present in the argument values.  Investigate to see if
-            // this is something we need to support.
-
-            while (pos < argsText.Length)
-            {
-                // Skip over any spaces.
-
-                for (; pos < argsText.Length && argsText[pos] == ' '; pos++);
-
-                if (pos >= argsText.Length)
-                {
-                    // No more arguments.
-
-                    break;
-                }
-
-                // [pos] points to the first character of NAME.  Extract
-                // the name up to the "=" sign.
-
-                var posEquals = argsText.IndexOf('=', pos);
-
-                if (posEquals == -1)
-                {
-                    throw new ArgumentException($"Invalid module arguments: Missing [=] near position [{pos}].");
-                }
-
-                var name = argsText.Substring(pos, posEquals - pos);
-
-                if (name.Length == 0)
-                {
-                    throw new ArgumentException($"Invalid module arguments: Blank NAME near position [{pos}].");
-                }
-
-                pos = posEquals + 1;
-
-                // Parse the value.
-
-                string value;
-
-                if (pos == argsText.Length)
-                {
-                    // There was no terminating space (which we'll probably never
-                    // see in the wild), but we'll handle this anyway to be robust.
-
-                    value = string.Empty;
-                }
-                else if (argsText[pos] == '\'')
-                {
-                    // The value is surrounded by single quotes.  We'll need to
-                    // parse any embedded escapes.
-
-                    var sb        = new StringBuilder();
-                    var haveValue = false;
-
-                    pos++;
-                    while (!haveValue)
-                    {
-                        if (pos >= argsText.Length)
-                        {
-                            throw new ArgumentException($"Invalid module arguments: [{name}] is missing a closing single quote.");
-                        }
-
-                        var ch = argsText[pos++];
-
-                        switch (ch)
-                        {
-                            case '\'':  // This is the closing quote.
-
-                                haveValue = true;
-                                break;
-
-                            case '\\':
-
-                                // We have an escaped character.  I'm going to hardcode this
-                                // to handle just these two cases:
-                                //
-                                //      \"          = " (double quote)
-                                //      '\"'\"'     = ' (single quote)
-                                //
-                                // since these appear to be the only characters Ansible escapes.
-
-                                const string escapedSingleQuote = "'\\\"'\\\"'";
-
-                                if (argsText[pos] == '"')
-                                {
-                                    sb.Append('"');
-                                    pos++;
-                                }
-                                else if (argsText.IndexOf(escapedSingleQuote, pos) == pos)
-                                {
-                                    sb.Append('\'');
-                                    pos += escapedSingleQuote.Length;
-                                }
-                                else
-                                {
-                                    throw new ArgumentException($"Invalid module arguments: [{name}] has an unexpected escape sequence.");
-                                }
-                                break;
-
-                            default:
-
-                                sb.Append(ch);
-                                break;
-                        }
-                    }
-
-                    value = sb.ToString();
-                }
-                else
-                {
-                    // The value is not quoted so we'll just parse the value up 
-                    // to the next space (or EOF).
-
-                    var posSpace = argsText.IndexOf(' ', pos);
-
-                    if (posSpace == -1)
-                    {
-                        value = argsText.Substring(pos);
-                        pos   = argsText.Length;
-                    }
-                    else
-                    {
-                        value = argsText.Substring(pos, posSpace - pos);
-                        pos   = posSpace + 1;
-                    }
-                }
-
-                args[name] = value;
-            }
-
-            return args;
         }
 
         /// <summary>
@@ -494,13 +349,14 @@ namespace NeonCli
         /// <param name="login">The cluster login.</param>
         /// <param name="args">The module arguments dictionary.</param>
         /// <returns>The <see cref="ModuleOutput"/>.</returns>
-        private ModuleOutput ImplementCertificateModule(ClusterLogin login, Dictionary<string, string> args)
+        private ModuleOutput ImplementCertificateModule(ClusterLogin login, JObject args)
         {
             var output = new ModuleOutput();
 
-            // Parse the arguments.
+            //-------------------------------
+            // Get the arguments.
 
-            if (!args.TryGetValue("name", out var name))
+            if (!args.TryGetValue<string>("name", out var name))
             {
                 throw new ArgumentException($"[name] module argument is required.");
             }
@@ -510,7 +366,7 @@ namespace NeonCli
                 throw new ArgumentException($"[name={name}] is not a valid certificate name.");
             }
 
-            if (!args.TryGetValue("value", out var value))
+            if (!args.TryGetValue<string>("value", out var value))
             {
                 throw new ArgumentException($"[value] module argument is required.");
             }
@@ -519,21 +375,21 @@ namespace NeonCli
 
             var certificate = new TlsCertificate(value);    // This validates the certificate/private key
 
-            if (!args.TryGetValue("state", out var state))
+            if (!args.TryGetValue<string>("state", out var state))
             {
                 state = "present";
             }
 
             state = state.ToLowerInvariant();
 
-            if (!args.TryGetValue("force", out var forceArg))
+            if (!args.TryGetValue<string>("force", out var forceArg))
             {
                 forceArg = "false";
             }
 
             var force = ToBool(forceArg);
 
-            // We have the arguments so perform the operation.
+            // We have the required arguments, so perform the operation.
 
             if (login.VaultCredentials == null || string.IsNullOrEmpty(login.VaultCredentials.RootToken))
             {
@@ -610,9 +466,9 @@ namespace NeonCli
         /// Implements the built-in <b>neon_route</b> module.
         /// </summary>
         /// <param name="login">The cluster login.</param>
-        /// <param name="args">The module argument dictionary.</param>
+        /// <param name="args">The module arguments as JSON.</param>
         /// <returns>The <see cref="ModuleOutput"/>.</returns>
-        private ModuleOutput ImplementRouteModule(ClusterLogin login, Dictionary<string, string> args)
+        private ModuleOutput ImplementRouteModule(ClusterLogin login, JObject args)
         {
             throw new NotImplementedException();
         }
