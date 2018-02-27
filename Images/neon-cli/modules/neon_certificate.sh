@@ -7,4 +7,4 @@
 WANT_JSON=yes
 
 # Invoke the module as a [neon-cli] command.
-neon ansible module --action neon_certificate $@
+neon ansible module neon_certificate $@

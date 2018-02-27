@@ -192,7 +192,8 @@ namespace NeonCli
         /// <param name="commandLine">The module command line: MODULE ARGS...</param>
         private void ExecuteModule(ClusterLogin login, CommandLine commandLine)
         {
-            var module = commandLine.Arguments.ElementAtOrDefault(0);
+            var module   = commandLine.Arguments.ElementAtOrDefault(0);
+            var isAction = commandLine.HasOption("--action");
 
             if (commandLine.HasHelpOption || module == null)
             {
@@ -241,12 +242,12 @@ namespace NeonCli
                 {
                     case "neon_certificate":
 
-                        output = ImplementCertificateModule(login, args);
+                        output = ImplementCertificateModule(login, isAction, args);
                         break;
 
                     case "neon_route":
 
-                        output = ImplementRouteModule(login, args);
+                        output = ImplementRouteModule(login, isAction, args);
                         break;
 
                     default:
@@ -347,9 +348,10 @@ namespace NeonCli
         /// Implements the built-in <b>neon_certificate</b> module.
         /// </summary>
         /// <param name="login">The cluster login.</param>
+        /// <param name="isAction">Indicates that the module is being executed as an <b>action plugin</b>.</param>
         /// <param name="args">The module arguments dictionary.</param>
         /// <returns>The <see cref="ModuleOutput"/>.</returns>
-        private ModuleOutput ImplementCertificateModule(ClusterLogin login, JObject args)
+        private ModuleOutput ImplementCertificateModule(ClusterLogin login, bool isAction, JObject args)
         {
             var output = new ModuleOutput();
 
@@ -466,9 +468,10 @@ namespace NeonCli
         /// Implements the built-in <b>neon_route</b> module.
         /// </summary>
         /// <param name="login">The cluster login.</param>
+        /// <param name="isAction">Indicates that the module is being executed as an <b>action plugin</b>.</param>
         /// <param name="args">The module arguments as JSON.</param>
         /// <returns>The <see cref="ModuleOutput"/>.</returns>
-        private ModuleOutput ImplementRouteModule(ClusterLogin login, JObject args)
+        private ModuleOutput ImplementRouteModule(ClusterLogin login, bool isAction, JObject args)
         {
             throw new NotImplementedException();
         }

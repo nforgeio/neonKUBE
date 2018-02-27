@@ -76,6 +76,7 @@
     </None>
     <None Include="golang\publish.ps1" />
     <None Include="golang\README.md" />
+    <None Include="neon-cli\modules\neon_certificate.sh" />
     <None Include="neon-cluster-manager\build.ps1" />
     <None Include="neon-cluster-manager\docker-entrypoint.sh" />
     <None Include="neon-cluster-manager\Dockerfile">
