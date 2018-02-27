@@ -208,7 +208,7 @@ namespace NeonCli
                 // Verify that we're running in the context of another Ansible
                 // command (probably [exec] or [play]).
 
-                if (Environment.GetEnvironmentVariable("NEON_ANSIBLE_INITIALIZED") == null)
+                if (Environment.GetEnvironmentVariable("IN_NEON_ANSIBLE_COMMAND") == null)
                 {
                     throw new NotSupportedException("Built-in neonCLUSTER Ansible modules can run only within [neon ansible exec] or [play].");
                 }
@@ -222,6 +222,11 @@ namespace NeonCli
                     throw new ArgumentException("Expected a path to the module arguments file.");
                 }
 
+                // Connect to the cluster so the NeonClusterHelper methods will work.
+
+                NeonClusterHelper.OpenCluster(login);
+
+                //-------------------------------
                 // $todo(jeff.lill): DELETE THIS!
 
                 if (File.Exists("_args.json"))
@@ -235,19 +240,16 @@ namespace NeonCli
 
                 var args = JObject.Parse(File.ReadAllText(argsPath));
 
-                //Console.WriteLine(output.ToString());
-                //return;
-
                 switch (module.ToLowerInvariant())
                 {
                     case "neon_certificate":
 
-                        output = ImplementCertificateModule(login, isAction, args);
+                        ImplementCertificateModule(output, login, isAction, args);
                         break;
 
                     case "neon_route":
 
-                        output = ImplementRouteModule(login, isAction, args);
+                        ImplementRouteModule(output, login, isAction, args);
                         break;
 
                     default:
@@ -347,16 +349,19 @@ namespace NeonCli
         /// <summary>
         /// Implements the built-in <b>neon_certificate</b> module.
         /// </summary>
+        /// <param name="output">The module outputm object.</param>
         /// <param name="login">The cluster login.</param>
         /// <param name="isAction">Indicates that the module is being executed as an <b>action plugin</b>.</param>
         /// <param name="args">The module arguments dictionary.</param>
-        /// <returns>The <see cref="ModuleOutput"/>.</returns>
-        private ModuleOutput ImplementCertificateModule(ClusterLogin login, bool isAction, JObject args)
+        private void ImplementCertificateModule(ModuleOutput output, ClusterLogin login, bool isAction, JObject args)
         {
-            var output = new ModuleOutput();
-
             //-------------------------------
-            // Get the arguments.
+            // Get the common arguments.
+
+            if (!args.TryGetValue<int>("_ansible_verbosity", out var verbosity) || verbosity < 0)
+            {
+                verbosity = 0;
+            }
 
             if (!args.TryGetValue<string>("name", out var name))
             {
@@ -367,15 +372,6 @@ namespace NeonCli
             {
                 throw new ArgumentException($"[name={name}] is not a valid certificate name.");
             }
-
-            if (!args.TryGetValue<string>("value", out var value))
-            {
-                throw new ArgumentException($"[value] module argument is required.");
-            }
-
-            TlsCertificate.Validate(value);
-
-            var certificate = new TlsCertificate(value);    // This validates the certificate/private key
 
             if (!args.TryGetValue<string>("state", out var state))
             {
@@ -400,7 +396,8 @@ namespace NeonCli
 
             var path = NeonClusterHelper.GetVaultCertificateKey(name);
 
-            output.WriteLine($"Vault: vertificate path is [{path}]");
+            output.WriteLine($"Vault: Certificate path is [{path}]");
+            output.WriteLine($"Vault: Opening Vault");
 
             using (var vault = NeonClusterHelper.OpenVault(login.VaultCredentials.RootToken))
             {
@@ -419,13 +416,22 @@ namespace NeonCli
                             output.WriteLine($"Vault: [{name}] certificate deleted");
 
                             TouchCertChanged();
-                            output.WriteLine($"Consul: Indicate certificate change.");
+                            output.WriteLine($"Consul: Signal the certificate change");
 
                             output.Changed = true;
                         }
                         break;
 
                     case "present":
+
+                        if (!args.TryGetValue<string>("value", out var value))
+                        {
+                            throw new ArgumentException($"[value] module argument is required.");
+                        }
+
+                        TlsCertificate.Validate(value);
+
+                        var certificate = new TlsCertificate(value);    // This validates the certificate/private key
 
                         output.WriteLine($"Vault: Reading [{name}]");
 
@@ -460,18 +466,16 @@ namespace NeonCli
                         throw new ArgumentException($"[state={state}] is not a valid choice.");
                 }
             }
-
-            return output;
         }
 
         /// <summary>
         /// Implements the built-in <b>neon_route</b> module.
         /// </summary>
+        /// <param name="output">The module outputm object.</param>
         /// <param name="login">The cluster login.</param>
         /// <param name="isAction">Indicates that the module is being executed as an <b>action plugin</b>.</param>
         /// <param name="args">The module arguments as JSON.</param>
-        /// <returns>The <see cref="ModuleOutput"/>.</returns>
-        private ModuleOutput ImplementRouteModule(ClusterLogin login, bool isAction, JObject args)
+        private void ImplementRouteModule(ModuleOutput output, ClusterLogin login, bool isAction, JObject args)
         {
             throw new NotImplementedException();
         }
