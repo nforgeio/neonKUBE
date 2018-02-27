@@ -65,15 +65,24 @@ RUN echo ** NEW LAYER **
 COPY bin/__app              /usr/bin/$APPNAME.dotnet/
 COPY docker-entrypoint.sh   /
 COPY conf/ssh_config.conf   /etc/ssh/ssh_config
+COPY action-plugins/*       /usr/share/ansible_plugins/action_plugins/
 COPY modules/*              /usr/share/ansible/plugins/modules/
+
+# External Ansible modules.  Both of these have pull requests pending to
+# have them built-in to Ansible.
+#
+# https://github.com/dariko/ansible-module-docker_stack
+# https://github.com/dariko/ansible/tree/ansible-modules-core/pull/5547/lib/ansible/modules/cloud/docker
+
+# The Docker 
 
 RUN chmod 700 /docker-entrypoint.sh \
     && chmod 666 /etc/ssh/ssh_config \
     && echo "#!/bin/bash" > /usr/bin/$APPNAME \ 
     && echo "dotnet /usr/bin/$APPNAME.dotnet/$APPNAME.dll \"\$@\"" >> /usr/bin/$APPNAME \
     && chmod 770 /usr/bin/$APPNAME \
-    && find /usr/share/ansible/plugins/modules -type f -name '*.sh' | while read f; do mv "$f" "${f%%.*}"; done \
-    && chmod 770 /usr/share/ansible/plugins/modules/*
+    && find /usr/share/ansible_plugins/action_plugins -type f -name '*.sh' | while read f; do mv "$f" "${f%%.*}"; done \
+    && chmod 770 /usr/share/ansible_plugins/action_plugins/*
 
 # NOTE: The second to the last line above renames the Ansible module
 #       Bash scripts by stripping off the [.sh] extension.  These
