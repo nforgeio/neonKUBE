@@ -247,7 +247,7 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
             Program.LogPath = null;
 
@@ -272,7 +272,7 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
                 shim.ReplaceItem(fileArg, "@" + shimFile);
             }
 
-            return new ShimInfo(isShimmed: true, ensureConnection: true);
+            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
         }
     }
 }

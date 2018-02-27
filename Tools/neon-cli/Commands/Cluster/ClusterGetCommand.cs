@@ -168,9 +168,9 @@ NODE IDENTIFIERS:
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new ShimInfo(isShimmed: false, ensureConnection: true);
+            return new DockerShimInfo(isShimmed: false, ensureConnection: true);
         }
     }
 }

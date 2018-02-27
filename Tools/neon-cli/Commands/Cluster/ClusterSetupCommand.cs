@@ -429,7 +429,7 @@ OPTIONS:
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
             var commandLine = shim.CommandLine.Shift(Words.Length);
 
@@ -437,7 +437,7 @@ OPTIONS:
             {
                 // We'll run the command in [--no-tool-container] mode for this option.
 
-                return new ShimInfo(isShimmed: false);
+                return new DockerShimInfo(isShimmed: false);
             }
 
             if (Program.ClusterLogin != null)
@@ -560,7 +560,7 @@ OPTIONS:
                     }
                 });
 
-            return new ShimInfo(isShimmed: true, ensureConnection: false);
+            return new DockerShimInfo(isShimmed: true, ensureConnection: false);
         }
 
         /// <summary>

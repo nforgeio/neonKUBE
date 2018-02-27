@@ -288,7 +288,7 @@ does this on the first manager node:
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
             // We need to copy any of the files referenced by [--script]
             // [--text] and/or [--data] options to the shim directory.
@@ -317,7 +317,7 @@ does this on the first manager node:
                 }
             }
 
-            return new ShimInfo(isShimmed: true, ensureConnection: true);
+            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
         }
     }
 }

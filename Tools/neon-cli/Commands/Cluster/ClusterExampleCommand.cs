@@ -882,9 +882,9 @@ USAGE:
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new ShimInfo(isShimmed: true);
+            return new DockerShimInfo(isShimmed: true);
         }
     }
 }

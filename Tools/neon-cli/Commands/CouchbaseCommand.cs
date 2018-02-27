@@ -306,14 +306,14 @@ COMMANDS:
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
             // $todo(jeff.lill): 
             //
             // I suppose this should be shimmed to be consistent with the
             // other commands that are, but it's not that important.
 
-            return new ShimInfo(isShimmed: false, ensureConnection: true);
+            return new DockerShimInfo(isShimmed: false, ensureConnection: true);
         }
     }
 }

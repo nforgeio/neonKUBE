@@ -921,7 +921,7 @@ MODULES:
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
             // For the Ansible Vault commands, we're going to map the directory
             // containing the target file into the container as the current working
@@ -1014,7 +1014,7 @@ MODULES:
 
             if (shim.CommandLine.Arguments.ElementAtOrDefault(1) == "password")
             {
-                return new ShimInfo(isShimmed: false, ensureConnection: false);
+                return new DockerShimInfo(isShimmed: false, ensureConnection: false);
             }
 
             // For the [config] command, we're going to shim the folder
@@ -1059,7 +1059,7 @@ MODULES:
                     break;
             }
 
-            return new ShimInfo(isShimmed: true, ensureConnection: ensureConnection);
+            return new DockerShimInfo(isShimmed: true, ensureConnection: ensureConnection);
         }
 
         /// <summary>

@@ -459,7 +459,7 @@ See the documentation for more proxy route and setting details.
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
             var commandLine = shim.CommandLine;
 
@@ -479,7 +479,7 @@ See the documentation for more proxy route and setting details.
                 }
             }
 
-            return new ShimInfo(isShimmed: true, ensureConnection: true);
+            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
         }
     }
 }

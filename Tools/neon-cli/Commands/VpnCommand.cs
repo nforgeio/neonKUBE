@@ -251,7 +251,7 @@ USAGE:
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
             var commandLine = shim.CommandLine;
 
@@ -291,7 +291,7 @@ USAGE:
                         }
                     });
 
-                return new ShimInfo(isShimmed: true);
+                return new DockerShimInfo(isShimmed: true);
             }
 
             // Shim command: neon vpn cert user create USER
@@ -322,14 +322,14 @@ USAGE:
                         }
                     });
 
-                return new ShimInfo(isShimmed: true);
+                return new DockerShimInfo(isShimmed: true);
             }
 
             // Shim command: neon vpn user revoke [--restart-vpn] THUMBPRINT
             //
             // No special actions required.
 
-            return new ShimInfo(isShimmed: true);
+            return new DockerShimInfo(isShimmed: true);
         }
 
         /// <summary>

@@ -105,9 +105,9 @@ names are reserved for use as dashboard commands:
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new ShimInfo(isShimmed: false);
+            return new DockerShimInfo(isShimmed: false);
         }
     }
 }

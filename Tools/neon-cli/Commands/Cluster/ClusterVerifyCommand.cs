@@ -68,11 +68,11 @@ ARGUMENTS:
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
             shim.AddFile(shim.CommandLine.Arguments.LastOrDefault());
 
-            return new ShimInfo(isShimmed: true);
+            return new DockerShimInfo(isShimmed: true);
         }
     }
 }

@@ -91,7 +91,7 @@ namespace NeonCli
         /// container and then executed there.
         /// </summary>
         /// <returns>
-        /// A <see cref="ShimInfo"/> that indicates whether the command should be shimmed
+        /// A <see cref="DockerShimInfo"/> that indicates whether the command should be shimmed
         /// and also whether the cluster should be connected before executing the command
         /// in the <b>neon-cli</b> container.
         /// </returns>
@@ -105,7 +105,7 @@ namespace NeonCli
         /// Commands that need no special handling may simply leave the shim unchanged.
         /// </para>
         /// </remarks>
-        ShimInfo Shim(DockerShim shim);
+        DockerShimInfo Shim(DockerShim shim);
     }
 
     [ContractClassFor(typeof(ICommand))]
@@ -132,7 +132,7 @@ namespace NeonCli
             Covenant.Requires<ArgumentNullException>(commandLine != null);
         }
 
-        public ShimInfo Shim(DockerShim shim)
+        public DockerShimInfo Shim(DockerShim shim)
         {
             Covenant.Requires<ArgumentNullException>(shim != null);
             return null;

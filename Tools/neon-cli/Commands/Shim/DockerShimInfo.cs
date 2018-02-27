@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ShimInfo.cs
+// FILE:	    DockerShimInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -22,7 +22,7 @@ namespace NeonCli
     /// with information about whether and how to shim a command to the <b>neon-cli</b>
     /// container.
     /// </summary>
-    public class ShimInfo
+    public class DockerShimInfo
     {
         /// <summary>
         /// Constructor.
@@ -33,7 +33,7 @@ namespace NeonCli
         /// (if enabled) before the command is executed in a <b>neon-cli</b>
         /// container.  This defaults to <c>false</c>.
         /// </param>
-        public ShimInfo(bool isShimmed, bool ensureConnection = false)
+        public DockerShimInfo(bool isShimmed, bool ensureConnection = false)
         {
             this.IsShimmed        = isShimmed;
             this.EnsureConnection = ensureConnection;

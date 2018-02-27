@@ -547,7 +547,7 @@ NOTE: The following Vault commands are not supported:
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
             Program.LogPath = null;
 
@@ -602,7 +602,7 @@ NOTE: The following Vault commands are not supported:
                 }
             }
 
-            return new ShimInfo(isShimmed: true, ensureConnection: true);
+            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
         }
     }
 }

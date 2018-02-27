@@ -297,7 +297,7 @@ the [neon exec] command.
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
             Program.LogPath = null;
 
@@ -309,7 +309,7 @@ the [neon exec] command.
 
             if (leftCommandLine.HasOption("--no-upload"))
             {
-                return new ShimInfo(isShimmed: true);
+                return new DockerShimInfo(isShimmed: true);
             }
 
             var arg1 = rightCommandLine.Arguments.FirstOrDefault();
@@ -338,7 +338,7 @@ the [neon exec] command.
 
                         if (path == null)
                         {
-                            return new ShimInfo(isShimmed: true, ensureConnection: true);   // This is an error but we'll let Docker report it.
+                            return new DockerShimInfo(isShimmed: true, ensureConnection: true);   // This is an error but we'll let Docker report it.
                         }
 
                         if (path == "-")
@@ -353,7 +353,7 @@ the [neon exec] command.
                     break;
             }
 
-            return new ShimInfo(isShimmed: true, ensureConnection: true);
+            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
         }
 
         /// <summary>

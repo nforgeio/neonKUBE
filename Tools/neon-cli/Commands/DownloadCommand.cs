@@ -119,7 +119,7 @@ ARGUMENTS:
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
             var commandLine = shim.CommandLine;
 
@@ -145,7 +145,7 @@ ARGUMENTS:
                     });
             }
 
-            return new ShimInfo(isShimmed: true, ensureConnection: true);
+            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
         }
     }
 }

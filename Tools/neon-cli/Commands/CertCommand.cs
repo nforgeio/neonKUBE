@@ -367,7 +367,7 @@ certificates, and then finally the private key.
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
             var commandLine = shim.CommandLine;
             var command     = commandLine.Arguments.ElementAtOrDefault(1);
@@ -379,7 +379,7 @@ certificates, and then finally the private key.
                 case "join":
                 case "split":
 
-                    return new ShimInfo(isShimmed: false);
+                    return new DockerShimInfo(isShimmed: false);
 
                 case "put":
 
@@ -388,7 +388,7 @@ certificates, and then finally the private key.
                         shim.AddFile(commandLine.Arguments[3]);
                     }
 
-                    return new ShimInfo(isShimmed: true, ensureConnection: true);
+                    return new DockerShimInfo(isShimmed: true, ensureConnection: true);
 
                 case "verify":
 
@@ -397,7 +397,7 @@ certificates, and then finally the private key.
                         shim.AddFile(path);
                     }
 
-                    return new ShimInfo(isShimmed: true, ensureConnection: true);
+                    return new DockerShimInfo(isShimmed: true, ensureConnection: true);
 
                 // These commands can be run in Docker without modification.
 
@@ -406,7 +406,7 @@ certificates, and then finally the private key.
                 case "list":
                 default:
 
-                    return new ShimInfo(isShimmed: true, ensureConnection: true);
+                    return new DockerShimInfo(isShimmed: true, ensureConnection: true);
             }
         }
 

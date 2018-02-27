@@ -188,11 +188,11 @@ ARGUMENTS:
         }
 
         /// <inheritdoc/>
-        public override ShimInfo Shim(DockerShim shim)
+        public override DockerShimInfo Shim(DockerShim shim)
         {
             // This command cannot be executed within the [neon-cli] container.
 
-            return new ShimInfo(isShimmed: false, ensureConnection: true);
+            return new DockerShimInfo(isShimmed: false, ensureConnection: true);
         }
     }
 }
