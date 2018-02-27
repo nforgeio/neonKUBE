@@ -57,9 +57,9 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Standard Ansible module outputs.
+        /// Module execution state.
         /// </summary>
-        private class ModuleOutput
+        private class ModuleContext
         {
             private List<string>    output = new List<string>();
             private List<string>    error  = new List<string>();
@@ -70,7 +70,40 @@ namespace NeonCli
             [JsonIgnore]
             public Verbosity Verbosity { get; set; } = Verbosity.Important;
 
-            // These values are described here:
+            /// <summary>
+            /// The Ansible module arguments.
+            /// </summary>
+            [JsonIgnore]
+            public JObject Arguments { get; set; }
+
+            /// <summary>
+            /// Indicates whether the module is being executed as an Ansible action plugin.
+            /// </summary>
+            [JsonIgnore]
+            public bool IsAction { get; set; }
+
+            /// <summary>
+            /// Indicates whether the model is being executed in Ansible <b>check mode</b>.
+            /// </summary>
+            [JsonIgnore]
+            public bool CheckMode { get; set; }
+
+            /// <summary>
+            /// Initializes the Ansible module arguments.
+            /// </summary>
+            /// <param name="argsPath">Path to the Ansible arguments file.</param>
+            public void SetArguments(string argsPath)
+            {
+                Arguments = JObject.Parse(File.ReadAllText(argsPath));
+
+                if (Arguments.TryGetValue<int>("_ansible_verbosity", out var ansibleVerbosity))
+                {
+                    this.Verbosity = (Verbosity)ansibleVerbosity;
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // These standard output fields are described here:
             //
             //      http://docs.ansible.com/ansible/latest/common_return_values.html
             //
@@ -119,7 +152,7 @@ namespace NeonCli
             /// </summary>
             [JsonProperty(PropertyName = "results", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
             [DefaultValue(null)]
-            public List<ModuleOutput> Results { get; set; } = null;
+            public List<ModuleContext> Results { get; set; } = null;
 
             /// <summary>
             /// A boolean that indicates if the task was skipped or not.
@@ -232,7 +265,7 @@ namespace NeonCli
                 Program.Exit(0);
             }
 
-            var output = new ModuleOutput();
+            var context = new ModuleContext();
 
             try
             {
@@ -244,7 +277,7 @@ namespace NeonCli
                     throw new NotSupportedException("Built-in neonCLUSTER Ansible modules can run only within [neon ansible exec] or [play].");
                 }
 
-                // Identify the target module.
+                // Read the Ansible module arguments.
 
                 var argsPath = commandLine.Arguments.ElementAtOrDefault(1);
 
@@ -252,6 +285,9 @@ namespace NeonCli
                 {
                     throw new ArgumentException("Expected a path to the module arguments file.");
                 }
+
+                context.IsAction = isAction;
+                context.SetArguments(argsPath);
 
                 // Connect to the cluster so the NeonClusterHelper methods will work.
 
@@ -269,23 +305,16 @@ namespace NeonCli
 
                 //-------------------------------
 
-                var args = JObject.Parse(File.ReadAllText(argsPath));
-
-                if (args.TryGetValue<int>("_ansible_verbosity", out var ansibleVerbosity))
-                {
-                    output.Verbosity = (Verbosity)ansibleVerbosity;
-                }
-
                 switch (module.ToLowerInvariant())
                 {
                     case "neon_certificate":
 
-                        ImplementCertificateModule(output, login, isAction, args);
+                        ImplementCertificateModule(context, login);
                         break;
 
                     case "neon_route":
 
-                        ImplementRouteModule(output, login, isAction, args);
+                        ImplementRouteModule(context, login);
                         break;
 
                     default:
@@ -295,16 +324,16 @@ namespace NeonCli
             }
             catch (Exception e)
             {
-                if (output == null)
+                if (context == null)
                 {
-                    output = new ModuleOutput();
+                    context = new ModuleContext();
                 }
 
-                output.Failed  = true;
-                output.Message = e.Message;
+                context.Failed  = true;
+                context.Message = e.Message;
             }
 
-            Console.WriteLine(output.ToString());
+            Console.WriteLine(context.ToString());
 
             // Exit right now to be sure that nothing else is written to STDOUT.
 
@@ -385,21 +414,19 @@ namespace NeonCli
         /// <summary>
         /// Implements the built-in <b>neon_certificate</b> module.
         /// </summary>
-        /// <param name="output">The module outputm object.</param>
+        /// <param name="context">The module execution context.</param>
         /// <param name="login">The cluster login.</param>
-        /// <param name="isAction">Indicates that the module is being executed as an <b>action plugin</b>.</param>
-        /// <param name="args">The module arguments dictionary.</param>
-        private void ImplementCertificateModule(ModuleOutput output, ClusterLogin login, bool isAction, JObject args)
+        private void ImplementCertificateModule(ModuleContext context, ClusterLogin login)
         {
             //-------------------------------
             // Get the common arguments.
 
-            if (!args.TryGetValue<int>("_ansible_verbosity", out var verbosity) || verbosity < 0)
+            if (!context.Arguments.TryGetValue<int>("_ansible_verbosity", out var verbosity) || verbosity < 0)
             {
                 verbosity = 0;
             }
 
-            if (!args.TryGetValue<string>("name", out var name))
+            if (!context.Arguments.TryGetValue<string>("name", out var name))
             {
                 throw new ArgumentException($"[name] module argument is required.");
             }
@@ -409,14 +436,14 @@ namespace NeonCli
                 throw new ArgumentException($"[name={name}] is not a valid certificate name.");
             }
 
-            if (!args.TryGetValue<string>("state", out var state))
+            if (!context.Arguments.TryGetValue<string>("state", out var state))
             {
                 state = "present";
             }
 
             state = state.ToLowerInvariant();
 
-            if (!args.TryGetValue<string>("force", out var forceArg))
+            if (!context.Arguments.TryGetValue<string>("force", out var forceArg))
             {
                 forceArg = "false";
             }
@@ -432,8 +459,8 @@ namespace NeonCli
 
             var vaultPath = NeonClusterHelper.GetVaultCertificateKey(name);
 
-            output.WriteLine(Verbosity.Trace, $"Vault: Certificate path is [{vaultPath}]");
-            output.WriteLine(Verbosity.Trace, $"Vault: Opening Vault");
+            context.WriteLine(Verbosity.Trace, $"Vault: Certificate path is [{vaultPath}]");
+            context.WriteLine(Verbosity.Trace, $"Vault: Opening Vault");
 
             using (var vault = NeonClusterHelper.OpenVault(login.VaultCredentials.RootToken))
             {
@@ -441,30 +468,33 @@ namespace NeonCli
                 {
                     case "absent":
 
-                        output.WriteLine(Verbosity.Trace, $"Vault: checking for [{name}] certificate");
+                        context.WriteLine(Verbosity.Trace, $"Vault: checking for [{name}] certificate");
 
                         if (vault.ExistsAsync(vaultPath).Result)
                         {
-                            output.WriteLine(Verbosity.Trace, $"Vault: [{name}] certificate exists");
-                            output.WriteLine(Verbosity.Trace, $"Vault: Deleting [{name}]");
+                            context.WriteLine(Verbosity.Trace, $"Vault: [{name}] certificate exists");
+                            context.WriteLine(Verbosity.Trace, $"Vault: Deleting [{name}]");
 
-                            vault.DeleteAsync(vaultPath).Wait();
-                            output.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate deleted");
+                            if (!context.CheckMode)
+                            {
+                                vault.DeleteAsync(vaultPath).Wait();
+                                context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate deleted");
 
-                            TouchCertChanged();
-                            output.WriteLine(Verbosity.Trace, $"Consul: Signal the certificate change");
+                                TouchCertChanged();
+                                context.WriteLine(Verbosity.Trace, $"Consul: Signal the certificate change");
+                            }
 
-                            output.Changed = true;
+                            context.Changed = true;
                         }
                         else
                         {
-                            output.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does not exist");
+                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does not exist");
                         }
                         break;
 
                     case "present":
 
-                        if (!args.TryGetValue<string>("value", out var value))
+                        if (!context.Arguments.TryGetValue<string>("value", out var value))
                         {
                             throw new ArgumentException($"[value] module argument is required.");
                         }
@@ -473,30 +503,30 @@ namespace NeonCli
 
                         certificate.Parse();
 
-                        output.WriteLine(Verbosity.Trace, $"Vault: Reading [{name}]");
+                        context.WriteLine(Verbosity.Trace, $"Vault: Reading [{name}]");
 
                         var existingCert = vault.ReadJsonAsync<TlsCertificate>(vaultPath, noException: true).Result;
 
                         if (existingCert == null)
                         {
-                            output.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does not exist");
-                            output.Changed = true;
+                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does not exist");
+                            context.Changed = true;
                         }
                         else if (!NeonHelper.JsonEquals(existingCert, certificate))
                         {
-                            output.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does exists but is different");
-                            output.Changed = true;
+                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does exists but is different");
+                            context.Changed = true;
                         }
                         else
                         {
-                            output.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate is unchanged");
+                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate is unchanged");
                         }
 
-                        if (output.Changed)
+                        if (context.Changed && !context.CheckMode)
                         {
-                            output.WriteLine(Verbosity.Trace, $"Vault: Saving [{name}] certificate");
+                            context.WriteLine(Verbosity.Trace, $"Vault: Saving [{name}] certificate");
                             vault.WriteJsonAsync(vaultPath, certificate).Wait();
-                            output.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate saved");
+                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate saved");
                         }
 
                         break;
@@ -511,11 +541,9 @@ namespace NeonCli
         /// <summary>
         /// Implements the built-in <b>neon_route</b> module.
         /// </summary>
-        /// <param name="output">The module outputm object.</param>
+        /// <param name="context">The module outputm object.</param>
         /// <param name="login">The cluster login.</param>
-        /// <param name="isAction">Indicates that the module is being executed as an <b>action plugin</b>.</param>
-        /// <param name="args">The module arguments as JSON.</param>
-        private void ImplementRouteModule(ModuleOutput output, ClusterLogin login, bool isAction, JObject args)
+        private void ImplementRouteModule(ModuleContext context, ClusterLogin login)
         {
             throw new NotImplementedException();
         }
