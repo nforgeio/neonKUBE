@@ -202,6 +202,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The <see cref="VaultStatus"/>.</returns>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
         public async Task<VaultStatus> GetHealthAsync(CancellationToken cancellationToken = default)
         {
             // We need to make an unsafe call because Vault will return [503-Service Unavailable] when not 
@@ -234,6 +235,7 @@ namespace Neon.Cluster
         /// <param name="credentials">The Vault credentials.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
         public async Task UnsealAsync(VaultCredentials credentials, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(credentials != null);
@@ -252,6 +254,7 @@ namespace Neon.Cluster
         /// <param name="path">The object path.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns><c>true</c> if the object exists.</returns>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
         public async Task<bool> ExistsAsync(string path, CancellationToken cancellationToken = default)
         {
             try
@@ -260,14 +263,9 @@ namespace Neon.Cluster
 
                 return true;
             }
-            catch (HttpException e)
+            catch (KeyNotFoundException)
             {
-                if (e.StatusCode == HttpStatusCode.NotFound)
-                {
-                    return false;
-                }
-
-                throw;
+                return false;
             }
         }
 
@@ -281,7 +279,11 @@ namespace Neon.Cluster
         /// </param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The result as a <c>dynamic</c> object.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown if no object is present at <paramref name="path"/>.</exception>
+        /// <exception cref="KeyNotFoundException">
+        /// Thrown if no object is present at <paramref name="path"/> and 
+        /// <paramref name="noException"/>=<c>false</c>.
+        /// </exception>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
         public async Task<dynamic> ReadDynamicAsync(string path, bool noException = false, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
@@ -292,11 +294,18 @@ namespace Neon.Cluster
                     .AsDynamic()
                     .data;
             }
-            catch (KeyNotFoundException)
+            catch (HttpException e)
             {
-                if (noException)
+                if (e.StatusCode == HttpStatusCode.NotFound)
                 {
-                    return default(dynamic);
+                    if (noException)
+                    {
+                        return default(dynamic);
+                    }
+                    else
+                    {
+                        throw new KeyNotFoundException($"Vault [path={path}] not found.");
+                    }
                 }
                 else
                 {
@@ -316,7 +325,11 @@ namespace Neon.Cluster
         /// </param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The result as a <c>dynamic</c> object.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown if no object is present at <paramref name="path"/>.</exception>
+        /// <exception cref="KeyNotFoundException">
+        /// Thrown if no object is present at <paramref name="path"/> and 
+        /// <paramref name="noException"/>=<c>false</c>.
+        /// </exception>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
         public async Task<T> ReadJsonAsync<T>(string path, bool noException = false, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
@@ -330,11 +343,18 @@ namespace Neon.Cluster
 
                 return NeonHelper.JsonDeserialize<T>(jsonText);
             }
-            catch (KeyNotFoundException)
+            catch (HttpException e)
             {
-                if (noException)
+                if (e.StatusCode == HttpStatusCode.NotFound)
                 {
-                    return default(dynamic);
+                    if (noException)
+                    {
+                        return default(T);
+                    }
+                    else
+                    {
+                        throw new KeyNotFoundException($"Vault [path={path}] not found.");
+                    }
                 }
                 else
                 {
@@ -350,6 +370,7 @@ namespace Neon.Cluster
         /// <param name="value">The pbject value to be written or <c>null</c>.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The result as a <c>dynamic</c> object.</returns>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
         public async Task<dynamic> WriteJsonAsync(string path, object value, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
@@ -366,6 +387,7 @@ namespace Neon.Cluster
         /// <param name="bytes">The value to be written or <c>null</c>.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The result as a <c>dynamic</c> object.</returns>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
         public async Task<dynamic> WriteBytesAsync(string path, byte[] bytes, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
@@ -388,7 +410,11 @@ namespace Neon.Cluster
         /// </param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The byte array.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown if no object is present at <paramref name="path"/>.</exception>
+        /// <exception cref="KeyNotFoundException">
+        /// Thrown if no object is present at <paramref name="path"/> and 
+        /// <paramref name="noException"/>=<c>false</c>.
+        /// </exception>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
         public async Task<byte[]> ReadBytesAsync(string path, bool noException = false, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
@@ -401,11 +427,18 @@ namespace Neon.Cluster
 
                 return Convert.FromBase64String((string)bytesObject.value);
             }
-            catch (KeyNotFoundException)
+            catch (HttpException e)
             {
-                if (noException)
+                if (e.StatusCode == HttpStatusCode.NotFound)
                 {
-                    return default(byte[]);
+                    if (noException)
+                    {
+                        return default(byte[]);
+                    }
+                    else
+                    {
+                        throw new KeyNotFoundException($"Vault [path={path}] not found.");
+                    }
                 }
                 else
                 {
@@ -419,6 +452,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="path">The object path.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
         public async Task DeleteAsync(string path, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
@@ -445,6 +479,7 @@ namespace Neon.Cluster
         /// <param name="path">The vault path, with or without a trailing forward slash (<b>/</b>).</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>A string list.</returns>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
         public async Task<IEnumerable<string>> ListAsync(string path, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
@@ -476,6 +511,7 @@ namespace Neon.Cluster
         /// <param name="roleName">The role name.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The <see cref="ClusterCredentials"/>.</returns>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
         public async Task<ClusterCredentials> GetAppRoleCredentialsAsync(string roleName, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(roleName));
