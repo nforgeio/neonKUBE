@@ -314,7 +314,7 @@ $@"
                     });
             }
 
-            cluster.PrivateProxy.SetRoute(route);
+            cluster.PrivateProxy.PutRoute(route);
         }
 
         /// <summary>
@@ -390,7 +390,7 @@ $@"
                     Port   = NetworkPorts.TDAgentForward
                 });
 
-            cluster.PrivateProxy.SetRoute(route);
+            cluster.PrivateProxy.PutRoute(route);
         }
 
         /// <summary>

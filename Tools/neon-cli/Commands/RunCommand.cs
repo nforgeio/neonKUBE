@@ -16,7 +16,6 @@ using System.Threading.Tasks;
 
 using Newtonsoft;
 using Newtonsoft.Json;
-
 using YamlDotNet.RepresentationModel;
 
 using Neon.Cluster;

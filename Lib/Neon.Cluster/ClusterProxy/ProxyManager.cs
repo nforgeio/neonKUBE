@@ -74,6 +74,15 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Returns the proxy settings.
+        /// </summary>
+        /// <returns>The <see cref="ProxySettings"/>.</returns>
+        public ProxySettings GetSettings()
+        {
+            return cluster.Consul.KV.GetObject<ProxySettings>(GetProxySettingsKey()).Result;
+        }
+
+        /// <summary>
         /// Updates the proxy settings.
         /// </summary>
         /// <param name="settings">The new settings.</param>
@@ -129,7 +138,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="routeName">The route name.</param>
         /// <returns><c>true</c> if the route existed and was deleted, <c>false</c> if it didn't exist.</returns>
-        public bool DeleteRoute(string routeName)
+        public bool RemoveRoute(string routeName)
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(routeName));
 
@@ -177,7 +186,7 @@ namespace Neon.Cluster
         /// if the proxy didn't already exist and was added.
         /// </returns>
         /// <exception cref="ClusterDefinitionException">Thrown if the route is not valid.</exception>
-        public bool SetRoute(ProxyRoute route)
+        public bool PutRoute(ProxyRoute route)
         {
             Covenant.Requires<ArgumentNullException>(route != null);
             Covenant.Requires<ArgumentNullException>(ClusterDefinition.IsValidName(route.Name));

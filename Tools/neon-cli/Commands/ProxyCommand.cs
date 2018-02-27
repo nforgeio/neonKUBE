@@ -327,7 +327,7 @@ See the documentation for more proxy route and setting details.
                         Program.Exit(1);
                     }
 
-                    if (proxyManager.DeleteRoute(routeName))
+                    if (proxyManager.RemoveRoute(routeName))
                     {
                         Console.WriteLine($"Deleted proxy [{proxyName}] route [{routeName}].");
                     }
@@ -384,7 +384,7 @@ See the documentation for more proxy route and setting details.
                         Program.Exit(1);
                     }
 
-                    if (proxyManager.SetRoute(proxyRoute))
+                    if (proxyManager.PutRoute(proxyRoute))
                     {
                         Console.WriteLine($"Proxy [{proxyName}] route [{routeName}] has been updated.");
                     }
