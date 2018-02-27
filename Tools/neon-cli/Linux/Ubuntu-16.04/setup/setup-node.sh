@@ -735,6 +735,7 @@ resolvconf -u
 apt-get install -yq python-pip
 pip install docker
 pip install PyYAML
+pip install jsondiff
 
 #------------------------------------------------------------------------------
 # Configure a CRON job that performs daily node maintenance including purging
