@@ -292,18 +292,11 @@ namespace Neon.Cluster
                     .AsDynamic()
                     .data;
             }
-            catch (HttpException e)
+            catch (KeyNotFoundException)
             {
-                if (e.StatusCode == HttpStatusCode.NotFound)
+                if (noException)
                 {
-                    if (noException)
-                    {
-                        return default(dynamic);
-                    }
-                    else
-                    {
-                        throw new KeyNotFoundException($"Vault [path={path}] not found.");
-                    }
+                    return default(dynamic);
                 }
                 else
                 {
@@ -337,18 +330,11 @@ namespace Neon.Cluster
 
                 return NeonHelper.JsonDeserialize<T>(jsonText);
             }
-            catch (HttpException e)
+            catch (KeyNotFoundException)
             {
-                if (e.StatusCode == HttpStatusCode.NotFound)
+                if (noException)
                 {
-                    if (noException)
-                    {
-                        return default(T);
-                    }
-                    else
-                    {
-                        throw new KeyNotFoundException($"Vault [path={path}] not found.");
-                    }
+                    return default(dynamic);
                 }
                 else
                 {
@@ -415,18 +401,11 @@ namespace Neon.Cluster
 
                 return Convert.FromBase64String((string)bytesObject.value);
             }
-            catch (HttpException e)
+            catch (KeyNotFoundException)
             {
-                if (e.StatusCode == HttpStatusCode.NotFound)
+                if (noException)
                 {
-                    if (noException)
-                    {
-                        return default(byte[]);
-                    }
-                    else
-                    {
-                        throw new KeyNotFoundException($"Vault [path={path}] not found.");
-                    }
+                    return default(byte[]);
                 }
                 else
                 {
