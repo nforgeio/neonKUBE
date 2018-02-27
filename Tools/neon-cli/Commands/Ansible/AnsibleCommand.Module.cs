@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AnsibleCommand.Modules.cs
+// FILE:	    AnsibleCommand.Module.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -87,6 +87,12 @@ namespace NeonCli
             /// </summary>
             [JsonIgnore]
             public bool CheckMode { get; set; }
+
+            /// <summary>
+            /// The cluster login.
+            /// </summary>
+            [JsonIgnore]
+            public ClusterLogin Login { get; set; }
 
             /// <summary>
             /// Initializes the Ansible module arguments.
@@ -287,6 +293,8 @@ namespace NeonCli
                 }
 
                 context.IsAction = isAction;
+                context.Login    = login;
+
                 context.SetArguments(argsPath);
 
                 // Connect to the cluster so the NeonClusterHelper methods will work.
@@ -309,12 +317,12 @@ namespace NeonCli
                 {
                     case "neon_certificate":
 
-                        ImplementCertificateModule(context, login);
+                        RunCertificateModule(context);
                         break;
 
                     case "neon_route":
 
-                        ImplementRouteModule(context, login);
+                        RunRouteModule(context);
                         break;
 
                     default:
@@ -365,187 +373,6 @@ namespace NeonCli
 
                     return false;
             }
-        }
-
-        /// <summary>
-        /// Update the <b>neon-proxy-manager</b> Consul key to indicate that changes
-        /// have been made to the cluster certificates.
-        /// </summary>
-        private void TouchCertChanged()
-        {
-            using (var consul = NeonClusterHelper.OpenConsul())
-            {
-                consul.KV.PutString("neon/service/neon-proxy-manager/conf/cert-update", DateTime.UtcNow).Wait();
-            }
-        }
-
-        //---------------------------------------------------------------------
-        // neon_certificate:
-        //
-        // Synopsis:
-        // ---------
-        //
-        // Creates or removes neonCLUSTER TLS certificates.
-        //
-        // Requirements:
-        // -------------
-        //
-        // This module runs only within the [neon-cli] container when invoked
-        // by [neon ansible exec ...] or [neon ansible play ...].
-        //
-        // Options:
-        // --------
-        //
-        // parameter    required    default     choices     comments
-        // --------------------------------------------------------------------
-        //
-        // name         yes                                 neonCLUSTER certificate name
-        //
-        // value        see comment                         public certificate, any intermediate
-        //                                                  certificates and the private key in PEM 
-        //                                                  format.  Required when [state=present]
-        //
-        // state        no          present     absent      indicates whether the certificate should
-        //                                      present     be created or removed
-        //
-        // force        no          false                   resaves the certificate when state=present
-        //                                                  even if the certificate is the same
-
-        /// <summary>
-        /// Implements the built-in <b>neon_certificate</b> module.
-        /// </summary>
-        /// <param name="context">The module execution context.</param>
-        /// <param name="login">The cluster login.</param>
-        private void ImplementCertificateModule(ModuleContext context, ClusterLogin login)
-        {
-            //-------------------------------
-            // Get the common arguments.
-
-            if (!context.Arguments.TryGetValue<int>("_ansible_verbosity", out var verbosity) || verbosity < 0)
-            {
-                verbosity = 0;
-            }
-
-            if (!context.Arguments.TryGetValue<string>("name", out var name))
-            {
-                throw new ArgumentException($"[name] module argument is required.");
-            }
-
-            if (!ClusterDefinition.IsValidName(name))
-            {
-                throw new ArgumentException($"[name={name}] is not a valid certificate name.");
-            }
-
-            if (!context.Arguments.TryGetValue<string>("state", out var state))
-            {
-                state = "present";
-            }
-
-            state = state.ToLowerInvariant();
-
-            if (!context.Arguments.TryGetValue<string>("force", out var forceArg))
-            {
-                forceArg = "false";
-            }
-
-            var force = ToBool(forceArg);
-
-            // We have the required arguments, so perform the operation.
-
-            if (login.VaultCredentials == null || string.IsNullOrEmpty(login.VaultCredentials.RootToken))
-            {
-                throw new ArgumentException("Access Denied: Vault root credentials are required.");
-            }
-
-            var vaultPath = NeonClusterHelper.GetVaultCertificateKey(name);
-
-            context.WriteLine(Verbosity.Trace, $"Vault: Certificate path is [{vaultPath}]");
-            context.WriteLine(Verbosity.Trace, $"Vault: Opening Vault");
-
-            using (var vault = NeonClusterHelper.OpenVault(login.VaultCredentials.RootToken))
-            {
-                switch (state)
-                {
-                    case "absent":
-
-                        context.WriteLine(Verbosity.Trace, $"Vault: checking for [{name}] certificate");
-
-                        if (vault.ExistsAsync(vaultPath).Result)
-                        {
-                            context.WriteLine(Verbosity.Trace, $"Vault: [{name}] certificate exists");
-                            context.WriteLine(Verbosity.Trace, $"Vault: Deleting [{name}]");
-
-                            if (!context.CheckMode)
-                            {
-                                vault.DeleteAsync(vaultPath).Wait();
-                                context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate deleted");
-
-                                TouchCertChanged();
-                                context.WriteLine(Verbosity.Trace, $"Consul: Signal the certificate change");
-                            }
-
-                            context.Changed = true;
-                        }
-                        else
-                        {
-                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does not exist");
-                        }
-                        break;
-
-                    case "present":
-
-                        if (!context.Arguments.TryGetValue<string>("value", out var value))
-                        {
-                            throw new ArgumentException($"[value] module argument is required.");
-                        }
-
-                        var certificate = new TlsCertificate(value);    // This validates the certificate/private key
-
-                        certificate.Parse();
-
-                        context.WriteLine(Verbosity.Trace, $"Vault: Reading [{name}]");
-
-                        var existingCert = vault.ReadJsonAsync<TlsCertificate>(vaultPath, noException: true).Result;
-
-                        if (existingCert == null)
-                        {
-                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does not exist");
-                            context.Changed = true;
-                        }
-                        else if (!NeonHelper.JsonEquals(existingCert, certificate))
-                        {
-                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does exists but is different");
-                            context.Changed = true;
-                        }
-                        else
-                        {
-                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate is unchanged");
-                        }
-
-                        if (context.Changed && !context.CheckMode)
-                        {
-                            context.WriteLine(Verbosity.Trace, $"Vault: Saving [{name}] certificate");
-                            vault.WriteJsonAsync(vaultPath, certificate).Wait();
-                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate saved");
-                        }
-
-                        break;
-
-                    default:
-
-                        throw new ArgumentException($"[state={state}] is not a valid choice.");
-                }
-            }
-        }
-
-        /// <summary>
-        /// Implements the built-in <b>neon_route</b> module.
-        /// </summary>
-        /// <param name="context">The module outputm object.</param>
-        /// <param name="login">The cluster login.</param>
-        private void ImplementRouteModule(ModuleContext context, ClusterLogin login)
-        {
-            throw new NotImplementedException();
         }
     }
 }
