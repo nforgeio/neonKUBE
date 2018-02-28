@@ -2285,7 +2285,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
             //      systemctl enable ceph-fuse@/cfs.service
             //
             // I was seeing an "Invalid argument" error.  I'm going to workaround
-            // this by creating and emabling my own service.
+            // this by creating and enabling my own service.
 
             node.InvokeIdempotentAction("setup-ceph-fuse-service",
                 () =>
@@ -2304,9 +2304,17 @@ EnvironmentFile=-/etc/default/ceph
 Environment=CLUSTER=ceph
 ExecStart=/usr/bin/ceph-fuse -f --cluster ${CLUSTER} /cfs
 TasksMax=infinity
+
+# These settings configure the service to restart on failure after
+# waiting 30 seconds for up to a 365 days (effectively forever).
+# [StartLimitInterval] is set to the bumber of minutes in a year
+# and [StartLimitBurst] is set to the number of 30 second intervals
+# in [StartLimitInterval].
+
 Restart=on-failure
-StartLimitInterval=30min
-StartLimitBurst=3
+RestartSec=30
+StartLimitInterval=525600min
+StartLimitBurst=1051200
 
 [Install]
 WantedBy=ceph-fuse.target
