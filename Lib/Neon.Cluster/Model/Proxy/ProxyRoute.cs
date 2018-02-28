@@ -78,6 +78,7 @@ namespace Neon.Cluster
 
             var deserializer = new DeserializerBuilder()
                 .WithNamingConvention(new HyphenatedNamingConvention())
+                .IgnoreUnmatchedProperties()
                 .Build();
 
             var baseRoute = deserializer.Deserialize<ProxyRoute>(yamlText);

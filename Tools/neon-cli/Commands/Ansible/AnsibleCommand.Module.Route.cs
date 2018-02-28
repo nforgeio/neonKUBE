@@ -16,11 +16,12 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Consul;
+using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-
-using ICSharpCode.SharpZipLib.Zip;
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
 
 using Neon.Cluster;
 using Neon.Cryptography;
