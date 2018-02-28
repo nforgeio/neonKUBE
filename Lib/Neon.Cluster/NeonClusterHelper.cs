@@ -764,7 +764,7 @@ namespace Neon.Cluster
             // Initialize some properties.
 
             var clusterDefinition = Cluster.Definition;
-            var manager           = Cluster.GetHealthyManager();
+            var manager           = Cluster.GetHealthyManager(ClusterProxy.HealthyManagerMode.ReturnFirst);
 
             // Simulate the environment variables initialized by a mounted [env-host] script.
 
@@ -1013,13 +1013,29 @@ namespace Neon.Cluster
         {
             VerifyConnected();
 
+            // For bare clusters, just return the local definition because there
+            // is no Consul service running.
+
             if (cachedDefinition != null && cachedDefinition.BareDocker)
             {
-                // For bare clusters, just return the local definition because there
-                // is no Consul service running.
-
                 return cachedDefinition;
             }
+
+            // Do a quick check to see if we have any healthy manager nodes.  If not,
+            // then we'll return the cached definition (if there is one).
+
+            if (cachedDefinition != null)
+            {
+                var cluster = new ClusterProxy(cachedDefinition);
+                var manager = cluster.GetHealthyManager(ClusterProxy.HealthyManagerMode.ReturnNull);
+
+                if (manager == null)
+                {
+                    return cachedDefinition;
+                }
+            }
+
+            // Otherwise, we'll attempt to download this from Consul.
 
             using (var consul = OpenConsul())
             {
@@ -1045,16 +1061,42 @@ namespace Neon.Cluster
                     catch (Exception e)
                     {
                         // This is probably an [HttpRequestException] indicating that we 
-                        // could not contact the cluster Consul.
+                        // could not contact the cluster Consul.  We'll just returned the
+                        // cached cluster definition in this situation (if we have one).
 
-                        throw new NeonClusterException("Unable to connect cluster.", e);
+                        if (cachedDefinition != null)
+                        {
+                            return cachedDefinition;
+                        }
+                        else
+                        {
+                            throw new NeonClusterException("Cannot connect to cluster.", e);
+                        }
                     }
                 }
 
-                var deflated = await consul.KV.GetBytes("neon/cluster/definition.deflate");
-                var json     = NeonHelper.DecompressString(deflated);
+                try
+                {
+                    var deflated = await consul.KV.GetBytes("neon/cluster/definition.deflate");
+                    var json     = NeonHelper.DecompressString(deflated);
 
-                return NeonHelper.JsonDeserialize<ClusterDefinition>(json);
+                    return NeonHelper.JsonDeserialize<ClusterDefinition>(json);
+                }
+                catch (Exception e)
+                {
+                    // This is probably an [HttpRequestException] indicating that we 
+                    // could not contact the cluster Consul.  We'll just returned the
+                    // cached cluster definition in this situation (if we have one).
+
+                    if (cachedDefinition != null)
+                    {
+                        return cachedDefinition;
+                    }
+                    else
+                    {
+                        throw new NeonClusterException("Cannot connect to cluster.", e);
+                    }
+                }
             }
         }
 

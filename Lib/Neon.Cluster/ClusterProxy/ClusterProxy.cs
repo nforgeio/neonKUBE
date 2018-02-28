@@ -29,6 +29,34 @@ namespace Neon.Cluster
     /// </summary>
     public class ClusterProxy : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Local types
+
+        /// <summary>
+        /// Enumerates how <see cref="GetHealthyManager(HealthyManagerMode)"/> should
+        /// behave when no there are no healthy cluster managers.
+        /// </summary>
+        public enum HealthyManagerMode
+        {
+            /// <summary>
+            /// Throw an exception when no managers are healthy.
+            /// </summary>
+            Throw,
+
+            /// <summary>
+            /// Return the first manager when no managers are healthy.
+            /// </summary>
+            ReturnFirst,
+
+            /// <summary>
+            /// Return <c>null</c> when no managers are healthy.
+            /// </summary>
+            ReturnNull
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private object                                                      syncRoot = new object();
         private VaultClient                                                 vaultClient;
         private ConsulClient                                                consulClient;
@@ -305,9 +333,13 @@ namespace Neon.Cluster
         /// <summary>
         /// Returns a manager node that appears to be healthy.
         /// </summary>
+        /// <param name="failureMode">Specifies what should happen when there are no healthy managers.</param>
         /// <returns>The healthy manager node.</returns>
-        /// <exception cref="NeonClusterException">Thrown if no healthy managers are present.</exception>
-        public SshProxy<NodeDefinition> GetHealthyManager()
+        /// <exception cref="NeonClusterException">
+        /// Thrown if no healthy managers are present and
+        /// <paramref name="failureMode"/>=<see cref="HealthyManagerMode.Throw"/>.
+        /// </exception>
+        public SshProxy<NodeDefinition> GetHealthyManager(HealthyManagerMode failureMode = HealthyManagerMode.ReturnFirst)
         {
             // Try sending up to three pings to each manager node in parallel
             // to get a list of the health ones.  Then we'll return the first
@@ -347,7 +379,24 @@ namespace Neon.Cluster
                 }
             }
 
-            throw new NeonClusterException("Could not locate a healthy cluster manager node.");
+            switch (failureMode)
+            {
+                case HealthyManagerMode.ReturnFirst:
+
+                    return FirstManager;
+
+                case HealthyManagerMode.ReturnNull:
+
+                    return null;
+
+                case HealthyManagerMode.Throw:
+
+                    throw new NeonClusterException("Could not locate a healthy cluster manager node.");
+
+                default:
+
+                    throw new NotImplementedException($"Unexpected failure [mode={failureMode}].");
+            }
         }
 
         /// <summary>
