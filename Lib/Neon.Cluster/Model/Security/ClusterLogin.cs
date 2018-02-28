@@ -212,6 +212,15 @@ namespace Neon.Cluster
         public CephConfig Ceph { get; set; }
 
         /// <summary>
+        /// Returns <c>true</c> if the login includes root HashiCorp Vault credentials.
+        /// </summary>
+        [JsonIgnore]
+        public bool HasVaultRootCredentials
+        {
+            get { return VaultCredentials != null && !string.IsNullOrEmpty(VaultCredentials.RootToken); }
+        }
+
+        /// <summary>
         /// Returns the <see cref="SshCredentials"/> for the cluster that can be used
         /// by <see cref="SshProxy{TMetadata}"/> and the <b>SSH.NET</b> Nuget package.
         /// </summary>

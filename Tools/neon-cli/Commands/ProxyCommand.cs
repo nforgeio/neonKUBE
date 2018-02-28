@@ -123,16 +123,16 @@ swarm mode service or DNS name.
         ]
     }
 
-Here's an example public TCP route that forwards TCP connections to the
-port 1000 on the cluster's Internet facing load balancer to the internal
-HAProxy server listening on Docker ingress port 11102 port which then
+Here's an example public TCP route that forwards TCP connections to
+port 1000 on the cluster's Internet-facing load balancer to the internal
+HAProxy server listening on Docker ingress port 5305 port which then
 load balances the traffic to the backend servers listening on port 1000:
 
     {
         ""Name"": ""my-tcp-route"",
         ""Mode"": ""tcp"",
         ""Frontends"": [
-            { ""PublicPort"": 1000, ""ProxyPort"": 11102 }
+            { ""PublicPort"": 1000, ""ProxyPort"": 5305 }
         ],
         ""Backends"": [
             { ""Server"": ""10.0.1.40"", ""Port"": 1000 },
@@ -374,7 +374,7 @@ See the documentation for more proxy route and setting details.
                         routeJson = File.ReadAllText(routeFile);
                     }
 
-                    var proxyRoute = ProxyRoute.Parse(routeJson);
+                    var proxyRoute = ProxyRoute.ParseJson(routeJson);
 
                     routeName = proxyRoute.Name;
 

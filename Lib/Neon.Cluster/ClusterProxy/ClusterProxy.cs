@@ -416,7 +416,7 @@ namespace Neon.Cluster
         {
             get
             {
-                if (ClusterLogin.VaultCredentials == null || string.IsNullOrEmpty(ClusterLogin.VaultCredentials.RootToken))
+                if (!ClusterLogin.HasVaultRootCredentials)
                 {
                     throw new InvalidOperationException($"[{nameof(ClusterProxy)}.{nameof(ClusterLogin)}] has not yet been intialized with the Vault root token.");
                 }
@@ -441,7 +441,7 @@ namespace Neon.Cluster
         /// <exception cref="InvalidOperationException">Thrown if the root token is not available.</exception>
         private void VerifyVaultToken()
         {
-            if (ClusterLogin.VaultCredentials == null || string.IsNullOrEmpty(ClusterLogin.VaultCredentials.RootToken))
+            if (!ClusterLogin.HasVaultRootCredentials)
             {
                 throw new InvalidOperationException($"[{nameof(ClusterProxy)}.{nameof(ClusterLogin)}] has not yet been intialized with the Vault root token.");
             }

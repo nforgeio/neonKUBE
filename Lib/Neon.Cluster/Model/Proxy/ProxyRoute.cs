@@ -18,6 +18,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
+using YamlDotNet.Serialization;
+using YamlDotNet.Serialization.NamingConventions;
+
 using Neon.Common;
 
 namespace Neon.Cluster
@@ -35,21 +38,59 @@ namespace Neon.Cluster
         /// <summary>
         /// Parses a <see cref="ProxyRoute"/> from a JSON string.
         /// </summary>
-        /// <param name="value">The input string.</param>
+        /// <param name="jsonText">The input string.</param>
         /// <returns>The parsed object instance derived from <see cref="ProxyRoute"/>.</returns>
-        public static ProxyRoute Parse(string value)
+        public static ProxyRoute ParseJson(string jsonText)
         {
-            var baseRoute = NeonHelper.JsonDeserialize<ProxyRoute>(value);
+            var baseRoute = NeonHelper.JsonDeserialize<ProxyRoute>(jsonText);
 
             switch (baseRoute.Mode)
             {
                 case ProxyMode.Http:
 
-                    return NeonHelper.JsonDeserialize<ProxyHttpRoute>(value);
+                    return NeonHelper.JsonDeserialize<ProxyHttpRoute>(jsonText);
 
                 case ProxyMode.Tcp:
 
-                    return NeonHelper.JsonDeserialize<ProxyTcpRoute>(value);
+                    return NeonHelper.JsonDeserialize<ProxyTcpRoute>(jsonText);
+
+                default:
+
+                    throw new NotImplementedException($"Unsupported [{nameof(ProxyRoute)}.{nameof(Mode)}={baseRoute.Mode}].");
+            }
+        }
+
+        /// <summary>
+        /// Parses a <see cref="ProxyRoute"/> from a YAML string.
+        /// </summary>
+        /// <param name="yamlText">The input string.</param>
+        /// <returns>The parsed object instance derived from <see cref="ProxyRoute"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// This YAML parser does not enforce property name case sensitivity.
+        /// </note>
+        /// </remarks>
+        public static ProxyRoute ParseYaml(string yamlText)
+        {
+            // Note that for YAML we're NOT going to enforce property name
+            // capitalization.  The [HyphenatedNamingConvention] instance
+            // appears to relax case sensitivity.
+
+            var deserializer = new DeserializerBuilder()
+                .WithNamingConvention(new HyphenatedNamingConvention())
+                .Build();
+
+            var baseRoute = deserializer.Deserialize<ProxyRoute>(yamlText);
+
+            switch (baseRoute.Mode)
+            {
+                case ProxyMode.Http:
+
+                    return deserializer.Deserialize<ProxyHttpRoute>(yamlText);
+
+                case ProxyMode.Tcp:
+
+                    return deserializer.Deserialize<ProxyTcpRoute>(yamlText);
 
                 default:
 
@@ -135,7 +176,7 @@ namespace Neon.Cluster
 
             if (!string.IsNullOrWhiteSpace(Resolver) && context.Settings.Resolvers.Count(r => string.Equals(Resolver, r.Name, StringComparison.OrdinalIgnoreCase)) == 0)
             {
-                context.Error($"Proxy route name [{nameof(Resolver)}={Resolver}] does not exist.");
+                context.Error($"Proxy resolver [{nameof(Resolver)}={Resolver}] does not exist.");
             }
         }
     }

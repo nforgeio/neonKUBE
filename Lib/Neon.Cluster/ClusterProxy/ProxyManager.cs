@@ -169,7 +169,7 @@ namespace Neon.Cluster
 
             if (cluster.Consul.KV.Exists(routeKey).Result)
             {
-                return ProxyRoute.Parse(cluster.Consul.KV.GetString(routeKey).Result);
+                return ProxyRoute.ParseJson(cluster.Consul.KV.GetString(routeKey).Result);
             }
             else
             {

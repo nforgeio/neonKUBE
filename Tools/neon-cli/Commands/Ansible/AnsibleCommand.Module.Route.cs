@@ -32,13 +32,308 @@ namespace NeonCli
 {
     public partial class AnsibleCommand : CommandBase
     {
+        //---------------------------------------------------------------------
+        // neon_route:
+        //
+        // Synopsis:
+        // ---------
+        //
+        // Manage neonCLUSTER proxy routes.
+        //
+        // Requirements:
+        // -------------
+        //
+        // This module runs only within the [neon-cli] container when invoked
+        // by [neon ansible exec ...] or [neon ansible play ...].
+        //
+        // Options:
+        // --------
+        //
+        // parameter    required    default     choices     comments
+        // --------------------------------------------------------------------
+        //
+        // name         yes                                 neonCLUSTER route name
+        //
+        // proxy        yes                     private     identifies the target proxy
+        //                                      public
+        //
+        // route        see comment                         proxy route description formatted as
+        //                                                  structured as JSON or YAML.  Required 
+        //                                                  when [state=present]
+        //
+        // state        no          present     absent      indicates whether the route should
+        //                                      present     be created or removed
+        //
+        // force        no          false                   forces proxy rebuild when [state=present]
+        //                                                  even if the route is unchanged
+
         /// <summary>
         /// Implements the built-in <b>neon_route</b> module.
         /// </summary>
-        /// <param name="context">The module outputm object.</param>
+        /// <param name="context">The module execution context.</param>
         private void RunRouteModule(ModuleContext context)
         {
-            throw new NotImplementedException();
+            ProxyManager    proxyManager;
+
+            // Obtain common arguments.
+
+            if (!context.Arguments.TryGetValue<string>("name", out var name))
+            {
+                throw new ArgumentException($"[name] module argument is required.");
+            }
+
+            if (!ClusterDefinition.IsValidName(name))
+            {
+                throw new ArgumentException($"[name={name}] is not a valid proxy route name.");
+            }
+
+            if (!context.Arguments.TryGetValue<string>("proxy", out var proxy))
+            {
+                throw new ArgumentException($"[proxy] module argument is required.");
+            }
+
+            switch (proxy)
+            {
+                case "private":
+
+                    proxyManager = NeonClusterHelper.Cluster.PrivateProxy;
+                    break;
+
+                case "public":
+
+                    proxyManager = NeonClusterHelper.Cluster.PublicProxy;
+                    break;
+
+                default:
+
+                    throw new ArgumentException($"[proxy={proxy}] is not a one of the valid choices: [private] or [public].");
+            }
+
+            if (!context.Arguments.TryGetValue<string>("state", out var state))
+            {
+                state = "present";
+            }
+
+            state = state.ToLowerInvariant();
+
+            if (!context.Arguments.TryGetValue<string>("force", out var forceArg))
+            {
+                forceArg = "false";
+            }
+
+            var force = ToBool(forceArg);
+
+            // We have the required arguments, so perform the operation.
+
+            switch (state)
+            {
+                case "absent":
+
+                    context.WriteLine(Verbosity.Trace, $"Check if route [{name}] exists.");
+
+                    if (proxyManager.GetRoute(name) != null)
+                    {
+                        context.WriteLine(Verbosity.Trace, $"Check route [{name}] does exist.");
+                        context.WriteLine(Verbosity.Info, $"Deleting route [{name}].");
+
+                        if (!context.CheckMode)
+                        {
+                            proxyManager.RemoveRoute(name);
+                            context.WriteLine(Verbosity.Trace, $"Route [{name}] deleted.");
+                        }
+
+                        context.Changed = true;
+                    }
+                    else
+                    {
+                        context.WriteLine(Verbosity.Trace, $"Check route [{name}] does not exist.");
+                    }
+                    break;
+
+                case "present":
+
+                    if (!context.Arguments.TryGetValue<string>("route", out var routeText))
+                    {
+                        throw new ArgumentException($"[route] module argument is required.");
+                    }
+
+                    ProxyRoute  newRoute;
+                    ProxyRoute  existingRoute;
+
+                    //-------------------------------------------
+                    // $todo(jeff.lill): DELETE THIS!
+
+                    var dumpPath = Path.Combine(Environment.CurrentDirectory, "dump.txt");
+
+                    if (File.Exists(dumpPath))
+                    {
+                        File.Delete(dumpPath);
+                    }
+
+                    File.WriteAllText(dumpPath, routeText);
+
+                    //-------------------------------------------
+
+                    // Parse the new route.  We're going to accept this as JSON or YAML and
+                    // we're going the relax the property name case sensitivity.
+
+                    // If the first non-whitespace character is a "{" then we're going
+                    // to assume route is formatted as JSON, otherwise we'll parse YAML.
+
+                    if (routeText.Trim().StartsWith("{"))
+                    {
+                        // Parse JSON:
+                        //
+                        // Note that for JSON we're going to enforce property name
+                        // capitalization.
+
+                        context.WriteLine(Verbosity.Trace, "Parsing route as JSON");
+
+                        newRoute = ProxyRoute.ParseJson(routeText);
+                    }
+                    else
+                    {
+                        // Parse YAML:
+                        //
+                        // Note that for yaml we're NOT going to enforce property name
+                        // capitalization.
+
+                        context.WriteLine(Verbosity.Trace, "Parsing route as YAML");
+
+                        newRoute = ProxyRoute.ParseYaml(routeText);
+                    }
+
+                    context.WriteLine(Verbosity.Trace, "Route parsed successfully");
+
+                    // Use the route name argument if the deserialized route doesn't
+                    // have a name.  This will make it easier on operators because 
+                    // they won't need to specify the name twice.
+
+                    if (string.IsNullOrWhiteSpace(newRoute.Name))
+                    {
+                        newRoute.Name = name;
+                    }
+
+                    // Ensure that the route name passed as an argument and the
+                    // name within the route definition match.
+
+                    if (!string.Equals(name, newRoute.Name, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        throw new ArgumentException($"The [name={name}] argument and the route's [{nameof(ProxyRoute.Name)}={newRoute.Name}] property are not the same.");
+                    }
+
+                    // Validate the route.
+
+                    var proxySettings = proxyManager.GetSettings();
+
+                    var validationContext = new ProxyValidationContext(name, proxySettings);
+
+                    // $hack(jeff.lill):
+                    //
+                    // This ensures that [proxySettings.Resolvers] is initialized with
+                    // the built-in Docker DNS resolver.
+
+                    proxySettings.Validate(validationContext);
+
+                    // Load the TLS certificates ointo the validation context so we'll
+                    // be able to verify that any referenced certificates mactually exist.
+
+                    // $todo(jeff.lill):
+                    //
+                    // This code assumes that the operator is currently logged in with
+                    // root Vault privileges.  We'll have to do something else for
+                    // non-root logins.
+                    //
+                    // One idea might be to save two versions of the certificates.
+                    // The primary certificate with primary key in Vault and then
+                    // just the public certificate in Consul and then load just
+                    // the public ones here.
+                    //
+                    // A good time to make this change might be when we convert to
+                    // use the .NET X.509 certificate implementation.
+
+                    if (!context.Login.HasVaultRootCredentials)
+                    {
+                        throw new ArgumentException("Access Denied: Root Vault credentials are required.");
+                    }
+
+                    using (var vault = NeonClusterHelper.OpenVault(Program.ClusterLogin.VaultCredentials.RootToken))
+                    {
+                        // List the certificate key/names and then fetch each one
+                        // to capture details like the expiration date and covered
+                        // host names.
+
+                        foreach (var certName in vault.ListAsync("neon-secret/cert").Result)
+                        {
+                            var certificate = vault.ReadJsonAsync<TlsCertificate>(NeonClusterHelper.GetVaultCertificateKey(certName)).Result;
+
+                            validationContext.Certificates.Add(name, certificate);
+                        }
+                    }
+
+                    // Actually perform the route validation.
+
+                    newRoute.Validate(validationContext);
+
+                    if (validationContext.HasErrors)
+                    {
+                        foreach (var error in validationContext.Errors)
+                        {
+                            context.WriteErrorLine(error);
+                        }
+
+                        context.Failed = true;
+                        return;
+                    }
+                    // Try reading any existing route with this name and then determine
+                    // whether the two versions of the route are different. 
+
+                    context.WriteLine(Verbosity.Trace, $"Looking for an existing route");
+
+                    existingRoute = proxyManager.GetRoute(name);
+
+                    if (existingRoute != null)
+                    {
+                        context.WriteLine(Verbosity.Trace, $"Route exists.  Checking for differences.");
+
+                        context.Changed = !NeonHelper.JsonEquals(newRoute, existingRoute);
+
+                        if (context.Changed)
+                        {
+                            context.WriteLine(Verbosity.Trace, $"Routes are different.");
+                        }
+                        else
+                        {
+                            if (force)
+                            {
+                                context.Changed = true;
+                                context.WriteLine(Verbosity.Trace, $"Routes are the same but since [force=true] we're going to update anyway..");
+                            }
+                            else
+                            {
+                                context.WriteLine(Verbosity.Info, $"Routes are the same.  No need to update.");
+                            }
+                        }
+                    }
+                    else
+                    {
+                        context.Changed = true;
+                        context.WriteLine(Verbosity.Trace, $"Route [name={name}] does not exist.");
+                    }
+
+                    if (context.Changed)
+                    {
+                        context.WriteLine(Verbosity.Trace, $"Updating route.");
+                        proxyManager.PutRoute(newRoute);
+                        context.WriteLine(Verbosity.Info, $"Route updated.");
+                    }
+
+                    break;
+
+                default:
+
+                    throw new ArgumentException($"[state={state}] is not one of the valid choices: [absent] or [present].");
+            }
         }
     }
 }

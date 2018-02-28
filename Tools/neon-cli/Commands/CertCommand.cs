@@ -226,7 +226,7 @@ certificates, and then finally the private key.
                         }
 
                         // List the certificate key/names and then fetch each one
-                        // to capture details like the expiration data and covered
+                        // to capture details like the expiration date and covered
                         // host names.
 
                         foreach (var name in vault.ListAsync("neon-secret/cert").Result)

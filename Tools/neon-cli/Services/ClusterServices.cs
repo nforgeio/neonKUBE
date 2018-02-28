@@ -63,7 +63,7 @@ namespace NeonCli
                 {
                     // Ensure that Vault has been initialized.
 
-                    if (cluster.ClusterLogin.VaultCredentials == null)
+                    if (!cluster.ClusterLogin.HasVaultRootCredentials)
                     {
                         throw new InvalidOperationException("Vault has not been initialized yet.");
                     }

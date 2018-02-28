@@ -471,7 +471,7 @@ namespace NeonProxyManager
                 {
                     foreach (var routeKey in result.Response)
                     {
-                        var route = ProxyRoute.Parse(Encoding.UTF8.GetString(routeKey.Value));
+                        var route = ProxyRoute.ParseJson(Encoding.UTF8.GetString(routeKey.Value));
 
                         routes.Add(route.Name, route);
                     }

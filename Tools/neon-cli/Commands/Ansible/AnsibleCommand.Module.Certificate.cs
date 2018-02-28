@@ -38,7 +38,7 @@ namespace NeonCli
         // Synopsis:
         // ---------
         //
-        // Creates or removes neonCLUSTER TLS certificates.
+        // Manages neonCLUSTER TLS certificates.
         //
         // Requirements:
         // -------------
@@ -61,7 +61,7 @@ namespace NeonCli
         // state        no          present     absent      indicates whether the certificate should
         //                                      present     be created or removed
         //
-        // force        no          false                   resaves the certificate when state=present
+        // force        no          false                   resaves the certificate when [state=present]
         //                                                  even if the certificate is the same
 
         /// <summary>
@@ -70,13 +70,7 @@ namespace NeonCli
         /// <param name="context">The module execution context.</param>
         private void RunCertificateModule(ModuleContext context)
         {
-            //-------------------------------
-            // Get the common arguments.
-
-            if (!context.Arguments.TryGetValue<int>("_ansible_verbosity", out var verbosity) || verbosity < 0)
-            {
-                verbosity = 0;
-            }
+            // Obtain common arguments.
 
             if (!context.Arguments.TryGetValue<string>("name", out var name))
             {
@@ -104,9 +98,9 @@ namespace NeonCli
 
             // We have the required arguments, so perform the operation.
 
-            if (context.Login.VaultCredentials == null || string.IsNullOrEmpty(context.Login.VaultCredentials.RootToken))
+            if (!context.Login.HasVaultRootCredentials)
             {
-                throw new ArgumentException("Access Denied: Vault root credentials are required.");
+                throw new ArgumentException("Access Denied: Root Vault credentials are required.");
             }
 
             var vaultPath = NeonClusterHelper.GetVaultCertificateKey(name);
@@ -116,6 +110,8 @@ namespace NeonCli
 
             using (var vault = NeonClusterHelper.OpenVault(context.Login.VaultCredentials.RootToken))
             {
+                context.WriteLine(Verbosity.Trace, $"Vault: Opened");
+
                 switch (state)
                 {
                     case "absent":
@@ -164,7 +160,7 @@ namespace NeonCli
                             context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does not exist");
                             context.Changed = true;
                         }
-                        else if (!NeonHelper.JsonEquals(existingCert, certificate))
+                        else if (!NeonHelper.JsonEquals(existingCert, certificate) || force)
                         {
                             context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does exists but is different");
                             context.Changed = true;
@@ -185,7 +181,7 @@ namespace NeonCli
 
                     default:
 
-                        throw new ArgumentException($"[state={state}] is not a valid choice.");
+                        throw new ArgumentException($"[state={state}] is not one of the valid choices: [absent] or [present].");
                 }
             }
         }

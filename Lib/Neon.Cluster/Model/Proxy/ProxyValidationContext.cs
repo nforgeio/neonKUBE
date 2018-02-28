@@ -57,7 +57,7 @@ namespace Neon.Cluster
         public ProxySettings Settings { get; private set; }
 
         /// <summary>
-        /// Returns a dictionary that maps a case sensitive certificate name to the
+        /// Returns a dictionary that maps case sensitive certificate names to the
         /// corresponding <see cref="TlsCertificate"/>.
         /// </summary>
         public Dictionary<string, TlsCertificate> Certificates { get; private set; }

@@ -359,11 +359,14 @@ namespace NeonCli
             //
             // Scan the Ansible source code and use the same conventions here
             // (if we're not doing so already).
+            //
+            // On second look, I believe that Ansible is already doing this
+            // conversion when it generates the module JSON arguments file.
 
             switch (value.ToLowerInvariant())
             {
                 case "yes":
-                case "true:":
+                case "true":
                 case "on":
                 case "1":
 
