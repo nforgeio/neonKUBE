@@ -255,6 +255,7 @@ TCPKeepAlive yes
 
             // Add the global Neon host and cluster related environment variables. 
 
+            sb.AppendLine($"NEON_CLUSTER_PROVISIONER={clusterDefinition.Provisioner}");
             sb.AppendLine($"NEON_CLUSTER={clusterDefinition.Name}");
             sb.AppendLine($"NEON_DATACENTER={clusterDefinition.Datacenter.ToLowerInvariant()}");
             sb.AppendLine($"NEON_ENVIRONMENT={clusterDefinition.Environment.ToString().ToLowerInvariant()}");

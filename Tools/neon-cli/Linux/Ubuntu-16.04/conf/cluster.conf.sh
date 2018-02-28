@@ -27,13 +27,9 @@ else
 fi
 
 #------------------------------------------------------------------------------
-# This describes the format of this file as defined by the version of
-# [neon-cli] last deployed to the cluster.  This is used to ensure
-# that older versions of the tool won't try to reconfigure clusters
-# deployed with a format it won't understand and also allow for newer
-# version of [neon-cli] to upgrade older clusters.
+# This identifies the tool/version that deployed or upgraded the cluster.
 
-NEON_CLUSTER_SCHEMA=$<cluster.schema>
+NEON_CLUSTER_PROVISIONER=$<cluster.provisioner>
 
 #------------------------------------------------------------------------------
 # Bash does not run interactively when called remotely via SSH.  This means
@@ -126,7 +122,7 @@ export NEON_LOG_ENABLED=$<log.enabled>
 # Echo the configuration to STDERR if requested.
 
 if $summary ; then
-    echo "NEON_CLUSTER_SCHEMA                = ${NEON_CLUSTER_SCHEMA}" 1>&2
+    echo "NEON_CLUSTER_PROVISIONER           = ${NEON_CLUSTER_PROVISIONER}" 1>&2
     echo 1>&2
     echo "NEON_CLUSTER                       = ${NEON_CLUSTER}" 1>&2
     echo "NEON_DATACENTER                    = ${NEON_DATACENTER}" 1>&2

@@ -139,7 +139,11 @@ Server Requirements:
 
             ClusterDefinition.ValidateFile(clusterDefPath);
 
-            cluster = new ClusterProxy(ClusterDefinition.FromFile(clusterDefPath), Program.CreateNodeProxy<NodeDefinition>, RunOptions.LogOutput | RunOptions.FaultOnError);
+            var clusterDefinition = ClusterDefinition.FromFile(clusterDefPath);
+
+            clusterDefinition.Provisioner = $"neon-cli:{Program.Version}";  // Identify this tool/version as the cluster provisioner
+
+            cluster = new ClusterProxy(clusterDefinition, Program.CreateNodeProxy<NodeDefinition>, RunOptions.LogOutput | RunOptions.FaultOnError);
 
             if (File.Exists(Program.GetClusterLoginPath(NeonClusterConst.RootUser, cluster.Definition.Name)))
             {
