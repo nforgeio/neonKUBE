@@ -89,12 +89,10 @@ namespace NeonCli
 
             state = state.ToLowerInvariant();
 
-            if (!context.Arguments.TryGetValue<string>("force", out var forceArg))
+            if (!context.Arguments.TryGetValue<bool>("force", out var force))
             {
-                forceArg = "false";
+                force = false;
             }
-
-            var force = ToBool(forceArg);
 
             // We have the required arguments, so perform the operation.
 

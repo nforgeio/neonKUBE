@@ -301,18 +301,6 @@ namespace NeonCli
 
                 NeonClusterHelper.OpenCluster(login);
 
-                //-------------------------------
-                // $todo(jeff.lill): DELETE THIS!
-
-                if (File.Exists("_args.json"))
-                {
-                    File.Delete("_args.json");
-                }
-
-                File.Copy(argsPath, Path.Combine(Environment.CurrentDirectory, "_args.json"));
-
-                //-------------------------------
-
                 switch (module.ToLowerInvariant())
                 {
                     case "neon_certificate":
@@ -346,36 +334,6 @@ namespace NeonCli
             // Exit right now to be sure that nothing else is written to STDOUT.
 
             Program.Exit(0);
-        }
-
-        /// <summary>
-        /// Converts an Ansible argument value into a boolean.
-        /// </summary>
-        /// <param name="value">The value being converted.</param>
-        /// <returns>The converted boolean.</returns>
-        private bool ToBool(string value)
-        {
-            // $todo(jeff.lill):
-            //
-            // Scan the Ansible source code and use the same conventions here
-            // (if we're not doing so already).
-            //
-            // On second look, I believe that Ansible is already doing this
-            // conversion when it generates the module JSON arguments file.
-
-            switch (value.ToLowerInvariant())
-            {
-                case "yes":
-                case "true":
-                case "on":
-                case "1":
-
-                    return true;
-
-                default:
-
-                    return false;
-            }
         }
     }
 }

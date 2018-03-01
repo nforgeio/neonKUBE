@@ -78,6 +78,8 @@ namespace NeonCli
 
             // Obtain common arguments.
 
+            context.WriteLine(Verbosity.Trace, $"Parsing [name]");
+
             if (!context.Arguments.TryGetValue<string>("name", out var name))
             {
                 throw new ArgumentException($"[name] module argument is required.");
@@ -87,6 +89,8 @@ namespace NeonCli
             {
                 throw new ArgumentException($"[name={name}] is not a valid proxy route name.");
             }
+
+            context.WriteLine(Verbosity.Trace, $"Parsing [proxy]");
 
             if (!context.Arguments.TryGetValue<string>("proxy", out var proxy))
             {
@@ -110,6 +114,8 @@ namespace NeonCli
                     throw new ArgumentException($"[proxy={proxy}] is not a one of the valid choices: [private] or [public].");
             }
 
+            context.WriteLine(Verbosity.Trace, $"Parsing [state]");
+
             if (!context.Arguments.TryGetValue<string>("state", out var state))
             {
                 state = "present";
@@ -117,12 +123,12 @@ namespace NeonCli
 
             state = state.ToLowerInvariant();
 
-            if (!context.Arguments.TryGetValue<string>("force", out var forceArg))
-            {
-                forceArg = "false";
-            }
+            context.WriteLine(Verbosity.Trace, $"Parsing [force]");
 
-            var force = ToBool(forceArg);
+            if (!context.Arguments.TryGetValue<bool>("force", out var force))
+            {
+                force = false;
+            }
 
             // We have the required arguments, so perform the operation.
 
@@ -153,24 +159,14 @@ namespace NeonCli
 
                 case "present":
 
-                    if (!context.Arguments.TryGetValue<string>("route", out var routeText))
+                    context.WriteLine(Verbosity.Trace, $"Parsing [route]");
+
+                    if (!context.Arguments.TryGetValue<JObject>("route", out var routeObject))
                     {
                         throw new ArgumentException($"[route] module argument is required.");
                     }
 
-                    //-------------------------------------------
-                    // $todo(jeff.lill): DELETE THIS!
-
-                    var dumpPath = Path.Combine(Environment.CurrentDirectory, "dump.txt");
-
-                    if (File.Exists(dumpPath))
-                    {
-                        File.Delete(dumpPath);
-                    }
-
-                    File.WriteAllText(dumpPath, routeText);
-
-                    //-------------------------------------------
+                    var routeText = routeObject.ToString();
 
                     context.WriteLine(Verbosity.Trace, "Parsing route");
 
