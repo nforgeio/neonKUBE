@@ -158,9 +158,6 @@ namespace NeonCli
                         throw new ArgumentException($"[route] module argument is required.");
                     }
 
-                    ProxyRoute  newRoute;
-                    ProxyRoute  existingRoute;
-
                     //-------------------------------------------
                     // $todo(jeff.lill): DELETE THIS!
 
@@ -175,34 +172,9 @@ namespace NeonCli
 
                     //-------------------------------------------
 
-                    // Parse the new route.  We're going to accept this as JSON or YAML and
-                    // we're going the relax the property name case sensitivity.
+                    context.WriteLine(Verbosity.Trace, "Parsing route");
 
-                    // If the first non-whitespace character is a "{" then we're going
-                    // to assume route is formatted as JSON, otherwise we'll parse YAML.
-
-                    if (routeText.Trim().StartsWith("{"))
-                    {
-                        // Parse JSON:
-                        //
-                        // Note that for JSON we're going to enforce property name
-                        // capitalization.
-
-                        context.WriteLine(Verbosity.Trace, "Parsing route as JSON");
-
-                        newRoute = ProxyRoute.ParseJson(routeText);
-                    }
-                    else
-                    {
-                        // Parse YAML:
-                        //
-                        // Note that for yaml we're NOT going to enforce property name
-                        // capitalization.
-
-                        context.WriteLine(Verbosity.Trace, "Parsing route as YAML");
-
-                        newRoute = ProxyRoute.ParseYaml(routeText);
-                    }
+                    var newRoute = ProxyRoute.Parse(routeText);
 
                     context.WriteLine(Verbosity.Trace, "Route parsed successfully");
 
@@ -246,7 +218,7 @@ namespace NeonCli
                     // non-root logins.
                     //
                     // One idea might be to save two versions of the certificates.
-                    // The primary certificate with primary key in Vault and then
+                    // The primary certificate with private key in Vault and then
                     // just the public certificate in Consul and then load just
                     // the public ones here.
                     //
@@ -286,12 +258,13 @@ namespace NeonCli
                         context.Failed = true;
                         return;
                     }
+
                     // Try reading any existing route with this name and then determine
-                    // whether the two versions of the route are different. 
+                    // whether the two versions of the route are actually different. 
 
                     context.WriteLine(Verbosity.Trace, $"Looking for an existing route");
 
-                    existingRoute = proxyManager.GetRoute(name);
+                    var existingRoute = proxyManager.GetRoute(name);
 
                     if (existingRoute != null)
                     {
@@ -308,7 +281,7 @@ namespace NeonCli
                             if (force)
                             {
                                 context.Changed = true;
-                                context.WriteLine(Verbosity.Trace, $"Routes are the same but since [force=true] we're going to update anyway..");
+                                context.WriteLine(Verbosity.Trace, $"Routes are the same but since [force=true] we're going to update anyway.");
                             }
                             else
                             {
