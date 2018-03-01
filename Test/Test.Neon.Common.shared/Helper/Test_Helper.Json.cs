@@ -3,9 +3,11 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
+using System;
 
 using Neon.Common;
 
+using Newtonsoft.Json;
 using Xunit;
 
 namespace TestCommon
@@ -19,7 +21,7 @@ namespace TestCommon
         }
 
         [Fact]
-        public void JsonSerialize()
+        public void JsonSerializeStrict()
         {
             var before = 
                 new JsonTestPerson()
@@ -36,6 +38,52 @@ namespace TestCommon
 
             Assert.Equal("Jeff", after.Name);
             Assert.Equal(56, after.Age);
+
+            // Verify that we see exceptions for a source property
+            // that's not defined in the type.
+
+            const string unmatchedJson =
+@"
+{
+    ""Name"": ""jeff"",
+    ""Age"": 66,
+    ""Unmatched"": ""Hello""
+}
+";
+            Assert.Throws<JsonSerializationException>(() => NeonHelper.JsonDeserialize<JsonTestPerson>(unmatchedJson));
+        }
+
+        [Fact]
+        public void JsonSerializeRelaxed()
+        {
+            var before =
+                new JsonTestPerson()
+                {
+                    Name = "Jeff",
+                    Age = 56
+                };
+
+            var json = NeonHelper.JsonSerialize(before, settings: NeonHelper.JsonRelaxedSerializerSettings);
+
+            Assert.StartsWith("{", json);
+
+            var after = NeonHelper.JsonDeserialize<JsonTestPerson>(json, settings: NeonHelper.JsonRelaxedSerializerSettings);
+
+            Assert.Equal("Jeff", after.Name);
+            Assert.Equal(56, after.Age);
+
+            // Verify that we see exceptions for a source property
+            // that's not defined in the type.
+
+            const string unmatchedJson =
+@"
+{
+    ""Name"": ""jeff"",
+    ""Age"": 66,
+    ""Unmatched"": ""Hello""
+}
+";
+            NeonHelper.JsonDeserialize<JsonTestPerson>(unmatchedJson, settings: NeonHelper.JsonRelaxedSerializerSettings);
         }
 
         [Fact]

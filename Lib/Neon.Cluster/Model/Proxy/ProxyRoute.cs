@@ -65,7 +65,12 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonText));
 
-            var baseRoute = NeonHelper.JsonDeserialize<ProxyRoute>(jsonText);
+            // We're going to ignore unmatched properties here because we
+            // we're reading the base route class first.
+
+            var baseRoute = NeonHelper.JsonDeserialize<ProxyRoute>(jsonText, settings: NeonHelper.JsonRelaxedSerializerSettings);
+
+            // Now that we know the route mode, we can deserialize the full route.
 
             switch (baseRoute.Mode)
             {

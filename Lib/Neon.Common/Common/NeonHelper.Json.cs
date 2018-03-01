@@ -21,25 +21,34 @@ namespace Neon.Common
     public static partial class NeonHelper
     {
         /// <summary>
-        /// The global JSON serializer settings.
+        /// The global <b>relaxed</b> JSON serializer settings.  These settings 
+        /// <b>do not require</b> that all source JSON properties match those 
+        /// defined by the type being deserialized.
         /// </summary>
-        public static JsonSerializerSettings JsonSerializerSettings { get; set; }
+        public static JsonSerializerSettings JsonRelaxedSerializerSettings { get; set; }
+
+        /// <summary>
+        /// The global <b>strict</b> JSON serializer settings.  These settings 
+        /// <b>do require</b> that all source JSON properties match those defined 
+        /// by the type being deserialized.
+        /// </summary>
+        public static JsonSerializerSettings JsonStrictSerializerSettings { get; set; }
 
         /// <summary>
         /// Serializes an object to JSON text using optional settings.
         /// </summary>
         /// <param name="value">The value to be serialized.</param>
         /// <param name="format">Output formatting option (defaults to <see cref="Formatting.None"/>).</param>
-        /// <param name="settings">The optional settings or <c>null</c> to use <see cref="JsonSerializerSettings"/>.</param>
+        /// <param name="settings">The optional settings or <c>null</c> to use <see cref="JsonStrictSerializerSettings"/>.</param>
         /// <returns>The JSON text.</returns>
         /// <remarks>
-        /// This method uses the default <see cref="JsonSerializerSettings"/> if when specific
-        /// settings are not passed.  These settings serialize enumerations as
-        /// non-camel case strings, not integers for better cross language compatibility.
+        /// This method uses the default <see cref="JsonStrictSerializerSettings"/> when specific
+        /// settings are not passed.  Yoy may pass <see cref="JsonRelaxedSerializerSettings"/> or
+        /// entirely custom settings.
         /// </remarks>
         public static string JsonSerialize(object value, Formatting format = Formatting.None, JsonSerializerSettings settings = null)
         {
-            return JsonConvert.SerializeObject(value, format, settings ?? JsonSerializerSettings);
+            return JsonConvert.SerializeObject(value, format, settings ?? JsonStrictSerializerSettings);
         }
 
         /// <summary>
@@ -47,16 +56,16 @@ namespace Neon.Common
         /// </summary>
         /// <typeparam name="T">The desired output type.</typeparam>
         /// <param name="json">The JSON text.</param>
-        /// <param name="settings">The optional settings or <c>null</c> to use <see cref="JsonSerializerSettings"/>.</param>
+        /// <param name="settings">The optional settings or <c>null</c> to use <see cref="JsonStrictSerializerSettings"/>.</param>
         /// <returns>The parsed <typeparamref name="T"/>.</returns>
         /// <remarks>
-        /// This method uses the default <see cref="JsonSerializerSettings"/> if when specific
-        /// settings are not passed.  These settings deserialize enumerations as
-        /// non-camel case strings, not integers for better cross language compatibility.
+        /// This method uses the default <see cref="JsonStrictSerializerSettings"/> when specific
+        /// settings are not passed.  Yoy may pass <see cref="JsonRelaxedSerializerSettings"/> or
+        /// entirely custom settings.
         /// </remarks>
         public static T JsonDeserialize<T>(string json, JsonSerializerSettings settings = null)
         {
-            return JsonConvert.DeserializeObject<T>(json, settings ?? JsonSerializerSettings);
+            return JsonConvert.DeserializeObject<T>(json, settings ?? JsonStrictSerializerSettings);
         }
 
         /// <summary>
