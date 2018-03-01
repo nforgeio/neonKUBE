@@ -32,9 +32,31 @@ namespace Neon.Cluster
     public class ProxyRoute
     {
         //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// 
+        /// </summary>
+        private class LowercaseNamingConvention : INamingConvention
+        {
+            public string Apply(string value)
+            {
+                return value.ToLowerInvariant();
+            }
+        }
+
+        //---------------------------------------------------------------------
         // Static members
 
+        /// <summary>
+        /// Identifies the built-in Docker DNS resolver.
+        /// </summary>
         private const string defaultResolverName = "docker";
+
+        /// <summary>
+        /// The naming convention to use for serializing routes to YAML.
+        /// </summary>
+        private static readonly INamingConvention yamlNamingConvention = new LowercaseNamingConvention();
 
         /// <summary>
         /// Parses a <see cref="ProxyRoute"/> from a JSON or YAML string,
@@ -96,7 +118,7 @@ namespace Neon.Cluster
             // we're reading the base route class first.
 
             var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(new PascalCaseNamingConvention())
+                .WithNamingConvention(yamlNamingConvention)
                 .IgnoreUnmatchedProperties()
                 .Build();
 
@@ -105,7 +127,7 @@ namespace Neon.Cluster
             // Enable unmatched property checking.
 
             deserializer = new DeserializerBuilder()
-                .WithNamingConvention(new PascalCaseNamingConvention())
+                .WithNamingConvention(yamlNamingConvention)
                 .Build();
 
             switch (baseRoute.Mode)
@@ -227,7 +249,7 @@ namespace Neon.Cluster
             // already for JSON.
 
             var serializer = new SerializerBuilder()
-                .WithNamingConvention(new PascalCaseNamingConvention())
+                .WithNamingConvention(yamlNamingConvention)
                 .Build();
 
             return serializer.Serialize(this);
