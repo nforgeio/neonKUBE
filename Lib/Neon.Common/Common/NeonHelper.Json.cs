@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonHelper.Csv.cs
+// FILE:	    NeonHelper.Json.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -45,18 +45,18 @@ namespace Neon.Common
         /// <summary>
         /// Deserializes JSON text using optional settings.
         /// </summary>
-        /// <typeparam name="TObject">The desired output type.</typeparam>
+        /// <typeparam name="T">The desired output type.</typeparam>
         /// <param name="json">The JSON text.</param>
         /// <param name="settings">The optional settings or <c>null</c> to use <see cref="JsonSerializerSettings"/>.</param>
-        /// <returns>The parsed <typeparamref name="TObject"/>.</returns>
+        /// <returns>The parsed <typeparamref name="T"/>.</returns>
         /// <remarks>
         /// This method uses the default <see cref="JsonSerializerSettings"/> if when specific
         /// settings are not passed.  These settings deserialize enumerations as
         /// non-camel case strings, not integers for better cross language compatibility.
         /// </remarks>
-        public static TObject JsonDeserialize<TObject>(string json, JsonSerializerSettings settings = null)
+        public static T JsonDeserialize<T>(string json, JsonSerializerSettings settings = null)
         {
-            return JsonConvert.DeserializeObject<TObject>(json, settings ?? JsonSerializerSettings);
+            return JsonConvert.DeserializeObject<T>(json, settings ?? JsonSerializerSettings);
         }
 
         /// <summary>

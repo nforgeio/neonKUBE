@@ -12,7 +12,7 @@ namespace TestCommon
 {
     public partial class Test_Helper
     {
-        public class TestClass
+        public class JsonTestPerson
         {
             public string Name { get; set; }
             public int Age { get; set; }
@@ -22,7 +22,7 @@ namespace TestCommon
         public void JsonSerialize()
         {
             var before = 
-                new TestClass()
+                new JsonTestPerson()
                 {
                     Name = "Jeff",
                     Age  = 56
@@ -32,7 +32,7 @@ namespace TestCommon
 
             Assert.StartsWith("{", json);
 
-            var after = NeonHelper.JsonDeserialize<TestClass>(json);
+            var after = NeonHelper.JsonDeserialize<JsonTestPerson>(json);
 
             Assert.Equal("Jeff", after.Name);
             Assert.Equal(56, after.Age);
@@ -42,13 +42,13 @@ namespace TestCommon
         public void JsonClone()
         {
             var value = 
-                new TestClass()
+                new JsonTestPerson()
                 {
                     Name = "Jeff",
                     Age  = 56
                 };
 
-            var clone = NeonHelper.JsonClone<TestClass>(value);
+            var clone = NeonHelper.JsonClone<JsonTestPerson>(value);
 
             Assert.NotSame(value, clone);
             Assert.Equal(value.Name, clone.Name);

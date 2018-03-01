@@ -19,9 +19,6 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
-using YamlDotNet.Serialization;
-using YamlDotNet.Serialization.NamingConventions;
-
 using Neon.Common;
 
 namespace Neon.Cluster
@@ -32,31 +29,12 @@ namespace Neon.Cluster
     public class ProxyRoute
     {
         //---------------------------------------------------------------------
-        // Private types
-
-        /// <summary>
-        /// 
-        /// </summary>
-        private class LowercaseNamingConvention : INamingConvention
-        {
-            public string Apply(string value)
-            {
-                return value.ToLowerInvariant();
-            }
-        }
-
-        //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
         /// Identifies the built-in Docker DNS resolver.
         /// </summary>
         private const string defaultResolverName = "docker";
-
-        /// <summary>
-        /// The naming convention to use for serializing routes to YAML.
-        /// </summary>
-        private static readonly INamingConvention yamlNamingConvention = new LowercaseNamingConvention();
 
         /// <summary>
         /// Parses a <see cref="ProxyRoute"/> from a JSON or YAML string,
@@ -117,28 +95,19 @@ namespace Neon.Cluster
             // We're going to ignore unmatched properties here because we
             // we're reading the base route class first.
 
-            var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(yamlNamingConvention)
-                .IgnoreUnmatchedProperties()
-                .Build();
+            var baseRoute = NeonHelper.YamlDeserialize<ProxyRoute>(yamlText, ignoreUnmatched: true);
 
-            var baseRoute = deserializer.Deserialize<ProxyRoute>(yamlText);
-
-            // Enable unmatched property checking.
-
-            deserializer = new DeserializerBuilder()
-                .WithNamingConvention(yamlNamingConvention)
-                .Build();
+            // Now that we know the route mode, we can deserialize the full route.
 
             switch (baseRoute.Mode)
             {
                 case ProxyMode.Http:
 
-                    return deserializer.Deserialize<ProxyHttpRoute>(yamlText);
+                    return NeonHelper.YamlDeserialize<ProxyHttpRoute>(yamlText);
 
                 case ProxyMode.Tcp:
 
-                    return deserializer.Deserialize<ProxyTcpRoute>(yamlText);
+                    return NeonHelper.YamlDeserialize<ProxyTcpRoute>(yamlText);
 
                 default:
 
@@ -243,16 +212,7 @@ namespace Neon.Cluster
         /// <returns>YAML text.</returns>
         public string ToYaml()
         {
-            // $todo(jeff.lill):
-            //
-            // Consider adding YAML serialization to [NeonHelper] like we do
-            // already for JSON.
-
-            var serializer = new SerializerBuilder()
-                .WithNamingConvention(yamlNamingConvention)
-                .Build();
-
-            return serializer.Serialize(this);
+            return NeonHelper.YamlSerialize(this);
         }
     }
 }
