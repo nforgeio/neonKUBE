@@ -17,8 +17,7 @@ namespace Neon.Cluster
     /// </summary>
     public class LocalHyperVOptions
     {
-        private const string defaultHostVhdxUri      = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.vhdx.zip";
-        internal const string defaultVmMinimumMemory = "2GB";
+        private const string defaultHostVhdxUri = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.vhdx.zip";
 
         /// <summary>
         /// Default constructor.
