@@ -39,7 +39,7 @@ Manages the cluster's public and private proxies.
 USAGE:
 
     neon proxy NAME build
-    neon proxy NAME get ROUTE
+    neon proxy NAME get [--yaml] ROUTE
     neon proxy NAME inspect
     neon proxy NAME list|ls
     neon proxy NAME remove|rm ROUTE
@@ -61,7 +61,8 @@ COMMANDS:
     build           - Forces the proxy manager to build the 
                       proxy configuration.
 
-    get             - Displays a specific route.
+    get             - Output a specific route as JSON by default.
+                      Use [--yaml] to return as YAML.
 
     haproxy         - Outputs the HAProxy configuration.
 
@@ -70,10 +71,11 @@ COMMANDS:
 
     list|ls         - Lists the route names.
 
-    remove|rm       - Removes a route (if it exists).
+    remove|rm       - Removes a named route.
 
-    put             - Adds or updates a route from a JSON file
-                      or by reading standard input.
+    put             - Adds or updates a route from a file or by
+                      reading standard input.  JSON or YAML
+                      input is supported.
 
     settings        - Updates the proxy global settings from a
                       JSON file or by reading standard input.
@@ -102,9 +104,9 @@ load balancer by setting the public port property.
 Backends specify one or more target servers by IP address or DNS name
 and port number.
 
-Routes are specified using JSON.  Here's an example HTTP/S route that
-accepts HTTP traffic for [foo.com] and [www.foo.com] and redirects it
-to HTTPS and then also accepts HTTPS traffic using the [foo.com] certificate.
+Routes are specified using JSON or YAML.  Here's an example HTTP/S route that
+accepts HTTP traffic for [foo.com] and [www.foo.com] and redirects it to
+HTTPS and then also accepts HTTPS traffic using the [foo.com] certificate.
 Traffic is routed to the [foo_service] on port 80 which could be a Docker
 swarm mode service or DNS name.
 
@@ -141,12 +143,33 @@ load balances the traffic to the backend servers listening on port 1000:
         ]
     }
 
+Here's how this route looks as YAML:
+
+    Name: my-tcp-route
+    Mode: tcp
+    Frontends:
+    - PublicPort: 1000
+      ProxyPort: 5305
+    Backends:
+    - Server: 10.0.1.40
+      Port: 1000
+    - Server: 10.0.1.41
+      Port: 1000
+    - Server: 10.0.1.42
+      Port:1000
+
 See the documentation for more proxy route and setting details.
 ";
         /// <inheritdoc/>
         public override string[] Words
         {
             get { return new string[] { "proxy" }; }
+        }
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions
+        {
+            get { return new string[] { "--yaml" }; }
         }
 
         /// <inheritdoc/>
@@ -168,7 +191,8 @@ See the documentation for more proxy route and setting details.
 
             // Process the command arguments.
 
-            ProxyManager proxyManager = null;
+            var proxyManager = (ProxyManager)null;
+            var yaml         = commandLine.HasOption("--yaml");
 
             var proxyName = commandLine.Arguments.FirstOrDefault();
 
@@ -233,7 +257,7 @@ See the documentation for more proxy route and setting details.
                         Program.Exit(1);
                     }
 
-                    Console.WriteLine(NeonHelper.JsonSerialize(route, Formatting.Indented));
+                    Console.WriteLine(yaml ? route.ToYaml() : route.ToJson());
                     break;
 
                 case "haproxy":
@@ -353,11 +377,13 @@ See the documentation for more proxy route and setting details.
                         Program.Exit(1);
                     }
 
-                    // Load the route.
+                    // Load the route.  Note that we support reading routes as JSON or
+                    // YAML, automatcially detecting thew format.  We always persist
+                    // routes as JSON though.
 
                     var routeFile = commandLine.Arguments[0];
 
-                    string routeJson;
+                    string routeText;
 
                     if (routeFile == "-")
                     {
@@ -365,16 +391,16 @@ See the documentation for more proxy route and setting details.
                         {
                             using (var reader = new StreamReader(input, detectEncodingFromByteOrderMarks: true))
                             {
-                                routeJson = reader.ReadToEnd();
+                                routeText = reader.ReadToEnd();
                             }
                         }
                     }
                     else
                     {
-                        routeJson = File.ReadAllText(routeFile);
+                        routeText = File.ReadAllText(routeFile);
                     }
 
-                    var proxyRoute = ProxyRoute.ParseJson(routeJson);
+                    var proxyRoute = ProxyRoute.Parse(routeText);
 
                     routeName = proxyRoute.Name;
 

@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
+using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -36,12 +37,34 @@ namespace Neon.Cluster
         private const string defaultResolverName = "docker";
 
         /// <summary>
+        /// Parses a <see cref="ProxyRoute"/> from a JSON or YAML string,
+        /// automatically detecting the input format.
+        /// </summary>
+        /// <param name="jsonOrYaml">The JSON or YAML input.</param>
+        /// <returns>The parsed object instance derived from <see cref="ProxyRoute"/>.</returns>
+        public static ProxyRoute Parse(string jsonOrYaml)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
+
+            if (jsonOrYaml.TrimStart().StartsWith("{"))
+            {
+                return ParseJson(jsonOrYaml);
+            }
+            else
+            {
+                return ParseYaml(jsonOrYaml);
+            }
+        }
+
+        /// <summary>
         /// Parses a <see cref="ProxyRoute"/> from a JSON string.
         /// </summary>
         /// <param name="jsonText">The input string.</param>
         /// <returns>The parsed object instance derived from <see cref="ProxyRoute"/>.</returns>
         public static ProxyRoute ParseJson(string jsonText)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonText));
+
             var baseRoute = NeonHelper.JsonDeserialize<ProxyRoute>(jsonText);
 
             switch (baseRoute.Mode)
@@ -65,23 +88,25 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="yamlText">The input string.</param>
         /// <returns>The parsed object instance derived from <see cref="ProxyRoute"/>.</returns>
-        /// <remarks>
-        /// <note>
-        /// This YAML parser does not enforce property name case sensitivity.
-        /// </note>
-        /// </remarks>
         public static ProxyRoute ParseYaml(string yamlText)
         {
-            // Note that for YAML we're NOT going to enforce property name
-            // capitalization.  The [HyphenatedNamingConvention] instance
-            // appears to relax case sensitivity.
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(yamlText));
+
+            // We're going to ignore unmatched properties here because we
+            // we're reading the base route class first.
 
             var deserializer = new DeserializerBuilder()
-                .WithNamingConvention(new HyphenatedNamingConvention())
+                .WithNamingConvention(new PascalCaseNamingConvention())
                 .IgnoreUnmatchedProperties()
                 .Build();
 
             var baseRoute = deserializer.Deserialize<ProxyRoute>(yamlText);
+
+            // Enable unmatched property checking.
+
+            deserializer = new DeserializerBuilder()
+                .WithNamingConvention(new PascalCaseNamingConvention())
+                .Build();
 
             switch (baseRoute.Mode)
             {
@@ -179,6 +204,33 @@ namespace Neon.Cluster
             {
                 context.Error($"Proxy resolver [{nameof(Resolver)}={Resolver}] does not exist.");
             }
+        }
+
+        /// <summary>
+        /// Renders the route as JSON.
+        /// </summary>
+        /// <returns>JSON text.</returns>
+        public string ToJson()
+        {
+            return NeonHelper.JsonSerialize(this, Formatting.Indented);
+        }
+
+        /// <summary>
+        /// Renders the route as YAML.
+        /// </summary>
+        /// <returns>YAML text.</returns>
+        public string ToYaml()
+        {
+            // $todo(jeff.lill):
+            //
+            // Consider adding YAML serialization to [NeonHelper] like we do
+            // already for JSON.
+
+            var serializer = new SerializerBuilder()
+                .WithNamingConvention(new PascalCaseNamingConvention())
+                .Build();
+
+            return serializer.Serialize(this);
         }
     }
 }

@@ -103,13 +103,13 @@ namespace Neon.Cluster
         /// The proxy frontend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Frontends", Required = Required.Always)]
-        public List<ProxyHttpFrontend> Frontends = new List<ProxyHttpFrontend>();
+        public List<ProxyHttpFrontend> Frontends { get; set; } = new List<ProxyHttpFrontend>();
 
         /// <summary>
         /// The proxy backend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Backends", Required = Required.Always)]
-        public List<ProxyHttpBackend> Backends = new List<ProxyHttpBackend>();
+        public List<ProxyHttpBackend> Backends { get; set; } = new List<ProxyHttpBackend>();
 
         /// <summary>
         /// Validates the route.

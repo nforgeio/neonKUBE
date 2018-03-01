@@ -40,13 +40,13 @@ namespace Neon.Cluster
         /// The proxy frontend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Frontends", Required = Required.Always)]
-        public List<ProxyTcpFrontend> Frontends = new List<ProxyTcpFrontend>();
+        public List<ProxyTcpFrontend> Frontends { get; set; } = new List<ProxyTcpFrontend>();
 
         /// <summary>
         /// The proxy backend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Backends", Required = Required.Always)]
-        public List<ProxyTcpBackend> Backends = new List<ProxyTcpBackend>();
+        public List<ProxyTcpBackend> Backends { get; set; } = new List<ProxyTcpBackend>();
 
         /// <summary>
         /// The maximum overall number of connections to be allowed for this
