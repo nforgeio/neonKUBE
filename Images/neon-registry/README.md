@@ -1,4 +1,4 @@
-This base image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a pull-thru registry cache for a neonCLUSTER.
+This base image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonCLUSTER.
 
 # Image Tags
 
@@ -8,23 +8,21 @@ The most recent production build will be tagged as **latest**.
 
 From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** identifies the Git source branch where the image was built from.  These images are used for internal development purposes only and **should not be used production** as they may not actually work and may also be removed or updated at any time.
 
-The following image tags identify archived images which will not be deleted but are no longer maintained.
-
-* `2.6.0, 2.6, 2`
-
 # Description
 
-This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a pull-thru registry cache for a neonCLUSTER that can reduce the network traffic to upstream image registries.
+This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker Registry for a neonCLUSTER.
+
+**neon-registry** is intended to be deployed as a Docker service or container on a neonCLUSTER with the **Ceph Filesystem** enabled.  **CephFS** implements a shared file system that is available on all cluster nodes as well as to Docker services and containers using the **neon volume driver**.  Registry service instances or containers will all mount the same shared **neon** volume to store the Docker images.  CephFS ensures that all registry instances see the same data and it also provides for data redundancy.
+
+Docker really expects registries to be secured with TLS certificates (it's possible to workaround this but that can be a pain).
 
 # Environment Variables
 
 * **HOSTNAME** (*required*) - host name for this instance.
 
-* **REGISTRY** (*optional*) - URL of the remote registry being cached.  This defaults to the Docker Public Registry at https://registry-1.docker.io.
+* **USERNAME** (*optional*) - user ID used to authenticate with the registry.
 
-* **USERNAME** (*optional*) - user ID used to authenticate with the cache and the remote registry.
-
-* **PASSWORD** (*optional*) - password used to authenticate with the cache and the remote registry.
+* **PASSWORD** (*optional*) - password used to authenticate with the registry.
 
 * **LOG_LEVEL** (*optional*) - registry logging level, one of: `error`, `warn`, `info`, or `debug`.  This defaults to `info`.
 
@@ -40,7 +38,7 @@ The **/var/lib/neon-registry-cache** directory should be mounted as a named read
 
 The registry caches are deployed such that cluster Docker daemons will attempt to download cached images beginning at the first manager node (as lexigraphically sorted by name).  If this fails, Docker will failover to the next manager.  If all managers fail, then the daemon will download directly from the authoritative external registry.
 
-This configuration makes a NeonCluser self-bootstrapping where even this **neon-registry-cache** image can be deployed during cluster setup, even before any other caches have been deployed.
+This configuration makes a NeonCluser self-bootstrapping where even this **neon-registry-cache** image can be deployed during cluster setup, even before any mirrors have been deployed.
 
 # Deployment
 

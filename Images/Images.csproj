@@ -145,6 +145,17 @@
     <Content Include="openjdk\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
+    <Content Include="neon-registry\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="neon-registry\build.ps1" />
+    <None Include="neon-registry\config\registry.yml.sh" />
+    <None Include="neon-registry\docker-entrypoint.sh" />
+    <None Include="neon-registry\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-registry\publish.ps1" />
+    <None Include="neon-registry\README.md" />
     <None Include="openjdk\build.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
