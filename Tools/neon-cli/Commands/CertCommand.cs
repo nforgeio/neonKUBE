@@ -87,7 +87,7 @@ USAGE:
     neon cert put NAME PATH
     neon cert remove|rm NAME
     neon cert split PATH PATH-CERT PATH-KEY 
-    neon verify PATH
+    neon cert verify PATH
 
 ARGUMENTS:
 
