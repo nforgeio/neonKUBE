@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# FILE:         mirror.yml.sh
+# FILE:         registry.yml.sh
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
@@ -12,10 +12,10 @@ log:
   level: ${LOG_LEVEL}
   formatter: json
   fields:
-    service_type: neon-registry-cache
+    service_type: neon-registry
 storage:
   filesystem:
-    rootdirectory: /var/lib/neon-registry-cache
+    rootdirectory: /var/lib/registry
     maxthreads: 100
   delete:
     enabled: true
@@ -33,10 +33,6 @@ storage:
       enabled: false
 http:
   addr: 0.0.0.0:5000
-  host: ${HOSTNAME}:5000
-  tls:
-    certificate: /etc/neon-registry-cache/cache.crt
-    key: /etc/neon-registry-cache/cache.key
   headers:
     X-Content-Type-Options: [nosniff]
 EOF

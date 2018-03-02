@@ -1,4 +1,4 @@
-This base image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonCLUSTER.
+This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonCLUSTER.
 
 # Image Tags
 
@@ -14,51 +14,41 @@ This image derives from the offical [registry](https://hub.docker.com/_/registry
 
 **neon-registry** is intended to be deployed as a Docker service or container on a neonCLUSTER with the **Ceph Filesystem** enabled.  **CephFS** implements a shared file system that is available on all cluster nodes as well as to Docker services and containers using the **neon volume driver**.  Registry service instances or containers will all mount the same shared **neon** volume to store the Docker images.  CephFS ensures that all registry instances see the same data and it also provides for data redundancy.
 
-Docker really expects registries to be secured with TLS certificates (it's possible to workaround this but that can be a pain).
+**neon-registry** is provisioned without integrated TLS support as it expects to be deployed behind a neonCLUSTER HTTPS proxy route using a TLS certificate to encrypt traffic.
 
 # Environment Variables
 
-* **HOSTNAME** (*required*) - host name for this instance.
+* **USERNAME** (*required*) - user ID used to authenticate with the registry.
 
-* **USERNAME** (*optional*) - user ID used to authenticate with the registry.
+* **PASSWORD** (*required*) - password used to authenticate with the registry.
 
-* **PASSWORD** (*optional*) - password used to authenticate with the registry.
+* **SECRET** (*required*) - a cryptographically random string used to persist state to clients to prevent tampering.  You must specify the same value for every registry instance in your cluster.
 
 * **LOG_LEVEL** (*optional*) - registry logging level, one of: `error`, `warn`, `info`, or `debug`.  This defaults to `info`.
 
+* **READ_ONLY** (*optional*) - indicates that the registry should be started as read-only.  This is useful for making the registry read-only during garbage collection.  Possible values are `true` and `false`.  This defaults to `false`.
+
 # Volumes
 
-This image expects two volumes to be mounted to it:
-
-The **/etc/neon-registry-cache** directory should be mounted as read-only and must include the cache's TLS certificate and private key files named **cache.crt** and **cache.key**.  The **neon-cli** maps this to the same directory on the host when the container is started.
-
-The **/var/lib/neon-registry-cache** directory should be mounted as a named read/write Docker volume, especially for production environments.  This is where the cached data will be stored.  **neon-cli** handles this configuration as well.
-
-# Operation
-
-The registry caches are deployed such that cluster Docker daemons will attempt to download cached images beginning at the first manager node (as lexigraphically sorted by name).  If this fails, Docker will failover to the next manager.  If all managers fail, then the daemon will download directly from the authoritative external registry.
-
-This configuration makes a NeonCluser self-bootstrapping where even this **neon-registry-cache** image can be deployed during cluster setup, even before any mirrors have been deployed.
+This image expects a single host volume to be mounted to the container at `/var/lib/registry`.  This is where the registry will persist the image manifests and layers.  For development or test environments with only a single deployed registry instance, this may simply reference a local Docker volume.  For production clusters that deploy multiple registry instances, this must reference a shared file system like one hosted on the integrated CephFS using the **neon volume driver**.
 
 # Deployment
 
-The neonCLUSTER **neon-cli** handles the deployment of Docker pull-thru Registry caches to the cluster manager nodes unless disabled in the cluster definition.  The tool performs the following steps (documented [here](https://docs.docker.com/registry/insecure/):
+The **neon-registry** image may be deployed as a Docker container or service.  We generally recommend deploying this as a service since that will be easier to manage.
 
-1. Generates a self-signed certificate for each cluster manager with the certificate hosts matching **<MANAGER-NAME>.neon-registry-cache.cluster** , where *<MANAGER-NAME>* is the name of the manager node.
+In either case, you'll generally need the following:
 
-2. Copies the generated certificates to every cluster node as **/etc/docker/certs.d/<hostname>:5002/ca.crt**.
+1. A DNS host name with the IP address of the registry, like: `registry.mycluster.com`.  This will need to be public if you need to push images from outside your cluster.
 
-3. Configures Linux on all nodes to trust the certificates as well.
+2. A TLS certificate for the registry host name.  This should be a real certificate (not self-signed).  [namecheap.com](http://namecheap.com) sells single site certificates for less than $10, so just bite the bullet and purchase one.
 
-4. Updates **/etc/hosts** on all cluster nodes with A records that map each manager node IP address to the corresponding host name.
+3. The username and password that will secure access to the registry.
 
-5. Configures the Docker systemd unit file with the list of with the manager registry cache URIs followed by the external authoritative registry URI. 
+4. A crytographically generated secret.  You can generate one using `neon create password`.  Note that you'll need to retain this secret somewhere in case you'll need to redeploy the registry container or service in the future.
 
-6. Copies the generated certificate and key file into `/etc/neon-registry-cache` on each manager node.
+## Deploy as a Service
 
-7. Creates a Docker volume named `neon-registry-cache` on each manager node (to be used to host the cached image layers).
-
-8. Runs the registry cache on each cluster manager as a container, mapping the host's `/etc/neon-registry-cache` directory as well as the `neon-registry-cache` volume into the container.
+## Deploy as a Container
 
 # Upgrading
 
