@@ -1102,6 +1102,7 @@ frontend {haProxyFrontend.Name}
     unique-id-format    {NeonClusterConst.HAProxyUidFormat}
     option              forwardfor
     option              http-server-close
+    http-request        set-header X-Forwarded-Proto https if {{ ssl_fc }}
 ");
 
                     if (haProxyFrontend.Log)
