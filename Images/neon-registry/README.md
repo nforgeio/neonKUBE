@@ -52,13 +52,15 @@ You'll typically want to have the registry listen on the default port **5000** w
 
 The Docker service command below shows how **neon-registry** can be deployed as a service.  In this example, we're deploying the registry on each of the manager nodes persisting data using the **neon** volume plugin to the **neon-registry** volume.
 
+**NOTE* ** You'll need to replace **MY-USER**, **-MY-PASSWORD**, and **MY-SECRET** with the desired values for your environment.
+
 ```
 docker service start \
     --name neon-registry \
     --detach=false \
-    --env USERNAME=my-user \
-    --env PASSWORD=my-password \
-    --env SECRET=IcKu7Z1r0pA9laROd9ku \
+    --env USERNAME=MY-USER \
+    --env PASSWORD=MY-PASSWORD \
+    --env SECRET=MY-SECRET \
     --env LOG_LEVEL=info \
     --env READ_ONLY=false \
     --constraint node.role==manager \
@@ -95,15 +97,17 @@ This route accepts HTTPS requests on port 5000 on all of the cluster hosts, hand
 
 You can also deploy **neon-registry** as a container.  We recommend deploying this as a service, but sometimes it's necessary to deploy containers (e.g. to dedicated pet nodes).  The steps are similar to those for deploying as a service:
 
+**NOTE* ** You'll need to replace **MY-USER**, **-MY-PASSWORD**, and **MY-SECRET** with the desired values for your environment.
+
 First, start the containers like:
 
 ```
 docker run \
     --name neon-registry \
     --detach \
-    --env USERNAME=my-user \
-    --env PASSWORD=my-password \
-    --env SECRET=IcKu7Z1r0pA9laROd9ku \
+    --env USERNAME=MY-USER \
+    --env PASSWORD=MY-PASSWORD \
+    --env SECRET=MY-SECRET \
     --env LOG_LEVEL=info \
     --env READ_ONLY=false \
     --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \

@@ -180,8 +180,8 @@ namespace Neon.Cluster
         /// </para>
         /// <note>
         /// This is recognized only when deploying on a local Hyper-V hypervisor, typically
-        /// for development and test poruposes.  This is ignored when provisioning on remote
-        /// Hyper-V instances or for hypervisors.
+        /// for development and test purposes.  This is ignored when provisioning on remote
+        /// Hyper-V instances or for cloud or bare machine environments.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "VmDriveFolder", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
