@@ -3,9 +3,9 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds a neonCLUSTER [neon-registry-cache] image with the specified version, subversion
+# Builds a neonCLUSTER [neon-registry] image with the specified version, subversion
 # and majorversion.  The image built will be a slightly modified version of the 
-# Docker Registry reference.
+# Docker reference Registry.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 
@@ -18,7 +18,7 @@ param
 
 "   "
 "======================================="
-"* NEON-REGISTRY-CACHE:" + $tag
+"* NEON-REGISTRY:" + $tag
 "======================================="
 
 # Copy the common scripts.

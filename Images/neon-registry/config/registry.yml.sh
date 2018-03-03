@@ -15,7 +15,7 @@ log:
     service_type: neon-registry
 storage:
   filesystem:
-    rootdirectory: /var/lib/registry
+    rootdirectory: /var/lib/neon-registry
     maxthreads: 100
   delete:
     enabled: true

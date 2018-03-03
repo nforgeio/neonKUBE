@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds all of the supported [neon-registry-cache] images and pushes them to Docker Hub.
+# Builds all of the supported [neon-registry] images and pushes them to Docker Hub.
 #
 # NOTE: You must be logged into Docker Hub.
 #
@@ -29,7 +29,7 @@ function Build
 		[switch]$latest = $False
 	)
 
-	$registry = "neoncluster/neon-registry-cache"
+	$registry = "neoncluster/neon-registry"
 	$date     = UtcDate
 	$branch   = GitBranch
 

@@ -4,35 +4,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
-. log-info.sh "Starting [neon-registry-cache]"
-. log-info.sh "HOSTNAME=${HOSTNAME}"
-. log-info.sh "REGISTRY=${REGISTRY}"
-. log-info.sh "USERNAME=${USERNAME}"
-. log-info.sh "PASSWORD=** REDACTED **"
-. log-info.sh "LOG_LEVEL=${LOG_LEVEL}"
-
-# Add the root directory to the PATH.
-
-PATH=${PATH}:/
-
-# Verify that cache TLS certificates have been mounted.
-
-if [ ! -f /etc/neon-registry-cache/cache.crt ] ; then
-    . log-error.sh "Expected [/etc/neon-registry-cache/cache.crt] to be mounted to the container."
-    exit 1
-fi
-
-if [ ! -f /etc/neon-registry-cache/cache.key ] ; then
-    . log-error.sh "Expected [/etc/neon-registry-cache/cache.key] to be mounted to the container."
-    exit 1
-fi
-
-# Warn if no external data volume is mounted.
-
-if [ ! -d /var/lib/neon-registry-cache ] ; then
-    . log-warn.sh "Expected the registry data volume to mounted at [/var/lib/neon-registry-cache].  Production deployments should not persist the cache within the container."
-    mkdir -p /var/lib/neon-registry-cache
-fi
+. log-info.sh "Starting [neon-registry]"
 
 # Handle the environment variables. 
 
@@ -41,12 +13,34 @@ if [ "${HOSTNAME}" == "" ] ; then
     exit 1
 fi
 
-if [ "${REGISTRY}" == "" ] ; then
-    export REGISTRY=https://registry-1.docker.io
+if [ "${PASSWORD}" == "" ] ; then
+    . log-error.sh "PASSWORD environment variable is required."
+    exit 1
+fi
+
+if [ "${READ_ONLY}" == "" ] ; then
+    export READ_ONLY=false
 fi
 
 if [ "${LOG_LEVEL}" == "" ] ; then
     export LOG_LEVEL=info
+fi
+
+. log-info.sh "USERNAME=${USERNAME}"
+. log-info.sh "PASSWORD=** REDACTED **"
+. log-info.sh "SECRET=** REDACTED **"
+. log-info.sh "READ_ONLY=${READ_ONLY}"
+. log-info.sh "LOG_LEVEL=${LOG_LEVEL}"
+
+# Add the root directory to the PATH.
+
+PATH=${PATH}:/
+
+# Warn if no external data volume is mounted.
+
+if [ ! -d /var/lib/neon-registry ] ; then
+    . log-warn.sh "Expected the registry data volume to mounted at [/var/lib/neon-registry].  Production deployments should not persist images within the container."
+    mkdir -p /var/lib/neon-registry
 fi
 
 # Generate the registry configuration.
@@ -75,7 +69,14 @@ EOF
 
 fi
 
+# Garbage collect if requested.
+
+if [ "${1}" == "garbage-collect" ] ; then    
+    registry garbage-collect /registry.yml
+    exit $?
+fi
+
 # Start the registry.
 
-. log-info.sh "Starting: [neon-registry-cache]"
+. log-info.sh "Starting: [registry]"
 registry serve registry.yml

@@ -24,13 +24,13 @@ This image derives from the offical [registry](https://hub.docker.com/_/registry
 
 * **SECRET** (*required*) - a cryptographically random string used to persist state to clients to prevent tampering.  You must specify the same value for every registry instance in your cluster.
 
-* **LOG_LEVEL** (*optional*) - registry logging level, one of: `error`, `warn`, `info`, or `debug`.  This defaults to `info`.
-
 * **READ_ONLY** (*optional*) - indicates that the registry should be started as read-only.  This is useful for making the registry read-only during garbage collection.  Possible values are `true` and `false`.  This defaults to `false`.
+
+* **LOG_LEVEL** (*optional*) - registry logging level, one of: `error`, `warn`, `info`, or `debug`.  This defaults to `info`.
 
 # Volumes
 
-This image expects a single host volume to be mounted to the container at `/var/lib/registry`.  This is where the registry will persist the image manifests and layers.  For development or test environments with only a single deployed registry instance, this may simply reference a local Docker volume.  For production clusters that deploy multiple registry instances, this must reference a shared file system like one hosted on the integrated CephFS using the **neon volume driver**.
+This image expects a single host volume to be mounted to the container at `/var/lib/neon-registry`.  This is where the registry will persist the image manifests and layers.  For development or test environments with only a single deployed registry instance, this may simply reference a local Docker volume.  For production clusters that deploy multiple registry instances, this must reference a shared file system like one hosted on the integrated CephFS using the **neon volume driver**.
 
 # Deployment
 
@@ -62,7 +62,7 @@ docker service start \
     --env LOG_LEVEL=info \
     --env READ_ONLY=false \
     --constraint node.role==manager \
-    --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/registry \
+    --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
     --network neon-public \
     --restart-delay 10s \
     neoncluster/neon-registry
@@ -106,8 +106,8 @@ docker run \
     --env SECRET=IcKu7Z1r0pA9laROd9ku \
     --env LOG_LEVEL=info \
     --env READ_ONLY=false \
-    --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/registry \
-	--publish 6000:5000
+    --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
+    --publish 6000:5000
     --restart always \
     neoncluster/neon-registry
 ```
@@ -151,7 +151,7 @@ docker service start  \
    --name neon-registry-garbage \
    --replicas 1 \
    --restart-condition=none \
-   --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/registry \
+   --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
    neoncluster/neon-registry garbage-collect
 
 docker service update --env READ_ONLY=false neon-registry
