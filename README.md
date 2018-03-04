@@ -100,39 +100,25 @@ Follow steps below to configure a development or test workstation.
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon ansible password import %NF_ROOT%\passwords.zip`
 
-19. Configure the neonFORGE Nuget CLI API key (so that batch publishing scripts will work).
+19. Restart Visual Studio and/or any command windows to pick up the change the environment variable changes above.
 
-  * Obtain the API key from another developer (or follow these [instructions](https://docs.microsoft.com/en-us/nuget/create-packages/publish-a-package) to get your API key from Nuget.org).
-  * Run this DOS command passing the key:
-
-  `setx NF_NUGET_API_KEY <API-KEY> /M`
-
-20. You'll need to create persistent environment variables with your Azure account secrets if you're going to use the [$/Devops/Home/home-azure.json] cluster configuration to test Azure deployments.  Use commands that look something like this:
-
-  `setx NF_AZURE_SUBSCRIPTIONID <SUBSCRIPTION-ID> /M`
-  `setx NF_AZURE_TENANTID <TENANT-ID> /M`
-  `setx NF_AZURE_APPLICATIONID <APPLICATION-ID> /M`
-  `setx NF_AZURE_PASSWORD <PASSWORD> /M`
-
-21. Restart Visual Studio and/or any command windows to pick up the change the environment variable changes above.
-
-22. Confirm that the solution builds:
+20. Confirm that the solution builds:
 
   * Run **Visual Studio** as **administrator**
   * Open **$/neonFORGE.sln** (where **$** is the repo root directory)
   * Select **Build/Rebuild** Solution
 
-23. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)s
+21. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)s
 
-24. Install **OpenVPN** from (using the Windows Installer): [here](https://openvpn.net/index.php/open-source/downloads.html)
+22. Install **OpenVPN** from (using the Windows Installer): [here](https://openvpn.net/index.php/open-source/downloads.html)
 
-25. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
+23. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
 
-26. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
+24. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-27. *Optional*: In Chrome, install the **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
+25. *Optional*: In Chrome, install the **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
 
-28. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
+26. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
 # Git Branches and Docker Image Tagging Conventions
 
