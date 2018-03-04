@@ -36,8 +36,6 @@ if (-not $?)
 #------------------------------------------------------------------------------
 # Provision core databases and services.
 
-# Wordpress
-
 ./setup-core-services.ps1 $clusterName
 
 if (-not $?)
