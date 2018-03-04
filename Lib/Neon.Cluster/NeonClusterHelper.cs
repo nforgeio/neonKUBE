@@ -1060,9 +1060,10 @@ namespace Neon.Cluster
                     }
                     catch (Exception e)
                     {
-                        // This is probably an [HttpRequestException] indicating that we 
-                        // could not contact the cluster Consul.  We'll just returned the
-                        // cached cluster definition in this situation (if we have one).
+                        // This is probably an [HttpRequestException] of [SocketException]
+                        // indicating that we  could not contact the cluster Consul.  We'll 
+                        // just returned the cached cluster definition in this situation 
+                        // (if we have one).
 
                         if (cachedDefinition != null)
                         {
@@ -1070,7 +1071,7 @@ namespace Neon.Cluster
                         }
                         else
                         {
-                            throw new NeonClusterException("Cannot connect to cluster.", e);
+                            throw new NeonClusterException($"[{e.GetType().Name}]: Cannot connect to cluster.", e);
                         }
                     }
                 }
@@ -1080,13 +1081,25 @@ namespace Neon.Cluster
                     var deflated = await consul.KV.GetBytes("neon/cluster/definition.deflate");
                     var json     = NeonHelper.DecompressString(deflated);
 
-                    return NeonHelper.JsonDeserialize<ClusterDefinition>(json);
+                    try
+                    {
+                        return NeonHelper.JsonDeserialize<ClusterDefinition>(json);
+                    }
+                    catch (Exception e2)
+                    {
+                        throw new NeonClusterException($"[{e2.GetType().Name}]: Cannot deserialize remote cluster definition.", e2);
+                    }
+                }
+                catch (NeonClusterException)
+                {
+                    throw;
                 }
                 catch (Exception e)
                 {
-                    // This is probably an [HttpRequestException] indicating that we 
-                    // could not contact the cluster Consul.  We'll just returned the
-                    // cached cluster definition in this situation (if we have one).
+                    // This is probably an [HttpRequestException] of [SocketException]
+                    // indicating that we  could not contact the cluster Consul.  We'll 
+                    // just returned the cached cluster definition in this situation 
+                    // (if we have one).
 
                     if (cachedDefinition != null)
                     {
@@ -1094,7 +1107,7 @@ namespace Neon.Cluster
                     }
                     else
                     {
-                        throw new NeonClusterException("Cannot connect to cluster.", e);
+                        throw new NeonClusterException($"[{e.GetType().Name}]: Cannot connect to cluster.", e);
                     }
                 }
             }
