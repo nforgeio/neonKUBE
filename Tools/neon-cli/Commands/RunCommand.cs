@@ -61,7 +61,7 @@ REMARKS:
 This command works by reading variables from one or more YAML files in the 
 order they appear on the command line, setting these as environment variables 
 and then executing a command in the context of these environment variables.
-The variable files are formatted as Ansible compatible YAML, like:
+The source variable files are formatted as Ansible compatible YAML, like:
 
     username: jeff
     password: super.dude
@@ -93,6 +93,9 @@ workstation:
 
 These folders are encrypted at rest for security.  You can use the 
 [neon ansible password ...] commands to manage your passwords.
+
+NOTE: Ansible variables with multi-line values WILL BE IGNORED when
+      setting ENVIRONMENT variables.
 
 NOTE: The [neon run ...] command cannot be run recursively.  For example,
       you can't have one run command execute a script that executes a 
@@ -254,6 +257,8 @@ NOTE: The [neon run ...] command cannot be run recursively.  For example,
                             // [varContents] now holds the decrypted variables formatted as YAML.
                             // We're going to parse this and set the appropriate environment
                             // variables.
+                            //
+                            // Note that we're going to ignore variables with multi-line values.
 
                             var yaml = new YamlStream();
                             var vars = new List<KeyValuePair<string, string>>();
@@ -263,6 +268,11 @@ NOTE: The [neon run ...] command cannot be run recursively.  For example,
 
                             foreach (var variable in vars)
                             {
+                                if (variable.Value != null && variable.Value.Contains('\n'))
+                                {
+                                    continue;   // Ignore variables with multi-line values.
+                                }
+
                                 allVars.Add(variable.Key, variable.Value);
                                 Environment.SetEnvironmentVariable(variable.Key, variable.Value);
                             }
