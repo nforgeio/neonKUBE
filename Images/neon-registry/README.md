@@ -55,7 +55,7 @@ The Docker service command below shows how **neon-registry** can be deployed as 
 **NOTE* ** You'll need to replace **MY-USER**, **-MY-PASSWORD**, and **MY-SECRET** with the desired values for your environment.
 
 ```
-docker service start \
+docker service create \
     --name neon-registry \
     --detach=false \
     --env USERNAME=MY-USER \
