@@ -52,7 +52,7 @@ You'll typically want to have the registry listen on the default port **5000** w
 
 The Docker service command below shows how **neon-registry** can be deployed as a service.  In this example, we're deploying the registry on each of the manager nodes persisting data using the **neon** volume plugin to the **neon-registry** volume.
 
-**NOTE* ** You'll need to replace **MY-USER**, **-MY-PASSWORD**, and **MY-SECRET** with the desired values for your environment.
+**NOTE* ** You'll need to replace **MY-USER**, **MY-PASSWORD**, and **MY-SECRET** with the required values for your environment.
 
 ```
 docker service create \
@@ -76,7 +76,7 @@ Next, you'll need to save your TLS certificate to neonCLUSTER:
 neon proxy public put MY-CERT-NAME PATH-TO-CERT
 ```
 &nbsp;
-Next, you'll need to deploy a proxy route that will direct traffic from the host network to the service.  Your route file will look something like this (as YAML):
+Finally, you'll need to deploy a proxy route that will direct traffic from the host network to the service.  Your route file will look something like this (as YAML):
 
 ```
 name: neon-registry
@@ -97,7 +97,7 @@ This route accepts HTTPS requests on port 5000 on all of the cluster hosts, hand
 
 You can also deploy **neon-registry** as a container.  We recommend deploying this as a service, but sometimes it's necessary to deploy containers (e.g. to dedicated pet nodes).  The steps are similar to those for deploying as a service:
 
-**NOTE* ** You'll need to replace **MY-USER**, **-MY-PASSWORD**, and **MY-SECRET** with the desired values for your environment.
+**NOTE* ** You'll need to replace **MY-USER**, **MY-PASSWORD**, and **MY-SECRET** with the required values for your environment.
 
 First, start the containers like:
 
@@ -116,8 +116,13 @@ docker run \
     neoncluster/neon-registry
 ```
 &nbsp;
+Next, you'll need to save your TLS certificate to neonCLUSTER:
 
-Next, you'll need to deploy a proxy route that will direct traffic from PORT 6000 on the host network to the container instances.  You'll need to know the IP addresses the nodes where you deployed the containers.  Your route file will look something like this (as YAML):
+```
+neon proxy public put MY-CERT-NAME PATH-TO-CERT
+```
+&nbsp;
+Finally, you'll need to deploy a proxy route that will direct traffic from PORT 6000 on the host network to the container instances.  You'll need to know the IP addresses the nodes where you deployed the containers.  Your route file will look something like this (as YAML):
 
 ```
 name: neon-registry
