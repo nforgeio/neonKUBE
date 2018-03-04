@@ -1,0 +1,10 @@
+---
+- name: Setup the cluster registry.
+  hosts: swarm-manager
+
+  user: root
+  become: yes
+  become_user: root
+  
+  roles:
+  - registry

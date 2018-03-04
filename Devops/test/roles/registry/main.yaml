@@ -1,0 +1,16 @@
+---
+- name: Install registry certificate
+  neon_certificate:
+    name: _neonforge_net_pem
+    state: present
+    value: {{ _neonforge_net_pem }}
+
+- name: Configure registry route
+  neon_route:
+    name: neon-registry
+    proxy: public
+    state: present
+    route: |
+      mode: http
+      frontends:
+      - host: 

@@ -135,6 +135,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{A7E3360B-C
 		Devops\test\setup-all.ps1 = Devops\test\setup-all.ps1
 		Devops\test\setup-cluster.ps1 = Devops\test\setup-cluster.ps1
 		Devops\test\setup-core-services.ps1 = Devops\test\setup-core-services.ps1
+		Devops\test\setup-registry.ps1 = Devops\test\setup-registry.ps1
+		Devops\test\setup-registry.yaml = Devops\test\setup-registry.yaml
 		Devops\test\vars.yaml = Devops\test\vars.yaml
 	EndProjectSection
 EndProject
@@ -171,6 +173,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-xen", "home-xen", "{A4
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "uuid-gen", "Tools\uuid-gen\uuid-gen.csproj", "{12E8C084-88B8-47A9-82AD-038C206089AA}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "roles", "roles", "{B8775523-0D60-486A-8E74-92E2438B3005}"
+EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "registry", "registry", "{D6048465-8895-480F-9EDE-0B2F9360803E}"
+	ProjectSection(SolutionItems) = preProject
+		Devops\test\roles\registry\main.yaml = Devops\test\roles\registry\main.yaml
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
@@ -549,6 +558,8 @@ Global
 		{CDCCEE29-B726-4AA1-BB06-F44156BE1E7E} = {F035D81E-A73A-40D6-82EE-98C63FDFCE04}
 		{A4590FB6-213E-4C56-B771-F11C8D1D2868} = {F035D81E-A73A-40D6-82EE-98C63FDFCE04}
 		{12E8C084-88B8-47A9-82AD-038C206089AA} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
+		{B8775523-0D60-486A-8E74-92E2438B3005} = {A7E3360B-CCAA-449B-9BCE-B56BAF0C3CA0}
+		{D6048465-8895-480F-9EDE-0B2F9360803E} = {B8775523-0D60-486A-8E74-92E2438B3005}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}
