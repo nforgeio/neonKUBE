@@ -360,11 +360,6 @@ Note that the tool requires admin priviledges for direct mode.
                             goto notShimmed;
                         }
 
-                        // We need administrator privileges to map the local drive
-                        // into a Docker container.
-
-                        Program.VerifyAdminPrivileges();
-
                         // Map the container's [/log] directory as required.
 
                         var logMount = string.Empty;
