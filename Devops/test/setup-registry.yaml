@@ -1,6 +1,9 @@
 ---
 - name: Setup the cluster registry.
   hosts: swarm-manager
+    vars_files: 
+    - "clusters/{{ lookup('env','CLUSTER') }}/secrets.yaml"
+    - "clusters/{{ lookup('env','CLUSTER') }}/vars.yaml"
 
   user: root
   become: yes

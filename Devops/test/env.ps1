@@ -40,7 +40,7 @@ $env:CLUSTER_MAX_PARALLEL = 10
 # Ansible password.
 
 $env:SECRETS_PASS = "neon-git"
-$env:SECRETS_VARS = "$env:CLUSTER_SETUP_PATH\secrets.yaml"
+$env:SECRETS_VARS = "$env:CLUSTER_SETUP_PATH\clusters\$env:CLUSTER\secrets.yaml"
 
 # Cluster secret YAML files need to have Linux-style line endings, so we're
 # going to convert these here.
