@@ -1252,8 +1252,21 @@ Note that the tool requires admin priviledges for direct mode.
         /// Verify that the current user has administrator privileges, exiting
         /// the application if this is not the case.
         /// </summary>
-        public static void VerifyAdminPrivileges()
+        /// <param name="message">Optional message.</param>
+        public static void VerifyAdminPrivileges(string message = null)
         {
+            if (message == null)
+            {
+                message = "*** ERROR: This command requires elevated administrator privileges.";
+            }
+            else
+            {
+                if (!message.StartsWith("*** ERROR: "))
+                {
+                    message = $"** ERROR: {message}";
+                }
+            }
+
             if (!NeonClusterHelper.InToolContainer)
             {
                 if (NeonHelper.IsWindows)
@@ -1262,7 +1275,7 @@ Note that the tool requires admin priviledges for direct mode.
 
                     if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
                     {
-                        Console.Error.WriteLine("*** ERROR: This command requires elevated administrator privileges.");
+                        Console.Error.WriteLine(message);
                         Program.Exit(1);
                     }
                 }

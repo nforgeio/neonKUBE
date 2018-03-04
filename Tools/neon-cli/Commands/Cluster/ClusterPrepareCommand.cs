@@ -262,7 +262,7 @@ Server Requirements:
 
             if (hostingManager.RequiresAdminPrivileges)
             {
-                Program.VerifyAdminPrivileges();
+                Program.VerifyAdminPrivileges($"Provisioning to [{cluster.Definition.Hosting.Environment}] requires elevated administrator privileges.");
             }
 
             if (!hostingManager.Provision(force))
