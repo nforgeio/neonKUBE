@@ -96,7 +96,7 @@ Follow steps below to configure a development or test workstation.
 
   `powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser`
 
-18. Import the Ansible passwords used for encrypting secret files in the Git repository Import using this command (use the standard **DEVOPS Password** when prompted):
+18. Import the Ansible passwords used for encrypting secret files in the Git repository Import using this command (use the standard neonFORGE **DEVOPS Password** when prompted):
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon ansible password import %NF_ROOT%\passwords.zip`
 
