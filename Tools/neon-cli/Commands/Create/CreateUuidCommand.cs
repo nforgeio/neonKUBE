@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CreateCypherCommand.cs
+// FILE:	    CreateUuidCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -22,22 +22,23 @@ using Neon.Common;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>create cypher</b> command.
+    /// Implements the <b>create uuid</b> command.
     /// </summary>
-    public class CreateCypherCommand : CommandBase
+    public class CreateUuidCommand : CommandBase
     {
         private const string usage = @"
-Generates a cryptographically random 16-byte key suitable for encrypting 
-Consul and Weave network traffic and writes as Base64 to standard output.
+Generates a globally unique ID like:
+
+    f7bd80fe-a154-4d2c-a730-8ea988a92e67
 
 USAGE:
 
-    neon create cypher
+    neon create uuid
 ";
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "create", "cypher" }; }
+            get { return new string[] { "create", "uuid" }; }
         }
 
         /// <inheritdoc/>
@@ -49,13 +50,13 @@ USAGE:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            Console.WriteLine(Convert.ToBase64String(NeonHelper.RandBytes(16)));
+            Console.Write(Guid.NewGuid().ToString("D").ToLowerInvariant());
         }
 
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new DockerShimInfo(isShimmed: true);
+            return new DockerShimInfo(isShimmed: false);
         }
     }
 }

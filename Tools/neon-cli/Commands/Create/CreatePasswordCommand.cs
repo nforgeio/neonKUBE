@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CreateCommand.cs
+// FILE:	    CreatePasswordCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -22,20 +22,32 @@ using Neon.Common;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>create</b> command.
+    /// Implements the <b>create password</b> command.
     /// </summary>
-    public class CreateCommand : CommandBase
+    public class CreatePasswordCommand : CommandBase
     {
         private const string usage = @"
+Generates a cryptographically random password.
+
 USAGE:
 
-    neon create cypher              - Generates 16-byte encryption key
-    neon create password [OPTIONS]  - Generates secure password
+    neon create password [OPTIONS]
+
+OPTIONS:
+
+    --length=#      - The desired password length.  This defaults
+                      to 20 characters.
 ";
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "create" }; }
+            get { return new string[] { "create", "password" }; }
+        }
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions
+        {
+            get { return new string[] { "--length" }; }
         }
 
         /// <inheritdoc/>
@@ -47,13 +59,20 @@ USAGE:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            Help();
+            var lengthOption = commandLine.GetOption("--length", "20");
+
+            if (!int.TryParse(lengthOption, out var length) || length < 1 || length > 1024)
+            {
+                Console.WriteLine($"*** ERROR: Length [{length}] is not valid.");
+            }
+
+            Console.Write(NeonHelper.GetRandomPassword(length));
         }
 
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new DockerShimInfo(isShimmed: true);
+            return new DockerShimInfo(isShimmed: false);
         }
     }
 }

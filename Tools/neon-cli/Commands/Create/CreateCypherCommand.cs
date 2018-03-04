@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CreatePasswordCommand.cs
+// FILE:	    CreateCypherCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -22,32 +22,22 @@ using Neon.Common;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>create password</b> command.
+    /// Implements the <b>create cypher</b> command.
     /// </summary>
-    public class CreatePasswordCommand : CommandBase
+    public class CreateCypherCommand : CommandBase
     {
         private const string usage = @"
-Generates a cryptographically random password.
+Generates a cryptographically random 16-byte key suitable for encrypting 
+Consul and Weave network traffic and writes as Base64 to standard output.
 
 USAGE:
 
-    neon create password [OPTIONS]
-
-OPTIONS:
-
-    --length=#      - The desired password length.  This defaults
-                      to 20 characters.
+    neon create cypher
 ";
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "create", "password" }; }
-        }
-
-        /// <inheritdoc/>
-        public override string[] ExtendedOptions
-        {
-            get { return new string[] { "--length" }; }
+            get { return new string[] { "create", "cypher" }; }
         }
 
         /// <inheritdoc/>
@@ -59,20 +49,13 @@ OPTIONS:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            var lengthOption = commandLine.GetOption("--length", "20");
-
-            if (!int.TryParse(lengthOption, out var length) || length < 1 || length > 1024)
-            {
-                Console.WriteLine($"*** ERROR: Length [{length}] is not valid.");
-            }
-
-            Console.WriteLine(NeonHelper.GetRandomPassword(length));
+            Console.Write(Convert.ToBase64String(NeonHelper.RandBytes(16)));
         }
 
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new DockerShimInfo(isShimmed: true);
+            return new DockerShimInfo(isShimmed: false);
         }
     }
 }
