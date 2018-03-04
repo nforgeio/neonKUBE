@@ -13,7 +13,7 @@ function Publish
 	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$env:NF_build\nuget"
 
 	# It looks like [dotnet pack] doesn't include a zero revision number when
-	# nameing the output file.  So {Neon.Common] built as version [0.0.5.0] will
+	# naming the output file.  So {Neon.Common] built as version [0.0.5.0] will
 	# generate [Neon.Common.0.0.5.nupkg] not [Neon.Common.0.0.5.0.nupkg].
 	#
 	# We need to strip the last ".0" off the version string in this case,
@@ -27,7 +27,10 @@ function Publish
 		$version = $version.Substring(0, $version.Length - 2)
 	}
 
-	nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$version.nupkg" $env:NF_NUGET_API_KEY
+	# We need to run [nuget push] in the context of [neon run] so we can
+	# reference the NuGet API key from the encrypted [secrets.yaml] file.
+
+	neon run --vault-password-file=neon-git "$env:NF_ROOT\Devops\test\secrets.yaml" -- nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$version.nupkg" %NUGET_API_KEY%
 }
 
 Publish Neon.Cluster
