@@ -261,6 +261,11 @@ Server Requirements:
             hostingManager.MaxParallel  = Program.MaxParallel;
             hostingManager.WaitSeconds  = Program.WaitSeconds;
 
+            if (hostingManager.RequiresAdminPrivileges)
+            {
+                Program.VerifyAdminPrivileges();
+            }
+
             if (!hostingManager.Provision(force))
             {
                 Program.Exit(1);

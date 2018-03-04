@@ -120,5 +120,11 @@ namespace Neon.Cluster
         /// </para>
         /// </summary>
         string DrivePrefix { get; }
+
+        /// <summary>
+        /// Returns <c>true</c> if provisoning requires that the user has
+        /// administrator privileges.
+        /// </summary>
+        bool RequiresAdminPrivileges { get; }
     }
 }

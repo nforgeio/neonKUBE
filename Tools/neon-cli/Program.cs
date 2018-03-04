@@ -69,7 +69,8 @@ COMMAND SUMMARY:
     neon cert               CMD...
     neon consul             ARGS
     neon create cypher
-    neon create password
+    neon create password    [--length=#]
+    neon create uuid
     neon dashboard          DASHBOARD
     neon docker             ARGS
     neon download           SOURCE TARGET [NODE]
@@ -153,32 +154,6 @@ Note that the tool requires admin priviledges for direct mode.
 
             LogManager.Default.LogLevel = LogLevel.None;
 
-            // Ensure that we're running with admin privileges when
-            // we're not running in the tool container.
-
-            if (!NeonClusterHelper.InToolContainer)
-            {
-                if (NeonHelper.IsWindows)
-                {
-                    var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
-
-                    if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
-                    {
-                        Console.Error.WriteLine("*** ERROR: [neon] requires elevated administrator privileges.");
-                        Program.Exit(1);
-                    }
-                }
-                else if (NeonHelper.IsOSX)
-                {
-                    // $todo(jeff.lill): Implement this
-                }
-                else
-                {
-                    Console.Error.WriteLine("*** ERROR: [neon] requires Windows or Apple OSX.");
-                    Program.Exit(1);
-                }
-            }
-
             // Configure the encrypted user-specific application data folder and initialize
             // the subfolders.
 
@@ -249,6 +224,7 @@ Note that the tool requires admin priviledges for direct mode.
                     new CreateCommand(),
                     new CreateCypherCommand(),
                     new CreatePasswordCommand(),
+                    new CreateUuidCommand(),
                     new DashboardCommand(),
                     new DockerCommand(),
                     new DownloadCommand(),
@@ -1270,6 +1246,31 @@ Note that the tool requires admin priviledges for direct mode.
             argList.Insert(0, NeonHelper.GetAssemblyPath(Assembly.GetEntryAssembly()));
 
             return NeonHelper.ExecuteCaptureStreams("dotnet", argList.ToArray());
+        }
+
+        /// <summary>
+        /// Verify that the current user has administrator privileges, exiting
+        /// the application if this is not the case.
+        /// </summary>
+        public static void VerifyAdminPrivileges()
+        {
+            if (!NeonClusterHelper.InToolContainer)
+            {
+                if (NeonHelper.IsWindows)
+                {
+                    var principal = new WindowsPrincipal(WindowsIdentity.GetCurrent());
+
+                    if (!principal.IsInRole(WindowsBuiltInRole.Administrator))
+                    {
+                        Console.Error.WriteLine("*** ERROR: This command requires elevated administrator privileges.");
+                        Program.Exit(1);
+                    }
+                }
+                else if (NeonHelper.IsOSX)
+                {
+                    // $todo(jeff.lill): Implement this
+                }
+            }
         }
     }
 }

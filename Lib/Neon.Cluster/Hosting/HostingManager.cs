@@ -216,5 +216,11 @@ namespace Neon.Cluster
 
         /// <inheritdoc/>
         public abstract string DrivePrefix { get; }
+
+        /// <inheritdoc/>
+        public virtual bool RequiresAdminPrivileges
+        {
+            get { return false; }
+        }
     }
 }

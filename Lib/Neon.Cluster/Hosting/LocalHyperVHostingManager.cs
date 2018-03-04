@@ -241,6 +241,12 @@ namespace Neon.Cluster
             get { return "sd"; }
         }
 
+        /// <inheritdoc/>
+        public override bool RequiresAdminPrivileges
+        {
+            get { return true; }
+        }
+
         /// <summary>
         /// Returns the name to use for naming the virtual machine hosting the node.
         /// </summary>
