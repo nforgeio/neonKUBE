@@ -4,24 +4,24 @@
 #------------------------------------------------------------------------------
 # [neon]: Ubuntu 16.04
 
-neon login rm root@home --force
-neon cluster prepare %NF_ROOT%\Devops\Home\home-small.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --force
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --unredacted root@home --no-tool-container
+neon login rm root@home-small --force
+powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-small
 
-neon login rm root@home --force
-neon cluster prepare %NF_ROOT%\Devops\Home\home-large.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --force
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 root@home --no-tool-container
+neon login rm root@home-large --force
+powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-large
 
-neon cluster prepare %NF_ROOT%\Devops\Home\home-azure.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 root@azure --no-tool-container
+neon login rm root@home-azure --force
+powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-azure
 
-neon login rm root@xen --force
-neon cluster prepare %NF_ROOT%\Devops\Home\home-xen.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --force
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 root@xen --no-tool-container
+neon login rm root@home-xen --force
+powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-xen
 
 neon login rm root@home-bare --force
-neon cluster prepare %NF_ROOT%\Devops\Home\home-bare.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --force
-neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --unredacted root@home-bare --no-tool-container
+powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-bare
+
+neon login rm root@home-small --force
+neon cluster prepare %NF_ROOT%\Devops\test\clusters\home-small\cluster.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --force
+neon cluster setup -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --unredacted root@home-small --no-tool-container
 
 # Create host VHDX template zip files that will be compatible with the [neon-cli] tool.
 

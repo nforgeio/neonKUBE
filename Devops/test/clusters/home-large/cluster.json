@@ -1,5 +1,5 @@
 {
-  "Name": "home",
+  "Name": "home-large",
   "Datacenter": "woodinville",
   "Environment": "development",
   "TimeSources": [ "pool.ntp.org" ],

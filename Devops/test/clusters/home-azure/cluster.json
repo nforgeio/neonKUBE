@@ -1,5 +1,5 @@
 {
-  "Name": "azure",
+  "Name": "test-azure",
   "Datacenter": "westus2",
   "Environment": "development",
   "TimeSources": [ "0.pool.ntp.org" ],
