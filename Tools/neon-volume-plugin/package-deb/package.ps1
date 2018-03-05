@@ -131,17 +131,17 @@ exec { unix-text "$packageSrcPath\\DEBIAN\\control" }
 
 # Copy the plugin binary.
 
-copy /y "bin\neon-volume-plugin" "$packageSrcPath\\usr\\local\\bin"
+copy "bin\neon-volume-plugin" "$packageSrcPath\\usr\\local\\bin"
 
 # Copy the systemd service file.
 
-copy /y "package-deb\\neon-volume-plugin.service" "$packageSrcPath\\lib\\systemd\\system"
+copy "package-deb\\neon-volume-plugin.service" "$packageSrcPath\\lib\\systemd\\system"
 exec { unix-text "$packageSrcPath\\lib\\systemd\\system\\neon-volume-plugin.service" }
 
 # We need to copy the [package.sh] script that will be launched 
 # within the container to actually build the package.
 
-copy /y "$projectPath\\package-deb\\package.sh" "$binPath"
+copy "$projectPath\\package-deb\\package.sh" "$binPath"
 exec { unix-text "$binPath\\package.sh" }
 
 # Build the Debian package using an Ubuntu container.
@@ -151,9 +151,9 @@ docker run --rm -v "${binPath}:/src" neoncluster/ubuntu-16.04 bash /src/package.
 # Copy the package to the solution build folder.
 
 $packagePath = [io.path]::combine($binPath, "$packageName.deb")
-copy /y "$packagePath" "$env:NF_BUILD"
+copy "$packagePath" "$env:NF_BUILD"
 
 # Copy it again as the latest version.
 
 $targetPath = [io.path]::combine($env:NF_BUILD, "neon-volume-plugin_latest.deb")
-copy /y "$packagePath" "$targetPath"
+copy "$packagePath" "$targetPath"
