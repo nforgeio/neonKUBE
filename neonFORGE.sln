@@ -92,6 +92,10 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-cli", "Tools\neon-cli\
 	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.Common.net", "Test\Test.Neon.Common.net\Test.Neon.Common.net.csproj", "{B204E5B0-3767-4247-8D5B-AFEEA0DE8090}"
+	ProjectSection(ProjectDependencies) = postProject
+		{468E440F-2284-483D-A54A-EC540C85F76E} = {468E440F-2284-483D-A54A-EC540C85F76E}
+		{8D3BD5BA-AAF6-4233-879F-69A63EB6CDA1} = {8D3BD5BA-AAF6-4233-879F-69A63EB6CDA1}
+	EndProjectSection
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.Couchbase.net", "Test\Test.Neon.Couchbase.net\Test.Neon.Couchbase.net.csproj", "{6E39DDC8-E5A0-4284-AD2A-327DEE029B2A}"
 EndProject
