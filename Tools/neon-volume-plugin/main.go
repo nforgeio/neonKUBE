@@ -128,7 +128,7 @@ func cfsReadyWait() error {
 	select {
 		case <- readyChannel:
 		
-			log.Println("[/cfs] IS READY NOW ***.")
+			log.Println("[/cfs] IS READY NOW ***")
 			return nil
 
 		case <- timer.C:
