@@ -41,6 +41,9 @@ EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Neon.Couchbase.Lite.shared", "Lib\Neon.Couchbase.Lite.shared\Neon.Couchbase.Lite.shared.shproj", "{8D7FE880-9006-488F-BAB3-3A82011CD699}"
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Couchbase.Lite.net", "Lib\Neon.Couchbase.Lite.net\Neon.Couchbase.Lite.net.csproj", "{5D528831-61AD-41C3-8BB4-50ABABF9AE99}"
+	ProjectSection(ProjectDependencies) = postProject
+		{8D3BD5BA-AAF6-4233-879F-69A63EB6CDA1} = {8D3BD5BA-AAF6-4233-879F-69A63EB6CDA1}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit", "Lib\Neon.Xunit\Neon.Xunit.csproj", "{468E440F-2284-483D-A54A-EC540C85F76E}"
 EndProject
