@@ -115,10 +115,6 @@
       <Project>{5d528831-61ad-41c3-8bb4-50ababf9ae99}</Project>
       <Name>Neon.Couchbase.Lite.net</Name>
     </ProjectReference>
-    <ProjectReference Include="..\..\Lib\Neon.Couchbase.SyncGateway\Neon.Couchbase.SyncGateway.csproj">
-      <Project>{7017af13-9c49-4c31-8304-9354d86e2886}</Project>
-      <Name>Neon.Couchbase.SyncGateway</Name>
-    </ProjectReference>
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj">
       <Project>{468e440f-2284-483d-a54a-ec540c85f76e}</Project>
       <Name>Neon.Xunit</Name>
@@ -129,6 +125,9 @@
   </ItemGroup>
   <ItemGroup>
     <Service Include="{82A7F48D-3B50-4B1E-B82E-3ADA8210C358}" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
   </ItemGroup>
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
   <Import Project="..\Test.Neon.Models.shared\Test.Neon.Models.shared.projitems" Label="Shared" />

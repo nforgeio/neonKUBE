@@ -7,8 +7,8 @@
     <ProjectGuid>{5D528831-61AD-41C3-8BB4-50ABABF9AE99}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Neon.Stack.Couchbase.Lite</RootNamespace>
-    <AssemblyName>Neon.Stack.Couchbase.Lite.net</AssemblyName>
+    <RootNamespace>Neon.Couchbase.Lite</RootNamespace>
+    <AssemblyName>Neon.Couchbase.Lite.net</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
     <TargetFrameworkProfile />
@@ -75,16 +75,19 @@
     <Compile Include="Properties\AssemblyInfo.cs" />
   </ItemGroup>
   <ItemGroup>
-    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj">
-      <Project>{8d3bd5ba-aaf6-4233-879f-69a63eb6cda1}</Project>
-      <Name>Neon.Common</Name>
-    </ProjectReference>
-  </ItemGroup>
-  <ItemGroup>
     <None Include="app.config">
       <SubType>Designer</SubType>
     </None>
     <None Include="packages.config" />
+  </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
+  <ItemGroup>
+    <ProjectReference Include="..\Neon.Common\Neon.Common.csproj">
+      <Project>{8d3bd5ba-aaf6-4233-879f-69a63eb6cda1}</Project>
+      <Name>Neon.Common</Name>
+    </ProjectReference>
   </ItemGroup>
   <Import Project="..\Neon.Global\Neon.Global.projitems" Label="Shared" />
   <Import Project="..\Neon.Couchbase.Lite.Shared\Neon.Couchbase.Lite.Shared.projitems" Label="Shared" />
