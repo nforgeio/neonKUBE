@@ -108,7 +108,7 @@ Follow steps below to configure a development or test workstation.
   * Open **$/neonFORGE.sln** (where **$** is the repo root directory)
   * Select **Build/Rebuild** Solution
 
-21. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)s
+21. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
 
 22. Install **OpenVPN** from (using the Windows Installer): [here](https://openvpn.net/index.php/open-source/downloads.html)
 
