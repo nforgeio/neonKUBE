@@ -117,6 +117,9 @@
   <ItemGroup>
     <Analyzer Include="..\..\packages\xunit.analyzers.0.7.0\analyzers\dotnet\cs\xunit.analyzers.dll" />
   </ItemGroup>
+  <ItemGroup>
+    <WCFMetadata Include="Connected Services\" />
+  </ItemGroup>
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
   <Import Project="..\Test.Neon.Common.shared\Test.Neon.Common.shared.projitems" Label="Shared" />
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
