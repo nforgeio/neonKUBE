@@ -708,10 +708,9 @@ USAGE:
     //      LogEsData                     Host Elasticsearch node for cluster
     //                                    logging data (bool)
     //
-    //      CephManager                   Deploy Ceph Manager to the node (bool)
-    //      CephMonitor                   Deploy Ceph Monitor the node (bool)
+    //      CephMDS                       Deploy Ceph MDS to the node (bool)
+    //      CephMON                       Deploy Ceph Monitor the node (bool)
     //      CephOSD                       Deploy Ceph OSD to the node (bool)
-    //      CephMSD                       Deploy Ceph MSD to the node (bool)
     //      CephDriveSizeGB               Ceph OSD drive size in GB (int)
     //      CephCacheSizeMB               Caph OSD cache size in MB (int)
     //

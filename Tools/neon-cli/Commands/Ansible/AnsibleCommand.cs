@@ -136,10 +136,9 @@ are organized into these predefined host groups:
     swarm           - manager or worker nodes
     pets            - pet nodes
     ceph            - nodes hosting any Ceph storage service
-    ceph-manager    - nodes hosting Ceph manager service
-    ceph-monitor    - nodes hosting Ceph monitor service
+    ceph-mds        - nodes hosting Ceph MDS service
+    ceph-mon        - nodes hosting Ceph monitor service
     ceph-osd        - nodes hosting Ceph OSD service
-    ceph-msd        - nodes hosting Ceph MSD service
 
 The special reserved [swarm-manager] host name can be used to target 
 Docker Swarm related tasks as a healthy Swarm manager node.
@@ -180,10 +179,9 @@ are organized into four groups:
     swarm           - manager or worker nodes
     pets            - pet nodes
     ceph            - nodes hosting any Ceph storage service
-    ceph-manager    - nodes hosting Ceph manager service
-    ceph-monitor    - nodes hosting Ceph monitor service
+    ceph-mds        - nodes hosting Ceph MDS service
+    ceph-mon        - nodes hosting Ceph monitor service
     ceph-osd        - nodes hosting Ceph OSD service
-    ceph-msd        - nodes hosting Ceph MSD service
 
 The special reserved [swarm-manager] host name can be used to target 
 Docker Swarm related tasks as a healthy Swarm manager node.
@@ -1670,124 +1668,22 @@ retries = 4
             // Note that we're going to special-case the [swarm-manager] host, which won't
             // belong to any groups.
 
-            var explicitGroupAssignments = new Dictionary<string, List<NodeDefinition>>(StringComparer.InvariantCultureIgnoreCase);
-
-            foreach (var node in login.Definition.Nodes)
-            {
-                foreach (var group in node.HostGroups)
-                {
-                    if (!explicitGroupAssignments.TryGetValue(group, out var groupAssignments))
-                    {
-                        groupAssignments = new List<NodeDefinition>();
-                        explicitGroupAssignments.Add(group, groupAssignments);
-                    }
-
-                    groupAssignments.Add(node);
-                }
-            }
+            var groups = login.Definition.GetNodeGroups(excludeAllGroup: true);
 
             using (var writer = new StreamWriter(new FileStream(Path.Combine(ansibleConfigFolder, "hosts"), FileMode.Create, FileAccess.ReadWrite), Encoding.ASCII))
             {
-                // Special-case Docker Swarm manager node (not in a group).
+                // Special-case the implicit Docker Swarm manager node (not in a group).
 
                 writer.WriteLine("swarm-manager");
 
-                // Swarm nodes group:
+                // Write the groups.
 
-                writer.WriteLine();
-                writer.WriteLine("[swarm]");
-
-                foreach (var node in login.Definition.SortedNodes.Where(n => n.InSwarm))
-                {
-                    writer.WriteLine(node.Name);
-                }
-
-                // Docker Swarm managers group:
-
-                writer.WriteLine();
-                writer.WriteLine("[managers]");
-
-                foreach (var node in login.Definition.SortedNodes.Where(n => n.IsManager))
-                {
-                    writer.WriteLine(node.Name);
-                }
-
-                // Docker Swarm workers group:
-
-                writer.WriteLine();
-                writer.WriteLine("[workers]");
-
-                foreach (var node in login.Definition.SortedNodes.Where(n => n.IsWorker))
-                {
-                    writer.WriteLine(node.Name);
-                }
-
-                // Pets group:
-
-                writer.WriteLine();
-                writer.WriteLine("[pets]");
-
-                foreach (var node in login.Definition.SortedNodes.Where(n => n.IsPet))
-                {
-                    writer.WriteLine(node.Name);
-                }
-
-                // Ceph related groups.
-
-                writer.WriteLine();
-                writer.WriteLine("[ceph]");
-
-                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephMON || n.Labels.CephMON || n.Labels.CephOSD || n.Labels.CephMDS))
-                {
-                    writer.WriteLine(node.Name);
-                }
-
-                writer.WriteLine();
-                writer.WriteLine("[ceph]");
-
-                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephMON || n.Labels.CephMON || n.Labels.CephOSD || n.Labels.CephMDS))
-                {
-                    writer.WriteLine(node.Name);
-                }
-
-                writer.WriteLine();
-                writer.WriteLine("[ceph-manager]");
-
-                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephMON))
-                {
-                    writer.WriteLine(node.Name);
-                }
-
-                writer.WriteLine();
-                writer.WriteLine("[ceph-monitor]");
-
-                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephMON))
-                {
-                    writer.WriteLine(node.Name);
-                }
-
-                writer.WriteLine();
-                writer.WriteLine("[ceph-osd]");
-
-                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephOSD))
-                {
-                    writer.WriteLine(node.Name);
-                }
-
-                writer.WriteLine();
-                writer.WriteLine("[ceph-msd]");
-
-                foreach (var node in login.Definition.SortedNodes.Where(n => n.Labels.CephMDS))
-                {
-                    writer.WriteLine(node.Name);
-                }
-
-                foreach (var explicitGroup in explicitGroupAssignments.OrderBy(item => item.Key.ToLowerInvariant()))
+                foreach (var group in groups.OrderBy(g => g.Key))
                 {
                     writer.WriteLine();
-                    writer.WriteLine($"[{explicitGroup.Key.ToLowerInvariant()}]");
+                    writer.WriteLine($"[{group.Key}]");
 
-                    foreach (var node in explicitGroup.Value.OrderBy(n => n.Name))
+                    foreach (var node in group.Value)
                     {
                         writer.WriteLine(node.Name);
                     }

@@ -949,5 +949,160 @@ namespace Neon.Cluster
 
             return filtered;
         }
+
+        /// <summary>
+        /// Returns a dictionary mapping Ansible host group names to the list of node
+        /// definitions specifying the nodes within the group.  The group name keys
+        /// are case insenstive and the groups returned will include built-in groups
+        /// like <b>all</b>, <b>swarm</b>, <b>managers</b>, <b>worker</b>, <b>pets</b>,
+        /// etc. in addition to any explicit groups specified by <see cref="NodeDefinition.HostGroups"/>.
+        /// </summary>
+        /// <param name="excludeAllGroup">Optionally exclude the built-in <b>all</b> group from the results.</param>
+        /// <returns></returns>
+        public Dictionary<string, List<NodeDefinition>> GetNodeGroups(bool excludeAllGroup = false)
+        {
+            var groups  = new Dictionary<string, List<NodeDefinition>>(StringComparer.InvariantCultureIgnoreCase);
+            var builtIn = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
+            {
+                "all",
+                "swarm",
+                "managers",
+                "workers",
+                "pets",
+                "ceph",
+                "ceph-mon",
+                "ceph-mds",
+                "ceph-osd"
+            };
+
+            // Add explicit group assignments.  Note that we're going to ignore
+            // any explicit assignments to built-in groups to avoid having nodes
+            // appear multiple times in the same group.
+
+            foreach (var node in this.Nodes)
+            {
+                foreach (var group in node.HostGroups)
+                {
+                    if (builtIn.Contains(group))
+                    {
+                        continue;   // Ignore explicit built-in group assignments.
+                    }
+
+                    if (!groups.TryGetValue(group, out var groupAssignments))
+                    {
+                        groupAssignments = new List<NodeDefinition>();
+                        groups.Add(group, groupAssignments);
+                    }
+
+                    groupAssignments.Add(node);
+                }
+            }
+
+            // Add built-in group assignments.  Note that we're going to take care
+            // to ensure that only one instance of a node will be added to any
+            // specific group.  This could happen if the user explicitly specified
+            // that a node is a member of a built-in group (which should probably
+            // be detected as an error).
+
+            var members = new List<NodeDefinition>();
+
+            // [all] group
+
+            if (!excludeAllGroup)
+            {
+                members.Clear();
+
+                foreach (var node in SortedNodes)
+                {
+                    members.Add(node);
+                }
+
+                groups.Add("all", members);
+            }
+
+            // [swarm] group
+
+            members.Clear();
+
+            foreach (var node in SortedNodes.Where(n => n.InSwarm))
+            {
+                members.Add(node);
+            }
+
+            groups.Add("swarm", members);
+
+            // [managers] group
+
+            members.Clear();
+
+            foreach (var node in SortedNodes.Where(n => n.IsManager))
+            {
+                members.Add(node);
+            }
+
+            groups.Add("managers", members);
+
+            // [workers] group
+
+            members.Clear();
+
+            foreach (var node in SortedNodes.Where(n => n.IsWorker))
+            {
+                members.Add(node);
+            }
+
+            groups.Add("workers", members);
+
+            // [pets] group
+
+            members.Clear();
+
+            foreach (var node in SortedNodes.Where(n => n.IsPet))
+            {
+                members.Add(node);
+            }
+
+            groups.Add("pets", members);
+
+            // [ceph] group
+
+            members.Clear();
+
+            foreach (var node in SortedNodes.Where(n => n.Labels.CephMON || n.Labels.CephMDS || n.Labels.CephOSD))
+            {
+                members.Add(node);
+            }
+
+            groups.Add("ceph", members);
+
+            // [ceph-mon] group
+
+            foreach (var node in SortedNodes.Where(n => n.Labels.CephMON))
+            {
+                members.Add(node);
+            }
+
+            groups.Add("ceph-mon", members);
+
+            // [ceph-mds] group
+
+            foreach (var node in SortedNodes.Where(n => n.Labels.CephMDS))
+            {
+                members.Add(node);
+            }
+
+            groups.Add("ceph-mds", members);
+
+            // [ceph-osd] group
+
+            foreach (var node in SortedNodes.Where(n => n.Labels.CephOSD))
+            {
+                members.Add(node);
+            }
+
+            groups.Add("ceph-osd", members);
+
+            return groups;
+        }
     }
 }

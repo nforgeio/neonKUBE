@@ -2105,7 +2105,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
         }
 
         /// <summary>
-        /// Configures the Ceph cluster by configuring and starting the OSD and MSD 
+        /// Configures the Ceph cluster by configuring and starting the OSD and MDS 
         /// services and then creating and mounting a CephFS file system.
         /// </summary>
         /// <param name="node">The target node.</param>

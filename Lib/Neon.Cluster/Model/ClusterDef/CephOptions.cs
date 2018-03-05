@@ -280,7 +280,7 @@ namespace Neon.Cluster
 
             if (cephMONCount == 0)
             {
-                // No Ceph MSD nodes are explicitly assigned so we're going to provision
+                // No Ceph MDS nodes are explicitly assigned so we're going to provision
                 // these on the Ceph Monitor servers.
 
                 foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.CephMON))
