@@ -843,13 +843,13 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Filters the worker nodes by applying the zero or more Docker Swarm style constraints.
+        /// Filters the cluster swarm nodes by applying the zero or more Docker Swarm style constraints.
         /// </summary>
         /// <param name="constraints">The constraints.</param>
-        /// <returns>The set of worker nodes that satisfy <b>all</b> of the constraints.</returns>
+        /// <returns>The set of swarm nodes that satisfy <b>all</b> of the constraints.</returns>
         /// <remarks>
         /// <note>
-        /// All of the worker nodes will be returned if the parameter is <c>null</c> or empty.
+        /// All of the swarm nodes will be returned if the parameter is <c>null</c> or empty.
         /// </note>
         /// <para>
         /// Constraint expressions must take the form of <b>LABEL==VALUE</b> or <b>LABEL!=VALUE</b>.
@@ -861,34 +861,34 @@ namespace Neon.Cluster
         /// or <b>node</b> to indicate the node name.  Label name lookup is case insenstive.
         /// </para>
         /// </remarks>
-        public IEnumerable<NodeDefinition> FilterWorkers(IEnumerable<string> constraints)
+        public IEnumerable<NodeDefinition> FilterSwarmNodes(IEnumerable<string> constraints)
         {
-            var filtered = SortedWorkers.ToList();
+            var filtered = this.SortedSwarm.ToList();
 
             if (constraints == null || constraints.FirstOrDefault() == null)
             {
                 return filtered;
             }
 
-            var workerLabelDictionary = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
+            var labelDictionary = new Dictionary<string, Dictionary<string, string>>(StringComparer.OrdinalIgnoreCase);
 
-            foreach (var worker in filtered)
+            foreach (var node in filtered)
             {
                 var labels = new Dictionary<string, string>();
 
-                labels.Add("node", worker.Name);
+                labels.Add("node", node.Name);
 
-                foreach (var label in worker.Labels.Standard)
+                foreach (var label in node.Labels.Standard)
                 {
                     labels.Add(label.Key, label.Value.ToString());
                 }
 
-                foreach (var label in worker.Labels.Custom)
+                foreach (var label in node.Labels.Custom)
                 {
                     labels.Add(label.Key, label.Value.ToString());
                 }
 
-                workerLabelDictionary.Add(worker.Name, labels);
+                labelDictionary.Add(node.Name, labels);
             }
 
             foreach (var constraint in constraints)
@@ -926,7 +926,7 @@ namespace Neon.Cluster
                     string  value = constraint.Substring(pos + 2);
                     string  nodeValue;
 
-                    if (!workerLabelDictionary[worker.Name].TryGetValue(label, out nodeValue))
+                    if (!labelDictionary[worker.Name].TryGetValue(label, out nodeValue))
                     {
                         nodeValue = string.Empty;
                     }
