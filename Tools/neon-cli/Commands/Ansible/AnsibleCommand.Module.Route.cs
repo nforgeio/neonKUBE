@@ -170,7 +170,7 @@ namespace NeonCli
 
                     context.WriteLine(Verbosity.Trace, "Parsing route");
 
-                    var newRoute = ProxyRoute.Parse(routeText);
+                    var newRoute = ProxyRoute.Parse(routeText, strict: true);
 
                     context.WriteLine(Verbosity.Trace, "Route parsed successfully");
 

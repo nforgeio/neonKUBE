@@ -400,7 +400,7 @@ See the documentation for more proxy route and setting details.
                         routeText = File.ReadAllText(routeFile);
                     }
 
-                    var proxyRoute = ProxyRoute.Parse(routeText);
+                    var proxyRoute = ProxyRoute.Parse(routeText, strict: true);
 
                     routeName = proxyRoute.Name;
 
@@ -430,18 +430,18 @@ See the documentation for more proxy route and setting details.
                         Program.Exit(1);
                     }
 
-                    string settingsJson;
+                    string settingsText;
 
                     if (settingsFile == "-")
                     {
-                        settingsJson = NeonHelper.ReadStandardInputText();
+                        settingsText = NeonHelper.ReadStandardInputText();
                     }
                     else
                     {
-                        settingsJson = File.ReadAllText(settingsFile);
+                        settingsText = File.ReadAllText(settingsFile);
                     }
 
-                    var proxySettings = NeonHelper.JsonDeserialize<ProxySettings>(settingsJson);
+                    var proxySettings = ProxySettings.Parse(settingsText, strict: true);
 
                     proxyManager.UpdateSettings(proxySettings);
                     Console.WriteLine($"Proxy [{proxyName}] settings have been updated.");
