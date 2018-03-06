@@ -107,7 +107,7 @@ namespace Neon.Cluster
 
             if (cluster.Consul.KV.Exists(proxySettingsKey).Result)
             {
-                proxyDefinition.Settings = NeonHelper.JsonDeserialize<ProxySettings>(cluster.Consul.KV.GetString(proxySettingsKey).Result);
+                proxyDefinition.Settings = ProxySettings.ParseJson(cluster.Consul.KV.GetString(proxySettingsKey).Result);
             }
             else
             {

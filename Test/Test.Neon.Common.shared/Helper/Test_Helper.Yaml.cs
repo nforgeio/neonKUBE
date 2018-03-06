@@ -66,7 +66,7 @@ unmatched: Hello
 
             // Verify that we can ignore unmatched properties.
 
-            person = NeonHelper.YamlDeserialize<YamlPerson>(unmatched, ignoreUnmatched: true);
+            person = NeonHelper.YamlDeserialize<YamlPerson>(unmatched, strict: false);
 
             Assert.Equal("Jeff", person.Name);
             Assert.Equal(56, person.Age);
@@ -74,7 +74,7 @@ unmatched: Hello
             // Verify that we see an exception when we're not ignoring unmatched
             // properties and the input has an unmatched property.
 
-            Assert.Throws<YamlException>(() => NeonHelper.YamlDeserialize<YamlPerson>(unmatched, ignoreUnmatched: false));
+            Assert.Throws<YamlException>(() => NeonHelper.YamlDeserialize<YamlPerson>(unmatched, strict: true));
         }
 
         [Fact]
@@ -89,7 +89,7 @@ unmatched: Hello
 ";
             try
             {
-                var person = NeonHelper.YamlDeserialize<YamlPerson>(unmatched, ignoreUnmatched: false);
+                var person = NeonHelper.YamlDeserialize<YamlPerson>(unmatched, strict: true);
             }
             catch (YamlException e)
             {

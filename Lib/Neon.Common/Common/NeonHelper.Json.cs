@@ -35,7 +35,40 @@ namespace Neon.Common
         public static JsonSerializerSettings JsonStrictSerializerSettings { get; set; }
 
         /// <summary>
-        /// Serializes an object to JSON text using optional settings.
+        /// Serializes an object to JSON text.
+        /// </summary>
+        /// <param name="value">The value to be serialized.</param>
+        /// <param name="format">Output formatting option (defaults to <see cref="Formatting.None"/>).</param>
+        /// <returns>The JSON text.</returns>
+        /// <remarks>
+        /// This method uses the default <see cref="JsonRelaxedSerializerSettings"/> when specific
+        /// settings are not passed.  You may pass <see cref="JsonStrictSerializerSettings"/> or
+        /// entirely custom settings.
+        /// </remarks>
+        public static string JsonSerialize(object value, Formatting format = Formatting.None)
+        {
+            return JsonConvert.SerializeObject(value, format, JsonRelaxedSerializerSettings);
+        }
+
+        /// <summary>
+        /// Deserializes JSON text using custom settings.
+        /// </summary>
+        /// <typeparam name="T">The desired output type.</typeparam>
+        /// <param name="json">The JSON text.</param>
+        /// <param name="strict">Optionally require that all input properties map to to <typeparamref name="T"/> properties.</param>
+        /// <returns>The parsed <typeparamref name="T"/>.</returns>
+        /// <remarks>
+        /// This method uses the default <see cref="JsonRelaxedSerializerSettings"/> when specific
+        /// settings are not passed.  You may pass <see cref="JsonStrictSerializerSettings"/> or
+        /// entirely custom settings.
+        /// </remarks>
+        public static T JsonDeserialize<T>(string json, bool strict = false)
+        {
+            return JsonConvert.DeserializeObject<T>(json, strict ? JsonStrictSerializerSettings : JsonRelaxedSerializerSettings);
+        }
+
+        /// <summary>
+        /// Serializes an object to JSON text using custom settings.
         /// </summary>
         /// <param name="value">The value to be serialized.</param>
         /// <param name="format">Output formatting option (defaults to <see cref="Formatting.None"/>).</param>
@@ -46,13 +79,13 @@ namespace Neon.Common
         /// settings are not passed.  You may pass <see cref="JsonStrictSerializerSettings"/> or
         /// entirely custom settings.
         /// </remarks>
-        public static string JsonSerialize(object value, Formatting format = Formatting.None, JsonSerializerSettings settings = null)
+        public static string JsonSerialize(object value, JsonSerializerSettings settings, Formatting format = Formatting.None)
         {
             return JsonConvert.SerializeObject(value, format, settings ?? JsonRelaxedSerializerSettings);
         }
 
         /// <summary>
-        /// Deserializes JSON text using optional settings.
+        /// Deserializes JSON text using custom settings.
         /// </summary>
         /// <typeparam name="T">The desired output type.</typeparam>
         /// <param name="json">The JSON text.</param>
@@ -63,7 +96,7 @@ namespace Neon.Common
         /// settings are not passed.  You may pass <see cref="JsonStrictSerializerSettings"/> or
         /// entirely custom settings.
         /// </remarks>
-        public static T JsonDeserialize<T>(string json, JsonSerializerSettings settings = null)
+        public static T JsonDeserialize<T>(string json, JsonSerializerSettings settings)
         {
             return JsonConvert.DeserializeObject<T>(json, settings ?? JsonRelaxedSerializerSettings);
         }

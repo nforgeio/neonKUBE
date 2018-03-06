@@ -91,19 +91,19 @@ namespace Neon.Common
         /// </summary>
         /// <typeparam name="T">The desired output type.</typeparam>
         /// <param name="yaml">The YAML text.</param>
-        /// <param name="ignoreUnmatched">Optionally ignore unmatched properties.</param>
+        /// <param name="strict">Optionally require that all input properties map to route properties.</param>
         /// <returns>The parsed <typeparamref name="T"/>.</returns>
-        public static T YamlDeserialize<T>(string yaml, bool ignoreUnmatched = false)
+        public static T YamlDeserialize<T>(string yaml, bool strict = false)
         {
             try
             {
-                if (ignoreUnmatched)
+                if (strict)
                 {
-                    return relaxedYamlDeserializer.Value.Deserialize<T>(yaml);
+                    return strictYamlDeserializer.Value.Deserialize<T>(yaml);
                 }
                 else
                 {
-                    return strictYamlDeserializer.Value.Deserialize<T>(yaml);
+                    return relaxedYamlDeserializer.Value.Deserialize<T>(yaml);
                 }
             }
             catch (YamlException e)

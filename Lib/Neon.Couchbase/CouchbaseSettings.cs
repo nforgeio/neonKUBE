@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 
 using Neon.Common;
 
@@ -19,6 +20,33 @@ namespace Neon.Data
     /// </summary>
     public class CouchbaseSettings
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Parses a <see cref="CouchbaseSettings"/> from a JSON or YAML string,
+        /// automatically detecting the input format.
+        /// </summary>
+        /// <param name="jsonOrYaml"></param>
+        /// <param name="strict">Optionally require that all input properties map to route properties.</param>
+        /// <returns>The parsed <see cref="CouchbaseSettings"/>.</returns>
+        public static CouchbaseSettings Parse(string jsonOrYaml, bool strict = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
+
+            if (jsonOrYaml.TrimStart().StartsWith("{"))
+            {
+                return NeonHelper.JsonDeserialize<CouchbaseSettings>(jsonOrYaml, strict);
+            }
+            else
+            {
+                return NeonHelper.YamlDeserialize<CouchbaseSettings>(jsonOrYaml, strict);
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <summary>
         /// One or more Couchbase server URIs.
         /// </summary>

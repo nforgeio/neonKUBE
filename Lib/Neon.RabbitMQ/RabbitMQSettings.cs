@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 
 using Neon.Common;
 using Neon.Net;
@@ -20,6 +21,33 @@ namespace Neon.Data
     /// </summary>
     public class RabbitMQSettings
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Parses a <see cref="RabbitMQSettings"/> from a JSON or YAML string,
+        /// automatically detecting the input format.
+        /// </summary>
+        /// <param name="jsonOrYaml"></param>
+        /// <param name="strict">Optionally require that all input properties map to route properties.</param>
+        /// <returns>The parsed <see cref="RabbitMQSettings"/>.</returns>
+        public static RabbitMQSettings Parse(string jsonOrYaml, bool strict = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
+
+            if (jsonOrYaml.TrimStart().StartsWith("{"))
+            {
+                return NeonHelper.JsonDeserialize<RabbitMQSettings>(jsonOrYaml, strict);
+            }
+            else
+            {
+                return NeonHelper.YamlDeserialize<RabbitMQSettings>(jsonOrYaml, strict);
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <summary>
         /// Specifies the virtual host namespace.  This defaults to <b>"/"</b>.
         /// </summary>

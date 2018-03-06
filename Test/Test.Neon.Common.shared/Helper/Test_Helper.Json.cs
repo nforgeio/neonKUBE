@@ -39,9 +39,6 @@ namespace TestCommon
             Assert.Equal("Jeff", after.Name);
             Assert.Equal(56, after.Age);
 
-            // Verify that we see exceptions for a source property
-            // that's not defined in the type.
-
             const string unmatchedJson =
 @"
 {
@@ -50,7 +47,15 @@ namespace TestCommon
     ""Unmatched"": ""Hello""
 }
 ";
-            Assert.Throws<JsonSerializationException>(() => NeonHelper.JsonDeserialize<JsonTestPerson>(unmatchedJson, NeonHelper.JsonStrictSerializerSettings));
+            // Verify that we don't see exceptions for a source property
+            // that's not defined in the type by default (when [strict=false])
+
+            NeonHelper.JsonDeserialize<JsonTestPerson>(unmatchedJson);
+
+            // Verify that we see exceptions for a source property
+            // that's not defined in the type when [strict=true]
+
+            Assert.Throws<JsonSerializationException>(() => NeonHelper.JsonDeserialize<JsonTestPerson>(unmatchedJson, strict: true));
         }
 
         [Fact]
@@ -60,14 +65,14 @@ namespace TestCommon
                 new JsonTestPerson()
                 {
                     Name = "Jeff",
-                    Age = 56
+                    Age  = 56
                 };
 
-            var json = NeonHelper.JsonSerialize(before, settings: NeonHelper.JsonRelaxedSerializerSettings);
+            var json = NeonHelper.JsonSerialize(before);
 
             Assert.StartsWith("{", json);
 
-            var after = NeonHelper.JsonDeserialize<JsonTestPerson>(json, settings: NeonHelper.JsonRelaxedSerializerSettings);
+            var after = NeonHelper.JsonDeserialize<JsonTestPerson>(json);
 
             Assert.Equal("Jeff", after.Name);
             Assert.Equal(56, after.Age);
@@ -83,7 +88,7 @@ namespace TestCommon
     ""Unmatched"": ""Hello""
 }
 ";
-            NeonHelper.JsonDeserialize<JsonTestPerson>(unmatchedJson, settings: NeonHelper.JsonRelaxedSerializerSettings);
+            NeonHelper.JsonDeserialize<JsonTestPerson>(unmatchedJson, strict: false);
         }
 
         [Fact]

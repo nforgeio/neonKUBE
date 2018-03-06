@@ -41,18 +41,19 @@ namespace Neon.Cluster
         /// automatically detecting the input format.
         /// </summary>
         /// <param name="jsonOrYaml">The JSON or YAML input.</param>
+        /// <param name="strict">Optionally require that all input properties map to route properties.</param>
         /// <returns>The parsed object instance derived from <see cref="ProxyRoute"/>.</returns>
-        public static ProxyRoute Parse(string jsonOrYaml)
+        public static ProxyRoute Parse(string jsonOrYaml, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
 
             if (jsonOrYaml.TrimStart().StartsWith("{"))
             {
-                return ParseJson(jsonOrYaml);
+                return ParseJson(jsonOrYaml, strict);
             }
             else
             {
-                return ParseYaml(jsonOrYaml);
+                return ParseYaml(jsonOrYaml, strict);
             }
         }
 
@@ -60,15 +61,16 @@ namespace Neon.Cluster
         /// Parses a <see cref="ProxyRoute"/> from a JSON string.
         /// </summary>
         /// <param name="jsonText">The input string.</param>
+        /// <param name="strict">Optionally require that all input properties map to route properties.</param>
         /// <returns>The parsed object instance derived from <see cref="ProxyRoute"/>.</returns>
-        public static ProxyRoute ParseJson(string jsonText)
+        public static ProxyRoute ParseJson(string jsonText, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonText));
 
             // We're going to ignore unmatched properties here because we
             // we're reading the base route class first.
 
-            var baseRoute = NeonHelper.JsonDeserialize<ProxyRoute>(jsonText, settings: NeonHelper.JsonRelaxedSerializerSettings);
+            var baseRoute = NeonHelper.JsonDeserialize<ProxyRoute>(jsonText);
 
             // Now that we know the route mode, we can deserialize the full route.
 
@@ -76,11 +78,11 @@ namespace Neon.Cluster
             {
                 case ProxyMode.Http:
 
-                    return NeonHelper.JsonDeserialize<ProxyHttpRoute>(jsonText);
+                    return NeonHelper.JsonDeserialize<ProxyHttpRoute>(jsonText, strict);
 
                 case ProxyMode.Tcp:
 
-                    return NeonHelper.JsonDeserialize<ProxyTcpRoute>(jsonText);
+                    return NeonHelper.JsonDeserialize<ProxyTcpRoute>(jsonText, strict);
 
                 default:
 
@@ -92,15 +94,16 @@ namespace Neon.Cluster
         /// Parses a <see cref="ProxyRoute"/> from a YAML string.
         /// </summary>
         /// <param name="yamlText">The input string.</param>
+        /// <param name="strict">Optionally require that all input properties map to route properties.</param>
         /// <returns>The parsed object instance derived from <see cref="ProxyRoute"/>.</returns>
-        public static ProxyRoute ParseYaml(string yamlText)
+        public static ProxyRoute ParseYaml(string yamlText, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(yamlText));
 
             // We're going to ignore unmatched properties here because we
             // we're reading the base route class first.
 
-            var baseRoute = NeonHelper.YamlDeserialize<ProxyRoute>(yamlText, ignoreUnmatched: true);
+            var baseRoute = NeonHelper.YamlDeserialize<ProxyRoute>(yamlText, strict: false);
 
             // Now that we know the route mode, we can deserialize the full route.
 
@@ -108,11 +111,11 @@ namespace Neon.Cluster
             {
                 case ProxyMode.Http:
 
-                    return NeonHelper.YamlDeserialize<ProxyHttpRoute>(yamlText);
+                    return NeonHelper.YamlDeserialize<ProxyHttpRoute>(yamlText, strict);
 
                 case ProxyMode.Tcp:
 
-                    return NeonHelper.YamlDeserialize<ProxyTcpRoute>(yamlText);
+                    return NeonHelper.YamlDeserialize<ProxyTcpRoute>(yamlText, strict);
 
                 default:
 

@@ -29,7 +29,60 @@ namespace Neon.Cluster
     /// </summary>
     public class ProxySettings
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         private const int defaultMaxConnections = 32000;
+
+        /// <summary>
+        /// Parses a <see cref="ProxySettings"/> from a JSON or YAML string,
+        /// automatically detecting the input format.
+        /// </summary>
+        /// <param name="jsonOrYaml">The JSON or YAML input.</param>
+        /// <param name="strict">Optionally require that all input properties map to settings properties.</param>
+        /// <returns>The parsed <see cref="ProxySettings"/>.</returns>
+        public static ProxySettings Parse(string jsonOrYaml, bool strict = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
+
+            if (jsonOrYaml.TrimStart().StartsWith("{"))
+            {
+                return ParseJson(jsonOrYaml, strict);
+            }
+            else
+            {
+                return ParseYaml(jsonOrYaml, strict);
+            }
+        }
+
+        /// <summary>
+        /// Parses a <see cref="ProxyRoute"/> from a JSON string.
+        /// </summary>
+        /// <param name="jsonText">The input string.</param>
+        /// <param name="strict">Optionally require that all input properties map to settings properties.</param>
+        /// <returns>The parsed <see cref="ProxySettings"/>.</returns>
+        public static ProxySettings ParseJson(string jsonText, bool strict = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonText));
+
+            return NeonHelper.JsonDeserialize<ProxySettings>(jsonText, strict);
+        }
+
+        /// <summary>
+        /// Parses a <see cref="ProxyRoute"/> from a YAML string.
+        /// </summary>
+        /// <param name="yamlText">The input string.</param>
+        /// <param name="strict">Optionally require that all input properties map to settings properties.</param>
+        /// <returns>The parsed <see cref="ProxySettings"/>.</returns>
+        public static ProxySettings ParseYaml(string yamlText, bool strict = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(yamlText));
+
+            return NeonHelper.YamlDeserialize<ProxySettings>(yamlText, strict);
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         /// <summary>
         /// First reserved port on the Docker ingress network in the block allocated to this proxy.
