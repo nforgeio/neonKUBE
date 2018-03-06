@@ -254,8 +254,8 @@ Server Requirements:
             // groups,... as required for the environment.
 
             hostingManager              = HostingManager.GetManager(cluster, Program.LogPath);
-            hostingManager.HostUsername = Program.Username;
-            hostingManager.HostPassword = Program.Password;
+            hostingManager.HostUsername = Program.MachineUsername;
+            hostingManager.HostPassword = Program.MachinePassword;
             hostingManager.ShowStatus   = !Program.Quiet;
             hostingManager.MaxParallel  = Program.MaxParallel;
             hostingManager.WaitSeconds  = Program.WaitSeconds;
@@ -383,8 +383,8 @@ Server Requirements:
                 Path         = clusterLoginPath,
                 Username     = NeonClusterConst.RootUser,
                 Definition   = cluster.Definition,
-                SshUsername  = Program.Username,
-                SshPassword  = Program.Password,
+                SshUsername  = Program.MachineUsername,
+                SshPassword  = Program.MachinePassword,
                 SetupPending = true
             };
 

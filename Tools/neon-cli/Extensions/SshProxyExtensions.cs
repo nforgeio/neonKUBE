@@ -395,7 +395,7 @@ namespace NeonCli
             preprocessReader.Set("load-cluster-config-quiet", NodeHostFolders.Config + "/cluster.conf.sh");
 
             SetBashVariable(preprocessReader, "cluster.provisioner", clusterDefinition.Provisioner);
-            SetBashVariable(preprocessReader, "cluster.rootuser", Program.Username);
+            SetBashVariable(preprocessReader, "cluster.rootuser", Program.MachineUsername);
 
             SetBashVariable(preprocessReader, "node.driveprefix", clusterDefinition.DrivePrefix);
 

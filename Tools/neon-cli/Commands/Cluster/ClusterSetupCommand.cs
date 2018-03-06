@@ -358,7 +358,7 @@ OPTIONS:
                 }
                 else
                 {
-                    clusterLogin.SshPassword = Program.Password;
+                    clusterLogin.SshPassword = Program.MachinePassword;
                 }
 
                 clusterLogin.Save();
@@ -399,7 +399,7 @@ OPTIONS:
             clusterLogin.IsRoot       = true;
             clusterLogin.Username     = NeonClusterConst.RootUser;
             clusterLogin.Definition   = cluster.Definition;
-            clusterLogin.SshUsername  = Program.Username;
+            clusterLogin.SshUsername  = Program.MachineUsername;
 
             if (cluster.Definition.Vpn.Enabled)
             {
@@ -2787,7 +2787,7 @@ chmod 666 /run/ssh-key*
 
                     var script =
 $@"
-echo '{Program.Username}:{clusterLogin.SshPassword}' | chpasswd
+echo '{Program.MachineUsername}:{clusterLogin.SshPassword}' | chpasswd
 ";
                     var bundle = new CommandBundle("./set-strong-password.sh");
 
@@ -2801,7 +2801,7 @@ echo '{Program.Username}:{clusterLogin.SshPassword}' | chpasswd
                         Program.Exit(response.ExitCode);
                     }
 
-                    node.UpdateCredentials(SshCredentials.FromUserPassword(Program.Username, clusterLogin.SshPassword));
+                    node.UpdateCredentials(SshCredentials.FromUserPassword(Program.MachineUsername, clusterLogin.SshPassword));
                 });
         }
 

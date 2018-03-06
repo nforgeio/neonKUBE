@@ -131,12 +131,14 @@ OPTIONS:
                                           configured in parallel [default=1]
     --node=NODE                         - Some commands may be directed at
                                           specific node(s)
+    --machine-password=PASSWORD         - Overrides default initial machine
+                                          password: sysadmin0000
+    --machine-username=USERNAME         - Overrides default initial machine
+                                          username: sysadmin
     --os=ubuntu-16.04                   - Target host OS
-    -p=PASSWORD, --password=PASSWORD    - Cluster host node root password
     -q, --quiet                         - Disables operation progress
     -w=SECONDS, --wait=SECONDS          - Seconds to delay for cluster
                                           stablization (defaults to 60s).
-    -u=USER, --user=USER                - Cluster host node root username
 
 NOTES:
 
@@ -178,8 +180,8 @@ Note that the tool requires admin priviledges for direct mode.
 
                 CommandLine = new CommandLine(args);
 
-                CommandLine.DefineOption("-u", "--user");
-                CommandLine.DefineOption("-p", "--password");
+                CommandLine.DefineOption("--machine-username");
+                CommandLine.DefineOption("--machine-password");
                 CommandLine.DefineOption("-os").Default = "ubuntu-16.04";
                 CommandLine.DefineOption("-q", "--quiet");
                 CommandLine.DefineOption("-m", "--max-parallel").Default = "1";
@@ -188,10 +190,8 @@ Note that the tool requires admin priviledges for direct mode.
 
                 var validOptions = new HashSet<string>();
 
-                validOptions.Add("-u");
-                validOptions.Add("--user");
-                validOptions.Add("-p");
-                validOptions.Add("--password");
+                validOptions.Add("--machine-username");
+                validOptions.Add("--machine-password");
                 validOptions.Add("--os");
                 validOptions.Add("--log-folder");
                 validOptions.Add("-q");
@@ -493,8 +493,8 @@ Note that the tool requires admin priviledges for direct mode.
 
                 // Load the user name and password from the command line options, if present.
 
-                Username = leftCommandLine.GetOption("--user");
-                Password = leftCommandLine.GetOption("--password");
+                MachineUsername = leftCommandLine.GetOption("--machine-username", "sysadmin");
+                MachinePassword = leftCommandLine.GetOption("--machine-password", "sysadmin0000");
 
                 // Handle the other options.
 
@@ -601,22 +601,22 @@ Note that the tool requires admin priviledges for direct mode.
 
                 if (command.NeedsSshCredentials(CommandLine))
                 {
-                    if (string.IsNullOrWhiteSpace(Username) || string.IsNullOrEmpty(Password))
+                    if (string.IsNullOrWhiteSpace(MachineUsername) || string.IsNullOrEmpty(MachinePassword))
                     {
                         Console.WriteLine();
                         Console.WriteLine("    Enter cluster SSH credentials:");
                         Console.WriteLine("    ------------------------------");
                     }
 
-                    while (string.IsNullOrWhiteSpace(Username))
+                    while (string.IsNullOrWhiteSpace(MachineUsername))
                     {
                         Console.Write("    username: ");
-                        Username = Console.ReadLine();
+                        MachineUsername = Console.ReadLine();
                     }
 
-                    while (string.IsNullOrEmpty(Password))
+                    while (string.IsNullOrEmpty(MachinePassword))
                     {
-                        Password = NeonHelper.ReadConsolePassword("    password: ");
+                        MachinePassword = NeonHelper.ReadConsolePassword("    password: ");
                     }
                 }
 
@@ -975,14 +975,16 @@ Note that the tool requires admin priviledges for direct mode.
         }
 
         /// <summary>
-        /// Returns the cluster's SSH user name.
+        /// Returns the username used to secure the cluster nodes before they are setup.  This
+        /// defaults to <b>sysadmin</b> which is used for the neonCLUSTER machine templates.
         /// </summary>
-        public static string Username { get; private set; }
+        public static string MachineUsername { get; private set; }
 
         /// <summary>
-        /// Returns the cluster's SSH user password.
+        /// Returns the password used to secure the cluster nodes before they are setup.  This
+        /// defaults to <b>sysadmin0000</b> which is used for the neonCLUSTER machine templates.
         /// </summary>
-        public static string Password { get; private set; }
+        public static string MachinePassword { get; private set; }
 
         /// <summary>
         /// Returns the cluster login information for the currently logged in cluster or <c>null</c>.
@@ -1040,9 +1042,9 @@ Note that the tool requires admin priviledges for direct mode.
 
             SshCredentials sshCredentials;
 
-            if (!string.IsNullOrEmpty(Program.Username) && !string.IsNullOrEmpty(Program.Password))
+            if (!string.IsNullOrEmpty(Program.MachineUsername) && !string.IsNullOrEmpty(Program.MachinePassword))
             {
-                sshCredentials = SshCredentials.FromUserPassword(Program.Username, Program.Password);
+                sshCredentials = SshCredentials.FromUserPassword(Program.MachineUsername, Program.MachinePassword);
             }
             else if (Program.ClusterLogin != null)
             {
