@@ -119,15 +119,6 @@ namespace Couchbase
         /// </summary>
         /// <param name="settings">The simplified Couchbase settings instance.</param>
         /// <returns>A Couchbase <see cref="ClientConfiguration"/>.</returns>
-        /// <remarks>
-        /// <note>
-        /// This method initializes the settings to use the <see cref="NeonHelper.JsonSerialize(object, Newtonsoft.Json.Formatting, Newtonsoft.Json.JsonSerializerSettings)"/>
-        /// and <see cref="NeonHelper.JsonDeserialize{TObject}(string, Newtonsoft.Json.JsonSerializerSettings)"/> methods 
-        /// using <see cref="NeonHelper.JsonStrictSerializerSettings"/> to handle JSON serialization by default.  You can
-        /// override this by implementing your own <see cref="ITypeSerializer"/> and then setting to return
-        /// a <see cref="ClientConfiguration.Serializer"/> instance.
-        /// </note>
-        /// </remarks>
         public static ClientConfiguration ToClientConfig(this CouchbaseSettings settings)
         {
             var config = new ClientConfiguration();
@@ -140,7 +131,7 @@ namespace Couchbase
             }
 
             config.UseSsl                   = false;
-            config.Serializer               = () => new DefaultSerializer(NeonHelper.JsonStrictSerializerSettings, NeonHelper.JsonStrictSerializerSettings);
+            config.Serializer               = () => new DefaultSerializer(NeonHelper.JsonRelaxedSerializerSettings, NeonHelper.JsonRelaxedSerializerSettings);
             config.DefaultOperationLifespan = (uint)settings.OperationTimeout;
             config.DefaultConnectionLimit   = settings.MaxPoolConnections;
 
