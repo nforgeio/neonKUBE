@@ -1,13 +1,13 @@
 #------------------------------------------------------------------------------
 # Provision and setup the underlying neonCLUSTER.
 #
-# usage: powershell -file setup-cluster.ps1 CLUSTER-NAME
+# usage: powershell -file setup-cluster.ps1 clusterName [OPTIONS]
 #
 # ARGUMENTS:
 #
-#   CLUSTER-NAME		- Identifies the target cluster definition in the [clusters]
+#   clusterName  		- Identifies the target cluster definition in the [clusters]
 #	    				  subfolder.  Note that this DOES NOT include the [.json]
-#						  file extension).  Example: "home-small"
+#						  file extension).  Example: "wrt-00-prod"
 #
 # NOTE: This script is not intended to be called directly by a
 #       system operator.
@@ -23,28 +23,31 @@ if (-not $env:SETUP_ALL -eq "true")
 	exit 1
 }
 
-# Prepare the underlying neonCLUSTER.
+# Prepare the neonCLUSTER.
 
 neon cluster prepare `
-	$clusterName `
-	-u="$env:CLUSTER_NODE_TEMPLATE_USERNAME" `
-	-p="$env:CLUSTER_NODE_TEMPLATE_PASSWORD" `
+    $env:SETUP_NO_TOOL_CONTAINER `
+	--machine-username="$env:CLUSTER_NODE_TEMPLATE_USERNAME" `
+	--machine-password="$env:CLUSTER_NODE_TEMPLATE_PASSWORD" `
 	--log-folder="$env:CLUSTER_LOG_FOLDER" `
-	--max-parallel="$env:CLUSTER_MAX_PARALLEL"
+	--max-parallel=$env:CLUSTER_MAX_PARALLEL `
+	$clusterName
 
 if (-not $?)
 {
 	exit 1
 }
 
-# Setup the underlying neonCLUSTER.
+# Setup the neonCLUSTER.
 
 neon cluster setup `
-	-u="$env:CLUSTER_NODE_TEMPLATE_USERNAME" `
-	-p="$env:CLUSTER_NODE_TEMPLATE_PASSWORD" `
+    $env:SETUP_NO_TOOL_CONTAINER `
+	$env:SETUP_IMAGE_TAG `
+	--machine-username="$env:CLUSTER_NODE_TEMPLATE_USERNAME" `
+	--machine-password="$env:CLUSTER_NODE_TEMPLATE_PASSWORD" `
 	--log-folder="$env:CLUSTER_LOG_FOLDER" `
 	--max-parallel="$env:CLUSTER_MAX_PARALLEL" `
-	"$env:CLUSTER_LOGIN"
+	$env:CLUSTER_LOGIN
 
 if (-not $?)
 {

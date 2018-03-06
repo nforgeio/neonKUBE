@@ -4,20 +4,25 @@
 #------------------------------------------------------------------------------
 # [neon]: Ubuntu 16.04
 
+neon logout
 neon login rm root@home-small --force
-powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-small
+powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-small jeff-latest -noToolContainer
 
+neon logout
 neon login rm root@home-large --force
-powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-large
+powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-large jeff-latest -noToolContainer
 
+neon logout
 neon login rm root@home-azure --force
-powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-azure
+powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-azure jeff-latest -noToolContainer
 
+neon logout
 neon login rm root@home-xen --force
-powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-xen
+powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-xen jeff-latest -noToolContainer
 
+neon logout
 neon login rm root@home-bare --force
-powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-bare
+powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-bare jeff-latest -noToolContainer
 
 neon login rm root@home-small --force
 neon cluster prepare %NF_ROOT%\Devops\test\clusters\home-small\cluster.json -u=sysadmin -p=sysadmin0000 --log-folder=d:\VM\neon.log --max-parallel=10 --force
