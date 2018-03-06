@@ -1017,7 +1017,7 @@ namespace Neon.Cluster
                     members.Add(node);
                 }
 
-                groups.Add("all", members);
+                groups.Add("all", members.ToList());
             }
 
             // [swarm] group
@@ -1029,7 +1029,7 @@ namespace Neon.Cluster
                 members.Add(node);
             }
 
-            groups.Add("swarm", members);
+            groups.Add("swarm", members.ToList());
 
             // [managers] group
 
@@ -1040,7 +1040,7 @@ namespace Neon.Cluster
                 members.Add(node);
             }
 
-            groups.Add("managers", members);
+            groups.Add("managers", members.ToList());
 
             // [workers] group
 
@@ -1051,7 +1051,7 @@ namespace Neon.Cluster
                 members.Add(node);
             }
 
-            groups.Add("workers", members);
+            groups.Add("workers", members.ToList());
 
             // [pets] group
 
@@ -1062,7 +1062,7 @@ namespace Neon.Cluster
                 members.Add(node);
             }
 
-            groups.Add("pets", members);
+            groups.Add("pets", members.ToList());
 
             // [ceph] group
 
@@ -1073,34 +1073,40 @@ namespace Neon.Cluster
                 members.Add(node);
             }
 
-            groups.Add("ceph", members);
+            groups.Add("ceph", members.ToList());
 
             // [ceph-mon] group
+
+            members.Clear();
 
             foreach (var node in SortedNodes.Where(n => n.Labels.CephMON))
             {
                 members.Add(node);
             }
 
-            groups.Add("ceph-mon", members);
+            groups.Add("ceph-mon", members.ToList());
 
             // [ceph-mds] group
+
+            members.Clear();
 
             foreach (var node in SortedNodes.Where(n => n.Labels.CephMDS))
             {
                 members.Add(node);
             }
 
-            groups.Add("ceph-mds", members);
+            groups.Add("ceph-mds", members.ToList());
 
             // [ceph-osd] group
+
+            members.Clear();
 
             foreach (var node in SortedNodes.Where(n => n.Labels.CephOSD))
             {
                 members.Add(node);
             }
 
-            groups.Add("ceph-osd", members);
+            groups.Add("ceph-osd", members.ToList());
 
             return groups;
         }

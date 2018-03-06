@@ -40,7 +40,8 @@ namespace Neon.Cluster
         /// <summary>
         /// The IP address or DNS name of the backend server where traffic to be forwarded.
         /// </summary>
-        [JsonProperty(PropertyName = "Server", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Server", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public string Server { get; set; }
 
         /// <summary>
@@ -60,7 +61,8 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Works in conjunction with <see cref="Group"/> to limit the number of Ansible
-        /// group nodes to be targeted.
+        /// group nodes to be targeted.  Setting this to zero (the default) indicates that
+        /// all nodes in the group will be targeted.
         /// </summary>
         [JsonProperty(PropertyName = "GroupLimit", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(0)]
@@ -87,7 +89,7 @@ namespace Neon.Cluster
 
                 if (GroupLimit < 0)
                 {
-                    context.Error($"Route [{routeName}] has backend with [{nameof(GroupLimit)}={GroupLimit}] which cannot be less than zero.");
+                    context.Error($"Route [{routeName}] has backend with [{nameof(GroupLimit)}={GroupLimit}] which may not be less than zero.");
                 }
             }
             else
@@ -102,6 +104,48 @@ namespace Neon.Cluster
             if (!NetHelper.IsValidPort(Port))
             {
                 context.Error($"Route [{routeName}] has backend server with invalid [{nameof(Port)}={Port}] which is outside the range of valid TCP ports.");
+            }
+        }
+
+        /// <summary>
+        /// Selects target node backends based on the <see cref="Group"/> and <see cref="GroupLimit"/> properties 
+        /// and the host groups passed.  This works only for backends that target a group.
+        /// </summary>
+        /// <param name="hostGroups">
+        /// Dictionary mapping host group names to the list of host node 
+        /// definitions within the named group.
+        /// </param>
+        /// <returns>The selected cluster host node definitions.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if the backend does not target a group.</exception>
+        public List<NodeDefinition> SelectGroupNodes(Dictionary<string, List<NodeDefinition>> hostGroups)
+        {
+            Covenant.Requires<ArgumentNullException>(hostGroups != null);
+            Covenant.Assert(hostGroups.Count(g => g.Key.Equals("all", StringComparison.InvariantCultureIgnoreCase)) > 0, "Expecting the [all] group to be present.");
+
+            if (string.IsNullOrEmpty(Group))
+            {
+                throw new InvalidOperationException($"[{nameof(ProxyBackend)}.{nameof(Group)}()] works only for route backends that target a group.");
+            }
+
+            if (!hostGroups.TryGetValue(Group, out var groupNodes))
+            {
+                // The group doesn't exist so return an empty list.
+
+                return new List<NodeDefinition>();
+            }
+
+            if (GroupLimit == 0 || GroupLimit >= groupNodes.Count)
+            {
+                // If there is no group limit or the limit is greater than or equal
+                // to the number of group nodes, so just return the group nodes.
+
+                return groupNodes;
+            }
+            else
+            {
+                // Randomly select [GroupLimit] nodes.
+
+                return groupNodes.SelectRandom(GroupLimit).ToList();
             }
         }
     }

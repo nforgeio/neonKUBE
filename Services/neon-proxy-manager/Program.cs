@@ -59,7 +59,8 @@ namespace NeonProxyManager
         private static DockerClient             docker;
         private static TimeSpan                 pollInterval;
         private static TimeSpan                 certWarnTime;
-        private static ClusterDefinition        cachedClusterDefinition;
+        private static ClusterDefinition        clusterDefinition;
+        private static bool                     clusterDefinitionChanged;
         private static Task                     monitorTask;
         private static List<DockerNode>         swarmNodes;
 
@@ -314,6 +315,14 @@ namespace NeonProxyManager
                                         return;
                                     }
 
+                                    // Fetch the cluster definition and detech whether it changed since the
+                                    // previous run.
+
+                                    var currentClusterDefinition = await NeonClusterHelper.GetDefinitionAsync(clusterDefinition, cts.Token);
+
+                                    clusterDefinitionChanged = clusterDefinition == null || !NeonHelper.JsonEquals(clusterDefinition, currentClusterDefinition);
+                                    clusterDefinition        = currentClusterDefinition;
+
                                     // Fetch the list of active Docker Swarm nodes.  We'll need this to generate the
                                     // proxy bridge configurations.
 
@@ -419,6 +428,7 @@ namespace NeonProxyManager
 
             string          proxyPrefix = $"{proxyConf}/{proxyName}";
             var             routes      = new Dictionary<string, ProxyRoute>();
+            var             hostGroups  = clusterDefinition.GetNodeGroups(excludeAllGroup: false);
             ProxySettings   settings;
 
             try
@@ -525,7 +535,7 @@ namespace NeonProxyManager
                         log.Record($"        proxy-port:  {frontend.ProxyPort}");
                     }
 
-                    foreach (var backend in route.Backends)
+                    foreach (var backend in route.SelectBackends(hostGroups))
                     {
                         log.Record($"    backend:         {backend.Server}:{backend.Port}");
                     }
@@ -558,7 +568,7 @@ namespace NeonProxyManager
                         log.Record($"        proxy-port:  {frontend.ProxyPort}");
                     }
 
-                    foreach (var backend in route.Backends)
+                    foreach (var backend in route.SelectBackends(hostGroups))
                     {
                         log.Record($"    backend:         {backend.Server}:{backend.Port}");
                     }
@@ -942,7 +952,7 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
                 var checkArg    = tcpRoute.Check ? " check" : string.Empty;
                 var serverIndex = 0;
 
-                foreach (var backend in tcpRoute.Backends)
+                foreach (var backend in tcpRoute.SelectBackends(hostGroups))
                 {
                     var backendName = $"server-{serverIndex++}";
 
@@ -1233,7 +1243,7 @@ backend http:{httpRoute.Name}
 
                     var serverIndex = 0;
 
-                    foreach (var backend in httpRoute.Backends)
+                    foreach (var backend in httpRoute.SelectBackends(hostGroups))
                     {
                         var serverName = $"server-{serverIndex++}";
 
@@ -1705,14 +1715,14 @@ listen tcp:port-{port}
         {
             try
             {
-                // Read the cluster hosting options from Vault and this combine 
-                // this with the cluster definition loaded from Consul to create
-                // a cluster proxy.
+                // Clone the cached cluster definition and add the hosting options
+                // acquired from Vault to create a cluster proxy.
 
-                cachedClusterDefinition         = await NeonClusterHelper.GetDefinitionAsync(cachedClusterDefinition, cancellationToken);
-                cachedClusterDefinition.Hosting = await vault.ReadJsonAsync<HostingOptions>("neon-secret/hosting/options", cancellationToken: cancellationToken);
+                var cloneClusterDefinition = NeonHelper.JsonClone<ClusterDefinition>(clusterDefinition);
 
-                var cluster = new ClusterProxy(cachedClusterDefinition);
+                cloneClusterDefinition.Hosting = await vault.ReadJsonAsync<HostingOptions>("neon-secret/hosting/options", cancellationToken: cancellationToken);
+
+                var cluster = new ClusterProxy(cloneClusterDefinition);
 
                 // Retrieve the current public load balancer rules and then compare
                 // these with the public routes defined for the cluster to determine

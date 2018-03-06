@@ -28,6 +28,8 @@ namespace Neon.Cluster
     /// </summary>
     public class ProxyHttpRoute : ProxyRoute
     {
+        private List<ProxyHttpBackend> selectedBackends;    // Used to cache selected backends
+
         /// <summary>
         /// Default constructor.
         /// </summary>
@@ -110,6 +112,88 @@ namespace Neon.Cluster
         /// </summary>
         [JsonProperty(PropertyName = "Backends", Required = Required.Always)]
         public List<ProxyHttpBackend> Backends { get; set; } = new List<ProxyHttpBackend>();
+
+        /// <summary>
+        /// Returns the list of backends selected to be targeted by processing any
+        /// backends with <see cref="ProxyBackend.Group"/> and <see cref="ProxyBackend.GroupLimit"/>
+        /// properties configured to dynamically select backend target nodes.
+        /// </summary>
+        /// <param name="hostGroups">
+        /// Dictionary mapping host group names to the list of host node 
+        /// definitions within the named group.
+        /// </param>
+        /// <returns>The list of selected backends.</returns>
+        /// <remarks>
+        /// <note>
+        /// This is a somewhat specialized method used by the <b>neon-proxy-manager</b>
+        /// when generating HAProxy configuration files.
+        /// </note>
+        /// <note>
+        /// This method will compute the select the first time it's called on an
+        /// instance and then return the same selected backends thereafter.
+        /// </note>
+        /// </remarks>
+        public List<ProxyHttpBackend> SelectBackends(Dictionary<string, List<NodeDefinition>> hostGroups)
+        {
+            Covenant.Requires<ArgumentNullException>(hostGroups != null);
+
+            if (selectedBackends != null)
+            {
+                return selectedBackends;   // Return the cached backends
+            }
+
+            if (Backends.Count(be => !string.IsNullOrEmpty(be.Group)) == 0)
+            {
+                // There is no group targeting so we can just return the 
+                // backend definitions as is.
+
+                return Backends;
+            }
+
+            // We actually need to select backends.  Any backend that doesn't
+            // target a group will be added as-is and then we'll need to
+            // process group targets to actually select the backend nodes.
+            //
+            // Note that we're only going to process the first backend that
+            // targets any given group (multiple backends targeting the 
+            // same group could be considered to be a configuration problem).
+
+            // NOTE:
+            //
+            // I'm treating a targeted host group that doesn't actually exist
+            // as an empty group.  A case could be made to signal this as an
+            // error or log a warning, but one could also argue that treating
+            // this as a empty group makes logical sense (and it's much easier
+            // to implement to boot).
+
+            var processedGroups = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+
+            selectedBackends = new List<ProxyHttpBackend>();
+
+            foreach (var backend in Backends)
+            {
+                if (string.IsNullOrEmpty(backend.Group))
+                {
+                    selectedBackends.Add(backend);
+                }
+                else if (!processedGroups.Contains(backend.Group))
+                {
+                    foreach (var groupNode in backend.SelectGroupNodes(hostGroups).OrderBy(n => n.Name))
+                    {
+                        var backendClone = NeonHelper.JsonClone(backend);
+
+                        backendClone.Name   = groupNode.Name;
+                        backendClone.Server = groupNode.PrivateAddress.ToString();
+
+                        selectedBackends.Add(backendClone);
+                    }
+
+                    processedGroups.Add(backend.Group);
+                }
+            }
+
+            return selectedBackends;
+        }
 
         /// <summary>
         /// Validates the route.
