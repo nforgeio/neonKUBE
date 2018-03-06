@@ -42,13 +42,13 @@ namespace Neon.Common
         /// <param name="settings">The optional settings or <c>null</c> to use <see cref="JsonStrictSerializerSettings"/>.</param>
         /// <returns>The JSON text.</returns>
         /// <remarks>
-        /// This method uses the default <see cref="JsonRelaxedSerializerSettings"/> when specific
-        /// settings are not passed.  You may pass <see cref="JsonStrictSerializerSettings"/> or
+        /// This method uses the default <see cref="JsonStrictSerializerSettings"/> when specific
+        /// settings are not passed.  Yoy may pass <see cref="JsonRelaxedSerializerSettings"/> or
         /// entirely custom settings.
         /// </remarks>
         public static string JsonSerialize(object value, Formatting format = Formatting.None, JsonSerializerSettings settings = null)
         {
-            return JsonConvert.SerializeObject(value, format, settings ?? JsonRelaxedSerializerSettings);
+            return JsonConvert.SerializeObject(value, format, settings ?? JsonStrictSerializerSettings);
         }
 
         /// <summary>
@@ -56,16 +56,16 @@ namespace Neon.Common
         /// </summary>
         /// <typeparam name="T">The desired output type.</typeparam>
         /// <param name="json">The JSON text.</param>
-        /// <param name="settings">The optional settings or <c>null</c> to use <see cref="JsonRelaxedSerializerSettings"/>.</param>
+        /// <param name="settings">The optional settings or <c>null</c> to use <see cref="JsonStrictSerializerSettings"/>.</param>
         /// <returns>The parsed <typeparamref name="T"/>.</returns>
         /// <remarks>
-        /// This method uses the default <see cref="JsonRelaxedSerializerSettings"/> when specific
-        /// settings are not passed.  You may pass <see cref="JsonStrictSerializerSettings"/> or
+        /// This method uses the default <see cref="JsonStrictSerializerSettings"/> when specific
+        /// settings are not passed.  Yoy may pass <see cref="JsonRelaxedSerializerSettings"/> or
         /// entirely custom settings.
         /// </remarks>
         public static T JsonDeserialize<T>(string json, JsonSerializerSettings settings = null)
         {
-            return JsonConvert.DeserializeObject<T>(json, settings ?? JsonRelaxedSerializerSettings);
+            return JsonConvert.DeserializeObject<T>(json, settings ?? JsonStrictSerializerSettings);
         }
 
         /// <summary>

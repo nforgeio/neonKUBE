@@ -50,7 +50,7 @@ namespace TestCommon
     ""Unmatched"": ""Hello""
 }
 ";
-            Assert.Throws<JsonSerializationException>(() => NeonHelper.JsonDeserialize<JsonTestPerson>(unmatchedJson, NeonHelper.JsonStrictSerializerSettings));
+            Assert.Throws<JsonSerializationException>(() => NeonHelper.JsonDeserialize<JsonTestPerson>(unmatchedJson));
         }
 
         [Fact]
@@ -72,7 +72,7 @@ namespace TestCommon
             Assert.Equal("Jeff", after.Name);
             Assert.Equal(56, after.Age);
 
-            // Verify that we don't see exceptions for a source property
+            // Verify that we see exceptions for a source property
             // that's not defined in the type.
 
             const string unmatchedJson =
