@@ -83,6 +83,30 @@ namespace Neon.Cryptography
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input));
 
+            // Strip out any blank lines (some services like Namecheap.com will
+            // generate certificates with blank lines between the certificates
+            // in the CA bunbdle.
+
+            var sb = new StringBuilder();
+
+            using (var reader = new StringReader(input))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    var l = line.Trim();
+
+                    if (l.Length > 0)
+                    {
+                        sb.AppendLine(l);
+                    }
+                }
+            }
+
+            input = sb.ToString();
+
+            // Convert to Linux style line endings and ensure that the
+            // last line is terminated with a LF.
+
             var output = NeonHelper.ToLinuxLineEndings(input);
 
             if (output.EndsWith("\n"))
@@ -747,7 +771,7 @@ namespace Neon.Cryptography
 
                     if (result.ExitCode != 0)
                     {
-                        throw new FormatException("Cannot parse certificate.");
+                        throw new FormatException($"Cannot parse certificate: {result.ErrorText}");
                     }
 
                     ParseCertUtil(result.OutputText);
@@ -761,7 +785,7 @@ namespace Neon.Cryptography
 
                     if (result.ExitCode != 0)
                     {
-                        throw new FormatException("Cannot parse certificate.");
+                        throw new FormatException($"Cannot parse certificate: {result.ErrorText}");
                     }
 
                     ParseOpenSsl(result.OutputText);
