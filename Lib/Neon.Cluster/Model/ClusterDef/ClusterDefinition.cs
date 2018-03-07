@@ -965,6 +965,7 @@ namespace Neon.Cluster
             var builtIn = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
             {
                 "all",
+                "cluster",
                 "swarm",
                 "managers",
                 "workers",

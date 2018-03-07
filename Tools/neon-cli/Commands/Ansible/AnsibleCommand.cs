@@ -1666,6 +1666,16 @@ retries = 4
                         writer.WriteLine(node.Name);
                     }
                 }
+
+                // Write the implicit [cluster] group with all of the cluster nodes.
+
+                writer.WriteLine();
+                writer.WriteLine($"[cluster]");
+
+                foreach (var node in cluster.Definition.SortedNodes)
+                {
+                    writer.WriteLine(node.Name);
+                }
             }
 
             // Generate host variable files as YAML.
