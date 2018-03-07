@@ -1579,7 +1579,8 @@ retries = 4
         }
 
         /// <summary>
-        /// Generates Ansible files including host inventory related files and the private TLS client key.
+        /// Generates Ansible files including host inventory related files, modfying <b>/etc/hosts</b>
+        /// and writing the private TLS client key.
         /// </summary>
         /// <param name="login">The cluster login.</param>
         private void GenerateAnsibleFiles(ClusterLogin login)
@@ -1591,8 +1592,9 @@ retries = 4
             //
             // We need a clean way to target Docker Swarm related modules at a healthy
             // swarm manager node.  We're going to use [NeonClusterHelper.GetHealthyManager()]
-            // to look for a healthy node (via pings) and add this to the inventory as
-            // the [swarm-manager] host and also generate related host variables.
+            // to look for a healthy node (via pings) and then this to the inventory as
+            // the [swarm-manager] host and to [/etc/hosts] as [health-swarm-manager] with
+            // the manager's IP address.   We'll also generate related host variables.
             // 
             // If [NeonClusterHelper.GetHealthyManager()] fails, we'll create a host
             // for the first manager as a fallback.  In this case, any playbooks 
@@ -1618,25 +1620,6 @@ retries = 4
             Directory.CreateDirectory(Path.GetDirectoryName(sshClientPrivateKeyPath));
             File.WriteAllText(sshClientPrivateKeyPath, login.SshClientKey.PrivatePEM);
             NeonHelper.Execute("chmod", $"600 \"{sshClientPrivateKeyPath}\"");
-
-            // Generate the [/etc/ssh/ssh_known_hosts] file with the public SSH key of the cluster
-            // nodes so Ansible will be able to verify host identity when connecting via SSH.  
-            // Note that all nodes share the same key.  This documented here:
-            //
-            //      http://man.openbsd.org/sshd.8
-
-            var hostPublicKeyFields = login.SshClusterHostPublicKey.Split(" ");
-            var hostPublicKey       = $"{hostPublicKeyFields[0]} {hostPublicKeyFields[1]}"; // Strip off the [user@host] field from the end (if present).
-
-            using (var writer = new StreamWriter(new FileStream("/etc/ssh/ssh_known_hosts", FileMode.Create, FileAccess.ReadWrite), Encoding.ASCII))
-            {
-                foreach (var node in login.Definition.SortedNodes)
-                {
-                    writer.WriteLine($"# Node: {node.Name}");
-                    writer.WriteLine($"{node.PrivateAddress} {hostPublicKey}");
-                    writer.WriteLine();
-                }
-            }
 
             // We need to execute the Ansible command within the client workstation's current directory 
             // mapped into the container.
@@ -1669,7 +1652,7 @@ retries = 4
             {
                 // Special-case the implicit Docker Swarm manager node (not in a group).
 
-                writer.WriteLine("swarm-manager");
+                writer.WriteLine(ClusterDefinition.VirtualSwarmManagerName);
 
                 // Write the groups.
 
@@ -1687,10 +1670,13 @@ retries = 4
 
             // Generate host variable files as YAML.
 
-            var swarmManagerNodes = new List<NodeDefinition>();  // Create a list with a faked up Swarm manager node
-            var swarmManagerNode  = NeonHelper.JsonClone(swarmManager.Metadata);
+            var swarmManagerNodes   = new List<NodeDefinition>();  // Create a list with a faked up Swarm manager node
+            var swarmManagerNode    = NeonHelper.JsonClone(swarmManager.Metadata);
+            var swarmManagerAddress = swarmManagerNode.PrivateAddress;
 
-            swarmManagerNode.Name = ClusterDefinition.VirtualSwarmManagerName;
+            swarmManagerNode.Name           = ClusterDefinition.VirtualSwarmManagerName;
+            swarmManagerNode.PrivateAddress = ClusterDefinition.VirtualSwarmManagerName;  // This references a record we'll add to [/etc/hosts] below.
+
             swarmManagerNodes.Add(swarmManagerNode);
 
             foreach (var node in login.Definition.Nodes
@@ -1776,6 +1762,36 @@ retries = 4
                     }
                 }
             }
+
+            // Generate the [/etc/ssh/ssh_known_hosts] file with the public SSH key of the cluster
+            // nodes so Ansible will be able to verify host identity when connecting via SSH.  
+            // Note that all nodes share the same key.  This documented here:
+            //
+            //      http://man.openbsd.org/sshd.8
+
+            var hostPublicKeyFields = login.SshClusterHostPublicKey.Split(" ");
+            var hostPublicKey       = $"{hostPublicKeyFields[0]} {hostPublicKeyFields[1]}"; // Strip off the [user@host] field from the end (if present).
+
+            using (var writer = new StreamWriter(new FileStream("/etc/ssh/ssh_known_hosts", FileMode.Create, FileAccess.ReadWrite), Encoding.ASCII))
+            {
+                foreach (var node in login.Definition.SortedNodes
+                    .Union(swarmManagerNodes))
+                {
+                    writer.WriteLine($"# Node: {node.Name}");
+                    writer.WriteLine($"{node.PrivateAddress} {hostPublicKey}");
+                    writer.WriteLine();
+                }
+            }
+
+            // Add the [swarm-master] record to [/etc/hosts].
+
+            File.AppendAllText("/etc/hosts",
+                NeonHelper.ToLinuxLineEndings(
+$@"
+# Identifies a (hopefully) healthy swarm manager node.
+
+{swarmManagerAddress} {ClusterDefinition.VirtualSwarmManagerName}
+"));
         }
     }
 }
