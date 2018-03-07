@@ -65,6 +65,12 @@ namespace NeonCli
             private List<string>    error  = new List<string>();
 
             /// <summary>
+            /// The modulke name.
+            /// </summary>
+            [JsonIgnore]
+            public string Module { get; set; }
+
+            /// <summary>
             /// The output verbosity.
             /// </summary>
             [JsonIgnore]
@@ -75,12 +81,6 @@ namespace NeonCli
             /// </summary>
             [JsonIgnore]
             public JObject Arguments { get; set; }
-
-            /// <summary>
-            /// Indicates whether the module is being executed as an Ansible action plugin.
-            /// </summary>
-            [JsonIgnore]
-            public bool IsAction { get; set; }
 
             /// <summary>
             /// Indicates whether the model is being executed in Ansible <b>check mode</b>.
@@ -262,8 +262,7 @@ namespace NeonCli
         /// <param name="commandLine">The module command line: MODULE ARGS...</param>
         private void ExecuteModule(ClusterLogin login, CommandLine commandLine)
         {
-            var module   = commandLine.Arguments.ElementAtOrDefault(0);
-            var isAction = commandLine.HasOption("--action");
+            var module = commandLine.Arguments.ElementAtOrDefault(0);
 
             if (commandLine.HasHelpOption || module == null)
             {
@@ -271,7 +270,10 @@ namespace NeonCli
                 Program.Exit(0);
             }
 
-            var context = new ModuleContext();
+            var context = new ModuleContext()
+            {
+                Module = module
+            };
 
             try
             {
@@ -292,8 +294,7 @@ namespace NeonCli
                     throw new ArgumentException("Expected a path to the module arguments file.");
                 }
 
-                context.IsAction = isAction;
-                context.Login    = login;
+                context.Login = login;
 
                 context.SetArguments(argsPath);
 

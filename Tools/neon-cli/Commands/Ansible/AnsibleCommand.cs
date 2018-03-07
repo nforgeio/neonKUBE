@@ -310,18 +310,12 @@ should never need to be called directly by cluster operators.
 
 USAGE:
 
-    neon ansible module [--action] MODULE ARGS
+    neon ansible module MODULE ARGS
 
 ARGUMENTS:
 
     MODULE              - Identifies the built-in module (see list below)
     ARGS                - Module arguments passed by Ansible
-
-OPTIONS:
-
-    --action            - Indicates that the module is being launched
-                          as an Ansible action plugin, as opposed to
-                          as a normal module.
 
 MODULES:
 
@@ -850,6 +844,7 @@ MODULES:
 
                 case "module":
 
+                    GenerateAnsibleConfig();
                     ExecuteModule(login, leftCommandLine.Shift(2));
                     break;
 
