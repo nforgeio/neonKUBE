@@ -13,8 +13,6 @@
 # property so don't change this folder in the container scripts without also updating
 # the tool code.
 
-# Execute the shimmed command.
-
 if [ ! -f /shim/__shim.sh ] ; then
     echo "*** ERROR: The [neon-cli] container cannot locate the script created by the [neon] tool."
     exit 1
