@@ -43,31 +43,13 @@ if [ ! -d /var/lib/neon-registry ] ; then
     mkdir -p /var/lib/neon-registry
 fi
 
+# Create the encrypted credentials.
+
+htpasswd -Bbn ${USERNAME} ${PASSWPORD} > /dev/shm > /dev/shm/htpasswd
+
 # Generate the registry configuration.
 
 . registry.yml.sh
-
-if [ "${USERNAME}" != "" ] ; then
-
-    # Append the proxy config including the upstream credentials.
-
-    cat <<EOF >> registry.yml
-proxy:
-    remoteurl: ${REGISTRY}
-    username: ${USERNAME}
-    password: ${PASSWORD}
-EOF
-
-else
-
-    # Append the proxy config.
-
-    cat <<EOF >> registry.yml
-proxy:
-    remoteurl: ${REGISTRY}
-EOF
-
-fi
 
 # Garbage collect if requested.
 

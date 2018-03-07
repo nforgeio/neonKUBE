@@ -31,8 +31,17 @@ COPY docker-entrypoint.sh   /
 COPY _common/*.sh           /
 COPY config/*               /
 
-# Set script permissions.
+# Set script permissions and install [mini-httpd] to
+# install the [htpasswd] tool from [gitolite].  This
+# is the only Alpine package I could find that has this.
 
-RUN chmod 700 /*.sh
+# $todo(jeff.lill):
+#
+# Find a smaller alternative to the [gitolite] package 
+# to install [htpasswd] since [gitolite] weighs in at
+# a heavy 76MB.
+
+RUN chmod 700 /*.sh \
+  && apk add --update gitolite
 
 ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]

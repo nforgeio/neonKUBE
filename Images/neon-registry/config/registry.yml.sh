@@ -30,9 +30,13 @@ storage:
       interval: 24h
       dryrun: false
     readonly:
-      enabled: false
+      enabled: ${READ_ONLY}
 http:
   addr: 0.0.0.0:5000
   headers:
     X-Content-Type-Options: [nosniff]
+auth:
+  htpasswd:
+    realm: 
+    path: /dev/shm/htpasswd
 EOF
