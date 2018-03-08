@@ -35,13 +35,6 @@ COPY config/*               /
 # install the [htpasswd] tool from [gitolite].  This
 # is the only Alpine package I could find that has this.
 
-# $todo(jeff.lill):
-#
-# Find a smaller alternative to the [gitolite] package 
-# to install [htpasswd] since [gitolite] weighs in at
-# a heavy 76MB.
-
-RUN chmod 700 /*.sh \
-  && apk add --update gitolite
+RUN chmod 700 /*.sh
 
 ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]

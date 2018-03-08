@@ -33,10 +33,11 @@ storage:
       enabled: ${READ_ONLY}
 http:
   addr: 0.0.0.0:5000
+  secret: ${SECRET}
   headers:
     X-Content-Type-Options: [nosniff]
 auth:
   htpasswd:
-    realm: 
+    realm: registry
     path: /dev/shm/htpasswd
 EOF

@@ -45,7 +45,7 @@ fi
 
 # Create the encrypted credentials.
 
-htpasswd -Bbn ${USERNAME} ${PASSWPORD} > /dev/shm > /dev/shm/htpasswd
+htpasswd -Bbn ${USERNAME} ${PASSWPORD} > /dev/shm/htpasswd
 
 # Generate the registry configuration.
 

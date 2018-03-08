@@ -111,7 +111,7 @@ docker run \
     --env LOG_LEVEL=info \
     --env READ_ONLY=false \
     --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
-    --publish 6000:5000
+    --publish 6000:5000 \
     --restart always \
     neoncluster/neon-registry
 ```
