@@ -154,6 +154,16 @@
     </None>
     <None Include="neon-registry\publish.ps1" />
     <None Include="neon-registry\README.md" />
+    <Content Include="neon-vegomatic\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="neon-vegomatic\build.ps1" />
+    <None Include="neon-vegomatic\docker-entrypoint.sh" />
+    <None Include="neon-vegomatic\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-vegomatic\publish.ps1" />
+    <None Include="neon-vegomatic\README.md" />
     <None Include="openjdk\build.ps1">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

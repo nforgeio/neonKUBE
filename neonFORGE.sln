@@ -196,6 +196,8 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "registry", "registry", "{D6
 		Devops\test\roles\registry\main.yaml = Devops\test\roles\registry\main.yaml
 	EndProjectSection
 EndProject
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "neon-vegomatic", "Services\neon-vegomatic\neon-vegomatic.csproj", "{CCE84513-2514-4158-ACF5-0477EA74AD9F}"
+EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
 		Test\Test.Neon.Common.shared\Test.Neon.Common.shared.projitems*{21586925-6da1-4898-9eb1-72c27550c528}*SharedItemsImports = 13
@@ -529,6 +531,18 @@ Global
 		{12E8C084-88B8-47A9-82AD-038C206089AA}.Release|x64.Build.0 = Release|Any CPU
 		{12E8C084-88B8-47A9-82AD-038C206089AA}.Release|x86.ActiveCfg = Release|Any CPU
 		{12E8C084-88B8-47A9-82AD-038C206089AA}.Release|x86.Build.0 = Release|Any CPU
+		{CCE84513-2514-4158-ACF5-0477EA74AD9F}.Debug|Any CPU.ActiveCfg = Debug|Any CPU
+		{CCE84513-2514-4158-ACF5-0477EA74AD9F}.Debug|Any CPU.Build.0 = Debug|Any CPU
+		{CCE84513-2514-4158-ACF5-0477EA74AD9F}.Debug|x64.ActiveCfg = Debug|Any CPU
+		{CCE84513-2514-4158-ACF5-0477EA74AD9F}.Debug|x64.Build.0 = Debug|Any CPU
+		{CCE84513-2514-4158-ACF5-0477EA74AD9F}.Debug|x86.ActiveCfg = Debug|Any CPU
+		{CCE84513-2514-4158-ACF5-0477EA74AD9F}.Debug|x86.Build.0 = Debug|Any CPU
+		{CCE84513-2514-4158-ACF5-0477EA74AD9F}.Release|Any CPU.ActiveCfg = Release|Any CPU
+		{CCE84513-2514-4158-ACF5-0477EA74AD9F}.Release|Any CPU.Build.0 = Release|Any CPU
+		{CCE84513-2514-4158-ACF5-0477EA74AD9F}.Release|x64.ActiveCfg = Release|Any CPU
+		{CCE84513-2514-4158-ACF5-0477EA74AD9F}.Release|x64.Build.0 = Release|Any CPU
+		{CCE84513-2514-4158-ACF5-0477EA74AD9F}.Release|x86.ActiveCfg = Release|Any CPU
+		{CCE84513-2514-4158-ACF5-0477EA74AD9F}.Release|x86.Build.0 = Release|Any CPU
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
@@ -575,6 +589,7 @@ Global
 		{12E8C084-88B8-47A9-82AD-038C206089AA} = {FE7764F7-F5B5-4A92-9BE2-F51690EDF870}
 		{B8775523-0D60-486A-8E74-92E2438B3005} = {A7E3360B-CCAA-449B-9BCE-B56BAF0C3CA0}
 		{D6048465-8895-480F-9EDE-0B2F9360803E} = {B8775523-0D60-486A-8E74-92E2438B3005}
+		{CCE84513-2514-4158-ACF5-0477EA74AD9F} = {319CF481-DCE8-4114-B13F-FC7CFC48496D}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}
