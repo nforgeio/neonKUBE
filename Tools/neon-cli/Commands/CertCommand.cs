@@ -381,6 +381,8 @@ certificates, and then finally the private key.
 
                     return new DockerShimInfo(isShimmed: false);
 
+                // These commands can be run in Docker without modification.
+
                 case "put":
 
                     if (commandLine.Arguments.Length >= 4)
@@ -399,10 +401,10 @@ certificates, and then finally the private key.
 
                     return new DockerShimInfo(isShimmed: true, ensureConnection: true);
 
-                // These commands can be run in Docker without modification.
-
                 case "remove":
+                case "rm":
                 case "get":
+                case "ls":
                 case "list":
                 default:
 
