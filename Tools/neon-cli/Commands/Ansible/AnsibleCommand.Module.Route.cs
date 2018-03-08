@@ -191,7 +191,11 @@ namespace NeonCli
                         throw new ArgumentException($"The [name={name}] argument and the route's [{nameof(ProxyRoute.Name)}={newRoute.Name}] property are not the same.");
                     }
 
+                    context.WriteLine(Verbosity.Trace, "Route name matched.");
+
                     // Validate the route.
+
+                    context.WriteLine(Verbosity.Trace, "Validating route.");
 
                     var proxySettings = proxyManager.GetSettings();
 
@@ -226,6 +230,8 @@ namespace NeonCli
                         throw new ArgumentException("Access Denied: Root Vault credentials are required.");
                     }
 
+                    context.WriteLine(Verbosity.Trace, "Reading cluster certificates.");
+
                     using (var vault = NeonClusterHelper.OpenVault(Program.ClusterLogin.VaultCredentials.RootToken))
                     {
                         // List the certificate key/names and then fetch each one
@@ -234,11 +240,15 @@ namespace NeonCli
 
                         foreach (var certName in vault.ListAsync("neon-secret/cert").Result)
                         {
+                            context.WriteLine(Verbosity.Trace, $"Reading: {certName}");
+
                             var certificate = vault.ReadJsonAsync<TlsCertificate>(NeonClusterHelper.GetVaultCertificateKey(certName)).Result;
 
-                            validationContext.Certificates.Add(name, certificate);
+                            validationContext.Certificates.Add(certName, certificate);
                         }
                     }
+
+                    context.WriteLine(Verbosity.Trace, $"[{validationContext.Certificates.Count}] cluster certificates downloaded.");
 
                     // Actually perform the route validation.
 
@@ -246,6 +256,8 @@ namespace NeonCli
 
                     if (validationContext.HasErrors)
                     {
+                        context.WriteLine(Verbosity.Trace, $"[{validationContext.Errors.Count}] Route validation errors.");
+
                         foreach (var error in validationContext.Errors)
                         {
                             context.WriteErrorLine(error);
@@ -254,6 +266,8 @@ namespace NeonCli
                         context.Failed = true;
                         return;
                     }
+
+                    context.WriteLine(Verbosity.Trace, "Route validation completed.");
 
                     // Try reading any existing route with this name and then determine
                     // whether the two versions of the route are actually different. 
