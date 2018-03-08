@@ -421,12 +421,16 @@ Note that the tool requires admin priviledges for direct mode.
                         // tag will simply be the tool version.  For non-production branches we'll
                         // use [BRANCH-<version>] as the tag.
 
+#pragma warning disable 162 // Unreachable code
+
                         var imageTag = Program.Version;
 
                         if (ThisAssembly.Git.Branch != NeonClusterConst.GitProdBranch)
                         {
                             imageTag = $"{ThisAssembly.Git.Branch}-{Program.Version}";
                         }
+
+#pragma warning restore 162 // Unreachable code
 
                         // Generate any [--env] options to be passed to the container.
 
