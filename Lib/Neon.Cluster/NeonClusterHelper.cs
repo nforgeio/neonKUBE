@@ -494,12 +494,12 @@ namespace Neon.Cluster
         public static bool IsConnected { get; private set; } = false;
 
         /// <summary>
-        /// Returns the <see cref="Cluster.ClusterLogin"/> for the current cluster if we're running in debug mode. 
+        /// Returns the <see cref="Cluster.ClusterLogin"/> for the opened cluster. 
         /// </summary>
         public static ClusterLogin ClusterLogin { get; private set; } = null;
 
         /// <summary>
-        /// Returns the <see cref="ClusterProxy"/> for the current cluster if we're running in debug mode.
+        /// Returns the <see cref="ClusterProxy"/> for the opened clustere.
         /// </summary>
         public static ClusterProxy Cluster { get; private set; } = null;
 

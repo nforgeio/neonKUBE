@@ -204,7 +204,7 @@ namespace NeonCli
 
                     proxySettings.Validate(validationContext);
 
-                    // Load the TLS certificates ointo the validation context so we'll
+                    // Load the TLS certificates into the validation context so we'll
                     // be able to verify that any referenced certificates mactually exist.
 
                     // $todo(jeff.lill):
