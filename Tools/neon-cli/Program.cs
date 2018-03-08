@@ -441,6 +441,72 @@ Note that the tool requires admin priviledges for direct mode.
                             sbEnvOptions.AppendWithSeparator(NeonHelper.NormalizeExecArgs($"--env={envOption}"));
                         }
 
+                        // Verify that the matching [neon-cli] image exists in the local Docker,
+                        // pulling it if it does not.  We're going to do this as an extra step
+                        // to prevent the pulling messages from mixing into the command output.
+
+                        var result = NeonHelper.ExecuteCaptureStreams("docker", 
+                            new object[]
+                            {
+                                "image",
+                                "ls",
+                                "--filter", $"reference=neoncluster/neon-cli:{imageTag}"
+                            });
+
+                        if (result.ExitCode != 0)
+                        {
+                            Console.Error.WriteLine(
+$@"*** ERROR: Cannot list Docker images.
+
+{result.AllText}");
+                            Program.Exit(1);
+                        }
+
+                        // The Docker image list output should look something like this:
+                        //
+                        //      REPOSITORY                  TAG                 IMAGE ID            CREATED             SIZE
+                        //      neoncluster/neon-registry   jeff-latest         b0d1d9c21ee1        20 hours ago        34.2MB
+                        //
+                        // We're just going to look to see there's a line of text that specifies
+                        // the repo and tag we're looking for.
+
+                        var matchingNeonImages = new StringReader(result.OutputText)
+                            .Lines()
+                            .Skip(1)
+                            .Where(
+                                line =>
+                                {
+                                    var fields = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+
+                                    return fields.Length >= 2 &&
+                                        fields[0] == "neoncluster/neon-cli" &&
+                                        fields[1] == imageTag;
+                                });
+
+                        if (matchingNeonImages.Count() == 0)
+                        {
+                            // The required [neon-cli] image doesn't exist locally so pull it.
+
+                            result = NeonHelper.ExecuteCaptureStreams("docker",
+                                new object[]
+                                {
+                                    "image",
+                                    "pull",
+                                    $"neoncluster/neon-cli:{imageTag}"
+                                });
+
+                            if (result.ExitCode != 0)
+                            {
+                                Console.Error.WriteLine(
+$@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
+
+{result.AllText}");
+                                Program.Exit(1);
+                            }
+                        }
+
+                        // Crank up Docker to shim into the [neon-cli] container.
+
                         Process process;
 
                         try
