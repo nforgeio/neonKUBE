@@ -1564,6 +1564,28 @@ $@"docker login \
         }
 
         /// <summary>
+        /// Returns systemd unit settings that will effectively have the unit
+        /// try to restart forever on failure.
+        /// </summary>
+        private string UnitRestartSettings
+        {
+            get
+            {
+                return
+@"# These settings configure the service to restart on failure after
+# waiting 30 seconds for up to a 365 days (effectively forever).
+# [StartLimitInterval] is set to the number of minutes in a year
+# and [StartLimitBurst] is set to the number of 30 second intervals
+# in [StartLimitInterval].
+
+Restart=on-failure
+RestartSec=30
+StartLimitInterval=525600min
+StartLimitBurst=1051200";
+            }
+        }
+
+        /// <summary>
         /// Installs the required Ceph Storage Cluster packages on the node without
         /// configuring them.
         /// </summary>
@@ -1601,7 +1623,6 @@ $@"docker login \
 
                     var parts       = cluster.Definition.Ceph.Version.Split('/');
                     var cephRelease = parts[0].Trim().ToLowerInvariant();
-                    // var cephVersion = parts[1].Trim().ToLowerInvariant();
 
                     // Configure the Ceph Debian package repositories and install
                     // the required packages.
@@ -1623,6 +1644,171 @@ $@"docker login \
                     // files in a directory via [setfattr] and [getfattr].
 
                     node.SudoCommand($"apt-get install -yq attr");
+
+                    //---------------------------------------------------------
+                    // The default Ceph service systemd unit files don't try very
+                    // hard to restart after failures so we're going to overwrite 
+                    // them with our own versions.
+
+                    string unitPath;
+
+                    // Ceph-MDS
+
+                    unitPath = "/lib/systemd/system/ceph-mds@.service";
+
+                    node.UploadText(unitPath,
+$@"[Unit]
+Description=Ceph metadata server daemon
+After=network-online.target local-fs.target time-sync.target
+Wants=network-online.target local-fs.target time-sync.target
+PartOf=ceph-mds.target
+
+[Service]
+LimitNOFILE=1048576
+LimitNPROC=1048576
+EnvironmentFile=-/etc/default/ceph
+Environment=CLUSTER=ceph
+ExecStart=/usr/bin/ceph-mds -f --cluster ${{CLUSTER}} --id %i --setuser ceph --setgroup ceph
+ExecReload=/bin/kill -HUP $MAINPIDk
+PrivateDevices=yes
+ProtectHome=true
+ProtectSystem=full
+PrivateTmp=true
+TasksMax=infinity
+
+{UnitRestartSettings}
+
+[Install]
+WantedBy=ceph-mds.target
+");
+                    node.SudoCommand($"chmod 644 {unitPath}");
+
+                    // Ceph-MGR
+
+                    unitPath = "/lib/systemd/system/ceph-mgr@.service";
+
+                    node.UploadText(unitPath,
+$@"[Unit]
+Description=Ceph cluster manager daemon
+After=network-online.target local-fs.target time-sync.target
+Wants=network-online.target local-fs.target time-sync.target
+PartOf=ceph-mgr.target
+
+[Service]
+LimitNOFILE=1048576
+LimitNPROC=1048576
+EnvironmentFile=-/etc/default/ceph
+Environment=CLUSTER=ceph
+
+ExecStart=/usr/bin/ceph-mgr -f --cluster ${{CLUSTER}} --id %i --setuser ceph --setgroup ceph
+ExecReload=/bin/kill -HUP $MAINPID
+
+{UnitRestartSettings}
+
+[Install]
+WantedBy=ceph-mgr.target
+");
+                    node.SudoCommand($"chmod 644 {unitPath}");
+
+                    // Ceph-MGRS
+
+                    unitPath = "/lib/systemd/system/ceph-mgrs@.service";
+
+                    node.UploadText(unitPath,
+$@"[Unit]
+Description=Ceph cluster manager daemon
+After=network-online.target local-fs.target time-sync.target
+Wants=network-online.target local-fs.target time-sync.target
+PartOf=ceph-mgr.target
+
+[Service]
+LimitNOFILE=1048576
+LimitNPROC=1048576
+EnvironmentFile=-/etc/default/ceph
+Environment=CLUSTER=ceph
+
+ExecStart=/usr/bin/ceph-mgr -f --cluster ${{CLUSTER}} --id %i --setuser ceph --setgroup ceph
+ExecReload=/bin/kill -HUP $MAINPID
+
+{UnitRestartSettings}
+
+[Install]
+WantedBy=ceph-mgr.target
+");
+                    node.SudoCommand($"chmod 644 {unitPath}");
+                    node.SudoCommand("systemctl daemon-reload");
+
+                    // Ceph-MON
+
+                    unitPath = "/lib/systemd/system/ceph-mon@.service";
+
+                    node.UploadText(unitPath,
+$@"[Unit]
+Description=Ceph cluster monitor daemon
+
+# According to:
+#   http://www.freedesktop.org/wiki/Software/systemd/NetworkTarget
+# these can be removed once ceph-mon will dynamically change network
+# configuration.
+After=network-online.target local-fs.target time-sync.target
+Wants=network-online.target local-fs.target time-sync.target
+
+PartOf=ceph-mon.target
+
+[Service]
+LimitNOFILE=1048576
+LimitNPROC=1048576
+EnvironmentFile=-/etc/default/ceph
+Environment=CLUSTER=ceph
+ExecStart=/usr/bin/ceph-mon -f --cluster ${{CLUSTER}} --id %i --setuser ceph --setgroup ceph
+ExecReload=/bin/kill -HUP $MAINPID
+PrivateDevices=yes
+ProtectHome=true
+ProtectSystem=full
+PrivateTmp=true
+TasksMax=infinity
+
+{UnitRestartSettings}
+
+[Install]
+WantedBy=ceph-mon.target
+");
+                    node.SudoCommand($"chmod 644 {unitPath}");
+
+                    // Ceph-OSD
+
+                    unitPath = "/lib/systemd/system/ceph-osd@.service";
+
+                    node.UploadText(unitPath,
+$@"[Unit]
+Description=Ceph object storage daemon osd.%i
+After=network-online.target local-fs.target time-sync.target ceph-mon.target
+Wants=network-online.target local-fs.target time-sync.target
+PartOf=ceph-osd.target
+
+[Service]
+LimitNOFILE=1048576
+LimitNPROC=1048576
+EnvironmentFile=-/etc/default/ceph
+Environment=CLUSTER=ceph
+ExecStart=/usr/bin/ceph-osd -f --cluster ${{CLUSTER}} --id %i --setuser ceph --setgroup ceph
+ExecStartPre=/usr/lib/ceph/ceph-osd-prestart.sh --cluster ${{CLUSTER}} --id %i
+ExecReload=/bin/kill -HUP $MAINPID
+ProtectHome=true
+ProtectSystem=full
+PrivateTmp=true
+TasksMax=infinity
+
+{UnitRestartSettings}
+
+[Install]
+WantedBy=ceph-osd.target
+");
+                    node.SudoCommand($"chmod 644 {unitPath}");
+
+                    // Reload the systemd configuration changes.
+
+                    node.SudoCommand("systemctl daemon-reload");
                 });
 
             // Download and install the [neon-volume-plugin].
@@ -1751,10 +1937,10 @@ systemctl start neon-volume-plugin
         /// Generates and uploads the Ceph configuration file to a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        /// <param name="confOnly">Optionally specifies that only the <b>ceph.conf</b> file is to be uploaded.</param>
-        private void UploadCephConf(SshProxy<NodeDefinition> node, bool confOnly = false)
+        /// <param name="configOnly">Optionally specifies that only the <b>ceph.conf</b> file is to be uploaded.</param>
+        private void UploadCephConf(SshProxy<NodeDefinition> node, bool configOnly = false)
         {
-            node.Status = "ceph config file";
+            node.Status = "ceph config";
 
             var sbHostNames     = new StringBuilder();
             var sbHostAddresses = new StringBuilder();
@@ -1804,7 +1990,7 @@ osd crush chooseleaf type = 1
 bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definition) * CephOptions.CacheSizeFudge) / NeonHelper.Mega}
 {mdsConf}
 ");
-            if (!confOnly)
+            if (!configOnly)
             {
                 var cephUser         = cluster.Definition.Ceph.Username;
                 var adminKeyringPath = "/etc/ceph/ceph.client.admin.keyring";
@@ -1875,11 +2061,11 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
                     // Upload the Ceph config file here because we'll need it below.
 
-                    UploadCephConf(node, confOnly: true);
+                    UploadCephConf(node, configOnly: true);
 
                     // Create the monitor data directory and load the monitor map and keyring.
 
-                    node.Status = "ceph monitor config";
+                    node.Status = "ceph-mon config";
 
                     var monFolder = $"/var/lib/ceph/mon/{clusterLogin.Ceph.Name}-{node.Name}";
                     
@@ -1904,7 +2090,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
                     // Indicate that we're done configuring the monitor and start it.
 
-                    node.Status = "ceph monitor start";
+                    node.Status = "ceph-mon start";
                     node.SudoCommand($"touch /var/lib/ceph/mon/ceph-{node.Name}/done");
                     node.SudoCommand($"systemctl enable ceph-mon@{node.Name}");
                     node.SudoCommand($"systemctl start ceph-mon@{node.Name}");
@@ -1928,7 +2114,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
                     // Configure and start the manager service.
 
-                    node.Status = "ceph manager config";
+                    node.Status = "ceph-mgr config";
 
                     var mgrFolder = $"/var/lib/ceph/mgr/ceph-{node.Name}";
 
@@ -1939,8 +2125,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
                     node.UploadText(mgrKeyringPath, GetManagerKeyring(node));
                     node.SudoCommand($"chown {cephUser}:{cephUser} {mgrKeyringPath}");
                     node.SudoCommand($"chown 640 {mgrKeyringPath}");
-
-                    node.Status = "ceph manager start";
+                    node.Status = "ceph-mgr start";
                     node.SudoCommand($"systemctl enable ceph-mgr@{node.Name}");
                     node.SudoCommand($"systemctl start ceph-mgr@{node.Name}");
 
@@ -2091,7 +2276,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
             // Detect if the [cfs] file system is ready.  There's probably a
             // way to detect this from the JSON status above but I need to
             // move on to other things.  This is fragile because it assumes
-            // that there's only one file deployed system.
+            // that there's only one file system deployed.
 
             result = node.SudoCommand("ceph mds stat");
 
@@ -2114,6 +2299,8 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
             node.InvokeIdempotentAction("setup-ceph-osd",
                 () =>
                 {
+                    node.Status = "ceph-osd config";
+
                     var cephUser = cluster.Definition.Ceph.Username;
 
                     // All nodes need the config file.
@@ -2124,7 +2311,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
                     if (node.Metadata.Labels.CephOSD)
                     {
-                        node.Status = "ceph OSD";
+                        node.Status = "ceph-osd start";
                         node.UploadText("/var/lib/ceph/bootstrap-osd/ceph.keyring", clusterLogin.Ceph.OSDKeyring);
                         node.SudoCommand($"ceph-volume lvm create --bluestore --data {node.Metadata.Labels.CephOSDDevice}");
                         node.Status = string.Empty;
@@ -2177,7 +2364,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
                 node.InvokeIdempotentAction("setup-ceph-mds",
                     () =>
                     {
-                        node.Status = "ceph MDS";
+                        node.Status = "ceph-msd";
 
                         var mdsFolder = $"/var/lib/ceph/mds/ceph-{node.Name}";
 
@@ -2187,6 +2374,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
                         node.UploadText(mdsKeyringPath, GetMDSKeyring(node));
 
+                        node.Status = "ceph-mds start";
                         node.SudoCommand($"systemctl enable ceph-mds@{node.Name}");
                         node.SudoCommand($"systemctl start ceph-mds@{node.Name}");
                         node.Status = string.Empty;
@@ -2292,7 +2480,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
                 {
                     node.Status = "create fuse service";
                     node.UploadText("/lib/systemd/system/ceph-fuse-cfs.service",
-@"[Unit]
+$@"[Unit]
 Description=Ceph FUSE client (for /cfs)
 After=network-online.target local-fs.target time-sync.target
 Wants=network-online.target local-fs.target time-sync.target
@@ -2302,19 +2490,10 @@ PartOf=ceph-fuse.target
 [Service]
 EnvironmentFile=-/etc/default/ceph
 Environment=CLUSTER=ceph
-ExecStart=/usr/bin/ceph-fuse -f --cluster ${CLUSTER} /cfs
+ExecStart=/usr/bin/ceph-fuse -f --cluster ${{CLUSTER}} /cfs
 TasksMax=infinity
 
-# These settings configure the service to restart on failure after
-# waiting 30 seconds for up to a 365 days (effectively forever).
-# [StartLimitInterval] is set to the number of minutes in a year
-# and [StartLimitBurst] is set to the number of 30 second intervals
-# in [StartLimitInterval].
-
-Restart=on-failure
-RestartSec=30
-StartLimitInterval=525600min
-StartLimitBurst=1051200
+{UnitRestartSettings}
 
 [Install]
 WantedBy=ceph-fuse.target
