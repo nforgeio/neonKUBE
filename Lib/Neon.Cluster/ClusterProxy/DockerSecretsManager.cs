@@ -67,7 +67,7 @@ namespace Neon.Cluster
 
             bundle.AddFile("secret.dat", value);
             bundle.AddFile("create-secret.sh",
-$@"#!/bin/sh
+$@"#!/bin/bash
 
 docker secret inspect {secretName}
 
@@ -94,7 +94,8 @@ fi
             var bundle = new CommandBundle("./delete-secret.sh");
 
             bundle.AddFile("delete-secret.sh",
-$@"docker secret inspect {secretName}
+$@"#!/bin/bash
+docker secret inspect {secretName}
 
 if [ ""$?"" != ""0"" ] ; then
     echo ""Secret doesn't exist.""
