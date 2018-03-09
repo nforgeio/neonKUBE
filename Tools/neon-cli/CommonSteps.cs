@@ -336,14 +336,25 @@ TCPKeepAlive yes
                 return waitedForPackageManager; // Already prepared
             }
 
+            //-----------------------------------------------------------------
+            // Package manager configuration.
+
             if (!clusterDefinition.HostNode.AllowPackageManagerIPv6)
             {
                 // Restrict the [apt] package manager to using IPv4 to communicate
                 // with the package mirrors, since IPv6 often doesn't work.
 
                 node.UploadText("/etc/apt/apt.conf.d/1000-force-ipv4-transport", "Acquire::ForceIPv4 \"true\";");
-                node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/1000-force-ipv4-transport");
+                node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-force-ipv4-transport");
             }
+
+            // Configure [apt] to retry.
+
+            node.UploadText("/etc/apt/apt.conf.d/99-retries", "APT::Acquire::Retries \"5\";");
+            node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-force-ipv4-transport");
+
+            //-----------------------------------------------------------------
+            // Other conmfiguration.
 
             ConfigureOpenSSH(node);
 
