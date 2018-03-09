@@ -1416,10 +1416,7 @@ mono {scriptPath}.mono $@
 
                             LogLine("*** END TEXT FILE");
 
-                            // Convert text files to Linux line endings and then
-                            // convert to UTF8 bytes.
-
-                            data = Encoding.UTF8.GetBytes(NeonHelper.ToLinuxLineEndings(file.Text));
+                            data = Encoding.UTF8.GetBytes(file.Text);
                         }
                         else
                         {
