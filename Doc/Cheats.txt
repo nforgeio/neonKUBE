@@ -6,7 +6,7 @@
 
 neon logout
 neon login rm root@home-small --force
-powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-small jeff-latest -noToolContainer
+powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-small jeff-latest -noToolContainer 
 
 neon logout
 neon login rm root@home-large --force
