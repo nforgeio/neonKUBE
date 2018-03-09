@@ -16,12 +16,25 @@
 # OPTIONS:
 #
 #	-noToolContainer	- Optionally prevents [neon-cli] from shimming into Docker.
+#
+#	-skipPrepare		- Skip the cluster prepare step.
+#
+#	-skipSetup			- Skip the cluster setup step.
+#
+#	-skipCoreServices	- Skip deploying core services (like databases).
+#						  This implies setting [-skipServices].
+#
+#	-skipServices		- Skip deploying cluster services.
 
 param 
 (
     [parameter(Mandatory=$True,Position=1)][string] $clusterName,
 	[parameter(Mandatory=$False, Position=2)]  [string] $imageTag = "",
-    [switch] $noToolContainer
+    [switch] $noToolContainer  = $False,
+    [switch] $skipPrepare      = $False,
+    [switch] $skipSetup        = $False,
+    [switch] $skipCoreServices = $False,
+	[switch] $skipServices     = $False
 )
 	
 # Initialize the environment.
@@ -41,6 +54,27 @@ if ($imageTag -ne "")
 	$env:SETUP_IMAGE_TAG = "--image-tag=$imageTag"
 }
 
+if ($skipPrepare)
+{
+	$env:SETUP_SKIP_PREPARE = "true"
+}
+
+if ($skipSetup)
+{
+	$env:SETUP_SKIP_SETUP = "true"
+}
+
+if ($skipCoreServices)
+{
+	$env:SETUP_SKIP_CORE_SERVICES = "true"
+	$skipServices                 = $True
+}
+
+if ($skipServices)
+{
+	$env:SETUP_SKIP_SERVICES = "true"
+}
+
 #------------------------------------------------------------------------------
 # Provision and setup the base neonCLUSTER.
 
@@ -57,9 +91,12 @@ if (-not $?)
 #------------------------------------------------------------------------------
 # Provision core databases and services.
 
-./setup-core-services.ps1 $clusterName
-
-if (-not $?)
+if (-not $skipCoreServices)
 {
-	exit 1
+	./setup-core-services.ps1 $clusterName
+
+	if (-not $?)
+	{
+		exit 1
+	}
 }

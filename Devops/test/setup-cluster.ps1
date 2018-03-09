@@ -25,31 +25,37 @@ if (-not $env:SETUP_ALL -eq "true")
 
 # Prepare the neonCLUSTER.
 
-neon cluster prepare `
-    $env:SETUP_NO_TOOL_CONTAINER `
-	--machine-username="$env:CLUSTER_NODE_TEMPLATE_USERNAME" `
-	--machine-password="$env:CLUSTER_NODE_TEMPLATE_PASSWORD" `
-	--log-folder="$env:CLUSTER_LOG_FOLDER" `
-	--max-parallel=$env:CLUSTER_MAX_PARALLEL `
-	$clusterName
-
-if (-not $?)
+if ($env:SETUP_SKIP_PREPARE -ne "true")
 {
-	exit 1
+	neon cluster prepare `
+		$env:SETUP_NO_TOOL_CONTAINER `
+		--machine-username="$env:CLUSTER_NODE_TEMPLATE_USERNAME" `
+		--machine-password="$env:CLUSTER_NODE_TEMPLATE_PASSWORD" `
+		--log-folder="$env:CLUSTER_LOG_FOLDER" `
+		--max-parallel=$env:CLUSTER_MAX_PARALLEL `
+		$clusterName
+
+	if (-not $?)
+	{
+		exit 1
+	}
 }
 
 # Setup the neonCLUSTER.
 
-neon cluster setup `
-    $env:SETUP_NO_TOOL_CONTAINER `
-	$env:SETUP_IMAGE_TAG `
-	--machine-username="$env:CLUSTER_NODE_TEMPLATE_USERNAME" `
-	--machine-password="$env:CLUSTER_NODE_TEMPLATE_PASSWORD" `
-	--log-folder="$env:CLUSTER_LOG_FOLDER" `
-	--max-parallel="$env:CLUSTER_MAX_PARALLEL" `
-	$env:CLUSTER_LOGIN
-
-if (-not $?)
+if ($env:SETUP_SKIP_SETUP -ne "true")
 {
-	exit 1
+	neon cluster setup `
+		$env:SETUP_NO_TOOL_CONTAINER `
+		$env:SETUP_IMAGE_TAG `
+		--machine-username="$env:CLUSTER_NODE_TEMPLATE_USERNAME" `
+		--machine-password="$env:CLUSTER_NODE_TEMPLATE_PASSWORD" `
+		--log-folder="$env:CLUSTER_LOG_FOLDER" `
+		--max-parallel="$env:CLUSTER_MAX_PARALLEL" `
+		$env:CLUSTER_LOGIN
+
+	if (-not $?)
+	{
+		exit 1
+	}
 }
