@@ -23,4 +23,4 @@ cd "$env:NF_ROOT\Devops\test"
 
 # Configure the infrastructure services (databases on pets, etc).
 
-.\registry-setup.ps1 $clusterName
+.\setup-registry.ps1 $clusterName
