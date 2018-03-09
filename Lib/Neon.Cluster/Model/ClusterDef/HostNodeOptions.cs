@@ -30,12 +30,12 @@ namespace Neon.Cluster
     /// </summary>
     public class HostNodeOptions
     {
-        private const AuthMethods   defaultSshAuth               = AuthMethods.Tls;
-        private const OsUpgrade     defaultUpgrade               = OsUpgrade.Full;
-        private const int           defaultPasswordLength        = 20;
-        private const bool          defaultPasswordAuth          = true;
-        private const bool          defaultEnableVolumeNetshare  = true;
-        private const string        defaultVolumeNetshareVersion = "0.34";
+        private const AuthMethods   defaultSshAuth                 = AuthMethods.Tls;
+        private const OsUpgrade     defaultUpgrade                 = OsUpgrade.Full;
+        private const int           defaultPasswordLength          = 20;
+        private const bool          defaultPasswordAuth            = true;
+        private const bool          defaultEnableVolumeNetshare    = true;
+        private const bool          defaultAllowPackageManagerIPv6 = false;
 
         /// <summary>
         /// Specifies whether the host node operating system should be upgraded
@@ -69,6 +69,15 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "PasswordLength", Required = Required.Default)]
         [DefaultValue(defaultPasswordLength)]
         public int PasswordLength { get; set; } = defaultPasswordLength;
+
+        /// <summary>
+        /// Allow the Linux package manager to use IPv6 when communicating with
+        /// package mirrors.  This defaults to <c>false</c> to restrict access
+        /// to IPv4.
+        /// </summary>
+        [JsonProperty(PropertyName = "AllowPackageManagerIPv6", Required = Required.Default)]
+        [DefaultValue(defaultAllowPackageManagerIPv6)]
+        public bool AllowPackageManagerIPv6 { get; set; } = defaultAllowPackageManagerIPv6;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are

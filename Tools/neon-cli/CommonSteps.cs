@@ -321,19 +321,28 @@ TCPKeepAlive yes
         /// for a neonCLUSTER host node.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        /// <param name="clusterDefinition">The optional cluster definition.</param>
+        /// <param name="clusterDefinition">The cluster definition.</param>
         /// <param name="shutdown">Optionally shuts down the node.</param>
         /// <returns>
         /// <c>true</c> if the method waited for the package manager to become
         /// ready before returning.
         /// </returns>
-        public static bool PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition = null, bool shutdown = false)
+        public static bool PrepareNode(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition, bool shutdown = false)
         {
             var waitedForPackageManager = false;
 
             if (node.FileExists($"{NodeHostFolders.State}/finished-prepared"))
             {
                 return waitedForPackageManager; // Already prepared
+            }
+
+            if (!clusterDefinition.HostNode.AllowPackageManagerIPv6)
+            {
+                // Restrict the [apt] package manager to using IPv4 to communicate
+                // with the package mirrors, since IPv6 often doesn't work.
+
+                node.UploadText("/etc/apt/apt.conf.d/1000-force-ipv4-transport", "Acquire::ForceIPv4 \"true\";");
+                node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/1000-force-ipv4-transport");
             }
 
             ConfigureOpenSSH(node);
