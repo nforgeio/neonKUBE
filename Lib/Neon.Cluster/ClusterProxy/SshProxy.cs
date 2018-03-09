@@ -66,7 +66,7 @@ namespace Neon.Cluster
         // Used when logging redacted output.
         private const string Redacted = "!!SECRETS-REDACTED!!";
 
-        // Path to the transiatent file on the Linux box whose presence indicates
+        // Path to the transient file on the Linux box whose presence indicates
         // that the server is still rebooting.
         private const string RebootStatusPath = "/dev/shm/neon/rebooting";
 
@@ -1416,7 +1416,10 @@ mono {scriptPath}.mono $@
 
                             LogLine("*** END TEXT FILE");
 
-                            data = Encoding.UTF8.GetBytes(file.Text);
+                            // Convert text files to Linux line endings and then
+                            // convert to UTF8 bytes.
+
+                            data = Encoding.UTF8.GetBytes(NeonHelper.ToLinuxLineEndings(file.Text));
                         }
                         else
                         {
