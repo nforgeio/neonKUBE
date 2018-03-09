@@ -36,6 +36,7 @@ namespace Neon.Cluster
         private const bool          defaultPasswordAuth            = true;
         private const bool          defaultEnableVolumeNetshare    = true;
         private const bool          defaultAllowPackageManagerIPv6 = false;
+        private const int           defaultPackageManagerRetries   = 5;
 
         /// <summary>
         /// Specifies whether the host node operating system should be upgraded
@@ -78,6 +79,14 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "AllowPackageManagerIPv6", Required = Required.Default)]
         [DefaultValue(defaultAllowPackageManagerIPv6)]
         public bool AllowPackageManagerIPv6 { get; set; } = defaultAllowPackageManagerIPv6;
+
+        /// <summary>
+        /// Specifies the number of times the host package manager should retry
+        /// failed index or package downloads.  This defaults to <b>5</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "PackageManagerRetries", Required = Required.Default)]
+        [DefaultValue(defaultPackageManagerRetries)]
+        public int PackageManagerRetries { get; set; } = defaultPackageManagerRetries;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are

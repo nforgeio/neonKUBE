@@ -343,15 +343,15 @@ TCPKeepAlive yes
             {
                 // Restrict the [apt] package manager to using IPv4 to communicate
                 // with the package mirrors, since IPv6 often doesn't work.
-
-                node.UploadText("/etc/apt/apt.conf.d/1000-force-ipv4-transport", "Acquire::ForceIPv4 \"true\";");
+                
+                node.UploadText("/etc/apt/apt.conf.d/99-force-ipv4-transport", "Acquire::ForceIPv4 \"true\";");
                 node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-force-ipv4-transport");
             }
 
             // Configure [apt] to retry.
 
-            node.UploadText("/etc/apt/apt.conf.d/99-retries", "APT::Acquire::Retries \"5\";");
-            node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-force-ipv4-transport");
+            node.UploadText("/etc/apt/apt.conf.d/99-retries", $"APT::Acquire::Retries \"{clusterDefinition.HostNode.PackageManagerRetries}\";");
+            node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-retries");
 
             //-----------------------------------------------------------------
             // Other conmfiguration.
