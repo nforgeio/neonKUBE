@@ -63,9 +63,21 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(secretName));
             Covenant.Requires<ArgumentNullException>(value != null);
 
-            var bundle = new CommandBundle($"cat secret.dat | docker secret create {secretName} -");
+            var bundle = new CommandBundle("./create-secret.sh");
 
             bundle.AddFile("secret.dat", value);
+            bundle.AddFile("create-secret.sh",
+$@"#!/bin/sh
+
+docker secret inspect {secretName}
+
+if [ ""$?"" == ""0"" ] ; then
+    echo ""Secret already exists, not setting it again.""
+else
+    cat secret.dat | docker secret create {secretName} -
+fi
+",
+                isExecutable: true);
 
             cluster.GetHealthyManager().SudoCommand(bundle, options);
         }
@@ -79,7 +91,19 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(secretName));
 
-            cluster.GetHealthyManager().SudoCommand($"docker secret rm {secretName}");
+            var bundle = new CommandBundle("./delete-secret.sh");
+
+            bundle.AddFile("delete-secret.sh",
+$@"docker secret inspect {secretName}
+
+if [ ""$?"" != ""0"" ] ; then
+    echo ""Secret doesn't exist.""
+else
+    docker secret rm {secretName}
+fi
+",              isExecutable: true);
+
+            cluster.GetHealthyManager().SudoCommand("./delete-secret.sh");
         }
     }
 }
