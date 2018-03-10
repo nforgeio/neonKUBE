@@ -96,6 +96,12 @@ namespace Neon.Net
         // Static members
 
         /// <summary>
+        /// Returns the <b>0.0.0.0/0</b> subnet which includes all public and private
+        /// IP addresses.
+        /// </summary>
+        public static NetworkCidr All { get; private set; } = new NetworkCidr(new IPAddress(new byte[] { 0, 0, 0, 0 }), 0);
+
+        /// <summary>
         /// Parses a subnet from CIDR notation in the form of <i>ip-address</i>/<i>prefix</i>,
         /// where <i>prefix</i> is the network prefix length in bits.
         /// </summary>
