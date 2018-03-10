@@ -11,7 +11,7 @@ using System.Threading.Tasks;
 
 using Neon.Net;
 
-namespace Neon.Cluster.DynamicDns
+namespace Neon.Cluster
 {
     /// <summary>
     /// Holds information about a DNS record persisted to Consul as part of
@@ -24,7 +24,7 @@ namespace Neon.Cluster.DynamicDns
         /// <summary>
         /// The domain name without the terminating period.
         /// </summary>
-        public string Name { get; set; }
+        public string Domain { get; set; }
 
         /// <summary>
         /// The record type in uppercase (e.g. "A", "CNAME", "MX",...).

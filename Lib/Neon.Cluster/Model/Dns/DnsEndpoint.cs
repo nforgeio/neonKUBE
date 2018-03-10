@@ -11,22 +11,17 @@ using System.Threading.Tasks;
 
 using Neon.Net;
 
-namespace Neon.Cluster.DynamicDns
+namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes a DNS endpoint made by a <see cref="DnsDefinition"/>.
+    /// Describes a DNS endpoint made by a <see cref="DnsDomain"/>.
     /// </summary>
     public class DnsEndpoint
     {
         /// <summary>
-        /// The endpoint's IP address or <c>null</c> if the endpoint is referenced by name.
+        /// The target host's IP address or FQDN.
         /// </summary>
-        public string Address { get; set; }
-
-        /// <summary>
-        /// The endpoint's domain name or <c>null</c> if the endpoint is referenced by address.
-        /// </summary>
-        public string Name { get; set; }
+        public string Target { get; set; }
 
         /// <summary>
         /// The integer priority for <b>MX</b>, <b>SRV</b>... records.
@@ -48,9 +43,8 @@ namespace Neon.Cluster.DynamicDns
         /// <b>tcp://</b> URI for a TCP check.
         /// </para>
         /// <para>
-        /// No health checks are performed if checking is disabled.  In this case, a record with the
-        /// <see cref="Address"/> or <see cref="Name"/> will always be returned, regardless of 
-        /// actual endpoint status.
+        /// No health checks are performed if checking is disabled.  In this case, a record with
+        /// <see cref="Target"/> address will always be returned, regardless of actual endpoint status.
         /// </para>
         /// <para>
         /// Endpoints with URIs like <b>http://host:port/path</b> will be verified by making
@@ -60,14 +54,13 @@ namespace Neon.Cluster.DynamicDns
         /// </para>
         /// <para>
         /// Endpoints with URIs like <b>tcp://host:port</b> will be verified by attempting
-        /// to establish a TCP connection.  Endpoints that can be connected are considered
-        /// to be healthy.
+        /// to establish a TCP connection.  Endpoints that connect are considered to
+        /// be healthy.
         /// </para>
-        /// <para>
-        /// The <b>host</b> in the URI may be any valid host name or it can be set to
-        /// <b>@@REF</b>.  In this case, <b>@@REF</b> will be replaced by the <see cref="Name"/>
-        /// or <see cref="Address"/>, depending on which property is set.
-        /// </para>
+        /// <note>
+        /// <b>host</b> in the URL can be specified as <b>@@TARGET</b>, which specifies
+        /// that <see cref="Target"/> will be substituted.
+        /// </note>
         /// </remarks>
         public string CheckUri { get; set; }
 
