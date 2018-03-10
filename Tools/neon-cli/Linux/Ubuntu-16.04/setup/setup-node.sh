@@ -577,8 +577,8 @@ local-ipv6=::1
 local-port=$<net.powerdns.port>
 
 #################################
-# launch					Enable the PowerDNS REMOTE backend to use HTTP to
-# remote-connection-string	query the local [neon-dns] listening on the host
+# launch					          Enable the PowerDNS REMOTE backend to use HTTP to
+# remote-connection-string	Query the local [neon-dns] listening on the host
 #                           network.
 #
 launch=remote
@@ -586,7 +586,7 @@ remote-connection-string=http:url=http://127.0.0.1:$<net.dynamicdns.port>,timeou
 
 #################################
 # no-shuffle	Set this to prevent random shuffling of answers.  The [neon-dns]
-#               backend service optionally handles this for specific hostnames.
+#             backend service optionally handles this for specific hostnames.
 #
 no-shuffle=yes
 
@@ -601,7 +601,7 @@ negquery-cache-ttl=5
 query-cache-ttl=60
 
 #################################
-# disable-syslog		We don't need this because we're capturing the systemd logs.
+# disable-syslog		We can disable this because we're capturing the systemd logs.
 #
 disable-syslog=yes
 
@@ -610,9 +610,9 @@ disable-syslog=yes
 #
 # Debugging related settings.
 #
-loglevel=5
-log-dns-details=yes
-log-dns-queries=yes
+# loglevel=5
+# log-dns-details=yes
+# log-dns-queries=yes
 EOF
 
 	# Set PowerDNS related config file permissions.  Note that we're not
