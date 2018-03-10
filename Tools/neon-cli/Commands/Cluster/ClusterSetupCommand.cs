@@ -230,7 +230,10 @@ OPTIONS:
                 n => n.Metadata.IsManager,
                 noParallelLimit: true);
 
-            controller.AddStep("manager config", n => ConfigureManager(n), n => n.Metadata.IsManager);
+            controller.AddStep("manager config", 
+                n => ConfigureManager(n),
+                n => n.Metadata.IsManager,
+                stepDelaySeconds: cluster.Definition.StepDelaySeconds);
 
             // Configure the workers and pets.
 
@@ -254,7 +257,8 @@ OPTIONS:
                         n.InvokeIdempotentAction("setup-common-restart", () => RebootAndWait(n));
                         ConfigureNonManager(n);
                     },
-                    n => n.Metadata.IsWorker || n.Metadata.IsPet);
+                    n => n.Metadata.IsWorker || n.Metadata.IsPet,
+                    stepDelaySeconds: cluster.Definition.StepDelaySeconds);
             }
 
             // Create the Swarm.
@@ -268,7 +272,10 @@ OPTIONS:
             {
                 if (cluster.Definition.Ceph.Enabled)
                 {
-                    controller.AddStep("ceph packages", n => CephPackages(n));
+                    controller.AddStep("ceph packages", 
+                        n => CephPackages(n),
+                        stepDelaySeconds: cluster.Definition.StepDelaySeconds);
+
                     controller.AddGlobalStep("ceph settings", () => CephSettings());
                     controller.AddStep("ceph bootstrap", n => CephBootstrap(n), n => n.Metadata.Labels.CephMON);
                     controller.AddStep("ceph cluster", n => CephCluster(n), noParallelLimit: true);

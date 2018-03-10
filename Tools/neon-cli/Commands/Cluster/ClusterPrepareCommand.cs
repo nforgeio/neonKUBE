@@ -321,7 +321,9 @@ Server Requirements:
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
             hostingManager.AddPostProvisionSteps(controller);
             controller.AddStep("verify OS", n => CommonSteps.VerifyOS(n));
-            controller.AddStep("prepare", server => CommonSteps.PrepareNode(server, cluster.Definition, shutdown: false));
+            controller.AddStep("prepare", 
+                server => CommonSteps.PrepareNode(server, cluster.Definition, shutdown: false),
+                stepDelaySeconds: cluster.Definition.StepDelaySeconds);
 
             // Add any VPN configuration steps.
 

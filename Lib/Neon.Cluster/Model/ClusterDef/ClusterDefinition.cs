@@ -51,6 +51,7 @@ namespace Neon.Cluster
         private const string        defaultProxyManagerImage   = "neoncluster/neon-proxy-manager:latest";
         private const string        defaultClusterManagerImage = "neoncluster/neon-cluster-manager:latest";
         private const string        defaultDrivePrefix         = "sd";
+        private const int           defaultStepDelaySeconds    = 20;
 
         internal static Regex NameRegex { get; private set; }    = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
         internal static Regex DnsHostRegex { get; private set; } = new Regex(@"^([a-z0-9]|[a-z0-9][a-z0-9\-_]{0,61}[a-z0-9])(\.([a-z0-9]|[a-z0-9][a-z0-9\-_]{0,61}[a-z0-9_]))*$", RegexOptions.IgnoreCase);
@@ -461,6 +462,23 @@ namespace Neon.Cluster
         public string ClusterManagerImage { get; set; } = defaultClusterManagerImage;
 
         /// <summary>
+        /// <para>
+        /// Specifies the maximum delay to be added at stategic points during 
+        /// cluster setup to mitigate potential problems when mutiple cluster nodes
+        /// are trying to access the same Internet resources, potentially getting
+        /// throttled by the remote endpoint.
+        /// </para>
+        /// <para>
+        /// This defaults to <b>20 seconds</b>, which means that some setup steps may
+        /// be delayed up to a maximum of 20 seconds.  Set this to 0 to disable the
+        /// delay.
+        /// </para>
+        /// </summary>
+        [JsonProperty(PropertyName = "StepDelaySeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(defaultStepDelaySeconds)]
+        public int StepDelaySeconds { get; set; } = defaultStepDelaySeconds;
+
+        /// <summary>
         /// Describes the Docker host nodes in the cluster.
         /// </summary>
         [JsonProperty(PropertyName = "Nodes", Required = Required.Always)]
@@ -468,7 +486,7 @@ namespace Neon.Cluster
 
         /// <summary>
         /// <para>
-        /// Set to the MD5 hash (encoded as base64) of the cluster definition for senarios
+        /// Set to the MD5 hash (encoded as base64) of the cluster definition for scenarios
         /// where its necessary to quickly determine whether two definitions are the same.
         /// This is computed by calling <see cref="ComputeHash()"/>
         /// </para>

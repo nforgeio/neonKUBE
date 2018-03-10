@@ -510,6 +510,13 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// <b>HACK:</b> This used by <see cref="SetupController{T}"/> to introduce a delay for this
+        /// node when executing the next setup step.
+        /// </summary>
+        [JsonIgnore]
+        internal TimeSpan StepDelay { get; set; }
+
+        /// <summary>
         /// Validates the node definition.
         /// </summary>
         /// <param name="clusterDefinition">The cluster definition.</param>

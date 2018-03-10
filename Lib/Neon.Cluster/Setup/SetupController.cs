@@ -46,6 +46,7 @@ namespace Neon.Cluster
             public Func<SshProxy<NodeMetadata>, bool>       Predicate;
             public StepStatus                               Status;
             public bool                                     NoParallelLimit;
+            public TimeSpan                                 Delay;
         }
 
         //---------------------------------------------------------------------
@@ -130,11 +131,20 @@ namespace Neon.Cluster
         /// Optionally ignores the global <see cref="SetupController{T}.MaxParallel"/> 
         /// limit for the new step when greater.
         /// </param>
+        /// <param name="stepDelaySeconds">
+        /// Optionally specifies the total time delay to be spread across
+        /// the nodes executing this step.  Setting a non-zero value of
+        /// perhaps 30 seconds will will mitigate problems with multiple
+        /// accessing nodes trying to download the same files from
+        /// the Internet at the same time, potentially causing the remote
+        /// endpoint to start throttling access.
+        /// </param>
         public void AddStep(string stepLabel,
                             Action<SshProxy<NodeMetadata>> nodeAction,
                             Func<SshProxy<NodeMetadata>, bool> nodePredicate = null,
                             bool quiet = false,
-                            bool noParallelLimit = false)
+                            bool noParallelLimit = false,
+                            int stepDelaySeconds = 0)
         {
             nodeAction    = nodeAction ?? new Action<SshProxy<NodeMetadata>>(n => { });
             nodePredicate = nodePredicate ?? new Func<SshProxy<NodeMetadata>, bool>(n => true);
@@ -146,7 +156,8 @@ namespace Neon.Cluster
                     Quiet           = quiet,
                     NodeAction      = nodeAction,
                     Predicate       = nodePredicate,
-                    NoParallelLimit = noParallelLimit
+                    NoParallelLimit = noParallelLimit,
+                    Delay           = TimeSpan.FromSeconds(stepDelaySeconds)
                 });
         }
 
@@ -354,11 +365,48 @@ namespace Neon.Cluster
                 {
                     if (step.NodeAction != null)
                     {
+                        // Compute the amount of time to delay before executing
+                        // the step on each node.  We're going to spread the step
+                        // delay evenly across the nodes.
+                        //
+                        // Note that this only works when [NodeMetadata==NodeDefinition]
+
+                        if (typeof(NodeMetadata) == typeof(NodeDefinition))
+                        {
+                            if (step.Delay <= TimeSpan.Zero || stepNodes.Count() <= 1)
+                            {
+                                foreach (var node in stepNodes)
+                                {
+                                    (node.Metadata as NodeDefinition).StepDelay = TimeSpan.Zero;
+                                }
+                            }
+                            else
+                            {
+                                var delay    = TimeSpan.Zero;
+                                var interval = TimeSpan.FromSeconds(step.Delay.TotalSeconds / stepNodes.Count());
+
+                                foreach (var node in stepNodes)
+                                {
+                                    (node.Metadata as NodeDefinition).StepDelay = delay;
+                                    delay += interval;
+                                }
+                            }
+                        }
+
+                        // Execute the step on the nodes.
+
                         Parallel.ForEach(stepNodes, parallelOptions,
                             node =>
                             {
                                 try
                                 {
+                                    var nodeDefinition = node.Metadata as NodeDefinition;
+
+                                    if (nodeDefinition != null && nodeDefinition.StepDelay > TimeSpan.Zero)
+                                    {
+                                        Thread.Sleep(nodeDefinition.StepDelay);
+                                    }
+
                                     step.NodeAction(node);
 
                                     node.Status  = "[x] DONE";
