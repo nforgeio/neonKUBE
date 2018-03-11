@@ -578,8 +578,7 @@ local-port=$<net.powerdns.port>
 
 #################################
 # launch					          Enable the PowerDNS REMOTE backend to use HTTP to
-# remote-connection-string	Query the local [neon-dns] listening on the host
-#                           network.
+# remote-connection-string	Query the [neon-dns] Docker service.
 #
 launch=remote
 remote-connection-string=http:url=http://127.0.0.1:$<net.dynamicdns.port>,timeout=2000

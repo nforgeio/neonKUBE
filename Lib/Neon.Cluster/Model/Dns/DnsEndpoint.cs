@@ -5,36 +5,32 @@
 
 using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
+
+using Newtonsoft.Json;
+using Newtonsoft.Json.Converters;
+using Newtonsoft.Json.Serialization;
 
 using Neon.Net;
 
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes a DNS endpoint made by a <see cref="DnsDomain"/>.
+    /// Describes a DNS endpoint made by a <see cref="DnsTarget"/>.
     /// </summary>
     public class DnsEndpoint
     {
         /// <summary>
         /// The target host's IP address or FQDN.
         /// </summary>
+        [JsonProperty(PropertyName = "Target", Required = Required.Always)]
         public string Target { get; set; }
 
         /// <summary>
-        /// The integer priority for <b>MX</b>, <b>SRV</b>... records.
-        /// </summary>
-        public string Priority { get; set; }
-
-        /// <summary>
-        /// The record time-to-live in seconds (defaults to 60).
-        /// </summary>
-        public int Ttl { get; set; } = 60;
-
-        /// <summary>
-        /// The optional endpoint health check URI.  (defaults to <c>null</c>)
+        /// Optional endpoint health check URI.  This defaults to <c>null</c>.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -44,7 +40,8 @@ namespace Neon.Cluster
         /// </para>
         /// <para>
         /// No health checks are performed if checking is disabled.  In this case, a record with
-        /// <see cref="Target"/> address will always be returned, regardless of actual endpoint status.
+        /// the <see cref="Target"/> address will always be returned, regardless of actual endpoint
+        /// status.
         /// </para>
         /// <para>
         /// Endpoints with URIs like <b>http://host:port/path</b> will be verified by making
@@ -62,16 +59,24 @@ namespace Neon.Cluster
         /// that <see cref="Target"/> will be substituted.
         /// </note>
         /// </remarks>
+        [JsonProperty(PropertyName = "CheckUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public string CheckUri { get; set; }
 
         /// <summary>
-        /// The HTTP method to use for HTTP health checks. (defaults to <b>GET</b>)
+        /// Optional HTTP method to use for HTTP health checks.  This defaults to <b>GET</b>.
         /// </summary>
+        [JsonProperty(PropertyName = "CheckMethod", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue("GET")]
         public string CheckMethod { get; set; } = "GET";
 
         /// <summary>
-        /// The host name to use 
+        /// Optional host name to present when making a HTTP health check request to this 
+        /// target.  This defaults to <c>null</c> which means that <see cref="Target"/>
+        /// will be submitted as the host name.
         /// </summary>
+        [JsonProperty(PropertyName = "CheckHost", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
         public string CheckHost { get; set; }
     }
 }
