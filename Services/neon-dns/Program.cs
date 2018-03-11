@@ -7,52 +7,58 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Reflection;
+using System.Security.Cryptography;
+using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
-using Microsoft.AspNetCore.Builder;
-using Microsoft.AspNetCore.Hosting;
-using Microsoft.Extensions.Logging;
+using Consul;
+using ICSharpCode.SharpZipLib.Zip;
+using Newtonsoft.Json;
 
-using Neon.Common;
 using Neon.Cluster;
+using Neon.Common;
+using Neon.Cryptography;
 using Neon.Diagnostics;
-using Neon.Web;
+using Neon.Docker;
+using Neon.Net;
 
-namespace NeonDns
+namespace NeonDnsHealth
 {
     /// <summary>
-    /// Implements the <b>neon-dns</b> service.  See 
+    /// Implements the <b>neon-dns-health</b> service.  See 
     /// <a href="https://hub.docker.com/r/neoncluster/neon-dns/">neoncluster/neon-dns</a>
     /// for more information.
     /// </summary>
     public static class Program
     {
-        /// <summary>
-        /// Returns the service name.
-        /// </summary>
         private const string serviceName = "neon-dns";
 
         private static ProcessTerminator    terminator;
         private static INeonLogger          log;
+        private static ConsulClient         consul;
+        private static DockerClient         docker;
+        private static TimeSpan             pollInterval;
 
         /// <summary>
-        /// Main program entry point.
+        /// Application entry point.
         /// </summary>
         /// <param name="args">Command line arguments.</param>
-        public static void Main(string[] args)
+        public static async Task Main(string[] args)
         {
             LogManager.Default.SetLogLevel(Environment.GetEnvironmentVariable("LOG_LEVEL"));
             log = LogManager.Default.GetLogger(typeof(Program));
             log.LogInfo(() => $"Starting [{serviceName}:{Program.GitVersion}]");
             log.LogInfo(() => $"LOG_LEVEL={LogManager.Default.LogLevel.ToString().ToUpper()}");
 
+            var pollSeconds = Environment.GetEnvironmentVariable("POLL_SECONDS");
+
+            log.LogInfo(() => $"POLL_SECONDS={pollSeconds}");
+
             // Create process terminator that handles process termination signals.
 
             terminator = new ProcessTerminator(log);
-
-            // Web site initialization.
-
-            WebHelper.Initialize();
 
             try
             {
@@ -67,23 +73,36 @@ namespace NeonDns
                     NeonClusterHelper.OpenCluster();
                 }
 
-                // Initialize and start the web service.
+                // Ensure that we're running on a manager node.  We won't be able
+                // to query swarm status otherwise.
 
-                // log.LogInfo(() => $"[{serviceName}] is listening on [port={NeonHostPorts.DynamicDNS}].");
+                var nodeRole = Environment.GetEnvironmentVariable("NEON_NODE_ROLE");
 
-                //var host = new WebHostBuilder()
-                //    .UseKestrel()
-                //    .UseContentRoot(Directory.GetCurrentDirectory())
-                //    .ConfigureLogging(
-                //        (hostingConbtext, logging) =>
-                //        {
-                //            logging.AddDebug();
-                //        })
-                //    .UseStartup<Startup>()
-                //    .UseUrls($"http://*:{NeonHostPorts.DynamicDNS}")
-                //    .Build();
+                if (string.IsNullOrEmpty(nodeRole))
+                {
+                    log.LogCritical(() => "Container does not appear to be running on a neonCLUSTER.");
+                    Program.Exit(1);
+                }
 
-                //host.Run();
+                if (!string.Equals(nodeRole, NodeRole.Manager, StringComparison.OrdinalIgnoreCase))
+                {
+                    log.LogCritical(() => $"[neon-dns-health] service is running on a [{nodeRole}] cluster node.  Running on only [{NodeRole.Manager}] nodes are supported.");
+                    Program.Exit(1);
+                }
+
+                // Open the cluster data services and then start the main service task.
+
+                log.LogDebug(() => $"Opening Consul");
+
+                using (consul = NeonClusterHelper.OpenConsul())
+                {
+                    log.LogDebug(() => $"Opening Docker");
+
+                    using (docker = NeonClusterHelper.OpenDocker())
+                    {
+                        await RunAsync();
+                    }
+                }
             }
             catch (Exception e)
             {
@@ -131,6 +150,23 @@ namespace NeonDns
             log.LogInfo(() => $"Exiting: [{serviceName}]");
             terminator.ReadyToExit();
             Environment.Exit(exitCode);
+        }
+
+        /// <summary>
+        /// Implements the service as a <see cref="Task"/>.
+        /// </summary>
+        /// <returns>The <see cref="Task"/>.</returns>
+        private static async Task RunAsync()
+        {
+            // Launch the sub-tasks.  These will run until the service is terminated.
+
+            var tasks = new List<Task>();
+
+            // Wait for all tasks to exit cleanly for a normal shutdown.
+
+            await NeonHelper.WaitAllAsync(tasks);
+
+            terminator.ReadyToExit();
         }
     }
 }

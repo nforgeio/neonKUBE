@@ -27,58 +27,22 @@ namespace Neon.Cluster
     /// </summary>
     public class DnsTarget
     {
-        private string      domain;
-        private string      type;
-        private string      contents;
+        private string      hostname;
         private int         ttl;
 
         /// <summary>
-        /// The domain name without the terminating period in lowercase.
+        /// The target hostname.
         /// </summary>
-        [JsonProperty(PropertyName = "Domain", Required = Required.Always)]
-        public string Domain
+        [JsonProperty(PropertyName = "Hostname", Required = Required.Always)]
+        public string Hostname
         {
-            get { return domain; }
+            get { return hostname; }
             
             set
             {
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value));
 
-                domain = value.ToLowerInvariant();
-            }
-        }
-
-        /// <summary>
-        /// The DNS record type in uppercase (e.g. "A", "CNAME", "MX",...).
-        /// </summary>
-        [JsonProperty(PropertyName = "Type", Required = Required.Always)]
-        public string Type
-        {
-            get { return type; }
-
-            set
-            {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value));
-
-                type = value.ToUpperInvariant();
-            }
-        }
-
-        /// <summary>
-        /// The record contents.  For A records, this will simply be an IP address.
-        /// For CNAME, this will be the referenced domain and for MX records, this
-        /// will be the referenced domain followed by the priority.
-        /// </summary>
-        [JsonProperty(PropertyName = "Contents", Required = Required.Always)]
-        public string Contents
-        {
-            get { return contents; }
-
-            set
-            {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value));
-
-                contents = value;
+                hostname = value.ToLowerInvariant();
             }
         }
 
@@ -104,15 +68,5 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "Endpoints", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<DnsEndpoint> Endpoints { get; set; } = new List<DnsEndpoint>();
-
-        /// <summary>
-        /// Returns the Consul key to be used to persist this target.  This
-        /// will be formatted as <b>DOMAIN-TYPE</b>.
-        /// </summary>
-        [JsonIgnore]
-        public string Key
-        {
-            get { return $"{Domain}-{Type}"; }
-        }
     }
 }

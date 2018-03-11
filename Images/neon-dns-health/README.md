@@ -12,6 +12,8 @@ The **neon-dns-health** service integrates with **neon-dns** and PowerDNS instal
 
 # Environment Variables
 
+* **POLL_INTERVAL** (*optional*) - specifies the interval in seconds the service will use when performing health checks.  This defaults to **15 seconds**.
+
 * **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
 # Deployment
@@ -22,12 +24,12 @@ The **neon-dns-health** service integrates with **neon-dns** and PowerDNS instal
 docker service create \
     --name neon-dns-health \
     --detach=false \
-    --mount type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true \
     --env LOG_LEVEL=INFO \
+    --env POLL_INTERVAL=15s \
     --constraint node.role==manager \
     --replicas 1 \
     --restart-delay 10s \
     neoncluster/neon-dns-health
 ````
 &nbsp;
-**NOTE:** This service must be deployed only to cluster managers so that it will be able to access the Docker Swarm REST API.
+**NOTE:** This service may be deployed anywhere on the cluster but we constrain it to manager nodes as a convention.

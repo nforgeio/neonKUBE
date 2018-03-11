@@ -39,7 +39,7 @@ namespace NeonDnsHealth
         private static INeonLogger          log;
         private static ConsulClient         consul;
         private static DockerClient         docker;
-        private static TimeSpan             consulPollInterval;
+        private static TimeSpan             pollInterval;
 
         /// <summary>
         /// Application entry point.
@@ -51,6 +51,12 @@ namespace NeonDnsHealth
             log = LogManager.Default.GetLogger(typeof(Program));
             log.LogInfo(() => $"Starting [{serviceName}:{Program.GitVersion}]");
             log.LogInfo(() => $"LOG_LEVEL={LogManager.Default.LogLevel.ToString().ToUpper()}");
+
+            // Parse the environment variable settings.
+
+            var environment = new EnvironmentParser(log);
+
+
 
             // Create process terminator that handles process termination signals.
 
