@@ -40,9 +40,8 @@ namespace Neon.Common
         /// </summary>
         /// <typeparam name="T">The parsed variable type.</typeparam>
         /// <param name="input">The input value.</param>
-        /// <param name="error">Returns as the error message on failure.</param>
         /// <returns>Returns <c>true</c> if the input value is valid.</returns>
-        public delegate bool Validator<T>(T input, out string error);
+        public delegate bool Validator<T>(T input);
 
         //---------------------------------------------------------------------
         // Built-in parsers.
@@ -423,16 +422,18 @@ namespace Neon.Common
 
             if (validator != null)
             {
-                if (!validator(value, out error))
+                if (!validator(value))
                 {
+                    const string invalidValue = "Invalid value.";
+
                     if (required)
                     {
-                        LogInvalidVariable(variable, input, error: error);
+                        LogInvalidVariable(variable, input, error: invalidValue);
                         ThrowNotFound(variable);
                     }
                     else
                     {
-                        LogInvalidVariable(variable, input, defaultInput, error: error);
+                        LogInvalidVariable(variable, input, defaultInput, error: invalidValue);
                     }
                 }
             }
