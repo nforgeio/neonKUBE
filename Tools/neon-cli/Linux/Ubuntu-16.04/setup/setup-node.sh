@@ -582,10 +582,10 @@ forward-zones-recurse=.=$<net.nameservers>
 local-address=0.0.0.0
 
 #################################
-# Cache responses for a maximum of 5 minutes (potentially overriding
+# Cache responses for a maximum of 30 seconds (potentially overriding
 # the TTL returned in the original answer).
 #
-max-cache-ttl=300
+max-cache-ttl=30
 
 #################################
 # max-negative-ttl	maximum number of seconds to keep a negative cached entry in memory
