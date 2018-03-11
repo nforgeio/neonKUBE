@@ -19,6 +19,8 @@ using Newtonsoft.Json;
 using Neon.Common;
 using Neon.Net;
 
+// $todo(jeff.lill): Should I be verifying that all KV responses have no errors?
+
 namespace Consul
 {
     /// <summary>
@@ -340,7 +342,7 @@ namespace Consul
         /// to <c>false</c>.
         /// </param>
         /// <param name="timeout">The optional timeout (defaults to <see cref="Timeout.InfiniteTimeSpan"/>).</param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The <see cref="Task"/>.</returns>
         /// <exception cref="HttpException">
         /// Thrown if <paramref name="throwOnError"/> is set to <c>true</c> and the
@@ -449,7 +451,7 @@ namespace Consul
         /// to <c>false</c>.
         /// </param>
         /// <param name="timeout">The optional timeout (defaults to <see cref="Timeout.InfiniteTimeSpan"/>).</param>
-        /// <param name="cancellationToken"></param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The <see cref="Task"/>.</returns>
         /// <exception cref="HttpException">
         /// Thrown if <paramref name="throwOnError"/> is set to <c>true</c> and the
@@ -542,6 +544,31 @@ namespace Consul
                         lastIndex = response.LastIndex;
                     }
                 });
+        }
+
+        /// <summary>
+        /// Lists the items beneath a path prefix and deserializes them as JSON.
+        /// </summary>
+        /// <typeparam name="T">The item type.</typeparam>
+        /// <param name="kv">The key/value endpoint.</param>
+        /// <param name="keyPrefix">The path prefix.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The items.</returns>
+        public static async Task<IEnumerable<T>> List<T>(this IKVEndpoint kv, string keyPrefix, CancellationToken cancellationToken = default)
+            where T : new()
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyPrefix));
+
+            var response = await kv.List(keyPrefix, cancellationToken);
+            var rawItems = response.Response;
+            var items    = new List<T>(rawItems.Length);
+
+            foreach (var rawItem in rawItems)
+            {
+                items.Add(NeonHelper.JsonDeserialize<T>(Encoding.UTF8.GetString(rawItem.Value)));
+            }
+
+            return items;
         }
     }
 }
