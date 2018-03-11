@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DnsEmptyResult.cs
+// FILE:	    PdnsDnsEmptyResult.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -17,13 +17,13 @@ namespace NeonDns
     /// The result returned to PowerDNS for unsuccessful DNS queries or queries 
     /// that return no results.
     /// </summary>
-    public class DnsEmptyResult
+    public class PdnsDnsEmptyResult
     {
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="success">Optionally used to indicate success or failure (defaults to <c>true</c>).</param>
-        public DnsEmptyResult(bool success = true)
+        public PdnsDnsEmptyResult(bool success = true)
         {
             this.Result = success;
         }

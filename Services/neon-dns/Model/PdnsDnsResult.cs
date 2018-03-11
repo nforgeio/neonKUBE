@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DnsResult.cs
+// FILE:	    PdnsDnsResult.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -16,20 +16,20 @@ namespace NeonDns
     /// <summary>
     /// The result returned to PowerDNS for successful DNS queries.
     /// </summary>
-    public class DnsResult
+    public class PdnsDnsResult
     {
         //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
-        /// Returns a global invariant empty <see cref="DnsResult"/> instance.
+        /// Returns a global invariant empty <see cref="PdnsDnsResult"/> instance.
         /// </summary>
-        public static DnsEmptyResult Empty { get; private set; } = new DnsEmptyResult(success: true);
+        public static PdnsDnsEmptyResult Empty { get; private set; } = new PdnsDnsEmptyResult(success: true);
 
         /// <summary>
-        /// Returns a global invariant <see cref="DnsEmptyResult"/> instance.
+        /// Returns a global invariant <see cref="PdnsDnsEmptyResult"/> instance.
         /// </summary>
-        public static DnsEmptyResult Fail { get; private set; } = new DnsEmptyResult(success: false);
+        public static PdnsDnsEmptyResult Fail { get; private set; } = new PdnsDnsEmptyResult(success: false);
 
         //---------------------------------------------------------------------
         // Instance members
@@ -38,6 +38,6 @@ namespace NeonDns
         /// Returns the DNS records that answer the query.
         /// </summary>
         [JsonProperty(PropertyName = "result")]
-        public List<DnsAnswer> Result { get; set; } = new List<DnsAnswer>();
+        public List<PdnsDnsAnswer> Result { get; set; } = new List<PdnsDnsAnswer>();
     }
 }

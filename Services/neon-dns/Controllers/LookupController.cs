@@ -65,7 +65,7 @@ namespace NeonDns.Controllers
                 qname = qname.Substring(0, qname.Length - 1);
             }
 
-            DnsResult result;
+            PdnsDnsResult result;
 
             switch (qtype)
             {
@@ -75,10 +75,10 @@ namespace NeonDns.Controllers
 
                     if (qname.Equals("cluster", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        result = new DnsResult();
+                        result = new PdnsDnsResult();
 
                         result.Result.Add(
-                            new DnsAnswer()
+                            new PdnsDnsAnswer()
                             {
                                 Ttl   = 3600,
                                 QName = qname,
@@ -87,19 +87,19 @@ namespace NeonDns.Controllers
                     }
                     else
                     {
-                        return DnsResult.Empty;
+                        return PdnsDnsResult.Empty;
                     }
                     break;
 
                 case "A":
                 case "ANY":
 
-                    result = new DnsResult();
+                    result = new PdnsDnsResult();
 
                     if (qname.Equals("test.cluster", StringComparison.InvariantCultureIgnoreCase))
                     {
                         result.Result.Add(
-                        new DnsAnswer()
+                        new PdnsDnsAnswer()
                         {
                             Ttl     = 300,
                             QName   = qname,
@@ -109,13 +109,13 @@ namespace NeonDns.Controllers
                     }
                     else
                     {
-                        return DnsResult.Empty;
+                        return PdnsDnsResult.Empty;
                     }
                     break;
 
                 default:
 
-                    return DnsResult.Empty;
+                    return PdnsDnsResult.Empty;
             }
 
             return result;

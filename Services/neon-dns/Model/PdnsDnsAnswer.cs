@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DnsAnswer.cs
+// FILE:	    PdnsDnsAnswer.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -17,7 +17,7 @@ namespace NeonDns
     /// Implements a DNS query answer returned by the Dynamic DNS service
     /// to the PowerDNS Authoritative service.
     /// </summary>
-    public class DnsAnswer
+    public class PdnsDnsAnswer
     {
         /// <summary>
         /// The answer's time-to-live in seconds (defaults to <b>60</b>).
