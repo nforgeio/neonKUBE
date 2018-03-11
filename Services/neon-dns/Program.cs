@@ -23,22 +23,23 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
 using Neon.Net;
+using Neon.Retry;
 
 namespace NeonDnsHealth
 {
     /// <summary>
-    /// Implements the <b>neon-dns-health</b> service.  See 
+    /// Implements the <b>neon-dns</b> service.  See 
     /// <a href="https://hub.docker.com/r/neoncluster/neon-dns/">neoncluster/neon-dns</a>
     /// for more information.
     /// </summary>
     public static class Program
     {
-        private const string serviceName = "neon-dns";
+        private const string serviceName       = "neon-dns";
+        private const string powerDnsHostsPath = "/etc/powerdns/hosts";
 
         private static ProcessTerminator    terminator;
         private static INeonLogger          log;
         private static ConsulClient         consul;
-        private static DockerClient         docker;
         private static TimeSpan             pollInterval;
 
         /// <summary>
@@ -52,9 +53,11 @@ namespace NeonDnsHealth
             log.LogInfo(() => $"Starting [{serviceName}:{Program.GitVersion}]");
             log.LogInfo(() => $"LOG_LEVEL={LogManager.Default.LogLevel.ToString().ToUpper()}");
 
-            var pollSeconds = Environment.GetEnvironmentVariable("POLL_SECONDS");
+            // Parse the environment variable settings.
 
-            log.LogInfo(() => $"POLL_SECONDS={pollSeconds}");
+            var environment = new EnvironmentParser(log);
+
+            pollInterval = environment.Get("POLL_INTERVAL", TimeSpan.FromSeconds(15), validator: v => v > TimeSpan.Zero);
 
             // Create process terminator that handles process termination signals.
 
@@ -73,8 +76,9 @@ namespace NeonDnsHealth
                     NeonClusterHelper.OpenCluster();
                 }
 
-                // Ensure that we're running on a manager node.  We won't be able
-                // to query swarm status otherwise.
+                // Ensure that we're running on a manager node.  This is required because
+                // we need to be able to update the [/etc/powerdns/hosts] files deployed
+                // on the managers.
 
                 var nodeRole = Environment.GetEnvironmentVariable("NEON_NODE_ROLE");
 
@@ -86,7 +90,15 @@ namespace NeonDnsHealth
 
                 if (!string.Equals(nodeRole, NodeRole.Manager, StringComparison.OrdinalIgnoreCase))
                 {
-                    log.LogCritical(() => $"[neon-dns-health] service is running on a [{nodeRole}] cluster node.  Running on only [{NodeRole.Manager}] nodes are supported.");
+                    log.LogCritical(() => $"[neon-dns] service is running on a [{nodeRole}] cluster node.  Only [{NodeRole.Manager}] nodes are supported.");
+                    Program.Exit(1);
+                }
+
+                // Ensure that the [/etc/powerdns/hosts] file was mapped into the container.
+
+                if (File.Exists(powerDnsHostsPath))
+                {
+                    log.LogCritical(() => $"[neon-dns] service cannot locate [{powerDnsHostsPath}] on the host manager.  Was this mounted to the container as read/write?");
                     Program.Exit(1);
                 }
 
@@ -96,12 +108,7 @@ namespace NeonDnsHealth
 
                 using (consul = NeonClusterHelper.OpenConsul())
                 {
-                    log.LogDebug(() => $"Opening Docker");
-
-                    using (docker = NeonClusterHelper.OpenDocker())
-                    {
-                        await RunAsync();
-                    }
+                    await RunAsync();
                 }
             }
             catch (Exception e)
@@ -158,14 +165,124 @@ namespace NeonDnsHealth
         /// <returns>The <see cref="Task"/>.</returns>
         private static async Task RunAsync()
         {
-            // Launch the sub-tasks.  These will run until the service is terminated.
+            var localMD5  = string.Empty;
+            var remoteMD5 = "[unknown]";
 
-            var tasks = new List<Task>();
+            while (true)
+            {
+                log.LogDebug(() => "Starting poll");
 
-            // Wait for all tasks to exit cleanly for a normal shutdown.
+                if (terminator.CancellationToken.IsCancellationRequested)
+                {
+                    log.LogDebug(() => "Terminating");
+                    break;
+                }
 
-            await NeonHelper.WaitAllAsync(tasks);
+                try
+                {
+                    log.LogDebug(() => "Fetching DNS answers MD5 from Consul.");
 
+                    try
+                    {
+                        remoteMD5 = await consul.KV.GetString(NeonClusterConst.DnsConsulHostsMd5Key, terminator.CancellationToken);
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        remoteMD5 = "[unknown]";
+                    }
+
+                    if (localMD5 == remoteMD5)
+                    {
+                        log.LogDebug(() => "DNS answers are unchanged.");
+                    }
+                    else
+                    {
+                        log.LogDebug(() => "DNS answers have changed.");
+                        log.LogDebug(() => "Fetching DNS answers.");
+
+                        try
+                        {
+                            var hostsTxt = await consul.KV.GetString(NeonClusterConst.DnsConsulHostsKey, terminator.CancellationToken);
+                            var marker   = "# ---DYNAMIC-HOSTS---";
+
+                            // We have the host entries from Consul.  We need to add these onto the
+                            // end [/etc/powserdns/hosts], replacing any host entries written during
+                            // a previous run.
+                            //
+                            // We're going to use the special marker line:
+                            //
+                            //  # ---DYNAMIC-HOSTS---
+                            //
+                            // to separate the built-in hosts (above the line) from the dynamic hosts
+                            // we're generating here (which will be below the line).  Note that this
+                            // line won't exist the first time this service runs, so we'll just add it.
+                            //
+                            // Note that it's possible that the PowerDNS Recursor might be reading this
+                            // file while we're trying to write it.  We're going to treat these as a
+                            // transient errors and retry.
+
+                            var retry = new LinearRetryPolicy(e => e is IOException, maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(1));
+
+                            await retry.InvokeAsync(
+                                async () =>
+                                {
+                                    using (var stream = new FileStream(powerDnsHostsPath, FileMode.Open, FileAccess.ReadWrite))
+                                    {
+                                        var sbHosts = new StringBuilder();
+
+                                        // Read the hosts file up to but not including the special marker
+                                        // line (if it's present).
+
+                                        using (var reader = new StreamReader(stream))
+                                        {
+                                            foreach (var line in reader.Lines())
+                                            {
+                                                if (line.StartsWith(marker))
+                                                {
+                                                    break;
+                                                }
+
+                                                sbHosts.AppendLineLinux(line);
+                                            }
+                                        }
+
+                                        // Append the marker line, followed by the dynamic host
+                                        // entries we downloaded from Consul.
+
+                                        sbHosts.AppendLineLinux(marker);
+                                        sbHosts.AppendLineLinux();
+                                        sbHosts.Append(hostsTxt);
+
+                                        // Update the hosts file, taking extra care to ensure that 
+                                        // we're using only Linux style line endings.
+
+                                        var hosts = sbHosts.ToString();
+
+                                        hosts = NeonHelper.ToLinuxLineEndings(hosts);
+
+                                        stream.Position = 0;
+                                        stream.SetLength(0);
+                                        stream.Write(Encoding.UTF8.GetBytes(hosts));
+                                    }
+
+                                    await Task.CompletedTask;
+                                });
+                        }
+                        catch (KeyNotFoundException)
+                        {
+                            log.LogWarn(() => "DNS answers do not exist on Consul.");
+                        }
+                    }
+                }
+                catch (Exception e)
+                {
+                    log.LogWarn(e);
+                }
+
+                await Task.Delay(pollInterval);
+            }
+
+            log.LogDebug(() => "Finished poll");
             terminator.ReadyToExit();
         }
     }

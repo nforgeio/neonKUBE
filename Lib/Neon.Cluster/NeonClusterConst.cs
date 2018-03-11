@@ -136,9 +136,13 @@ namespace Neon.Cluster
         public static readonly string DnsConsulTargetsKey = $"{DnsConsulRootKey}/targets";
 
         /// <summary>
-        /// Consul parent key for the Dynamic DNS answers.
+        /// Consul key for the Dynamic DNS answer <b>hosts.txt</b> file.
         /// </summary>
-        public static readonly string DnsConsulAnswersKey = $"{DnsConsulRootKey}/answers";
+        public static readonly string DnsConsulHostsKey = $"{DnsConsulRootKey}/answers/hosts.txt";
 
+        /// <summary>
+        /// Consul key for the Dynamic DNS answer <b>hosts.md5</b> file.
+        /// </summary>
+        public static readonly string DnsConsulHostsMd5Key = $"{DnsConsulRootKey}/answers/hosts.md5";
     }
 }

@@ -1316,5 +1316,21 @@ namespace Neon.Common
 
             return NeonHelper.StripFileScheme(assembly.CodeBase);
         }
+
+        /// <summary>
+        /// Computes the MD5 hash for a string and returns the result
+        /// formatted as a hex string.
+        /// </summary>
+        /// <param name="input"></param>
+        /// <returns></returns>
+        public static string ComputeMD5(string input)
+        {
+            if (input == null)
+            {
+                return new string('0', 32);     // MD5 hashes are 128 bits (or 16 bytes * two hex digits)
+            }
+
+            return NeonHelper.ToHex(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(input)));
+        }
     }
 }

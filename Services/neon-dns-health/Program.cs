@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -38,7 +39,6 @@ namespace NeonDnsHealth
         private static ProcessTerminator    terminator;
         private static INeonLogger          log;
         private static ConsulClient         consul;
-        private static DockerClient         docker;
         private static TimeSpan             pollInterval;
 
         /// <summary>
@@ -56,7 +56,7 @@ namespace NeonDnsHealth
 
             var environment = new EnvironmentParser(log);
 
-
+            pollInterval = environment.Get("POLL_INTERVAL", TimeSpan.FromSeconds(15), validator: v => v > TimeSpan.Zero);
 
             // Create process terminator that handles process termination signals.
 
@@ -75,35 +75,13 @@ namespace NeonDnsHealth
                     NeonClusterHelper.OpenCluster();
                 }
 
-                // Ensure that we're running on a manager node.  We won't be able
-                // to query swarm status otherwise.
-
-                var nodeRole = Environment.GetEnvironmentVariable("NEON_NODE_ROLE");
-
-                if (string.IsNullOrEmpty(nodeRole))
-                {
-                    log.LogCritical(() => "Container does not appear to be running on a neonCLUSTER.");
-                    Program.Exit(1);
-                }
-
-                if (!string.Equals(nodeRole, NodeRole.Manager, StringComparison.OrdinalIgnoreCase))
-                {
-                    log.LogCritical(() => $"[neon-dns-health] service is running on a [{nodeRole}] cluster node.  Running on only [{NodeRole.Manager}] nodes are supported.");
-                    Program.Exit(1);
-                }
-
                 // Open the cluster data services and then start the main service task.
 
                 log.LogDebug(() => $"Opening Consul");
 
                 using (consul = NeonClusterHelper.OpenConsul())
                 {
-                    log.LogDebug(() => $"Opening Docker");
-
-                    using (docker = NeonClusterHelper.OpenDocker())
-                    {
-                        await RunAsync();
-                    }
+                    await RunAsync();
                 }
             }
             catch (Exception e)
@@ -160,13 +138,101 @@ namespace NeonDnsHealth
         /// <returns>The <see cref="Task"/>.</returns>
         private static async Task RunAsync()
         {
-            // Launch the sub-tasks.  These will run until the service is terminated.
+            var clusterDefinition = (ClusterDefinition)null;
 
-            var tasks = new List<Task>();
+            while (true)
+            {
+                try
+                {
+                    log.LogDebug(() => "Starting poll");
 
-            // Wait for all tasks to exit cleanly for a normal shutdown.
+                    if (terminator.CancellationToken.IsCancellationRequested)
+                    {
+                        log.LogDebug(() => "Terminating");
+                        break;
+                    }
 
-            await NeonHelper.WaitAllAsync(tasks);
+                    // We're going to collect the hostname --> address mappings into
+                    // a specialized (semi-threadsafe) dictionary.
+
+                    var hostAddresses = new HostAddresses();
+
+                    // Retrieve the current cluster definition from Consul if we don't already
+                    // have it or if it's different from what we've cached.
+
+                    clusterDefinition = await NeonClusterHelper.GetDefinitionAsync(clusterDefinition, terminator.CancellationToken);
+
+                    log.LogDebug(() => $"Cluster has [{clusterDefinition.NodeDefinitions.Count}] nodes.");
+
+                    // Add the [NAME.node.cluster] definitions for each cluster node.
+
+                    foreach (var node in clusterDefinition.Nodes)
+                    {
+                        hostAddresses.Add($"{node.Name}.node.cluster", IPAddress.Parse(node.PrivateAddress));
+                    }
+
+                    // Read the DNS target definitions from Consul.
+
+                    var targets = await consul.KV.List<DnsTarget>(NeonClusterConst.DnsConsulTargetsKey + "/", terminator.CancellationToken);
+
+                    log.LogDebug(() => $"Consul has [{targets.Count()}] DNS targets.");
+
+                    // Generate a canonical [hosts.txt] file by sorting host entries by 
+                    // hostname and then by IP address.
+
+                    var sbHosts      = new StringBuilder();
+                    var mappingCount = 0;
+
+                    foreach (var host in hostAddresses.OrderBy(h => h.Key))
+                    {
+                        foreach (var address in host.Value.OrderBy(a => a.ToString()))
+                        {
+                            sbHosts.AppendLineLinux($"{address,-15} {host}");
+                            mappingCount++;
+                        }
+                    }
+
+                    // Compute the MD5 hash and compare it to the hash persisted to
+                    // Consul (if any) to determine whether we need to update the
+                    // answers in Consul.
+
+                    var hostsTxt   = sbHosts.ToString();
+                    var hostsMD5   = NeonHelper.ComputeMD5(hostsTxt);
+                    var currentMD5 = (string)null;
+
+                    try
+                    {
+                        currentMD5 = await consul.KV.GetString(NeonClusterConst.DnsConsulHostsMd5Key, terminator.CancellationToken);
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        currentMD5 = string.Empty;
+                    }
+
+                    if (hostsMD5 != currentMD5)
+                    {
+                        log.LogDebug(() => $"DNS answers have changed.");
+                        log.LogDebug(() => $"Writing [{mappingCount}] DNS answers to Consul.");
+
+                        // Update the Consul keys using a transaction.
+
+                        var operations = new List<KVTxnOp>()
+                    {
+                        new KVTxnOp(NeonClusterConst.DnsConsulHostsMd5Key, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsMD5) },
+                        new KVTxnOp(NeonClusterConst.DnsConsulHostsKey, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsTxt) }
+                    };
+
+                        await consul.KV.Txn(operations, terminator.CancellationToken);
+                    }
+                }
+                catch (Exception e)
+                {
+                    log.LogWarn(e);
+                }
+
+                log.LogDebug(() => "Finished poll");
+                await Task.Delay(pollInterval);
+            }
 
             terminator.ReadyToExit();
         }
