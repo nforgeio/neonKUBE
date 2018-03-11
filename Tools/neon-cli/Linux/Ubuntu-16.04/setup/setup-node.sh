@@ -667,8 +667,9 @@ forward-zones-recurse=.=$<net.nameservers>
 
 #################################
 # forward-zones		If the cluster enables Dynamic DNS, we need to specify the 
-#                   forward requests for the [*.cluster] and [*.node.cluster] domains
-#					to the PowerDNS Authoritative Servers running on the master nodes.
+#                 forward requests for the [*.cluster] and [*.node.cluster] 
+#                 domains to the PowerDNS Authoritative Servers running on the
+#                 master nodes.
 #
 forward-zones=cluster=127.0.0.1:$<net.powerdns.port>
 

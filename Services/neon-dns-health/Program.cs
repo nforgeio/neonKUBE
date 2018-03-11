@@ -35,10 +35,6 @@ namespace NeonDnsHealth
     {
         private const string serviceName = "neon-dns-health";
 
-        private static readonly string dnsRootKey    = "neon/dns";
-        private static readonly string dnsTargetsKey = $"{dnsRootKey}/targets";
-        private static readonly string dnsAnswersKey = $"{dnsRootKey}/answers";
-
         private static ProcessTerminator    terminator;
         private static INeonLogger          log;
         private static ConsulClient         consul;

@@ -124,5 +124,21 @@ namespace Neon.Cluster
         /// Identifies the Git production branch.
         /// </summary>
         public const string GitProdBranch = "prod";
+
+        /// <summary>
+        /// Consul parent key for the Dynamic DNS service related values.
+        /// </summary>
+        public static readonly string DnsConsulRootKey = "neon/dns";
+
+        /// <summary>
+        /// Consul parent key for the Dynamic DNS targets.
+        /// </summary>
+        public static readonly string DnsConsulTargetsKey = $"{DnsConsulRootKey}/targets";
+
+        /// <summary>
+        /// Consul parent key for the Dynamic DNS answers.
+        /// </summary>
+        public static readonly string DnsConsulAnswersKey = $"{DnsConsulRootKey}/answers";
+
     }
 }

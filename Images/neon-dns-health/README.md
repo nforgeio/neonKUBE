@@ -22,6 +22,7 @@ The **neon-dns-health** service integrates with **neon-dns** and PowerDNS instal
 docker service create \
     --name neon-dns-health \
     --detach=false \
+    --mount type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true \
     --env LOG_LEVEL=INFO \
     --constraint node.role==manager \
     --replicas 1 \

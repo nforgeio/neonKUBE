@@ -22,6 +22,7 @@ The **neon-dns** service integrates with PowerDNS installed in a neonCLUSTER to 
 docker service create \
     --name neon-dns \
     --detach=false \
+    --mount type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true \
     --env LOG_LEVEL=INFO \
     --constraint node.role==manager \
     --mode global \

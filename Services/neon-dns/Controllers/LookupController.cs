@@ -49,15 +49,14 @@ namespace NeonDns.Controllers
         }
 
         /// <summary>
-        /// Returns a 200 status code when the service is healthy.
+        /// Performs a dynamic DNS lookup from answers persisted to Consul by the
+        /// <b>neon-dns-health</b> service.
         /// </summary>
         /// <param name="qname">The DNS hostname being queried.</param>
         /// <param name="qtype">The DNS query record type (or <b>ANY</b>).</param>
         [HttpGet("/lookup/{qname}/{qtype}")]
         public async Task<object> Get(string qname, string qtype)
         {
-            Console.WriteLine($"{qname} {qtype}");
-
             // Strip off any terminating "." from the query name.
 
             if (qname.EndsWith("."))
@@ -71,7 +70,7 @@ namespace NeonDns.Controllers
             {
                 case "SOA":
 
-                    // We need to answer SOA requests for [cluster].
+                    // We need to answer DNS requests for 
 
                     if (qname.Equals("cluster", StringComparison.InvariantCultureIgnoreCase))
                     {
@@ -119,6 +118,33 @@ namespace NeonDns.Controllers
             }
 
             return result;
+        }
+
+        /// <summary>
+        /// Queries Consul to resolve a DNS host and type.
+        /// </summary>
+        /// <param name="qname">The query domain.</param>
+        /// <param name="qtype">The query type.</param>
+        /// <returns>The <see cref="DnsAnswer"/> if found, <c>null</c> otherwise.</returns>
+        private Task<DnsAnswer> FindDnsAnswerAsync(string qname, string qtype)
+        {
+            // Convert the name to lowercase and the type to uppercase
+            // and generate the key used to persist the record to Consul.
+
+            qname = qname.ToLowerInvariant();
+            qtype = qtype.ToUpperInvariant();
+
+            var key = $"{NeonClusterConst.DnsConsulAnswersKey}/{qname}-{qtype}";
+
+            var result = new DnsAnswer()
+            {
+                Domain   = qname,
+                Type     = qtype,
+                Contents = "17.0.0.1",
+                Ttl      = 10
+            };
+
+            return Task.FromResult(result);
         }
     }
 }
