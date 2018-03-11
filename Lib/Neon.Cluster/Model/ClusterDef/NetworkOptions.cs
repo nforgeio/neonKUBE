@@ -166,7 +166,15 @@ namespace Neon.Cluster
         private const string defaultCloudSubnet   = "10.168.0.0/21";
         private const string defaultVpnPoolSubnet = "10.169.0.0/22";
 
-        private const string defaultPdnsRecursorPackagePackageUri = "https://jefflill.github.io/neoncluster/binaries/ubuntu/pdns-recursor_4.1.0~alpha1-1pdns.xenial_amd64.deb";
+        // I'm explicitly downloading the PowerDNS Recursor package and saving it to
+        // a well known location because PDNS only maintains only two or three package
+        // versions on their site.
+        //
+        // I located and downloaded the package from here:
+        //
+        //      http://repo.powerdns.com/ubuntu/pool/main/p/pdns-recursor/
+
+        private const string defaultPdnsRecursorPackagePackageUri = "https://jefflill.github.io/neoncluster/binaries/ubuntu/pdns-recursor_4.1.1-1pdns.xenial_amd64.deb";
 
         /// <summary>
         /// Default constructor.
