@@ -39,7 +39,7 @@ namespace Neon.Cluster
         public string Contents { get; set; }
 
         /// <summary>
-        /// The record TTL in seconds.
+        /// The DNS TTL in seconds.
         /// </summary>
         public int Ttl { get; set; }
     }

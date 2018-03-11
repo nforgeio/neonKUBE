@@ -585,10 +585,9 @@ launch=remote
 remote-connection-string=http:url=http://127.0.0.1:$<net.dynamicdns.port>,timeout=2000
 
 #################################
-# no-shuffle	Set this to prevent random shuffling of answers.  The [neon-dns]
-#             backend service optionally handles this for specific hostnames.
+# no-shuffle	Set this to prevent random shuffling of answers.
 #
-no-shuffle=yes
+# no-shuffle=yes
 
 #################################
 # negquery-cache-ttl	Seconds to store negative query results in the QueryCache
