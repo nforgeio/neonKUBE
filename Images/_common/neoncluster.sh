@@ -239,16 +239,6 @@ export NeonHostPorts_LogEsDataTcp=5006
 # SYSLOG events from the HAProxy based services and perhaps other sources.
 export NeonHostPorts_LogHostSysLog=5007
 
-# The port where the PowerDNS Authoritative Server listens if the
-# cluster's Dynamic DNS feature is enabled.  These servers are deployed
-# to the manager nodes if enabled.
-export NeonHostPorts_PowerDNS=5008
-
-# The port where the <b>neon-dns</b> service listens on the manager
-# node host network for dynamic DNS HTTP requests if the cluster's 
-# Dynamic DNS feature is enabled.
-export NeonHostPorts_DynamicDNS=5009
-
 # This port is reserved and must not be assigned to any service.  This is
 # currently referenced by the manager load balancer rule for Azure deployments
 # and it must not actually host a service.  See the [AzureHostingManager]

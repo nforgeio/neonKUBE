@@ -166,10 +166,6 @@ namespace Neon.Cluster
         private const string defaultCloudSubnet   = "10.168.0.0/21";
         private const string defaultVpnPoolSubnet = "10.169.0.0/22";
 
-        // WARNING: [pdns-server] and the [pdns-remote-backend] packages must come from the same build.
-
-        private const string defaultPdnsServerPackageUri          = "https://jefflill.github.io/neoncluster/binaries/ubuntu/pdns-server_4.1.0~rc1-1pdns.xenial_amd64.deb";
-        private const string defaultPdnsBackendRemotePackageUri   = "https://jefflill.github.io/neoncluster/binaries/ubuntu/pdns-backend-remote_4.1.0~rc1-1pdns.xenial_amd64.deb";
         private const string defaultPdnsRecursorPackagePackageUri = "https://jefflill.github.io/neoncluster/binaries/ubuntu/pdns-recursor_4.1.0~alpha1-1pdns.xenial_amd64.deb";
 
         /// <summary>
@@ -270,52 +266,12 @@ namespace Neon.Cluster
         public string[] Nameservers { get; set; } = null;
 
         /// <summary>
-        /// <para>
-        /// URI for the <a href="https://www.powerdns.com/auth.html">PowerDNS Authoritative Server</a> package 
-        /// to use for provisioning cluster dynbamic DNS services on the cluster mnanagers.  This defaults to 
-        /// a known good release.
-        /// </para>
-        /// <note>
-        /// <see cref="PdnsServerPackageUri"/> and <see cref="PdnsBackendRemotePackageUri"/> must specify packages
-        /// from the same PowerDNS build.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "PdnsServerPackageUri", Required = Required.Default)]
-        [DefaultValue(defaultPdnsServerPackageUri)]
-        public string PdnsServerPackageUri { get; set; } = defaultPdnsServerPackageUri;
-
-        /// <summary>
-        /// <para>
-        /// URI for the <a href="https://www.powerdns.com/auth.html">PowerDNS Authoritative Server Remote Backend</a>
-        /// package to use for provisioning cluster dynamic DNS services on the cluster managers.  This defaults to 
-        /// a known good release.
-        /// </para>
-        /// <note>
-        /// <see cref="PdnsServerPackageUri"/> and <see cref="PdnsBackendRemotePackageUri"/> must specify packages
-        /// from the same PowerDNS build.
-        /// </note>
-        /// </summary>
-        [JsonProperty(PropertyName = "PdnsBackendRemotePackageUri", Required = Required.Default)]
-        [DefaultValue(defaultPdnsBackendRemotePackageUri)]
-        public string PdnsBackendRemotePackageUri { get; set; } = defaultPdnsBackendRemotePackageUri;
-
-        /// <summary>
         /// URI for the <a href="https://www.powerdns.com/recursor.html">PowerDNS Recursor</a> package 
         /// to use for provisioning cluster DNS services.  This defaults to a known good release.
         /// </summary>
         [JsonProperty(PropertyName = "PdnsRecursorPackageUri", Required = Required.Default)]
         [DefaultValue(defaultPdnsRecursorPackagePackageUri)]
         public string PdnsRecursorPackageUri { get; set; } = defaultPdnsRecursorPackagePackageUri;
-
-        /// <summary>
-        /// Enables the deployment of the PowerDNS Authoritative server to the cluster manager nodes
-        /// along with the <b>neon-dns</b> and <b>neon-dns-health</b> services to provide dynamic
-        /// DNS capabilities to the cluster.  Worker nodes will be configured to use the managers
-        /// as their upstream DNS servers.  This defaults to <c>true</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "DynamicDns", Required = Required.Default)]
-        [DefaultValue(true)]
-        public bool DynamicDns { get; set; } = true;
 
         /// <summary>
         /// Optionally specifies the cluster's public FQDN or IP address where inbound 
@@ -613,23 +569,9 @@ namespace Neon.Cluster
                 }
             }
 
-            PdnsServerPackageUri = PdnsServerPackageUri ?? defaultPdnsServerPackageUri;
-
-            if (!Uri.TryCreate(PdnsServerPackageUri, UriKind.Absolute, out var uri1))
-            {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PdnsServerPackageUri)}={PdnsServerPackageUri}] is not a valid URI.");
-            }
-
-            PdnsBackendRemotePackageUri = PdnsBackendRemotePackageUri ?? defaultPdnsBackendRemotePackageUri;
-
-            if (!Uri.TryCreate(PdnsBackendRemotePackageUri, UriKind.Absolute, out var uri2))
-            {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PdnsBackendRemotePackageUri)}={PdnsBackendRemotePackageUri}] is not a valid URI.");
-            }
-
             PdnsRecursorPackageUri = PdnsRecursorPackageUri ?? defaultPdnsRecursorPackagePackageUri;
 
-            if (!Uri.TryCreate(PdnsServerPackageUri, UriKind.Absolute, out var uri3))
+            if (!Uri.TryCreate(PdnsRecursorPackageUri, UriKind.Absolute, out var uri3))
             {
                 throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PdnsRecursorPackageUri)}={PdnsRecursorPackageUri}] is not a valid URI.");
             }

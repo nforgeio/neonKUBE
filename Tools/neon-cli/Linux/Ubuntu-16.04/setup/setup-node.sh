@@ -532,95 +532,6 @@ systemctl daemon-reload
 systemctl restart neon-security-cleaner
 
 #------------------------------------------------------------------------------
-# Configure the PowerDNS Authoritative Server on the manager nodes if Dynamic
-# DNS is enabled for the cluster.
-
-if [ "$<net.dynamicdns.enabled>" ] ; then
-
-	# Download the PowerDNS server.
-
-	curl -4fsSLv ${CURL_RETRY} $<net.powerdns.server.package.uri> -o /tmp/pdns-server.deb
-	gdebi --non-interactive /tmp/pdns-server.deb
-	rm /tmp/pdns-server.deb
-
-	# Install the PowerDNS REMOTE backend.
-
-	curl -4fsSLv ${CURL_RETRY} $<net.powerdns.backend.remote.package.uri> -o /tmp/pdns-backend-remote.deb
-	gdebi --non-interactive /tmp/pdns-backend-remote.deb
-	rm /tmp/pdns-backend-remote.deb
-
-	# Stop the service while we configure it and install the recursor.
-
-	systemctl stop pdns
-
-	# Backup the configuration file installed by the package.
-
-	cp /etc/powerdns/pdns.conf /etc/powerdns/pdns.conf.backup
-
-	# Remove any sample local configuration files installed by the package and
-	# then add our custom file.
-
-	rm -f /etc/powerdns/bindbackend.conf
-	rm -f /etc/powerdns/pdns.d/*
-
-	cat <<EOF > /etc/powerdns/pdns.d/pdns.local.conf
-###############################################################################
-# neonCLUSTER custom PowerDNS Authoritative Server configuration overrides.
-
-#################################
-# local-address		Listen for requests on this interface and port.
-# local-ipv6
-# local-port	
-#
-local-address=127.0.0.1
-local-ipv6=::1
-local-port=$<net.powerdns.port>
-
-#################################
-# launch					          Enable the PowerDNS REMOTE backend to use HTTP to
-# remote-connection-string	Query the [neon-dns] Docker service.
-#
-launch=remote
-remote-connection-string=http:url=http://127.0.0.1:$<net.dynamicdns.port>,timeout=2000
-
-#################################
-# no-shuffle	Set this to prevent random shuffling of answers.
-#
-# no-shuffle=yes
-
-#################################
-# negquery-cache-ttl	Seconds to store negative query results in the QueryCache
-#
-negquery-cache-ttl=5
-
-#################################
-# query-cache-ttl		Max seconds to store query results in the QueryCache
-#
-query-cache-ttl=60
-
-#################################
-# disable-syslog		We can disable this because we're capturing the systemd logs.
-#
-disable-syslog=yes
-
-#################################
-# WARNING: Be sure to comment these out for production clusters.
-#
-# Debugging related settings.
-#
-# loglevel=5
-# log-dns-details=yes
-# log-dns-queries=yes
-EOF
-
-	# Set PowerDNS related config file permissions.  Note that we're not
-	# going to restart the [pdns] service until after we install the recursor
-	# to avoid default configuration conflicts.
-
-	chmod -R 775 /etc/powerdns
-fi
-
-#------------------------------------------------------------------------------
 # Configure the PowerDNS Recursor.
 
 curl -4fsSLv ${CURL_RETRY} $<net.powerdns.recursor.package.uri> -o /tmp/pdns-recursor.deb
@@ -666,14 +577,6 @@ export-etc-hosts=yes
 forward-zones-recurse=.=$<net.nameservers>
 
 #################################
-# forward-zones		If the cluster enables Dynamic DNS, we need to specify the 
-#                 forward requests for the [*.cluster] and [*.node.cluster] 
-#                 domains to the PowerDNS Authoritative Servers running on the
-#                 master nodes.
-#
-forward-zones=cluster=127.0.0.1:$<net.powerdns.port>
-
-#################################
 # Bind to all network interfaces.
 #
 local-address=0.0.0.0
@@ -710,14 +613,8 @@ cat /etc/powerdns/recursor.local.conf >> /etc/powerdns/recursor.conf
 
 chmod -R 775 /etc/powerdns
 
-# Restart the PowerDNS server and recursor services to pick up the new configs.
-
-if [ "$<net.dynamicdns.enabled>" ] ; then
-	systemctl start pdns
-fi
-
 systemctl start pdns-recursor
-sleep 5		# Give the services some time to start.
+sleep 5		# Give the service some time to start.
 
 # Configure the local DNS resolver to override any DHCP or other interface
 # specific settings and just query the PowerDNS Recursor running locally

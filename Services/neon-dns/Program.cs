@@ -69,21 +69,21 @@ namespace NeonDns
 
                 // Initialize and start the web service.
 
-                log.LogInfo(() => $"[{serviceName}] is listening on [port={NeonHostPorts.DynamicDNS}].");
+                // log.LogInfo(() => $"[{serviceName}] is listening on [port={NeonHostPorts.DynamicDNS}].");
 
-                var host = new WebHostBuilder()
-                    .UseKestrel()
-                    .UseContentRoot(Directory.GetCurrentDirectory())
-                    .ConfigureLogging(
-                        (hostingConbtext, logging) =>
-                        {
-                            logging.AddDebug();
-                        })
-                    .UseStartup<Startup>()
-                    .UseUrls($"http://*:{NeonHostPorts.DynamicDNS}")
-                    .Build();
+                //var host = new WebHostBuilder()
+                //    .UseKestrel()
+                //    .UseContentRoot(Directory.GetCurrentDirectory())
+                //    .ConfigureLogging(
+                //        (hostingConbtext, logging) =>
+                //        {
+                //            logging.AddDebug();
+                //        })
+                //    .UseStartup<Startup>()
+                //    .UseUrls($"http://*:{NeonHostPorts.DynamicDNS}")
+                //    .Build();
 
-                host.Run();
+                //host.Run();
             }
             catch (Exception e)
             {

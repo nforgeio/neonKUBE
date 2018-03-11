@@ -418,35 +418,9 @@ namespace NeonCli
             SetBashVariable(preprocessReader, "ntp.manager.sources", managerTimeSources);
             SetBashVariable(preprocessReader, "ntp.worker.sources", workerTimeSources);
 
-            SetBashVariable(preprocessReader, "net.dynamicdns.enabled", (clusterDefinition.Network.DynamicDns && nodeDefinition.IsManager) ? "true" : "false");
-
-            if (clusterDefinition.Network.DynamicDns)
+            if (!clusterDefinition.BareDocker)
             {
-                var forwardZones = string.Empty;
-
-                foreach (var manager in clusterDefinition.Managers)
-                {
-                    if (forwardZones.Length > 0)
-                    {
-                        forwardZones += ';';
-                    }
-
-                    forwardZones += $"{manager.PrivateAddress}:{NeonHostPorts.PowerDNS}";
-                }
-
-                preprocessReader.Set("net.dynamic.forwardzones", $"forward-zones=cluster={forwardZones}");
-            }
-            else
-            {
-                // Don't configure any PowerDNS Recursor forward zones if the cluster
-                // Dynamic DNS is disabled.
-
-                preprocessReader.Set("net.dynamic.forwardzones", string.Empty);
-            }
-
-            if (clusterDefinition.Network.DynamicDns)
-            {
-                // When we're deploying the Dynamic DNS, the manager nodes will use the 
+                // When we're not deploying bare Docker, the manager nodes will use the 
                 // configured name servers as the cluster's upstream DNS and the worker
                 // nodes will be configured to query the name servers.
 
@@ -479,12 +453,8 @@ namespace NeonCli
                 preprocessReader.Set("net.nameservers", nameservers);
             }
 
-            SetBashVariable(preprocessReader, "net.powerdns.server.package.uri", clusterDefinition.Network.PdnsServerPackageUri);
-            SetBashVariable(preprocessReader, "net.powerdns.backend.remote.package.uri", clusterDefinition.Network.PdnsBackendRemotePackageUri);
             SetBashVariable(preprocessReader, "net.powerdns.recursor.package.uri", clusterDefinition.Network.PdnsRecursorPackageUri);
             preprocessReader.Set("net.powerdns.recursor.hosts", GetPowerDnsHosts(clusterDefinition, nodeDefinition));
-            preprocessReader.Set("net.powerdns.port", NeonHostPorts.PowerDNS);
-            preprocessReader.Set("net.dynamicdns.port", NeonHostPorts.DynamicDNS);
 
             SetBashVariable(preprocessReader, "docker.version", clusterDefinition.Docker.PackageVersion);
 
