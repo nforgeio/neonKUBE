@@ -48,7 +48,7 @@ namespace Neon.Common
         // Built-in parsers.
 
         /// <summary>
-        /// Parses a <c>string</c>.
+        /// Parses a <see cref="string"/>.
         /// </summary>
         /// <param name="input">The input value.</param>
         /// <param name="value">Returns as the parsed value.</param>
@@ -65,7 +65,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Parses an <c>int</c>.
+        /// Parses an <see cref="int"/>.
         /// </summary>
         /// <param name="input">The input value.</param>
         /// <param name="value">Returns as the parsed value.</param>
@@ -89,7 +89,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Parses a <c>double</c>.
+        /// Parses a <see cref="double"/>.
         /// </summary>
         /// <param name="input">The input value.</param>
         /// <param name="value">Returns as the parsed value.</param>
@@ -113,7 +113,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Parses a boolean.
+        /// Parses a <see cref="bool"/>.
         /// </summary>
         /// <param name="input">The input value.</param>
         /// <param name="value">Returns as the parsed value.</param>
@@ -149,6 +149,104 @@ namespace Neon.Common
 
                     error = "Invalid boolean.";
                     return false;
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Parses a <see cref="TimeSpan"/>.
+        /// </summary>
+        /// <param name="input">The input value.</param>
+        /// <param name="value">Returns as the parsed value.</param>
+        /// <param name="error">Returns as the error message on failure.</param>
+        /// <returns>Returns <c>true</c> if the input value is valid.</returns>
+        private static bool TimeSpanParser(string input, out TimeSpan value, out string error)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input));
+
+            input = input.ToLowerInvariant();
+            value = TimeSpan.Zero;
+            error = null;
+
+            // First, try parsing a float value with optional unit suffix (defaults to seconds).
+
+            var units = (string)null;
+
+            if (input.EndsWith("ms", StringComparison.InvariantCultureIgnoreCase))
+            {
+                units = "ms";   // milliseconds
+            }
+            else if (input.EndsWith("s", StringComparison.InvariantCultureIgnoreCase))
+            {
+                units = "s";    // seconds
+            }
+            else if (input.EndsWith("m", StringComparison.InvariantCultureIgnoreCase))
+            {
+                units = "m";    // minutes
+            }
+            else if (input.EndsWith("h", StringComparison.InvariantCultureIgnoreCase))
+            {
+                units = "h";    // hours
+            }
+            else if (input.EndsWith("d", StringComparison.InvariantCultureIgnoreCase))
+            {
+                units = "d";    // days
+            }
+
+            if (units == null)
+            {
+                units = "s";
+            }
+            else
+            {
+                input = input.Substring(0, input.Length - units.Length);
+            }
+
+            if (!double.TryParse(input, NumberStyles.Any, CultureInfo.InvariantCulture, out var doubleValue))
+            {
+                goto tryStandard;
+            }
+
+            switch (units)
+            {
+                case "s":
+
+                    value = TimeSpan.FromSeconds(doubleValue);
+                    return true;
+
+                case "m":
+
+                    value = TimeSpan.FromMinutes(doubleValue);
+                    return true;
+
+                case "ms":
+
+                    value = TimeSpan.FromMilliseconds(doubleValue);
+                    return true;
+
+                case "h":
+
+                    value = TimeSpan.FromHours(doubleValue);
+                    return true;
+
+                case "d":
+
+                    value = TimeSpan.FromDays(doubleValue);
+                    return true;
+
+                default:
+
+                    throw new NotImplementedException($"Unexpected TimeSpan units [{units}].");
+            }
+
+            // Next, try to parse a standard TimeSpan string.
+
+        tryStandard:
+
+            if (TimeSpan.TryParse(input, CultureInfo.InvariantCulture, out value))
+            {
+                return true;
             }
 
             return true;
@@ -343,7 +441,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Attempts to parse an environment variable as a <c>string</c>, writting messages
+        /// Attempts to parse an environment variable as a <see cref="string"/>, writting messages
         /// to the associated logger if one was passed to the constructor.
         /// </summary>
         /// <param name="variable">The variable name.</param>
@@ -363,7 +461,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Attempts to parse an environment variable as an <c>int</c>, writting messages
+        /// Attempts to parse an environment variable as an <see cref="int"/>, writting messages
         /// to the associated logger if one was passed to the constructor.
         /// </summary>
         /// <param name="variable">The variable name.</param>
@@ -383,7 +481,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Attempts to parse an environment variable as an <c>double</c>, writting messages
+        /// Attempts to parse an environment variable as an <see cref="double"/>, writting messages
         /// to the associated logger if one was passed to the constructor.
         /// </summary>
         /// <param name="variable">The variable name.</param>
@@ -403,7 +501,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Attempts to parse an environment variable as a <c>bool</c>, writting messages
+        /// Attempts to parse an environment variable as a <see cref="bool"/>, writting messages
         /// to the associated logger if one was passed to the constructor.
         /// </summary>
         /// <param name="variable">The variable name.</param>
@@ -420,6 +518,26 @@ namespace Neon.Common
         public bool Get(string variable, bool defaultInput, bool required = false, Validator<bool> validator = null)
         {
             return Parse<bool>(variable, defaultInput.ToString(CultureInfo.InvariantCulture), BoolParser, required, validator);
+        }
+
+        /// <summary>
+        /// Attempts to parse an environment variable as a <see cref="TimeSpan"/>, writting messages
+        /// to the associated logger if one was passed to the constructor.
+        /// </summary>
+        /// <param name="variable">The variable name.</param>
+        /// <param name="defaultInput">The default value.</param>
+        /// <param name="required">Optionally specifies that the variable is required to exist.</param>
+        /// <param name="validator">
+        /// Optional validation function to be called to verify that the parsed variable
+        /// value is valid.  This should return <c>null</c> for valid values and an error
+        /// message for invalid ones.
+        /// </param>
+        /// <returns>The parsed value.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the variable does not exists and <paramref name="required"/>=<c>true</c>.</exception>
+        /// <exception cref="FormatException">Thrown if the variable could not be parsed or the <paramref name="validator"/> returned an error.</exception>
+        public TimeSpan Get(string variable, TimeSpan defaultInput, bool required = false, Validator<TimeSpan> validator = null)
+        {
+            return Parse<TimeSpan>(variable, defaultInput.TotalSeconds.ToString(CultureInfo.InvariantCulture) + "s", TimeSpanParser, required, validator);
         }
     }
 }

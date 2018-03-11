@@ -116,5 +116,34 @@ namespace TestCommon
             Assert.True(parser.Get(Var("EXISTS"), true));
             Assert.False(parser.Get(Var("EXISTS"), false));
         }
+
+        [Fact]
+        public void TimeSpan()
+        {
+            var parser = new EnvironmentParser();
+
+            Assert.Equal(System.TimeSpan.FromSeconds(5), parser.Get(Var("DOESNT_EXIST"), System.TimeSpan.FromSeconds(5)));
+
+            Environment.SetEnvironmentVariable(Var("EXISTS"), "10");
+            Assert.Equal(System.TimeSpan.FromSeconds(10), parser.Get(Var("EXISTS"), System.TimeSpan.FromSeconds(5)));
+
+            Environment.SetEnvironmentVariable(Var("EXISTS"), "20s");
+            Assert.Equal(System.TimeSpan.FromSeconds(20), parser.Get(Var("EXISTS"), System.TimeSpan.FromSeconds(5)));
+
+            Environment.SetEnvironmentVariable(Var("EXISTS"), "20ms");
+            Assert.Equal(System.TimeSpan.FromMilliseconds(20), parser.Get(Var("EXISTS"), System.TimeSpan.FromSeconds(5)));
+
+            Environment.SetEnvironmentVariable(Var("EXISTS"), "20m");
+            Assert.Equal(System.TimeSpan.FromMinutes(20), parser.Get(Var("EXISTS"), System.TimeSpan.FromSeconds(5)));
+
+            Environment.SetEnvironmentVariable(Var("EXISTS"), "20h");
+            Assert.Equal(System.TimeSpan.FromHours(20), parser.Get(Var("EXISTS"), System.TimeSpan.FromSeconds(5)));
+
+            Environment.SetEnvironmentVariable(Var("EXISTS"), "20d");
+            Assert.Equal(System.TimeSpan.FromDays(20), parser.Get(Var("EXISTS"), System.TimeSpan.FromSeconds(5)));
+
+            Environment.SetEnvironmentVariable(Var("EXISTS"), "20.5s");
+            Assert.Equal(System.TimeSpan.FromSeconds(20.5), parser.Get(Var("EXISTS"), System.TimeSpan.FromSeconds(5)));
+        }
     }
 }
