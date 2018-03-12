@@ -611,7 +611,7 @@ cat /etc/powerdns/recursor.local.conf >> /etc/powerdns/recursor.conf
 # Set PowerDNS related config file permissions and then restart the 
 # recursor to pick up the new config.
 
-chmod -R 775 /etc/powerdns
+chmod -R 774 /etc/powerdns
 
 systemctl start pdns-recursor
 sleep 5		# Give the service some time to start.
@@ -623,6 +623,73 @@ sleep 5		# Give the service some time to start.
 echo "" > /etc/resolvconf/interface-order
 echo "nameserver ${NEON_NODE_IP}" > /etc/resolvconf/resolv.conf.d/base
 resolvconf -u
+
+#------------------------------------------------------------------------------
+# Configure the [neon-dns-loader] service on manager nodes.  This Service
+# watches for a file created by the [neon-dns] Docker service indicating 
+# that the PowerDNS Recursor needs to reload the hosts file.
+
+cat <<EOF > /usr/local/bin/neon-dns-loader 
+#!/bin/bash
+#------------------------------------------------------------------------------
+# FILE:         neon-dns-loader
+# CONTRIBUTOR:  Jeff Lill
+# COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+#
+# This script runs as the local [neon-dns-loader] service which is responsible
+# for watching for the presence of a file created by the [neon-dns] Docker
+# service, indicating that the PowerDNS Recursor needs to reload this hosts
+# file.
+#
+# The signal file is located on the RAM drive at: /dev/shm/neon-dns/reload
+
+signal_folder=/dev/shm/neon-dns
+signal_path=\$signal_folder
+sleep_seconds=1
+
+echo "[INFO] Starting: [sleep_time=\${sleep_seconds} seconds]"
+
+mkdir -p \$signal_folder
+
+while true
+do
+    if [ -f \$signal_path ]; then
+
+        # Delete the signal file.
+
+        rm \$signal_path
+
+        # Signal PowerDNS Recursor.
+
+        rec_control reload_zones
+    fi
+
+    sleep \${sleep_seconds}
+done
+EOF
+
+cat <<EOF > /lib/systemd/system/neon-dns-loader.service
+# Used by [neon-dns] to have PowerDNS Recursor reload host entries.
+
+[Unit]
+Description=neon-dns-loader
+Documentation=
+After=
+
+[Service]
+ExecStart=/usr/local/bin/neon-dns-loader
+ExecReload=/bin/kill -s HUP \$MAINPID
+Restart=always
+
+[Install]
+WantedBy=multi-user.target
+EOF
+
+chmod -R 744 /usr/local/bin/neon-dns-loader
+
+systemctl enable neon-dns-loader
+systemctl daemon-reload
+systemctl restart neon-dns-loader
 
 #------------------------------------------------------------------------------
 # Install Ansible related packages so common playbooks (like Docker related ones)
