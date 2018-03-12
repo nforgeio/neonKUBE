@@ -366,6 +366,10 @@ namespace NeonCli
             // Format the network upstream nameservers as semicolon separated
             // to be compatible with the PowerDNS Recursor [forward-zones-recurse]
             // configuration setting.
+            //
+            // Note that manager nodes will recurse to upstream (external) DNS 
+            // servers and workers/pets will recurse to the managers so they can
+            // dynamically pickup cluster DNS changes.
 
             if (clusterDefinition.Network?.Nameservers == null)
             {
@@ -379,14 +383,29 @@ namespace NeonCli
 
             var nameservers = string.Empty;
 
-            for (int i = 0; i < clusterDefinition.Network.Nameservers.Length; i++)
+            if (nodeDefinition.Role == NodeRole.Manager)
             {
-                if (i > 0)
+                for (int i = 0; i < clusterDefinition.Network.Nameservers.Length; i++)
                 {
-                    nameservers += ";";
-                }
+                    if (i > 0)
+                    {
+                        nameservers += ";";
+                    }
 
-                nameservers += clusterDefinition.Network.Nameservers[i].Trim();
+                    nameservers += clusterDefinition.Network.Nameservers[i].Trim();
+                }
+            }
+            else
+            {
+                foreach (var manager in clusterDefinition.SortedManagers)
+                {
+                    if (nameservers.Length > 0)
+                    {
+                        nameservers += ";";
+                    }
+
+                    nameservers += manager.PrivateAddress;
+                }
             }
 
             // Set the variables.
