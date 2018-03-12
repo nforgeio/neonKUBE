@@ -29,6 +29,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
 using Neon.Net;
+using Neon.Retry;
 using Neon.Time;
 
 namespace NeonCli
@@ -1468,7 +1469,25 @@ $@"docker login \
 
                         foreach (var labelDefinition in labelDefinitions)
                         {
-                            manager.DockerCommand("docker node update --label-add", labelDefinition, node.Name);
+                            // We occasionaly see "out of order" errors from labeling operations.
+                            // These seem to be transient, so we're going to retry a few times
+                            // before actually giving up.
+
+                            var retry = new LinearRetryPolicy(e => e is NeonClusterException, retryInterval: TimeSpan.FromSeconds(2));
+
+                            retry.InvokeAsync(
+                                async () =>
+                                {
+                                    var response = manager.DockerCommand(RunOptions.Defaults & ~RunOptions.FaultOnError, "docker node update --label-add", labelDefinition, node.Name);
+
+                                    if (response.ExitCode != 0)
+                                    {
+                                        throw new NeonClusterException(response.ErrorSummary);
+                                    }
+
+                                    await Task.CompletedTask;
+
+                                }).Wait();
                         }
 
                         node.Status = "labeling";
