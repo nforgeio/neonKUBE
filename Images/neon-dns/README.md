@@ -12,7 +12,9 @@ The **neon-dns** service integrates with PowerDNS installed in a neonCLUSTER to 
 
 # Environment Variables
 
-* **POLL_INTERVAL** (*optional*) - specifies the interval in seconds the service will use when polling Consul for DNS changes.  This defaults to **15 seconds**.
+* **POLL_INTERVAL** (*optional*) - specifies the interval used when polling Consul for DNS changes.  This defaults to **15 seconds**.
+
+* **VERIFY_INTERVAL** (*optional*) - specifies the interval used verify that the manager has the correct hosts even when no changes were detected from Consul.  This defaults to **5 minutes**.
 
 * **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
@@ -26,6 +28,7 @@ docker service create \
     --detach=false \
     --mount type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true \
     --env POLL_INTERVAL=15s \
+    --env VERIFY_INTERVAL=5m \
     --env LOG_LEVEL=INFO \
     --constraint node.role==manager \
     --mode global \

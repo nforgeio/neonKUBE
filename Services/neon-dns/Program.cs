@@ -24,6 +24,7 @@ using Neon.Diagnostics;
 using Neon.Docker;
 using Neon.Net;
 using Neon.Retry;
+using Neon.Time;
 
 namespace NeonDnsHealth
 {
@@ -34,13 +35,14 @@ namespace NeonDnsHealth
     /// </summary>
     public static class Program
     {
-        private const string serviceName       = "neon-dns";
-        private const string powerDnsHostsPath = "/etc/powerdns/hosts";
+        private const string serviceName = "neon-dns";
 
+        private static string               powerDnsHostsPath = "/etc/powerdns/hosts";
         private static ProcessTerminator    terminator;
         private static INeonLogger          log;
         private static ConsulClient         consul;
         private static TimeSpan             pollInterval;
+        private static TimeSpan             verifyInterval;
 
         /// <summary>
         /// Application entry point.
@@ -57,7 +59,8 @@ namespace NeonDnsHealth
 
             var environment = new EnvironmentParser(log);
 
-            pollInterval = environment.Get("POLL_INTERVAL", TimeSpan.FromSeconds(15), validator: v => v > TimeSpan.Zero);
+            pollInterval   = environment.Get("POLL_INTERVAL", TimeSpan.FromSeconds(15), validator: v => v > TimeSpan.Zero);
+            verifyInterval = environment.Get("VERIFY_INTERVAL", TimeSpan.FromMinutes(5), validator: v => v > TimeSpan.Zero);
 
             // Create process terminator that handles process termination signals.
 
@@ -70,6 +73,32 @@ namespace NeonDnsHealth
                 if (NeonHelper.IsDevWorkstation)
                 {
                     NeonClusterHelper.OpenRemoteCluster();
+
+                    // For testing and development, we're going to write a test
+                    // hosts file to [%NF_TEMP\neon-dns-hosts.txt] so we can see
+                    // what's happening outside of a cluster.
+
+                    powerDnsHostsPath = Environment.ExpandEnvironmentVariables("%NF_TEMP%\\neon-dns-hosts.txt");
+
+                    File.WriteAllText(powerDnsHostsPath,
+@"# PowerDNS Recursor authoritatively answers for [*.cluster] hostnames.
+# on the local node using these mappings.
+
+10.0.0.30       neon-consul.cluster
+
+# Internal cluster Vault mappings:
+
+10.0.0.30       neon-vault.cluster
+10.0.0.30       manager-0.neon-vault.cluster
+
+# Internal cluster registry cache related mappings:
+
+10.0.0.30       manager-0.neon-registry-cache.cluster
+
+# Internal cluster log pipeline related mappings:
+
+10.0.0.30       neon-log-esdata.cluster
+");
                 }
                 else
                 {
@@ -96,7 +125,7 @@ namespace NeonDnsHealth
 
                 // Ensure that the [/etc/powerdns/hosts] file was mapped into the container.
 
-                if (File.Exists(powerDnsHostsPath))
+                if (!File.Exists(powerDnsHostsPath))
                 {
                     log.LogCritical(() => $"[neon-dns] service cannot locate [{powerDnsHostsPath}] on the host manager.  Was this mounted to the container as read/write?");
                     Program.Exit(1);
@@ -165,8 +194,9 @@ namespace NeonDnsHealth
         /// <returns>The <see cref="Task"/>.</returns>
         private static async Task RunAsync()
         {
-            var localMD5  = string.Empty;
-            var remoteMD5 = "[unknown]";
+            var localMD5    = string.Empty;
+            var remoteMD5   = "[unknown]";
+            var verifyTimer = new PolledTimer(verifyInterval, autoReset: true);
 
             while (true)
             {
@@ -191,19 +221,29 @@ namespace NeonDnsHealth
                         remoteMD5 = "[unknown]";
                     }
 
-                    if (localMD5 == remoteMD5)
+                    var verify = verifyTimer.HasFired;
+
+                    if (!verify && localMD5 == remoteMD5)
                     {
                         log.LogDebug(() => "DNS answers are unchanged.");
                     }
                     else
                     {
-                        log.LogDebug(() => "DNS answers have changed.");
+                        if (localMD5 == remoteMD5)
+                        {
+                            log.LogDebug(() => "DNS answers have not changed but we're going to verify that we have the correct hosts anyway.");
+                        }
+                        else
+                        {
+                            log.LogDebug(() => "DNS answers have changed.");
+                        }
+
                         log.LogDebug(() => "Fetching DNS answers.");
 
                         try
                         {
                             var hostsTxt = await consul.KV.GetString(NeonClusterConst.DnsConsulHostsKey, terminator.CancellationToken);
-                            var marker   = "# ---DYNAMIC-HOSTS---";
+                            var marker   = "# -------- NEON-DNS --------";
 
                             // We have the host entries from Consul.  We need to add these onto the
                             // end [/etc/powserdns/hosts], replacing any host entries written during
@@ -228,12 +268,21 @@ namespace NeonDnsHealth
                                 {
                                     using (var stream = new FileStream(powerDnsHostsPath, FileMode.Open, FileAccess.ReadWrite))
                                     {
+                                        // Read a copy of the hosts file as bytes so we can compare
+                                        // the old version with the new one generated below for changes.
+
+                                        var orgHostBytes = stream.ReadToEnd();
+
+                                        stream.Position = 0;
+
+                                        // Generate the new hosts file.
+
                                         var sbHosts = new StringBuilder();
 
                                         // Read the hosts file up to but not including the special marker
                                         // line (if it's present).
 
-                                        using (var reader = new StreamReader(stream))
+                                        using (var reader = new StreamReader(stream, Encoding.UTF8, true, 32 * 1024, leaveOpen: true))
                                         {
                                             foreach (var line in reader.Lines())
                                             {
@@ -242,31 +291,55 @@ namespace NeonDnsHealth
                                                     break;
                                                 }
 
-                                                sbHosts.AppendLineLinux(line);
+                                                sbHosts.AppendLine(line);
                                             }
                                         }
+
+                                        // Strip any trailing whitespace from the hosts file so we'll
+                                        // be able to leave a nice blank line between the end of the
+                                        // original file and the special marker line.
+
+                                        var text = sbHosts.ToString().TrimEnd();
+
+                                        sbHosts.Clear();
+                                        sbHosts.AppendLine(text);
 
                                         // Append the marker line, followed by the dynamic host
                                         // entries we downloaded from Consul.
 
-                                        sbHosts.AppendLineLinux(marker);
-                                        sbHosts.AppendLineLinux();
+                                        sbHosts.AppendLine();
+                                        sbHosts.AppendLine(marker);
+                                        sbHosts.AppendLine();
                                         sbHosts.Append(hostsTxt);
 
-                                        // Update the hosts file, taking extra care to ensure that 
-                                        // we're using only Linux style line endings.
+                                        // Generate the new host file bytes, taking care to ensure that
+                                        // we're using Linux style line endings and then update the
+                                        // hosts file if anything changed.
 
-                                        var hosts = sbHosts.ToString();
+                                        var hostsText    = NeonHelper.ToLinuxLineEndings(sbHosts.ToString());
+                                        var newHostBytes = Encoding.UTF8.GetBytes(hostsText);
 
-                                        hosts = NeonHelper.ToLinuxLineEndings(hosts);
+                                        if (NeonHelper.ArrayEquals(orgHostBytes, newHostBytes))
+                                        {
+                                            log.LogDebug(() => $"[{powerDnsHostsPath}] file is up-to-date.");
+                                        }
+                                        else
+                                        {
+                                            log.LogDebug(() => $"[{powerDnsHostsPath}] is being updated.");
 
-                                        stream.Position = 0;
-                                        stream.SetLength(0);
-                                        stream.Write(Encoding.UTF8.GetBytes(hosts));
+                                            stream.Position = 0;
+                                            stream.SetLength(0);
+                                            stream.Write(newHostBytes);
+                                        }
                                     }
 
                                     await Task.CompletedTask;
                                 });
+
+                            // We've successfully synchronized the local hosts file with
+                            // the Consul DNS settings.
+
+                            localMD5 = remoteMD5;
                         }
                         catch (KeyNotFoundException)
                         {
