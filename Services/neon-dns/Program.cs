@@ -283,7 +283,7 @@ namespace NeonDnsHealth
                             // file while we're trying to write it.  We're going to treat these as a
                             // transient errors and retry.
 
-                            var retry = new LinearRetryPolicy(e => e is IOException, maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(1));
+                            var retry = new LinearRetryPolicy(typeof(IOException), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(1));
 
                             await retry.InvokeAsync(
                                 async () =>

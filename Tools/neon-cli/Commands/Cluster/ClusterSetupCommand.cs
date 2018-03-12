@@ -1521,6 +1521,8 @@ $@"docker login \
                     {
                         images.Add(Program.ResolveDockerImage(cluster.Definition.ClusterManagerImage));
                         images.Add(Program.ResolveDockerImage(cluster.Definition.ProxyManagerImage));
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.DnsImage));
+                        images.Add(Program.ResolveDockerImage(cluster.Definition.DnsMonImage));
                     }
 
                     if (cluster.Definition.Log.Enabled)

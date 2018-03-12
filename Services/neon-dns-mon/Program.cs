@@ -164,11 +164,11 @@ namespace NeonDnsHealth
 
                     log.LogDebug(() => $"Cluster has [{clusterDefinition.NodeDefinitions.Count}] nodes.");
 
-                    // Add the [NAME.node.cluster] definitions for each cluster node.
+                    // Add the [NAME.cluster] definitions for each cluster node.
 
                     foreach (var node in clusterDefinition.Nodes)
                     {
-                        hostAddresses.Add($"{node.Name}.node.cluster", IPAddress.Parse(node.PrivateAddress));
+                        hostAddresses.Add($"{node.Name}.cluster", IPAddress.Parse(node.PrivateAddress));
                     }
 
                     // Read the DNS target definitions from Consul.

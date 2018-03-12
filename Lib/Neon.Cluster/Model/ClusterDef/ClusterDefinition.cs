@@ -50,6 +50,8 @@ namespace Neon.Cluster
         private const string        defaultProxyVaultImage     = "neoncluster/neon-proxy-vault:latest";
         private const string        defaultProxyManagerImage   = "neoncluster/neon-proxy-manager:latest";
         private const string        defaultClusterManagerImage = "neoncluster/neon-cluster-manager:latest";
+        private const string        defaultDnsImage            = "neoncluster/neon-dns:latest";
+        private const string        defaultDnsMonImage         = "neoncluster/neon-dns-mon:latest";
         private const string        defaultDrivePrefix         = "sd";
         private const int           defaultStepDelaySeconds    = 20;
 
@@ -462,6 +464,22 @@ namespace Neon.Cluster
         public string ClusterManagerImage { get; set; } = defaultClusterManagerImage;
 
         /// <summary>
+        /// The Docker image to be used to provision the <b>neon-dns</b> service.
+        /// This defaults to <b>neoncluster/neon-dns:latest</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "DnsImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(defaultDnsImage)]
+        public string DnsImage { get; set; } = defaultDnsImage;
+
+        /// <summary>
+        /// The Docker image to be used to provision the <b>neon-dns-mon</b> service.
+        /// This defaults to <b>neoncluster/neon-dns-mon:latest</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "DnsMonImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(defaultDnsMonImage)]
+        public string DnsMonImage { get; set; } = defaultDnsMonImage;
+
+        /// <summary>
         /// <para>
         /// Specifies the maximum delay to be added at stategic points during 
         /// cluster setup to mitigate potential problems when mutiple cluster nodes
@@ -663,6 +681,8 @@ namespace Neon.Cluster
             ProxyVaultImage     = ProxyVaultImage ?? defaultProxyVaultImage;
             ProxyManagerImage   = ProxyManagerImage ?? defaultProxyManagerImage;
             ClusterManagerImage = ClusterManagerImage ?? defaultClusterManagerImage;
+            DnsImage            = DnsImage ?? defaultDnsImage;
+            DnsMonImage         = DnsMonImage ?? defaultDnsMonImage;
 
             Network.Validate(this);
             Hosting.Validate(this);

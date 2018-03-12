@@ -60,7 +60,7 @@ apt-get install -yq jq aptitude gdebi-core
 
 # Configure the host name.
 #
-# NOTE: this assumes that the host name was originally configured 
+# NOTE: This assumes that the host name was originally configured 
 #       configured to be "ubuntu" as described in:
 #
 #       [Ubuntu-16.04 neonCLUSTER Template.docx]
@@ -546,7 +546,7 @@ cp /etc/powerdns/recursor.conf /etc/powerdns/recursor.conf.backup
 # Generate [/etc/powerdns/hosts] file that the PowerDNS Recursor
 # will use to authoritatively answer local cluster questions.  Note
 # that the $<net.powerdns.recursor.hosts> macro is initialized to 
-# the host entries for this specific node.
+# the host entries customized for this specific node.
 
 cat <<EOF > /etc/powerdns/hosts
 $<net.powerdns.recursor.hosts>
@@ -644,7 +644,7 @@ cat <<EOF > /usr/local/bin/neon-dns-loader
 # The signal file is located on the RAM drive at: /dev/shm/neon-dns/reload
 
 signal_folder=/dev/shm/neon-dns
-signal_path=\$signal_folder
+signal_path=\$signal_folder/reload
 sleep_seconds=1
 
 echo "[INFO] Starting: [sleep_time=\${sleep_seconds} seconds]"
@@ -661,7 +661,7 @@ do
 
         # Signal PowerDNS Recursor.
 
-        rec_control reload_zones
+        rec_control reload-zones
     fi
 
     sleep \${sleep_seconds}

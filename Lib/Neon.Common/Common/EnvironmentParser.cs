@@ -343,7 +343,7 @@ namespace Neon.Common
         {
             if (log != null)
             {
-                log.LogInfo(() => $"Setting: {variable}={value}");
+                log.LogInfo(() => $"{variable}={value}");
             }
         }
 

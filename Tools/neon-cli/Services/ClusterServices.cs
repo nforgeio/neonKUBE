@@ -33,7 +33,8 @@ namespace NeonCli
     /// <summary>
     /// Handles the provisioning of the global cluster proxy services including: 
     /// <b>neon-cluster-manager</b>, <b>neon-proxy-manager</b>,
-    /// <b>neon-proxy-public</b> and <b>neon-proxy-private</b>, and the
+    /// <b>neon-proxy-public</b> and <b>neon-proxy-private</b>,
+    /// <b>neon-dns</b>, <b>neon-dns-mon</b> as well as the
     /// <b>neon-proxy-public-bridge</b> and <b>neon-proxy-private-bridge</b>
     /// containers on any pet nodes.
     /// </summary>
@@ -216,6 +217,8 @@ namespace NeonCli
                         }
                     }
 
+                    // Deploy: neon-proxy-public
+
                     firstManager.Status = "start: neon-proxy-public";
 
                     response = firstManager.DockerCommand(
@@ -241,6 +244,8 @@ namespace NeonCli
                         manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-public.sh"), response.BashCommand);
                     }
 
+                    // Deploy: neon-proxy-private
+
                     firstManager.Status = "start: neon-proxy-private";
 
                     response = firstManager.DockerCommand(
@@ -264,6 +269,50 @@ namespace NeonCli
                     foreach (var manager in cluster.Managers)
                     {
                         manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-private.sh"), response.BashCommand);
+                    }
+
+                    // Deploy: neon-dns
+
+                    firstManager.Status = "start: neon-dns";
+
+                    response = firstManager.DockerCommand(
+                        "docker service create",
+                            "--name", "neon-dns",
+                            "--detach=false",
+                            "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
+                            "--mount", "type=bind,src=/etc/powerdns/hosts,dst=/etc/powerdns/hosts",
+                            "--mount", "type=bind,src=/dev/shm/neon-dns,dst=/neon-dns",
+                            "--env", "POLL_INTERVAL=15s",
+                            "--env", "VERIFY_INTERVAL=5m",
+                            "--env", "LOG_LEVEL=INFO",
+                            "--constraint", "node.role==manager",
+                            "--mode", "global",
+                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
+                            Program.ResolveDockerImage(cluster.Definition.DnsImage));
+
+                    foreach (var manager in cluster.Managers)
+                    {
+                        manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-dns.sh"), response.BashCommand);
+                    }
+
+                    // Deploy: neon-dns-mon
+
+                    firstManager.Status = "start: neon-dns-mon";
+
+                    response = firstManager.DockerCommand(
+                        "docker service create",
+                            "--name", "neon-dns-mon",
+                            "--detach=false",
+                            "--env", "POLL_INTERVAL=15s",
+                            "--env", "LOG_LEVEL=INFO",
+                            "--constraint", "node.role==manager",
+                            "--replicas", "1",
+                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
+                            Program.ResolveDockerImage(cluster.Definition.DnsMonImage));
+
+                    foreach (var manager in cluster.Managers)
+                    {
+                        manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-dns-mon.sh"), response.BashCommand);
                     }
 
                     firstManager.Status = string.Empty;
