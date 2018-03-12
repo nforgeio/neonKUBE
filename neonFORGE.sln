@@ -205,7 +205,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "registry", "registry", "{D6
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-vegomatic", "Services\neon-vegomatic\neon-vegomatic.csproj", "{CCE84513-2514-4158-ACF5-0477EA74AD9F}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "neon-dns-health", "Services\neon-dns-health\neon-dns-health.csproj", "{7D09D2A7-299E-4693-A547-064879F3B42B}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-dns-mon", "Services\neon-dns-mon\neon-dns-mon.csproj", "{7D09D2A7-299E-4693-A547-064879F3B42B}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

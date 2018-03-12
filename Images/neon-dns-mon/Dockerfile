@@ -3,11 +3,11 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# .NET Core based image that implements the [neon-dns-health].
+# .NET Core based image that implements the [neon-dns-mon].
 #
 # ARGUMENTS:
 #
-#       APPNAME     - Name of the application binary/script (e.g "neon-dns-health")
+#       APPNAME     - Name of the application binary/script (e.g "neon-dns-mon")
 #                     This makes it easier to clone and reuse the Dockerfile.
 
 FROM        neoncluster/dotnet:2-runtime

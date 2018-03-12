@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the neonCLUSTER [neon-dns-health] image.
+# Builds the neonCLUSTER [neon-dns-mon] image.
 #
 # Usage: powershell -file REGISTRY TAG
 
@@ -15,10 +15,10 @@ param
 
 "   "
 "======================================="
-"* NEON-DNS-HEALTH:" + $tag
+"* NEON-DNS-MON:" + $tag
 "======================================="
 
-$appname = "neon-dns-health"
+$appname = "neon-dns-mon"
 
 # Build and publish the app to a local [bin] folder.
 

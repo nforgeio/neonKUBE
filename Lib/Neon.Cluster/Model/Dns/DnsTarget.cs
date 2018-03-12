@@ -21,7 +21,7 @@ namespace Neon.Cluster
 {
     /// <summary>
     /// Describes a DNS target domain to be served dynamically by the the neonCLUSTER 
-    /// Dynamic DNS implementation.  These records are used by the <b>neon-dns-health</b> 
+    /// Dynamic DNS implementation.  These records are used by the <b>neon-dns-mon</b> 
     /// service to persist the <see cref="DnsAnswer"/> records to Consul for the
     /// healthy endpoints.
     /// </summary>

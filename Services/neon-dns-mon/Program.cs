@@ -28,13 +28,13 @@ using Neon.Net;
 namespace NeonDnsHealth
 {
     /// <summary>
-    /// Implements the <b>neon-dns-health</b> service.  See 
-    /// <a href="https://hub.docker.com/r/neoncluster/neon-dns-health/">neoncluster/neon-dns-health</a>
+    /// Implements the <b>neon-dns-mon</b> service.  See 
+    /// <a href="https://hub.docker.com/r/neoncluster/neon-dns-mon/">neoncluster/neon-dns-mon</a>
     /// for more information.
     /// </summary>
     public static class Program
     {
-        private const string serviceName = "neon-dns-health";
+        private const string serviceName = "neon-dns-mon";
 
         private static ProcessTerminator    terminator;
         private static INeonLogger          log;

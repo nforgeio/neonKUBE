@@ -87,16 +87,16 @@
     <Content Include="neon-dns\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <Content Include="neon-dns-health\.dockerignore">
+    <Content Include="neon-dns-mon\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
-    <None Include="neon-dns-health\build.ps1" />
-    <None Include="neon-dns-health\docker-entrypoint.sh" />
-    <None Include="neon-dns-health\Dockerfile">
+    <None Include="neon-dns-mon\build.ps1" />
+    <None Include="neon-dns-mon\docker-entrypoint.sh" />
+    <None Include="neon-dns-mon\Dockerfile">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Include="neon-dns-health\publish.ps1" />
-    <None Include="neon-dns-health\README.md" />
+    <None Include="neon-dns-mon\publish.ps1" />
+    <None Include="neon-dns-mon\README.md" />
     <None Include="neon-dns\build.ps1" />
     <None Include="neon-dns\docker-entrypoint.sh" />
     <None Include="neon-dns\Dockerfile">

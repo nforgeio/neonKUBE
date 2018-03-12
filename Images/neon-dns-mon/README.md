@@ -8,7 +8,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Description
 
-The **neon-dns-health** service integrates with **neon-dns** and PowerDNS installed in a neonCLUSTER to provide dynamic DNS capabilities.
+The **neon-dns-mon** service integrates with **neon-dns** and PowerDNS installed in a neonCLUSTER to provide dynamic DNS capabilities.
 
 # Environment Variables
 
@@ -18,18 +18,18 @@ The **neon-dns-health** service integrates with **neon-dns** and PowerDNS instal
 
 # Deployment
 
-**neon-dns-health** service will be deployed automatically as a single replica by **neon-cli** during cluster setup using a command like:
+**neon-dns-mon** service will be deployed automatically as a single replica by **neon-cli** during cluster setup using a command like:
 
 ````
 docker service create \
-    --name neon-dns-health \
+    --name neon-dns-mon \
     --detach=false \
     --env LOG_LEVEL=INFO \
     --env POLL_INTERVAL=15s \
     --constraint node.role==manager \
     --replicas 1 \
     --restart-delay 10s \
-    neoncluster/neon-dns-health
+    neoncluster/neon-dns-mon
 ````
 &nbsp;
 **NOTE:** This service may be deployed anywhere on the cluster but we constrain it to manager nodes as a convention.

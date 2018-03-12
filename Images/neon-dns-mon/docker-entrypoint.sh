@@ -5,7 +5,7 @@
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
 # Loads the Docker host node environment variables before launching the 
-# [neon-dns-health] .NET service.
+# [neon-dns-mon] .NET service.
 
 # Load the Docker host node environment variables if present.
 
@@ -15,4 +15,4 @@ fi
 
 # Launch the service.
 
-neon-dns-health
+neon-dns-mon
