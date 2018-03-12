@@ -554,18 +554,24 @@ namespace Consul
         /// <param name="keyPrefix">The path prefix.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The items.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the <paramref name="keyPrefix"/> does not exist.</exception>
         public static async Task<IEnumerable<T>> List<T>(this IKVEndpoint kv, string keyPrefix, CancellationToken cancellationToken = default)
             where T : new()
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyPrefix));
 
-            var response = await kv.List(keyPrefix, cancellationToken);
-            var rawItems = response.Response;
-            var items    = new List<T>(rawItems.Length);
+            var response = (await kv.List(keyPrefix, cancellationToken)).Response;
 
-            foreach (var rawItem in rawItems)
+            if (response == null)
             {
-                items.Add(NeonHelper.JsonDeserialize<T>(Encoding.UTF8.GetString(rawItem.Value)));
+                throw new KeyNotFoundException(keyPrefix);
+            }
+
+            var items = new List<T>(response.Length);
+
+            foreach (var item in response)
+            {
+                items.Add(NeonHelper.JsonDeserialize<T>(Encoding.UTF8.GetString(item.Value)));
             }
 
             return items;
