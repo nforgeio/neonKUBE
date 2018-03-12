@@ -21,20 +21,73 @@ namespace Neon.Retry
         private Func<Exception, bool> transientDetector;
 
         /// <summary>
-        /// Constructor.
+        /// Constructs the retry policy with a specific transitent detection function.d
         /// </summary>
-        /// <param name="transientDetector">The function that determines whether an exception is transient (see <see cref="TransientDetector"/>).</param>
+        /// <param name="transientDetector">
+        /// A function that determines whether an exception is transient 
+        /// (see <see cref="TransientDetector"/>).  You can pass <c>null</c>
+        /// if all exceptions are to be considered to be transient.
+        /// </param>
         /// <param name="maxAttempts">The maximum number of times an action should be retried (defaults to <b>5</b>.</param>
         /// <param name="retryInterval">The time interval between retry attempts (defaults to <b>1 second</b>).</param>
-        public LinearRetryPolicy(Func<Exception, bool> transientDetector, int maxAttempts = 5, TimeSpan? retryInterval = null)
+        public LinearRetryPolicy(Func<Exception, bool> transientDetector = null, int maxAttempts = 5, TimeSpan? retryInterval = null)
         {
-            Covenant.Requires<ArgumentNullException>(transientDetector != null);
             Covenant.Requires<ArgumentException>(maxAttempts > 0);
             Covenant.Requires<ArgumentException>(retryInterval == null || retryInterval >= TimeSpan.Zero);
 
-            this.transientDetector = transientDetector;
+            this.transientDetector = transientDetector ?? (e => true);
             this.MaxAttempts       = maxAttempts;
             this.RetryInterval     = retryInterval ?? TimeSpan.FromSeconds(1);
+        }
+
+        /// <summary>
+        /// Constructs the retry policy to handle a specific exception type as transient.
+        /// </summary>
+        /// <param name="exceptionType">The exception type to be considered to be transient.</param>
+        /// <param name="maxAttempts">The maximum number of times an action should be retried (defaults to <b>5</b>.</param>
+        /// <param name="retryInterval">The time interval between retry attempts (defaults to <b>1 second</b>).</param>
+        public LinearRetryPolicy(Type exceptionType, int maxAttempts = 5, TimeSpan?retryInterval = null)
+            : this
+            (
+                e => e != null && exceptionType == e.GetType(),
+                maxAttempts,
+                retryInterval
+            )
+        {
+        }
+
+        /// <summary>
+        /// Constructs the retry policy to handle a multiple exception types as transient.
+        /// </summary>
+        /// <param name="exceptionTypes">The exception type to be considered to be transient.</param>
+        /// <param name="maxAttempts">The maximum number of times an action should be retried (defaults to <b>5</b>.</param>
+        /// <param name="retryInterval">The time interval between retry attempts (defaults to <b>1 second</b>).</param>
+        public LinearRetryPolicy(Type[] exceptionTypes, int maxAttempts = 5, TimeSpan? retryInterval = null)
+            : this
+            (
+                e =>
+                {
+                    if (exceptionTypes == null)
+                    {
+                        return false;
+                    }
+
+                    var exceptionType = e.GetType();
+
+                    foreach (var type in exceptionTypes)
+                    {
+                        if (type == exceptionType)
+                        {
+                            return true;
+                        }
+                    }
+
+                    return false;
+                },
+                maxAttempts,
+                retryInterval
+            )
+        {
         }
 
         /// <summary>
