@@ -38,6 +38,7 @@ namespace NeonDnsHealth
         private const string serviceName = "neon-dns";
 
         private static string               powerDnsHostsPath = "/etc/powerdns/hosts";
+        private static string               reloadSignalPath  = "/neon-dns/reload";
         private static ProcessTerminator    terminator;
         private static INeonLogger          log;
         private static ConsulClient         consul;
@@ -99,6 +100,11 @@ namespace NeonDnsHealth
 
 10.0.0.30       neon-log-esdata.cluster
 ");
+                    // We're also going to create a temporary folder for the reload signal.
+
+                    reloadSignalPath = Environment.ExpandEnvironmentVariables("%NF_TEMP%\\neon-dns\\reload");
+
+                    Directory.CreateDirectory(Path.GetDirectoryName(reloadSignalPath));
                 }
                 else
                 {
@@ -223,6 +229,22 @@ namespace NeonDnsHealth
 
                     var verify = verifyTimer.HasFired;
 
+                    if (verify)
+                    {
+                        // Under normal circumstances, we should never see the reload signal file
+                        // here because the [neon-dns-loader] service should have deleted it after
+                        // handling the last change signal.
+                        //
+                        // This probably means that [neon-dns-loader] is not running or if this service
+                        // is configured with POLL_INTERVAL being so short that [neon-dns-loader]
+                        // hasn't had a chance to handle the previous signal.
+
+                        if (File.Exists(reloadSignalPath))
+                        {
+                            log.LogWarn("The [neon-dns-loader] service doesn't appear to be running because the reload signal file is present.");
+                        }
+                    }
+
                     if (!verify && localMD5 == remoteMD5)
                     {
                         log.LogDebug(() => "DNS answers are unchanged.");
@@ -330,6 +352,11 @@ namespace NeonDnsHealth
                                             stream.Position = 0;
                                             stream.SetLength(0);
                                             stream.Write(newHostBytes);
+
+                                            // Signal to the local [neon-dns-loader] systemd service that it needs
+                                            // to have PowerDNS Recursor reload the hosts file.
+
+                                            File.WriteAllText(reloadSignalPath, "reload now");
                                         }
                                     }
 
