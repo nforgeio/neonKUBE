@@ -1071,7 +1071,7 @@ namespace Neon.Cluster
                         }
                         else
                         {
-                            throw new NeonClusterException($"[{e.GetType().Name}]: Cannot connect to cluster.", e);
+                            throw new NeonClusterException(NeonHelper.ExceptionError(e, includeInner: true));
                         }
                     }
                 }
@@ -1107,7 +1107,7 @@ namespace Neon.Cluster
                     }
                     else
                     {
-                        throw new NeonClusterException($"[{e.GetType().Name}]: Cannot connect to cluster.", e);
+                        throw new NeonClusterException(NeonHelper.ExceptionError(e, includeInner: true));
                     }
                 }
             }
