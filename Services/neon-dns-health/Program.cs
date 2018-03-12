@@ -173,7 +173,19 @@ namespace NeonDnsHealth
 
                     // Read the DNS target definitions from Consul.
 
-                    var targets = await consul.KV.List<DnsTarget>(NeonClusterConst.DnsConsulTargetsKey + "/", terminator.CancellationToken);
+                    IEnumerable<DnsTarget> targets;
+
+                    try
+                    {
+                        targets = await consul.KV.List<DnsTarget>(NeonClusterConst.DnsConsulTargetsKey + "/", terminator.CancellationToken);
+                    }
+                    catch (KeyNotFoundException)
+                    {
+                        // The targets key wasn't found in Consul, so we're
+                        // going to assume that there are no targets.
+
+                        targets = new List<DnsTarget>();
+                    }
 
                     log.LogDebug(() => $"Consul has [{targets.Count()}] DNS targets.");
 
@@ -187,7 +199,7 @@ namespace NeonDnsHealth
                     {
                         foreach (var address in host.Value.OrderBy(a => a.ToString()))
                         {
-                            sbHosts.AppendLineLinux($"{address,-15} {host}");
+                            sbHosts.AppendLineLinux($"{address,-15} {host.Key}");
                             mappingCount++;
                         }
                     }
