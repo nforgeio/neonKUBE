@@ -602,7 +602,7 @@ disable-syslog=yes
 #
 # Debugging related settings.  Be sure to comment these out for production clusters.
 #
-# loglevel=6
+# loglevel=9
 # quiet=no
 EOF
 
@@ -613,12 +613,15 @@ cat /etc/powerdns/recursor.local.conf >> /etc/powerdns/recursor.conf
 
 chmod -R 774 /etc/powerdns
 
+# chown -R pdns:pdns /etc/powerdns
+# chmod -R 774 /etc/powerdns
+
 systemctl start pdns-recursor
 sleep 5		# Give the service some time to start.
 
 # Configure the local DNS resolver to override any DHCP or other interface
 # specific settings and just query the PowerDNS Recursor running locally
-# on the this host node.
+# on this host node.
 
 echo "" > /etc/resolvconf/interface-order
 echo "nameserver ${NEON_NODE_IP}" > /etc/resolvconf/resolv.conf.d/base
