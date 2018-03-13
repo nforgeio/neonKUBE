@@ -11,8 +11,12 @@
 
 param 
 (
-	[switch]$all = $False,
-    [switch]$nopush = $False
+	[switch]$all         = $False,        # Rebuild all images
+	[switch]$base        = $False,        # Rebuild base images
+	[switch]$dotnet      = $False,        # Rebuild .NET based images
+	[switch]$other       = $False,        # Rebuild all other images (usually script based)
+    [switch]$nopush      = $False,        # Don't push to the registry
+	[switch]$allVersions = $False         # Rebuild all image versions
 )
 
 #----------------------------------------------------------
@@ -34,7 +38,7 @@ function Publish
 
 	cd "$Path"
 
-	if ($all)
+	if ($allVersions)
 	{
 		if ($nopush)
 		{
@@ -58,33 +62,51 @@ function Publish
 	}
 }
 
+if ($all)
+{
+	$base   = $True
+	$dotnet = $True
+	$other  = $True
+}
+
 # NOTE: 
 #
 # The build order below is important since later images
 # may depend on earlier ones.
 
-Publish "$image_root\\ubuntu-16.04"
-Publish "$image_root\\ubuntu-16.04-dotnet"
-Publish "$image_root\\alpine"
-Publish "$image_root\\golang"
-Publish "$image_root\\dotnet"
-Publish "$image_root\\openjdk"
-Publish "$image_root\\elasticsearch"
-Publish "$image_root\\elasticsearch6"
-Publish "$image_root\\kibana"
-Publish "$image_root\\metricbeat"
-Publish "$image_root\\td-agent"
-Publish "$image_root\\neon-log-collector"
-Publish "$image_root\\neon-log-host"
-Publish "$image_root\\node"
-Publish "$image_root\\haproxy"
-Publish "$image_root\\neon-cli"
-Publish "$image_root\\neon-cluster-manager"
-Publish "$image_root\\neon-proxy"
-Publish "$image_root\\neon-proxy-vault"
-Publish "$image_root\\neon-proxy-manager"
-Publish "$image_root\\neon-registry"
-Publish "$image_root\\neon-registry-cache"
-Publish "$image_root\\neon-vegomatic"
-Publish "$image_root\\neon-dns"
-Publish "$image_root\\neon-dns-mon"
+if ($base)
+{
+	Publish "$image_root\\ubuntu-16.04"
+	Publish "$image_root\\ubuntu-16.04-dotnet"
+	Publish "$image_root\\alpine"
+	Publish "$image_root\\golang"
+	Publish "$image_root\\dotnet"
+	Publish "$image_root\\openjdk"
+	Publish "$image_root\\elasticsearch"
+	Publish "$image_root\\elasticsearch6"
+	Publish "$image_root\\kibana"
+	Publish "$image_root\\metricbeat"
+	Publish "$image_root\\td-agent"
+	Publish "$image_root\\node"
+	Publish "$image_root\\haproxy"
+	Publish "$image_root\\neon-proxy"
+	Publish "$image_root\\neon-registry"
+	Publish "$image_root\\neon-registry-cache"
+}
+
+if ($dotnet)
+{
+	Publish "$image_root\\neon-cli"
+	Publish "$image_root\\neon-cluster-manager"
+	Publish "$image_root\\neon-dns"
+	Publish "$image_root\\neon-dns-mon"
+	Publish "$image_root\\neon-proxy-manager"
+	Publish "$image_root\\neon-vegomatic"
+}
+
+if ($other)
+{
+	Publish "$image_root\\neon-log-collector"
+	Publish "$image_root\\neon-log-host"
+	Publish "$image_root\\neon-proxy-vault"
+}
