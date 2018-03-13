@@ -613,9 +613,6 @@ cat /etc/powerdns/recursor.local.conf >> /etc/powerdns/recursor.conf
 
 chmod -R 774 /etc/powerdns
 
-# chown -R pdns:pdns /etc/powerdns
-# chmod -R 774 /etc/powerdns
-
 systemctl start pdns-recursor
 sleep 5		# Give the service some time to start.
 
@@ -631,6 +628,20 @@ resolvconf -u
 # Configure the [neon-dns-loader] service on manager nodes.  This Service
 # watches for a file created by the [neon-dns] Docker service indicating 
 # that the PowerDNS Recursor needs to reload the hosts file.
+
+# $todo(jeff.lill):
+#
+# I really want to use [rec_control reload-zones] to have PowerDNS reload
+# the [/etc/powerdns/hosts] file but this is currently failing with This
+# log message:
+#
+#    Encountered error reloading zones, keeping original data: Unable to re-parse configuration file '/etc/powerdns/recursor.conf'
+#
+# I'm betting that this is a security related issue (e.g. chroot jail)
+# but I am unable to figure this out right now.
+#
+# So for now, I'm just going to restart the recursor service.  This should
+# be investigated and fixed in the future.
 
 cat <<EOF > /usr/local/bin/neon-dns-loader 
 #!/bin/bash
@@ -662,9 +673,17 @@ do
 
         rm \$signal_path
 
-        # Signal PowerDNS Recursor.
+        # \$todo(jeff.lill):
+        # 
+        # I couldn't get PowerDNS Recursor to reload the [/etc/powerdns/hosts]
+        # files using [rec_control reload-zones] so I'm just going to restart
+        # the recursor service.  Not ideal.
 
-        rec_control reload-zones
+        systemctl restart pdns-recursor
+
+        # Signal PowerDNS Recursor.
+        #
+        # rec_control reload-zones
     fi
 
     sleep \${sleep_seconds}
