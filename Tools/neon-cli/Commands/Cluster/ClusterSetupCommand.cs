@@ -2204,9 +2204,9 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
             public int MDSActiveCount { get; set; }
 
             /// <summary>
-            /// Indicates that the <b>cfs</b> file system is ready.
+            /// Indicates that the <b>neonFS</b> file system is ready.
             /// </summary>
-            public bool IsCfsReady { get; set; }
+            public bool IsFsReady { get; set; }
         }
 
         /// <summary>
@@ -2301,7 +2301,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
             // $hack(jeff.lill):
             //
-            // Detect if the [cfs] file system is ready.  There's probably a
+            // Detect if the [neonFS] file system is ready.  There's probably a
             // way to detect this from the JSON status above but I need to
             // move on to other things.  This is fragile because it assumes
             // that there's only one file system deployed.
@@ -2310,8 +2310,8 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
             if (result.ExitCode == 0)
             {
-                status.IsCfsReady = result.OutputText.StartsWith("cfs-") &&
-                                    result.OutputText.Contains("up:active");
+                status.IsFsReady = result.OutputText.StartsWith("neonfs-") &&
+                                   result.OutputText.Contains("up:active");
             }
 
             return status;
@@ -2448,8 +2448,8 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
             node.Status = string.Empty;
 
-            // We're going to have the first manager create the [cfs_data] and [cfs_metadata] storage 
-            // pools and then the [cfs] filesystem on top of those pools.  Then we'll have the first
+            // We're going to have the first manager create the [neonfs_data] and [neonfs_metadata] storage 
+            // pools and then the [neonFS] filesystem on top of those pools.  Then we'll have the first
             // manager wait for the filesystem to be created.
 
             if (node == cluster.FirstManager)
@@ -2458,9 +2458,9 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
                     () =>
                     {
                         node.Status = "create file system";
-                        node.SudoCommand($"ceph osd pool create cfs_data {cluster.Definition.Ceph.OSDPlacementGroups}");
-                        node.SudoCommand($"ceph osd pool create cfs_metadata {cluster.Definition.Ceph.OSDPlacementGroups}");
-                        node.SudoCommand($"ceph fs new cfs cfs_metadata cfs_data");
+                        node.SudoCommand($"ceph osd pool create neonfs_data {cluster.Definition.Ceph.OSDPlacementGroups}");
+                        node.SudoCommand($"ceph osd pool create neonfs_metadata {cluster.Definition.Ceph.OSDPlacementGroups}");
+                        node.SudoCommand($"ceph fs new neonfs neonfs_metadata neonfs_data");
                     });
             }
 
@@ -2471,7 +2471,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
                 NeonHelper.WaitFor(
                     () =>
                     {
-                        return GetCephClusterStatus(node).IsCfsReady;
+                        return GetCephClusterStatus(node).IsFsReady;
                     },
                     timeout: TimeSpan.FromSeconds(120),
                     pollTime: TimeSpan.FromSeconds(2));
@@ -2481,7 +2481,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
                 node.Fault("Timeout waiting for Ceph file system.");
             }
 
-            // We're going to use the FUSE client to mount the file system at [/cfs].
+            // We're going to use the FUSE client to mount the file system at [/mnt/neonfs].
 
             node.InvokeIdempotentAction("setup-ceph-mount",
                 () =>
@@ -2489,16 +2489,16 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
                     var monNode = cluster.Definition.SortedNodes.First(n => n.Labels.CephMON);
 
                     node.Status = "mount file system";
-                    node.SudoCommand($"mkdir -p /cfs");
-                    node.SudoCommand($"ceph-fuse -m {monNode.PrivateAddress}:6789 /cfs");
+                    node.SudoCommand($"mkdir -p /mnt/neonfs");
+                    node.SudoCommand($"ceph-fuse -m {monNode.PrivateAddress}:6789 /mnt/neonfs");
                 });
 
             // $hack(jeff.lill):
             //
             // I couldn't enable the built-in [ceph-fuse@/*.service] to have
-            // [/cfs] mount on reboot via:
+            // [/mnt/neonfs] mount on reboot via:
             //
-            //      systemctl enable ceph-fuse@/cfs.service
+            //      systemctl enable ceph-fuse@/neonfs.service
             //
             // I was seeing an "Invalid argument" error.  I'm going to workaround
             // this by creating and enabling my own service.
@@ -2507,9 +2507,9 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
                 () =>
                 {
                     node.Status = "create fuse service";
-                    node.UploadText("/lib/systemd/system/ceph-fuse-cfs.service",
+                    node.UploadText("/lib/systemd/system/ceph-fuse-neonfs.service",
 $@"[Unit]
-Description=Ceph FUSE client (for /cfs)
+Description=Ceph FUSE client (for /mnt/neonfs)
 After=network-online.target local-fs.target time-sync.target
 Wants=network-online.target local-fs.target time-sync.target
 Conflicts=umount.target
@@ -2518,7 +2518,7 @@ PartOf=ceph-fuse.target
 [Service]
 EnvironmentFile=-/etc/default/ceph
 Environment=CLUSTER=ceph
-ExecStart=/usr/bin/ceph-fuse -f --cluster ${{CLUSTER}} /cfs
+ExecStart=/usr/bin/ceph-fuse -f --cluster ${{CLUSTER}} /mnt/neonfs
 TasksMax=infinity
 
 {UnitRestartSettings}
@@ -2527,8 +2527,8 @@ TasksMax=infinity
 WantedBy=ceph-fuse.target
 WantedBy=docker.service
 ");
-                    node.SudoCommand("chmod 644 /lib/systemd/system/ceph-fuse-cfs.service");
-                    node.SudoCommand($"systemctl enable ceph-fuse-cfs.service");
+                    node.SudoCommand("chmod 644 /lib/systemd/system/ceph-fuse-neonfs.service");
+                    node.SudoCommand($"systemctl enable ceph-fuse-neonfs.service");
                 });
 
             if (node == cluster.FirstManager)
@@ -2536,16 +2536,16 @@ WantedBy=docker.service
                 node.InvokeIdempotentAction("setup-ceph-fs-init",
                     () =>
                     {
-                        // Initialize [/cfs]:
+                        // Initialize [/mnt/neonfs]:
                         //
-                        //      /cfs/READY  - Read-only file whose presence indicates that the file system is mounted
-                        //      /cfs/docker - Holds mapped Docker volumes
-                        //      /cfs/neon   - Reserved for neonCLUSTER
+                        //      /mnt/neonfs/READY   - Read-only file whose presence indicates that the file system is mounted
+                        //      /mnt/neonfs/docker  - Holds mapped Docker volumes
+                        //      /mnt/neonfs/neon    - Reserved for neonCLUSTER
 
                         node.Status = "populate file system";
-                        node.SudoCommand($"touch /cfs/READY && chmod 444 /cfs/READY");
-                        node.SudoCommand($"mkdir -p /cfs/docker && chown root:root /cfs/docker && chmod 770 /cfs/docker");
-                        node.SudoCommand($"mkdir -p /cfs/neon && chown root:root /cfs/neon && chmod 770 /cfs/neon");
+                        node.SudoCommand($"touch /mnt/neonfs/READY && chmod 444 /mnt/neonfs/READY");
+                        node.SudoCommand($"mkdir -p /mnt/neonfs/docker && chown root:root /mnt/neonfs/docker && chmod 770 /mnt/neonfs/docker");
+                        node.SudoCommand($"mkdir -p /mnt/neonfs/neon && chown root:root /mnt/neonfs/neon && chmod 770 /mnt/neonfs/neon");
                     });
             }
         }

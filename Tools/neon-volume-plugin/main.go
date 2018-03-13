@@ -39,12 +39,12 @@ func toError(text string) error {
 
 func mountPath(volumeName string) string {
 
-	return "/cfs/docker/" + volumeName
+	return "/mnt/neonfs/docker/" + volumeName
 }
 
-func cfsReady() (bool, error) {
+func fsReady() (bool, error) {
 
-	stat, err := os.Stat("/cfs/READY")
+	stat, err := os.Stat("/mnt/neonfs/READY")
 
 	if (err == nil && !stat.IsDir()) {
 
@@ -52,14 +52,14 @@ func cfsReady() (bool, error) {
 
 	} else {
 
-		log.Println("[/cfs] is not ready.");
-		return false, cfsNotReady()
+		log.Println("[/mnt/neonfs] is not ready.");
+		return false, fsNotReady()
 	}
 }
 
-func cfsNotReady() error {
+func fsNotReady() error {
 
-	return toError("Cluster distributed filesystem [/cfs] is not ready.")
+	return toError("Cluster distributed filesystem [/mnt/neonfs] is not ready.")
 }
 
 func stub(err error) {
@@ -72,23 +72,23 @@ func stub(err error) {
 	// to this "do nothing" function.
 }
 
-func cfsReadyWait() error {
+func fsReadyWait() error {
 
-	// Check if CFS is already ready.
+	// Check if neonFS is already ready.
 
-	isReady, err := cfsReady()
+	isReady, err := fsReady()
 	if (isReady) {
 		return nil;
 	}
 
 	stub(err)
 
-	// We're going to wait for a period of time for CFS
+	// We're going to wait for a period of time for neonFS
 	// to become ready.  This most likely happens during
 	// cluster boot where it may take a minute or two for
 	// all of the Ceph services to initialize.
 
-	// We'll send [true] on this channel when CFS is ready.
+	// We'll send [true] on this channel when neonFS is ready.
 
 	readyChannel := make(chan bool, 1)	
 	defer close(readyChannel)
@@ -98,7 +98,7 @@ func cfsReadyWait() error {
 	timer := time.NewTimer(3 * time.Minute)	// 3 minute timeout
 	defer timer.Stop()
 
-	// Start a go function that polls for CFS to become
+	// Start a go function that polls for neonFS to become
 	// ready and then signals on the [readyChannel].
 
 	exit := false
@@ -113,7 +113,7 @@ func cfsReadyWait() error {
 				return;
 			}
 
-			isReady, err := cfsReady()
+			isReady, err := fsReady()
 			if (isReady) {
 				readyChannel <- true
 				return;
@@ -128,13 +128,13 @@ func cfsReadyWait() error {
 	select {
 		case <- readyChannel:
 		
-			log.Println("[/cfs] IS READY NOW ***")
+			log.Println("[/mnt/neonfs] IS READY NOW ***")
 			return nil
 
 		case <- timer.C:
 
 			exit = true
-			return toError("Timeout waiting for CFS to become ready.")
+			return toError("Timeout waiting for neonFS to become ready.")
 	}
 }
 
@@ -159,7 +159,7 @@ func (driver *neonDriver) Create(request *volume.CreateRequest) error {
 
 	log.Println("create:", request.Name);
 
-	error := cfsReadyWait()
+	error := fsReadyWait()
 
 	if (error != nil) {
 		return error
@@ -167,7 +167,7 @@ func (driver *neonDriver) Create(request *volume.CreateRequest) error {
 	
 	if (volumeExists(request.Name)) {
 
-		// I'm not going to treat this as an error since CFS is
+		// I'm not going to treat this as an error since neonFS is
 		// distributed and its likely that folks may have 
 		// already created the volume on another host.
 
@@ -282,7 +282,7 @@ func (driver *neonDriver) Remove(request *volume.RemoveRequest) error {
 
 	log.Println("remove:", request.Name);
 
-	error := cfsReadyWait()
+	error := fsReadyWait()
 
 	if (error != nil) {
 		return error
@@ -306,7 +306,7 @@ func (driver *neonDriver) Path(request *volume.PathRequest) (*volume.PathRespons
 
 	log.Println("path:", request.Name);
 
-	error := cfsReadyWait()
+	error := fsReadyWait()
 
 	if (error != nil) {
 		return nil, error
@@ -323,7 +323,7 @@ func (driver *neonDriver) Mount(request *volume.MountRequest) (*volume.MountResp
 
 	log.Println("mount:", request.Name);
 
-	error := cfsReadyWait()
+	error := fsReadyWait()
 
 	if (error != nil) {
 		return nil, error
@@ -342,7 +342,7 @@ func (driver *neonDriver) Unmount(request *volume.UnmountRequest) error {
 
 	log.Println("unmount:", request.Name);
 
-	error := cfsReadyWait()
+	error := fsReadyWait()
 
 	if (error != nil) {
 		return error
@@ -361,7 +361,7 @@ func (driver *neonDriver) Get(request *volume.GetRequest) (*volume.GetResponse, 
 
 	log.Println("get:", request.Name);
 
-	error := cfsReadyWait()
+	error := fsReadyWait()
 
 	if (error != nil) {
 		return nil, error
@@ -380,7 +380,7 @@ func (driver *neonDriver) List() (*volume.ListResponse, error) {
 
 	log.Println("list");
 
-	error := cfsReadyWait()
+	error := fsReadyWait()
 
 	if (error != nil) {
 		return nil, error
@@ -388,7 +388,7 @@ func (driver *neonDriver) List() (*volume.ListResponse, error) {
 	
 	var volumes []*volume.Volume
 
-	files, err := ioutil.ReadDir("/cfs/docker")
+	files, err := ioutil.ReadDir("/mnt/neonfs/docker")
 
 	if err == nil {
 

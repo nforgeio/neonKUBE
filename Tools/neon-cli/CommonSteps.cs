@@ -266,7 +266,7 @@ TCPKeepAlive yes
             }
 
             sb.AppendLine($"NEON_NODE_NAME={node.Name}");
-            sb.AppendLine($"NEON_NODE_CFS={clusterDefinition.Ceph.Enabled.ToString().ToLowerInvariant()}");
+            sb.AppendLine($"NEON_NODE_FS={clusterDefinition.Ceph.Enabled.ToString().ToLowerInvariant()}");
 
             if (node.Metadata != null)
             {
