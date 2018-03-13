@@ -210,7 +210,6 @@ net.ipv4.tcp_keepalive_probes = 5
 # Log Martian Packets
 #net.ipv4.conf.all.log_martians = 1
 
-
 ###################################################################
 # Fluentd/TD-Agent recommended settings:
 
@@ -221,6 +220,15 @@ net.ipv4.tcp_tw_reuse = 1
 # OpenVPN requires packet forwarding.
 
 net.ipv4.ip_forward=1
+
+###################################################################
+# neonCLUSTER settings
+
+# Disable the Linux OOM Killer 
+vm.oom-kill = 0
+
+# Disable memory overcommit
+# vm.overcommit_memory = 2
 EOF
 
 #--------------------------------------------------------------------------
@@ -265,17 +273,8 @@ if ! ${NEON_NODE_SWAP} ; then
 
         cat <<EOF >> /etc/sysctl.conf
 
-###################################################################
-# neonCLUSTER settings
-
 # Disable swapping
 vm.swappiness = 0
-
-# Disable the Linux OOM Killer 
-vm.oom-kill = 0
-
-# Disable memory overcommit
-vm.overcommit_memory = 2
 EOF
 
         # Disable the system swap file (this requires a reboot).
@@ -971,12 +970,12 @@ max-negative-ttl=30
 #################################
 # setgid        If set, change group id to this gid for more security
 #
-# setgid=pdns
+setgid=pdns
 
 #################################
 # setuid        If set, change user id to this uid for more security
 #
-# setuid=pdns
+setuid=pdns
 
 #################################
 # single-socket If set, only use a single socket for outgoing queries
@@ -1110,10 +1109,12 @@ max-negative-ttl=30
 # quiet=no
 EOF
 
-# Set PowerDNS related config file permissions and then restart the 
-# recursor to pick up the new config.
+# Set PowerDNS related config file permissions.
 
+chown -R root:root /etc/powerdns
 chmod -R 774 /etc/powerdns
+
+# Start the PowerDNS Recursor.
 
 systemctl start pdns-recursor
 sleep 10    # Give the service some time to start.
@@ -1131,7 +1132,7 @@ resolvconf -u
 # watches for a file created by the [neon-dns] Docker service indicating 
 # that the PowerDNS Recursor needs to reload the hosts file.
 
-cat <<EOF > /usr/local/bin/neon-dns-loader 
+cat <<EOF > /usr/local/bin/neon-dns-loader
 #!/bin/bash
 #------------------------------------------------------------------------------
 # FILE:         neon-dns-loader
@@ -1153,6 +1154,16 @@ echo "[INFO] Starting: [sleep_time=\${sleep_seconds} seconds]"
 
 mkdir -p \$signal_folder
 
+# This hack ensures that the [/etc/powerdns] permissions are set
+# for [root:root] by default.  This mitigates a corner case where
+# the script below fails before reseting the owner after reloading 
+# the zones, preventing the PowerDNS Recursor from running the next
+# time the machine boots or the service is restarted.
+
+chown -R root:root /etc/powerdns
+
+# Loop to monitor DNS changes.
+
 while true
 do
     if [ -f \$signal_path ]; then
@@ -1161,14 +1172,24 @@ do
 
         rm \$signal_path
 
-        # Signal PowerDNS Recursor.
+        # Signal PowerDNS Recursor.  Note that this call will fail the first time
+        # it is called after a system reboot due to a permissions issue I haven't
+        # been able to figure out.  I'm going to hack around this by setting 
+        # permissions for [/etc/powerdns] to [pdns:pdns] before reloading the zones
+        # and then resetting to [root:root] afterwards, as described here:
+        #
+        #   https://github.com/jefflill/NeonForge/issues/211
 
+        chown -R pdns:pdns /etc/powerdns
         rec_control reload-zones
+        chown -R root:root /etc/powerdns
     fi
 
     sleep \${sleep_seconds}
 done
 EOF
+
+chmod 774 /usr/local/bin/neon-dns-loader
 
 cat <<EOF > /lib/systemd/system/neon-dns-loader.service
 # Used by [neon-dns] to have PowerDNS Recursor reload host entries.
