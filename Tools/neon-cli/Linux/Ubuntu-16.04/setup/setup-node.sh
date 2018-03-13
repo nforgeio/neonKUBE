@@ -270,6 +270,12 @@ if ! ${NEON_NODE_SWAP} ; then
 
 # Disable swapping
 vm.swappiness = 0
+
+# Disable the Linux OOM Killer 
+vm.oom-kill = 0
+
+# Disable memory overcommit
+vm.overcommit_memory = 2
 EOF
 
         # Disable the system swap file (this requires a reboot).
