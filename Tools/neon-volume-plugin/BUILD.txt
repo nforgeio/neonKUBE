@@ -2,10 +2,8 @@
 --------------------
 The Debian package is built automatically in the project post-build
 event using the [package-deb\package.ps1] script.  Note that you
-need to update [version.txt] to be the Debian package version including
-the "-REVISION" suffix (most likely set to "-1").
-
-Also: Ensure that the [version] constant in [main.go] is correct.
+need to update [version.go] to be the Debian package version (without
+the "-REVISION" suffix).
 
 The package will be created in the [/bin] folder and also copied
 to the solution's Build folder.  You'll need to manually upload

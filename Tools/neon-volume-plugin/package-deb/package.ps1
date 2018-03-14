@@ -33,16 +33,34 @@ $projectPath = $projectPath.TrimEnd('"')
 
 cd "$projectPath"
 
-# Read the package version number from [version.txt].  We're expecting
-# this file to specify the version on a single line of text.
+# Read the package version number from [version.go].  We're expecting
+# this file to specify the version as a GO constant.
 
-$version = Get-Content version.txt -First 1
-$version = $version.Trim()
+#$version = Get-Content version.txt -First 1
+#$version = $version.Trim()
+
+$versionPath    = Join-Path -Path $projectPath -ChildPath "version.go"
+$versionPattern = '^\s*const\s*version\s*=\s*"(?<version>[\d\.]+)"'
+$versionRegex   = [regex] $versionPattern
+$versionLine    = Select-String -Path $versionPath -Pattern $versionRegex | foreach { $_.Line }
+
+if ($versionLine -ne "")
+{
+    $matches = $versionRegex.Match($versionLine)
+    $version = $matches.Groups["version"].Value
+}
+else
+{
+    Write-Error "*** ERROR: Cannot parse the plugin version number from [version.go]."
+    exit 1
+}
 
 "   "
 "============================================="
 "* Packaging: neon-volume-plugin v" + $version
 "============================================="
+
+$version += "-1"    # Append the Debian package revision.
 
 # The package is super simple right now.  We're not going to bother with
 # pre/post install steps that manage enabling/starting the plugin service.
@@ -125,7 +143,7 @@ mkdir "$packageSrcPath\\lib\\systemd\\system"
 # actual version number.
 
 $controlText = Get-Content -Path "package-deb\\control.txt"
-$controlText = $controlText -replace "PACKAGE_VERSION",$version
+$controlText = $controlText -replace "PACKAGE_VERSION", $version
 $controlText | Out-File "$packageSrcPath\\DEBIAN\\control"
 exec { unix-text "$packageSrcPath\\DEBIAN\\control" }
 
