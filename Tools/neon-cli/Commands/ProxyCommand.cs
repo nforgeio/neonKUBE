@@ -38,6 +38,7 @@ Manages the cluster's public and private proxies.
 
 USAGE:
 
+    neon proxy help
     neon proxy NAME build
     neon proxy NAME get [--yaml] ROUTE
     neon proxy NAME inspect
@@ -54,36 +55,30 @@ ARGUMENTS:
     NAME    - Proxy name: [public] or [private].
     ROUTE   - Route name.
     FILE    - Path to a JSON file.
-    -       - Indicates that JSON is read from standard input.
+    -       - Indicates that JSON/YAML is read from standard input.
 
 COMMANDS:
 
+    help            - Prints proxy route details.
     build           - Forces the proxy manager to build the 
                       proxy configuration.
-
     get             - Output a specific route as JSON by default.
                       Use [--yaml] to return as YAML.
-
     haproxy         - Outputs the HAProxy configuration.
-
     inspect         - Displays JSON details for all proxy routes
                       and settings.
-
     list|ls         - Lists the route names.
-
     remove|rm       - Removes a named route.
-
     put             - Adds or updates a route from a file or by
                       reading standard input.  JSON or YAML
                       input is supported.
-
     settings        - Updates the proxy global settings from a
                       JSON file or by reading standard input.
-
     status          - Displays the current status for a proxy.
+";
 
-ROUTES:
-
+        private const string routeHelp =
+@"
 neonCLUSTER proxies support two types of routes: HTTP/S and TCP.
 Each route defines one or more frontend and backends.
 
@@ -198,6 +193,14 @@ See the documentation for more proxy route and setting details.
 
             switch (proxyName)
             {
+                case "help":
+
+                    // $hack: So this isn't really a proxy name.
+
+                    Console.WriteLine(routeHelp);
+                    Program.Exit(0);
+                    break;
+
                 case "public":
 
                     proxyManager = NeonClusterHelper.Cluster.PublicProxy;
