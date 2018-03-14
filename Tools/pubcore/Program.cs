@@ -75,7 +75,7 @@ usage: pubcore CSPROJ-PATH BIN-PATH PUBLISH-PATH
                 {
                     File.WriteAllText(Path.Combine(publishPath, $"{programName}.cmd"),
 $@"@echo off
-dotnet {binFolder}\{Path.GetFileName(args[0])} %*
+dotnet %~dp0\{programName}\{Path.GetFileName(args[0])} %*
 ");
                     // Remove the output folder and then recreate it to ensure
                     // that all old files will be removed.
