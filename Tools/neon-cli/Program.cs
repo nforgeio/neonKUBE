@@ -72,6 +72,7 @@ COMMAND SUMMARY:
     neon create password    [--length=#]
     neon create uuid
     neon dashboard          DASHBOARD
+    neon dns                ARGS
     neon docker             ARGS
     neon download           SOURCE TARGET [NODE]
     neon exec               BASH-CMD
@@ -226,6 +227,7 @@ Note that the tool requires admin priviledges for direct mode.
                     new CreatePasswordCommand(),
                     new CreateUuidCommand(),
                     new DashboardCommand(),
+                    new DnsCommand(),
                     new DockerCommand(),
                     new DownloadCommand(),
                     new ExecCommand(),

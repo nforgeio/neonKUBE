@@ -27,8 +27,7 @@ namespace NeonCli
     public class DashboardCommand : CommandBase
     {
         private const string usage = @"
-Manages cluster dashboards.  Dashboards are simply URLs registered with
-a name.
+Manages cluster dashboards.
 
 USAGE:
 
@@ -42,7 +41,7 @@ REMARKS:
 
 Many dashboards will require proxy routes.  These will need to be 
 registered elsewhere using [proxy] commands.  Note that the following
-names are reserved for use as dashboard commands:
+dashboard names are reserved for use as commands:
 
     list, ls, rm, remove, set, url
 ";
@@ -71,18 +70,7 @@ names are reserved for use as dashboard commands:
             var clusterLogin = Program.ConnectCluster();
             var cluster      = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>);
             var dashboard    = commandLine.Arguments[0];
-            var nodeName     = commandLine.GetOption("--node");
-
-            SshProxy<NodeDefinition> node;
-
-            if (nodeName == null)
-            {
-                node = cluster.GetHealthyManager();
-            }
-            else
-            {
-                node = cluster.GetNode(nodeName);
-            }
+            var node         = cluster.GetHealthyManager();
 
             switch (dashboard)
             {
@@ -107,7 +95,7 @@ names are reserved for use as dashboard commands:
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new DockerShimInfo(isShimmed: false);
+            return new DockerShimInfo(isShimmed: false, ensureConnection: true);
         }
     }
 }

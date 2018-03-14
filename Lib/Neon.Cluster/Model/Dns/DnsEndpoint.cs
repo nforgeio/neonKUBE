@@ -34,14 +34,48 @@ namespace Neon.Cluster
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Set this to <c>null</c> to disable health checking.  HTTP and TCP health checks are
-        /// both supported.  Specify a <b>http://</b> URI for an HTTP based health check or 
-        /// <b>tcp://</b> URI for a TCP check.
+        /// Set this to <c>null</c> to disable health checking.  neonCLUSTER supports a few
+        /// types of target health checks, specified by the URI scheme specified in <see cref="CheckUri"/>:
         /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>http://host:port/path</b></term>
+        ///     <description>
+        ///     HTTP request based checking.  The optional <see cref="CheckHost"/>,
+        ///     and <see cref="CheckMethod"/> properties can be specified.  <b>2xx</b>
+        ///     and <b>3xx</b> response codes indicate that the target is healthy.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>https://host:port</b></term>
+        ///     <description>
+        ///     HTTPS request based checking.  The optional <see cref="CheckHost"/>,
+        ///     and <see cref="CheckMethod"/> properties can be specified.  <b>2xx</b>
+        ///     and <b>3xx</b> response codes indicate that the target is healthy.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>tcp://host:port</b></term>
+        ///     <description>
+        ///     A socket connection is made to the <b>host/port</b>.  Targets that
+        ///     allow connections are considered healthy.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>ping://host</b></term>
+        ///     <description>
+        ///     A few ICMP pings are sent to the target host.  Hosts that respond
+        ///     are considered healthy.
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// <note>
+        /// <b>host</b> may be an IP address or a fully qualified domain name.
+        /// </note>
         /// <para>
-        /// No health checks are performed if checking is disabled.  In this case, a record with
-        /// the <see cref="Target"/> address will always be returned, regardless of actual endpoint
-        /// status.
+        /// No health checks are performed if <see cref="CheckUri"/> is <c>null</c>.  For this case,
+        /// a record with the <see cref="Target"/> address will always be returned, regardless of 
+        /// actual endpoint status.
         /// </para>
         /// <para>
         /// Endpoints with URIs like <b>http://host:port/path</b> will be verified by making
