@@ -61,3 +61,22 @@
 #*.PDF   diff=astextplain
 #*.rtf   diff=astextplain
 #*.RTF   diff=astextplain
+
+###############################################################################
+# Text files passed to Docker/Ansible need Linux line endings.
+###############################################################################
+
+/Devops/**/*.yaml       text=lf
+/Devops/**/*.yml        text=lf
+
+/Images/**/*.cfg        text=lf
+/Images/**/*.conf       text=lf
+/Images/**/Dockerfile   text=lf
+/Images/**/*.js         text=lf
+/Images/**/*.json       text=lf
+/Images/**/*.md         text=lf
+/Images/**/*.rb         text=lf
+/Images/**/*.py         text=lf
+/Images/**/*.sh         text=lf
+/Images/**/*.yaml       text=lf
+/Images/**/*.yml        text=lf

@@ -77,10 +77,9 @@ wwwroot/
 
 # Build artifacts: 
 #
-# NOTE: This assumes that we'll never want to check in folders
-#		named [bin] or [obj]
+# NOTE: This assumes that we'll never want to commit folders
+#		    named [bin] or [obj]
 
 /build/**
 **/bin/**
 **/obj/**
-
