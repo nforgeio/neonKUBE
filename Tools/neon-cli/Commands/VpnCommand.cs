@@ -420,7 +420,7 @@ subjectAltName          = email:nobody@nowhere.com
         {
             DirectNotAllowed();
 
-            var clusterDefinition = ClusterDefinition.FromFile(defPath);
+            var clusterDefinition = ClusterDefinition.FromFile(defPath, strict: true);
 
             // This implements the steps described here:
             // 

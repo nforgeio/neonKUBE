@@ -137,9 +137,9 @@ Server Requirements:
             clusterDefPath = commandLine.Arguments[0];
             force          = commandLine.GetFlag("--force");
 
-            ClusterDefinition.ValidateFile(clusterDefPath);
+            ClusterDefinition.ValidateFile(clusterDefPath, strict: true);
 
-            var clusterDefinition = ClusterDefinition.FromFile(clusterDefPath);
+            var clusterDefinition = ClusterDefinition.FromFile(clusterDefPath, strict: true);
 
             clusterDefinition.Provisioner = $"neon-cli:{Program.Version}";  // Identify this tool/version as the cluster provisioner
 

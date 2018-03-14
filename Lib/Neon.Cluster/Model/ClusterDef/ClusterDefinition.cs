@@ -67,6 +67,7 @@ namespace Neon.Cluster
         /// Parses a cluster definition from JSON text.
         /// </summary>
         /// <param name="json">The JSON text.</param>
+        /// <param name="strict">Optionally require that all input properties map to to <see cref="ClusterDefinition"/> properties.</param>
         /// <returns>The parsed <see cref="ClusterDefinition"/>.</returns>
         /// <remarks>
         /// <note>
@@ -74,7 +75,7 @@ namespace Neon.Cluster
         /// and then is parsed as JSON.
         /// </note>
         /// </remarks>
-        public static ClusterDefinition FromJson(string json)
+        public static ClusterDefinition FromJson(string json, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(json != null);
 
@@ -82,7 +83,7 @@ namespace Neon.Cluster
             {
                 using (var preprocessReader = new PreprocessReader(stringReader))
                 {
-                    return NeonHelper.JsonDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd());
+                    return NeonHelper.JsonDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
                 }
             }
         }
@@ -91,16 +92,18 @@ namespace Neon.Cluster
         /// Parses and validates a cluster definition file.
         /// </summary>
         /// <param name="path">The file path.</param>
+        /// <param name="strict">Optionally require that all input properties map to to <see cref="ClusterDefinition"/> properties.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
-        public static void ValidateFile(string path)
+        public static void ValidateFile(string path, bool strict = false)
         {
-            FromFile(path);
+            FromFile(path, strict: strict);
         }
 
         /// <summary>
         /// Parses a cluster definition from a file.
         /// </summary>
         /// <param name="path">The file path.</param>
+        /// <param name="strict">Optionally require that all input properties map to to <see cref="ClusterDefinition"/> properties.</param>
         /// <returns>The parsed <see cref="ClusterDefinition"/>.</returns>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         /// <remarks>
@@ -109,7 +112,7 @@ namespace Neon.Cluster
         /// and then is parsed as JSON.
         /// </note>
         /// </remarks>
-        public static ClusterDefinition FromFile(string path)
+        public static ClusterDefinition FromFile(string path, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(path != null);
 
@@ -119,7 +122,7 @@ namespace Neon.Cluster
                 {
                     using (var preprocessReader = new PreprocessReader(stringReader))
                     {
-                        var clusterDefinition = NeonHelper.JsonDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd());
+                        var clusterDefinition = NeonHelper.JsonDeserialize<ClusterDefinition>(preprocessReader.ReadToEnd(), strict: strict);
 
                         if (clusterDefinition == null)
                         {

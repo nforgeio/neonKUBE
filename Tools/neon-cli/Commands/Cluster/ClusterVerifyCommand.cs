@@ -61,7 +61,7 @@ ARGUMENTS:
 
             // Parse and validate the cluster definition.
 
-            ClusterDefinition.FromFile(commandLine.Arguments[0]);
+            ClusterDefinition.FromFile(commandLine.Arguments[0], strict: true);
 
             Console.WriteLine("");
             Console.WriteLine("*** The cluster definition is OK.");
