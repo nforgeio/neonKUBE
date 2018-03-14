@@ -36,9 +36,6 @@ cd "$projectPath"
 # Read the package version number from [version.go].  We're expecting
 # this file to specify the version as a GO constant.
 
-#$version = Get-Content version.txt -First 1
-#$version = $version.Trim()
-
 $versionPath    = Join-Path -Path $projectPath -ChildPath "version.go"
 $versionPattern = '^\s*const\s*version\s*=\s*"(?<version>[\d\.]+)"'
 $versionRegex   = [regex] $versionPattern

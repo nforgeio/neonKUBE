@@ -412,6 +412,17 @@ func (driver *neonDriver) Capabilities() *volume.CapabilitiesResponse {
 
 func main() {
 
+  // Output the plugin version if "version" is passed on the command line.
+
+  args := os.Args[1:]  // Strip off the program path
+
+  if (len(args) > 0 && args[0] == "version") {
+      fmt.Println(version)
+      return
+  }
+
+  // Start the volume plugin service.
+
 	log.Println(fmt.Sprintf("Starting: neon-volume-plugin v%v", version))
 
 	driver  := &neonDriver{ }
