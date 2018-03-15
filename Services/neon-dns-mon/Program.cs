@@ -390,20 +390,9 @@ namespace NeonDnsHealth
         {
             // Perform health checking if required.
 
-            if (!string.IsNullOrEmpty(endpoint.CheckUri))
+            if (endpoint.Check)
             {
-                if (!Uri.TryCreate(endpoint.CheckUri, UriKind.Absolute, out var checkUri))
-                {
-                    // We shouldn't ever see this, but we'll treat this as
-                    // a health failure.
-
-                    return null;
-                }
-
-                return null;
             }
-
-            // 
 
             return null;
         }

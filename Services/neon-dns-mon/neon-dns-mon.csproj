@@ -18,7 +18,6 @@
 
   <ItemGroup>
     <PackageReference Include="Consul" Version="0.7.2.3" />
-    <PackageReference Include="DNS" Version="3.0.0" />
     <PackageReference Include="GitInfo" Version="2.0.8" />
     <PackageReference Include="Newtonsoft.Json" Version="10.0.3" />
   </ItemGroup>
