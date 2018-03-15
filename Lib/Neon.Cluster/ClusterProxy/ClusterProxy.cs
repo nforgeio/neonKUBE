@@ -359,9 +359,9 @@ namespace Neon.Cluster
                 Parallel.ForEach(Nodes.Where(n => n.Metadata.IsManager),
                     manager =>
                     {
-                        using (var pinger = new Ping())
+                        using (var ping = new Ping())
                         {
-                            var reply = pinger.Send(manager.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
+                            var reply = ping.Send(manager.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
 
                             if (reply.Status == IPStatus.Success)
                             {
