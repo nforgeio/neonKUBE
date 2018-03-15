@@ -283,7 +283,7 @@ TCPKeepAlive yes
                 sbNameservers.AppendWithSeparator(nameServer, ",");
             }
 
-            sb.AppendLine($"NEON_UPSTREAM_DNS={sbNameservers}");
+            sb.AppendLine($"NEON_UPSTREAM_DNS=\"{sbNameservers}\"");
             sb.AppendLine($"NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(clusterDefinition)}");
 
             // Append Consul and Vault addresses.
