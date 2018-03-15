@@ -276,6 +276,14 @@ TCPKeepAlive yes
                 sb.AppendLine($"NEON_NODE_SWAP={node.Metadata.Labels.ComputeSwap.ToString().ToLowerInvariant()}");
             }
 
+            var sbNameservers = new StringBuilder();
+
+            foreach (var nameServer in clusterDefinition.Network.Nameservers)
+            {
+                sbNameservers.AppendWithSeparator(nameServer, ",");
+            }
+
+            sb.AppendLine($"NEON_UPSTREAM_DNS={sbNameservers}");
             sb.AppendLine($"NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(clusterDefinition)}");
 
             // Append Consul and Vault addresses.

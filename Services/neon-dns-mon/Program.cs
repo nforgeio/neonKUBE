@@ -15,6 +15,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Consul;
+using DNS.Client;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 
@@ -24,6 +25,7 @@ using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
 using Neon.Net;
+using Neon.Time;
 
 namespace NeonDnsHealth
 {
@@ -40,6 +42,10 @@ namespace NeonDnsHealth
         private static INeonLogger          log;
         private static ConsulClient         consul;
         private static TimeSpan             pollInterval;
+        private static TimeSpan             warnInterval;
+        private static ClusterDefinition    clusterDefinition;
+        private static PolledTimer          warnTimer;
+        private static DnsClient            dns;
 
         /// <summary>
         /// Application entry point.
@@ -57,6 +63,16 @@ namespace NeonDnsHealth
             var environment = new EnvironmentParser(log);
 
             pollInterval = environment.Get("POLL_INTERVAL", TimeSpan.FromSeconds(15), validator: v => v > TimeSpan.Zero);
+            warnInterval = environment.Get("WARN_INTERVAL", TimeSpan.FromMinutes(5), validator: v => v > TimeSpan.Zero);
+
+            // Create a timer so we'll avoid spamming the logs with warnings.
+
+            warnTimer = new PolledTimer(warnInterval, autoReset: true);
+            warnTimer.FireNow();    // Setup such that the first warnings detected will be reported immediately.
+
+            // Create the DNS resolver client.
+
+            dns = new DnsClient("");
 
             // Create process terminator that handles process termination signals.
 
@@ -75,7 +91,7 @@ namespace NeonDnsHealth
                     NeonClusterHelper.OpenCluster();
                 }
 
-                // Open the cluster data services and then start the main service task.
+                // Open Consul and then start the main service task.
 
                 log.LogDebug(() => $"Opening Consul");
 
@@ -138,8 +154,6 @@ namespace NeonDnsHealth
         /// <returns>The <see cref="Task"/>.</returns>
         private static async Task RunAsync()
         {
-            var clusterDefinition = (ClusterDefinition)null;
-
             while (true)
             {
                 try
@@ -171,13 +185,14 @@ namespace NeonDnsHealth
                         hostAddresses.Add($"{node.Name}.cluster", IPAddress.Parse(node.PrivateAddress));
                     }
 
-                    // Read the DNS target definitions from Consul.
+                    // Read the DNS target definitions from Consul and add the appropriate 
+                    // host/addresses based on health checks, etc.
 
-                    IEnumerable<DnsTarget> targets;
+                    List<DnsTarget> targets;
 
                     try
                     {
-                        targets = await consul.KV.List<DnsTarget>(NeonClusterConst.DnsConsulTargetsKey + "/", terminator.CancellationToken);
+                        targets = (await consul.KV.List<DnsTarget>(NeonClusterConst.DnsConsulTargetsKey + "/", terminator.CancellationToken)).ToList();
                     }
                     catch (KeyNotFoundException)
                     {
@@ -188,6 +203,8 @@ namespace NeonDnsHealth
                     }
 
                     log.LogDebug(() => $"Consul has [{targets.Count()}] DNS targets.");
+
+                    await ResolveTargetsAsync(hostAddresses, targets);
 
                     // Generate a canonical [hosts.txt] file by sorting host entries by 
                     // hostname and then by IP address.
@@ -247,6 +264,163 @@ namespace NeonDnsHealth
             }
 
             terminator.ReadyToExit();
+        }
+
+        /// <summary>
+        /// Resolves the <paramref name="targets"/> into host addresses, adding the results
+        /// to <paramref name="hostAddresses"/>.
+        /// </summary>
+        /// <param name="hostAddresses">The host addresses.</param>
+        /// <param name="targets">The DNS targets.</param>
+        private static async Task ResolveTargetsAsync(HostAddresses hostAddresses, List<DnsTarget> targets)
+        {
+            // $todo(jeff.lill): 
+            //
+            // I'm keeping this implementation super simple for now, by performing all
+            // of the health checks during the poll.  This probably won't scale well
+            // when there are 100s of target endpoints.  This will tend to blast
+            // endpoints all at once.
+            //
+            // It would probably be better to do health checking continuously in
+            // another task and have this method resolve the hosts from that data.
+            // That would also allow health checks to use the target TTL as a
+            // hint for how often endpoint health should be checked.
+
+            // Implementation Note:
+            // --------------------
+            // We're going to create a task for each DNS target and then
+            // each of those tasks will create a task for each endpoint
+            // that requires a health check.
+
+            var nodeGroups  = clusterDefinition.GetNodeGroups();
+            var targetTasks = new List<Task>();
+            var warnings    = new List<string>();
+
+            foreach (var target in targets)
+            {
+                var targetWarnings = target.Validate(clusterDefinition, nodeGroups);
+
+                if (targetWarnings.Count > 0)
+                {
+                    // We skip generating DNS entries for targets with warnings.
+                    
+                    foreach (var warning in warnings)
+                    {
+                        warnings.Add(warning);
+                    }
+
+                    continue;
+                }
+
+                // Kick off the endpoint health checks.
+
+                targetTasks.Add(Task.Run(
+                    async () =>
+                    {
+                        var healthTasks = new List<Task>();
+
+                        foreach (var endpoint in target.Endpoints)
+                        {
+                            // Handle node group endpoints.
+
+                            var groupName = endpoint.GetGroupName();
+
+                            if (groupName != null)
+                            {
+                                if (nodeGroups.TryGetValue(groupName, out var group))
+                                {
+                                    foreach (var node in group)
+                                    {
+                                        healthTasks.Add(Task.Run(
+                                            async () =>
+                                            {
+                                                var nodeAddress = await CheckEndpointAsync(endpoint, node.PrivateAddress);
+
+                                                if (nodeAddress != null)
+                                                {
+                                                    hostAddresses.Add(target.Hostname, nodeAddress);
+                                                }
+                                            }));
+                                    }
+                                }
+
+                                continue;
+                            }
+
+                            // Handle normal endpoints.
+
+                            var address = await CheckEndpointAsync(endpoint);
+
+                            if (address != null)
+                            {
+                                hostAddresses.Add(target.Hostname, address);
+                            }
+                        }
+
+                        await NeonHelper.WaitAllAsync(healthTasks);
+                    },
+                    cancellationToken: terminator.CancellationToken));
+            }
+
+            await NeonHelper.WaitAllAsync(targetTasks);
+
+            // Log any detected warnings.  Note that we're going to throttle
+            // warning reports to once every 5 minutes, so we won't spam
+            // the logs.
+
+            if (warnTimer.HasFired)
+            {
+                foreach (var warning in warnings)
+                {
+                    log.LogWarn(warning);
+                }
+            }
+        }
+
+        /// <summary>
+        /// Performs an endpoint health check.
+        /// </summary>
+        /// <param name="endpoint">The endpoint being tested.</param>
+        /// <param name="targetOverride">
+        /// Optionally overrides the <see cref="DnsEndpoint.Target"/> property when we're
+        /// testing node groups.
+        /// </param>
+        /// <returns>The <see cref="IPAddress"/> of the endpoint if it's healthy, <c>null</c> if not.</returns>
+        private static async Task<IPAddress> CheckEndpointAsync(DnsEndpoint endpoint, string targetOverride = null)
+        {
+            // Perform health checking if required.
+
+            if (!string.IsNullOrEmpty(endpoint.CheckUri))
+            {
+                if (!Uri.TryCreate(endpoint.CheckUri, UriKind.Absolute, out var checkUri))
+                {
+                    // We shouldn't ever see this, but we'll treat this as
+                    // a health failure.
+
+                    return null;
+                }
+
+                return null;
+            }
+
+            // 
+
+            return null;
+        }
+
+        /// <summary>
+        /// Resolves an IP address or FQDN into an IP address.
+        /// </summary>
+        /// <param name="addressOrFQDN">The IP address string or FQDN.</param>
+        /// <returns>The <see cref="IPAddress"/> or <c>null</c> if the FQDN could not be resolved.</returns>
+        private static async Task<IPAddress> ResolveAddressAsync(string addressOrFQDN)
+        {
+            if (IPAddress.TryParse(addressOrFQDN, out var address))
+            {
+                return address;
+            }
+
+            return null;
         }
     }
 }

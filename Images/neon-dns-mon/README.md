@@ -12,7 +12,11 @@ The **neon-dns-mon** service integrates with **neon-dns** and PowerDNS installed
 
 # Environment Variables
 
-* **POLL_INTERVAL** (*optional*) - specifies the interval in seconds the service will use when performing health checks.  This defaults to **15 seconds**.
+* **NAMESERVERS** (*required*) - specifies the upstream DNS nameserver IP addresses (comma separated) to be used to resolve hostnames.  This is required and should be set to ${NEON_UPSTREAM_DNS} which is configured correctly on every cluster host.
+
+* **POLL_INTERVAL** (*optional*) - specifies the interval the service uses when generating DNS host entries.  This defaults to **15 seconds**.
+
+* **WARN_INTERVAL** (*optional*) - specifies the interval service uses to limit logged warnings.  This defaults to **5 minutes**.
 
 * **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
@@ -24,8 +28,10 @@ The **neon-dns-mon** service integrates with **neon-dns** and PowerDNS installed
 docker service create \
     --name neon-dns-mon \
     --detach=false \
+    --env NAMESERVERS=${NEON_UPSTREAM_DNS} \
     --env LOG_LEVEL=INFO \
     --env POLL_INTERVAL=15s \
+    --env WARN_INTERVAL=5m \
     --constraint node.role==manager \
     --replicas 1 \
     --restart-delay 10s \

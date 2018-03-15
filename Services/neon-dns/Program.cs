@@ -137,7 +137,7 @@ namespace NeonDnsHealth
                     Program.Exit(1);
                 }
 
-                // Open the cluster data services and then start the main service task.
+                // Open Consul and then start the main service task.
 
                 log.LogDebug(() => $"Opening Consul");
 

@@ -6,7 +6,9 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 using System.Linq;
+using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -24,7 +26,8 @@ namespace Neon.Cluster
     public class DnsEndpoint
     {
         /// <summary>
-        /// The target host's IP address or FQDN.
+        /// Specifies the target host's IP address or FQDN or a target host group
+        /// by specifying <b>group=NAME</b>.
         /// </summary>
         [JsonProperty(PropertyName = "Target", Required = Required.Always)]
         public string Target { get; set; }
@@ -89,8 +92,8 @@ namespace Neon.Cluster
         /// be healthy.
         /// </para>
         /// <note>
-        /// <b>host</b> in the URL can be specified as <b>@@TARGET</b>, which specifies
-        /// that <see cref="Target"/> will be substituted.
+        /// <b>host</b> in the URL can be specified as <b>@TARGET</b>, which specifies
+        /// that <see cref="Target"/> or the target group host IP address will be substituted.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "CheckUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -112,5 +115,73 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "CheckHost", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string CheckHost { get; set; }
+
+        /// <summary>
+        /// Attempts to extract the node group name from <see cref="Target"/> if present.
+        /// </summary>
+        /// <returns>The group name or <c>null</c>.</returns>
+        public string GetGroupName()
+        {
+            if (Target.StartsWith("group="))
+            {
+                return Target.Substring("group=".Length);
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Validates the DNS endpoint.  Any warning/errors will be appended to <paramref name="warnings"/>.
+        /// </summary>
+        /// <param name="warnings">Any warnings will be appended here.</param>
+        /// <param name="clusterDefinition">The current cluster definition,</param>
+        /// <param name="nodeGroups">The cluster node groups.</param>
+        /// <param name="targetHostname">The parent target hostname.</param>
+        public void Validate(List<string> warnings, ClusterDefinition clusterDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups, string targetHostname)
+        {
+            Covenant.Requires<ArgumentException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentException>(nodeGroups != null);
+
+            if (string.IsNullOrEmpty(Target))
+            {
+                warnings.Add($"Invalid [{nameof(DnsEndpoint)}.{nameof(Target)}={Target}] for [{nameof(DnsTarget)}={targetHostname}].");
+            }
+
+            var groupName = GetGroupName();
+
+            if (groupName != null)
+            {
+                if (!string.IsNullOrEmpty(groupName))
+                {
+                    warnings.Add($"Invalid [{nameof(DnsEndpoint)}.{nameof(Target)}={Target}] for [{nameof(DnsTarget)}={targetHostname}].");
+                }
+                else if (!nodeGroups.ContainsKey(groupName))
+                {
+                    warnings.Add($"Node group [{groupName}] not found for [{nameof(DnsTarget)}={targetHostname}].");
+                }
+            }
+            else
+            {
+                if (!IPAddress.TryParse(Target, out var address) && !ClusterDefinition.DnsHostRegex.IsMatch(Target))
+                {
+                    warnings.Add($"Invalid [{nameof(DnsEndpoint)}.{nameof(Target)}={Target}] is not a valid IP address or DNS hostname for [{nameof(DnsTarget)}={targetHostname}].");
+                }
+            }
+
+            if (string.IsNullOrEmpty(CheckUri))
+            {
+                if (!Uri.TryCreate(CheckUri, UriKind.Absolute, out var uri))
+                {
+                    warnings.Add($"Invalid [{nameof(DnsEndpoint)}.{nameof(CheckUri)}={CheckUri}] is not a valid URI for [{nameof(DnsTarget)}={targetHostname}].");
+                }
+            }
+
+            if (string.IsNullOrEmpty(CheckHost) && !ClusterDefinition.DnsHostRegex.IsMatch(CheckHost))
+            {
+                warnings.Add($"Invalid [{nameof(DnsEndpoint)}.{nameof(CheckHost)}={CheckHost}] is not a valid DNS hostname for [{nameof(DnsTarget)}={targetHostname}].");
+            }
+        }
     }
 }

@@ -27,40 +27,18 @@ namespace Neon.Cluster
     /// </summary>
     public class DnsTarget
     {
-        private string      hostname;
-        private int         ttl;
-
         /// <summary>
-        /// The target hostname.
+        /// The target hostname to be resolved by the DNS.  This must be a simple
+        /// hostname or a fully qualified domain name.
         /// </summary>
         [JsonProperty(PropertyName = "Hostname", Required = Required.Always)]
-        public string Hostname
-        {
-            get { return hostname; }
-            
-            set
-            {
-                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(value));
-
-                hostname = value.ToLowerInvariant();
-            }
-        }
+        public string Hostname { get; set; }
 
         /// <summary>
         /// The DNS TTL in seconds.
         /// </summary>
         [JsonProperty(PropertyName = "Ttl", Required = Required.Always)]
-        public int Ttl
-        {
-            get { return ttl; }
-
-            set
-            {
-                Covenant.Requires<ArgumentException>(value >= 0, $"DNS [TTL={value}] is not valid.");
-
-                ttl = value;
-            }
-        }
+        public int Ttl { get; set; }
 
         /// <summary>
         /// Lists the domain endpoints.
@@ -68,5 +46,36 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "Endpoints", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public List<DnsEndpoint> Endpoints { get; set; } = new List<DnsEndpoint>();
+
+        /// <summary>
+        /// Validates the DNS target.  Any warning/errors will be appended to <paramref name="warnings"/>.
+        /// </summary>
+        /// <param name="clusterDefinition">The current cluster definition,</param>
+        /// <param name="nodeGroups">The cluster node groups.</param>
+        /// <returns>The list of warnings (if any).</returns>
+        public List<string> Validate(ClusterDefinition clusterDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups)
+        {
+            Covenant.Requires<ArgumentException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentException>(nodeGroups != null);
+
+            var warnings = new List<string>();
+
+            if (string.IsNullOrEmpty(Hostname))
+            {
+                warnings.Add($"Invalid [{nameof(DnsTarget)}.{nameof(Hostname)}={Hostname}].");
+            }
+
+            if (Ttl <= 0)
+            {
+                warnings.Add($"Invalid [{nameof(DnsTarget)}.{nameof(Ttl)}={Ttl}] for [{nameof(Hostname)}={Hostname}].");
+            }
+
+            foreach (var endpoint in Endpoints)
+            {
+                endpoint.Validate(warnings, clusterDefinition, nodeGroups, Hostname);
+            }
+
+            return warnings;
+        }
     }
 }
