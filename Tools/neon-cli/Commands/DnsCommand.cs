@@ -97,8 +97,8 @@ The YAML example below defines [my-managers] using the [managers] group:
     - target: group=managers
       check: true
 
-Note that neonCLUSTER automatically creates DNS entries for all cluster host
-groups during cluster setup.  These are named like [GROUPNAME.cluster].
+Note that [neon-dns-mon] automatically creates DNS entries for all cluster 
+host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 ";
         /// <inheritdoc/>
         public override string[] Words
