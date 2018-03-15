@@ -12,7 +12,9 @@ The **neon-dns-mon** service integrates with **neon-dns** and PowerDNS installed
 
 # Environment Variables
 
-* **NAMESERVERS** (*required*) - specifies the upstream DNS nameserver IP addresses (comma separated) to be used to resolve hostnames.  This is required and should be set to ${NEON_UPSTREAM_DNS} which is configured correctly on every cluster host.
+* **NAMESERVERS** (*optional*) - specifies the upstream DNS nameserver IP addresses (comma separated) to be used to resolve hostnames.  This defaults to the Google nameservers [8.8.8.8,4.4.4.4] but should be set to ${NEON_UPSTREAM_DNS} which is configured correctly on every cluster host.
+
+* **PING_TIMEOUT** (*optional*) - specifies the maximum time to wait for an ICMP ping health check response.  This defaults to **1.5 seconds**.
 
 * **POLL_INTERVAL** (*optional*) - specifies the interval the service uses when generating DNS host entries.  This defaults to **15 seconds**.
 
@@ -29,6 +31,7 @@ docker service create \
     --name neon-dns-mon \
     --detach=false \
     --env NAMESERVERS=${NEON_UPSTREAM_DNS} \
+    --env PING_TIMEOUT=1.5s \
     --env LOG_LEVEL=INFO \
     --env POLL_INTERVAL=15s \
     --env WARN_INTERVAL=5m \

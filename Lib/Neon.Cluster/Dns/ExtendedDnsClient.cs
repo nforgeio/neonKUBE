@@ -15,7 +15,7 @@ using Neon.Common;
 using Neon.Cluster;
 using System.Threading;
 
-namespace Couchbase
+namespace Neon.DnsTools
 {
     /// <summary>
     /// Extends <see cref="DnsClient"/> to support resolution against 
@@ -26,12 +26,28 @@ namespace Couchbase
         private DnsClient[]     clients;
 
         /// <summary>
-        /// Constructs an instance to query one or more nameservers.
+        /// Constructs an instance to query one or more nameserver IP addresses.
         /// </summary>
-        /// <param name="nameservers">The name server IP addresses (at least one must be passed.</param>
+        /// <param name="nameservers">The name server IP addresses (at least one must be passed).</param>
         public ExtendedDnsClient(params IPAddress[] nameservers)
         {
-            Covenant.Requires<ArgumentException>(nameservers != null && nameservers.Length != 0, "At least one name server is required.");
+            Covenant.Requires<ArgumentException>(nameservers != null && nameservers.Length != 0, "At least one nameserver is required.");
+
+            clients = new DnsClient[nameservers.Length];
+
+            for (int i = 0; i < nameservers.Length; i++)
+            {
+                clients[i] = new DnsClient(nameservers[i]);
+            }
+        }
+
+        /// <summary>
+        /// Constructs an instance to query one or more nameserver IP address strings.
+        /// </summary>
+        /// <param name="nameservers">The name server IP addresses (at least one must be passed).</param>
+        public ExtendedDnsClient(params string[] nameservers)
+        {
+            Covenant.Requires<ArgumentException>(nameservers != null && nameservers.Length != 0, "At least one nameserver is required.");
 
             clients = new DnsClient[nameservers.Length];
 
@@ -89,7 +105,10 @@ namespace Couchbase
                         }
                         catch (ResponseException)
                         {
-                            // $note(jeff.lill): I wish the underlying client didn't throw exceptions.
+                            // $todo(jeff.lill): 
+                            //
+                            // I wish the underlying client didn't throw exceptions.  Perhaps
+                            // I could extend the implementation to implement [TryResolve()].
 
                             Interlocked.Decrement(ref pending);
                             readyEvent.Set();

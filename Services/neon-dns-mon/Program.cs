@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Reflection;
 using System.Security.Cryptography;
 using System.Text;
@@ -20,6 +21,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 
 using Neon.Cluster;
+using Neon.DnsTools;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
@@ -41,11 +43,14 @@ namespace NeonDnsHealth
         private static ProcessTerminator    terminator;
         private static INeonLogger          log;
         private static ConsulClient         consul;
+        private static string[]             nameservers;
+        private static TimeSpan             pingTimeout;
         private static TimeSpan             pollInterval;
         private static TimeSpan             warnInterval;
         private static ClusterDefinition    clusterDefinition;
         private static PolledTimer          warnTimer;
-        private static DnsClient            dns;
+        private static ExtendedDnsClient    dns;
+        private static Ping                 ping;
 
         /// <summary>
         /// Application entry point.
@@ -62,17 +67,21 @@ namespace NeonDnsHealth
 
             var environment = new EnvironmentParser(log);
 
+            nameservers  = environment.Get("NAMESERVERS", "8.8.8.8,8.8.4.4").Split(',');
+            pingTimeout  = environment.Get("PING_TIMROUT", TimeSpan.FromSeconds(1.5), validator: v => v > TimeSpan.Zero);
             pollInterval = environment.Get("POLL_INTERVAL", TimeSpan.FromSeconds(15), validator: v => v > TimeSpan.Zero);
             warnInterval = environment.Get("WARN_INTERVAL", TimeSpan.FromMinutes(5), validator: v => v > TimeSpan.Zero);
 
             // Create a timer so we'll avoid spamming the logs with warnings.
 
             warnTimer = new PolledTimer(warnInterval, autoReset: true);
-            warnTimer.FireNow();    // Setup such that the first warnings detected will be reported immediately.
+            warnTimer.FireNow();    // Set so that the first warnings detected will be reported immediately.
 
-            // Create the DNS resolver client.
+            // Create the DNS resolver client and the pinger we'll use
+            // for health checks.
 
-            dns = new DnsClient("");
+            dns  = new ExtendedDnsClient(nameservers);
+            ping = new Ping();
 
             // Create process terminator that handles process termination signals.
 
@@ -267,8 +276,8 @@ namespace NeonDnsHealth
         }
 
         /// <summary>
-        /// Resolves the <paramref name="targets"/> into host addresses, adding the results
-        /// to <paramref name="hostAddresses"/>.
+        /// Resolves the <paramref name="targets"/> into healthy host addresses, 
+        /// adding the results to <paramref name="hostAddresses"/>.
         /// </summary>
         /// <param name="hostAddresses">The host addresses.</param>
         /// <param name="targets">The DNS targets.</param>
@@ -321,6 +330,7 @@ namespace NeonDnsHealth
 
                         foreach (var endpoint in target.Endpoints)
                         {
+                            //-------------------------------------------------
                             // Handle node group endpoints.
 
                             var groupName = endpoint.GetGroupName();
@@ -334,9 +344,9 @@ namespace NeonDnsHealth
                                         healthTasks.Add(Task.Run(
                                             async () =>
                                             {
-                                                var nodeAddress = await CheckEndpointAsync(endpoint, node.PrivateAddress);
+                                                var nodeAddresses = await CheckEndpointAsync(endpoint, node.PrivateAddress);
 
-                                                if (nodeAddress != null)
+                                                foreach (var nodeAddress in nodeAddresses)
                                                 {
                                                     hostAddresses.Add(target.Hostname, nodeAddress);
                                                 }
@@ -347,6 +357,7 @@ namespace NeonDnsHealth
                                 continue;
                             }
 
+                            //-------------------------------------------------
                             // Handle normal endpoints.
 
                             var address = await CheckEndpointAsync(endpoint);
@@ -364,9 +375,8 @@ namespace NeonDnsHealth
 
             await NeonHelper.WaitAllAsync(targetTasks);
 
-            // Log any detected warnings.  Note that we're going to throttle
-            // warning reports to once every 5 minutes, so we won't spam
-            // the logs.
+            // Log any detected configuration warnings.  Note that we're going to throttle
+            // warning reports to once every 5 minutes, so we won't spam the logs.
 
             if (warnTimer.HasFired)
             {
@@ -385,31 +395,58 @@ namespace NeonDnsHealth
         /// Optionally overrides the <see cref="DnsEndpoint.Target"/> property when we're
         /// testing node groups.
         /// </param>
-        /// <returns>The <see cref="IPAddress"/> of the endpoint if it's healthy, <c>null</c> if not.</returns>
-        private static async Task<IPAddress> CheckEndpointAsync(DnsEndpoint endpoint, string targetOverride = null)
+        /// <returns>
+        /// The list of healthy endpoint IP addresses for the endpoint or 
+        /// an empty list if there are no healthy addresses.
+        /// </returns>
+        private static async Task<List<IPAddress>> CheckEndpointAsync(DnsEndpoint endpoint, string targetOverride = null)
         {
+            // Resolve the target DNS name, if required.
+
+            var addresses = await dns.LookupAsync(endpoint.Target);
+
             // Perform health checking if required.
+
+            var healthyAddresses = new List<IPAddress>();
 
             if (endpoint.Check)
             {
+                var pingTasks = new List<Task>();
+
+                foreach (var address in addresses)
+                {
+                    pingTasks.Add(Task.Run(
+                        async () =>
+                        {
+                            var reply = await ping.SendPingAsync(address, (int)pingTimeout.TotalMilliseconds);
+
+                            if (reply.Status == IPStatus.Success)
+                            {
+                                lock (healthyAddresses)
+                                {
+                                    healthyAddresses.Add(address);
+                                }
+                            }
+                            else
+                            {
+                                // $todo(jeff.lill):
+                                //
+                                // Consider logging [HEALTHY --> UNHEALTHY] as well as
+                                // [UNHEALTHY --> HEALTHY] transitions.
+                                //
+                                // We'll need to keep some state to manage this.
+                            }
+                        }));
+                }
+
+                await NeonHelper.WaitAllAsync(pingTasks);
             }
-
-            return null;
-        }
-
-        /// <summary>
-        /// Resolves an IP address or FQDN into an IP address.
-        /// </summary>
-        /// <param name="addressOrFQDN">The IP address string or FQDN.</param>
-        /// <returns>The <see cref="IPAddress"/> or <c>null</c> if the FQDN could not be resolved.</returns>
-        private static async Task<IPAddress> ResolveAddressAsync(string addressOrFQDN)
-        {
-            if (IPAddress.TryParse(addressOrFQDN, out var address))
+            else
             {
-                return address;
+                healthyAddresses = addresses.ToList();
             }
 
-            return null;
+            return healthyAddresses;
         }
     }
 }

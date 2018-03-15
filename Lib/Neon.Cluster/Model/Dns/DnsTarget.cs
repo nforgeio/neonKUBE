@@ -35,12 +35,6 @@ namespace Neon.Cluster
         public string Hostname { get; set; }
 
         /// <summary>
-        /// The DNS TTL in seconds.
-        /// </summary>
-        [JsonProperty(PropertyName = "Ttl", Required = Required.Always)]
-        public int Ttl { get; set; }
-
-        /// <summary>
         /// Lists the domain endpoints.
         /// </summary>
         [JsonProperty(PropertyName = "Endpoints", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -63,11 +57,6 @@ namespace Neon.Cluster
             if (string.IsNullOrEmpty(Hostname))
             {
                 warnings.Add($"Invalid [{nameof(DnsTarget)}.{nameof(Hostname)}={Hostname}].");
-            }
-
-            if (Ttl <= 0)
-            {
-                warnings.Add($"Invalid [{nameof(DnsTarget)}.{nameof(Ttl)}={Ttl}] for [{nameof(Hostname)}={Hostname}].");
             }
 
             foreach (var endpoint in Endpoints)
