@@ -211,14 +211,14 @@ Server Requirements:
                 Parallel.ForEach(cluster.Definition.NodeDefinitions.Values, parallelOptions,
                     node =>
                     {
-                        using (var pinger = new Ping())
+                        using (var ping = new Ping())
                         {
                             // We're going to try pinging up to [pingAttempts] times for each node
                             // just in case the network it sketchy and we're loosing reply packets.
 
                             for (int i = 0; i < pingAttempts; i++)
                             {
-                                var reply = pinger.Send(node.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
+                                var reply = ping.Send(node.PrivateAddress, (int)pingTimeout.TotalMilliseconds);
 
                                 if (reply.Status == IPStatus.Success)
                                 {
