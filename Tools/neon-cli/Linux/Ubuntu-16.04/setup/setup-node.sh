@@ -1220,7 +1220,9 @@ systemctl restart neon-dns-loader
 
 apt-get install -yq python-pip
 pip install docker
-pip install PyYAML
+pip install docker-py
+pip install docker-compose
+pip install pyyaml
 pip install jsondiff
 
 #------------------------------------------------------------------------------
