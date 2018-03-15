@@ -25,14 +25,64 @@ namespace Neon.Common
         /// <b>do not require</b> that all source JSON properties match those 
         /// defined by the type being deserialized.
         /// </summary>
-        public static JsonSerializerSettings JsonRelaxedSerializerSettings { get; set; }
+        public static Lazy<JsonSerializerSettings> JsonRelaxedSerializerSettings =
+            new Lazy<JsonSerializerSettings>(
+                () =>
+                {
+                    var settings = new JsonSerializerSettings();
+
+                    settings.Converters.Add(
+                        new StringEnumConverter(false)
+                        {
+                            AllowIntegerValues = false
+                        });
+
+                    // Ignore missing members for relaxed parsing.
+
+                    settings.MissingMemberHandling = MissingMemberHandling.Ignore;
+
+                    // Serialize dates as UTC like: 2012-07-27T18:51:45.53403Z
+                    //
+                    // The nice thing about this is that Couchbase and other NoSQL database will
+                    // be able to do date range queries out-of-the-box.
+
+                    settings.DateFormatHandling   = DateFormatHandling.IsoDateFormat;
+                    settings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+
+                    return settings;
+                });
 
         /// <summary>
         /// The global <b>strict</b> JSON serializer settings.  These settings 
         /// <b>do require</b> that all source JSON properties match those defined 
         /// by the type being deserialized.
         /// </summary>
-        public static JsonSerializerSettings JsonStrictSerializerSettings { get; set; }
+        public static Lazy<JsonSerializerSettings> JsonStrictSerializerSettings =
+            new Lazy<JsonSerializerSettings>(
+                () =>
+                {
+                    var settings = new JsonSerializerSettings();
+
+                    settings.Converters.Add(
+                        new StringEnumConverter(false)
+                        {
+                            AllowIntegerValues = false
+                        });
+
+                    // Treat missing members as errors for strict parsing.
+
+                    settings.MissingMemberHandling = MissingMemberHandling.Error;
+
+                    // Serialize dates as UTC like: 2012-07-27T18:51:45.53403Z
+                    //
+                    // The nice thing about this is that Couchbase and other NoSQL database will
+                    // be able to do date range queries out-of-the-box.
+
+                    settings.DateFormatHandling   = DateFormatHandling.IsoDateFormat;
+                    settings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
+
+                    return settings;
+                });
 
         /// <summary>
         /// Serializes an object to JSON text.
@@ -47,7 +97,7 @@ namespace Neon.Common
         /// </remarks>
         public static string JsonSerialize(object value, Formatting format = Formatting.None)
         {
-            return JsonConvert.SerializeObject(value, format, JsonRelaxedSerializerSettings);
+            return JsonConvert.SerializeObject(value, format, JsonRelaxedSerializerSettings.Value);
         }
 
         /// <summary>
@@ -64,7 +114,7 @@ namespace Neon.Common
         /// </remarks>
         public static T JsonDeserialize<T>(string json, bool strict = false)
         {
-            return JsonConvert.DeserializeObject<T>(json, strict ? JsonStrictSerializerSettings : JsonRelaxedSerializerSettings);
+            return JsonConvert.DeserializeObject<T>(json, strict ? JsonStrictSerializerSettings.Value : JsonRelaxedSerializerSettings.Value);
         }
 
         /// <summary>
@@ -81,7 +131,7 @@ namespace Neon.Common
         /// </remarks>
         public static string JsonSerialize(object value, JsonSerializerSettings settings, Formatting format = Formatting.None)
         {
-            return JsonConvert.SerializeObject(value, format, settings ?? JsonRelaxedSerializerSettings);
+            return JsonConvert.SerializeObject(value, format, settings ?? JsonRelaxedSerializerSettings.Value);
         }
 
         /// <summary>
@@ -98,7 +148,7 @@ namespace Neon.Common
         /// </remarks>
         public static T JsonDeserialize<T>(string json, JsonSerializerSettings settings)
         {
-            return JsonConvert.DeserializeObject<T>(json, settings ?? JsonRelaxedSerializerSettings);
+            return JsonConvert.DeserializeObject<T>(json, settings ?? JsonRelaxedSerializerSettings.Value);
         }
 
         /// <summary>

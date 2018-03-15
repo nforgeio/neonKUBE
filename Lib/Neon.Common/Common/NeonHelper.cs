@@ -120,46 +120,6 @@ namespace Neon.Common
             // Dependency injection initialization:
 
             ServiceContainer = new ServiceContainer();
-
-            //---------------------------------------------
-            // Relaxed JSON serialization settings:
-
-            JsonRelaxedSerializerSettings = new JsonSerializerSettings();
-            JsonRelaxedSerializerSettings.Converters.Add(
-                new StringEnumConverter(false)
-                {
-                    AllowIntegerValues = false
-                });
-
-            JsonRelaxedSerializerSettings.MissingMemberHandling = MissingMemberHandling.Ignore;
-
-            // Serialize dates as UTC like: 2012-07-27T18:51:45.53403Z
-            //
-            // The nice thing about this is that Couchbase and other NoSQL database will
-            // be able to do date range queries out-of-the-box.
-
-            JsonRelaxedSerializerSettings.DateFormatHandling   = DateFormatHandling.IsoDateFormat;
-            JsonRelaxedSerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
-
-            //---------------------------------------------
-            // Strict JSON serialization settings:
-
-            JsonStrictSerializerSettings = new JsonSerializerSettings();
-            JsonStrictSerializerSettings.Converters.Add(
-                new StringEnumConverter(false)
-                {
-                    AllowIntegerValues = false
-                });
-
-            JsonStrictSerializerSettings.MissingMemberHandling = MissingMemberHandling.Error;
-
-            // Serialize dates as UTC like: 2012-07-27T18:51:45.53403Z
-            //
-            // The nice thing about this is that Couchbase and other NoSQL database will
-            // be able to do date range queries out-of-the-box.
-
-            JsonStrictSerializerSettings.DateFormatHandling   = DateFormatHandling.IsoDateFormat;
-            JsonStrictSerializerSettings.DateTimeZoneHandling = DateTimeZoneHandling.Utc;
         }
 
         /// <summary>
