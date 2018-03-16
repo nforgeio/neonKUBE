@@ -120,12 +120,21 @@ namespace Neon.Cluster
                 nodeProxyCreator =
                     (name, publicAddress, privateAddress) =>
                     {
-                        // Note that the proxy returned won't actually work because we're not 
-                        // passing valid SSH credentials.  This us useful for situations where
-                        // we need a cluster proxy for global things (like managing a hosting
-                        // environment) where we won't need access to specific cluster nodes.
+                        var login = NeonClusterHelper.ClusterLogin;
 
-                        return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, SshCredentials.FromUserPassword("null", ""));
+                        if (login != null)
+                        {
+                            return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, login.GetSshCredentials());
+                        }
+                        else
+                        {
+                            // Note that the proxy returned won't actually work because we're not 
+                            // passing valid SSH credentials.  This is useful for situations where
+                            // we need a cluster proxy for global things (like managing a hosting
+                            // environment) where we won't need access to specific cluster nodes.
+
+                            return new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, SshCredentials.FromUserPassword("null", ""));
+                        }
                     };
             }
 

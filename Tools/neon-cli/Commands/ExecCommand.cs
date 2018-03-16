@@ -241,7 +241,7 @@ does this on the first manager node:
 
             // Perform the operation.
 
-            var cluster = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>);
+            var cluster = new ClusterProxy(clusterLogin);
 
             if (nodeDefinitions.Count == 1)
             {

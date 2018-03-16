@@ -113,7 +113,7 @@ the [neon exec] command.
 
             var clusterLogin = Program.ConnectCluster();
 
-            cluster = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>);
+            cluster = new ClusterProxy(clusterLogin);
 
             // Determine which node we're going to target.
 

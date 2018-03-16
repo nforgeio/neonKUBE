@@ -1586,7 +1586,7 @@ retries = 4
         private void GenerateAnsibleFiles(ClusterLogin login)
         {
             var clusterLogin = Program.ConnectCluster();
-            var cluster      = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>);
+            var cluster      = new ClusterProxy(clusterLogin);
 
             // IMPLEMENTATION NOTE:
             //

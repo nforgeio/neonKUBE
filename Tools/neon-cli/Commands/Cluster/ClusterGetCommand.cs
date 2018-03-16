@@ -76,7 +76,7 @@ NODE IDENTIFIERS:
             }
 
             var clusterLogin = Program.ConnectCluster();
-            var cluster      = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>);
+            var cluster      = new ClusterProxy(clusterLogin);
 
             if (commandLine.Arguments.Length != 1)
             {

@@ -115,7 +115,7 @@ NOTE: The following Vault commands are not supported:
 
             var clusterLogin = Program.ConnectCluster();
 
-            cluster          = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>);
+            cluster          = new ClusterProxy(clusterLogin);
             vaultCredentials = clusterLogin.VaultCredentials;
 
             // Determine which node we're going to target.

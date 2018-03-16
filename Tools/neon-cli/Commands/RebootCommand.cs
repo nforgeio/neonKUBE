@@ -113,7 +113,7 @@ command.
 
             // Perform the reboots.
 
-            var cluster   = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>);
+            var cluster   = new ClusterProxy(clusterLogin);
             var operation = 
                 new SetupController<NodeDefinition>(Program.SafeCommandLine, cluster.Nodes.Where(n => nodeDefinitions.Exists(nd => nd.Name == n.Name)))
                 {

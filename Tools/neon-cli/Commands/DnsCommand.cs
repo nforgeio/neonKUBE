@@ -122,7 +122,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
             }
 
             var clusterLogin = Program.ConnectCluster();
-            var cluster      = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>);
+            var cluster      = new ClusterProxy(clusterLogin);
             var command      = commandLine.Arguments.ElementAt(0);
 
             switch (command)

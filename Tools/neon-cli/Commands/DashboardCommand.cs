@@ -68,7 +68,7 @@ dashboard names are reserved for use as commands:
             }
 
             var clusterLogin = Program.ConnectCluster();
-            var cluster      = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>);
+            var cluster      = new ClusterProxy(clusterLogin);
             var dashboard    = commandLine.Arguments[0];
             var node         = cluster.GetHealthyManager();
 
