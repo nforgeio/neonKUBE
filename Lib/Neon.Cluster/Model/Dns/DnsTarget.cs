@@ -42,7 +42,7 @@ namespace Neon.Cluster
         public List<DnsEndpoint> Endpoints { get; set; } = new List<DnsEndpoint>();
 
         /// <summary>
-        /// Validates the DNS target.  Any warning/errors will be appended to <paramref name="warnings"/>.
+        /// Validates the DNS target.  Any warning/errors will be returned as a string list.
         /// </summary>
         /// <param name="clusterDefinition">The current cluster definition,</param>
         /// <param name="nodeGroups">The cluster node groups.</param>
