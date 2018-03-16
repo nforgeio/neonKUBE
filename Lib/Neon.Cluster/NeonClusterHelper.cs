@@ -499,7 +499,7 @@ namespace Neon.Cluster
         public static ClusterLogin ClusterLogin { get; private set; } = null;
 
         /// <summary>
-        /// Returns the <see cref="ClusterProxy"/> for the opened clustere.
+        /// Returns the <see cref="ClusterProxy"/> for the opened cluster.
         /// </summary>
         public static ClusterProxy Cluster { get; private set; } = null;
 
@@ -513,7 +513,7 @@ namespace Neon.Cluster
         /// <exception cref="InvalidOperationException">Thrown if a cluster is already connected.</exception>
         /// <remarks>
         /// <note>
-        /// This method requres elevated administrative permissions for the local operating
+        /// This method requires elevated administrative permissions for the local operating
         /// system.
         /// </note>
         /// <note>
