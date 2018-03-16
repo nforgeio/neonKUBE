@@ -195,7 +195,7 @@ See the documentation for more proxy route and setting details.
             {
                 case "help":
 
-                    // $hack: So this isn't really a proxy name.
+                    // $hack: This isn't really a proxy name.
 
                     Console.WriteLine(routeHelp);
                     Program.Exit(0);
