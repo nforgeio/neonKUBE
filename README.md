@@ -120,7 +120,7 @@ Follow steps below to configure a development or test workstation.
 
 26. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
-27. *Optional*: Download **Cmdr** *Mini* command shell from [here](http://cmder.net/) and unzip it into a new folder and then ensure that this folder is in your **PATH**.
+27. *Optional*: Download **Cmdr** *Mini* command shell from [here](http://cmder.net/) and unzip it into a new folder and then ensure that this folder is in your **PATH**.  You should also consider removing the alias definitions in the `user-aliases.cmd` file so that command like `ls` will work properly.
 
 # Git Branches and Docker Image Tagging Conventions
 
