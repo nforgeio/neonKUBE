@@ -339,10 +339,10 @@ systemctl restart neon-disable-thp
 # I'm hardcoding the [neon-proxy-public] ports 5100 and 5101 here rather than
 # adding a new macro.  Hopefully, these ports will never change again.
 
-cat <<EOF > /usr/local/bin/neon-port-forwarding
+cat <<EOF > /usr/local/bin/neon-port-forwarder
 #!/bin/bash
 #------------------------------------------------------------------------------
-# FILE:         neon-port-forwarding
+# FILE:         neon-port-forwarder
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
@@ -383,20 +383,20 @@ do
 done
 EOF
 
-chmod 700 /usr/local/bin/neon-port-forwarding
+chmod 700 /usr/local/bin/neon-port-forwarder
 
-# Generate the [neon-port-forwarding] systemd unit.
+# Generate the [neon-port-forwarder] systemd unit.
 
-cat <<EOF > /lib/systemd/system/neon-port-forwarding.service
+cat <<EOF > /lib/systemd/system/neon-port-forwarder.service
 # A service that configures the port 80 and 443 port forwarding rules.
 
 [Unit]
-Description=neon-port-forwarding
+Description=neon-port-forwarder
 Documentation=
 After=wait-for-network.service
 
 [Service]
-ExecStart=/usr/local/bin/neon-port-forwarding
+ExecStart=/usr/local/bin/neon-port-forwarder
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 
@@ -404,9 +404,9 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-systemctl enable neon-port-forwarding
+systemctl enable neon-port-forwarder
 systemctl daemon-reload
-systemctl restart neon-port-forwarding
+systemctl restart neon-port-forwarder
 
 #------------------------------------------------------------------------------
 # Configure the systemd journal to perist the journal to the file system at
