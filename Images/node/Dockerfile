@@ -20,7 +20,8 @@ COPY program.js             /
 ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 
 RUN chmod 700 /docker-entrypoint.sh \
-    && chmod 700 /tini \
+    && apk add --update tini \
+    && chmod 700 /sbin/tini \
     && chmod 600 /program.js
 
 EXPOSE 80
