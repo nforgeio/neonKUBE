@@ -69,14 +69,13 @@ The source variable files are formatted as Ansible compatible YAML, like:
         username: dbuser
         password: dbpass
 
-This will generate four environment variables plus the [neon_run_id] which
-is discussed in a note below.
+This will generate four environment variables plus [NEON_RUN_ENV].
 
     username=jeff
     password=super.dude
     mysql_username=dbuser
     mysql_password=dbpass
-    NEON_RUN_ENV=PATH
+    NEON_RUN_ENV=PATH       ** see note below
 
 Variable files can be encrypted using the [neon ansible vault encrypt]
 command and then can be used by [neon run] and other [neon ansible]
