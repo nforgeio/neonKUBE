@@ -272,7 +272,7 @@ NOTE: The [neon run ...] command cannot be run recursively.  For example,
                                     continue;   // Ignore variables with multi-line values.
                                 }
 
-                                allVars.Add(variable.Key, variable.Value);
+                                allVars[variable.Key] = variable.Value;
                                 Environment.SetEnvironmentVariable(variable.Key, variable.Value);
                             }
                         }
