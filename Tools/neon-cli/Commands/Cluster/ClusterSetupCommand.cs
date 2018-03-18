@@ -1470,8 +1470,8 @@ $@"docker login \
                         foreach (var labelDefinition in labelDefinitions)
                         {
                             // We occasionaly see [update out of sequence] errors from labeling operations.
-                            // These seem to be transient, so we're going to retry a few timesbefore actually
-                            // giving up.
+                            // These seem to be transient, so we're going to retry a few times before
+                            // actually giving up.
 
                             var retry = new LinearRetryPolicy(e => e is NeonClusterException, retryInterval: TimeSpan.FromSeconds(5));
 
