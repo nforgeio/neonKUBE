@@ -350,40 +350,80 @@ cat <<EOF > /usr/local/bin/neon-port-forwarder
 # forwarding rules.  Note that these rules work because [neon-proxy-public]
 # is either running on ever node or we're using the Docker ingress mesh
 # network to route these packets to the proxy instances.
+#
+# We're going to loop every 30 seconds to ensure that this gets reconfigured
+# in case the network stack is restarted or Docker messes with the rules.
 
-echo "[INFO] Configuring port forwarding rules."
+echo "[INFO] Verifying port forwarding rules every [30] seconds."
 
-# Use [ip link] and [gawk] to list the interfaces that match "eth#"
-# and then configure the IPTABLES forwarding rules for those interfaces.
+# This function appends an [iptables] rule if it doesn't already exist.
+function setRule {
+    
+    # Verify that the rule doesn't already exist.
 
-for interface in \$( ip link | gawk '/eth[0..9]+:/ { print gensub(/:/, "", "g", \$2) }' ); do
+    if iptables --check \$@ &> /dev/nul ; then
+        return
+    fi
 
-    # Forward port 80 --> 5100
+    # Append the rule.  Note that I'm using [--wait] to ensure that 
+    # we'll wait for the [iptables] lock to be released if somebody
+    # else (like Docker) is messing with the rules.
 
-    echo "[INFO] Forwarding [port 80] packets on [\$interface] to [${NEON_NODE_IP}:5100]."
-    iptables -A PREROUTING -t nat -i \$interface -p tcp --dport 80 -j DNAT --to ${NEON_NODE_IP}:5100
-    iptables -A FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5100 -j ACCEPT
-
-    # Forward port 443 --> 5101
-
-    echo "[INFO] Forwarding [port 443] packets on [\$interface] to [${NEON_NODE_IP}:5101]."
-    iptables -A PREROUTING -t nat -i \$interface -p tcp --dport 443 -j DNAT --to ${NEON_NODE_IP}:5101
-    iptables -A FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5101 -j ACCEPT
-done
-
-echo "[INFO] Configuration complete."
-
-# We probably don't need to loop here, but it can't hurt.
-
-echo "[INFO] Sleeping."
+    echo [INFO] Setting rule: -A \$@
+    iptables --wait -A \$@
+}
 
 while true
 do
-    sleep 3600
+    # IMPLEMENTATION NOTE:
+    #
+    # We need to apply these changes only to the physical host network interfaces.
+    # We're going to assume that these interfaces will be named like [eth#] (the 
+    # old naming scheme or [en*] (the new consistent interface naming scheme).
+    #
+    # This is probably going to be somewhat fragile.
+    #
+    # Also note that we're not going to try to apply NATs to the loopback [lo]
+    # interface.
+
+    #------------------------------------------------------
+    # Use [ip link] and [gawk] to list the interfaces that match "eth#"
+    # and then configure the IPTABLES forwarding rules for those interfaces.
+
+    for interface in \$( ip link | gawk '/eth[0..9]+:/ { print gensub(/:/, "", "g", \$2) }' )
+    do
+        # Forward port 80 --> 5100
+
+        setRule PREROUTING -t nat -i \$interface -p tcp --dport 80 -j DNAT --to ${NEON_NODE_IP}:5100
+        setRule FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5100 -j ACCEPT
+
+        # Forward port 443 --> 5101
+
+        setRule PREROUTING -t nat -i \$interface -p tcp --dport 443 -j DNAT --to ${NEON_NODE_IP}:5101
+        setRule FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5101 -j ACCEPT
+    done
+
+    #------------------------------------------------------
+    # Now do the same for any [en*] interfaces.
+
+    for interface in \$( ip link | gawk '/en[0-9a-zA-Z]+:/ { print gensub(/:/, "", "g", \$2) }' )
+    do
+        # Forward port 80 --> 5100
+
+        setRule PREROUTING -t nat -i \$interface -p tcp --dport 80 -j DNAT --to ${NEON_NODE_IP}:5100
+        setRule FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5100 -j ACCEPT
+
+        # Forward port 443 --> 5101
+
+        setRule PREROUTING -t nat -i \$interface -p tcp --dport 443 -j DNAT --to ${NEON_NODE_IP}:5101
+        setRule FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5101 -j ACCEPT
+    done
+
+    sleep 30
 done
 EOF
 
-chmod 700 /usr/local/bin/neon-port-forwarder
+chmod 744 /usr/local/bin/neon-port-forwarder
 
 # Generate the [neon-port-forwarder] systemd unit.
 
