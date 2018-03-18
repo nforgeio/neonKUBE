@@ -145,11 +145,13 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "test", "test", "{A7E3360B-C
 	ProjectSection(SolutionItems) = preProject
 		Devops\test\env.ps1 = Devops\test\env.ps1
 		Devops\test\README.md = Devops\test\README.md
+		Devops\test\secrets.yaml = Devops\test\secrets.yaml
 		Devops\test\setup-all.ps1 = Devops\test\setup-all.ps1
 		Devops\test\setup-cluster.ps1 = Devops\test\setup-cluster.ps1
 		Devops\test\setup-core-services.ps1 = Devops\test\setup-core-services.ps1
 		Devops\test\setup-registry.ps1 = Devops\test\setup-registry.ps1
 		Devops\test\setup-registry.yaml = Devops\test\setup-registry.yaml
+		Devops\test\vars.yaml = Devops\test\vars.yaml
 	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-volume-plugin", "Tools\neon-volume-plugin\neon-volume-plugin.csproj", "{1253D575-7978-45EA-934C-DC827FA34C06}"

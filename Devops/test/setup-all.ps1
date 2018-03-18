@@ -80,7 +80,7 @@ if ($skipServices)
 
 $env:SETUP_ALL = "true"
 
-neon run --vault-password-file=$env:SECRETS_PASS "$env:SECRETS_VARS" -- `
+neon run --vault-password-file=$env:SECRETS_PASS "$env:SECRETS_GLOBAL" "$env:SECRETS_LOCAL" "$env:VARS_GLOBAL" "$env:VARS_LOCAL" -- `
 	powershell -f setup-cluster.ps1 "$env:CLUSTER_SETUP_PATH\clusters\$env:CLUSTER\cluster.json"
 
 if (-not $?)

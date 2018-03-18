@@ -1,0 +1,19 @@
+# Global deployment variables.
+
+vars:
+
+  # Most routers don't allow packets to loop back from the
+  # internal network, to the router's public IP address and
+  # then back into the internal network for better security.
+  #
+  # So, we need to register two DNS names, one that references
+  # public IP address and the other that references an internal
+  # address.
+
+  # $todo(jeff.lill):
+  #
+  # In the future, we'd use dynamic DNS to return the external
+  # or internal address depending on where the request originated.
+
+  registry_host_public: registry.neonforge.net
+  registry_host_private: registry-private.neonforge.net
