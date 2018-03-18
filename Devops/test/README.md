@@ -21,8 +21,8 @@ This file defines the variables described below.  These variables can be referen
 
 ## Standard DEVOPS Credentials
 
-`CLUSTER_DEVOPS_USERNAME`
-`CLUSTER_DEVOPS_PASSWORD`
+`DEVOPS_USERNAME`
+`DEVOPS_PASSWORD`
 
 ## Default credentials for virtual machine templates. 
 
