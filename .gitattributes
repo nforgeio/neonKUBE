@@ -80,3 +80,9 @@
 /Images/**/*.sh         text=lf
 /Images/**/*.yaml       text=lf
 /Images/**/*.yml        text=lf
+
+###############################################################################
+# These files are Ansible encrypted YAML so we'll treat them as binary.
+###############################################################################
+
+/Devops/**/secrets.yaml merge=binary
