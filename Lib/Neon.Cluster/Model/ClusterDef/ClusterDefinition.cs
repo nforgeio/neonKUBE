@@ -55,7 +55,14 @@ namespace Neon.Cluster
         private const string        defaultDrivePrefix         = "sd";
         private const int           defaultStepDelaySeconds    = 20;
 
+        /// <summary>
+        /// Regex for verifying cluster names for hosts, routes, groups, etc.
+        /// </summary>
         public static Regex NameRegex { get; private set; }    = new Regex(@"^[a-z0-9.\-_]+$", RegexOptions.IgnoreCase);
+
+        /// <summary>
+        /// Regex for verifying DNS hostnames.
+        /// </summary>
         public static Regex DnsHostRegex { get; private set; } = new Regex(@"^([a-z0-9]|[a-z0-9][a-z0-9\-_]{0,61}[a-z0-9])(\.([a-z0-9]|[a-z0-9][a-z0-9\-_]{0,61}[a-z0-9_]))*$", RegexOptions.IgnoreCase);
 
         /// <summary>
