@@ -263,7 +263,11 @@ NOTE: The [neon run ...] command cannot be run recursively.  For example,
                             var vars = new List<KeyValuePair<string, string>>();
 
                             yaml.Load(new StringReader(varContents));
-                            ParseYamlVariables(vars, (YamlMappingNode)yaml.Documents.First().RootNode);
+
+                            if (yaml.Documents.FirstOrDefault() != null)
+                            {
+                                ParseYamlVariables(vars, (YamlMappingNode)yaml.Documents.First().RootNode);
+                            }
 
                             foreach (var variable in vars)
                             {
