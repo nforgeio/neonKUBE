@@ -23,11 +23,12 @@ using AzureEnvironment = Microsoft.Azure.Management.ResourceManager.Fluent.Azure
 
 // $todo(jeff.lill):
 //
-// I stubbed out Azure calls that weren't compiling due to changed
+// I stubbed out Azure calls that weren't compiling due to changes
 // in the Azure class library (I've been using a very old version).
 
 #pragma warning disable 169 
 #pragma warning disable 649 
+
 #if AZURE_STUBBED
 #endif
 
