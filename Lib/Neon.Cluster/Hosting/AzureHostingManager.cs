@@ -290,6 +290,9 @@ namespace Neon.Cluster
         /// </param>
         public AzureHostingManager(ClusterProxy cluster, string logFolder = null)
         {
+#if !AZURE_STUBBED
+            throw new NotImplementedException("AzureHostingManager is currently stubbed.");
+#endif
 #if AZURE_STUBBED
             this.cluster        = cluster;
             this.clusterName    = cluster.Definition.Name;
