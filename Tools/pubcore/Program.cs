@@ -35,9 +35,11 @@ namespace pubcore
         /// <param name="args">Command line arguments.</param>
         public static void Main(string[] args)
         {
-            if (args.Length != 6)
+            try
             {
-                Console.WriteLine(
+                if (args.Length != 6)
+                {
+                    Console.WriteLine(
 $@"
 .NET Core Publishing Utility: pubcore [v{Version}]
 
@@ -67,156 +69,162 @@ or:
     <RuntimeIdentifiers>win10-x64;...</RuntimeIdentifiers>
 
 ");
-                Environment.Exit(1);
-            }
-
-            // We need to examine/set an environment variable to prevent the [dotnet publish...]
-            // command below from recursively invoking the project build event that will invoke
-            // the program again.
-
-            const string recursionVar = "unix-text-68A780E5-00E7-4158-B5DE-E95C1D284911";
-
-            if (Environment.GetEnvironmentVariable(recursionVar) == "true")
-            {
-                // Looks like we've recursed, so just bail right now.
-
-                return;
-            }
-
-            Environment.SetEnvironmentVariable(recursionVar, "true");
-
-            // Parse the arguments.
-
-            var projectPath = args[0];
-
-            if (!File.Exists(projectPath))
-            {
-                Console.WriteLine($"Project file [{projectPath}] does not exist.");
-                Environment.Exit(1);
-            }
-
-            var targetName  = args[1];
-            var config      = args[2];
-            var targetPath  = Path.Combine(Path.GetDirectoryName(args[3]), "publish");
-            var publishPath = args[4];
-            var runtime     = args.ElementAtOrDefault(5);
-            var binFolder   = Path.Combine(publishPath, targetName);
-
-            Directory.CreateDirectory(publishPath);
-
-            // Ensure that the runtime identifier is present in the project file.
-
-            // $hack(jeff.lill): 
-            //
-            // I'm hacking this test right now using string matching.  Ultimately,
-            // this should be accomplished by actually parsing the project XML.
-
-            var projectText = File.ReadAllText(projectPath);
-
-            if (!projectText.Contains(runtime))
-            {
-                Console.Error.WriteLine();
-                Console.Error.WriteLine("ERROR: Make sure the runtime identifier below is present in your");
-                Console.Error.WriteLine("       project's <PropertyGroup/> section:");
-                Console.Error.WriteLine();
-                Console.Error.WriteLine($"    <PropertyGroup>");
-                Console.Error.WriteLine($"        <RuntimeIdentifier>{runtime}</RuntimeIdentifier>");
-                Console.Error.WriteLine($"    </PropertyGroup>");
-                Console.Error.WriteLine();
-                Console.Error.WriteLine($"PROJECT: {Path.GetFullPath(projectPath)}");
-                Console.Error.WriteLine();
-
-                Environment.Exit(1);
-            }
-
-            // Projects specifying a single runtime identifier like:
-            //
-            //      <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
-            //
-            // will publish their output to:
-            //
-            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp2.0\publish
-            //
-            // Projects that use <RuntimeIdentifiers/> (plural) with one
-            // or more runtime identifiers like:
-            //
-            //      <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
-            //
-            // will publish output to:
-            //
-            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp2.0\win10-x64\publish
-            //
-            // We're going to probe for the existence of the first folder
-            // and assume the second if the first doesn't exist.
-
-            if (!Directory.Exists(targetPath))
-            {
-                targetPath = Path.GetFullPath(Path.Combine(targetPath, ".."));
-                targetPath = Path.Combine(targetPath, runtime, "publish");
-            }
-
-            // Publish the project.
-
-            var startInfo = new ProcessStartInfo("dotnet.exe")
-            {
-                CreateNoWindow  = true,
-                UseShellExecute = false
-            };
-
-            startInfo.Arguments = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime}";
-
-            var process = Process.Start(startInfo);
-
-            process.WaitForExit();
-
-            if (process.ExitCode != 0)
-            {
-                Environment.Exit(process.ExitCode);
-            }
-
-            // It appears that references to published files can remain open 
-            // after previous tool executions, even after the program has
-            // exited.  I'm not sure what's causing this, but we'll mitigate
-            // pausing and retrying a few times.
-
-            const int tryCount = 5;
-
-            for (int i = 1; i <= tryCount; i++)
-            {
-                try
-                {
-                    File.WriteAllText(Path.Combine(publishPath, $"{targetName}.cmd"), 
-$@"@echo off
-%~dp0\{targetName}\{targetName}.exe %*
-");
-
-                    // Remove the output folder and then recreate it to ensure
-                    // that all old files will be removed.
-
-                    if (Directory.Exists(binFolder))
-                    {
-                        Directory.Delete(binFolder, recursive: true);
-                    }
-
-                    Directory.CreateDirectory(binFolder);
-
-                    CopyRecursive(targetPath, binFolder);
-                    break;
-                }
-                catch (Exception e)
-                {
-                    if (i < tryCount)
-                    {
-                        Thread.Sleep(TimeSpan.FromSeconds(5));
-                        continue;
-                    }
-
-                    Console.WriteLine($"{e.GetType().FullName}: {e.Message}");
                     Environment.Exit(1);
                 }
-            }
 
-            Environment.Exit(0);
+                // We need to examine/set an environment variable to prevent the [dotnet publish...]
+                // command below from recursively invoking the project build event that will invoke
+                // the program again.
+
+                const string recursionVar = "unix-text-68A780E5-00E7-4158-B5DE-E95C1D284911";
+
+                if (Environment.GetEnvironmentVariable(recursionVar) == "true")
+                {
+                    // Looks like we've recursed, so just bail right now.
+
+                    return;
+                }
+
+                Environment.SetEnvironmentVariable(recursionVar, "true");
+
+                // Parse the arguments.
+
+                var projectPath = args[0];
+
+                if (!File.Exists(projectPath))
+                {
+                    Console.WriteLine($"Project file [{projectPath}] does not exist.");
+                    Environment.Exit(1);
+                }
+
+                var targetName = args[1];
+                var config = args[2];
+                var targetPath = Path.Combine(Path.GetDirectoryName(args[3]), "publish");
+                var publishPath = args[4];
+                var runtime = args.ElementAtOrDefault(5);
+                var binFolder = Path.Combine(publishPath, targetName);
+
+                Directory.CreateDirectory(publishPath);
+
+                // Ensure that the runtime identifier is present in the project file.
+
+                // $hack(jeff.lill): 
+                //
+                // I'm hacking this test right now using string matching.  Ultimately,
+                // this should be accomplished by actually parsing the project XML.
+
+                var projectText = File.ReadAllText(projectPath);
+
+                if (!projectText.Contains(runtime))
+                {
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine("ERROR: Make sure the runtime identifier below is present in your");
+                    Console.Error.WriteLine("       project's <PropertyGroup/> section:");
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine($"    <PropertyGroup>");
+                    Console.Error.WriteLine($"        <RuntimeIdentifier>{runtime}</RuntimeIdentifier>");
+                    Console.Error.WriteLine($"    </PropertyGroup>");
+                    Console.Error.WriteLine();
+                    Console.Error.WriteLine($"PROJECT: {Path.GetFullPath(projectPath)}");
+                    Console.Error.WriteLine();
+
+                    Environment.Exit(1);
+                }
+
+                // Projects specifying a single runtime identifier like:
+                //
+                //      <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+                //
+                // will publish their output to:
+                //
+                //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp2.0\publish
+                //
+                // Projects that use <RuntimeIdentifiers/> (plural) with one
+                // or more runtime identifiers like:
+                //
+                //      <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
+                //
+                // will publish output to:
+                //
+                //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp2.0\win10-x64\publish
+                //
+                // We're going to probe for the existence of the first folder
+                // and assume the second if the first doesn't exist.
+
+                if (!Directory.Exists(targetPath))
+                {
+                    targetPath = Path.GetFullPath(Path.Combine(targetPath, ".."));
+                    targetPath = Path.Combine(targetPath, runtime, "publish");
+                }
+
+                // Publish the project.
+
+                var startInfo = new ProcessStartInfo("dotnet.exe")
+                {
+                    CreateNoWindow = true,
+                    UseShellExecute = false
+                };
+
+                startInfo.Arguments = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime}";
+
+                var process = Process.Start(startInfo);
+
+                process.WaitForExit();
+
+                if (process.ExitCode != 0)
+                {
+                    Environment.Exit(process.ExitCode);
+                }
+
+                // It appears that references to published files can remain open 
+                // after previous tool executions, even after the program has
+                // exited.  I'm not sure what's causing this, but we'll mitigate
+                // pausing and retrying a few times.
+
+                const int tryCount = 5;
+
+                for (int i = 1; i <= tryCount; i++)
+                {
+                    try
+                    {
+                        File.WriteAllText(Path.Combine(publishPath, $"{targetName}.cmd"),
+    $@"@echo off
+    %~dp0\{targetName}\{targetName}.exe %*
+    ");
+
+                        // Remove the output folder and then recreate it to ensure
+                        // that all old files will be removed.
+
+                        if (Directory.Exists(binFolder))
+                        {
+                            Directory.Delete(binFolder, recursive: true);
+                        }
+
+                        Directory.CreateDirectory(binFolder);
+
+                        CopyRecursive(targetPath, binFolder);
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        if (i < tryCount)
+                        {
+                            Thread.Sleep(TimeSpan.FromSeconds(5));
+                            continue;
+                        }
+
+                        Console.WriteLine($"{e.GetType().FullName}: {e.Message}");
+                        Environment.Exit(1);
+                    }
+                }
+
+                Environment.Exit(0);
+            }
+            catch (Exception e)
+            {
+                Console.Error.WriteLine($"ERROR: [{e.GetType().Name}]: {e.Message}");
+                Environment.Exit(1);
+            }
         }
 
         /// <summary>
