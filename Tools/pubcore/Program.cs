@@ -35,12 +35,13 @@ namespace pubcore
         /// <param name="args">Command line arguments.</param>
         public static void Main(string[] args)
         {
+#if _DEBUG
             Console.WriteLine($"*** ARGUMETS: {args.Length}");
             for (int i = 0; i < args.Length; i++)
             {
                 Console.WriteLine($"*** ARG[{i}]: {args[i]}");
             }
-
+#endif
             try
             {
                 if (args.Length != 6)
@@ -161,45 +162,6 @@ or:
                     Environment.Exit(process.ExitCode);
                 }
 
-                // Projects specifying a single runtime identifier like:
-                //
-                //      <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
-                //
-                // will publish their output to:
-                //
-                //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp2.0\publish
-                //
-                // Projects that use <RuntimeIdentifiers/> (plural) with one
-                // or more runtime identifiers like:
-                //
-                //      <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
-                //
-                // will publish output to:
-                //
-                //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp2.0\win10-x64\publish
-                //
-                // We're going to probe for the existence of the first folder
-                // and assume the second if the first doesn't exist.
-
-                var probeDir = Path.Combine(targetDir, "publish");
-
-                if (Directory.Exists(probeDir))
-                {
-                    targetDir = probeDir;
-                }
-                else
-                {
-                    targetDir = Path.Combine(targetDir, runtime, "publish");
-
-                    if (!Directory.Exists(targetDir))
-                    {
-                        Console.Error.WriteLine($"*** ERROR: Cannot locate publication directory:");
-                        Console.Error.WriteLine($"***        ...at: [{probeDir}]");
-                        Console.Error.WriteLine($"***        ...or: [{targetDir}]");
-                        Environment.Exit(1);
-                    }
-                }
-
                 // It appears that references to published files can remain open 
                 // after previous tool executions, even after the program has
                 // exited.  I'm not sure what's causing this, but we'll mitigate
@@ -221,6 +183,8 @@ or:
                         // Remove the output folder and then recreate it to ensure
                         // that all old files will be removed.
 
+Console.WriteLine($"binFolder: {binFolder}");
+Console.WriteLine($"targetDir: {targetDir}");
                         if (Directory.Exists(binFolder))
                         {
                             Directory.Delete(binFolder, recursive: true);
@@ -228,7 +192,7 @@ or:
 
                         Directory.CreateDirectory(binFolder);
 
-                        CopyRecursive(targetDir, binFolder);
+                        CopyRecursive(GetPublishDir(targetDir, runtime), binFolder);
                         break;
                     }
                     catch (Exception e)
@@ -272,6 +236,57 @@ or:
                 var subfolder = folder.Split(Path.DirectorySeparatorChar).Last();
 
                 CopyRecursive(Path.Combine(sourceFolder, subfolder), Path.Combine(targetFolder, subfolder));
+            }
+        }
+
+        /// <summary>
+        /// Returns the directory path where <b>dotnet publish</b> actually published
+        /// the tool binaries.
+        /// </summary>
+        /// <param name="targetDir">The project's target directory path.</param>
+        /// <param name="runtime">The runtime identifier.</param>
+        /// <returns>The publish path.</returns>
+        private static string GetPublishDir(string targetDir, string runtime)
+        {
+            // Projects specifying a single runtime identifier like:
+            //
+            //      <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+            //
+            // will publish their output to:
+            //
+            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp2.0\publish
+            //
+            // Projects that use <RuntimeIdentifiers/> (plural) with one
+            // or more runtime identifiers like:
+            //
+            //      <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
+            //
+            // will publish output to:
+            //
+            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp2.0\win10-x64\publish
+            //
+            // We're going to probe for the existence of the first folder
+            // and assume the second if the first doesn't exist.
+
+            var probeDir1 = Path.Combine(targetDir, "publish");
+
+            if (Directory.Exists(probeDir1))
+            {
+                return probeDir1;
+            }
+            else
+            {
+                var probeDir2 = Path.Combine(targetDir, runtime, "publish");
+
+                if (!Directory.Exists(probeDir2))
+                {
+                    Console.Error.WriteLine($"*** ERROR: Cannot locate publication directory:");
+                    Console.Error.WriteLine($"***        ...at: [{probeDir1}]");
+                    Console.Error.WriteLine($"***        ...or: [{probeDir2}]");
+                    Environment.Exit(1);
+                }
+
+                return probeDir2;
             }
         }
     }
