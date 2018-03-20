@@ -35,6 +35,12 @@ namespace pubcore
         /// <param name="args">Command line arguments.</param>
         public static void Main(string[] args)
         {
+            Console.WriteLine($"*** ARGUMETS: {args.Length}");
+            for (int i = 0; i < args.Length; i++)
+            {
+                Console.WriteLine($"*** ARG[{i}]: {args[i]}");
+            }
+
             try
             {
                 if (args.Length != 6)
@@ -43,13 +49,14 @@ namespace pubcore
 $@"
 .NET Core Publishing Utility: pubcore [v{Version}]
 
-usage: pubcore PROJECT-PATH CONFIG TARGET-NAME PUBLISH-PATH [RUNTIME]
+usage: pubcore PROJECT-PATH TARGET-NAME CONFIG TARGET-PATH PUBLISH-DIR RUNTIME
 
     PROJECT-PATH    - Path to the [.csproj] file
     TARGET-NAME     - Build target name
     CONFIG          - Build configuration (like: Debug or Release)
     TARGET-PATH     - Build target path
-    PUBLISH-PATH    - Path to the publication folder
+    PUBLISH-DIR     - Path to the publication folder
+    RUNTIME         - Target dotnet runtime, like: win10-x64
 
 REMARKS:
 
@@ -57,7 +64,7 @@ This utility is designed to be called from within a .NET Core project's
 POST-BUILD event using Visual Studio post-build event macros.  Here's
 an example that publishes a standalone [win10-x64] app to OUTPUT-PATH.
 
-    pubcore ""$(ProjectPath)"" ""$(TargetName)"" ""$(ConfigurationName)"" ""OUTPUT-PATH"" win10-x64
+    pubcore ""$(ProjectPath)"" ""$(TargetName)"" ""$(ConfigurationName)"" ""$(TargetDir)"" ""PUBLISH-DIR"" win10-x64
 
 Note that you MUST ADD the following to the <PropertyGroup>...</PropertyGroup>
 section on your project CSPROJ file for this to work:
@@ -98,13 +105,11 @@ or:
                 }
 
                 var targetName = args[1];
-                var config = args[2];
-                var targetPath = Path.Combine(Path.GetDirectoryName(args[3]), "publish");
-                var publishPath = args[4];
-                var runtime = args.ElementAtOrDefault(5);
-                var binFolder = Path.Combine(publishPath, targetName);
-
-                Directory.CreateDirectory(publishPath);
+                var config     = args[2];
+                var targetDir  = Path.GetDirectoryName(args[3]);
+                var publishDir = args[4];
+                var runtime    = args.ElementAtOrDefault(5);
+                var binFolder  = Path.Combine(publishDir, targetName);
 
                 // Ensure that the runtime identifier is present in the project file.
 
@@ -131,6 +136,31 @@ or:
                     Environment.Exit(1);
                 }
 
+                // Publish the project.
+
+                var process = new Process();
+
+                process.StartInfo.FileName               = "dotnet.exe";
+                process.StartInfo.Arguments              = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime}";
+                process.StartInfo.CreateNoWindow         = true;
+                process.StartInfo.UseShellExecute        = false;
+                process.StartInfo.RedirectStandardError  = true;
+                process.StartInfo.RedirectStandardOutput = true;
+
+                process.OutputDataReceived += (s, e) => Console.WriteLine(e.Data);
+                process.ErrorDataReceived  += (s, e) => Console.WriteLine(e.Data);
+
+                process.Start();
+                process.BeginErrorReadLine();
+                process.BeginOutputReadLine();
+                process.WaitForExit();
+
+                if (process.ExitCode != 0)
+                {
+                    Console.Error.WriteLine($"*** ERROR: [dotnet publish] failed with [exitcode={process.ExitCode}].");
+                    Environment.Exit(process.ExitCode);
+                }
+
                 // Projects specifying a single runtime identifier like:
                 //
                 //      <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
@@ -151,29 +181,23 @@ or:
                 // We're going to probe for the existence of the first folder
                 // and assume the second if the first doesn't exist.
 
-                if (!Directory.Exists(targetPath))
+                var probeDir = Path.Combine(targetDir, "publish");
+
+                if (Directory.Exists(probeDir))
                 {
-                    targetPath = Path.GetFullPath(Path.Combine(targetPath, ".."));
-                    targetPath = Path.Combine(targetPath, runtime, "publish");
+                    targetDir = probeDir;
                 }
-
-                // Publish the project.
-
-                var startInfo = new ProcessStartInfo("dotnet.exe")
+                else
                 {
-                    CreateNoWindow = true,
-                    UseShellExecute = false
-                };
+                    targetDir = Path.Combine(targetDir, runtime, "publish");
 
-                startInfo.Arguments = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime}";
-
-                var process = Process.Start(startInfo);
-
-                process.WaitForExit();
-
-                if (process.ExitCode != 0)
-                {
-                    Environment.Exit(process.ExitCode);
+                    if (!Directory.Exists(targetDir))
+                    {
+                        Console.Error.WriteLine($"*** ERROR: Cannot locate publication directory:");
+                        Console.Error.WriteLine($"***        ...at: [{probeDir}]");
+                        Console.Error.WriteLine($"***        ...or: [{targetDir}]");
+                        Environment.Exit(1);
+                    }
                 }
 
                 // It appears that references to published files can remain open 
@@ -183,11 +207,13 @@ or:
 
                 const int tryCount = 5;
 
+                Directory.CreateDirectory(publishDir);
+                
                 for (int i = 1; i <= tryCount; i++)
                 {
                     try
                     {
-                        File.WriteAllText(Path.Combine(publishPath, $"{targetName}.cmd"),
+                        File.WriteAllText(Path.Combine(publishDir, $"{targetName}.cmd"),
     $@"@echo off
     %~dp0\{targetName}\{targetName}.exe %*
     ");
@@ -202,7 +228,7 @@ or:
 
                         Directory.CreateDirectory(binFolder);
 
-                        CopyRecursive(targetPath, binFolder);
+                        CopyRecursive(targetDir, binFolder);
                         break;
                     }
                     catch (Exception e)
@@ -213,7 +239,7 @@ or:
                             continue;
                         }
 
-                        Console.WriteLine($"{e.GetType().FullName}: {e.Message}");
+                        Console.WriteLine($"ERROR(retry): {e.GetType().FullName}: {e.Message}");
                         Environment.Exit(1);
                     }
                 }
