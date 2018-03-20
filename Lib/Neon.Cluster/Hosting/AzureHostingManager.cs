@@ -21,6 +21,15 @@ using Neon.Net;
 
 using AzureEnvironment = Microsoft.Azure.Management.ResourceManager.Fluent.AzureEnvironment;
 
+// $todo(jeff.lill):
+//
+// I stubbed out Azure calls that weren't compiling due to changed
+// in the Azure class library (I've been using a very old version).
+
+#pragma warning disable 649 // Disable assigned member fields warning
+#if AZURE_STUBBED
+#endif
+
 namespace Neon.Cluster
 {
     /// <summary>
@@ -279,6 +288,7 @@ namespace Neon.Cluster
         /// </param>
         public AzureHostingManager(ClusterProxy cluster, string logFolder = null)
         {
+#if AZURE_STUBBED
             this.cluster        = cluster;
             this.clusterName    = cluster.Definition.Name;
             this.hostOptions    = cluster.Definition.Hosting;
@@ -324,6 +334,7 @@ namespace Neon.Cluster
                     node.Metadata.Azure = new AzureNodeOptions();
                 }
             }
+#endif
         }
 
         /// <inheritdoc/>
@@ -343,6 +354,7 @@ namespace Neon.Cluster
         /// </summary>
         private void AzureConnect()
         {
+#if AZURE_STUBBED
             if (azure != null)
             {
                 return; // Already connected.
@@ -404,6 +416,7 @@ namespace Neon.Cluster
             azure = Azure.Configure()
                 .Authenticate(azureCredentials)
                 .WithSubscription(azureOptions.SubscriptionId);
+#endif
         }
 
         /// <inheritdoc/>
@@ -674,6 +687,7 @@ namespace Neon.Cluster
         /// </summary>
         private void CreateResourceGroup()
         {
+#if AZURE_STUBBED
             if (azure.ResourceGroups.CheckExistence(resourceGroup))
             {
                 return;
@@ -683,6 +697,7 @@ namespace Neon.Cluster
                 .Define(resourceGroup)
                 .WithRegion(azureOptions.Region)
                 .Create();
+#endif
         }
 
         /// <summary>
@@ -1011,6 +1026,7 @@ namespace Neon.Cluster
         /// </remarks>
         private void CreateLoadbalancers(NetworkUpdateSets updateNetworks = NetworkUpdateSets.All, List<HostedEndpoint> endpoints = null, bool tempSsh = false)
         {
+#if AZURE_STUBBED
             tempSsh   = tempSsh && !cluster.Definition.Hosting.Azure.PublicNodeAddresses;
             endpoints = endpoints ?? new List<HostedEndpoint>();
 
@@ -1219,6 +1235,7 @@ namespace Neon.Cluster
 
                 lbWorker = lbWorkerCreator.Create();
             }
+#endif
         }
 
         /// <summary>
