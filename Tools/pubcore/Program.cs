@@ -27,7 +27,7 @@ namespace pubcore
         /// <summary>
         /// Tool version number.
         /// </summary>
-        public const string Version = "1.1";
+        public const string Version = "1.2";
 
         /// <summary>
         /// Program entrypoint.
@@ -48,7 +48,7 @@ namespace pubcore
                 {
                     Console.WriteLine(
 $@"
-.NET Core Publishing Utility: pubcore [v{Version}]
+.NET Core Publishing Utility: PUBCORE v{Version}
 
 usage: pubcore PROJECT-PATH TARGET-NAME CONFIG TARGET-PATH PUBLISH-DIR RUNTIME
 
@@ -95,6 +95,11 @@ or:
 
                 Environment.SetEnvironmentVariable(recursionVar, "true");
 
+                Console.WriteLine();
+                Console.WriteLine($"===========================================================");
+                Console.WriteLine($".NET Core Publishing Utility: PUBCORE v{Version}");
+                Console.WriteLine($"===========================================================");
+
                 // Parse the arguments.
 
                 var projectPath = args[0];
@@ -137,44 +142,79 @@ or:
                     Environment.Exit(1);
                 }
 
+                // It appears that [dotnet publish] is sometimes unable to write
+                // output files due to locks being held by somebody else (I'm guessing
+                // some part of the Visual Studio build process).  This appears to
+                // be transient.  We're going to mitigate this by introducing an
+                // initial 5 second delay to hopefully avoid the situation entirely
+                // and then try the operation up to five times.
+
+                var tryCount = 5;
+                var delay    = TimeSpan.FromSeconds(5);
+
                 // Publish the project.
 
-                var process = new Process();
+                Thread.Sleep(delay);
 
-                process.StartInfo.FileName               = "dotnet.exe";
-                process.StartInfo.Arguments              = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime}";
-                process.StartInfo.CreateNoWindow         = true;
-                process.StartInfo.UseShellExecute        = false;
-                process.StartInfo.RedirectStandardError  = true;
-                process.StartInfo.RedirectStandardOutput = true;
-
-                process.OutputDataReceived += (s, e) => Console.WriteLine(e.Data);
-                process.ErrorDataReceived  += (s, e) => Console.WriteLine(e.Data);
-
-                process.Start();
-                process.BeginErrorReadLine();
-                process.BeginOutputReadLine();
-                process.WaitForExit();
-
-                if (process.ExitCode != 0)
+                for (int i = 0; i < tryCount; i++)
                 {
-                    Console.Error.WriteLine($"*** ERROR: [dotnet publish] failed with [exitcode={process.ExitCode}].");
-                    Environment.Exit(process.ExitCode);
+                    var process = new Process();
+
+                    process.StartInfo.FileName               = "dotnet.exe";
+                    process.StartInfo.Arguments              = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime} --no-restore --no-dependencies";
+                    process.StartInfo.CreateNoWindow         = true;
+                    process.StartInfo.UseShellExecute        = false;
+                    process.StartInfo.RedirectStandardError  = true;
+                    process.StartInfo.RedirectStandardOutput = true;
+
+                    process.OutputDataReceived += (s, e) => Console.WriteLine(e.Data);
+                    process.ErrorDataReceived  += (s, e) => Console.WriteLine(e.Data);
+
+                    if (i > 0)
+                    {
+                        Console.WriteLine($"===========================================================");
+                        Console.WriteLine($"PUBCORE RETRY: dotnet {process.StartInfo.Arguments}");
+                        Console.WriteLine($"===========================================================");
+                    }
+
+                    process.Start();
+                    process.BeginErrorReadLine();
+                    process.BeginOutputReadLine();
+                    process.WaitForExit();
+
+                    if (process.ExitCode != 0)
+                    {
+                        if (i < tryCount - 1)
+                        {
+                            Console.Error.WriteLine($"*** WARNING: [dotnet publish] failed with [exitcode={process.ExitCode}].  Retrying after [{delay}].");
+                            Thread.Sleep(delay);
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"*** ERROR: [dotnet publish] failed with [exitcode={process.ExitCode}].");
+                            Environment.Exit(process.ExitCode);
+                        }
+                    }
+                    else
+                    {
+                        break;
+                    }
                 }
 
-                // It appears that references to published files can remain open 
-                // after previous tool executions, even after the program has
-                // exited.  I'm not sure what's causing this, but we'll mitigate
-                // pausing and retrying a few times.
+                // Copy build binaries to the output folder.  This also seems to
+                // experience transient errors, so we'll retry here with delays.
 
-                const int tryCount = 5;
-
-                Directory.CreateDirectory(publishDir);
-                
                 for (int i = 1; i <= tryCount; i++)
                 {
                     try
                     {
+                        if (i > 0)
+                        {
+                            Console.WriteLine($"===========================================================");
+                            Console.WriteLine($"PUBCORE RETRY: Copy to output folder");
+                            Console.WriteLine($"===========================================================");
+                        }
+
                         File.WriteAllText(Path.Combine(publishDir, $"{targetName}.cmd"),
     $@"@echo off
     %~dp0\{targetName}\{targetName}.exe %*
@@ -199,7 +239,7 @@ Console.WriteLine($"targetDir: {targetDir}");
                     {
                         if (i < tryCount)
                         {
-                            Thread.Sleep(TimeSpan.FromSeconds(5));
+                            Thread.Sleep(delay);
                             continue;
                         }
 
