@@ -26,7 +26,7 @@ using AzureEnvironment = Microsoft.Azure.Management.ResourceManager.Fluent.Azure
 // I stubbed out Azure calls that weren't compiling due to changed
 // in the Azure class library (I've been using a very old version).
 
-#pragma warning disable 649 // Disable assigned member fields warning
+#pragma warning disable 169 // Disable assigned member fields warning
 #if AZURE_STUBBED
 #endif
 
