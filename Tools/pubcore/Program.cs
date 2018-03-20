@@ -61,6 +61,11 @@ Note that you MUST ADD the following to the <PropertyGroup>...</PropertyGroup>
 section on your project CSPROJ file for this to work:
 
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+
+or:
+
+    <RuntimeIdentifiers>win10-x64;...</RuntimeIdentifiers>
+
 ");
                 Environment.Exit(1);
             }
@@ -101,23 +106,53 @@ section on your project CSPROJ file for this to work:
 
             // Ensure that the runtime identifier is present in the project file.
 
-            var projectText     = File.ReadAllText(projectPath);
-            var runtimeProperty = $"<RuntimeIdentifier>{runtime}</RuntimeIdentifier>";
+            // $hack(jeff.lill): 
+            //
+            // I'm hacking this test right now using string matching.  Ultimately,
+            // this should be accomplished by actually parsing the project XML.
 
-            if (!projectText.Contains(runtimeProperty))
+            var projectText = File.ReadAllText(projectPath);
+
+            if (!projectText.Contains(runtime))
             {
                 Console.Error.WriteLine();
                 Console.Error.WriteLine("ERROR: Make sure the runtime identifier below is present in your");
                 Console.Error.WriteLine("       project's <PropertyGroup/> section:");
                 Console.Error.WriteLine();
                 Console.Error.WriteLine($"    <PropertyGroup>");
-                Console.Error.WriteLine($"        {runtimeProperty}");
+                Console.Error.WriteLine($"        <RuntimeIdentifier>{runtime}</RuntimeIdentifier>");
                 Console.Error.WriteLine($"    </PropertyGroup>");
                 Console.Error.WriteLine();
                 Console.Error.WriteLine($"PROJECT: {Path.GetFullPath(projectPath)}");
                 Console.Error.WriteLine();
 
                 Environment.Exit(1);
+            }
+
+            // Projects specifying a single runtime identifier like:
+            //
+            //      <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+            //
+            // will publish their output to:
+            //
+            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp2.0\publish
+            //
+            // Projects that use <RuntimeIdentifiers/> (plural) with one
+            // or more runtime identifiers like:
+            //
+            //      <RuntimeIdentifiers>win10-x64</RuntimeIdentifiers>
+            //
+            // will publish output to:
+            //
+            //      PROJECT-DIR\bin\CONFIGURATION\netcoreapp2.0\win10-x64\publish
+            //
+            // We're going to probe for the existence of the first folder
+            // and assume the second if the first doesn't exist.
+
+            if (!Directory.Exists(targetPath))
+            {
+                targetPath = Path.GetFullPath(Path.Combine(targetPath, ".."));
+                targetPath = Path.Combine(targetPath, runtime, "publish");
             }
 
             // Publish the project.
