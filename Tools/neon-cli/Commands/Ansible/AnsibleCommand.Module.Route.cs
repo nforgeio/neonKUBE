@@ -272,7 +272,7 @@ namespace NeonCli
                     // Try reading any existing route with this name and then determine
                     // whether the two versions of the route are actually different. 
 
-                    context.WriteLine(Verbosity.Trace, $"Looking for an existing route");
+                    context.WriteLine(Verbosity.Trace, $"Looking for existing route [{name}]");
 
                     var existingRoute = proxyManager.GetRoute(name);
 
