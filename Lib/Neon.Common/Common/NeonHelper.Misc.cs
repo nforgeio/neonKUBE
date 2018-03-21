@@ -1348,7 +1348,7 @@ namespace Neon.Common
         /// </remarks>
         public static T JsonOrYamlDeserialize<T>(string input, bool strict = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrWhiteSpace(input));
 
             var trimmed = input.TrimStart();
 
