@@ -260,6 +260,7 @@ namespace NeonCli
 
                         foreach (var error in validationContext.Errors)
                         {
+                            context.WriteLine(Verbosity.Important, error);
                             context.WriteErrorLine(error);
                         }
 
