@@ -1332,5 +1332,37 @@ namespace Neon.Common
 
             return NeonHelper.ToHex(MD5.Create().ComputeHash(Encoding.UTF8.GetBytes(input)));
         }
+
+        /// <summary>
+        /// Deserializes JSON or YAML text using, optionally requiring strict mapping of input properties to the target type.
+        /// </summary>
+        /// <typeparam name="T">The desired output type.</typeparam>
+        /// <param name="input">The input text (JSON or YAML).</param>
+        /// <param name="strict">Optionally require that all input properties map to to <typeparamref name="T"/> properties.</param>
+        /// <returns>The parsed <typeparamref name="T"/>.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method works by looking for leading '{' or '[' as the first non-whitespace character
+        /// in the string to detect whether the input is JSON.  The method assumes YAML otherwise.
+        /// </note>
+        /// </remarks>
+        public static T JsonOrYamlDeserialize<T>(string input, bool strict = false)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input));
+
+            var trimmed = input.TrimStart();
+
+            switch (trimmed[0])
+            {
+                case '{':
+                case '[':
+
+                    return NeonHelper.JsonDeserialize<T>(input, strict);
+
+                default:
+
+                    return NeonHelper.YamlDeserialize<T>(input, strict);
+            }
+        }
     }
 }

@@ -83,7 +83,7 @@ namespace Neon.Common
 
         /// <summary>
         /// <para>
-        /// Deserializes YAML text to an object.
+        /// Deserializes YAML text to an object, optionally requiring strict mapping of input properties to the target type.
         /// </para>
         /// <note>
         /// Property names are expected to be lowercase.

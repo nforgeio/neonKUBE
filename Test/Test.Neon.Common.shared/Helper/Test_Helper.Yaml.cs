@@ -109,5 +109,32 @@ age: 56
                 Assert.StartsWith("(line: ", e.Message);
             }
         }
+
+        [Fact]
+        public void YamlNotJson()
+        {
+            // Verify that we can identify and parse YAML (over JSON).
+
+            var before =
+                new YamlPerson()
+                {
+                    Name = "Jeff",
+                    Age = 56
+                };
+
+            // Verify that the property names were converted to lowercase.
+
+            var yaml = NeonHelper.YamlSerialize(before);
+
+            Assert.Contains("name: Jeff", yaml);
+            Assert.Contains("age: 56", yaml);
+
+            // Verify that we can deserialize.
+
+            var after = NeonHelper.JsonOrYamlDeserialize<YamlPerson>(yaml);
+
+            Assert.Equal("Jeff", after.Name);
+            Assert.Equal(56, after.Age);
+        }
     }
 }

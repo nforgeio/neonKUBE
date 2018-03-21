@@ -107,5 +107,27 @@ namespace TestCommon
             Assert.Equal(value.Name, clone.Name);
             Assert.Equal(value.Age, clone.Age);
         }
+
+        [Fact]
+        public void JsonNotYaml()
+        {
+            // Verify that we can identify and parse JSON (over YAML).
+
+            var before =
+                new JsonTestPerson()
+                {
+                    Name = "Jeff",
+                    Age = 56
+                };
+
+            var json = NeonHelper.JsonSerialize(before);
+
+            Assert.StartsWith("{", json);
+
+            var after = NeonHelper.JsonOrYamlDeserialize<JsonTestPerson>(json);
+
+            Assert.Equal("Jeff", after.Name);
+            Assert.Equal(56, after.Age);
+        }
     }
 }

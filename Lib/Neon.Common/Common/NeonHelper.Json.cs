@@ -101,7 +101,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Deserializes JSON text using custom settings.
+        /// Deserializes JSON text using, optionally requiring strict mapping of input properties to the target type.
         /// </summary>
         /// <typeparam name="T">The desired output type.</typeparam>
         /// <param name="json">The JSON text.</param>
