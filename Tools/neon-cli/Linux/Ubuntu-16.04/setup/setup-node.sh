@@ -369,8 +369,28 @@ function appendRule {
 
     # Append the rule.
 
-    echo [INFO] Setting rule: "\$@"
+    echo [INFO] Appending rule: "\$@"
     iptables --wait --append "\$@"
+}
+
+# This function inserts an [iptables] rule at the top of the chain if
+# the rule doesn't already exist.
+function insertRule {
+
+    # Note that I'm using [--wait] to ensure that  we'll wait for the 
+    # [iptables] lock to be released if somebody else (like Docker) is
+    # messing with the rules.
+
+    # Verify that the rule doesn't already exist.
+
+    if iptables --wait --check "\$@" &> /dev/nul ; then
+        return
+    fi
+
+    # Insert the rule.
+
+    echo [INFO] Inserting rule: "\$@"
+    iptables --wait --insert "\$@"
 }
 
 echo "[INFO] Verifying port forwarding rules every [30] seconds."
@@ -379,19 +399,19 @@ while true
 do
     # Port 80 --> 5100 rules
 
-    appendRule PREROUTING -t nat -s ${NEON_NODE_IP} -p tcp --dport 80 -j REDIRECT --to 5100
-    appendRule OUTPUT -t nat -s ${NEON_NODE_IP} -p tcp --dport 80 -j REDIRECT --to 5100
+    insertRule PREROUTING -t nat -p tcp -d ${NEON_NODE_IP} --dport 80 -j REDIRECT --to 5100
+    insertRule OUTPUT -t nat -p tcp -d ${NEON_NODE_IP} --dport 80 -j REDIRECT --to 5100
 
-    appendRule PREROUTING -t nat -s 127.0.0.0/8 -p tcp --dport 80 -j REDIRECT --to 5100
-    appendRule OUTPUT -t nat -s 127.0.0.0/8 -p tcp --dport 80 -j REDIRECT --to 5100
+    insertRule PREROUTING -t nat -p tcp -d 127.0.0.0/8 --dport 80 -j REDIRECT --to 5100
+    insertRule OUTPUT -t nat -p tcp -d 127.0.0.0/8 --dport 80 -j REDIRECT --to 5100
 
     # Port 443 --> 5101 rules
 
-    appendRule PREROUTING -t nat -s ${NEON_NODE_IP} -p tcp --dport 443 -j REDIRECT --to 5101
-    appendRule OUTPUT -t nat -s ${NEON_NODE_IP} -p tcp --dport 443 -j REDIRECT --to 5101
+    insertRule PREROUTING -t nat -p tcp -d ${NEON_NODE_IP} --dport 443 -j REDIRECT --to 5101
+    insertRule OUTPUT -t nat -p tcp -d ${NEON_NODE_IP} --dport 443 -j REDIRECT --to 5101
 
-    appendRule PREROUTING -t nat -s 127.0.0.0/8 -p tcp --dport 443 -j REDIRECT --to 5101
-    appendRule OUTPUT -t nat -s 127.0.0.0/8 -p tcp --dport 443 -j REDIRECT --to 5101
+    insertRule PREROUTING -t nat -p tcp -d 127.0.0.0/8 --dport 443 -j REDIRECT --to 5101
+    insertRule OUTPUT -t nat -p tcp -d 127.0.0.0/8 --dport 443 -j REDIRECT --to 5101
 
     sleep 30
 done
