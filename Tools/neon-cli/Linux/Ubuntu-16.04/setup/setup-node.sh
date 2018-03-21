@@ -339,10 +339,10 @@ systemctl restart neon-disable-thp
 # I'm hardcoding the [neon-proxy-public] ports 5100 and 5101 here rather than
 # adding a new macro.  Hopefully, these ports will never change again.
 
-cat <<EOF > /usr/local/bin/neon-port-forwarder
+cat <<EOF > /usr/local/bin/neon-iptables
 #!/bin/bash
 #------------------------------------------------------------------------------
-# FILE:         neon-port-forwarder
+# FILE:         neon-iptables
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
@@ -354,89 +354,63 @@ cat <<EOF > /usr/local/bin/neon-port-forwarder
 # We're going to loop every 30 seconds to ensure that this gets reconfigured
 # in case the network stack is restarted or Docker messes with the rules.
 
-echo "[INFO] Verifying port forwarding rules every [30] seconds."
-
 # This function appends an [iptables] rule if it doesn't already exist.
-function setRule {
-    
+function appendRule {
+
+    # Note that I'm using [--wait] to ensure that  we'll wait for the 
+    # [iptables] lock to be released if somebody else (like Docker) is
+    # messing with the rules.
+
     # Verify that the rule doesn't already exist.
 
-    if iptables --check \$@ &> /dev/nul ; then
+    if iptables --wait --check "\$@" &> /dev/nul ; then
         return
     fi
 
-    # Append the rule.  Note that I'm using [--wait] to ensure that 
-    # we'll wait for the [iptables] lock to be released if somebody
-    # else (like Docker) is messing with the rules.
+    # Append the rule.
 
-    echo [INFO] Setting rule: -A \$@
-    iptables --wait -A \$@
+    echo [INFO] Setting rule: "\$@"
+    iptables --wait --append "\$@"
 }
+
+echo "[INFO] Verifying port forwarding rules every [30] seconds."
 
 while true
 do
-    # IMPLEMENTATION NOTE:
-    #
-    # We need to apply these changes only to the physical host network interfaces.
-    # We're going to assume that these interfaces will be named like [eth#] (the 
-    # old naming scheme or [en*] (the new consistent interface naming scheme).
-    #
-    # This is probably going to be somewhat fragile.
-    #
-    # Also note that we're not going to try to apply NATs to the loopback [lo]
-    # interface.
+    # Port 80 --> 5100 rules
 
-    #------------------------------------------------------
-    # Use [ip link] and [gawk] to list the interfaces that match "eth#"
-    # and then configure the IPTABLES forwarding rules for those interfaces.
+    appendRule PREROUTING -t nat -s ${NEON_NODE_IP} -p tcp --dport 80 -j REDIRECT --to 5100
+    appendRule OUTPUT -t nat -s ${NEON_NODE_IP} -p tcp --dport 80 -j REDIRECT --to 5100
 
-    for interface in \$( ip link | gawk '/eth[0..9]+:/ { print gensub(/:/, "", "g", \$2) }' )
-    do
-        # Forward port 80 --> 5100
+    appendRule PREROUTING -t nat -s 127.0.0.0/8 -p tcp --dport 80 -j REDIRECT --to 5100
+    appendRule OUTPUT -t nat -s 127.0.0.0/8 -p tcp --dport 80 -j REDIRECT --to 5100
 
-        setRule PREROUTING -t nat -i \$interface -p tcp --dport 80 -j DNAT --to ${NEON_NODE_IP}:5100
-        setRule FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5100 -j ACCEPT
+    # Port 443 --> 5101 rules
 
-        # Forward port 443 --> 5101
+    appendRule PREROUTING -t nat -s ${NEON_NODE_IP} -p tcp --dport 443 -j REDIRECT --to 5101
+    appendRule OUTPUT -t nat -s ${NEON_NODE_IP} -p tcp --dport 443 -j REDIRECT --to 5101
 
-        setRule PREROUTING -t nat -i \$interface -p tcp --dport 443 -j DNAT --to ${NEON_NODE_IP}:5101
-        setRule FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5101 -j ACCEPT
-    done
-
-    #------------------------------------------------------
-    # Now do the same for any [en*] interfaces.
-
-    for interface in \$( ip link | gawk '/en[0-9a-zA-Z]+:/ { print gensub(/:/, "", "g", \$2) }' )
-    do
-        # Forward port 80 --> 5100
-
-        setRule PREROUTING -t nat -i \$interface -p tcp --dport 80 -j DNAT --to ${NEON_NODE_IP}:5100
-        setRule FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5100 -j ACCEPT
-
-        # Forward port 443 --> 5101
-
-        setRule PREROUTING -t nat -i \$interface -p tcp --dport 443 -j DNAT --to ${NEON_NODE_IP}:5101
-        setRule FORWARD -p tcp -d ${NEON_NODE_IP} --dport 5101 -j ACCEPT
-    done
+    appendRule PREROUTING -t nat -s 127.0.0.0/8 -p tcp --dport 443 -j REDIRECT --to 5101
+    appendRule OUTPUT -t nat -s 127.0.0.0/8 -p tcp --dport 443 -j REDIRECT --to 5101
 
     sleep 30
 done
 EOF
 
-chmod 744 /usr/local/bin/neon-port-forwarder
+chmod 744 /usr/local/bin/neon-iptables
 
-# Generate the [neon-port-forwarder] systemd unit.
+# Generate the [neon-iptables] systemd unit.
 
-cat <<EOF > /lib/systemd/system/neon-port-forwarder.service
+cat <<EOF > /lib/systemd/system/neon-iptables.service
 # A service that configures the port 80 and 443 port forwarding rules.
 
 [Unit]
-Description=neon-port-forwarder
+Description=neon-iptables
 Documentation=
 After=wait-for-network.service
 
 [Service]
-ExecStart=/usr/local/bin/neon-port-forwarder
+ExecStart=/usr/local/bin/neon-iptables
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 
@@ -444,9 +418,9 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-systemctl enable neon-port-forwarder
+systemctl enable neon-iptables
 systemctl daemon-reload
-systemctl restart neon-port-forwarder
+systemctl restart neon-iptables
 
 #------------------------------------------------------------------------------
 # Configure the systemd journal to perist the journal to the file system at
