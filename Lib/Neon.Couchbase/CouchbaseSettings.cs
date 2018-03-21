@@ -34,14 +34,7 @@ namespace Neon.Data
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
 
-            if (jsonOrYaml.TrimStart().StartsWith("{"))
-            {
-                return NeonHelper.JsonDeserialize<CouchbaseSettings>(jsonOrYaml, strict);
-            }
-            else
-            {
-                return NeonHelper.YamlDeserialize<CouchbaseSettings>(jsonOrYaml, strict);
-            }
+            return NeonHelper.JsonOrYamlDeserialize<CouchbaseSettings>(jsonOrYaml, strict);
         }
 
         //---------------------------------------------------------------------

@@ -35,14 +35,7 @@ namespace Neon.Data
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
 
-            if (jsonOrYaml.TrimStart().StartsWith("{"))
-            {
-                return NeonHelper.JsonDeserialize<RabbitMQSettings>(jsonOrYaml, strict);
-            }
-            else
-            {
-                return NeonHelper.YamlDeserialize<RabbitMQSettings>(jsonOrYaml, strict);
-            }
+            return NeonHelper.JsonOrYamlDeserialize<RabbitMQSettings>(jsonOrYaml, strict);
         }
 
         //---------------------------------------------------------------------
