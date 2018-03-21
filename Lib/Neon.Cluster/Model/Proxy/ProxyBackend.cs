@@ -34,7 +34,7 @@ namespace Neon.Cluster
         /// generate a unique name within the route if this isn't specified.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(false)]
+        [DefaultValue(null)]
         public string Name { get; set; } = null;
 
         /// <summary>
