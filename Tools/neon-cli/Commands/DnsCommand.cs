@@ -404,6 +404,24 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <param name="commandLine">The command line.</param>
         private void RemoveTarget(CommandLine commandLine)
         {
+            var targetHost = commandLine.Arguments.ElementAtOrDefault(0);
+
+            if (targetHost == null)
+            {
+                Console.Error.WriteLine("*** ERROR: [HOST] argument expected.");
+                Program.Exit(1);
+            }
+
+            try
+            {
+                cluster.Consul.KV.Delete($"neon/dns/targets/{targetHost}").Wait();
+            }
+            catch (KeyNotFoundException)
+            {
+                // Intentionally catching and ignoring this.
+            }
+
+            Console.WriteLine($"[{targetHost}] was deleted (if it existed).");
         }
 
         /// <summary>
@@ -412,6 +430,73 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <param name="commandLine">The command line.</param>
         private void SetTarget(CommandLine commandLine)
         {
+            DnsTarget dnsTarget;
+
+            if (commandLine.Arguments.Length >= 4)
+            {
+                // Handle: neon dns set [--check] HOST ADDRESSES
+
+                var host  = commandLine.Arguments.ElementAtOrDefault(2);
+                var check = commandLine.HasOption("--check");
+
+                dnsTarget = new DnsTarget()
+                {
+                    Hostname = host
+                };
+
+                foreach (var address in commandLine.Arguments.Skip(3))
+                {
+                    dnsTarget.Endpoints.Add(
+                        new DnsEndpoint()
+                        {
+                            Target = address,
+                            Check  = check
+                        });
+                }
+            }
+            else
+            {
+                // Handle: neon dns set PATH
+                //     or: neon dns set -
+
+                string path = commandLine.Arguments.ElementAtOrDefault(2);
+                string data;
+
+                if (path == null)
+                {
+                    Console.Error.WriteLine("*** ERROR: [PATH] or [-] argument expected.");
+                    Program.Exit(1);
+                }
+
+                if (path == "-")
+                {
+                    data = NeonHelper.ReadStandardInputText();
+                }
+                else
+                {
+                    data = File.ReadAllText(path);
+                }
+
+                dnsTarget = NeonHelper.JsonOrYamlDeserialize<DnsTarget>(data, strict: true);
+            }
+
+            var errors = dnsTarget.Validate(cluster.Definition, cluster.Definition.GetNodeGroups(excludeAllGroup: true));
+
+            if (errors.Count > 0)
+            {
+                foreach (var error in errors)
+                {
+                    Console.Error.WriteLine($"*** ERROR: {error}");
+                }
+
+                Program.Exit(1);
+            }
+
+            var key = $"neon/dns/targets/{dnsTarget.Hostname}";
+
+            cluster.Consul.KV.PutObject(key, dnsTarget, Formatting.Indented).Wait();
+
+            Console.WriteLine($"[{dnsTarget.Hostname}] was set.");
         }
 
         /// <summary>
