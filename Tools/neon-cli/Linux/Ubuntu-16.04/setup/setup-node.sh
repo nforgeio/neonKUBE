@@ -339,6 +339,18 @@ systemctl restart neon-disable-thp
 # I'm hardcoding the [neon-proxy-public] ports 5100 and 5101 here rather than
 # adding a new macro.  Hopefully, these ports will never change again.
 
+# $todo(jeff.lill:
+#
+# A possible optimization would be to ensure that these rules are always at 
+# the top of their chains.  This service will do this initially, but it's
+# possible that Docker or something else could rearrange things.
+#
+# I also tried to organize the rules into their own chains and then insert
+# jumps at the top of the chains but I couldn't get this working.  Here's
+# the tracking issue:
+#
+#       https://github.com/jefflill/NeonForge/issues/217
+
 cat <<EOF > /usr/local/bin/neon-iptables
 #!/bin/bash
 #------------------------------------------------------------------------------
