@@ -27,7 +27,7 @@ namespace pubcore
         /// <summary>
         /// Tool version number.
         /// </summary>
-        public const string Version = "1.2";
+        public const string Version = "1.3";
 
         /// <summary>
         /// Program entrypoint.
@@ -208,7 +208,7 @@ or:
                 {
                     try
                     {
-                        if (i > 0)
+                        if (i > 1)
                         {
                             Console.WriteLine($"===========================================================");
                             Console.WriteLine($"PUBCORE RETRY: Copy to output folder");
