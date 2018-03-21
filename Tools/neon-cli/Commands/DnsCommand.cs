@@ -131,7 +131,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            if (commandLine.Arguments.Length != 1)
+            if (commandLine.Arguments.Length == 0)
             {
                 Console.WriteLine(usage);
                 Program.Exit(1);
@@ -190,7 +190,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            var ensureConnection = shim.CommandLine.Arguments.ElementAt(1) != "help";
+            var ensureConnection = shim.CommandLine.Arguments.ElementAtOrDefault(1) != "help";
 
             return new DockerShimInfo(isShimmed: false, ensureConnection: ensureConnection);
         }
