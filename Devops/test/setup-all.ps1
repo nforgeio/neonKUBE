@@ -15,7 +15,7 @@
 #
 # OPTIONS:
 #
-#	-noToolContainer	- Optionally prevents [neon-cli] from shimming into Docker.
+#	-noshim	            - Optionally prevents [neon-cli] from shimming into Docker.
 #
 #	-skipPrepare		- Skip the cluster prepare step.
 #
@@ -30,7 +30,7 @@ param
 (
     [parameter(Mandatory=$True,Position=1)][string] $clusterName,
 	[parameter(Mandatory=$False, Position=2)]  [string] $imageTag = "",
-    [switch] $noToolContainer  = $False,
+    [switch] $noshim           = $False,
     [switch] $skipPrepare      = $False,
     [switch] $skipSetup        = $False,
     [switch] $skipCoreServices = $False,
@@ -44,7 +44,7 @@ cd "$env:NF_ROOT\Devops\test"
 
 # Convert the optional parameters into environment variables.
 
-if ($noToolContainer)
+if ($noshim)
 {
 	$env:SETUP_NO_TOOL_CONTAINER = "--noshim"
 }
