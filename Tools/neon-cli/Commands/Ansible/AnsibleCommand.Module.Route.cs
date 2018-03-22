@@ -39,7 +39,7 @@ namespace NeonCli
         // Synopsis:
         // ---------
         //
-        // Manage neonCLUSTER proxy routes.
+        // Manages neonCLUSTER proxy routes.
         //
         // Requirements:
         // -------------

@@ -11,7 +11,7 @@ WANT_JSON=yes
 
 if [ "${IN_NEON_ANSIBLE_COMMAND}" == "" ] ; then
 
-    echo "*** ERROR: The [neon_route] module runs only on the Ansible master.  Consider using: delegate_to: localhost" 1>&2
+    echo "*** ERROR: The [neon_route] module runs only on the Ansible master.  Consider using: [delegate_to: localhost]" 1>&2
     exit 1
 fi
 

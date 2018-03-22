@@ -39,7 +39,7 @@ namespace NeonCli
         // Synopsis:
         // ---------
         //
-        // Manage neonCLUSTER DNS host entries.
+        // Manages neonCLUSTER DNS host entries.
         //
         // Requirements:
         // -------------

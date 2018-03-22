@@ -309,6 +309,16 @@ namespace NeonCli
                         RunCertificateModule(context);
                         break;
 
+                    case "neon_dashboard":
+
+                        RunDashboardModule(context);
+                        break;
+
+                    case "neon_dns":
+
+                        RunDnsModule(context);
+                        break;
+
                     case "neon_route":
 
                         RunRouteModule(context);

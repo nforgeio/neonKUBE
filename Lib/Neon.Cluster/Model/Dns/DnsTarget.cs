@@ -54,7 +54,7 @@ namespace Neon.Cluster
 
             var warnings = new List<string>();
 
-            if (string.IsNullOrEmpty(Hostname))
+            if (string.IsNullOrEmpty(Hostname) || !ClusterDefinition.IsValidName(Hostname))
             {
                 warnings.Add($"Invalid [{nameof(DnsTarget)}.{nameof(Hostname)}={Hostname}].");
             }
