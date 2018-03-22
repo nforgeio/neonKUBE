@@ -55,7 +55,7 @@ namespace NeonCli
         //
         // hostname     yes                                 DNS hostname
         //
-        // target       see comment                         target definition structured as YAML.  
+        // target       see comment                         DNS target structured as YAML.  
         //                                                  Required when [state=present]
         //
         // state        no          present     absent      indicates whether the DNS target
@@ -81,14 +81,7 @@ namespace NeonCli
 
             if (!ClusterDefinition.DnsHostRegex.IsMatch(hostname))
             {
-                throw new ArgumentException($"[hostname={hostname}] is not a DNS hostname.");
-            }
-
-            context.WriteLine(Verbosity.Trace, $"Parsing [target]");
-
-            if (!context.Arguments.TryGetValue<string>("target", out var proxy))
-            {
-                throw new ArgumentException($"[target] module argument is required.");
+                throw new ArgumentException($"[hostname={hostname}] is not a valid DNS hostname.");
             }
 
             context.WriteLine(Verbosity.Trace, $"Parsing [state]");
@@ -99,6 +92,13 @@ namespace NeonCli
             }
 
             state = state.ToLowerInvariant();
+
+            context.WriteLine(Verbosity.Trace, $"Parsing [target]");
+
+            if (!context.Arguments.TryGetValue<string>("target", out var proxy) && state == "present")
+            {
+                throw new ArgumentException($"[target] module argument is required when [state={state}].");
+            }
 
             // We have the required arguments, so perform the operation.
 
@@ -133,12 +133,12 @@ namespace NeonCli
 
                     context.WriteLine(Verbosity.Trace, $"Parsing [target]");
 
-                    if (!context.Arguments.TryGetValue<JObject>("target", out var routeObject))
+                    if (!context.Arguments.TryGetValue<JObject>("target", out var targetObject))
                     {
                         throw new ArgumentException($"[target] module argument is required.");
                     }
 
-                    var targetText = routeObject.ToString();
+                    var targetText = targetObject.ToString();
 
                     context.WriteLine(Verbosity.Trace, "Parsing target");
 
@@ -146,7 +146,7 @@ namespace NeonCli
 
                     context.WriteLine(Verbosity.Trace, "Target parsed successfully");
 
-                    // Use the target hostname argument if the deserialized route doesn't
+                    // Use the target hostname argument if the deserialized target doesn't
                     // have a name.  This will make it easier on operators because 
                     // they won't need to specify the name twice.
 
@@ -160,7 +160,7 @@ namespace NeonCli
 
                     if (!string.Equals(hostname, newTarget.Hostname, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        throw new ArgumentException($"The [hostname={hostname}] argument and the route's [{nameof(DnsTarget.Hostname)}={newTarget.Hostname}] property are not the same.");
+                        throw new ArgumentException($"The [hostname={hostname}] argument and the target's [{nameof(DnsTarget.Hostname)}={newTarget.Hostname}] property are not the same.");
                     }
 
                     context.WriteLine(Verbosity.Trace, "Target hostname matched.");
@@ -168,8 +168,6 @@ namespace NeonCli
                     // Validate the DNS target.
 
                     context.WriteLine(Verbosity.Trace, "Validating DNS target.");
-
-                    // Actually perform the route validation.
 
                     var errors = newTarget.Validate(cluster.Definition, cluster.Definition.GetNodeGroups(excludeAllGroup: true));
 
@@ -189,45 +187,39 @@ namespace NeonCli
 
                     context.WriteLine(Verbosity.Trace, "DNS target is valid.");
 
-                    // Try reading any existing route with this name and then determine
-                    // whether the two versions of the route are actually different. 
+                    // Try reading any existing target with this name and then determine
+                    // whether the two versions of the target are actually different. 
 
-                    context.WriteLine(Verbosity.Trace, $"Looking for existing route [{hostname}]");
+                    context.WriteLine(Verbosity.Trace, $"Looking for existing target for [{hostname}]");
+
+                    var existingTarget = consul.KV.GetObjectOrDefault<DnsTarget>(targetKey).Result;
 
                     if (existingTarget != null)
                     {
-                        context.WriteLine(Verbosity.Trace, $"Target exists.  Checking for differences.");
+                        context.WriteLine(Verbosity.Trace, $"Target exists: checking for differences.");
 
                         context.Changed = !NeonHelper.JsonEquals(newTarget, existingTarget);
 
                         if (context.Changed)
                         {
-                            context.WriteLine(Verbosity.Trace, $"Routes are different.");
+                            context.WriteLine(Verbosity.Trace, $"Targets are different.");
                         }
                         else
                         {
-                            if (force)
-                            {
-                                context.Changed = true;
-                                context.WriteLine(Verbosity.Trace, $"Routes are the same but since [force=true] we're going to update anyway.");
-                            }
-                            else
-                            {
-                                context.WriteLine(Verbosity.Info, $"Routes are the same.  No need to update.");
-                            }
+                            context.WriteLine(Verbosity.Info, $"Targets are the same.  No need to update.");
                         }
                     }
                     else
                     {
                         context.Changed = true;
-                        context.WriteLine(Verbosity.Trace, $"Route [hostname={hostname}] does not exist.");
+                        context.WriteLine(Verbosity.Trace, $"Target for [hostname={hostname}] does not exist.");
                     }
 
                     if (context.Changed)
                     {
                         context.WriteLine(Verbosity.Trace, $"Updating target.");
-                        proxyManager.PutRoute(newRoute);
-                        context.WriteLine(Verbosity.Info, $"Target updated.");
+                        consul.KV.PutObject(targetKey, newTarget).Wait();
+                        context.WriteLine(Verbosity.Info, $"DNS target updated.");
                     }
 
                     break;
