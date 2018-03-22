@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AnsibleCommand.Route.cs
+// FILE:	    AnsibleCommand.Module.Route.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -140,7 +140,7 @@ namespace NeonCli
 
                     if (proxyManager.GetRoute(name) != null)
                     {
-                        context.WriteLine(Verbosity.Trace, $"Check route [{name}] does exist.");
+                        context.WriteLine(Verbosity.Trace, $"Route [{name}] does exist.");
                         context.WriteLine(Verbosity.Info, $"Deleting route [{name}].");
 
                         if (!context.CheckMode)
@@ -153,7 +153,7 @@ namespace NeonCli
                     }
                     else
                     {
-                        context.WriteLine(Verbosity.Trace, $"Check route [{name}] does not exist.");
+                        context.WriteLine(Verbosity.Trace, $"Route [{name}] does not exist.");
                     }
                     break;
 
@@ -268,7 +268,7 @@ namespace NeonCli
                         return;
                     }
 
-                    context.WriteLine(Verbosity.Trace, "Route validation completed.");
+                    context.WriteLine(Verbosity.Trace, "Route is valid.");
 
                     // Try reading any existing route with this name and then determine
                     // whether the two versions of the route are actually different. 
