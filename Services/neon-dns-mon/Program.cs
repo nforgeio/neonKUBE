@@ -49,7 +49,7 @@ namespace NeonDnsHealth
         private static TimeSpan             warnInterval;
         private static ClusterDefinition    clusterDefinition;
         private static PolledTimer          warnTimer;
-        private static ExtendedDnsClient    dns;
+        private static NeonDnsClient    dns;
         private static Ping                 ping;
 
         /// <summary>
@@ -80,7 +80,7 @@ namespace NeonDnsHealth
             // Create the DNS resolver client and the pinger we'll use
             // for health checks.
 
-            dns  = new ExtendedDnsClient(nameservers);
+            dns  = NeonDnsClient.CreateCaching(nameservers);
             ping = new Ping();
 
             // Create process terminator that handles process termination signals.
@@ -301,25 +301,25 @@ namespace NeonDnsHealth
         {
             // $todo(jeff.lill): 
             //
-            // I'm keeping this implementation super simple for now, by performing all
-            // of the health checks during the poll.  This probably won't scale well
-            // when there are 100s of target endpoints.  This will tend to blast
-            // endpoints all at once.
+            // I'm keeping this implementation super simple for now, by performing 
+            // all of the health checks during the poll.  This probably won't scale
+            // well when there are 100s of target endpoints.  This will tend to 
+            // blast endpoints all at once.
             //
             // It would probably be better to do health checking continuously in
             // another task and have this method resolve the hosts from that data.
-            // That would also allow health checks to use the target TTL as a
-            // hint for how often endpoint health should be checked.
+            // That would also allow health checks to use a target TTL as a hint
+            // for how often endpoint health should be checked.
 
             // Implementation Note:
             // --------------------
-            // We're going to create a task for each DNS target and then
-            // each of those tasks will create a task for each endpoint
-            // that requires a health check.
+            // We're going to create a task for each DNS host entry and then
+            // each of those tasks will create a task for each endpoint that
+            // requires a health check.
 
-            var nodeGroups  = clusterDefinition.GetNodeGroups();
-            var targetTasks = new List<Task>();
-            var warnings    = new List<string>();
+            var nodeGroups = clusterDefinition.GetNodeGroups();
+            var entryTasks = new List<Task>();
+            var warnings   = new List<string>();
 
             foreach (var target in targets)
             {
@@ -339,7 +339,7 @@ namespace NeonDnsHealth
 
                 // Kick off the endpoint health checks.
 
-                targetTasks.Add(Task.Run(
+                entryTasks.Add(Task.Run(
                     async () =>
                     {
                         var healthTasks = new List<Task>();
@@ -376,11 +376,14 @@ namespace NeonDnsHealth
                             //-------------------------------------------------
                             // Handle normal endpoints.
 
-                            var address = await CheckEndpointAsync(endpoint);
+                            var addresses = await CheckEndpointAsync(endpoint);
 
-                            if (address != null)
+                            if (addresses != null)
                             {
-                                hostAddresses.Add(target.Hostname, address);
+                                foreach (var address in addresses)
+                                {
+                                    hostAddresses.Add(target.Hostname, address);
+                                }
                             }
                         }
 
@@ -389,7 +392,7 @@ namespace NeonDnsHealth
                     cancellationToken: terminator.CancellationToken));
             }
 
-            await NeonHelper.WaitAllAsync(targetTasks);
+            await NeonHelper.WaitAllAsync(entryTasks);
 
             // Log any detected configuration warnings.  Note that we're going to throttle
             // warning reports to once every 5 minutes, so we won't spam the logs.
@@ -447,8 +450,10 @@ namespace NeonDnsHealth
                             {
                                 // $todo(jeff.lill):
                                 //
-                                // Consider logging [HEALTHY --> UNHEALTHY] as well as
-                                // [UNHEALTHY --> HEALTHY] transitions.
+                                // Consider logging health transitions:
+                                //
+                                //      HEALTHY   --> UNHEALTHY
+                                //      UNHEALTHY --> HEALTHY
                                 //
                                 // We'll need to keep some state to manage this.
                             }

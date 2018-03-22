@@ -527,7 +527,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
             cluster.Consul.KV.PutObject(key, dnsEntry, Formatting.Indented).Wait();
 
             Console.WriteLine();
-            Console.WriteLine($"Saved [{dnsEntry.Hostname}] DNS host mappings.");
+            Console.WriteLine($"Saved [{dnsEntry.Hostname}] DNS host entry.");
         }
 
         /// <summary>
