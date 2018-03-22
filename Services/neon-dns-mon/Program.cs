@@ -68,7 +68,7 @@ namespace NeonDnsHealth
             var environment = new EnvironmentParser(log);
 
             nameservers  = environment.Get("NAMESERVERS", "8.8.8.8,8.8.4.4").Split(',');
-            pingTimeout  = environment.Get("PING_TIMROUT", TimeSpan.FromSeconds(1.5), validator: v => v > TimeSpan.Zero);
+            pingTimeout  = environment.Get("PING_TIMEOUT", TimeSpan.FromSeconds(1.5), validator: v => v > TimeSpan.Zero);
             pollInterval = environment.Get("POLL_INTERVAL", TimeSpan.FromSeconds(15), validator: v => v > TimeSpan.Zero);
             warnInterval = environment.Get("WARN_INTERVAL", TimeSpan.FromMinutes(5), validator: v => v > TimeSpan.Zero);
 

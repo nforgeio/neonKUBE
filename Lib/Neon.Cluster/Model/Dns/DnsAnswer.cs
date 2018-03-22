@@ -27,8 +27,7 @@ namespace Neon.Cluster
     /// </summary>
     public class DnsAnswer
     {
-        private string      hostname;
-        private int         ttl;
+        private string  hostname;
 
         /// <summary>
         /// The target hostname.
@@ -51,21 +50,5 @@ namespace Neon.Cluster
         /// </summary>
         [JsonProperty(PropertyName = "Address", Required = Required.Always)]
         public IPAddress Address { get; set; }
-
-        /// <summary>
-        /// The DNS TTL in seconds.
-        /// </summary>
-        [JsonProperty(PropertyName = "Ttl", Required = Required.Always)]
-        public int Ttl
-        {
-            get { return ttl; }
-
-            set
-            {
-                Covenant.Requires<ArgumentException>(value >= 0, $"DNS [TTL={value}] is not valid.");
-
-                ttl = value;
-            }
-        }
     }
 }

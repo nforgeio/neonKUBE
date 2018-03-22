@@ -35,7 +35,7 @@ Manages cluster DNS records.
 USAGE:
 
     neon dns help                           - Describes target file format
-    neon dns addr|addresses [HOST]          - Lists live host addresses
+    neon dns addr|addresses [HOST]          - Lists current host addresses
     neon dns [--yaml] get HOST              - Gets DNS host settings
     neon dns ls|list                        - Lists the DNS hosts
     neon dns rm|remove HOST                 - Removes DNS host settings
@@ -56,7 +56,7 @@ OPTIONS:
     --check     - Indicates that indvidual endpoint health should be
                   verified by sending ICMP pings.
 
-    --yaml      - Outputs YAML instead of JSON.
+    --yaml      - Output YAML instead of JSON.
 ";
         private const string help =
 @"
@@ -226,8 +226,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
                 foreach (var item in answers.OrderBy(i => i.Key))
                 {
-                    PrintHostAddresses(item.Key, item.Value);
-                    Console.WriteLine();
+                    PrintHostAddresses(item.Key, item.Value, maxHostNameWidth);
                 }
             }
         }
@@ -288,16 +287,16 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
             if (maxHostNameWidth <= 0)
             {
-                lead = $"{host}:";
+                lead = $"{host}";
             }
             else
             {
                 var spacing = new string(' ', maxHostNameWidth - host.Length);
 
-                lead = $"{host}:{spacing}";
+                lead = $"{host} {spacing}";
             }
 
-            lead += "    ";
+            lead += " ";
 
             var indent = new string(' ', lead.Length);
             var first  = true;
@@ -306,16 +305,16 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
             {
                 if (first)
                 {
-                    Console.WriteLine(lead);
+                    Console.Write(lead);
                     first = false;
                 }
                 else
                 {
-                    Console.WriteLine(indent);
+                    Console.Write(indent);
                 }
-            }
 
-            Console.WriteLine(addresses);
+                Console.WriteLine(address);
+            }
         }
 
         /// <summary>
@@ -324,7 +323,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <param name="commandLine">The command line.</param>
         private void GetTarget(CommandLine commandLine)
         {
-            var host = commandLine.Arguments.ElementAtOrDefault(2);
+            var host = commandLine.Arguments.ElementAtOrDefault(1);
             var yaml = commandLine.HasOption("--yaml");
 
             if (host == null)
@@ -359,14 +358,17 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <param name="commandLine">The command line.</param>
         private void ListTargets(CommandLine commandLine)
         {
-            var targetDefs = cluster.Consul.KV.ListOrDefault<DnsTarget>("neon/dns/targets").Result.ToList();
+            var targetResult = cluster.Consul.KV.ListOrDefault<DnsTarget>("neon/dns/targets").Result;
 
-            if (targetDefs == null)
+            Console.WriteLine();
+
+            if (targetResult == null)
             {
                 Console.WriteLine("[0] hosts");
                 return;
             }
 
+            var targetDefs   = targetResult.ToList();
             var maxHostWidth = targetDefs.Max(t => t.Hostname.Length);
             var answers      = GetAnswers();
 
@@ -394,7 +396,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <param name="commandLine">The command line.</param>
         private void RemoveTarget(CommandLine commandLine)
         {
-            var targetHost = commandLine.Arguments.ElementAtOrDefault(0);
+            var targetHost = commandLine.Arguments.ElementAtOrDefault(1);
 
             if (targetHost == null)
             {
@@ -402,16 +404,8 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                 Program.Exit(1);
             }
 
-            try
-            {
-                cluster.Consul.KV.Delete($"neon/dns/targets/{targetHost}").Wait();
-            }
-            catch (KeyNotFoundException)
-            {
-                // Intentionally catching and ignoring this.
-            }
-
-            Console.WriteLine($"[{targetHost}] was deleted (if it existed).");
+            cluster.Consul.KV.Delete($"neon/dns/targets/{targetHost}").Wait();
+            Console.WriteLine($"Removed [{targetHost}] (if it existed).");
         }
 
         /// <summary>
@@ -422,11 +416,11 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         {
             DnsTarget dnsTarget;
 
-            if (commandLine.Arguments.Length >= 4)
+            if (commandLine.Arguments.Length >= 3)
             {
                 // Handle: neon dns set [--check] HOST ADDRESSES
 
-                var host  = commandLine.Arguments.ElementAtOrDefault(2);
+                var host  = commandLine.Arguments.ElementAtOrDefault(1);
                 var check = commandLine.HasOption("--check");
 
                 dnsTarget = new DnsTarget()
@@ -434,7 +428,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                     Hostname = host
                 };
 
-                foreach (var address in commandLine.Arguments.Skip(3))
+                foreach (var address in commandLine.Arguments.Skip(2))
                 {
                     dnsTarget.Endpoints.Add(
                         new DnsEndpoint()
@@ -449,7 +443,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                 // Handle: neon dns set PATH
                 //     or: neon dns set -
 
-                string path = commandLine.Arguments.ElementAtOrDefault(2);
+                string path = commandLine.Arguments.ElementAtOrDefault(1);
                 string data;
 
                 if (path == null)
@@ -486,7 +480,8 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
             cluster.Consul.KV.PutObject(key, dnsTarget, Formatting.Indented).Wait();
 
-            Console.WriteLine($"[{dnsTarget.Hostname}] was set.");
+            Console.WriteLine();
+            Console.WriteLine($"Saved [{dnsTarget.Hostname}] DNS host mappings.");
         }
 
         /// <summary>
