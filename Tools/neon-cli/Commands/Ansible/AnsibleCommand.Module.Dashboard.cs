@@ -55,7 +55,7 @@ namespace NeonCli
         //
         // name         yes                                 dashboard name
         //
-        // url          see comment                         dashboard URL, required  
+        // url          see comment                         dashboard URL.  Required  
         //                                                  when [state=present]
         //
         // state        no          present     absent      indicates whether the dashboard

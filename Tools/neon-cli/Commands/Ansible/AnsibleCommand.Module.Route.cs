@@ -58,9 +58,8 @@ namespace NeonCli
         // proxy        yes                     private     identifies the target proxy
         //                                      public
         //
-        // route        see comment                         proxy route description formatted as
-        //                                                  structured as YAML.  Required when
-        //                                                  [state=present]
+        // route        see comment                         proxy route description
+        //                                                  required when [state=present]
         //
         // state        no          present     absent      indicates whether the route should
         //                                      present     be created or removed
