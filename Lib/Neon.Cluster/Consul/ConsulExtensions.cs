@@ -554,7 +554,7 @@ namespace Consul
         public static async Task<T> GetObjectOrDefault<T>(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
             where T : new()
         {
-            var value = await GetString(kv, key, cancellationToken);
+            var value = await GetStringOrDefault(kv, key, cancellationToken);
 
             if (value == null)
             {
