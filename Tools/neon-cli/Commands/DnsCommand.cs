@@ -248,29 +248,54 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                 Program.Exit(1);
             }
 
-            var answers = new Dictionary<string, List<string>>(StringComparer.InvariantCultureIgnoreCase);
+            var answers         = new Dictionary<string, List<string>>(StringComparer.InvariantCultureIgnoreCase);
+            var unhealthyPrefix = "# unhealthy:";
 
             using (var reader = new StringReader(hosts))
             {
                 foreach (var line in reader.Lines())
                 {
-                    var fields = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-                    if (fields.Length != 2)
+                    if (line.StartsWith(unhealthyPrefix))
                     {
-                        continue;
+                        // Comment lines formatted like:
+                        //
+                        //      # unhealthy: HOSTNAME
+                        //
+                        // Have no health endpoints.  We're going to add an empty
+                        // list for these and highlight these below.
+
+                        var host = line.Substring(unhealthyPrefix.Length).Trim();
+
+                        if (!answers.TryGetValue(host, out var addresses))
+                        {
+                            addresses = new List<string>();
+                            answers.Add(host, addresses);
+                        }
                     }
-
-                    var address = fields[0];
-                    var host = fields[1];
-
-                    if (!answers.TryGetValue(host, out var addresses))
+                    else if (line.StartsWith("#"))
                     {
-                        addresses = new List<string>();
-                        answers.Add(host, addresses);
+                        // Ignore other comment lines.
                     }
+                    else
+                    {
+                        var fields = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-                    addresses.Add(address);
+                        if (fields.Length != 2)
+                        {
+                            continue;
+                        }
+
+                        var address = fields[0];
+                        var host    = fields[1];
+
+                        if (!answers.TryGetValue(host, out var addresses))
+                        {
+                            addresses = new List<string>();
+                            answers.Add(host, addresses);
+                        }
+
+                        addresses.Add(address);
+                    }
                 }
             }
 
@@ -303,19 +328,26 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
             var indent = new string(' ', lead.Length);
             var first  = true;
 
-            foreach (var address in addresses)
+            if (addresses.Count == 0)
             {
-                if (first)
+                Console.WriteLine($"{lead}* not healthy");
+            }
+            else
+            {
+                foreach (var address in addresses)
                 {
-                    Console.Write(lead);
-                    first = false;
-                }
-                else
-                {
-                    Console.Write(indent);
-                }
+                    if (first)
+                    {
+                        Console.Write(lead);
+                        first = false;
+                    }
+                    else
+                    {
+                        Console.Write(indent);
+                    }
 
-                Console.WriteLine(address);
+                    Console.WriteLine(address);
+                }
             }
         }
 

@@ -218,7 +218,11 @@ namespace NeonDnsHealth
                     await ResolveTargetsAsync(hostAddresses, targets);
 
                     // Generate a canonical [hosts.txt] file by sorting host entries by 
-                    // hostname and then by IP address.
+                    // hostname and then by IP address followed by comment lines describing
+                    // any hosts that don't have any healthy endpoints.  These error
+                    // lines will sorted by hostname and will be formatted like:
+                    //
+                    //      # unhealthy: HOSTNAME
 
                     var sbHosts      = new StringBuilder();
                     var mappingCount = 0;
@@ -229,6 +233,20 @@ namespace NeonDnsHealth
                         {
                             sbHosts.AppendLineLinux($"{address,-15} {host.Key}");
                             mappingCount++;
+                        }
+                    }
+
+                    var unhealthyTargets = targets.Where(t => !hostAddresses.ContainsKey(t.Hostname) || hostAddresses[t.Hostname].Count == 0).ToList();
+
+                    if (unhealthyTargets.Count > 0)
+                    {
+                        sbHosts.AppendLine();
+                        sbHosts.AppendLine($"# [{unhealthyTargets.Count}] hosts with no healthy endpoints:");
+                        sbHosts.AppendLine($"#");
+
+                        foreach (var target in unhealthyTargets.OrderBy(h => h))
+                        {
+                            sbHosts.AppendLine($"# unhealthy: {target.Hostname}");
                         }
                     }
 
