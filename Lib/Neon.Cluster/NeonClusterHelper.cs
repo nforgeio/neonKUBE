@@ -1045,18 +1045,18 @@ namespace Neon.Cluster
 
                     try
                     {
-                        var hash = await consul.KV.GetString("neon/cluster/definition.hash");
+                        var hash = await consul.KV.GetStringOrDefault("neon/cluster/definition.hash");
 
-                        if (hash == cachedDefinition.Hash)
+                        if (hash == null)
+                        {
+                            // It's possible (but super rare) that the cluster definition might
+                            // exist without the hash.  In this case, we'll just drop through
+                            // and try reading the full definition below.
+                        }
+                        else if (hash == cachedDefinition.Hash)
                         {
                             return cachedDefinition;
                         }
-                    }
-                    catch (KeyNotFoundException)
-                    {
-                        // It's possible (but super rare) that the cluster definition might
-                        // exist without the hash.  In this case, we'll just drop through
-                        // and try reading the full definition below.
                     }
                     catch (Exception e)
                     {

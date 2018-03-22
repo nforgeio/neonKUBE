@@ -218,11 +218,9 @@ namespace NeonDnsHealth
                 {
                     log.LogDebug(() => "Fetching DNS answers MD5 from Consul.");
 
-                    try
-                    {
-                        remoteMD5 = await consul.KV.GetString(NeonClusterConst.DnsConsulHostsMd5Key, terminator.CancellationToken);
-                    }
-                    catch (KeyNotFoundException)
+                    remoteMD5 = await consul.KV.GetStringOrDefault(NeonClusterConst.DnsConsulHostsMd5Key, terminator.CancellationToken);
+
+                    if (remoteMD5 == null)
                     {
                         remoteMD5 = "[unknown]";
                     }
@@ -262,10 +260,15 @@ namespace NeonDnsHealth
 
                         log.LogDebug(() => "Fetching DNS answers.");
 
-                        try
+                        var hostsTxt = await consul.KV.GetStringOrDefault(NeonClusterConst.DnsConsulHostsKey, terminator.CancellationToken);
+
+                        if (hostsTxt == null)
                         {
-                            var hostsTxt = await consul.KV.GetString(NeonClusterConst.DnsConsulHostsKey, terminator.CancellationToken);
-                            var marker   = "# -------- NEON-DNS --------";
+                            log.LogWarn(() => "DNS answers do not exist on Consul.  Is [neon-dns-mon] functioning properly?");
+                        }
+                        else
+                        {
+                            var marker = "# -------- NEON-DNS --------";
 
                             // We have the host entries from Consul.  We need to add these onto the
                             // end [/etc/powserdns/hosts], replacing any host entries written during
@@ -367,10 +370,6 @@ namespace NeonDnsHealth
                             // the Consul DNS settings.
 
                             localMD5 = remoteMD5;
-                        }
-                        catch (KeyNotFoundException)
-                        {
-                            log.LogWarn(() => "DNS answers do not exist on Consul.");
                         }
                     }
                 }

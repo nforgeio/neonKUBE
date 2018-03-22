@@ -197,18 +197,20 @@ namespace NeonDnsHealth
                     // Read the DNS target definitions from Consul and add the appropriate 
                     // host/addresses based on health checks, etc.
 
+                    var targetsResult = (await consul.KV.ListOrDefault<DnsTarget>(NeonClusterConst.DnsConsulTargetsKey + "/", terminator.CancellationToken));
+
                     List<DnsTarget> targets;
 
-                    try
-                    {
-                        targets = (await consul.KV.List<DnsTarget>(NeonClusterConst.DnsConsulTargetsKey + "/", terminator.CancellationToken)).ToList();
-                    }
-                    catch (KeyNotFoundException)
+                    if (targetsResult == null)
                     {
                         // The targets key wasn't found in Consul, so we're
                         // going to assume that there are no targets.
 
                         targets = new List<DnsTarget>();
+                    }
+                    else
+                    {
+                        targets = targetsResult.ToList();
                     }
 
                     log.LogDebug(() => $"Consul has [{targets.Count()}] DNS targets.");
@@ -236,13 +238,9 @@ namespace NeonDnsHealth
 
                     var hostsTxt   = sbHosts.ToString();
                     var hostsMD5   = NeonHelper.ComputeMD5(hostsTxt);
-                    var currentMD5 = (string)null;
+                    var currentMD5 = await consul.KV.GetStringOrDefault(NeonClusterConst.DnsConsulHostsMd5Key, terminator.CancellationToken);
 
-                    try
-                    {
-                        currentMD5 = await consul.KV.GetString(NeonClusterConst.DnsConsulHostsMd5Key, terminator.CancellationToken);
-                    }
-                    catch (KeyNotFoundException)
+                    if (currentMD5 == null)
                     {
                         currentMD5 = string.Empty;
                     }

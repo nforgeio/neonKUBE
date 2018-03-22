@@ -330,10 +330,14 @@ namespace NeonClusterManager
                     // Consul.  We'll assume that there are no pets if this key doesn't exist for
                     // backwards compatibility and robustness.
 
-                    try
-                    {
-                        var petsJson = await NeonClusterHelper.Consul.KV.GetString("neon/cluster/pets.json", terminator.CancellationToken);
+                    var petsJson = await NeonClusterHelper.Consul.KV.GetStringOrDefault("neon/cluster/pets.json", terminator.CancellationToken);
 
+                    if (petsJson == null)
+                    {
+                        log.LogDebug(() => $"NodePoller: [neon/cluster/pets.json] Consul key not found.  Assuming no pets.");
+                    }
+                    else
+                    {
                         if (!string.IsNullOrWhiteSpace(petsJson))
                         {
                             // Parse the pet node definitions and add them to the cluster definition.
@@ -351,13 +355,6 @@ namespace NeonClusterManager
                         {
                             log.LogDebug(() => $"NodePoller: [neon/cluster/pets.json] is empty.");
                         }
-
-                    }
-                    catch (KeyNotFoundException)
-                    {
-                        // Assume that there are no cluster pets.
-
-                        log.LogDebug(() => $"NodePoller: [neon/cluster/pets.json] Consul key not found.  Assuming no pets.");
                     }
 
                     // Determine if the definition has changed.

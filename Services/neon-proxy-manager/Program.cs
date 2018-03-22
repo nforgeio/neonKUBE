@@ -433,11 +433,9 @@ namespace NeonProxyManager
 
             try
             {
-                try
-                {
-                    settings = await consul.KV.GetObject<ProxySettings>($"{proxyPrefix}/settings", cancellationToken);
-                }
-                catch (KeyNotFoundException)
+                settings = await consul.KV.GetObjectOrDefault<ProxySettings>($"{proxyPrefix}/settings", cancellationToken);
+
+                if (settings == null)
                 {
                     // Initialize default settings for the proxy if they aren't written to Consul yet.
 

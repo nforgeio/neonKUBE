@@ -238,13 +238,9 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <returns>The answers dictionary.</returns>
         private Dictionary<string, List<string>> GetAnswers()
         {
-            var hosts = String.Empty;
+            var hosts = cluster.Consul.KV.GetStringOrDefault("neon/dns/answers/hosts.txt").Result;
 
-            try
-            {
-                hosts = cluster.Consul.KV.GetString("neon/dns/answers/hosts.txt").Result;
-            }
-            catch (KeyNotFoundException)
+            if (hosts == null)
             {
                 Console.Error.WriteLine($"*** ERROR: [neon/dns/answers/hosts.txt] does not exist in Consul.");
                 Console.Error.WriteLine($"***        Verify that [neon-dns-mon] service is running.");
@@ -339,23 +335,21 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
             host = host.ToLowerInvariant();
 
-            try
-            {
-                var targetDef = cluster.Consul.KV.GetObject<DnsTarget>($"neon/dns/targets/{host}").Result;
+            var targetDef = cluster.Consul.KV.GetObjectOrDefault<DnsTarget>($"neon/dns/targets/{host}").Result;
 
-                if (yaml)
-                {
-                    Console.WriteLine(NeonHelper.YamlSerialize(targetDef));
-                }
-                else
-                {
-                    Console.WriteLine(NeonHelper.JsonSerialize(targetDef, Formatting.Indented));
-                }
-            }
-            catch (KeyNotFoundException)
+            if (targetDef == null)
             {
                 Console.Error.WriteLine($"*** ERROR: DNS entry for [{host}] does not exist.");
                 Program.Exit(1);
+            }
+
+            if (yaml)
+            {
+                Console.WriteLine(NeonHelper.YamlSerialize(targetDef));
+            }
+            else
+            {
+                Console.WriteLine(NeonHelper.JsonSerialize(targetDef, Formatting.Indented));
             }
         }
 
@@ -365,13 +359,9 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <param name="commandLine">The command line.</param>
         private void ListTargets(CommandLine commandLine)
         {
-            var targetDefs = (List<DnsTarget>)null;
+            var targetDefs = cluster.Consul.KV.ListOrDefault<DnsTarget>("neon/dns/targets").Result.ToList();
 
-            try
-            {
-                targetDefs = cluster.Consul.KV.List<DnsTarget>("neon/dns/targets").Result.ToList();
-            }
-            catch (KeyNotFoundException)
+            if (targetDefs == null)
             {
                 Console.WriteLine("[0] hosts");
                 return;

@@ -270,41 +270,38 @@ See the documentation for more proxy route and setting details.
 
                     using (var consul = NeonClusterHelper.OpenConsul())
                     {
-                        var confKey = $"neon/service/neon-proxy-manager/proxies/{proxyName}/conf";
+                        var confKey      = $"neon/service/neon-proxy-manager/proxies/{proxyName}/conf";
+                        var confZipBytes = consul.KV.GetBytesOrDefault(confKey).Result;
 
-                        try
+                        if (confZipBytes == null)
                         {
-                            var confZipBytes = consul.KV.GetBytes(confKey).Result;
+                            Console.WriteLine($"*** ERROR: HAProxy ZIP configuration was not found in Consul at [{confKey}].");
+                            Program.Exit(1);
+                        }
 
-                            using (var msZipData = new MemoryStream(confZipBytes))
+                        using (var msZipData = new MemoryStream(confZipBytes))
+                        {
+                            using (var zip = new ZipFile(msZipData))
                             {
-                                using (var zip = new ZipFile(msZipData))
+                                var entry = zip.GetEntry("haproxy.cfg");
+
+                                if (entry == null || !entry.IsFile)
                                 {
-                                    var entry = zip.GetEntry("haproxy.cfg");
+                                    Console.WriteLine($"*** ERROR: HAProxy ZIP configuration in Consul at [{confKey}] appears to be corrupt.  Cannot locate the [haproxy.cfg] entry.");
+                                    Program.Exit(1);
+                                }
 
-                                    if (entry == null || !entry.IsFile)
+                                using (var entryStream = zip.GetInputStream(entry))
+                                {
+                                    using (var reader = new StreamReader(entryStream))
                                     {
-                                        Console.WriteLine($"*** ERROR: HAProxy ZIP configuration in Consul at [{confKey}] appears to be corrupt.  Cannot locate the [haproxy.cfg] entry.");
-                                        Program.Exit(1);
-                                    }
-
-                                    using (var entryStream = zip.GetInputStream(entry))
-                                    {
-                                        using (var reader = new StreamReader(entryStream))
+                                        foreach (var line in reader.Lines())
                                         {
-                                            foreach (var line in reader.Lines())
-                                            {
-                                                Console.WriteLine(line);
-                                            }
+                                            Console.WriteLine(line);
                                         }
                                     }
                                 }
                             }
-                        }
-                        catch (KeyNotFoundException)
-                        {
-                            Console.WriteLine($"*** ERROR: HAProxy ZIP configuration was not found in Consul at [{confKey}].");
-                            Program.Exit(1);
                         }
                     }
                     break;
@@ -454,27 +451,26 @@ See the documentation for more proxy route and setting details.
 
                     using (var consul = NeonClusterHelper.OpenConsul())
                     {
-                        try
-                        {
-                            var statusJson  = consul.KV.GetString($"neon/service/neon-proxy-manager/status/{proxyName}").Result;
-                            var proxyStatus = NeonHelper.JsonDeserialize<ProxyStatus>(statusJson);
+                        var statusJson  = consul.KV.GetStringOrDefault($"neon/service/neon-proxy-manager/status/{proxyName}").Result;
 
-                            Console.WriteLine();
-                            Console.WriteLine($"Snapshot Time: {proxyStatus.TimestampUtc} (UTC)");
-                            Console.WriteLine();
-
-                            using (var reader = new StringReader(proxyStatus.Status))
-                            {
-                                foreach (var line in reader.Lines())
-                                {
-                                    Console.WriteLine(line);
-                                }
-                            }
-                        }
-                        catch (KeyNotFoundException)
+                        if (statusJson == null)
                         {
                             Console.WriteLine($"*** ERROR: Status for proxy [{proxyName}] is not currently available.");
                             Program.Exit(1);
+                        }
+
+                        var proxyStatus = NeonHelper.JsonDeserialize<ProxyStatus>(statusJson);
+
+                        Console.WriteLine();
+                        Console.WriteLine($"Snapshot Time: {proxyStatus.TimestampUtc} (UTC)");
+                        Console.WriteLine();
+
+                        using (var reader = new StringReader(proxyStatus.Status))
+                        {
+                            foreach (var line in reader.Lines())
+                            {
+                                Console.WriteLine(line);
+                            }
                         }
                     }
                     break;

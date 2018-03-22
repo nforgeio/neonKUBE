@@ -19,8 +19,6 @@ using Newtonsoft.Json;
 using Neon.Common;
 using Neon.Net;
 
-// $todo(jeff.lill): Should I be verifying that all KV responses have no errors?
-
 namespace Consul
 {
     /// <summary>
@@ -159,13 +157,18 @@ namespace Consul
         }
 
         /// <summary>
-        /// Reads a key as a byte array.
+        /// Reads a key as a byte array, throwing an exception if the key doesn't exist.
         /// </summary>
         /// <param name="kv">The key/value endpoint.</param>
         /// <param name="key">The key.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The byte array value.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if <paramref name="key"/> could not be found.</exception>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
         public static async Task<byte[]> GetBytes(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key));
@@ -181,13 +184,44 @@ namespace Consul
         }
 
         /// <summary>
-        /// Reads a key as a string.
+        /// Reads a key as a byte array, returning <c>null</c> if the key doesn't exist.
+        /// </summary>
+        /// <param name="kv">The key/value endpoint.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The byte array value or <c>null</c>.</returns>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
+        public static async Task<byte[]> GetBytesOrDefault(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key));
+
+            var response = (await kv.Get(key, cancellationToken)).Response;
+
+            if (response == null)
+            {
+                return null;
+            }
+
+            return response.Value;
+        }
+
+        /// <summary>
+        /// Reads a key as a string, throwing an exception if the key doesn't exist.
         /// </summary>
         /// <param name="kv">The key/value endpoint.</param>
         /// <param name="key">The key.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The string value.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if <paramref name="key"/> could not be found.</exception>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
         public static async Task<string> GetString(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key));
@@ -203,18 +237,39 @@ namespace Consul
         }
 
         /// <summary>
-        /// Reads and parses a key as a <c>bool</c>.
+        /// Reads a key as a string, returning <c>null</c> if the key doesn't exist.
         /// </summary>
         /// <param name="kv">The key/value endpoint.</param>
         /// <param name="key">The key.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
-        /// <returns>The parsed value.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown if <paramref name="key"/> could not be found.</exception>
-        /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
-        public static async Task<bool> GetBool(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
+        /// <returns>The string value or <c>null</c>.</returns>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
+        public static async Task<string> GetStringOrDefault(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
         {
-            var input = await GetString(kv, key, cancellationToken);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key));
 
+            var response = (await kv.Get(key, cancellationToken)).Response;
+
+            if (response == null)
+            {
+                return null;
+            }
+
+            return Encoding.UTF8.GetString(response.Value);
+        }
+
+        /// <summary>
+        /// Parses common boolean literals.
+        /// </summary>
+        /// <param name="input">The input literal.</param>
+        /// <returns>The parsed output.</returns>
+        /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
+        private static bool ParseBool(string input)
+        {
             switch (input.ToLowerInvariant())
             {
                 case "0":
@@ -236,7 +291,7 @@ namespace Consul
         }
 
         /// <summary>
-        /// Reads and parses a key as an <c>int</c>.
+        /// Reads and parses a key as a <c>bool</c>, throwing an exception if the key doesn't exist.
         /// </summary>
         /// <param name="kv">The key/value endpoint.</param>
         /// <param name="key">The key.</param>
@@ -244,22 +299,105 @@ namespace Consul
         /// <returns>The parsed value.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if <paramref name="key"/> could not be found.</exception>
         /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
+        public static async Task<bool> GetBool(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
+        {
+            var value = await GetString(kv, key, cancellationToken);
+
+            return ParseBool(value);
+        }
+
+        /// <summary>
+        /// Reads and parses a key as a <c>bool</c>, returning <c>false</c> if the key doesn't exist.
+        /// </summary>
+        /// <param name="kv">The key/value endpoint.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The parsed value or <c>false</c>.</returns>
+        /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
+        public static async Task<bool> GetBoolOrDefault(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
+        {
+            var value = await GetStringOrDefault(kv, key, cancellationToken);
+
+            if (value == null)
+            {
+                return false;
+            }
+
+            return ParseBool(value);
+        }
+
+        /// <summary>
+        /// Reads and parses a key as an <c>int</c>, throwing an exception if the key doesn't exist.
+        /// </summary>
+        /// <param name="kv">The key/value endpoint.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The parsed value.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if <paramref name="key"/> could not be found.</exception>
+        /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
         public static async Task<int> GetInt(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
         {
-            var input = await GetString(kv, key, cancellationToken);
+            var value = await GetString(kv, key, cancellationToken);
 
-            if (int.TryParse(input, out var value))
+            if (int.TryParse(value, out var parsed))
             {
-                return value;
+                return parsed;
             }
             else
             {
-                throw new FormatException($"[{input}] is not a valid integer.");
+                throw new FormatException($"[{value}] is not a valid integer.");
             }
         }
 
         /// <summary>
-        /// Reads and parses a key as a <c>long</c>.
+        /// Reads and parses a key as an <c>int</c>, returning <c>0</c> if the key doesn't exist.
+        /// </summary>
+        /// <param name="kv">The key/value endpoint.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The parsed value or <b>0</b>.</returns>
+        /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
+        public static async Task<int> GetIntOrDefault(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
+        {
+            var value = await GetString(kv, key, cancellationToken);
+
+            if (value == null)
+            {
+                return 0;
+            }
+
+            if (int.TryParse(value, out var parsed))
+            {
+                return parsed;
+            }
+            else
+            {
+                throw new FormatException($"[{value}] is not a valid integer.");
+            }
+        }
+
+        /// <summary>
+        /// Reads and parses a key as a <c>long</c>, throwing an exception if the key doesn't exist.
         /// </summary>
         /// <param name="kv">The key/value endpoint.</param>
         /// <param name="key">The key.</param>
@@ -282,7 +420,34 @@ namespace Consul
         }
 
         /// <summary>
-        /// Reads and parses a key as a <c>double</c>.
+        /// Reads and parses a key as a <c>long</c>, returning <c>0</c> if the key doesn't exist.
+        /// </summary>
+        /// <param name="kv">The key/value endpoint.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The parsed value or <c>0</c>.</returns>
+        /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
+        public static async Task<long> GetLongOrDefault(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
+        {
+            var value = await GetString(kv, key, cancellationToken);
+
+            if (value == null)
+            {
+                return 0;
+            }
+
+            if (long.TryParse(value, out var parsed))
+            {
+                return parsed;
+            }
+            else
+            {
+                throw new FormatException($"[{value}] is not a valid long.");
+            }
+        }
+
+        /// <summary>
+        /// Reads and parses a key as a <c>double</c>, throwing an exception if the key doesn't exist.
         /// </summary>
         /// <param name="kv">The key/value endpoint.</param>
         /// <param name="key">The key.</param>
@@ -290,6 +455,11 @@ namespace Consul
         /// <returns>The parsed value.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if <paramref name="key"/> could not be found.</exception>
         /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
         public static async Task<double> GetDouble(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
         {
             var input = await GetString(kv, key, cancellationToken);
@@ -305,7 +475,39 @@ namespace Consul
         }
 
         /// <summary>
-        /// Reads and deserializes a key with a JSON value as a specified type.
+        /// Reads and parses a key as a <c>double</c>, returning <c>0.0</c> if the key doesn't exist.
+        /// </summary>
+        /// <param name="kv">The key/value endpoint.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The parsed value or <c>0.0</c>.</returns>
+        /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
+        public static async Task<double> GetDoubleOrDefault(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
+        {
+            var value = await GetString(kv, key, cancellationToken);
+
+            if (value == null)
+            {
+                return 0.0;
+            }
+
+            if (double.TryParse(value, NumberStyles.AllowDecimalPoint, NumberFormatInfo.InvariantInfo, out var parsed))
+            {
+                return parsed;
+            }
+            else
+            {
+                throw new FormatException($"[{value}] is not a valid double.");
+            }
+        }
+
+        /// <summary>
+        /// Reads and deserializes a key with a JSON value as a specified type, throwing an exception if the key doesn't exist.
         /// </summary>
         /// <typeparam name="T">The type to be desearialized.</typeparam>
         /// <param name="kv">The key/value endpoint.</param>
@@ -314,6 +516,11 @@ namespace Consul
         /// <returns>The parsed <typeparamref name="T"/>.</returns>
         /// <exception cref="KeyNotFoundException">Thrown if <paramref name="key"/> could not be found.</exception>
         /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
         public static async Task<T> GetObject<T>(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
             where T : new()
         {
@@ -327,6 +534,114 @@ namespace Consul
             {
                 throw new FormatException(e.Message, e);
             }
+        }
+
+        /// <summary>
+        /// Reads and deserializes a key with a JSON value as a specified type, returning the default value
+        /// if the key doesn't exist.
+        /// </summary>
+        /// <typeparam name="T">The type to be desearialized.</typeparam>
+        /// <param name="kv">The key/value endpoint.</param>
+        /// <param name="key">The key.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The parsed <typeparamref name="T"/> or <c>default(T)</c>.</returns>
+        /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
+        public static async Task<T> GetObjectOrDefault<T>(this IKVEndpoint kv, string key, CancellationToken cancellationToken = default)
+            where T : new()
+        {
+            var value = await GetString(kv, key, cancellationToken);
+
+            if (value == null)
+            {
+                return default(T);
+            }
+
+            try
+            {
+                return NeonHelper.JsonDeserialize<T>(value);
+            }
+            catch (Exception e)
+            {
+                throw new FormatException(e.Message, e);
+            }
+        }
+
+        /// <summary>
+        /// Lists the items beneath a path prefix and deserializes them as JSON objects, throwing
+        /// an exception if the key doesn't exist.
+        /// </summary>
+        /// <typeparam name="T">The item type.</typeparam>
+        /// <param name="kv">The key/value endpoint.</param>
+        /// <param name="keyPrefix">The path prefix.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The items.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the <paramref name="keyPrefix"/> does not exist.</exception>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
+        public static async Task<IEnumerable<T>> List<T>(this IKVEndpoint kv, string keyPrefix, CancellationToken cancellationToken = default)
+            where T : new()
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyPrefix));
+
+            var response = (await kv.List(keyPrefix, cancellationToken)).Response;
+
+            if (response == null)
+            {
+                throw new KeyNotFoundException(keyPrefix);
+            }
+
+            var items = new List<T>(response.Length);
+
+            foreach (var item in response)
+            {
+                items.Add(NeonHelper.JsonDeserialize<T>(Encoding.UTF8.GetString(item.Value)));
+            }
+
+            return items;
+        }
+
+        /// <summary>
+        /// Lists the items beneath a path prefix and deserializes them as JSON objects, returning
+        /// <c>null</c> if the key doesn't exist.
+        /// </summary>
+        /// <typeparam name="T">The item type.</typeparam>
+        /// <param name="kv">The key/value endpoint.</param>
+        /// <param name="keyPrefix">The path prefix.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The item list or <c>null</c>.</returns>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
+        public static async Task<IEnumerable<T>> ListOrDefault<T>(this IKVEndpoint kv, string keyPrefix, CancellationToken cancellationToken = default)
+            where T : new()
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyPrefix));
+
+            var response = (await kv.List(keyPrefix, cancellationToken)).Response;
+
+            if (response == null)
+            {
+                return null;
+            }
+
+            var items = new List<T>(response.Length);
+
+            foreach (var item in response)
+            {
+                items.Add(NeonHelper.JsonDeserialize<T>(Encoding.UTF8.GetString(item.Value)));
+            }
+
+            return items;
         }
 
         /// <summary>
@@ -393,6 +708,11 @@ namespace Consul
         ///     },
         ///     TimeSpan.FromSeconds(30));
         /// </code> 
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
         /// </remarks>
         public static async Task WatchKey(this IKVEndpoint kv, string key, Func<byte[], Task> action, bool throwOnError = false, TimeSpan timeout = default, CancellationToken cancellationToken = default)
         {
@@ -501,6 +821,11 @@ namespace Consul
         ///     },
         ///     TimeSpan.FromSeconds(30));
         /// </code> 
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
         /// </remarks>
         public static async Task WatchPrefix(this IKVEndpoint kv, string keyPrefix, Func<Task> action, bool throwOnError = false, TimeSpan timeout = default, CancellationToken cancellationToken = default)
         {
@@ -544,37 +869,6 @@ namespace Consul
                         lastIndex = response.LastIndex;
                     }
                 });
-        }
-
-        /// <summary>
-        /// Lists the items beneath a path prefix and deserializes them as JSON.
-        /// </summary>
-        /// <typeparam name="T">The item type.</typeparam>
-        /// <param name="kv">The key/value endpoint.</param>
-        /// <param name="keyPrefix">The path prefix.</param>
-        /// <param name="cancellationToken">The optional cancellation token.</param>
-        /// <returns>The items.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown if the <paramref name="keyPrefix"/> does not exist.</exception>
-        public static async Task<IEnumerable<T>> List<T>(this IKVEndpoint kv, string keyPrefix, CancellationToken cancellationToken = default)
-            where T : new()
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyPrefix));
-
-            var response = (await kv.List(keyPrefix, cancellationToken)).Response;
-
-            if (response == null)
-            {
-                throw new KeyNotFoundException(keyPrefix);
-            }
-
-            var items = new List<T>(response.Length);
-
-            foreach (var item in response)
-            {
-                items.Add(NeonHelper.JsonDeserialize<T>(Encoding.UTF8.GetString(item.Value)));
-            }
-
-            return items;
         }
     }
 }
