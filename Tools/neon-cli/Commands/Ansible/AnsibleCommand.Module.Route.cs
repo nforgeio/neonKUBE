@@ -163,7 +163,7 @@ namespace NeonCli
 
                     if (!context.Arguments.TryGetValue<JObject>("route", out var routeObject))
                     {
-                        throw new ArgumentException($"[route] module argument is required.");
+                        throw new ArgumentException($"[route] module argument is required when [state={state}].");
                     }
 
                     var routeText = routeObject.ToString();
@@ -279,7 +279,7 @@ namespace NeonCli
 
                     if (existingRoute != null)
                     {
-                        context.WriteLine(Verbosity.Trace, $"Route exists.  Checking for differences.");
+                        context.WriteLine(Verbosity.Trace, $"Route exists: checking for differences.");
 
                         context.Changed = !NeonHelper.JsonEquals(newRoute, existingRoute);
 
