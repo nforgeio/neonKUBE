@@ -4,11 +4,12 @@
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
-
-using Neon.Common;
+using System.Collections.Generic;
 
 using Xunit;
 using YamlDotNet.Core;
+
+using Neon.Common;
 
 namespace TestCommon
 {
@@ -135,6 +136,38 @@ age: 56
 
             Assert.Equal("Jeff", after.Name);
             Assert.Equal(56, after.Age);
+        }
+
+        [Fact]
+        public void YamlArray()
+        {
+            // Verify that we can YAML arrays.
+
+            var before = new List<YamlPerson>();
+
+            before.Add(
+                new YamlPerson()
+                {
+                    Name = "Jeff",
+                    Age = 56
+                });
+
+            before.Add(
+                new YamlPerson()
+                {
+                    Name = "Darrian",
+                    Age = 25
+                });
+
+            var yaml = NeonHelper.YamlSerialize(before);
+
+            // Verify that we can deserialize.
+
+            var after = NeonHelper.JsonOrYamlDeserialize<List<YamlPerson>>(yaml);
+
+            Assert.Equal(2, after.Count);
+            Assert.Equal("Jeff", after[0].Name);
+            Assert.Equal("Darrian", after[1].Name);
         }
     }
 }
