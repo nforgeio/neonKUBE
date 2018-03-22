@@ -55,11 +55,88 @@ namespace NeonCli
         //
         // hostname     yes                                 DNS hostname
         //
-        // entry        see comment                         DNS entry structured as YAML.  
-        //                                                  Required when [state=present]
+        // endpoints    see comment                         target endpoint array (see remarks)  
+        //                                                  required when [state=present]
         //
         // state        no          present     absent      indicates whether the DNS entry
         //                                      present     should be created or removed
+        //
+        // Remarks:
+        // --------
+        //
+        // The endpoints array is required when [state=present].  This describes
+        // the targets to be resolved for the hostname.  Each array element
+        // specifies the following fields:
+        //
+        // field        required    default     choices     comments
+        // --------------------------------------------------------------------
+        //
+        // target       yes                     IPADDRESS   IP address like: 10.0.0.55
+        //                                      HOSTNAME    CNAME like host: www.google.com
+        //                                      GROUP       Host group like: group=managers
+        //
+        // check        no          no          yes/no      Require endpoint health checks
+        //
+        // Examples:
+        // ---------
+        //
+        // This simple example associates a single IP address to FOO.COM:
+        //
+        //      hostname: foo.com
+        //      state: present
+        //      endpoints:
+        //        - target: 10.0.0.30
+        //
+        // This example enables health checks for a single address:
+        //
+        //      hostname: foo.com
+        //      state: present
+        //      endpoints:
+        //        - target: 10.0.0.30
+        //          check: yes
+        //
+        // This example associates multiple addresses, some with health
+        // checks and others without:
+        //
+        //      hostname: foo.com
+        //      state: present
+        //      endpoints:
+        //        - target: 10.0.0.30
+        //          check: yes
+        //        - target: 10.0.0.31
+        //          check: no
+        //        - target: 10.0.0.32
+        //          check: yes
+        //
+        // This example simulates a CNAME record by associating WWW.GOOGLE.COM
+        // with the FOO.COM.  This means DNS lookups for FOO.COM will return
+        // the last IP address we retrieved for WWW.GOOGLE.COM:
+        //
+        //      hostname: foo.com
+        //      state: present
+        //      endpoints:
+        //        - target: www.google.com
+        //
+        // This example expands the neonCLUSTER [swarm] host group so that
+        // FOO.COM will resolve to the IP addresses for all cluster Swarm
+        // nodes.  Checking is now enabled, so the IP addresses for all Swarm
+        // nodes will be returned, regardless of their health.
+        //
+        //      hostname: foo.com
+        //      state: present
+        //      endpoints:
+        //        - target: group=swarm
+        //
+        // This example expands the neonCLUSTER [swarm] host group so that
+        // FOO.COM will resolve to the IP addresses for all cluster Swarm
+        // nodes.  Checking is enabled this time, so the IP addresses for 
+        // healthy Swarm nodes will be returned, regardless of their health.
+        //
+        //      hostname: foo.com
+        //      state: present
+        //      endpoints:
+        //        - target: group=swarm
+        //          check: yes
 
         /// <summary>
         /// Implements the built-in <b>neon_dns</b> module.
@@ -93,11 +170,11 @@ namespace NeonCli
 
             state = state.ToLowerInvariant();
 
-            context.WriteLine(Verbosity.Trace, $"Parsing [entry]");
+            context.WriteLine(Verbosity.Trace, $"Parsing [endpoints]");
 
-            if (!context.Arguments.TryGetValue<string>("entry", out var proxy) && state == "present")
+            if (!context.Arguments.TryGetValue<string>("endpoints", out var proxy) && state == "present")
             {
-                throw new ArgumentException($"[entry] module argument is required when [state={state}].");
+                throw new ArgumentException($"[endpoints] module argument is required when [state={state}].");
             }
 
             // We have the required arguments, so perform the operation.
@@ -131,41 +208,24 @@ namespace NeonCli
 
                 case "present":
 
-                    context.WriteLine(Verbosity.Trace, $"Parsing [entry]");
+                    context.WriteLine(Verbosity.Trace, $"Parsing [endpoints]");
 
-                    if (!context.Arguments.TryGetValue<JObject>("entry", out var entryObject))
+                    if (!context.Arguments.TryGetValue<List<DnsEndpoint>>("endpoints", out var endpoints))
                     {
-                        throw new ArgumentException($"[entry] module argument is required.");
+                        throw new ArgumentException($"[endpoints] module argument is required.");
                     }
 
-                    var entryText = entryObject.ToString();
+                    context.WriteLine(Verbosity.Trace, $"[{endpoints.Count}] Endpoints parsed successfully");
 
-                    context.WriteLine(Verbosity.Trace, "Parsing entry");
+                    // Construct the new entry.
 
-                    var newEntry = NeonHelper.JsonOrYamlDeserialize<DnsEntry>(entryText, strict: true);
-
-                    context.WriteLine(Verbosity.Trace, "Entry parsed successfully");
-
-                    // Use the entry hostname argument if the deserialized entry doesn't
-                    // have a name.  This will make it easier on operators because 
-                    // they won't need to specify the name twice.
-
-                    if (string.IsNullOrWhiteSpace(newEntry.Hostname))
+                    var newEntry = new DnsEntry()
                     {
-                        newEntry.Hostname = hostname;
-                    }
+                        Hostname  = hostname,
+                        Endpoints = endpoints
+                    };
 
-                    // Ensure that the entry name passed as an argument and the
-                    // name within the entry definition match.
-
-                    if (!string.Equals(hostname, newEntry.Hostname, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        throw new ArgumentException($"The [hostname={hostname}] argument and the entrie's [{nameof(DnsEntry.Hostname)}={newEntry.Hostname}] property are not the same.");
-                    }
-
-                    context.WriteLine(Verbosity.Trace, "Entry hostname matched.");
-
-                    // Validate the DNS entry.
+                    // Validate the new DNS entry.
 
                     context.WriteLine(Verbosity.Trace, "Validating DNS entry.");
 
@@ -187,37 +247,37 @@ namespace NeonCli
 
                     context.WriteLine(Verbosity.Trace, "DNS entry is valid.");
 
-                    // Try reading any existing entry with this name and then determine
+                    // Try reading an existing entry with this name and then determine
                     // whether the two versions of the entry are actually different. 
 
-                    context.WriteLine(Verbosity.Trace, $"Looking for existing entry for [{hostname}]");
+                    context.WriteLine(Verbosity.Trace, $"Look up existing DNS entry for [{hostname}]");
 
                     var existingEntry = consul.KV.GetObjectOrDefault<DnsEntry>(hostKey).Result;
 
                     if (existingEntry != null)
                     {
-                        context.WriteLine(Verbosity.Trace, $"Entry exists: checking for differences.");
+                        context.WriteLine(Verbosity.Trace, $"DNS entry exists: checking for differences.");
 
                         context.Changed = !NeonHelper.JsonEquals(newEntry, existingEntry);
 
                         if (context.Changed)
                         {
-                            context.WriteLine(Verbosity.Trace, $"Entries are different.");
+                            context.WriteLine(Verbosity.Trace, $"DNS entries are different.");
                         }
                         else
                         {
-                            context.WriteLine(Verbosity.Info, $"Entries are the same.  No need to update.");
+                            context.WriteLine(Verbosity.Info, $"DNS entries are the same.  No need to update.");
                         }
                     }
                     else
                     {
                         context.Changed = true;
-                        context.WriteLine(Verbosity.Trace, $"Entry for [hostname={hostname}] does not exist.");
+                        context.WriteLine(Verbosity.Trace, $"DNS entry for [hostname={hostname}] does not exist.");
                     }
 
                     if (context.Changed)
                     {
-                        context.WriteLine(Verbosity.Trace, $"Updating entry.");
+                        context.WriteLine(Verbosity.Trace, $"Updating DNS entry.");
                         consul.KV.PutObject(hostKey, newEntry).Wait();
                         context.WriteLine(Verbosity.Info, $"DNS entry updated.");
                     }
