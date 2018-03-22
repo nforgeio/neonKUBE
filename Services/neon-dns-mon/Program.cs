@@ -241,7 +241,7 @@ namespace NeonDnsHealth
                     if (unhealthyTargets.Count > 0)
                     {
                         sbHosts.AppendLine();
-                        sbHosts.AppendLine($"# [{unhealthyTargets.Count}] hosts with no healthy endpoints:");
+                        sbHosts.AppendLine($"# [{unhealthyTargets.Count}] hosts without healthy endpoints:");
                         sbHosts.AppendLine($"#");
 
                         foreach (var target in unhealthyTargets.OrderBy(h => h))
@@ -422,7 +422,7 @@ namespace NeonDnsHealth
         {
             // Resolve the target DNS name, if required.
 
-            var addresses = await dns.LookupAsync(endpoint.Target);
+            var addresses = await dns.LookupAsync(targetOverride ?? endpoint.Target);
 
             // Perform health checking if required.
 

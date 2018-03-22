@@ -77,7 +77,7 @@ namespace Neon.Cluster
 
             if (groupName != null)
             {
-                if (!string.IsNullOrEmpty(groupName))
+                if (string.IsNullOrEmpty(groupName))
                 {
                     warnings.Add($"Invalid [{nameof(DnsEndpoint)}.{nameof(Target)}={Target}] for [{nameof(DnsEntry)}={entryHostname}].");
                 }
