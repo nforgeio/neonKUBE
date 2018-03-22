@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DnsTarget.cs
+// FILE:	    DnsEntry.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -20,15 +20,15 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes a DNS target domain to be served dynamically by the the neonCLUSTER 
+    /// Describes a DNS domain to be served dynamically by the the neonCLUSTER 
     /// Dynamic DNS implementation.  These records are used by the <b>neon-dns-mon</b> 
     /// service to persist the <see cref="DnsAnswer"/> records to Consul for the
     /// healthy endpoints.
     /// </summary>
-    public class DnsTarget
+    public class DnsEntry
     {
         /// <summary>
-        /// The target hostname to be resolved by the DNS.  This must be a simple
+        /// The hostname to be resolved by the DNS.  This must be a simple
         /// hostname or a fully qualified domain name.
         /// </summary>
         [JsonProperty(PropertyName = "Hostname", Required = Required.Always)]
@@ -42,7 +42,7 @@ namespace Neon.Cluster
         public List<DnsEndpoint> Endpoints { get; set; } = new List<DnsEndpoint>();
 
         /// <summary>
-        /// Validates the DNS target.  Any warning/errors will be returned as a string list.
+        /// Validates the DNS entry.  Any warning/errors will be returned as a string list.
         /// </summary>
         /// <param name="clusterDefinition">The current cluster definition,</param>
         /// <param name="nodeGroups">The cluster node groups.</param>
@@ -56,7 +56,7 @@ namespace Neon.Cluster
 
             if (string.IsNullOrEmpty(Hostname) || !ClusterDefinition.IsValidName(Hostname))
             {
-                warnings.Add($"Invalid [{nameof(DnsTarget)}.{nameof(Hostname)}={Hostname}].");
+                warnings.Add($"Invalid [{nameof(DnsEntry)}.{nameof(Hostname)}={Hostname}].");
             }
 
             foreach (var endpoint in Endpoints)

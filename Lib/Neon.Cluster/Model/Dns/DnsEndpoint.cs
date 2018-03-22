@@ -21,12 +21,12 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes a DNS endpoint made by a <see cref="DnsTarget"/>.
+    /// Describes a DNS endpoint made by a <see cref="DnsEntry"/>.
     /// </summary>
     public class DnsEndpoint
     {
         /// <summary>
-        /// Specifies the target host's IP address or FQDN or a target host group
+        /// Specifies the target host IP address, or FQDN, or a target host group
         /// by specifying <b>group=NAME</b>.
         /// </summary>
         [JsonProperty(PropertyName = "Target", Required = Required.Always)]
@@ -62,15 +62,15 @@ namespace Neon.Cluster
         /// <param name="warnings">Any warnings will be appended here.</param>
         /// <param name="clusterDefinition">The current cluster definition,</param>
         /// <param name="nodeGroups">The cluster node groups.</param>
-        /// <param name="targetHostname">The parent target hostname.</param>
-        public void Validate(List<string> warnings, ClusterDefinition clusterDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups, string targetHostname)
+        /// <param name="entryHostname">The parent <see cref="DnsEntry"/>'s hostname.</param>
+        public void Validate(List<string> warnings, ClusterDefinition clusterDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups, string entryHostname)
         {
             Covenant.Requires<ArgumentException>(clusterDefinition != null);
             Covenant.Requires<ArgumentException>(nodeGroups != null);
 
             if (string.IsNullOrEmpty(Target))
             {
-                warnings.Add($"Invalid [{nameof(DnsEndpoint)}.{nameof(Target)}={Target}] for [{nameof(DnsTarget)}={targetHostname}].");
+                warnings.Add($"Invalid [{nameof(DnsEndpoint)}.{nameof(Target)}={Target}] for [{nameof(DnsEntry)}={entryHostname}].");
             }
 
             var groupName = GetGroupName();
@@ -79,18 +79,18 @@ namespace Neon.Cluster
             {
                 if (!string.IsNullOrEmpty(groupName))
                 {
-                    warnings.Add($"Invalid [{nameof(DnsEndpoint)}.{nameof(Target)}={Target}] for [{nameof(DnsTarget)}={targetHostname}].");
+                    warnings.Add($"Invalid [{nameof(DnsEndpoint)}.{nameof(Target)}={Target}] for [{nameof(DnsEntry)}={entryHostname}].");
                 }
                 else if (!nodeGroups.ContainsKey(groupName))
                 {
-                    warnings.Add($"Node group [{groupName}] not found for [{nameof(DnsTarget)}={targetHostname}].");
+                    warnings.Add($"Node group [{groupName}] not found for [{nameof(DnsEntry)}={entryHostname}].");
                 }
             }
             else
             {
                 if (!IPAddress.TryParse(Target, out var address) && !ClusterDefinition.DnsHostRegex.IsMatch(Target))
                 {
-                    warnings.Add($"Invalid [{nameof(DnsEndpoint)}.{nameof(Target)}={Target}] is not a valid IP address or DNS hostname for [{nameof(DnsTarget)}={targetHostname}].");
+                    warnings.Add($"Invalid [{nameof(DnsEndpoint)}.{nameof(Target)}={Target}] is not a valid IP address or DNS hostname for [{nameof(DnsEntry)}={entryHostname}].");
                 }
             }
         }

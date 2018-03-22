@@ -194,19 +194,19 @@ namespace NeonDnsHealth
                         hostAddresses.Add($"{node.Name}.cluster", IPAddress.Parse(node.PrivateAddress));
                     }
 
-                    // Read the DNS target definitions from Consul and add the appropriate 
+                    // Read the DNS entry definitions from Consul and add the appropriate 
                     // host/addresses based on health checks, etc.
 
-                    var targetsResult = (await consul.KV.ListOrDefault<DnsTarget>(NeonClusterConst.DnsConsulTargetsKey + "/", terminator.CancellationToken));
+                    var targetsResult = (await consul.KV.ListOrDefault<DnsEntry>(NeonClusterConst.DnsConsulEntriesKey + "/", terminator.CancellationToken));
 
-                    List<DnsTarget> targets;
+                    List<DnsEntry> targets;
 
                     if (targetsResult == null)
                     {
                         // The targets key wasn't found in Consul, so we're
                         // going to assume that there are no targets.
 
-                        targets = new List<DnsTarget>();
+                        targets = new List<DnsEntry>();
                     }
                     else
                     {
@@ -297,7 +297,7 @@ namespace NeonDnsHealth
         /// </summary>
         /// <param name="hostAddresses">The host addresses.</param>
         /// <param name="targets">The DNS targets.</param>
-        private static async Task ResolveTargetsAsync(HostAddresses hostAddresses, List<DnsTarget> targets)
+        private static async Task ResolveTargetsAsync(HostAddresses hostAddresses, List<DnsEntry> targets)
         {
             // $todo(jeff.lill): 
             //

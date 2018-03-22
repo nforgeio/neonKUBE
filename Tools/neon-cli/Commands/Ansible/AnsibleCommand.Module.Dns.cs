@@ -55,10 +55,10 @@ namespace NeonCli
         //
         // hostname     yes                                 DNS hostname
         //
-        // target       see comment                         DNS target structured as YAML.  
+        // entry        see comment                         DNS entry structured as YAML.  
         //                                                  Required when [state=present]
         //
-        // state        no          present     absent      indicates whether the DNS target
+        // state        no          present     absent      indicates whether the DNS entry
         //                                      present     should be created or removed
 
         /// <summary>
@@ -93,87 +93,87 @@ namespace NeonCli
 
             state = state.ToLowerInvariant();
 
-            context.WriteLine(Verbosity.Trace, $"Parsing [target]");
+            context.WriteLine(Verbosity.Trace, $"Parsing [entry]");
 
-            if (!context.Arguments.TryGetValue<string>("target", out var proxy) && state == "present")
+            if (!context.Arguments.TryGetValue<string>("entry", out var proxy) && state == "present")
             {
-                throw new ArgumentException($"[target] module argument is required when [state={state}].");
+                throw new ArgumentException($"[entry] module argument is required when [state={state}].");
             }
 
             // We have the required arguments, so perform the operation.
 
-            var targetKey = $"neon/dns/targets/{hostname}";
+            var hostKey = $"{NeonClusterConst.DnsConsulEntriesKey}/{hostname}";
 
             switch (state)
             {
                 case "absent":
 
-                    context.WriteLine(Verbosity.Trace, $"Check if DNS target [{hostname}] exists.");
+                    context.WriteLine(Verbosity.Trace, $"Check if DNS entry [{hostname}] exists.");
 
-                    if (consul.KV.Exists(targetKey).Result)
+                    if (consul.KV.Exists(hostKey).Result)
                     {
-                        context.WriteLine(Verbosity.Trace, $"DNS target [{hostname}] does exist.");
-                        context.WriteLine(Verbosity.Info, $"Deleting DNS target [{hostname}].");
+                        context.WriteLine(Verbosity.Trace, $"DNS entry [{hostname}] does exist.");
+                        context.WriteLine(Verbosity.Info, $"Deleting DNS entry [{hostname}].");
 
                         if (!context.CheckMode)
                         {
-                            consul.KV.Delete(targetKey);
-                            context.WriteLine(Verbosity.Trace, $"DNS target [{hostname}] deleted.");
+                            consul.KV.Delete(hostKey);
+                            context.WriteLine(Verbosity.Trace, $"DNS entry [{hostname}] deleted.");
                         }
 
                         context.Changed = true;
                     }
                     else
                     {
-                        context.WriteLine(Verbosity.Trace, $"DNS target [{hostname}] does not exist.");
+                        context.WriteLine(Verbosity.Trace, $"DNS entry [{hostname}] does not exist.");
                     }
                     break;
 
                 case "present":
 
-                    context.WriteLine(Verbosity.Trace, $"Parsing [target]");
+                    context.WriteLine(Verbosity.Trace, $"Parsing [entry]");
 
-                    if (!context.Arguments.TryGetValue<JObject>("target", out var targetObject))
+                    if (!context.Arguments.TryGetValue<JObject>("entry", out var entryObject))
                     {
-                        throw new ArgumentException($"[target] module argument is required.");
+                        throw new ArgumentException($"[entry] module argument is required.");
                     }
 
-                    var targetText = targetObject.ToString();
+                    var entryText = entryObject.ToString();
 
-                    context.WriteLine(Verbosity.Trace, "Parsing target");
+                    context.WriteLine(Verbosity.Trace, "Parsing entry");
 
-                    var newTarget = NeonHelper.JsonOrYamlDeserialize<DnsTarget>(targetText, strict: true);
+                    var newEntry = NeonHelper.JsonOrYamlDeserialize<DnsEntry>(entryText, strict: true);
 
-                    context.WriteLine(Verbosity.Trace, "Target parsed successfully");
+                    context.WriteLine(Verbosity.Trace, "Entry parsed successfully");
 
-                    // Use the target hostname argument if the deserialized target doesn't
+                    // Use the entry hostname argument if the deserialized entry doesn't
                     // have a name.  This will make it easier on operators because 
                     // they won't need to specify the name twice.
 
-                    if (string.IsNullOrWhiteSpace(newTarget.Hostname))
+                    if (string.IsNullOrWhiteSpace(newEntry.Hostname))
                     {
-                        newTarget.Hostname = hostname;
+                        newEntry.Hostname = hostname;
                     }
 
-                    // Ensure that the target name passed as an argument and the
-                    // name within the target definition match.
+                    // Ensure that the entry name passed as an argument and the
+                    // name within the entry definition match.
 
-                    if (!string.Equals(hostname, newTarget.Hostname, StringComparison.InvariantCultureIgnoreCase))
+                    if (!string.Equals(hostname, newEntry.Hostname, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        throw new ArgumentException($"The [hostname={hostname}] argument and the target's [{nameof(DnsTarget.Hostname)}={newTarget.Hostname}] property are not the same.");
+                        throw new ArgumentException($"The [hostname={hostname}] argument and the entrie's [{nameof(DnsEntry.Hostname)}={newEntry.Hostname}] property are not the same.");
                     }
 
-                    context.WriteLine(Verbosity.Trace, "Target hostname matched.");
+                    context.WriteLine(Verbosity.Trace, "Entry hostname matched.");
 
-                    // Validate the DNS target.
+                    // Validate the DNS entry.
 
-                    context.WriteLine(Verbosity.Trace, "Validating DNS target.");
+                    context.WriteLine(Verbosity.Trace, "Validating DNS entry.");
 
-                    var errors = newTarget.Validate(cluster.Definition, cluster.Definition.GetNodeGroups(excludeAllGroup: true));
+                    var errors = newEntry.Validate(cluster.Definition, cluster.Definition.GetNodeGroups(excludeAllGroup: true));
 
                     if (errors.Count > 0)
                     {
-                        context.WriteLine(Verbosity.Trace, $"[{errors.Count}] DNS target validation errors.");
+                        context.WriteLine(Verbosity.Trace, $"[{errors.Count}] DNS entry validation errors.");
 
                         foreach (var error in errors)
                         {
@@ -185,41 +185,41 @@ namespace NeonCli
                         return;
                     }
 
-                    context.WriteLine(Verbosity.Trace, "DNS target is valid.");
+                    context.WriteLine(Verbosity.Trace, "DNS entry is valid.");
 
-                    // Try reading any existing target with this name and then determine
-                    // whether the two versions of the target are actually different. 
+                    // Try reading any existing entry with this name and then determine
+                    // whether the two versions of the entry are actually different. 
 
-                    context.WriteLine(Verbosity.Trace, $"Looking for existing target for [{hostname}]");
+                    context.WriteLine(Verbosity.Trace, $"Looking for existing entry for [{hostname}]");
 
-                    var existingTarget = consul.KV.GetObjectOrDefault<DnsTarget>(targetKey).Result;
+                    var existingEntry = consul.KV.GetObjectOrDefault<DnsEntry>(hostKey).Result;
 
-                    if (existingTarget != null)
+                    if (existingEntry != null)
                     {
-                        context.WriteLine(Verbosity.Trace, $"Target exists: checking for differences.");
+                        context.WriteLine(Verbosity.Trace, $"Entry exists: checking for differences.");
 
-                        context.Changed = !NeonHelper.JsonEquals(newTarget, existingTarget);
+                        context.Changed = !NeonHelper.JsonEquals(newEntry, existingEntry);
 
                         if (context.Changed)
                         {
-                            context.WriteLine(Verbosity.Trace, $"Targets are different.");
+                            context.WriteLine(Verbosity.Trace, $"Entries are different.");
                         }
                         else
                         {
-                            context.WriteLine(Verbosity.Info, $"Targets are the same.  No need to update.");
+                            context.WriteLine(Verbosity.Info, $"Entries are the same.  No need to update.");
                         }
                     }
                     else
                     {
                         context.Changed = true;
-                        context.WriteLine(Verbosity.Trace, $"Target for [hostname={hostname}] does not exist.");
+                        context.WriteLine(Verbosity.Trace, $"Entry for [hostname={hostname}] does not exist.");
                     }
 
                     if (context.Changed)
                     {
-                        context.WriteLine(Verbosity.Trace, $"Updating target.");
-                        consul.KV.PutObject(targetKey, newTarget).Wait();
-                        context.WriteLine(Verbosity.Info, $"DNS target updated.");
+                        context.WriteLine(Verbosity.Trace, $"Updating entry.");
+                        consul.KV.PutObject(hostKey, newEntry).Wait();
+                        context.WriteLine(Verbosity.Info, $"DNS entry updated.");
                     }
 
                     break;

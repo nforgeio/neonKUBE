@@ -131,9 +131,9 @@ namespace Neon.Cluster
         public static readonly string DnsConsulRootKey = "neon/dns";
 
         /// <summary>
-        /// Consul parent key for the Dynamic DNS targets.
+        /// Consul parent key for the Dynamic DNS entry definitions.
         /// </summary>
-        public static readonly string DnsConsulTargetsKey = $"{DnsConsulRootKey}/targets";
+        public static readonly string DnsConsulEntriesKey = $"{DnsConsulRootKey}/entries";
 
         /// <summary>
         /// Consul key for the Dynamic DNS answer <b>hosts.txt</b> file.

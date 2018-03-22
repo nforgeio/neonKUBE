@@ -34,10 +34,10 @@ Manages cluster DNS records.
 
 USAGE:
 
-    neon dns help                           - Describes target file format
+    neon dns help                           - Describes DNS entry format
     neon dns addr|addresses [HOST]          - Lists current host addresses
     neon dns [--yaml] get HOST              - Gets DNS host settings
-    neon dns ls|list                        - Lists the DNS host targets
+    neon dns ls|list                        - Lists the DNS host entries
     neon dns rm|remove HOST                 - Removes DNS host settings
     neon dns set [--check] HOST ADDRESSES   - Sets DNS host settings
     neon dns set PATH                       - Sets DNS settings from a file
@@ -46,7 +46,7 @@ USAGE:
 ARGUMENTS:
 
     HOST        - FQDN of the DNS entry being added (e.g. server.domain.com)
-    ADDRESSES   - Specifies one or more target IP addresses, FQDNs or
+    ADDRESSES   - Specifies one or more endpoint IP addresses, FQDNs or
                   host group names via [group=GROUPNAME]
     PATH        - Path to a JSON/YAML file describing the new entry
     -           - Indicates that the JSON/YAML file is specified by STDIN
@@ -159,24 +159,24 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
                 case "get":
 
-                    GetTarget(commandLine);
+                    GetEntries(commandLine);
                     break;
 
                 case "ls":
                 case "list":
 
-                    ListTargets(commandLine);
+                    ListEntries(commandLine);
                     break;
 
                 case "rm":
                 case "remove":
 
-                    RemoveTarget(commandLine);
+                    RemoveEntry(commandLine);
                     break;
 
                 case "set":
 
-                    SetTarget(commandLine);
+                    SetEntry(commandLine);
                     break;
 
                 default:
@@ -203,22 +203,22 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         {
             // We're simply going to download and parse [neon/dns/answers/hosts.txt].
 
-            var answers    = GetAnswers();
-            var targetHost = commandLine.Arguments.ElementAtOrDefault(2);
+            var answers   = GetAnswers();
+            var entryHost = commandLine.Arguments.ElementAtOrDefault(2);
 
             Console.WriteLine();
 
-            if (targetHost != null)
+            if (entryHost != null)
             {
                 // Print the addresses for a specific host.
 
-                if (!answers.TryGetValue(targetHost, out var addresses))
+                if (!answers.TryGetValue(entryHost, out var addresses))
                 {
-                    Console.Error.WriteLine($"*** ERROR: [host={targetHost}] does not exist.");
+                    Console.Error.WriteLine($"*** ERROR: [host={entryHost}] does not exist.");
                     Program.Exit(1);
                 }
 
-                PrintHostAddresses(targetHost, addresses);
+                PrintHostAddresses(entryHost, addresses);
             }
             else
             {
@@ -355,7 +355,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// Implements the <b>get</b> command.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
-        private void GetTarget(CommandLine commandLine)
+        private void GetEntries(CommandLine commandLine)
         {
             var host = commandLine.Arguments.ElementAtOrDefault(1);
             var yaml = commandLine.HasOption("--yaml");
@@ -368,9 +368,9 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
             host = host.ToLowerInvariant();
 
-            var targetDef = cluster.Consul.KV.GetObjectOrDefault<DnsTarget>(GetTargetConsulKey(host)).Result;
+            var entryDefDef = cluster.Consul.KV.GetObjectOrDefault<DnsEntry>(GetEntryConsulKey(host)).Result;
 
-            if (targetDef == null)
+            if (entryDefDef == null)
             {
                 Console.Error.WriteLine($"*** ERROR: DNS entry for [{host}] does not exist.");
                 Program.Exit(1);
@@ -378,11 +378,11 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
             if (yaml)
             {
-                Console.WriteLine(NeonHelper.YamlSerialize(targetDef));
+                Console.WriteLine(NeonHelper.YamlSerialize(entryDefDef));
             }
             else
             {
-                Console.WriteLine(NeonHelper.JsonSerialize(targetDef, Formatting.Indented));
+                Console.WriteLine(NeonHelper.JsonSerialize(entryDefDef, Formatting.Indented));
             }
         }
 
@@ -390,29 +390,29 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// Implements the <b>ls|list</b> command.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
-        private void ListTargets(CommandLine commandLine)
+        private void ListEntries(CommandLine commandLine)
         {
-            var targetResult = cluster.Consul.KV.ListOrDefault<DnsTarget>(NeonClusterConst.DnsConsulTargetsKey).Result;
+            var entryResult = cluster.Consul.KV.ListOrDefault<DnsEntry>(NeonClusterConst.DnsConsulEntriesKey).Result;
 
             Console.WriteLine();
 
-            if (targetResult == null)
+            if (entryResult == null)
             {
-                Console.WriteLine("[0] DNS targets");
+                Console.WriteLine("[0] DNS host entries");
                 return;
             }
 
-            var targetDefs   = targetResult.ToList();
-            var maxHostWidth = targetDefs.Max(t => t.Hostname.Length);
+            var entryDefs    = entryResult.ToList();
+            var maxHostWidth = entryDefs.Max(t => t.Hostname.Length);
             var answers      = GetAnswers();
 
-            foreach (var target in targetDefs)
+            foreach (var entry in entryDefs)
             {
-                var host       = target.Hostname.ToLowerInvariant();
+                var host       = entry.Hostname.ToLowerInvariant();
                 var hostPart   = $"{host} {new string(' ', maxHostWidth - host.Length)}";
                 var healthyCount = 0;
 
-                if (answers.TryGetValue(target.Hostname, out var answer))
+                if (answers.TryGetValue(entry.Hostname, out var answer))
                 {
                     healthyCount = answer.Count;
                 }
@@ -421,46 +421,46 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
             }
 
             Console.WriteLine();
-            Console.WriteLine($"[{targetDefs.Count}] DNS targets");
+            Console.WriteLine($"[{entryDefs.Count}] DNS host entries");
         }
 
         /// <summary>
-        /// Returns the Consul key for the DNS target for a hostname.
+        /// Returns the Consul key for the DNS host entry for a hostname.
         /// </summary>
-        /// <param name="hostname">The target hostname.</param>
+        /// <param name="hostname">The entry hostname.</param>
         /// <returns>The Consul key path.</returns>
-        private string GetTargetConsulKey(string hostname)
+        private string GetEntryConsulKey(string hostname)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
 
-            return $"{NeonClusterConst.DnsConsulTargetsKey}/{hostname}";
+            return $"{NeonClusterConst.DnsConsulEntriesKey}/{hostname}";
         }
 
         /// <summary>
         /// Implements the <b>rm|remove</b> command.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
-        private void RemoveTarget(CommandLine commandLine)
+        private void RemoveEntry(CommandLine commandLine)
         {
-            var targetHost = commandLine.Arguments.ElementAtOrDefault(1);
+            var entryHost = commandLine.Arguments.ElementAtOrDefault(1);
 
-            if (targetHost == null)
+            if (entryHost == null)
             {
                 Console.Error.WriteLine("*** ERROR: [HOST] argument expected.");
                 Program.Exit(1);
             }
 
-            cluster.Consul.KV.Delete(GetTargetConsulKey(targetHost)).Wait();
-            Console.WriteLine($"Removed [{targetHost}] (if it existed).");
+            cluster.Consul.KV.Delete(GetEntryConsulKey(entryHost)).Wait();
+            Console.WriteLine($"Removed [{entryHost}] (if it existed).");
         }
 
         /// <summary>
         /// Implements the <b>set</b> command.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
-        private void SetTarget(CommandLine commandLine)
+        private void SetEntry(CommandLine commandLine)
         {
-            DnsTarget dnsTarget;
+            DnsEntry dnsEntry;
 
             if (commandLine.Arguments.Length >= 3)
             {
@@ -469,14 +469,14 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                 var host  = commandLine.Arguments.ElementAtOrDefault(1);
                 var check = commandLine.HasOption("--check");
 
-                dnsTarget = new DnsTarget()
+                dnsEntry = new DnsEntry()
                 {
                     Hostname = host
                 };
 
                 foreach (var address in commandLine.Arguments.Skip(2))
                 {
-                    dnsTarget.Endpoints.Add(
+                    dnsEntry.Endpoints.Add(
                         new DnsEndpoint()
                         {
                             Target = address,
@@ -507,10 +507,10 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                     data = File.ReadAllText(path);
                 }
 
-                dnsTarget = NeonHelper.JsonOrYamlDeserialize<DnsTarget>(data, strict: true);
+                dnsEntry = NeonHelper.JsonOrYamlDeserialize<DnsEntry>(data, strict: true);
             }
 
-            var errors = dnsTarget.Validate(cluster.Definition, cluster.Definition.GetNodeGroups(excludeAllGroup: true));
+            var errors = dnsEntry.Validate(cluster.Definition, cluster.Definition.GetNodeGroups(excludeAllGroup: true));
 
             if (errors.Count > 0)
             {
@@ -522,12 +522,12 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                 Program.Exit(1);
             }
 
-            var key = GetTargetConsulKey(dnsTarget.Hostname);
+            var key = GetEntryConsulKey(dnsEntry.Hostname);
 
-            cluster.Consul.KV.PutObject(key, dnsTarget, Formatting.Indented).Wait();
+            cluster.Consul.KV.PutObject(key, dnsEntry, Formatting.Indented).Wait();
 
             Console.WriteLine();
-            Console.WriteLine($"Saved [{dnsTarget.Hostname}] DNS host mappings.");
+            Console.WriteLine($"Saved [{dnsEntry.Hostname}] DNS host mappings.");
         }
 
         /// <summary>
