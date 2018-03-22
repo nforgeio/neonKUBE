@@ -1,4 +1,4 @@
-﻿#!/bin/bash
+#!/bin/bash
 #
 # This script invokes the [neon-cli] command that implements 
 # this Ansible module.

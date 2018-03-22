@@ -37,7 +37,7 @@ USAGE:
     neon dns help                           - Describes target file format
     neon dns addr|addresses [HOST]          - Lists current host addresses
     neon dns [--yaml] get HOST              - Gets DNS host settings
-    neon dns ls|list                        - Lists the DNS hosts
+    neon dns ls|list                        - Lists the DNS host targets
     neon dns rm|remove HOST                 - Removes DNS host settings
     neon dns set [--check] HOST ADDRESSES   - Sets DNS host settings
     neon dns set PATH                       - Sets DNS settings from a file
@@ -119,7 +119,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--yaml" }; }
+            get { return new string[] { "--check", "--yaml" }; }
         }
 
         /// <inheritdoc/>
@@ -205,6 +205,8 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
             var answers    = GetAnswers();
             var targetHost = commandLine.Arguments.ElementAtOrDefault(2);
+
+            Console.WriteLine();
 
             if (targetHost != null)
             {
@@ -334,7 +336,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
             host = host.ToLowerInvariant();
 
-            var targetDef = cluster.Consul.KV.GetObjectOrDefault<DnsTarget>($"neon/dns/targets/{host}").Result;
+            var targetDef = cluster.Consul.KV.GetObjectOrDefault<DnsTarget>(GetTargetConsulKey(host)).Result;
 
             if (targetDef == null)
             {
@@ -358,13 +360,13 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <param name="commandLine">The command line.</param>
         private void ListTargets(CommandLine commandLine)
         {
-            var targetResult = cluster.Consul.KV.ListOrDefault<DnsTarget>("neon/dns/targets").Result;
+            var targetResult = cluster.Consul.KV.ListOrDefault<DnsTarget>(NeonClusterConst.DnsConsulTargetsKey).Result;
 
             Console.WriteLine();
 
             if (targetResult == null)
             {
-                Console.WriteLine("[0] hosts");
+                Console.WriteLine("[0] DNS targets");
                 return;
             }
 
@@ -372,22 +374,34 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
             var maxHostWidth = targetDefs.Max(t => t.Hostname.Length);
             var answers      = GetAnswers();
 
-            Console.WriteLine($"[{targetDefs.Count}] hosts");
-            Console.WriteLine();
-
             foreach (var target in targetDefs)
             {
                 var host       = target.Hostname.ToLowerInvariant();
-                var hostPart   = $"{host}:{new string(' ', maxHostWidth - host.Length)}";
-                var aliveCount = 0;
+                var hostPart   = $"{host} {new string(' ', maxHostWidth - host.Length)}";
+                var healthyCount = 0;
 
                 if (answers.TryGetValue(target.Hostname, out var answer))
                 {
-                    aliveCount = answer.Count;
+                    healthyCount = answer.Count;
                 }
 
-                Console.WriteLine($"{hostPart}    [alive={aliveCount}]");
+                Console.WriteLine($"{hostPart}    [healthy={healthyCount}]");
             }
+
+            Console.WriteLine();
+            Console.WriteLine($"[{targetDefs.Count}] DNS targets");
+        }
+
+        /// <summary>
+        /// Returns the Consul key for the DNS target for a hostname.
+        /// </summary>
+        /// <param name="hostname">The target hostname.</param>
+        /// <returns>The Consul key path.</returns>
+        private string GetTargetConsulKey(string hostname)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
+
+            return $"{NeonClusterConst.DnsConsulTargetsKey}/{hostname}";
         }
 
         /// <summary>
@@ -404,7 +418,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                 Program.Exit(1);
             }
 
-            cluster.Consul.KV.Delete($"neon/dns/targets/{targetHost}").Wait();
+            cluster.Consul.KV.Delete(GetTargetConsulKey(targetHost)).Wait();
             Console.WriteLine($"Removed [{targetHost}] (if it existed).");
         }
 
@@ -476,7 +490,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                 Program.Exit(1);
             }
 
-            var key = $"neon/dns/targets/{dnsTarget.Hostname}";
+            var key = GetTargetConsulKey(dnsTarget.Hostname);
 
             cluster.Consul.KV.PutObject(key, dnsTarget, Formatting.Indented).Wait();
 
