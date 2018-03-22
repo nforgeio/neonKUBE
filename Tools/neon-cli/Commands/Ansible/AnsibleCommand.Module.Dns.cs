@@ -172,7 +172,7 @@ namespace NeonCli
 
             context.WriteLine(Verbosity.Trace, $"Parsing [endpoints]");
 
-            if (!context.Arguments.TryGetValue<string>("endpoints", out var proxy) && state == "present")
+            if (!context.Arguments.TryGetValue<JToken>("endpoints", out var endpointsToken) && state == "present")
             {
                 throw new ArgumentException($"[endpoints] module argument is required when [state={state}].");
             }
@@ -208,14 +208,21 @@ namespace NeonCli
 
                 case "present":
 
-                    context.WriteLine(Verbosity.Trace, $"Parsing [endpoints]");
+                    var endpointsArray = endpointsToken as JArray;
 
-                    if (!context.Arguments.TryGetValue<List<DnsEndpoint>>("endpoints", out var endpoints))
+                    if (endpointsArray == null)
                     {
-                        throw new ArgumentException($"[endpoints] module argument is required.");
+                        throw new ArgumentException($"[endpoints] module argument must be an array.");
                     }
 
-                    context.WriteLine(Verbosity.Trace, $"[{endpoints.Count}] Endpoints parsed successfully");
+                    var endpoints = new List<DnsEndpoint>();
+
+                    foreach (var item in endpointsArray)
+                    {
+                        endpoints.Add(item.ToObject<DnsEndpoint>());
+                    }
+
+                    context.WriteLine(Verbosity.Trace, $"[{endpoints.Count}] endpoints parsed");
 
                     // Construct the new entry.
 

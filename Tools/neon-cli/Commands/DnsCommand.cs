@@ -348,6 +348,11 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
                     Console.WriteLine(address);
                 }
+
+                if (addresses.Count > 1)
+                {
+                    Console.WriteLine();
+                }
             }
         }
 
