@@ -39,10 +39,10 @@ Exec { dotnet publish "$src_tools_path\\neon-cli\\neon-cli.csproj" -c Release -o
 Exec { core-layers $appname "$pwd\bin" }
 
 # Invoke the tool to retrieve its version number.  Note that we need
-# to use [--no-tool-container] because we haven't published the tool's image
+# to use [--noshim] because we haven't published the tool's image
 # to the registry yet.
 
-$version=$(& dotnet "$pwd\bin\$appname.dll" --no-tool-container version -n)
+$version=$(& dotnet "$pwd\bin\$appname.dll" --noshim version -n)
 
 # Build the image.
 

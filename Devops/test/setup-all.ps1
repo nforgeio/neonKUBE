@@ -46,7 +46,7 @@ cd "$env:NF_ROOT\Devops\test"
 
 if ($noToolContainer)
 {
-	$env:SETUP_NO_TOOL_CONTAINER = "--no-tool-container"
+	$env:SETUP_NO_TOOL_CONTAINER = "--noshim"
 }
 
 if ($imageTag -ne "")

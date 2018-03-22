@@ -431,7 +431,7 @@ Server Requirements:
 
                 if (NeonClusterHelper.InToolContainer)
                 {
-                    Program.Execute(neonExecutable, "--no-tool-container", "vpn", "ca", clusterDefPath, tempCaFolder);
+                    Program.Execute(neonExecutable, "--noshim", "vpn", "ca", clusterDefPath, tempCaFolder);
                 }
                 else
                 {

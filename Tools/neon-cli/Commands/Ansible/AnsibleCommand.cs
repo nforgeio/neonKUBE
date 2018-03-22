@@ -369,7 +369,7 @@ MODULES:
             var rightCommandLine = commandSplit.Right;
             var command          = leftCommandLine.Arguments.ElementAtOrDefault(1);
 
-            // The [password] command operates in [--no-tool-container] mode so we'll implement it here.
+            // The [password] command operates in [--noshim] mode so we'll implement it here.
 
             if (command == "password")
             {
@@ -645,7 +645,7 @@ MODULES:
 
             if (!NeonClusterHelper.InToolContainer)
             {
-                Console.Error.WriteLine($"*** ERROR: [neon ansible {command}] does not support [--no-tool-container] mode.");
+                Console.Error.WriteLine($"*** ERROR: [neon ansible {command}] does not support [--noshim] mode.");
                 Program.Exit(1);
             }
 

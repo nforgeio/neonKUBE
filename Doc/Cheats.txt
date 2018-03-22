@@ -26,7 +26,7 @@ powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-bare jeff-latest -noTo
 
 neon login rm root@home-small --force
 neon cluster prepare %NF_ROOT%\Devops\test\clusters\home-small\cluster.json --log-folder=d:\VM\neon.log --max-parallel=10 --force
-neon cluster setup --log-folder=d:\VM\neon.log --max-parallel=10 --unredacted root@home-small --no-tool-container
+neon cluster setup --log-folder=d:\VM\neon.log --max-parallel=10 --unredacted root@home-small --noshim
 
 # Create host VHDX template zip files that will be compatible with the [neon-cli] tool.
 
