@@ -34,10 +34,10 @@ Manages cluster dashboards.
 USAGE:
 
     neon dashboard NAME             - Show named dashboard
+    neon dashboard get NAME         - Prints a dashboard URL
     neon dashboard ls|list          - Lists the dashboards
     neon dashboard rm|remove NAME   - Removes a dashboard
     neon dashboard set NAME URL     - Saves a dashboard
-    neon dashboard url NAME         - Prints a dashboard URL
 
 REMARKS:
 
@@ -45,7 +45,7 @@ Many dashboards will require proxy routes.  These will need to be
 registered elsewhere using [proxy] commands.  Note that the following
 dashboard names are reserved for use as commands:
 
-    get, list, ls, rm, remove, set, url
+    get, list, ls, rm, remove, set
 ";
         private ClusterLogin    clusterLogin;
         private ClusterProxy    cluster;
@@ -81,14 +81,18 @@ dashboard names are reserved for use as commands:
                 "ls",
                 "rm",
                 "remove",
-                "set",
-                "url"
+                "set"
             };
 
             var command = commandLine.Arguments.ElementAtOrDefault(0);
 
             switch (command)
             {
+                case "get":
+
+                    Get(commandLine);
+                    break;
+
                 case "ls":
                 case "list":
 
@@ -104,10 +108,6 @@ dashboard names are reserved for use as commands:
                 case "set":
 
                     Set(commandLine);
-                    break;
-
-                case "url":
-
                     break;
 
                 default:
@@ -146,6 +146,40 @@ dashboard names are reserved for use as commands:
         public override DockerShimInfo Shim(DockerShim shim)
         {
             return new DockerShimInfo(isShimmed: false, ensureConnection: true);
+        }
+
+        /// <summary>
+        /// Gets a dashboard.
+        /// </summary>
+        /// <param name="commandLine">The command line.</param>
+        private void Get(CommandLine commandLine)
+        {
+            var name = commandLine.Arguments.ElementAtOrDefault(1);
+
+            if (string.IsNullOrEmpty(name))
+            {
+                Console.Error.WriteLine("*** ERROR: Expected a NAME argument.");
+                Program.Exit(1);
+            }
+
+            if (!ClusterDefinition.IsValidName(name) || reserved.Contains(name))
+            {
+                Console.Error.WriteLine($"*** ERROR: [{name}] is not a valid dashboard name.");
+                Program.Exit(1);
+            }
+
+            name = name.ToLowerInvariant();
+
+            var key       = GetDashboardConsulKey(name);
+            var dashboard = cluster.Consul.KV.GetObjectOrDefault<ClusterDashboard>(key).Result;
+
+            if (dashboard == null)
+            {
+                Console.Error.WriteLine($"*** ERROR: Dashboard [{name}] does not exist.");
+                Program.Exit(1);
+            }
+
+            Console.WriteLine(dashboard.Url);
         }
 
         /// <summary>
