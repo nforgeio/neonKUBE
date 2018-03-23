@@ -239,6 +239,9 @@ export NeonHostPorts_LogEsDataTcp=5006
 # SYSLOG events from the HAProxy based services and perhaps other sources.
 export NeonHostPorts_LogHostSysLog=5007
 
+# The port assigned to the cluster Ceph web dashboard.
+export NeonHostPorts_CephDashboard=5008
+
 # This port is reserved and must not be assigned to any service.  This is
 # currently referenced by the manager load balancer rule for Azure deployments
 # and it must not actually host a service.  See the [AzureHostingManager]
