@@ -54,7 +54,7 @@ namespace Neon.Cluster
 
             if (string.IsNullOrEmpty(Url) || !Uri.TryCreate(Url, UriKind.Absolute, out var uri))
             {
-                warnings.Add($"Invalid [{nameof(ClusterDashboard)}.{nameof(Name)}={Name}].");
+                warnings.Add($"Invalid [{nameof(ClusterDashboard)}.{nameof(Url)}={Url}].");
             }
 
             return warnings;

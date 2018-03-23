@@ -67,8 +67,8 @@ ARGUMENTS:
 
             if (exists)
             {
-                Console.WriteLine($"*** ERROR: A login already exists for [{clusterLogin.LoginName}].");
-                Console.WriteLine($"           Use [neon logins rm {clusterLogin.LoginName}] to delete this and then add the replacement.");
+                Console.Error.WriteLine($"*** ERROR: A login already exists for [{clusterLogin.LoginName}].");
+                Console.Error.WriteLine($"           Use [neon logins rm {clusterLogin.LoginName}] to delete this and then add the replacement.");
                 Program.Exit(1);
             }
 

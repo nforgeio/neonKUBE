@@ -218,7 +218,7 @@ namespace NeonDnsHealth
                 {
                     log.LogDebug(() => "Fetching DNS answers MD5 from Consul.");
 
-                    remoteMD5 = await consul.KV.GetStringOrDefault(NeonClusterConst.DnsConsulHostsMd5Key, terminator.CancellationToken);
+                    remoteMD5 = await consul.KV.GetStringOrDefault(NeonClusterConst.ConsulDnsHostsMd5Key, terminator.CancellationToken);
 
                     if (remoteMD5 == null)
                     {
@@ -260,7 +260,7 @@ namespace NeonDnsHealth
 
                         log.LogDebug(() => "Fetching DNS answers.");
 
-                        var hostsTxt = await consul.KV.GetStringOrDefault(NeonClusterConst.DnsConsulHostsKey, terminator.CancellationToken);
+                        var hostsTxt = await consul.KV.GetStringOrDefault(NeonClusterConst.ConsulDnsHostsKey, terminator.CancellationToken);
 
                         if (hostsTxt == null)
                         {

@@ -90,7 +90,7 @@ ARGUMENTS:
 
             if (!login.IsOK)
             {
-                Console.WriteLine($"*** ERROR: Invalid username/cluster [{commandLine.Arguments[0]}].  Expected something like: USER@CLUSTER");
+                Console.Error.WriteLine($"*** ERROR: Invalid username/cluster [{commandLine.Arguments[0]}].  Expected something like: USER@CLUSTER");
                 Program.Exit(1);
             }
 
@@ -147,7 +147,7 @@ ARGUMENTS:
                     {
                         if (!clusterLogin.Definition.Vpn.Enabled)
                         {
-                            Console.WriteLine($"*** ERROR: Cluster [{clusterLogin.ClusterName}] was not provisioned with a VPN.");
+                            Console.Error.WriteLine($"*** ERROR: Cluster [{clusterLogin.ClusterName}] was not provisioned with a VPN.");
                             Program.Exit(1);
                         }
 
@@ -209,8 +209,8 @@ ARGUMENTS:
             }
             catch (Exception e)
             {
-                Console.WriteLine($"*** ERROR: Cluster login failed{viaVpn}: {NeonHelper.ExceptionError(e)}");
-                Console.WriteLine("");
+                Console.Error.WriteLine($"*** ERROR: Cluster login failed{viaVpn}: {NeonHelper.ExceptionError(e)}");
+                Console.Error.WriteLine("");
             }
         }
 

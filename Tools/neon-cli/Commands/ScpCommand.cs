@@ -86,7 +86,7 @@ OPTIONS:
 
                 if (node == null)
                 {
-                    Console.WriteLine($"*** ERROR: The node [{name}] does not exist.");
+                    Console.Error.WriteLine($"*** ERROR: The node [{name}] does not exist.");
                     Program.Exit(1);
                 }
             }
@@ -110,7 +110,7 @@ OPTIONS:
 
             if (!int.TryParse(clusterLogin.SshClusterHostKeyFingerprint.Substring(0, endPos), out bitCount) || bitCount <= 0)
             {
-                Console.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{clusterLogin.SshClusterHostKeyFingerprint}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{clusterLogin.SshClusterHostKeyFingerprint}].");
                 Program.Exit(1);
             }
 
@@ -118,7 +118,7 @@ OPTIONS:
 
             if (startPos == -1)
             {
-                Console.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{clusterLogin.SshClusterHostKeyFingerprint}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{clusterLogin.SshClusterHostKeyFingerprint}].");
                 Program.Exit(1);
             }
 
@@ -141,7 +141,7 @@ OPTIONS:
 
             if (!File.Exists(Program.WinScpPath))
             {
-                Console.WriteLine($"*** ERROR: WinSCP application is not installed at [{Program.WinScpPath}].");
+                Console.Error.WriteLine($"*** ERROR: WinSCP application is not installed at [{Program.WinScpPath}].");
                 Program.Exit(1);
             }
 

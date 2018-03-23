@@ -197,7 +197,7 @@ namespace NeonDnsHealth
                     // Read the DNS entry definitions from Consul and add the appropriate 
                     // host/addresses based on health checks, etc.
 
-                    var targetsResult = (await consul.KV.ListOrDefault<DnsEntry>(NeonClusterConst.DnsConsulEntriesKey + "/", terminator.CancellationToken));
+                    var targetsResult = (await consul.KV.ListOrDefault<DnsEntry>(NeonClusterConst.ConsulDnsEntriesKey + "/", terminator.CancellationToken));
 
                     List<DnsEntry> targets;
 
@@ -256,7 +256,7 @@ namespace NeonDnsHealth
 
                     var hostsTxt   = sbHosts.ToString();
                     var hostsMD5   = NeonHelper.ComputeMD5(hostsTxt);
-                    var currentMD5 = await consul.KV.GetStringOrDefault(NeonClusterConst.DnsConsulHostsMd5Key, terminator.CancellationToken);
+                    var currentMD5 = await consul.KV.GetStringOrDefault(NeonClusterConst.ConsulDnsHostsMd5Key, terminator.CancellationToken);
 
                     if (currentMD5 == null)
                     {
@@ -272,8 +272,8 @@ namespace NeonDnsHealth
 
                         var operations = new List<KVTxnOp>()
                     {
-                        new KVTxnOp(NeonClusterConst.DnsConsulHostsMd5Key, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsMD5) },
-                        new KVTxnOp(NeonClusterConst.DnsConsulHostsKey, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsTxt) }
+                        new KVTxnOp(NeonClusterConst.ConsulDnsHostsMd5Key, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsMD5) },
+                        new KVTxnOp(NeonClusterConst.ConsulDnsHostsKey, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsTxt) }
                     };
 
                         await consul.KV.Txn(operations, terminator.CancellationToken);

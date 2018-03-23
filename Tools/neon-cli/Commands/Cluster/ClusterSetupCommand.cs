@@ -107,7 +107,7 @@ OPTIONS:
 
             if (!login.IsOK)
             {
-                Console.WriteLine($"*** ERROR: Invalid username/cluster [{commandLine.Arguments[0]}].  Expected something like: USER@CLUSTER");
+                Console.Error.WriteLine($"*** ERROR: Invalid username/cluster [{commandLine.Arguments[0]}].  Expected something like: USER@CLUSTER");
                 Program.Exit(1);
             }
 
@@ -466,7 +466,7 @@ OPTIONS:
 
             if (!login.IsOK)
             {
-                Console.WriteLine($"*** ERROR: Invalid username/cluster [{commandLine.Arguments[0]}].  Expected something like: USER@CLUSTER");
+                Console.Error.WriteLine($"*** ERROR: Invalid username/cluster [{commandLine.Arguments[0]}].  Expected something like: USER@CLUSTER");
                 Program.Exit(1);
             }
 
@@ -502,7 +502,7 @@ OPTIONS:
             {
                 NeonClusterHelper.VpnOpen(clusterLogin,
                     onStatus: message => Console.WriteLine($"*** {message}"),
-                    onError: message => Console.WriteLine($"*** ERROR: {message}"));
+                    onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
             }
 
             // We're going to use WinSCP to convert the OpenSSH PEM formatted key
@@ -3004,7 +3004,7 @@ echo '{Program.MachineUsername}:{clusterLogin.SshPassword}' | chpasswd
 
                     if (response.ExitCode != 0)
                     {
-                        Console.WriteLine($"*** ERROR: Unable to set a strong password [exitcode={response.ExitCode}].");
+                        Console.Error.WriteLine($"*** ERROR: Unable to set a strong password [exitcode={response.ExitCode}].");
                         Program.Exit(response.ExitCode);
                     }
 

@@ -149,7 +149,7 @@ NOTES:
 
                     if (!clusterLogin.Definition.NodeDefinitions.TryGetValue(name, out node))
                     {
-                        Console.WriteLine($"*** ERROR: Node [{name}] is not present in the cluster.");
+                        Console.Error.WriteLine($"*** ERROR: Node [{name}] is not present in the cluster.");
                         Program.Exit(1);
                     }
 
@@ -159,7 +159,7 @@ NOTES:
 
             if (!File.Exists(source))
             {
-                Console.WriteLine($"*** ERROR: File [{source}] does not exist.");
+                Console.Error.WriteLine($"*** ERROR: File [{source}] does not exist.");
                 Program.Exit(1);
             }
 

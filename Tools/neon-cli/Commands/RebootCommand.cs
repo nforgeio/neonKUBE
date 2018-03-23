@@ -103,7 +103,7 @@ command.
 
                     if (!clusterLogin.Definition.NodeDefinitions.TryGetValue(name, out node))
                     {
-                        Console.WriteLine($"*** Error: Node [{name}] is not present in the cluster.");
+                        Console.Error.WriteLine($"*** Error: Node [{name}] is not present in the cluster.");
                         Program.Exit(1);
                     }
 

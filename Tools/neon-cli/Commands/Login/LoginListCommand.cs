@@ -136,7 +136,7 @@ USAGE:
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"*** ERROR: Cannot read [{file}].  Details: {NeonHelper.ExceptionError(e)}");
+                    Console.Error.WriteLine($"*** ERROR: Cannot read [{file}].  Details: {NeonHelper.ExceptionError(e)}");
                     Program.Exit(1);
                 }
             }

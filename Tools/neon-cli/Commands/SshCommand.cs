@@ -76,7 +76,7 @@ ARGUMENTS:
 
                 if (node == null)
                 {
-                    Console.WriteLine($"*** ERROR: The node [{name}] does not exist.");
+                    Console.Error.WriteLine($"*** ERROR: The node [{name}] does not exist.");
                     Program.Exit(1);
                 }
             }
@@ -95,7 +95,7 @@ ARGUMENTS:
 
             if (startPos == -1)
             {
-                Console.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{clusterLogin.SshClusterHostKeyFingerprint}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot parse host's SSH key fingerprint [{clusterLogin.SshClusterHostKeyFingerprint}].");
                 Program.Exit(1);
             }
 
@@ -116,7 +116,7 @@ ARGUMENTS:
 
             if (!File.Exists(Program.PuttyPath))
             {
-                Console.WriteLine($"*** ERROR: PuTTY is application not installed at [{Program.PuttyPath}].");
+                Console.Error.WriteLine($"*** ERROR: PuTTY is application not installed at [{Program.PuttyPath}].");
                 Program.Exit(1);
             }
 

@@ -63,7 +63,7 @@ OPTIONS:
 
             if (!int.TryParse(lengthOption, out var length) || length < 1 || length > 1024)
             {
-                Console.WriteLine($"*** ERROR: Length [{length}] is not valid.");
+                Console.Error.WriteLine($"*** ERROR: Length [{length}] is not valid.");
             }
 
             Console.Write(NeonHelper.GetRandomPassword(length));

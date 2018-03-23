@@ -180,7 +180,7 @@ certificates, and then finally the private key.
 
                         if (!ClusterDefinition.IsValidName(certName))
                         {
-                            Console.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
+                            Console.Error.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
                             Program.Exit(1);
                         }
 
@@ -293,7 +293,7 @@ certificates, and then finally the private key.
 
                         if (!ClusterDefinition.IsValidName(certName))
                         {
-                            Console.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
+                            Console.Error.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
                             Program.Exit(1);
                         }
 
@@ -325,7 +325,7 @@ certificates, and then finally the private key.
 
                         if (!ClusterDefinition.IsValidName(certName))
                         {
-                            Console.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
+                            Console.Error.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
                             Program.Exit(1);
                         }
 
@@ -506,7 +506,7 @@ certificates, and then finally the private key.
             }
             catch (Win32Exception)
             {
-                Console.WriteLine($"*** ERROR: Cannot find the [{tool}] SSL certificate utility on the PATH.");
+                Console.Error.WriteLine($"*** ERROR: Cannot find the [{tool}] SSL certificate utility on the PATH.");
                 Program.Exit(1);
             }
             finally

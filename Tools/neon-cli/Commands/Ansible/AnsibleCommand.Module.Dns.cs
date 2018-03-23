@@ -179,7 +179,7 @@ namespace NeonCli
 
             // We have the required arguments, so perform the operation.
 
-            var hostKey = $"{NeonClusterConst.DnsConsulEntriesKey}/{hostname}";
+            var hostKey = $"{NeonClusterConst.ConsulDnsEntriesKey}/{hostname}";
 
             switch (state)
             {

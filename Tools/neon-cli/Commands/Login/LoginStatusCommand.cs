@@ -125,7 +125,7 @@ USAGE:
                 }
                 catch (Exception e)
                 {
-                    Console.WriteLine($"*** ERROR: Cluster authentication failed: {NeonHelper.ExceptionError(e)}");
+                    Console.Error.WriteLine($"*** ERROR: Cluster authentication failed: {NeonHelper.ExceptionError(e)}");
                 }
             }
 

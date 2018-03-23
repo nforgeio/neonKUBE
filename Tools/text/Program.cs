@@ -197,7 +197,7 @@ usage: text replace     -TEXT=VALUE... FILE
 
             if (lines.Length == 0 || string.IsNullOrWhiteSpace(lines[0]))
             {
-                Console.WriteLine($"*** ERROR: [{versionPath}] file is empty.");
+                Console.Error.WriteLine($"*** ERROR: [{versionPath}] file is empty.");
                 Program.Exit(1);
             }
 
@@ -209,7 +209,7 @@ usage: text replace     -TEXT=VALUE... FILE
 
             if (pos == -1)
             {
-                Console.WriteLine($"*** ERROR: [{csprojPath}] does not have: <version>...</version>");
+                Console.Error.WriteLine($"*** ERROR: [{csprojPath}] does not have: <version>...</version>");
                 Program.Exit(1);
             }
 
@@ -217,7 +217,7 @@ usage: text replace     -TEXT=VALUE... FILE
 
             if (posEnd == -1)
             {
-                Console.WriteLine($"*** ERROR: [{csprojPath}] does not have: <version>...</version>");
+                Console.Error.WriteLine($"*** ERROR: [{csprojPath}] does not have: <version>...</version>");
                 Program.Exit(1);
             }
 

@@ -659,7 +659,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                                 commandWords += word;
                             }
 
-                            Console.WriteLine($"*** ERROR: [{commandWords}] command does not support [{option.Key}].");
+                            Console.Error.WriteLine($"*** ERROR: [{commandWords}] command does not support [{option.Key}].");
                             Program.Exit(1);
                         }
                     }
@@ -1241,7 +1241,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
             }
             catch (Win32Exception)
             {
-                Console.WriteLine($"*** ERROR: Cannot launch [{programPath}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot launch [{programPath}].");
                 throw;
             }
             finally
@@ -1292,7 +1292,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
             }
             catch (Win32Exception)
             {
-                Console.WriteLine($"*** ERROR: Cannot launch [{programPath}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot launch [{programPath}].");
                 Program.Exit(1);
             }
         }

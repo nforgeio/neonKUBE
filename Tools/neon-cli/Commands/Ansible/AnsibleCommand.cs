@@ -907,7 +907,7 @@ MODULES:
 
                 default:
 
-                    Console.WriteLine($"*** ERROR: Unexpected Ansible [{command}] command.");
+                    Console.Error.WriteLine($"*** ERROR: Unexpected Ansible [{command}] command.");
                     Program.Exit(1);
                     break;
             }

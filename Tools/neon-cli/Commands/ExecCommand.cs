@@ -183,7 +183,7 @@ does this on the first manager node:
 
                     if (!clusterLogin.Definition.NodeDefinitions.TryGetValue(trimmedName, out node))
                     {
-                        Console.WriteLine($"*** ERROR: Node [{trimmedName}] is not present in the cluster.");
+                        Console.Error.WriteLine($"*** ERROR: Node [{trimmedName}] is not present in the cluster.");
                         Program.Exit(1);
                     }
 
@@ -195,7 +195,7 @@ does this on the first manager node:
 
             if (rightCommandLine == null)
             {
-                Console.WriteLine($"*** ERROR: A command is expected after [exec].");
+                Console.Error.WriteLine($"*** ERROR: A command is expected after [exec].");
                 Program.Exit(1);
             }
 
@@ -210,7 +210,7 @@ does this on the first manager node:
             {
                 if (!File.Exists(scriptPath))
                 {
-                    Console.WriteLine($"*** ERROR: Script [{scriptPath}] does not exist.");
+                    Console.Error.WriteLine($"*** ERROR: Script [{scriptPath}] does not exist.");
                     Program.Exit(1);
                 }
 
@@ -221,7 +221,7 @@ does this on the first manager node:
             {
                 if (!File.Exists(textPath))
                 {
-                    Console.WriteLine($"*** ERROR: Text file [{textPath}] does not exist.");
+                    Console.Error.WriteLine($"*** ERROR: Text file [{textPath}] does not exist.");
                     Program.Exit(1);
                 }
 
@@ -232,7 +232,7 @@ does this on the first manager node:
             {
                 if (!File.Exists(dataPath))
                 {
-                    Console.WriteLine($"*** ERROR: Data file [{dataPath}] does not exist.");
+                    Console.Error.WriteLine($"*** ERROR: Data file [{dataPath}] does not exist.");
                     Program.Exit(1);
                 }
 

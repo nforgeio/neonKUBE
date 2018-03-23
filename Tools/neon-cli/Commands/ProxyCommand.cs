@@ -213,7 +213,7 @@ See the documentation for more proxy route and setting details.
 
                 default:
 
-                    Console.WriteLine($"*** ERROR: Proxy name must be one of [public] or [private] ([{proxyName}] is not valid).");
+                    Console.Error.WriteLine($"*** ERROR: Proxy name must be one of [public] or [private] ([{proxyName}] is not valid).");
                     Program.Exit(1);
                     break;
             }
@@ -246,7 +246,7 @@ See the documentation for more proxy route and setting details.
 
                     if (!ClusterDefinition.IsValidName(routeName))
                     {
-                        Console.WriteLine($"*** ERROR: [{routeName}] is not a valid route name.");
+                        Console.Error.WriteLine($"*** ERROR: [{routeName}] is not a valid route name.");
                         Program.Exit(1);
                     }
 
@@ -256,7 +256,7 @@ See the documentation for more proxy route and setting details.
 
                     if (route == null)
                     {
-                        Console.WriteLine($"*** ERROR: Proxy [{proxyName}] route [{routeName}] does not exist.");
+                        Console.Error.WriteLine($"*** ERROR: Proxy [{proxyName}] route [{routeName}] does not exist.");
                         Program.Exit(1);
                     }
 
@@ -275,7 +275,7 @@ See the documentation for more proxy route and setting details.
 
                         if (confZipBytes == null)
                         {
-                            Console.WriteLine($"*** ERROR: HAProxy ZIP configuration was not found in Consul at [{confKey}].");
+                            Console.Error.WriteLine($"*** ERROR: HAProxy ZIP configuration was not found in Consul at [{confKey}].");
                             Program.Exit(1);
                         }
 
@@ -287,7 +287,7 @@ See the documentation for more proxy route and setting details.
 
                                 if (entry == null || !entry.IsFile)
                                 {
-                                    Console.WriteLine($"*** ERROR: HAProxy ZIP configuration in Consul at [{confKey}] appears to be corrupt.  Cannot locate the [haproxy.cfg] entry.");
+                                    Console.Error.WriteLine($"*** ERROR: HAProxy ZIP configuration in Consul at [{confKey}] appears to be corrupt.  Cannot locate the [haproxy.cfg] entry.");
                                     Program.Exit(1);
                                 }
 
@@ -347,17 +347,17 @@ See the documentation for more proxy route and setting details.
 
                     if (!ClusterDefinition.IsValidName(routeName))
                     {
-                        Console.WriteLine($"*** ERROR: [{routeName}] is not a valid route name.");
+                        Console.Error.WriteLine($"*** ERROR: [{routeName}] is not a valid route name.");
                         Program.Exit(1);
                     }
 
                     if (proxyManager.RemoveRoute(routeName))
                     {
-                        Console.WriteLine($"Deleted proxy [{proxyName}] route [{routeName}].");
+                        Console.Error.WriteLine($"Deleted proxy [{proxyName}] route [{routeName}].");
                     }
                     else
                     {
-                        Console.WriteLine($"*** ERROR: Proxy [{proxyName}] route [{routeName}] does not exist.");
+                        Console.Error.WriteLine($"*** ERROR: Proxy [{proxyName}] route [{routeName}] does not exist.");
                         Program.Exit(1);
                     }
                     break;
@@ -406,7 +406,7 @@ See the documentation for more proxy route and setting details.
 
                     if (!ClusterDefinition.IsValidName(routeName))
                     {
-                        Console.WriteLine($"*** ERROR: [{routeName}] is not a valid route name.");
+                        Console.Error.WriteLine($"*** ERROR: [{routeName}] is not a valid route name.");
                         Program.Exit(1);
                     }
 
@@ -455,7 +455,7 @@ See the documentation for more proxy route and setting details.
 
                         if (statusJson == null)
                         {
-                            Console.WriteLine($"*** ERROR: Status for proxy [{proxyName}] is not currently available.");
+                            Console.Error.WriteLine($"*** ERROR: Status for proxy [{proxyName}] is not currently available.");
                             Program.Exit(1);
                         }
 

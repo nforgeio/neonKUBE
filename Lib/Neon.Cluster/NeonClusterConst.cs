@@ -128,21 +128,26 @@ namespace Neon.Cluster
         /// <summary>
         /// Consul parent key for the Dynamic DNS service related values.
         /// </summary>
-        public static readonly string DnsConsulRootKey = "neon/dns";
+        public static readonly string ConsulDnsRootKey = "neon/dns";
 
         /// <summary>
         /// Consul parent key for the Dynamic DNS entry definitions.
         /// </summary>
-        public static readonly string DnsConsulEntriesKey = $"{DnsConsulRootKey}/entries";
+        public static readonly string ConsulDnsEntriesKey = $"{ConsulDnsRootKey}/entries";
 
         /// <summary>
         /// Consul key for the Dynamic DNS answer <b>hosts.txt</b> file.
         /// </summary>
-        public static readonly string DnsConsulHostsKey = $"{DnsConsulRootKey}/answers/hosts.txt";
+        public static readonly string ConsulDnsHostsKey = $"{ConsulDnsRootKey}/answers/hosts.txt";
 
         /// <summary>
         /// Consul key for the Dynamic DNS answer <b>hosts.md5</b> file.
         /// </summary>
-        public static readonly string DnsConsulHostsMd5Key = $"{DnsConsulRootKey}/answers/hosts.md5";
+        public static readonly string ConsulDnsHostsMd5Key = $"{ConsulDnsRootKey}/answers/hosts.md5";
+
+        /// <summary>
+        /// Consul key where cluster dashboards are registered.
+        /// </summary>
+        public const string ConsulDashboardsKey = "neon/dashboards";
     }
 }

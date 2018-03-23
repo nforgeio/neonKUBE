@@ -63,7 +63,7 @@ ARGUMENTS:
 
             if (!login.IsOK)
             {
-                Console.WriteLine($"*** ERROR: Invalid username/cluster [{commandLine.Arguments[0]}].  Expected something like: USER@CLUSTER");
+                Console.Error.WriteLine($"*** ERROR: Invalid username/cluster [{commandLine.Arguments[0]}].  Expected something like: USER@CLUSTER");
                 Program.Exit(1);
             }
 
@@ -81,7 +81,7 @@ ARGUMENTS:
             }
             else
             {
-                Console.WriteLine($"*** ERROR: Login [{login.Username}@{login.ClusterName}] does not exist.");
+                Console.Error.WriteLine($"*** ERROR: Login [{login.Username}@{login.ClusterName}] does not exist.");
                 return;
             }
         }

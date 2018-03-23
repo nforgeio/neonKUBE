@@ -1083,13 +1083,13 @@ nsCertType              = server
 
                 if (certInfo == null)
                 {
-                    Console.WriteLine($"*** ERROR: Certificate with thumbprint [{thumbprint}] is not known.");
+                    Console.Error.WriteLine($"*** ERROR: Certificate with thumbprint [{thumbprint}] is not known.");
                     Program.Exit(1);
                 }
 
                 if (!certInfo.IsValid)
                 {
-                    Console.WriteLine($"*** ERROR: Certificate with thumbprint [{thumbprint}] is already revoked.");
+                    Console.Error.WriteLine($"*** ERROR: Certificate with thumbprint [{thumbprint}] is already revoked.");
                     Program.Exit(1);
                 }
 
