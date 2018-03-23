@@ -159,7 +159,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
                 case "get":
 
-                    GetEntries(commandLine);
+                    GetEntry(commandLine);
                     break;
 
                 case "ls":
@@ -360,7 +360,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// Implements the <b>get</b> command.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
-        private void GetEntries(CommandLine commandLine)
+        private void GetEntry(CommandLine commandLine)
         {
             var host = commandLine.Arguments.ElementAtOrDefault(1);
             var yaml = commandLine.HasOption("--yaml");
@@ -397,24 +397,24 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <param name="commandLine">The command line.</param>
         private void ListEntries(CommandLine commandLine)
         {
-            var entryResult = cluster.Consul.KV.ListOrDefault<DnsEntry>(NeonClusterConst.DnsConsulEntriesKey).Result;
+            var result = cluster.Consul.KV.ListOrDefault<DnsEntry>(NeonClusterConst.ConsulDnsEntriesKey).Result;
 
             Console.WriteLine();
 
-            if (entryResult == null)
+            if (result == null)
             {
                 Console.WriteLine("[0] DNS host entries");
                 return;
             }
 
-            var entryDefs    = entryResult.ToList();
+            var entryDefs    = result.ToList();
             var maxHostWidth = entryDefs.Max(t => t.Hostname.Length);
             var answers      = GetAnswers();
 
             foreach (var entry in entryDefs)
             {
-                var host       = entry.Hostname.ToLowerInvariant();
-                var hostPart   = $"{host} {new string(' ', maxHostWidth - host.Length)}";
+                var host         = entry.Hostname.ToLowerInvariant();
+                var hostPart     = $"{host} {new string(' ', maxHostWidth - host.Length)}";
                 var healthyCount = 0;
 
                 if (answers.TryGetValue(entry.Hostname, out var answer))
@@ -430,7 +430,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         }
 
         /// <summary>
-        /// Returns the Consul key for the DNS host entry for a hostname.
+        /// Returns the Consul key for a DNS host entry based on its hostname.
         /// </summary>
         /// <param name="hostname">The entry hostname.</param>
         /// <returns>The Consul key path.</returns>
@@ -438,7 +438,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
 
-            return $"{NeonClusterConst.DnsConsulEntriesKey}/{hostname}";
+            return $"{NeonClusterConst.ConsulDnsEntriesKey}/{hostname}";
         }
 
         /// <summary>
