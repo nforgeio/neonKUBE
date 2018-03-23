@@ -179,7 +179,7 @@ dashboard names are reserved for use as commands:
                 Program.Exit(1);
             }
 
-            Console.WriteLine(dashboard.Url);
+            Console.Write(dashboard.Url);
         }
 
         /// <summary>

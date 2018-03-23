@@ -142,7 +142,11 @@ namespace NeonCli
                         context.WriteLine(Verbosity.Trace, $"Route [{name}] does exist.");
                         context.WriteLine(Verbosity.Info, $"Deleting route [{name}].");
 
-                        if (!context.CheckMode)
+                        if (context.CheckMode)
+                        {
+                            context.WriteLine(Verbosity.Info, $"Route [{name}] will be deleted when CHECKMODE is disabled.");
+                        }
+                        else
                         {
                             proxyManager.RemoveRoute(name);
                             context.WriteLine(Verbosity.Trace, $"Route [{name}] deleted.");
@@ -307,9 +311,16 @@ namespace NeonCli
 
                     if (context.Changed)
                     {
-                        context.WriteLine(Verbosity.Trace, $"Updating route.");
-                        proxyManager.PutRoute(newRoute);
-                        context.WriteLine(Verbosity.Info, $"Route updated.");
+                        if (context.CheckMode)
+                        {
+                            context.WriteLine(Verbosity.Info, $"Route [{name}] will be updated when CHECKMODE is disabled.");
+                        }
+                        else
+                        {
+                            context.WriteLine(Verbosity.Trace, $"Updating route [{name}].");
+                            proxyManager.PutRoute(newRoute);
+                            context.WriteLine(Verbosity.Info, $"Route updated.");
+                        }
                     }
 
                     break;

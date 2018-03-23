@@ -82,10 +82,4 @@ RUN chmod 700 /docker-entrypoint.sh \
     && chmod 770 /usr/bin/$APPNAME \
     && chmod 770 /usr/share/ansible/plugins/modules/*
 
-# NOTE: The second to the last line above renames the Ansible module
-#       Bash scripts by stripping off the [.sh] extension.  These
-#       scripts have that extension in source control so that we 
-#       can easily use the [unix-text] tool to convert to Linux
-#       line endings before building the image.
-
 ENTRYPOINT ["/docker-entrypoint.sh"]

@@ -121,7 +121,11 @@ namespace NeonCli
                             context.WriteLine(Verbosity.Trace, $"Vault: [{name}] certificate exists");
                             context.WriteLine(Verbosity.Trace, $"Vault: Deleting [{name}]");
 
-                            if (!context.CheckMode)
+                            if (context.CheckMode)
+                            {
+                                context.WriteLine(Verbosity.Info, $"Vault: Certificate [{name}] will be deleted when CHECKMODE is disabled.");
+                            }
+                            else
                             {
                                 vault.DeleteAsync(vaultPath).Wait();
                                 context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate deleted");
@@ -168,11 +172,18 @@ namespace NeonCli
                             context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate is unchanged");
                         }
 
-                        if (context.Changed && !context.CheckMode)
+                        if (context.Changed)
                         {
-                            context.WriteLine(Verbosity.Trace, $"Vault: Saving [{name}] certificate");
-                            vault.WriteJsonAsync(vaultPath, certificate).Wait();
-                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate saved");
+                            if (context.CheckMode)
+                            {
+                                context.WriteLine(Verbosity.Info, $"Vault: Certificate [{name}] will be deleted when CHECKMODE is disabled.");
+                            }
+                            else
+                            {
+                                context.WriteLine(Verbosity.Trace, $"Vault: Saving [{name}] certificate");
+                                vault.WriteJsonAsync(vaultPath, certificate).Wait();
+                                context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate saved");
+                            }
                         }
 
                         break;

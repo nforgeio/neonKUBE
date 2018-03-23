@@ -109,7 +109,7 @@ namespace NeonCli
 
             // We have the required arguments, so perform the operation.
 
-            var dashboardKey = $"neon/dashboard/dashboards/{name}";
+            var dashboardKey = $"{NeonClusterConst.ConsulDashboardsKey}/{name}";
 
             switch (state)
             {
@@ -120,12 +120,16 @@ namespace NeonCli
                     if (consul.KV.Exists(dashboardKey).Result)
                     {
                         context.WriteLine(Verbosity.Trace, $"Dashboard [{name}] does exist.");
-                        context.WriteLine(Verbosity.Info, $"Deleting dashboard [{name}].");
 
                         if (!context.CheckMode)
                         {
+                            context.WriteLine(Verbosity.Info, $"Deleting dashboard [{name}].");
                             consul.KV.Delete(dashboardKey);
                             context.WriteLine(Verbosity.Trace, $"Dashboard [{name}] deleted.");
+                        }
+                        else
+                        {
+                            context.WriteLine(Verbosity.Info, $"Dashboard [{name}] will be deleted when CHECKMODE is disabled.");
                         }
 
                         context.Changed = true;
@@ -198,9 +202,16 @@ namespace NeonCli
 
                     if (context.Changed)
                     {
-                        context.WriteLine(Verbosity.Trace, $"Updating dashboard.");
-                        consul.KV.PutObject(dashboardKey, newDashboard).Wait();
-                        context.WriteLine(Verbosity.Info, $"Dashboard updated.");
+                        if (context.CheckMode)
+                        {
+                            context.WriteLine(Verbosity.Info, $"Dashboard [{name}] will be updated when CHECKMODE is disabled.");
+                        }
+                        else
+                        {
+                            context.WriteLine(Verbosity.Trace, $"Updating dashboard.");
+                            consul.KV.PutObject(dashboardKey, newDashboard).Wait();
+                            context.WriteLine(Verbosity.Info, $"Dashboard updated.");
+                        }
                     }
 
                     break;

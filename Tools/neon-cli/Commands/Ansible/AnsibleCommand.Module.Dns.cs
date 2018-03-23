@@ -192,7 +192,11 @@ namespace NeonCli
                         context.WriteLine(Verbosity.Trace, $"DNS entry [{hostname}] does exist.");
                         context.WriteLine(Verbosity.Info, $"Deleting DNS entry [{hostname}].");
 
-                        if (!context.CheckMode)
+                        if (context.CheckMode)
+                        {
+                            context.WriteLine(Verbosity.Info, $"DNS entry [{hostname}] will be deleted when CHECKMODE is disabled.");
+                        }
+                        else
                         {
                             consul.KV.Delete(hostKey);
                             context.WriteLine(Verbosity.Trace, $"DNS entry [{hostname}] deleted.");
@@ -284,9 +288,16 @@ namespace NeonCli
 
                     if (context.Changed)
                     {
-                        context.WriteLine(Verbosity.Trace, $"Updating DNS entry.");
-                        consul.KV.PutObject(hostKey, newEntry).Wait();
-                        context.WriteLine(Verbosity.Info, $"DNS entry updated.");
+                        if (context.CheckMode)
+                        {
+                            context.WriteLine(Verbosity.Info, $"DNS entry [{hostname}] will be updated when CHECKMODE is disabled.");
+                        }
+                        else
+                        {
+                            context.WriteLine(Verbosity.Trace, $"Updating DNS entry.");
+                            consul.KV.PutObject(hostKey, newEntry).Wait();
+                            context.WriteLine(Verbosity.Info, $"DNS entry updated.");
+                        }
                     }
 
                     break;
