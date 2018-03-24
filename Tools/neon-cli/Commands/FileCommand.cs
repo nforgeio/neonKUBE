@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Security.Cryptography;
@@ -52,7 +53,7 @@ OPTIONS:
 
 REMARKS:
 
-Be very carefule when using the [decrypt] command to ensure that
+Be very careful when using the [decrypt] command to ensure that
 you are not decrypting the file in a directory where it might be
 committed to source control.  Always decrypt to somewhere else,
 edit the file, and then re-encrypt to the source control directory.
@@ -182,6 +183,16 @@ This can be easily accomplished with a custom script.
                     Console.Error.WriteLine($"*** ERROR: [--editor={editor}] does not specify a known editor.  Specify one of: NANO, VIM, or VI.");
                     Program.Exit(1);
                     break;
+            }
+
+            // Ensure that the password file actually exists.
+
+            Covenant.Assert(!string.IsNullOrEmpty(passwordName));
+
+            if (!File.Exists(Path.Combine(NeonClusterHelper.GetAnsiblePasswordsFolder(), passwordName)))
+            {
+                Console.Error.WriteLine($"*** ERROR: Password file for [{passwordName}] does not exist.");
+                Program.Exit(1);
             }
 
             // $note(jeff.lill):
