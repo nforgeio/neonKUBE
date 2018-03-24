@@ -946,7 +946,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
 
         /// <summary>
         /// Returns the folder where <b>neon-cli</b> persists local state.  This
-        /// folder and all subfolders are encrypted whwn supported by the current
+        /// folder and all subfolders are encrypted when supported by the current
         /// operating system.
         /// </summary>
         public static string ClusterRootFolder { get; private set; }
