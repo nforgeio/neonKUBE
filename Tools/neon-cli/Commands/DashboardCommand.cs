@@ -33,11 +33,17 @@ Manages cluster dashboards.
 
 USAGE:
 
-    neon dashboard NAME             - Show named dashboard
-    neon dashboard get NAME         - Prints a dashboard URL
-    neon dashboard ls|list          - Lists the dashboards
-    neon dashboard rm|remove NAME   - Removes a dashboard
-    neon dashboard set NAME URL     - Saves a dashboard
+    neon dashboard NAME                     - Show named dashboard
+    neon dashboard get NAME                 - Prints a dashboard URL
+    neon dashboard ls|list                  - Lists the dashboards
+    neon dashboard rm|remove NAME           - Removes a dashboard
+    neon dashboard set NAME URL [OPTIONS]   - Saves a dashboard
+
+OPTIONS:
+
+    --title=TITLE               - Optional dashboard title
+    --folder=FOLDER             - Optional dashboard folder
+    --description=DESCRIPTION   - Optional dashboard description
 
 REMARKS:
 
@@ -66,12 +72,6 @@ dashboard names are reserved for use as commands:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            if (commandLine.Arguments.Length == 0)
-            {
-                Console.WriteLine(usage);
-                Program.Exit(1);
-            }
-
             clusterLogin = Program.ConnectCluster();
             cluster      = new ClusterProxy(clusterLogin);
             reserved     = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
@@ -112,34 +112,9 @@ dashboard names are reserved for use as commands:
 
                 default:
 
-                    // Retrieve and launch the requested dashboard in a browser.
-
+                    Show(commandLine);
                     break;
             }
-
-            //var clusterLogin = Program.ConnectCluster();
-            //var cluster      = new ClusterProxy(clusterLogin);
-            //var dashboard    = commandLine.Arguments[0];
-            //var node         = cluster.GetHealthyManager();
-
-            //switch (dashboard)
-            //{
-            //    case "consul":
-
-            //        NeonHelper.OpenBrowser($"http://{node.PrivateAddress}:{NetworkPorts.Consul}/ui");
-            //        break;
-
-            //    case "kibana":
-
-            //        NeonHelper.OpenBrowser($"http://{node.PrivateAddress}:{NeonHostPorts.Kibana}");
-            //        break;
-
-            //    default:
-
-            //        Console.WriteLine($"Unknown dashboard: [{dashboard}]");
-            //        Program.Exit(1);
-            //        break;
-            //}
         }
 
         /// <inheritdoc/>
@@ -287,11 +262,18 @@ dashboard names are reserved for use as commands:
                 Program.Exit(1);
             }
 
+            var title       = commandLine.GetOption("--title");
+            var folder      = commandLine.GetOption("--folder");
+            var description = commandLine.GetOption("--description");
+
             var key       = GetDashboardConsulKey(name);
             var dashboard = new ClusterDashboard()
             {
-                Name = name,
-                Url  = url
+                Name        = name,
+                Title       = title,
+                Folder      = folder,
+                Url         = url,
+                Description = description
             };
 
             var errors = dashboard.Validate(cluster.Definition);
@@ -310,6 +292,38 @@ dashboard names are reserved for use as commands:
 
             Console.WriteLine();
             Console.WriteLine($"Saved [{name}] dashboard.");
+        }
+
+        /// <summary>
+        /// Opens the requested dashboard in a browser.
+        /// </summary>
+        /// <param name="commandLine">The command line.</param>
+        private void Show(CommandLine commandLine)
+        {
+            var name = commandLine.Arguments.ElementAtOrDefault(0);
+
+            name = name ?? "cluster";   // Default to the neonCLUSTER dashboard
+
+            var dashboard = cluster.Consul.KV.GetObjectOrDefault<ClusterDashboard>($"{NeonClusterConst.ConsulDashboardsKey}/{name}").Result;
+
+            if (dashboard == null)
+            {
+                Console.Error.WriteLine($"*** ERROR: Dashboard [{name}] does not exist.");
+                Program.Exit(1);
+            }
+
+            if (!Uri.TryCreate(dashboard.Url, UriKind.Absolute, out var url))
+            {
+                Console.Error.WriteLine($"*** ERROR: Invalid dashboard [{nameof(dashboard.Url)}={dashboard.Url}].");
+                Program.Exit(1);
+            }
+
+            if (url.Host.Equals("healthy-manager").Equals(StringComparison.InvariantCultureIgnoreCase))
+            {
+                url = new Uri($"{url.Scheme}//:{cluster.GetHealthyManager().PrivateAddress}:{url.Port}{url.PathAndQuery}");
+            }
+
+            NeonHelper.OpenBrowser(url.ToString());
         }
     }
 }

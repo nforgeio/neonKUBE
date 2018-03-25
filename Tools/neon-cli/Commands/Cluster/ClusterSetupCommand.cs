@@ -338,6 +338,7 @@ OPTIONS:
                     controller.AddStep("log containers", n => logServices.DeployContainers(n));
                 }
 
+                controller.AddGlobalStep("dashboards", () => ConfigureDashboards());
                 controller.AddStep("check managers", n => ClusterDiagnostics.CheckManager(n, cluster.Definition), n => n.Metadata.IsManager);
                 controller.AddStep("check workers/pets", n => ClusterDiagnostics.CheckWorkersOrPet(n, cluster.Definition), n => n.Metadata.IsWorker || n.Metadata.IsPet);
 
@@ -1955,8 +1956,8 @@ systemctl start neon-volume-plugin
 
             manager.SudoCommand($"rm -r {tmpPath}", runOptions);
 
-            // Persist the cluster login so we'll have the keyrings and monmap
-            // in case we have to restart setup.
+            // Persist the cluster login so we'll have the keyrings and 
+            // monitor map in case we have to restart setup.
 
             clusterLogin.Save();
         }
@@ -2156,6 +2157,12 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
                     node.Status = "ceph-mgr start";
                     node.SudoCommand($"systemctl enable ceph-mgr@{node.Name}");
                     node.SudoCommand($"systemctl start ceph-mgr@{node.Name}");
+
+                    // Enable the Ceph dashboard.
+
+                    node.Status = "ceph dashboard";
+
+                    node.SudoCommand("ceph mgr module enable dashboard");
 
                     // Remove the temp folder.
 
@@ -3137,6 +3144,100 @@ systemctl restart sshd
                     bundle.AddFile("config.sh", configScript, isExecutable: true);
                     bundle.AddFile("ssh_host_rsa_key", clusterLogin.SshClusterHostPrivateKey);
                     node.SudoCommand(bundle);
+                });
+        }
+
+        /// <summary>
+        /// Condifures the built-in cluster dashboards.
+        /// </summary>
+        private void ConfigureDashboards()
+        {
+            var firstManager = cluster.FirstManager;
+
+            firstManager.InvokeIdempotentAction("setup-dashboards ",
+                () =>
+                {
+                    // Create the [neon-fs] dashboard and related route.
+
+                    if (cluster.Definition.Ceph.Enabled && cluster.Definition.Dashboard.Ceph)
+                    {
+                        firstManager.Status = "ceph dashboard";
+
+                        var cephDashboard = new ClusterDashboard()
+                        {
+                            Name        = "neonfs",
+                            Title       = "NeonFS",
+                            Folder      = NeonClusterConst.DashboardSystemFolder,
+                            Url         = $"http://healthy-manager:{NeonHostPorts.CephDashboard}",
+                            Description = "Cluster distributed file system dashboard"
+                        };
+
+                        cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDashboardsKey}/{cephDashboard.Name}", cephDashboard, Formatting.Indented).Wait();
+
+                        var route = new ProxyHttpRoute()
+                        {
+                            Name     = "neonfs-dashboard",
+                            System   = true,
+                            Resolver = null
+                        };
+
+                        route.Frontends.Add(
+                            new ProxyHttpFrontend()
+                            {
+                                ProxyPort = NeonHostPorts.CephDashboard
+                            });
+
+                        foreach (var monNode in cluster.Nodes.Where(n => n.Metadata.Labels.CephMON))
+                        {
+                            route.Backends.Add(
+                                new ProxyHttpBackend()
+                                {
+                                    Server = monNode.Metadata.PrivateAddress.ToString(),
+                                    Port   = NetworkPorts.CephDashboard
+                                });
+                        }
+
+                        cluster.PrivateProxy.PutRoute(route);
+                        firstManager.Status = string.Empty;
+                    }
+
+                    // Configure the Kibana dashboard.
+
+                    if (cluster.Definition.Log.Enabled && cluster.Definition.Dashboard.Kibana)
+                    {
+                        firstManager.Status = "kibana dashboard";
+
+                        var kibanaDashboard = new ClusterDashboard()
+                        {
+                            Name        = "kibana",
+                            Title       = "Kibana",
+                            Folder      = NeonClusterConst.DashboardSystemFolder,
+                            Url         = $"http://healthy-manager:{NeonHostPorts.Kibana}",
+                            Description = "Cluster Kibana status and event logs"
+                        };
+
+                        cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDashboardsKey}/{kibanaDashboard.Name}", kibanaDashboard, Formatting.Indented).Wait();
+                        firstManager.Status = string.Empty;
+                    }
+
+                    // Configure the Consul dashboard.
+
+                    if (cluster.Definition.Dashboard.Consul)
+                    {
+                        firstManager.Status = "consul dashboard";
+
+                        var consulDashboard = new ClusterDashboard()
+                        {
+                            Name        = "consul",
+                            Title       = "Consul",
+                            Folder      = NeonClusterConst.DashboardSystemFolder,
+                            Url         = $"http://healthy-manager:{NetworkPorts.Consul}/ui",
+                            Description = "Cluster Consul key/value store"
+                        };
+
+                        cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDashboardsKey}/{consulDashboard.Name}", consulDashboard, Formatting.Indented).Wait();
+                        firstManager.Status = string.Empty;
+                    }
                 });
         }
     }

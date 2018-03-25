@@ -509,18 +509,21 @@ USAGE:
         ""Enabled"": true
     },
 
-    // Dashboard options:
+    // Cluster built-in dashboard options:
 
     ""Dashboard"": {
     
-        // Install the Elastic Kibana dashboard if cluster logging is enabled.
-        // This defaults to [true].
+        // Enables the Elastic Kibana dashboard.  Defaults to [true].
 
         ""Kibana"": true,
 
-        // Install the Consul user interface.  This defaults to [true].
+        // Enables the Consul dashboard.  Defaults to [true].
 
-        ""Consul"": true
+        ""Consul"": true,
+
+        // Enables the Ceph dashboard.  Defaults to [true].
+
+        ""Ceph"": true
     },
 
     // Integrated Ceph Storage Cluster settings.

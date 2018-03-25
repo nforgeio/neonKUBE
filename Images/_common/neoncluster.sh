@@ -161,6 +161,9 @@ export NetworkPorts_AMQP=5672
 # RabbitMQ Admin dashboard port.
 export NetworkPorts_RabbitMQAdmin=15672
 
+# Default port for the Ceph dashboard.
+export NetworkPorts_CephDashboard=7000
+
 #------------------------------------------------------------------------------
 # NeonClusterConst:
 #

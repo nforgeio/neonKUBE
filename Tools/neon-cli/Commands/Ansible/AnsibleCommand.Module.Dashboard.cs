@@ -55,8 +55,17 @@ namespace NeonCli
         //
         // name         yes                                 dashboard name
         //
+        // title        no                                  title to be used for this dashboard 
+        //                                                  when displayed in the global cluster
+        //                                                  dashboard
+        //
+        // folder       no                                  folder where this dashboard will be in 
+        //                                                  the global cluster dashboard.
+        //
         // url          see comment                         dashboard URL.  Required  
         //                                                  when [state=present]
+        //
+        // description  no                                  brief dashboard description
         //
         // state        no          present     absent      indicates whether the dashboard
         //                                      present     should be created or removed
@@ -107,6 +116,10 @@ namespace NeonCli
 
             url = urlParsed.ToString();
 
+            context.Arguments.TryGetValue<string>("title", out var title);
+            context.Arguments.TryGetValue<string>("folder", out var folder);
+            context.Arguments.TryGetValue<string>("description", out var description);
+
             // We have the required arguments, so perform the operation.
 
             var dashboardKey = $"{NeonClusterConst.ConsulDashboardsKey}/{name}";
@@ -146,8 +159,11 @@ namespace NeonCli
 
                     var newDashboard = new ClusterDashboard()
                     {
-                        Name = name,
-                        Url  = url
+                        Name        = name,
+                        Title       = title,
+                        Folder      = folder,
+                        Url         = url,
+                        Description = description
                     };
 
                     // Validate the dashboard.

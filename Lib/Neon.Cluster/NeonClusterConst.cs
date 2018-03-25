@@ -149,5 +149,10 @@ namespace Neon.Cluster
         /// Consul key where cluster dashboards are registered.
         /// </summary>
         public const string ConsulDashboardsKey = "neon/dashboards";
+
+        /// <summary>
+        /// Identifies the dashboard folder where built-in cluster dashboards will reside.
+        /// </summary>
+        public const string DashboardSystemFolder = "system";
     }
 }

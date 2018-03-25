@@ -24,6 +24,8 @@ namespace Neon.Cluster
     /// </summary>
     public class ClusterDashboard
     {
+        private string title;
+
         /// <summary>
         /// Identifies the dashboard.
         /// </summary>
@@ -31,10 +33,43 @@ namespace Neon.Cluster
         public string Name { get; set; }
 
         /// <summary>
+        /// The title to be used for this dashboard when displayed in the global 
+        /// cluster dashboard.
+        /// This defaults to <see cref="Name"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Title", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string Title
+        {
+            get { return title ?? Name; }
+            set { title = value; }
+        }
+
+        /// <summary>
+        /// Optionally specifies the 
+        /// </summary>
+        [JsonProperty(PropertyName = "Folder", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string Folder { get; set; }
+
+        /// <summary>
+        /// <para>
         /// The dashboard URL.
+        /// </para>
+        /// <note>
+        /// You may set the URL hostname to <b>healthy-manager</b> to target
+        /// the private IP address of the first healthy cluster manager node.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Url", Required = Required.Always)]
         public string Url { get; set; }
+
+        /// <summary>
+        /// Optional dashboard description.
+        /// </summary>
+        [JsonProperty(PropertyName = "Description", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public string Description { get; set; }
 
         /// <summary>
         /// Validates the dashboard.  Any warning/errors will be returned as a string list.

@@ -24,15 +24,16 @@ using Neon.Common;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes the dashboard to be installed in cluster.
+    /// Controls which built-in dashboards are to be enabled for the cluster.
     /// </summary>
     public class DashboardOptions
     {
         private const bool defaultKibana = true;
         private const bool defaultConsul = true;
+        private const bool defaultCeph   = true;
 
         /// <summary>
-        /// Installs the Elastic Kibana dashboard if logging is enabled for the cluster.
+        /// Enables the Elastic Kibana dashboard if logging is enabled for the cluster.
         /// This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Kibana", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -40,11 +41,18 @@ namespace Neon.Cluster
         public bool Kibana { get; set; } = defaultKibana;
 
         /// <summary>
-        /// Installs the Consul user interface.  This defaults to <c>true</c>.
+        /// Enables the Consul dashboard.  This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Consul", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultConsul)]
         public bool Consul { get; set; } = defaultConsul;
+
+        /// <summary>
+        /// Enables the Ceph dashboard.  This defaults to <c>true</c>.
+        /// </summary>
+        [JsonProperty(PropertyName = "Ceph", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultCeph)]
+        public bool Ceph { get; set; } = defaultCeph;
 
         /// <summary>
         /// Validates the options and also ensures that all <c>null</c> properties are
