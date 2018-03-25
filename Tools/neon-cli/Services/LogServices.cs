@@ -293,6 +293,7 @@ $@"
             var route = new ProxyHttpRoute()
             {
                 Name     = "neon-log-esdata",
+                System   = true,
                 Log      = false,   // This is important: we don't want to SPAM the log database with its own traffic.
                 Resolver = null
             };
@@ -373,8 +374,9 @@ $@"
 
             var route = new ProxyTcpRoute()
             {
-                Name = "neon-log-collector",
-                Log  = false    // This is important: we don't want to SPAM the log database with its own traffic.
+                Name   = "neon-log-collector",
+                System = true,
+                Log    = false    // This is important: we don't want to SPAM the log database with its own traffic.
             };
 
             route.Frontends.Add(

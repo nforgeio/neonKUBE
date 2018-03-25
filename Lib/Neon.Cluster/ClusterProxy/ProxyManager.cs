@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Consul;
 using Newtonsoft;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.Cryptography;
@@ -114,10 +115,8 @@ namespace Neon.Cluster
                 throw new NeonClusterException($"Settings for proxy [{Name}] do not exist or could not be loaded.");
             }
 
-            foreach (var routeName in ListRoutes())
+            foreach (var route in ListRoutes())
             {
-                var route = GetRoute(routeName);
-
                 proxyDefinition.Routes.Add(route.Name, route);
             }
 
@@ -215,27 +214,33 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Lists the names of the proxy routes.
+        /// Lists the the proxy routes.
         /// </summary>
-        /// <returns>The <see cref="IEnumerable{T}"/> of route names.</returns>
-        public IEnumerable<string> ListRoutes()
+        /// <param name="predicate">Optional predicate used to filter the output routes.</param>
+        /// <returns>The <see cref="IEnumerable{T}"/> of proxy routes.</returns>
+        public IEnumerable<ProxyRoute> ListRoutes(Func<ProxyRoute, bool> predicate = null)
         {
-            var routesResponse = cluster.Consul.KV.List($"{proxyManagerPrefix}/conf/{Name}/routes/").Result.Response;
+            var routesResponse = cluster.Consul.KV.ListOrDefault<JObject>($"{proxyManagerPrefix}/conf/{Name}/routes/").Result;
 
             if (routesResponse != null)
             {
-                var names = new List<string>();
+                var routes = new List<ProxyRoute>();
 
-                foreach (var keyPair in cluster.Consul.KV.List($"{proxyManagerPrefix}/conf/{Name}/routes/").Result.Response)
+                foreach (var routeObject in routesResponse)
                 {
-                    names.Add(keyPair.Key.Substring(keyPair.Key.LastIndexOf('/') + 1));
+                    var route = ProxyRoute.ParseJson(routeObject.ToString());
+
+                    if (predicate == null || predicate(route))
+                    {
+                        routes.Add(route);
+                    }
                 }
 
-                return names;
+                return routes;
             }
             else
             {
-                return new string[0];
+                return new ProxyRoute[0];
             }
         }
     }

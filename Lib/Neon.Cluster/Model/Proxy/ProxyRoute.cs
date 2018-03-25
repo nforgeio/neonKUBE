@@ -182,6 +182,16 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "LogChecks", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(true)]
         public bool LogChecks { get; set; } = true;
+    
+        /// <summary>
+        /// Optionally indicates that this is to be considered to be a <b>system</b> route
+        /// used to support the underlying neonCLUSTER as opposed to a regular user defined
+        /// route.  This has no impact other than the fact that system routes are hidden
+        /// by <b>neon-cli</b> commands by default.
+        /// </summary>
+        [JsonProperty(PropertyName = "System", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool System { get; set; } = false;
 
         /// <summary>
         /// Validates the instance.

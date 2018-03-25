@@ -42,7 +42,7 @@ USAGE:
     neon proxy NAME build
     neon proxy NAME get [--yaml] ROUTE
     neon proxy NAME inspect
-    neon proxy NAME list|ls
+    neon proxy NAME [--all] [--sys] list|ls
     neon proxy NAME remove|rm ROUTE
     neon proxy NAME put FILE
     neon proxy NAME put -
@@ -75,6 +75,12 @@ COMMANDS:
     settings        - Updates the proxy global settings from a
                       JSON file or by reading standard input.
     status          - Displays the current status for a proxy.
+
+OPTIONS:
+
+    --all           - List all proxy routes (normally system
+                      routes are excluded)
+    --sys           - List only system routes
 ";
 
         private const string routeHelp =
@@ -164,7 +170,7 @@ See the documentation for more proxy route and setting details.
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--yaml" }; }
+            get { return new string[] { "--all", "--sys", "--yaml" }; }
         }
 
         /// <inheritdoc/>
@@ -314,19 +320,35 @@ See the documentation for more proxy route and setting details.
                 case "list":
                 case "ls":
 
-                    var nameList = proxyManager.ListRoutes().ToArray();
-
-                    if (nameList.Length == 0)
-                    {
-                        Console.WriteLine("* No routes");
-                    }
-                    else
-                    {
-                        foreach (var name in proxyManager.ListRoutes())
+                    var showAll = commandLine.HasOption("--all");
+                    var showSys = commandLine.HasOption("--sys");
+                    var routes  = proxyManager.ListRoutes(
+                        proxy =>
                         {
-                            Console.WriteLine(name);
-                        }
+                            if (showAll)
+                            {
+                                return true;
+                            }
+                            else if (showSys)
+                            {
+                                return proxy.System;
+                            }
+                            else
+                            {
+                                return !proxy.System;
+                            }
+                        });
+
+                    Console.WriteLine();
+                    Console.WriteLine($"[{routes.Count()}] {proxyManager.Name} routes");
+                    Console.WriteLine();
+
+                    foreach (var item in routes)
+                    {
+                        Console.WriteLine(item.Name);
                     }
+
+                    Console.WriteLine();
                     break;
 
                 case "build":
