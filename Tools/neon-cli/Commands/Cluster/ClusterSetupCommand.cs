@@ -234,7 +234,7 @@ OPTIONS:
             controller.AddStep("manager config", 
                 n => ConfigureManager(n),
                 n => n.Metadata.IsManager,
-                stepDelaySeconds: cluster.Definition.StepDelaySeconds);
+                stepStaggerSeconds: cluster.Definition.StepStaggerSeconds);
 
             // Configure the workers and pets.
 
@@ -259,7 +259,7 @@ OPTIONS:
                         ConfigureNonManager(n);
                     },
                     n => n.Metadata.IsWorker || n.Metadata.IsPet,
-                    stepDelaySeconds: cluster.Definition.StepDelaySeconds);
+                    stepStaggerSeconds: cluster.Definition.StepStaggerSeconds);
             }
 
             // Create the Swarm.
@@ -275,7 +275,7 @@ OPTIONS:
                 {
                     controller.AddStep("ceph packages", 
                         n => CephPackages(n),
-                        stepDelaySeconds: cluster.Definition.StepDelaySeconds);
+                        stepStaggerSeconds: cluster.Definition.StepStaggerSeconds);
 
                     controller.AddGlobalStep("ceph settings", () => CephSettings());
                     controller.AddStep("ceph bootstrap", n => CephBootstrap(n), n => n.Metadata.Labels.CephMON);
@@ -2704,6 +2704,8 @@ WantedBy=docker.service
                 {
                     manager.SudoCommand($"vault-direct unseal", cluster.VaultRunOptions, clusterLogin.VaultCredentials.UnsealKeys[i]);
                 }
+
+                manager.Status = string.Empty;
 
                 // $hack(jeff.lill): Fragile: Wait for Vault to unseal and be ready to accept commands.
 

@@ -46,7 +46,7 @@ namespace Neon.Cluster
             public Func<SshProxy<NodeMetadata>, bool>       Predicate;
             public StepStatus                               Status;
             public bool                                     NoParallelLimit;
-            public TimeSpan                                 Delay;
+            public TimeSpan                                 StepStagger;
         }
 
         //---------------------------------------------------------------------
@@ -131,10 +131,10 @@ namespace Neon.Cluster
         /// Optionally ignores the global <see cref="SetupController{T}.MaxParallel"/> 
         /// limit for the new step when greater.
         /// </param>
-        /// <param name="stepDelaySeconds">
-        /// Optionally specifies the total time delay to be spread across
-        /// the nodes executing this step.  Setting a non-zero value of
-        /// perhaps 30 seconds will will mitigate problems with multiple
+        /// <param name="stepStaggerSeconds">
+        /// Optionally specifies the time delay used to stagger execution
+        /// of the nodes executing this step.  Setting a non-zero value of
+        /// perhaps 5 seconds will help mitigate problems with multiple
         /// accessing nodes trying to download the same files from
         /// the Internet at the same time, potentially causing the remote
         /// endpoint to start throttling access.
@@ -144,7 +144,7 @@ namespace Neon.Cluster
                             Func<SshProxy<NodeMetadata>, bool> nodePredicate = null,
                             bool quiet = false,
                             bool noParallelLimit = false,
-                            int stepDelaySeconds = 0)
+                            int stepStaggerSeconds = 0)
         {
             nodeAction    = nodeAction ?? new Action<SshProxy<NodeMetadata>>(n => { });
             nodePredicate = nodePredicate ?? new Func<SshProxy<NodeMetadata>, bool>(n => true);
@@ -157,7 +157,7 @@ namespace Neon.Cluster
                     NodeAction      = nodeAction,
                     Predicate       = nodePredicate,
                     NoParallelLimit = noParallelLimit,
-                    Delay           = TimeSpan.FromSeconds(stepDelaySeconds)
+                    StepStagger     = TimeSpan.FromSeconds(stepStaggerSeconds)
                 });
         }
 
@@ -373,7 +373,7 @@ namespace Neon.Cluster
 
                         if (typeof(NodeMetadata) == typeof(NodeDefinition))
                         {
-                            if (step.Delay <= TimeSpan.Zero || stepNodes.Count() <= 1)
+                            if (step.StepStagger <= TimeSpan.Zero || stepNodes.Count() <= 1)
                             {
                                 foreach (var node in stepNodes)
                                 {
@@ -382,13 +382,12 @@ namespace Neon.Cluster
                             }
                             else
                             {
-                                var delay    = TimeSpan.Zero;
-                                var interval = TimeSpan.FromSeconds(step.Delay.TotalSeconds / stepNodes.Count());
+                                var delay = TimeSpan.Zero;
 
                                 foreach (var node in stepNodes)
                                 {
                                     (node.Metadata as NodeDefinition).StepDelay = delay;
-                                    delay += interval;
+                                    delay += step.StepStagger;
                                 }
                             }
                         }

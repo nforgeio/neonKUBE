@@ -53,7 +53,7 @@ namespace Neon.Cluster
         private const string        defaultDnsImage            = "neoncluster/neon-dns:latest";
         private const string        defaultDnsMonImage         = "neoncluster/neon-dns-mon:latest";
         private const string        defaultDrivePrefix         = "sd";
-        private const int           defaultStepDelaySeconds    = 20;
+        private const int           defaultStepStaggerSeconds  = 5;
 
         /// <summary>
         /// Regex for verifying cluster names for hosts, routes, groups, etc.
@@ -491,20 +491,19 @@ namespace Neon.Cluster
 
         /// <summary>
         /// <para>
-        /// Specifies the maximum delay to be added at stategic points during 
-        /// cluster setup to mitigate potential problems when mutiple cluster nodes
-        /// are trying to access the same Internet resources, potentially getting
-        /// throttled by the remote endpoint.
+        /// Specifies the maximum delay to be added between steps at strategic points 
+        /// during cluster preparation and setup to help mitigate potential problems 
+        /// when mutiple cluster nodes are trying to access the same Internet resources,
+        /// potentially getting throttled by the remote endpoint.
         /// </para>
         /// <para>
-        /// This defaults to <b>20 seconds</b>, which means that some setup steps may
-        /// be delayed up to a maximum of 20 seconds.  Set this to 0 to disable the
-        /// delay.
+        /// This defaults to <b>5 seconds</b> between these steps  Set this to 0 to disable
+        /// the delay.
         /// </para>
         /// </summary>
-        [JsonProperty(PropertyName = "StepDelaySeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(defaultStepDelaySeconds)]
-        public int StepDelaySeconds { get; set; } = defaultStepDelaySeconds;
+        [JsonProperty(PropertyName = "StepStaggerSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(defaultStepStaggerSeconds)]
+        public int StepStaggerSeconds { get; set; } = defaultStepStaggerSeconds;
 
         /// <summary>
         /// Describes the Docker host nodes in the cluster.
