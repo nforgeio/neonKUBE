@@ -145,8 +145,24 @@ namespace Neon.Cluster
 
                     if (logWriter != null)
                     {
-                        logWriter.Dispose();
-                        logWriter = null;
+                        // $hack(jeff.lill):
+                        //
+                        // Sometimes we'll see an [ObjectDisposedException] here.  I'm
+                        // not entirely sure why.  We'll mitigate this for now by catching
+                        // and ignoring the exception.
+
+                        try
+                        {
+                            logWriter.Dispose();
+                        }
+                        catch (ObjectDisposedException)
+                        {
+                            // Intentionally ignoring this.
+                        }
+                        finally
+                        {
+                            logWriter = null;
+                        }
                     }
 
                     isDisposed = true;
