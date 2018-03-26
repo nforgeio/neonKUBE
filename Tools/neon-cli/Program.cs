@@ -273,7 +273,6 @@ Note that the tool may require admin privileges for --noshim mode.
                     if (command == null)
                     {
                         Console.Error.WriteLine($"*** ERROR: Unexpected [{CommandLine.Arguments[0]}] command.");
-                        Console.Error.WriteLine(usage);
                         Program.Exit(1);
                     }
 
@@ -288,7 +287,6 @@ Note that the tool may require admin privileges for --noshim mode.
                 if (command == null)
                 {
                     Console.Error.WriteLine($"*** ERROR: Unexpected [{CommandLine.Arguments[0]}] command.");
-                    Console.Error.WriteLine(usage);
                     Program.Exit(1);
                 }
 
