@@ -72,7 +72,7 @@ $@"#!/bin/bash
 docker secret inspect {secretName}
 
 if [ ""$?"" == ""0"" ] ; then
-    echo ""Secret already exists, not setting it again.""
+    echo ""Secret already exists; not setting it again.""
 else
     cat secret.dat | docker secret create {secretName} -
 fi

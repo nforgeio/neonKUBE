@@ -155,7 +155,7 @@ Server Requirements:
 
             if (commandLine.HasOption("--unredacted"))
             {
-                cluster.VaultRunOptions = RunOptions.None;
+                cluster.SecureRunOptions = RunOptions.None;
             }
 
             // Assign the VPN client return subnets to the manager nodes if VPN is enabled.

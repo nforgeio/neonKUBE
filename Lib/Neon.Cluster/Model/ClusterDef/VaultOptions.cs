@@ -153,15 +153,6 @@ namespace Neon.Cluster
         public string DefaultLease { get; set; } = defaultLease;
 
         /// <summary>
-        /// Optionally disables security redaction from logs during cluster setup.  This is
-        /// useful for debugging Vault setup issues but <b>SHOULD NEVER BE ENABLED FOR PRODUCTION</b>.
-        /// This defaults to <c>false</c>.
-        /// </summary>
-        [JsonProperty(PropertyName = "DebugSetup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(false)]
-        public bool DebugSetup { get; set; } = false;
-
-        /// <summary>
         /// Returns the Vault port.
         /// </summary>
         [JsonIgnore]

@@ -90,7 +90,7 @@ namespace NeonCli
 
                     cluster.FirstManager.Status = "start: neon-cluster-manager";
 
-                    var response = cluster.FirstManager.DockerCommand(RunOptions.Redact,
+                    var response = cluster.FirstManager.DockerCommand(cluster.SecureRunOptions | RunOptions.FaultOnError,
                         "docker service create",
                             "--name", "neon-cluster-manager",
                             "--detach=false",

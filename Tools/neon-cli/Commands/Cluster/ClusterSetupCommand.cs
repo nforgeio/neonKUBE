@@ -132,13 +132,6 @@ OPTIONS:
 
             cluster = new ClusterProxy(clusterLogin, Program.CreateNodeProxy<NodeDefinition>, RunOptions.LogOutput | RunOptions.FaultOnError);
 
-            if (cluster.Definition.Vault.DebugSetup)
-            {
-                // Note that we log a warning when this is true for each node in [ConfifureCommon()].
-
-                cluster.VaultRunOptions = RunOptions.FaultOnError;
-            }
-
             // We need to ensure that any necessary VPN connection is opened if we're
             // not provisioning on-premise or not running in the tool container.
 
@@ -176,7 +169,7 @@ OPTIONS:
 
             if (commandLine.HasOption("--unredacted"))
             {
-                cluster.VaultRunOptions = RunOptions.None;
+                cluster.SecureRunOptions = RunOptions.None;
             }
 
             // Perform the setup operations.
@@ -606,11 +599,6 @@ OPTIONS:
             // scripts and tools when cluster setup has been partially
             // completed.  These steps are implicitly idempotent and
             // complete pretty quickly.
-
-            if (cluster.Definition.Vault.DebugSetup)
-            {
-                node.Log($"SECURITY WARNING: Cluster definition [{nameof(ClusterDefinition.Vault)}.{nameof(VaultOptions.DebugSetup)}=true] which disables redaction of potentially sensitive VAULT information.  This should never be enabled for production clusters.");
-            }
 
             // Configure the node's environment variables.
 
@@ -1579,13 +1567,13 @@ $@"docker login \
 
                     if (node.Metadata.IsManager)
                     {
-                        node.DockerCommand(RunOptions.Redact, $"docker swarm join --token {clusterLogin.SwarmManagerToken} {cluster.FirstManager.Metadata.PrivateAddress}:2377");
+                        node.DockerCommand(cluster.SecureRunOptions | RunOptions.FaultOnError, $"docker swarm join --token {clusterLogin.SwarmManagerToken} {cluster.FirstManager.Metadata.PrivateAddress}:2377");
                     }
                     else
                     {
                         // Must be a worker node.
 
-                        node.DockerCommand(RunOptions.Redact, $"docker swarm join --token {clusterLogin.SwarmWorkerToken} {cluster.FirstManager.Metadata.PrivateAddress}:2377");
+                        node.DockerCommand(cluster.SecureRunOptions | RunOptions.FaultOnError, $"docker swarm join --token {clusterLogin.SwarmWorkerToken} {cluster.FirstManager.Metadata.PrivateAddress}:2377");
                     }
                 });
 
@@ -2576,8 +2564,8 @@ WantedBy=docker.service
             cluster.FirstManager.InvokeIdempotentAction("setup-proxy-vault",
                 () =>
                 {
-                    // Docker mesh routing seemed unstable on versions 17.03.0-ce
-                    // thru 17.06.0-ce so we're going to provide an option to work
+                    // Docker mesh routing seemed unstable on versions [17.03.0-ce]
+                    // thru [17.12.1-ce] so we're going to provide an option to work
                     // around this by running the PUBLIC, PRIVATE and VAULT proxies 
                     // on all nodes and  publishing the ports to the host (not the mesh).
                     //
@@ -2625,8 +2613,8 @@ WantedBy=docker.service
                     //---------------------------------------------------------
                     // $hack(jeff.lill): 
                     //
-                    // Fragile: Give Vault a chance to start.  It would be better to have the subsequent
-                    // steps that depend on Vault to detect when ser service is not ready and retry.
+                    // Fragile: Give Vault a chance to start.  It would be better to actively 
+                    // detect when Vault is ready.
 
                     steps.Add(CommandStep.CreateSudo(cluster.FirstManager.Name, "sleep 15"));
 
@@ -2709,7 +2697,7 @@ WantedBy=docker.service
 
                 for (int i = 0; i < clusterLogin.VaultCredentials.KeyThreshold; i++)
                 {
-                    manager.SudoCommand($"vault-direct unseal", cluster.VaultRunOptions, clusterLogin.VaultCredentials.UnsealKeys[i]);
+                    manager.SudoCommand($"vault-direct unseal", cluster.SecureRunOptions | RunOptions.FaultOnError, clusterLogin.VaultCredentials.UnsealKeys[i]);
                 }
 
                 manager.Status = string.Empty;
@@ -2743,7 +2731,7 @@ WantedBy=docker.service
 
                         var response = firstManager.SudoCommand(
                             "vault-direct init",
-                            RunOptions.LogOnErrorOnly | cluster.VaultRunOptions,
+                            cluster.SecureRunOptions | RunOptions.LogOnErrorOnly | RunOptions.FaultOnError,
                             $"-key-shares={cluster.Definition.Vault.KeyCount}",
                             $"-key-threshold={cluster.Definition.Vault.KeyThreshold}");
 

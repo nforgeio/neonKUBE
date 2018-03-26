@@ -290,7 +290,7 @@ the [neon exec] command.
 
             bundle.AddFile("secret.data", secretData);
 
-            var response = node.SudoCommand(bundle, RunOptions.Redact);
+            var response = node.SudoCommand(bundle, cluster.SecureRunOptions | RunOptions.FaultOnError);
 
             Console.Write(response.AllText);
             Program.Exit(response.ExitCode);

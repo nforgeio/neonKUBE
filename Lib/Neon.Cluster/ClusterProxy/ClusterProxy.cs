@@ -256,13 +256,12 @@ namespace Neon.Cluster
         public ProxyManager PrivateProxy { get; private set; }
 
         /// <summary>
-        /// Specifies the <see cref="RunOptions"/> to use when executing cluster Vault
-        /// commands.  This defaults to <see cref="RunOptions.Redact"/> and
-        /// <see cref="RunOptions.FaultOnError"/> for best security but may be changed
-        /// to just <see cref="RunOptions.FaultOnError"/> when debugging
+        /// Specifies the <see cref="RunOptions"/> to use when executing commands that 
+        /// include secrets.  This defaults to <see cref="RunOptions.Redact"/> for best 
+        /// security but may be changed to just <see cref="RunOptions.None"/> when debugging
         /// cluster setup.
         /// </summary>
-        public RunOptions VaultRunOptions { get; set; } = RunOptions.Redact | RunOptions.FaultOnError;
+        public RunOptions SecureRunOptions { get; set; } = RunOptions.Redact | RunOptions.FaultOnError;
 
         /// <summary>
         /// Enumerates the cluster manager node proxies sorted in ascending order by name.
@@ -525,7 +524,7 @@ export VAULT_TOKEN={ClusterLogin.VaultCredentials.RootToken}
 ",
                 isExecutable: true);
 
-            var response = GetHealthyManager().SudoCommand(bundle, VaultRunOptions);
+            var response = GetHealthyManager().SudoCommand(bundle, SecureRunOptions);
 
             response.BashCommand = bundle.ToBash();
 
@@ -554,7 +553,7 @@ vault policy-write {policy.Name} policy.hcl
 
             bundle.AddFile("policy.hcl", policy);
 
-            var response = GetHealthyManager().SudoCommand(bundle, VaultRunOptions);
+            var response = GetHealthyManager().SudoCommand(bundle, SecureRunOptions);
 
             response.BashCommand = bundle.ToBash();
 
