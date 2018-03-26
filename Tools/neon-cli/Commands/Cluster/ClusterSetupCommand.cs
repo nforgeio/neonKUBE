@@ -1392,19 +1392,19 @@ $@"docker login \
                 {
                     manager.DockerCommand(
                         "docker network create",
-                            "--driver", "overlay",
-                            "--opt", "encrypt",
-                            "--subnet", cluster.Definition.Network.PublicSubnet,
-                            cluster.Definition.Network.PublicAttachable ? "--attachable" : null,
-                            NeonClusterConst.PublicNetwork);
+                        "--driver", "overlay",
+                        "--opt", "encrypt",
+                        "--subnet", cluster.Definition.Network.PublicSubnet,
+                        cluster.Definition.Network.PublicAttachable ? "--attachable" : null,
+                        NeonClusterConst.PublicNetwork);
 
                     manager.DockerCommand(
                         "docker network create",
-                            "--driver", "overlay",
-                            "--opt", "encrypt",
-                            "--subnet", cluster.Definition.Network.PrivateSubnet,
-                            cluster.Definition.Network.PrivateAttachable ? "--attachable" : null,
-                            NeonClusterConst.PrivateNetwork);
+                        "--driver", "overlay",
+                        "--opt", "encrypt",
+                        "--subnet", cluster.Definition.Network.PrivateSubnet,
+                        cluster.Definition.Network.PrivateAttachable ? "--attachable" : null,
+                        NeonClusterConst.PrivateNetwork);
                 });
         }
 

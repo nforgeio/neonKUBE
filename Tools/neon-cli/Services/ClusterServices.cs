@@ -92,17 +92,17 @@ namespace NeonCli
 
                     var response = cluster.FirstManager.DockerCommand(cluster.SecureRunOptions | RunOptions.FaultOnError,
                         "docker service create",
-                            "--name", "neon-cluster-manager",
-                            "--detach=false",
-                            "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
-                            "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
-                            "--mount", "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
-                            "--env", "LOG_LEVEL=INFO",
-                            unsealSecretOption,
-                            "--constraint", "node.role==manager",
-                            "--replicas", 1,
-                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                            Program.ResolveDockerImage(cluster.Definition.ClusterManagerImage));
+                        "--name", "neon-cluster-manager",
+                        "--detach=false",
+                        "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
+                        "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
+                        "--mount", "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
+                        "--env", "LOG_LEVEL=INFO",
+                        unsealSecretOption,
+                        "--constraint", "node.role==manager",
+                        "--replicas", 1,
+                        "--restart-delay", cluster.Definition.Docker.RestartDelay,
+                        Program.ResolveDockerImage(cluster.Definition.ClusterManagerImage));
 
                     foreach (var manager in cluster.Managers)
                     {
@@ -143,18 +143,18 @@ namespace NeonCli
 
                     response = firstManager.DockerCommand(
                         "docker service create",
-                            "--name", "neon-proxy-manager",
-                            "--detach=false",
-                            "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
-                            "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
-                            "--mount", "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
-                            "--env", "VAULT_CREDENTIALS=neon-proxy-manager-credentials",
-                            "--env", "LOG_LEVEL=INFO",
-                            "--secret", "neon-proxy-manager-credentials",
-                            "--constraint", "node.role==manager",
-                            "--replicas", 1,
-                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                            Program.ResolveDockerImage(cluster.Definition.ProxyManagerImage));
+                        "--name", "neon-proxy-manager",
+                        "--detach=false",
+                        "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
+                        "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
+                        "--mount", "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
+                        "--env", "VAULT_CREDENTIALS=neon-proxy-manager-credentials",
+                        "--env", "LOG_LEVEL=INFO",
+                        "--secret", "neon-proxy-manager-credentials",
+                        "--constraint", "node.role==manager",
+                        "--replicas", 1,
+                        "--restart-delay", cluster.Definition.Docker.RestartDelay,
+                        Program.ResolveDockerImage(cluster.Definition.ProxyManagerImage));
 
                     foreach (var manager in cluster.Managers)
                     {
@@ -223,21 +223,21 @@ namespace NeonCli
 
                     response = firstManager.DockerCommand(
                         "docker service create",
-                            "--name", "neon-proxy-public",
-                            "--detach=false",
-                            "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
-                            "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
-                            "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public/conf",
-                            "--env", "VAULT_CREDENTIALS=neon-proxy-public-credentials",
-                            "--env", "LOG_LEVEL=INFO",
-                            "--env", "DEBUG=false",
-                            "--secret", "neon-proxy-public-credentials",
-                            publicPublish,
-                            proxyConstraint,
-                            "--mode", "global",
-                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                            "--network", NeonClusterConst.PublicNetwork,
-                            Program.ResolveDockerImage(cluster.Definition.ProxyImage));
+                        "--name", "neon-proxy-public",
+                        "--detach=false",
+                        "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
+                        "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
+                        "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public/conf",
+                        "--env", "VAULT_CREDENTIALS=neon-proxy-public-credentials",
+                        "--env", "LOG_LEVEL=INFO",
+                        "--env", "DEBUG=false",
+                        "--secret", "neon-proxy-public-credentials",
+                        publicPublish,
+                        proxyConstraint,
+                        "--mode", "global",
+                        "--restart-delay", cluster.Definition.Docker.RestartDelay,
+                        "--network", NeonClusterConst.PublicNetwork,
+                        Program.ResolveDockerImage(cluster.Definition.ProxyImage));
 
                     foreach (var manager in cluster.Managers)
                     {
@@ -250,21 +250,21 @@ namespace NeonCli
 
                     response = firstManager.DockerCommand(
                         "docker service create",
-                            "--name", "neon-proxy-private",
-                            "--detach=false",
-                            "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
-                            "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
-                            "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private/conf",
-                            "--env", "VAULT_CREDENTIALS=neon-proxy-private-credentials",
-                            "--env", "LOG_LEVEL=INFO",
-                            "--env", "DEBUG=false",
-                            "--secret", "neon-proxy-private-credentials",
-                            privatePublish,
-                            proxyConstraint,
-                            "--mode", "global",
-                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                            "--network", NeonClusterConst.PrivateNetwork,
-                            Program.ResolveDockerImage(cluster.Definition.ProxyImage));
+                        "--name", "neon-proxy-private",
+                        "--detach=false",
+                        "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
+                        "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
+                        "--env", "CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private/conf",
+                        "--env", "VAULT_CREDENTIALS=neon-proxy-private-credentials",
+                        "--env", "LOG_LEVEL=INFO",
+                        "--env", "DEBUG=false",
+                        "--secret", "neon-proxy-private-credentials",
+                        privatePublish,
+                        proxyConstraint,
+                        "--mode", "global",
+                        "--restart-delay", cluster.Definition.Docker.RestartDelay,
+                        "--network", NeonClusterConst.PrivateNetwork,
+                        Program.ResolveDockerImage(cluster.Definition.ProxyImage));
 
                     foreach (var manager in cluster.Managers)
                     {
@@ -277,18 +277,18 @@ namespace NeonCli
 
                     response = firstManager.DockerCommand(
                         "docker service create",
-                            "--name", "neon-dns",
-                            "--detach=false",
-                            "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
-                            "--mount", "type=bind,src=/etc/powerdns/hosts,dst=/etc/powerdns/hosts",
-                            "--mount", "type=bind,src=/dev/shm/neon-dns,dst=/neon-dns",
-                            "--env", "POLL_INTERVAL=15s",
-                            "--env", "VERIFY_INTERVAL=5m",
-                            "--env", "LOG_LEVEL=INFO",
-                            "--constraint", "node.role==manager",
-                            "--mode", "global",
-                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                            Program.ResolveDockerImage(cluster.Definition.DnsImage));
+                        "--name", "neon-dns",
+                        "--detach=false",
+                        "--mount", "type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true",
+                        "--mount", "type=bind,src=/etc/powerdns/hosts,dst=/etc/powerdns/hosts",
+                        "--mount", "type=bind,src=/dev/shm/neon-dns,dst=/neon-dns",
+                        "--env", "POLL_INTERVAL=15s",
+                        "--env", "VERIFY_INTERVAL=5m",
+                        "--env", "LOG_LEVEL=INFO",
+                        "--constraint", "node.role==manager",
+                        "--mode", "global",
+                        "--restart-delay", cluster.Definition.Docker.RestartDelay,
+                        Program.ResolveDockerImage(cluster.Definition.DnsImage));
 
                     foreach (var manager in cluster.Managers)
                     {
@@ -301,14 +301,14 @@ namespace NeonCli
 
                     response = firstManager.DockerCommand(
                         "docker service create",
-                            "--name", "neon-dns-mon",
-                            "--detach=false",
-                            "--env", "POLL_INTERVAL=15s",
-                            "--env", "LOG_LEVEL=INFO",
-                            "--constraint", "node.role==manager",
-                            "--replicas", "1",
-                            "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                            Program.ResolveDockerImage(cluster.Definition.DnsMonImage));
+                        "--name", "neon-dns-mon",
+                        "--detach=false",
+                        "--env", "POLL_INTERVAL=15s",
+                        "--env", "LOG_LEVEL=INFO",
+                        "--constraint", "node.role==manager",
+                        "--replicas", "1",
+                        "--restart-delay", cluster.Definition.Docker.RestartDelay,
+                        Program.ResolveDockerImage(cluster.Definition.DnsMonImage));
 
                     foreach (var manager in cluster.Managers)
                     {
