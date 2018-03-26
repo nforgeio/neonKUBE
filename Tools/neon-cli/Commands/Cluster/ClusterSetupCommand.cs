@@ -2595,7 +2595,7 @@ WantedBy=docker.service
 
                     var steps   = new ConfigStepList();
                     var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-proxy-vault",
-                    "docker service create",
+                        "docker service create",
                         "--name", "neon-proxy-vault",
                         "--detach=false",
                         "--mode", "global",

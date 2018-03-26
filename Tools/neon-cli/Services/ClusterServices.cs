@@ -90,7 +90,7 @@ namespace NeonCli
 
                     cluster.FirstManager.Status = "start: neon-cluster-manager";
 
-                    var response = cluster.FirstManager.DockerCommand(cluster.SecureRunOptions | RunOptions.FaultOnError,
+                    var response = cluster.FirstManager.IdempotentDockerCommand("setup-neon-cluster-manager", cluster.SecureRunOptions | RunOptions.FaultOnError,
                         "docker service create",
                         "--name", "neon-cluster-manager",
                         "--detach=false",
@@ -141,7 +141,7 @@ namespace NeonCli
 
                     firstManager.Status = "start: neon-proxy-manager";
 
-                    response = firstManager.DockerCommand(
+                    response = firstManager.IdempotentDockerCommand("setup-neon-proxy-manager",
                         "docker service create",
                         "--name", "neon-proxy-manager",
                         "--detach=false",
@@ -221,7 +221,7 @@ namespace NeonCli
 
                     firstManager.Status = "start: neon-proxy-public";
 
-                    response = firstManager.DockerCommand(
+                    response = firstManager.IdempotentDockerCommand("setup-neon-proxy-public",
                         "docker service create",
                         "--name", "neon-proxy-public",
                         "--detach=false",
@@ -248,7 +248,7 @@ namespace NeonCli
 
                     firstManager.Status = "start: neon-proxy-private";
 
-                    response = firstManager.DockerCommand(
+                    response = firstManager.IdempotentDockerCommand("setup-neon-proxy-private",
                         "docker service create",
                         "--name", "neon-proxy-private",
                         "--detach=false",
@@ -275,7 +275,7 @@ namespace NeonCli
 
                     firstManager.Status = "start: neon-dns";
 
-                    response = firstManager.DockerCommand(
+                    response = firstManager.IdempotentDockerCommand("setup-neon-dns",
                         "docker service create",
                         "--name", "neon-dns",
                         "--detach=false",
@@ -299,7 +299,7 @@ namespace NeonCli
 
                     firstManager.Status = "start: neon-dns-mon";
 
-                    response = firstManager.DockerCommand(
+                    response = firstManager.IdempotentDockerCommand("setup-neon-dns-mon",
                         "docker service create",
                         "--name", "neon-dns-mon",
                         "--detach=false",

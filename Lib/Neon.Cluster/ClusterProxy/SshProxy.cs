@@ -2470,14 +2470,81 @@ echo $? > {cmdFolder}/exit
         }
 
         /// <summary>
+        /// Runs a Docker command as idempotent on the node under <b>sudo</b> with specific
+        /// run options while attempting to handle transient errors.
+        /// </summary>
+        /// <param name="actionId">The node-unique action ID.</param>
+        /// <param name="command">The Linux command.</param>
+        /// <param name="runOptions">The execution options.</param>
+        /// <param name="args">The command arguments.</param>
+        /// <remarks>
+        /// <para>
+        /// This method attempts to retry transient Docker client errors (e.g. when an
+        /// image pull fails for some reason).  Using this will be more reliable than
+        /// executing the command directly, especially on large clusters.
+        /// </para>
+        /// <note>
+        /// You'll need to passes the full Docker command, including the leading
+        /// <b>docker</b> client program name.
+        /// </note>
+        /// </remarks>
+        public CommandResponse IdempotentDockerCommand(string actionId, RunOptions runOptions, string command, params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId));
+
+            var response = (CommandResponse)null;
+
+            InvokeIdempotentAction(actionId,
+                () =>
+                {
+                    response = DockerCommand(runOptions, command, args);
+                });
+
+            return response;
+        }
+
+        /// <summary>
+        /// Runs a Docker command as idempotent on the node under <b>sudo</b>
+        /// while attempting to handle transient errors.
+        /// </summary>
+        /// <param name="actionId">The node-unique action ID.</param>
+        /// <param name="command">The Linux command.</param>
+        /// <param name="args">The command arguments.</param>
+        /// <remarks>
+        /// <para>
+        /// This method attempts to retry transient Docker client errors (e.g. when an
+        /// image pull fails for some reason).  Using this will be more reliable than
+        /// executing the command directly, especially on large clusters.
+        /// </para>
+        /// <note>
+        /// You'll need to passes the full Docker command, including the leading
+        /// <b>docker</b> client program name.
+        /// </note>
+        /// </remarks>
+        public CommandResponse IdempotentDockerCommand(string actionId, string command, params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId));
+
+            var response = (CommandResponse)null;
+
+            InvokeIdempotentAction(actionId,
+                () =>
+                {
+                    response = DockerCommand(command, args);
+                });
+
+            return response;
+        }
+
+        /// <summary>
         /// Invokes a named action on the node if it has never been been performed
         /// on the node before.
         /// </summary>
-        /// <param name="name">The node-unique action name.</param>
+        /// <param name="actionId">The node-unique action ID.</param>
         /// <param name="action">Tbe action to be performed.</param>
         /// <remarks>
         /// <para>
-        /// <paramref name="name"/> must uniquely identify the action on the node.
+        /// <paramref name="actionId"/> must uniquely identify the action on the node.
         /// This name may include letters, digits, and dashes.
         /// </para>
         /// <para>
@@ -2488,20 +2555,20 @@ echo $? > {cmdFolder}/exit
         /// present.
         /// </para>
         /// </remarks>
-        public void InvokeIdempotentAction(string name, Action action)
+        public void InvokeIdempotentAction(string actionId, Action action)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId));
             Covenant.Requires<ArgumentNullException>(action != null);
 
-            foreach (var ch in name)
+            foreach (var ch in actionId)
             {
                 if (!char.IsLetterOrDigit(ch) && ch != '-')
                 {
-                    throw new ArgumentException($"Idempotent action name [{name}] is invalid because it includes a character that's not a letter, digit, or dash.");
+                    throw new ArgumentException($"Idempotent action name [{actionId}] is invalid because it includes a character that's not a letter, digit, or dash.");
                 }
             }
 
-            var statePath = LinuxPath.Combine(NodeHostFolders.State, $"finished-{name}");
+            var statePath = LinuxPath.Combine(NodeHostFolders.State, $"finished-{actionId}");
 
             if (!hasStateFolder)
             {
