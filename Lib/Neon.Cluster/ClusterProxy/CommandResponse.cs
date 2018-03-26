@@ -134,7 +134,7 @@ namespace Neon.Cluster
                     return string.Empty;
                 }
 
-                return $"[exitcode={ExitCode}: {Command}";
+                return $"[exitcode={ExitCode}]: {Command}";
             }
         }
     }
