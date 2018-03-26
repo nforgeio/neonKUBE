@@ -553,7 +553,6 @@ namespace Neon.Cluster
                 return;
             }
 
-            var underline         = " " + new string('-', 39);
             var maxStepLabelWidth = steps.Max(n => n.Label.Length);
             var maxNodeNameWidth  = nodes.Max(n => n.Name.Length);
             var maxHostNameWidth  = 0;
@@ -568,14 +567,10 @@ namespace Neon.Cluster
 
             sbDisplay.AppendLine();
             sbDisplay.AppendLine($" {operationTitle}");
-            sbDisplay.AppendLine($" {new string('-', operationTitle.Length)}");
             sbDisplay.AppendLine($" {operationStatus}");
-            sbDisplay.AppendLine();
 
             sbDisplay.AppendLine();
             sbDisplay.AppendLine(" Steps:");
-            sbDisplay.AppendLine(underline);
-            sbDisplay.AppendLine();
 
             foreach (var step in steps.Where(s => !s.Quiet))
             {
@@ -626,10 +621,7 @@ namespace Neon.Cluster
                         if (nodes.Exists(n => (n.Metadata as NodeDefinition).IsManager))
                         {
                             sbDisplay.AppendLine();
-                            sbDisplay.AppendLine();
                             sbDisplay.AppendLine(" Managers:");
-                            sbDisplay.AppendLine(underline);
-                            sbDisplay.AppendLine();
 
                             foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsManager))
                             {
@@ -640,10 +632,7 @@ namespace Neon.Cluster
                         if (nodes.Exists(n => (n.Metadata as NodeDefinition).IsWorker))
                         {
                             sbDisplay.AppendLine();
-                            sbDisplay.AppendLine();
                             sbDisplay.AppendLine(" Workers:");
-                            sbDisplay.AppendLine(underline);
-                            sbDisplay.AppendLine();
 
                             foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsWorker))
                             {
@@ -654,10 +643,7 @@ namespace Neon.Cluster
                         if (nodes.Exists(n => (n.Metadata as NodeDefinition).IsPet))
                         {
                             sbDisplay.AppendLine();
-                            sbDisplay.AppendLine();
                             sbDisplay.AppendLine(" Pets:");
-                            sbDisplay.AppendLine(underline);
-                            sbDisplay.AppendLine();
 
                             foreach (var node in nodes.Where(n => (n.Metadata as NodeDefinition).IsPet))
                             {
@@ -668,10 +654,7 @@ namespace Neon.Cluster
                     else
                     {
                         sbDisplay.AppendLine();
-                        sbDisplay.AppendLine();
                         sbDisplay.AppendLine(" Nodes:");
-                        sbDisplay.AppendLine(underline);
-                        sbDisplay.AppendLine();
 
                         foreach (var node in nodes)
                         {
@@ -684,10 +667,7 @@ namespace Neon.Cluster
                     // Provisioning cluster nodes on XenServer hosts.
 
                     sbDisplay.AppendLine();
-                    sbDisplay.AppendLine();
                     sbDisplay.AppendLine(" XenServers:");
-                    sbDisplay.AppendLine(underline);
-                    sbDisplay.AppendLine();
 
                     foreach (var node in nodes.OrderBy(n => (n.Metadata as XenClient).Name, StringComparer.InvariantCultureIgnoreCase))
                     {
