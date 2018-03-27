@@ -294,7 +294,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Sets the optation status text.
         /// </summary>
-        /// <param name="status">The optional operation status text to be displayed below the operation title.</param>
+        /// <param name="status">The optional operation status text.</param>
         public void SetOperationStatus(string status = null)
         {
             operationStatus = status ?? string.Empty;
@@ -569,7 +569,6 @@ namespace Neon.Cluster
 
             sbDisplay.AppendLine();
             sbDisplay.AppendLine($" {operationTitle}");
-            sbDisplay.AppendLine($" {operationStatus}");
 
             sbDisplay.AppendLine();
             sbDisplay.AppendLine(" Steps:");
@@ -678,6 +677,12 @@ namespace Neon.Cluster
                         sbDisplay.AppendLine($"    {xenHost.Name}{new string(' ', maxHostNameWidth - xenHost.Name.Length)}: {GetStatus(stepNodeNamesSet, node)}");
                     }
                 }
+            }
+
+            if (!string.IsNullOrEmpty(operationStatus))
+            {
+                sbDisplay.AppendLine();
+                sbDisplay.AppendLine($" {operationStatus}");
             }
 
             var newDisplay = sbDisplay.ToString();

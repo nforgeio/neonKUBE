@@ -192,6 +192,7 @@ Server Requirements:
 
             if (cluster.Definition.Hosting.Environment != HostingEnvironments.Machine)
             {
+                Console.WriteLine();
                 Console.WriteLine("Checking for IP address conflicts...");
                 Console.WriteLine();
 
