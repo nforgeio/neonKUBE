@@ -90,7 +90,15 @@ namespace NeonCli
 
                     cluster.FirstManager.Status = "start: neon-cluster-manager";
 
-                    var response = cluster.FirstManager.IdempotentDockerCommand("setup-neon-cluster-manager", cluster.SecureRunOptions | RunOptions.FaultOnError,
+                    cluster.FirstManager.IdempotentDockerCommand("setup-neon-cluster-manager",
+                        response =>
+                        {
+                            foreach (var manager in cluster.Managers)
+                            {
+                                manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-cluster-manager.sh"), response.BashCommand);
+                            }
+                        },
+                        cluster.SecureRunOptions | RunOptions.FaultOnError,
                         "docker service create",
                         "--name", "neon-cluster-manager",
                         "--detach=false",
@@ -103,11 +111,6 @@ namespace NeonCli
                         "--replicas", 1,
                         "--restart-delay", cluster.Definition.Docker.RestartDelay,
                         Program.ResolveDockerImage(cluster.Definition.ClusterManagerImage));
-
-                    foreach (var manager in cluster.Managers)
-                    {
-                        manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-cluster-manager.sh"), response.BashCommand);
-                    }
 
                     //---------------------------------------------------------
                     // Deploy proxy related services
@@ -141,7 +144,14 @@ namespace NeonCli
 
                     firstManager.Status = "start: neon-proxy-manager";
 
-                    response = firstManager.IdempotentDockerCommand("setup-neon-proxy-manager",
+                    firstManager.IdempotentDockerCommand("setup-neon-proxy-manager",
+                        response =>
+                        {
+                            foreach (var manager in cluster.Managers)
+                            {
+                                manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-manager.sh"), response.BashCommand);
+                            }
+                        },
                         "docker service create",
                         "--name", "neon-proxy-manager",
                         "--detach=false",
@@ -155,11 +165,6 @@ namespace NeonCli
                         "--replicas", 1,
                         "--restart-delay", cluster.Definition.Docker.RestartDelay,
                         Program.ResolveDockerImage(cluster.Definition.ProxyManagerImage));
-
-                    foreach (var manager in cluster.Managers)
-                    {
-                        manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-manager.sh"), response.BashCommand);
-                    }
 
                     // Docker mesh routing seemed unstable on versions 17.03.0-ce
                     // thru 17.06.0-ce so we're going to provide an option to work
@@ -221,7 +226,14 @@ namespace NeonCli
 
                     firstManager.Status = "start: neon-proxy-public";
 
-                    response = firstManager.IdempotentDockerCommand("setup-neon-proxy-public",
+                    firstManager.IdempotentDockerCommand("setup-neon-proxy-public",
+                        response =>
+                        {
+                            foreach (var manager in cluster.Managers)
+                            {
+                                manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-public.sh"), response.BashCommand);
+                            }
+                        },
                         "docker service create",
                         "--name", "neon-proxy-public",
                         "--detach=false",
@@ -239,16 +251,18 @@ namespace NeonCli
                         "--network", NeonClusterConst.PublicNetwork,
                         Program.ResolveDockerImage(cluster.Definition.ProxyImage));
 
-                    foreach (var manager in cluster.Managers)
-                    {
-                        manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-public.sh"), response.BashCommand);
-                    }
-
                     // Deploy: neon-proxy-private
 
                     firstManager.Status = "start: neon-proxy-private";
 
-                    response = firstManager.IdempotentDockerCommand("setup-neon-proxy-private",
+                    firstManager.IdempotentDockerCommand("setup-neon-proxy-private",
+                        response =>
+                        {
+                            foreach (var manager in cluster.Managers)
+                            {
+                                manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-private.sh"), response.BashCommand);
+                            }
+                        },
                         "docker service create",
                         "--name", "neon-proxy-private",
                         "--detach=false",
@@ -266,16 +280,18 @@ namespace NeonCli
                         "--network", NeonClusterConst.PrivateNetwork,
                         Program.ResolveDockerImage(cluster.Definition.ProxyImage));
 
-                    foreach (var manager in cluster.Managers)
-                    {
-                        manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-private.sh"), response.BashCommand);
-                    }
-
                     // Deploy: neon-dns
 
                     firstManager.Status = "start: neon-dns";
 
-                    response = firstManager.IdempotentDockerCommand("setup-neon-dns",
+                    firstManager.IdempotentDockerCommand("setup-neon-dns",
+                        response =>
+                        {
+                            foreach (var manager in cluster.Managers)
+                            {
+                                manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-dns.sh"), response.BashCommand);
+                            }
+                        },
                         "docker service create",
                         "--name", "neon-dns",
                         "--detach=false",
@@ -290,16 +306,18 @@ namespace NeonCli
                         "--restart-delay", cluster.Definition.Docker.RestartDelay,
                         Program.ResolveDockerImage(cluster.Definition.DnsImage));
 
-                    foreach (var manager in cluster.Managers)
-                    {
-                        manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-dns.sh"), response.BashCommand);
-                    }
-
                     // Deploy: neon-dns-mon
 
                     firstManager.Status = "start: neon-dns-mon";
 
-                    response = firstManager.IdempotentDockerCommand("setup-neon-dns-mon",
+                    firstManager.IdempotentDockerCommand("setup-neon-dns-mon",
+                        response =>
+                        {
+                            foreach (var manager in cluster.Managers)
+                            {
+                                manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-dns-mon.sh"), response.BashCommand);
+                            }
+                        },
                         "docker service create",
                         "--name", "neon-dns-mon",
                         "--detach=false",
@@ -309,11 +327,6 @@ namespace NeonCli
                         "--replicas", "1",
                         "--restart-delay", cluster.Definition.Docker.RestartDelay,
                         Program.ResolveDockerImage(cluster.Definition.DnsMonImage));
-
-                    foreach (var manager in cluster.Managers)
-                    {
-                        manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-dns-mon.sh"), response.BashCommand);
-                    }
 
                     firstManager.Status = string.Empty;
                 });

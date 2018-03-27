@@ -2392,6 +2392,7 @@ echo $? > {cmdFolder}/exit
         /// <param name="command">The Linux command.</param>
         /// <param name="runOptions">The execution options.</param>
         /// <param name="args">The command arguments.</param>
+        /// <returns>The <see cref="CommandResponse"/>.</returns>
         /// <remarks>
         /// <para>
         /// This method attempts to retry transient Docker client errors (e.g. when an
@@ -2453,6 +2454,7 @@ echo $? > {cmdFolder}/exit
         /// </summary>
         /// <param name="command">The Linux command.</param>
         /// <param name="args">The command arguments.</param>
+        /// <returns>The <see cref="CommandResponse"/>.</returns>
         /// <remarks>
         /// <para>
         /// This method attempts to retry transient Docker client errors (e.g. when an
@@ -2474,6 +2476,11 @@ echo $? > {cmdFolder}/exit
         /// run options while attempting to handle transient errors.
         /// </summary>
         /// <param name="actionId">The node-unique action ID.</param>
+        /// <param name="postAction">
+        /// The action to be performed after the command was executed.  The
+        /// <see cref="CommandResponse"/> from the command execution will be
+        /// passed.  Pass <c>null</c> when there is no post-action.
+        /// </param>
         /// <param name="command">The Linux command.</param>
         /// <param name="runOptions">The execution options.</param>
         /// <param name="args">The command arguments.</param>
@@ -2488,19 +2495,17 @@ echo $? > {cmdFolder}/exit
         /// <b>docker</b> client program name.
         /// </note>
         /// </remarks>
-        public CommandResponse IdempotentDockerCommand(string actionId, RunOptions runOptions, string command, params object[] args)
+        public void IdempotentDockerCommand(string actionId, Action<CommandResponse> postAction, RunOptions runOptions, string command, params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId));
-
-            var response = (CommandResponse)null;
 
             InvokeIdempotentAction(actionId,
                 () =>
                 {
-                    response = DockerCommand(runOptions, command, args);
-                });
+                    var response = DockerCommand(runOptions, command, args);
 
-            return response;
+                    postAction?.Invoke(response);
+                });
         }
 
         /// <summary>
@@ -2508,6 +2513,11 @@ echo $? > {cmdFolder}/exit
         /// while attempting to handle transient errors.
         /// </summary>
         /// <param name="actionId">The node-unique action ID.</param>
+        /// <param name="postAction">
+        /// The action to be performed after the command was executed.  The
+        /// <see cref="CommandResponse"/> from the command execution will be
+        /// passed.  Pass <c>null</c> when there is no post-action.
+        /// </param>
         /// <param name="command">The Linux command.</param>
         /// <param name="args">The command arguments.</param>
         /// <remarks>
@@ -2521,19 +2531,17 @@ echo $? > {cmdFolder}/exit
         /// <b>docker</b> client program name.
         /// </note>
         /// </remarks>
-        public CommandResponse IdempotentDockerCommand(string actionId, string command, params object[] args)
+        public void IdempotentDockerCommand(string actionId, Action<CommandResponse> postAction, string command, params object[] args)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId));
-
-            var response = (CommandResponse)null;
 
             InvokeIdempotentAction(actionId,
                 () =>
                 {
-                    response = DockerCommand(command, args);
-                });
+                    var response = DockerCommand(command, args);
 
-            return response;
+                    postAction?.Invoke(response);
+                });
         }
 
         /// <summary>
