@@ -29,10 +29,11 @@ namespace Neon.Cluster
     /// </summary>
     public class VaultOptions
     {
-        private const string    defaultVersion      = "0.9.0";
-        private const int       defaultKeyCount     = 1;
-        private const int       defaultKeyThreshold = 1;
-        private const string    defaultLease        = "0";
+        private const string        defaultVersion = "0.9.6";
+        private const int           defaultKeyCount     = 1;
+        private const int           defaultKeyThreshold = 1;
+        private const string        defaultLease        = "0";
+        private readonly Version    minVersion          = new System.Version("0.9.6");
 
         /// <summary>
         /// Default constructor.
@@ -175,6 +176,16 @@ namespace Neon.Cluster
             if (string.IsNullOrWhiteSpace(Version))
             {
                 throw new ClusterDefinitionException($"Invalid version [{nameof(VaultOptions)}.{nameof(Version)}={Version}].");
+            }
+
+            if (!System.Version.TryParse(Version, out var version))
+            {
+                throw new ClusterDefinitionException($"Invalid version [{nameof(VaultOptions)}.{nameof(Version)}={Version}].");
+            }
+
+            if (version < minVersion)
+            {
+                throw new ClusterDefinitionException($"Minumim acceptable [{nameof(VaultOptions)}.{nameof(Version)}={minVersion}].");
             }
 
             if (KeyCount <= 0)

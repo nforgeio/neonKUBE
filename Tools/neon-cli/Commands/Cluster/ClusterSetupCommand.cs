@@ -15,6 +15,7 @@ using System.Net;
 using System.Net.Http;
 using System.Net.Http.Headers;
 using System.Text;
+using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -2680,10 +2681,29 @@ WantedBy=docker.service
 
                     var response = manager.SudoCommand("vault-direct status", RunOptions.LogOutput);
 
-                    if (response.ExitCode == 2 /* sealed */ &&
-                        response.OutputText.Contains("High-Availability Enabled: true"))
+                    // $hack(jeff.lill):
+                    //
+                    // We need to determine whether Vault has initialized HA mode by 
+                    // connecting to the underlying Consul.  Unfortunately, the JSON
+                    // version of the response doesn't report this so we're going to
+                    // extract this from the table formatted command output.
+
+                    var haRegex = new Regex(@"^HA Enabled\s+true", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
+                    if (haRegex.IsMatch(response.OutputText))
                     {
-                        break;
+                        if (response.ExitCode == 0)
+                        {
+                            // The Vault instance is already unsealed.
+
+                            goto unsealed;
+                        }
+                        else if (response.ExitCode == 2)
+                        {
+                            // The Vault instance is ready to be unsealed.
+
+                            break;
+                        }
                     }
 
                     Thread.Sleep(TimeSpan.FromSeconds(5));
@@ -2703,6 +2723,8 @@ WantedBy=docker.service
                 manager.Status = string.Empty;
 
                 // $hack(jeff.lill): Fragile: Wait for Vault to unseal and be ready to accept commands.
+
+            unsealed:
 
                 Thread.Sleep(TimeSpan.FromSeconds(15));
             }

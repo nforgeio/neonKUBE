@@ -229,7 +229,7 @@ NOTE: The following Vault commands are not supported:
 
                                 if (standbyMode)
                                 {
-                                    Console.WriteLine($"[{manager.Name}] restaring to seal standby vault...");
+                                    Console.WriteLine($"[{manager.Name}] restarting to seal standby vault...");
 
                                     response = manager.SudoCommand($"systemctl restart vault");
 
