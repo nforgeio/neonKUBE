@@ -130,14 +130,14 @@ namespace NeonCli
                         new ProxySettings()
                         {
                             FirstPort = NeonHostPorts.ProxyPublicFirst,
-                            LastPort = NeonHostPorts.ProxyPublicLast
+                            LastPort  = NeonHostPorts.ProxyPublicLast
                         });
 
                     cluster.PrivateProxy.UpdateSettings(
                         new ProxySettings()
                         {
                             FirstPort = NeonHostPorts.ProxyPrivateFirst,
-                            LastPort = NeonHostPorts.ProxyPrivateLast
+                            LastPort  = NeonHostPorts.ProxyPrivateLast
                         });
 
                     // Deploy the proxy manager service.
