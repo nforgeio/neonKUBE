@@ -678,9 +678,6 @@ namespace Neon.Cluster
                 }
             }
 
-            sbDisplay.AppendLine();
-            sbDisplay.AppendLine();
-
             var newDisplay = sbDisplay.ToString();
 
             if (newDisplay != lastDisplay)
