@@ -2657,7 +2657,7 @@ WantedBy=docker.service
                     {
                         var steps   = new ConfigStepList();
                         var command = CommandStep.CreateIdempotentDocker(pet.Name, "setup-neon-proxy-vault",
-                        "docker run",
+                            "docker run",
                             "--name", "neon-proxy-vault",
                             "--detach",
                             "--publish", $"{NeonHostPorts.ProxyVault}:{NetworkPorts.Vault}",
@@ -2683,12 +2683,15 @@ WantedBy=docker.service
             // Wait for the Vault instance on each manager node to become ready 
             // and then unseal them.
 
+            var timer   = new Stopwatch();
+            var timeout = TimeSpan.FromMinutes(5);
+            var haRegex = new Regex(@"^HA Enabled\s+true", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+
             foreach (var manager in cluster.Managers)
             {
                 // Wait up to two minutes for Vault to initialize.
 
-                var timer   = new Stopwatch();
-                var timeout = TimeSpan.FromMinutes(5);
+                timer.Restart();
 
                 while (true)
                 {
@@ -2705,9 +2708,7 @@ WantedBy=docker.service
                     // We need to determine whether Vault has initialized HA mode by 
                     // connecting to the underlying Consul.  Unfortunately, the JSON
                     // version of the response doesn't report this so we're going to
-                    // extract this from the table formatted command output.
-
-                    var haRegex = new Regex(@"^HA Enabled\s+true", RegexOptions.Multiline | RegexOptions.IgnoreCase);
+                    // extract this from the table formatted command output instead.
 
                     if (haRegex.IsMatch(response.OutputText))
                     {
@@ -2715,7 +2716,7 @@ WantedBy=docker.service
                         {
                             // The Vault instance is already unsealed.
 
-                            goto unsealed;
+                            return;
                         }
                         else if (response.ExitCode == 2)
                         {
@@ -2739,14 +2740,40 @@ WantedBy=docker.service
                     manager.SudoCommand($"vault-direct unseal", cluster.SecureRunOptions | RunOptions.FaultOnError, clusterLogin.VaultCredentials.UnsealKeys[i]);
                 }
 
+                // Wait for Vault to indicate that it's unsealed and is
+                // ready to accept commands.
+
+                timer.Reset();
+
+                manager.Status = "vault: unseal wait";
+
+                while (true)
+                {
+                    var response = manager.SudoCommand("vault-direct status", RunOptions.LogOutput);
+
+                    if (response.ExitCode == 0)
+                    {
+                        break;
+                    }
+
+                    Thread.Sleep(TimeSpan.FromSeconds(5));
+                }
+
                 manager.Status = string.Empty;
-
-                // $hack(jeff.lill): Fragile: Wait for Vault to unseal and be ready to accept commands.
-
-            unsealed:
-
-                Thread.Sleep(TimeSpan.FromSeconds(15));
             }
+
+            // $todo(jeff.lill):
+            //
+            // Vault doesn't actually seem to be ready right away, even after
+            // verifing that all of the Vault instances are unsealed so we're
+            // going to wait an additional 15 seconds for the cluster to
+            // stabilize.
+            //
+            // An alterniative to waiting might be try verifying that we
+            // can write/read something to Vault.
+
+            cluster.FirstManager.Status = "vault: stablize";
+            Thread.Sleep(TimeSpan.FromSeconds(15));
         }
 
         /// <summary>
