@@ -286,6 +286,8 @@ namespace Neon.Cluster
                         node.Disconnect();
                     }
                 }
+
+                Console.WriteLine();    // Add an extra line after the status to look nice.
             }
         }
 
