@@ -240,7 +240,7 @@ namespace Neon.Cluster
         /// <summary>
         /// <b>io.neon.compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
         /// This defaults to <b>0</b> for <see cref="HostingEnvironments.Machine"/>
-        /// and is intialized for cloud and Hypervisor based hosting environments.
+        /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
         [JsonProperty(PropertyName = "ComputeCores", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(0)]
@@ -257,7 +257,7 @@ namespace Neon.Cluster
         /// <summary>
         /// <b>io.neon.compute.ram_mb</b> [<c>int</c>]: Specifies the the available RAM in
         /// megabytes.  This defaults to <b>0</b> for <see cref="HostingEnvironments.Machine"/>
-        /// and is intialized for cloud and Hypervisor based hosting environments.
+        /// and is initialized for cloud and Hypervisor based hosting environments.
         /// </summary>
         [JsonProperty(PropertyName = "ComputeRamMB", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(0)]

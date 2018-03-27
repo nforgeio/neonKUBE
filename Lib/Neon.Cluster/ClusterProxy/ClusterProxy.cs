@@ -468,14 +468,14 @@ namespace Neon.Cluster
         /// Returns a Vault client using the root token.
         /// </summary>
         /// <returns>The <see cref="VaultClient"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if <see cref="ClusterLogin"/> has not yet been intialized with the Vault root token.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if <see cref="ClusterLogin"/> has not yet been initialized with the Vault root token.</exception>
         public VaultClient Vault
         {
             get
             {
                 if (!ClusterLogin.HasVaultRootCredentials)
                 {
-                    throw new InvalidOperationException($"[{nameof(ClusterProxy)}.{nameof(ClusterLogin)}] has not yet been intialized with the Vault root token.");
+                    throw new InvalidOperationException($"[{nameof(ClusterProxy)}.{nameof(ClusterLogin)}] has not yet been initialized with the Vault root token.");
                 }
 
                 lock (syncRoot)
@@ -500,7 +500,7 @@ namespace Neon.Cluster
         {
             if (!ClusterLogin.HasVaultRootCredentials)
             {
-                throw new InvalidOperationException($"[{nameof(ClusterProxy)}.{nameof(ClusterLogin)}] has not yet been intialized with the Vault root token.");
+                throw new InvalidOperationException($"[{nameof(ClusterProxy)}.{nameof(ClusterLogin)}] has not yet been initialized with the Vault root token.");
             }
         }
 
