@@ -667,7 +667,7 @@ namespace Neon.Cluster
                     // Provisioning cluster nodes on XenServer hosts.
 
                     sbDisplay.AppendLine();
-                    sbDisplay.AppendLine(" XenServers:");
+                    sbDisplay.AppendLine(" Xen Servers:");
 
                     foreach (var node in nodes.OrderBy(n => (n.Metadata as XenClient).Name, StringComparer.InvariantCultureIgnoreCase))
                     {
