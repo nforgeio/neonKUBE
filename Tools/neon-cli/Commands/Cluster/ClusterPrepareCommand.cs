@@ -323,7 +323,7 @@ Server Requirements:
             controller.AddStep("verify OS", n => CommonSteps.VerifyOS(n));
             controller.AddStep("prepare", 
                 server => CommonSteps.PrepareNode(server, cluster.Definition, shutdown: false),
-                stepStaggerSeconds: cluster.Definition.StepStaggerSeconds);
+                stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
 
             // Add any VPN configuration steps.
 

@@ -227,7 +227,7 @@ OPTIONS:
             controller.AddStep("manager config", 
                 n => ConfigureManager(n),
                 n => n.Metadata.IsManager,
-                stepStaggerSeconds: cluster.Definition.StepStaggerSeconds);
+                stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
 
             // Configure the workers and pets.
 
@@ -252,7 +252,7 @@ OPTIONS:
                         ConfigureNonManager(n);
                     },
                     n => n.Metadata.IsWorker || n.Metadata.IsPet,
-                    stepStaggerSeconds: cluster.Definition.StepStaggerSeconds);
+                    stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
             }
 
             // Create the Swarm.
@@ -268,7 +268,7 @@ OPTIONS:
                 {
                     controller.AddStep("ceph packages", 
                         n => CephPackages(n),
-                        stepStaggerSeconds: cluster.Definition.StepStaggerSeconds);
+                        stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
 
                     controller.AddGlobalStep("ceph settings", () => CephSettings());
                     controller.AddStep("ceph bootstrap", n => CephBootstrap(n), n => n.Metadata.Labels.CephMON);
@@ -3142,9 +3142,11 @@ systemctl restart sshd
         {
             var firstManager = cluster.FirstManager;
 
-            firstManager.InvokeIdempotentAction("setup-dashboards ",
+            firstManager.InvokeIdempotentAction("setup-dashboards",
                 () =>
                 {
+                    return;     // $todo(jeff.lill): DELETE THIS!
+
                     // Create the [neon-fs] dashboard and related route.
 
                     if (cluster.Definition.Ceph.Enabled && cluster.Definition.Dashboard.Ceph)
@@ -3185,7 +3187,7 @@ systemctl restart sshd
                                 });
                         }
 
-                        cluster.PrivateProxy.PutRoute(route);
+                        cluster.PublicProxy.PutRoute(route);
                         firstManager.Status = string.Empty;
                     }
 

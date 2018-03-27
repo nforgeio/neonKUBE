@@ -386,6 +386,13 @@ namespace Neon.Cluster
         public string PackageProxy { get; set; } = null;
 
         /// <summary>
+        /// Optionally specifies setup process related options.
+        /// </summary>
+        [JsonProperty(PropertyName = "Setup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(null)]
+        public SetupOptions Setup { get; set; } = null;
+
+        /// <summary>
         /// Specifies host node options.
         /// </summary>
         [JsonProperty(PropertyName = "HostNode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -488,22 +495,6 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "DnsMonImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(defaultDnsMonImage)]
         public string DnsMonImage { get; set; } = defaultDnsMonImage;
-
-        /// <summary>
-        /// <para>
-        /// Specifies the maximum delay to be added between steps at strategic points 
-        /// during cluster preparation and setup to help mitigate potential problems 
-        /// when mutiple cluster nodes are trying to access the same Internet resources,
-        /// potentially getting throttled by the remote endpoint.
-        /// </para>
-        /// <para>
-        /// This defaults to <b>5 seconds</b> between these steps  Set this to 0 to disable
-        /// the delay.
-        /// </para>
-        /// </summary>
-        [JsonProperty(PropertyName = "StepStaggerSeconds", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
-        [DefaultValue(defaultStepStaggerSeconds)]
-        public int StepStaggerSeconds { get; set; } = defaultStepStaggerSeconds;
 
         /// <summary>
         /// Describes the Docker host nodes in the cluster.
@@ -675,6 +666,7 @@ namespace Neon.Cluster
         {
             Provisioner = Provisioner ?? defaultProvisioner;
             DrivePrefix   = DrivePrefix ?? defaultDrivePrefix;
+            Setup         = Setup ?? new SetupOptions();
             Hosting       = Hosting ?? new HostingOptions();
             Vpn           = Vpn ?? new VpnOptions();
             HostNode      = HostNode ?? new HostNodeOptions();
@@ -693,6 +685,7 @@ namespace Neon.Cluster
             DnsImage            = DnsImage ?? defaultDnsImage;
             DnsMonImage         = DnsMonImage ?? defaultDnsMonImage;
 
+            Setup.Validate(this);
             Network.Validate(this);
             Hosting.Validate(this);
             Vpn.Validate(this);
