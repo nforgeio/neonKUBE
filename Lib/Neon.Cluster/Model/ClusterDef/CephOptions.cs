@@ -27,7 +27,7 @@ namespace Neon.Cluster
 {
     /// <summary>
     /// Specifies the options for configuring the cluster integrated <a href="https://ceph.com/">Ceph</a>
-    /// distributed storage cluster.  This is disabled by default.
+    /// distributed storage cluster.
     /// </summary>
     public class CephOptions
     {
