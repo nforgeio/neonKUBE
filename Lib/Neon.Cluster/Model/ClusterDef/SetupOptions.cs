@@ -34,6 +34,22 @@ namespace Neon.Cluster
 
         /// <summary>
         /// <para>
+        /// Indicates that cluster prepare and setup should be run in <b>debug mode</b>.
+        /// This is intended to help debugging cluster setup issues by having scripts
+        /// uploaded multiple times at different stages of setup so that setup can
+        /// be restarted with new scripts without having to restart setup from the
+        /// beginning.  This defaults to <c>false</c>.
+        /// </para>
+        /// <note>
+        /// This is intended for use by neonCLUSTER developers.
+        /// </note>
+        /// </summary>
+        [JsonProperty(PropertyName = "Debug", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(false)]
+        public bool Debug { get; set; } = false;
+
+        /// <summary>
+        /// <para>
         /// Specifies the maximum delay to be added between steps at strategic points 
         /// during cluster preparation and setup to help mitigate potential problems 
         /// when mutiple cluster nodes are trying to access the same Internet resources,

@@ -587,6 +587,25 @@ OPTIONS:
         }
 
         /// <summary>
+        /// Basic configuration that will happen every time if DEBUG setup
+        /// mode is ENABLED or else will be invoked idempotently (if that's 
+        /// a word).
+        /// </summary>
+        /// <param name="node">The target cluster node.</param>
+        private void ConfigureBasic(SshProxy<NodeDefinition> node)
+        {
+            // Configure the node's environment variables.
+
+            CommonSteps.ConfigureEnvironmentVariables(node, cluster.Definition);
+
+            // Upload the setup and configuration files.
+
+            node.InitializeNeonFolders();
+            node.UploadConfigFiles(cluster.Definition);
+            node.UploadTools(cluster.Definition);
+        }
+
+        /// <summary>
         /// Performs common node configuration.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
@@ -601,15 +620,10 @@ OPTIONS:
             // completed.  These steps are implicitly idempotent and
             // complete pretty quickly.
 
-            // Configure the node's environment variables.
-
-            CommonSteps.ConfigureEnvironmentVariables(node, cluster.Definition);
-
-            // Upload the setup and configuration files.
-
-            node.InitializeNeonFolders();
-            node.UploadConfigFiles(cluster.Definition);
-            node.UploadTools(cluster.Definition);
+            if (cluster.Definition.Setup.Debug)
+            {
+                ConfigureBasic(node);
+            }
 
             //-----------------------------------------------------------------
             // Ensure the following steps are executed only once.
@@ -617,6 +631,11 @@ OPTIONS:
             node.InvokeIdempotentAction("setup-common",
                 () =>
                 {
+                    if (!cluster.Definition.Setup.Debug)
+                    {
+                        ConfigureBasic(node);
+                    }
+
                     // Ensure that the node has been prepared for setup.
 
                     var waitedForPackageManager = CommonSteps.PrepareNode(node, cluster.Definition);

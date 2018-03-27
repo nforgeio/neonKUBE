@@ -362,7 +362,7 @@ TCPKeepAlive yes
             node.SudoCommand("chmod 644 /etc/apt/apt.conf.d/99-retries");
 
             //-----------------------------------------------------------------
-            // Other conmfiguration.
+            // Other configuration.
 
             ConfigureOpenSSH(node);
 
