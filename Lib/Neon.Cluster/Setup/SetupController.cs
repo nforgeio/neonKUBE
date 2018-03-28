@@ -682,7 +682,7 @@ namespace Neon.Cluster
             if (!string.IsNullOrEmpty(operationStatus))
             {
                 sbDisplay.AppendLine();
-                sbDisplay.AppendLine($" {operationStatus}");
+                sbDisplay.AppendLine($"*** {operationStatus}");
             }
 
             var newDisplay = sbDisplay.ToString();
