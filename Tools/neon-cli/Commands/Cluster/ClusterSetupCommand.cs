@@ -2943,7 +2943,7 @@ WantedBy=docker.service
 
                     var response = firstManager.SudoCommand(
                         "vault-direct init",
-                        cluster.SecureRunOptions | RunOptions.LogOnErrorOnly | RunOptions.FaultOnError,
+                        cluster.SecureRunOptions | RunOptions.FaultOnError,
                         $"-key-shares={cluster.Definition.Vault.KeyCount}",
                         $"-key-threshold={cluster.Definition.Vault.KeyThreshold}");
 
@@ -2971,13 +2971,22 @@ WantedBy=docker.service
                 firstManager.InvokeIdempotentAction("setup-vault-audit",
                     () =>
                     {
-                        firstManager.Status = "vault: audit enable";
-                        cluster.VaultCommand("vault audit-enable syslog tag=\"vault\" facility=\"AUTH\"");
+                        // $todo(jeff.lill):
+                        //
+                        // This command fails with later Vault versions for some
+                        // reason.  We're not doing anything with the audit stream
+                        // at this point anyway so I'm going to comment this out.
+                        // This issue is tracked here:
+                        //
+                        //      https://github.com/jefflill/NeonForge/issues/37
+
+                        //firstManager.Status = "vault: audit enable";
+                        //cluster.VaultCommand("vault audit enable syslog tag=\"vault\" facility=\"AUTH\"");
                     });
 
                 // Mount a [generic] backend dedicated to neonCLUSTER related secrets.
 
-                firstManager.InvokeIdempotentAction("setup-vault-mount-neon-secret",
+                firstManager.InvokeIdempotentAction("setup-vault-enable-neon-secret",
                     () =>
                     {
                         firstManager.Status = "vault: enable neon-secret backend";
@@ -2986,7 +2995,7 @@ WantedBy=docker.service
 
                 // Mount the [transit] backend and create the cluster key.
 
-                firstManager.InvokeIdempotentAction("setup-vault-mount-transit",
+                firstManager.InvokeIdempotentAction("setup-vault-enable-transit",
                     () =>
                     {
                         firstManager.Status = "vault: transit backend";
@@ -2996,7 +3005,7 @@ WantedBy=docker.service
 
                 // Mount the [approle] backend.
 
-                firstManager.InvokeIdempotentAction("setup-vault-mount-approle",
+                firstManager.InvokeIdempotentAction("setup-vault-enable-approle",
                     () =>
                     {
                         firstManager.Status = "vault: approle backend";
