@@ -506,13 +506,16 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Wait for all Vault instances to report being unsealed.
+        /// Wait for all Vault instances to report being unsealed and then
+        /// to be able to perform an operation (e.g. writing a secret).
         /// </summary>
         public void VaultWaitUntilReady()
         {
             var readyManagers = new HashSet<string>();
             var timeout       = TimeSpan.FromSeconds(120);
             var timer         = new Stopwatch();
+
+            // Wait for all of the managers to repost being unsealed.
 
             timer.Start();
 
@@ -539,21 +542,74 @@ namespace Neon.Cluster
                         readyManagers.Add(manager.Name);
                     }
                 }
+
+                Thread.Sleep(TimeSpan.FromSeconds(2));
+            }
+
+            // Now, verify that all managers are really ready by verifying that
+            // we can write a secret to each of them.  We'll keep retrying for
+            // a while when this fails.
+
+            readyManagers.Clear();
+            timer.Restart();
+
+            while (readyManagers.Count < Managers.Count())
+            {
+                if (timer.Elapsed >= timeout)
+                {
+                    var sbNotReadyManagers = new StringBuilder();
+
+                    foreach (var manager in Managers.Where(m => !readyManagers.Contains(m.Name)))
+                    {
+                        sbNotReadyManagers.AppendWithSeparator(manager.Name, ", ");
+                    }
+
+                    throw new NeonClusterException($"Vault not ready after waiting [{timeout}] on: {sbNotReadyManagers}");
+                }
+
+                foreach (var manager in Managers.Where(m => !readyManagers.Contains(m.Name)))
+                {
+                    var response = VaultCommand(manager, $"vault-direct write secret {manager.Name}-ready=true");
+
+                    if (response.ExitCode == 0)
+                    {
+                        readyManagers.Add(manager.Name);
+                    }
+                }
+
+                Thread.Sleep(TimeSpan.FromSeconds(2));
+            }
+
+            // Looks like all Vault instances are ready, so remove the secrets we added.
+
+            foreach (var manager in Managers.Where(m => !readyManagers.Contains(m.Name)))
+            {
+                VaultCommandNoFault(manager, $"vault-direct delete secret {manager.Name}-ready");
             }
         }
 
         /// <summary>
-        /// Executes a command on a cluster manager node using the root Vault token.
+        /// Executes a command on a specific cluster manager node using the root Vault token.
         /// </summary>
+        /// <param name="manager">The target manager.</param>
         /// <param name="command">The command (including the <b>vault</b>).</param>
         /// <param name="args">The optional arguments.</param>
         /// <returns>The command response.</returns>
-        public CommandResponse VaultCommand(string command, params object[] args)
+        /// <remarks>
+        /// <note>
+        /// This method faults and throws an exception if the command returns
+        /// a non-zero exit code.
+        /// </note>
+        /// </remarks>
+        public CommandResponse VaultCommand(SshProxy<NodeDefinition> manager, string command, params object[] args)
         {
+            Covenant.Requires<ArgumentNullException>(manager != null);
+            Covenant.Requires<ArgumentNullException>(command != null);
+
             VerifyVaultToken();
 
             var scriptBundle = new CommandBundle(command, args);
-            var bundle       = new CommandBundle("./vault-command.sh");
+            var bundle = new CommandBundle("./vault-command.sh");
 
             bundle.AddFile("vault-command.sh",
 $@"#!/bin/bash
@@ -562,11 +618,86 @@ export VAULT_TOKEN={ClusterLogin.VaultCredentials.RootToken}
 ",
                 isExecutable: true);
 
-            var response = GetHealthyManager().SudoCommand(bundle, SecureRunOptions | RunOptions.FaultOnError);
+            var response = manager.SudoCommand(bundle, SecureRunOptions | RunOptions.FaultOnError);
 
             response.BashCommand = bundle.ToBash();
 
             return response;
+        }
+
+        /// <summary>
+        /// Executes a command on a healthy cluster manager node using the root Vault token.
+        /// </summary>
+        /// <param name="command">The command (including the <b>vault</b>).</param>
+        /// <param name="args">The optional arguments.</param>
+        /// <returns>The command response.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method faults and throws an exception if the command returns
+        /// a non-zero exit code.
+        /// </note>
+        /// </remarks>
+        public CommandResponse VaultCommand(string command, params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(command != null);
+
+            return VaultCommand(GetHealthyManager(), command, args);
+        }
+
+        /// <summary>
+        /// Executes a command on a specific cluster manager node using the root Vault token.
+        /// </summary>
+        /// <param name="manager">The target manager.</param>
+        /// <param name="command">The command (including the <b>vault</b>).</param>
+        /// <param name="args">The optional arguments.</param>
+        /// <returns>The command response.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method does not fault or throw an exception if the command returns
+        /// a non-zero exit code.
+        /// </note>
+        /// </remarks>
+        public CommandResponse VaultCommandNoFault(SshProxy<NodeDefinition> manager, string command, params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(manager != null);
+            Covenant.Requires<ArgumentNullException>(command != null);
+
+            VerifyVaultToken();
+
+            var scriptBundle = new CommandBundle(command, args);
+            var bundle = new CommandBundle("./vault-command.sh");
+
+            bundle.AddFile("vault-command.sh",
+$@"#!/bin/bash
+export VAULT_TOKEN={ClusterLogin.VaultCredentials.RootToken}
+{scriptBundle}
+",
+                isExecutable: true);
+
+            var response = manager.SudoCommand(bundle, SecureRunOptions);
+
+            response.BashCommand = bundle.ToBash();
+
+            return response;
+        }
+
+        /// <summary>
+        /// Executes a command on a healthy cluster manager node using the root Vault token.
+        /// </summary>
+        /// <param name="command">The command (including the <b>vault</b>).</param>
+        /// <param name="args">The optional arguments.</param>
+        /// <returns>The command response.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method does not fault or throw an exception if the command returns
+        /// a non-zero exit code.
+        /// </note>
+        /// </remarks>
+        public CommandResponse VaultCommandNoFault(string command, params object[] args)
+        {
+            Covenant.Requires<ArgumentNullException>(command != null);
+
+            return VaultCommandNoFault(GetHealthyManager(), command, args);
         }
 
         /// <summary>
