@@ -267,8 +267,10 @@ does this on the first manager node:
 
                 operation.AddWaitUntilOnlineStep();
                 operation.AddStep($"run: {bundle.Command}",
-                    node =>
+                    (node, stepDelay) =>
                     {
+                        Thread.Sleep(stepDelay);
+
                         node.Status = "running";
                         node.SudoCommand(bundle, RunOptions.FaultOnError | RunOptions.LogOutput);
 

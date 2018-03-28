@@ -123,12 +123,14 @@ command.
 
             operation.AddWaitUntilOnlineStep();
             operation.AddStep("reboot nodes",
-                n =>
+                (node, stepDelay) =>
                 {
-                    n.Status = "rebooting";
-                    n.Reboot(wait: true);
+                    Thread.Sleep(stepDelay);
 
-                    n.Status = $"stablizing ({Program.WaitSeconds}s)";
+                    node.Status = "rebooting";
+                    node.Reboot(wait: true);
+
+                    node.Status = $"stablizing ({Program.WaitSeconds}s)";
                     Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
                 });
 

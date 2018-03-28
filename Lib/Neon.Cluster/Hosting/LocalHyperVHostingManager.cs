@@ -187,7 +187,7 @@ namespace Neon.Cluster
             };
 
             controller.AddGlobalStep("prepare hyper-v", () => PrepareHyperV());
-            controller.AddStep("create virtual machines", n => ProvisionVM(n));
+            controller.AddStep("create virtual machines", (node, stepDelay) => ProvisionVM(node));
             controller.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
             if (!controller.Run())

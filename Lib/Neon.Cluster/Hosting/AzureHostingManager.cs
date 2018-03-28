@@ -1441,7 +1441,7 @@ namespace Neon.Cluster
             const string interfaceConfigPath = "/etc/network/interfaces.d/50-cloud-init.cfg";
 
             controller.AddStep("secondary nic",
-                manager =>
+                (manager, stepDelay) =>
                 {
                     var interfaceConfig = manager.DownloadText(interfaceConfigPath);
 

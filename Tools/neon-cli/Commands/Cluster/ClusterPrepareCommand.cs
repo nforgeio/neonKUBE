@@ -321,9 +321,19 @@ Server Requirements:
 
             controller.AddWaitUntilOnlineStep(timeout: TimeSpan.FromMinutes(15));
             hostingManager.AddPostProvisionSteps(controller);
-            controller.AddStep("verify OS", n => CommonSteps.VerifyOS(n));
+            controller.AddStep("verify OS",
+                (node, stepDelay) =>
+                {
+                    Thread.Sleep(stepDelay);
+                    CommonSteps.VerifyOS(node);
+                });
+
             controller.AddStep("prepare", 
-                server => CommonSteps.PrepareNode(server, cluster.Definition, shutdown: false),
+                (node, stepDelay) =>
+                {
+                    Thread.Sleep(stepDelay);
+                    CommonSteps.PrepareNode(node, cluster.Definition, shutdown: false);
+                },
                 stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
 
             // Add any VPN configuration steps.
@@ -331,7 +341,13 @@ Server Requirements:
             if (cluster.Definition.Vpn.Enabled)
             {
                 controller.AddGlobalStep("vpn credentials", () => CreateVpnCredentials());
-                controller.AddStep("vpn server", n => ConfigManagerVpn(n), n => n.Metadata.IsManager);
+                controller.AddStep("vpn server",
+                    (node, stepDelay) =>
+                    {
+                        Thread.Sleep(stepDelay);
+                        ConfigManagerVpn(node);
+                    },
+                    node => node.Metadata.IsManager);
 
                 // Add a step to establish a VPN connection if we're provisioning to a cloud.
                 // We specifically don't want to do this if we're provisioning to a on-premise
@@ -341,18 +357,20 @@ Server Requirements:
                 if (cluster.Definition.Hosting.IsCloudProvider)
                 {
                     controller.AddStep("vpn connect",
-                        manager =>
+                        (manager, stepDelay) =>
                         {
+                            Thread.Sleep(stepDelay);
+
                             // Create a cluster login with just enough credentials to connect the VPN.
                             // Note that this isn't really a node specific command but I wanted to 
                             // be able to display the connection status somewhere.
 
                             var vpnLogin =
-                                    new ClusterLogin()
-                                    {
-                                        Definition     = cluster.Definition,
-                                        VpnCredentials = vpnCredentials
-                                    };
+                                new ClusterLogin()
+                                {
+                                    Definition     = cluster.Definition,
+                                    VpnCredentials = vpnCredentials
+                                };
 
                             // Ensure that we don't have an old VPN client for the cluster running.
 

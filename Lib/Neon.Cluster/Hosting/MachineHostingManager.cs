@@ -97,7 +97,7 @@ namespace Neon.Cluster
                 MaxParallel = this.MaxParallel
             };
 
-            controller.AddStep("node labels", n => SetLabels(n));
+            controller.AddStep("node labels", (node, stepDelay) => SetLabels(node));
 
             if (!controller.Run())
             {

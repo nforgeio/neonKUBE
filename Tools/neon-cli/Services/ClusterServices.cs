@@ -336,7 +336,8 @@ namespace NeonCli
         /// Deploys cluster service containers to a node.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        public void DeployContainers(SshProxy<NodeDefinition> node)
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        public void DeployContainers(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             // NOTE: A this time, we only need to deploy the proxy bridges to the
             //       pet nodes, because these will be deployed as global services
@@ -350,6 +351,8 @@ namespace NeonCli
             node.InvokeIdempotentAction("setup-neon-proxy-public-bridge",
                 () =>
                 {
+                    Thread.Sleep(stepDelay);
+
                     node.Status = "start: neon-proxy-public-bridge";
 
                     var response = node.DockerCommand(

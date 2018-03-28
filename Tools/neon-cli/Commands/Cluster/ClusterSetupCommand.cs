@@ -202,10 +202,21 @@ OPTIONS:
 
             if (sshTlsAuth)
             {
-                controller.AddStep("ssh client cert", n => GenerateClientSshKey(n), n => n == cluster.FirstManager);
+                controller.AddStep("ssh client cert", 
+                    (node, stepDelay) =>
+                    {
+                        GenerateClientSshKey(node, stepDelay);
+                    },
+                    node => node == cluster.FirstManager);
             }
 
-            controller.AddStep("verify OS", n => CommonSteps.VerifyOS(n));
+            controller.AddStep("verify OS", 
+                (node, stepDelay) =>
+                {
+                    Thread.Sleep(stepDelay);
+                    CommonSteps.VerifyOS(node);
+                });
+
             controller.AddGlobalStep("create certs", () => CreateCertificates());
 
             // We're going to configure the managers separately from the workers
@@ -214,19 +225,32 @@ OPTIONS:
             // reboot all of the managers together after common manager 
             // configuration is complete for the same reason.
 
-            controller.AddStep("manager initialize", n => ConfigureCommon(n), n => n.Metadata.IsManager);
-
-            controller.AddStep("manager restart", 
-                n =>
+            controller.AddStep("manager initialize",
+                (node, stepDelay) =>
                 {
-                    n.InvokeIdempotentAction("setup-common-restart", () => RebootAndWait(n));
+                    ConfigureCommon(node, stepDelay);
                 },
-                n => n.Metadata.IsManager,
+                node => node.Metadata.IsManager);
+
+            controller.AddStep("manager restart",
+                (node, stepDelay) =>
+                {
+                    node.InvokeIdempotentAction("setup-common-restart",
+                        () =>
+                        {
+                            Thread.Sleep(stepDelay);
+                            RebootAndWait(node);
+                        });
+                },
+                node => node.Metadata.IsManager,
                 noParallelLimit: true);
 
-            controller.AddStep("manager config", 
-                n => ConfigureManager(n),
-                n => n.Metadata.IsManager,
+            controller.AddStep("manager config",
+                (node, stepDelay) =>
+                {
+                    ConfigureManager(node, stepDelay);
+                },
+                node => node.Metadata.IsManager,
                 stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
 
             // Configure the workers and pets.
@@ -245,20 +269,31 @@ OPTIONS:
                 }
 
                 controller.AddStep(workerPetStepLabel,
-                    n =>
+                    (node, stepDelay) =>
                     {
-                        ConfigureCommon(n);
-                        n.InvokeIdempotentAction("setup-common-restart", () => RebootAndWait(n));
-                        ConfigureNonManager(n);
+                        ConfigureCommon(node, stepDelay);
+                        node.InvokeIdempotentAction("setup-common-restart", () => RebootAndWait(node));
+                        ConfigureNonManager(node);
                     },
-                    n => n.Metadata.IsWorker || n.Metadata.IsPet,
+                    node => node.Metadata.IsWorker || node.Metadata.IsPet,
                     stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
             }
 
             // Create the Swarm.
 
-            controller.AddStep("swarm create", n => CreateSwarm(n), n => n == cluster.FirstManager);
-            controller.AddStep("swarm join", n => JoinSwarm(n), n => n != cluster.FirstManager && !n.Metadata.IsPet);
+            controller.AddStep("swarm create",
+                (node, stepDelay) =>
+                {
+                    CreateSwarm(node, stepDelay);
+                },
+                node => node == cluster.FirstManager);
+
+            controller.AddStep("swarm join",
+                (node, stepDelay) =>
+                {
+                    JoinSwarm(node, stepDelay);
+                }, 
+                node => node != cluster.FirstManager && !node.Metadata.IsPet);
 
             // Continue with the configuration unless we're just installing bare Docker.
 
@@ -266,23 +301,54 @@ OPTIONS:
             {
                 if (cluster.Definition.Ceph.Enabled)
                 {
-                    controller.AddStep("ceph packages", 
-                        n => CephPackages(n),
+                    controller.AddStep("ceph packages",
+                        (node, stepDelay) =>
+                        {
+                            CephPackages(node, stepDelay);
+                        },
                         stepStaggerSeconds: cluster.Definition.Setup.StepStaggerSeconds);
 
                     controller.AddGlobalStep("ceph settings", () => CephSettings());
-                    controller.AddStep("ceph bootstrap", n => CephBootstrap(n), n => n.Metadata.Labels.CephMON);
-                    controller.AddStep("ceph cluster", n => CephCluster(n), noParallelLimit: true);
+
+                    controller.AddStep("ceph bootstrap",
+                        (node, stepDelay) =>
+                        {
+                            CephBootstrap(node, stepDelay);
+                        }, 
+                        node => node.Metadata.Labels.CephMON);
+
+                    controller.AddStep("ceph cluster",
+                        (node, stepDelay) =>
+                        {
+                            CephCluster(node, stepDelay);
+                        }, 
+                        noParallelLimit: true);
                 }
 
-                controller.AddStep("networks", n => CreateClusterNetworks(n), n => n == cluster.FirstManager);
-                controller.AddStep("node labels", n => AddNodeLabels(n), n => n == cluster.FirstManager);
+                controller.AddStep("networks",
+                    (node, stepDelay) =>
+                        {
+                            CreateClusterNetworks(node, stepDelay);
+                        }, 
+                        node => node == cluster.FirstManager);
+
+                controller.AddStep("node labels",
+                    (node, stepDelay) =>
+                    {
+                        AddNodeLabels(node);
+                    }, 
+                    n => n == cluster.FirstManager);
 
                 if (cluster.Definition.Docker.RegistryCache)
                 {
                     var registryCacheConfigurator = new RegistryCache(cluster, clusterLoginPath);
 
-                    controller.AddStep("registry cache", n => registryCacheConfigurator.Configure(n));
+                    controller.AddStep("registry cache",
+                        (node, stepDelay) =>
+                        {
+                            Thread.Sleep(stepDelay);
+                            registryCacheConfigurator.Configure(node);
+                        });
                 }
 
                 if (cluster.Definition.Docker.RegistryCache && cluster.Definition.NodeDefinitions.Count > 1)
@@ -293,15 +359,33 @@ OPTIONS:
                     // and then pull for all of the other nodes in a subsequent step
                     // (so we don't slam the Internet connection and the package mirrors.
 
-                    controller.AddStep("pull images to cache", n => PullImages(n, pullAll: true), n => n == cluster.FirstManager);
-                    controller.AddStep("pull images to nodes", n => PullImages(n), n => n != cluster.FirstManager);
+                    controller.AddStep("pull images to cache",
+                        (node, stepDelay) =>
+                        {
+                            Thread.Sleep(stepDelay);
+                            PullImages(node, pullAll: true);
+                        },
+                        node => node == cluster.FirstManager);
+
+                    controller.AddStep("pull images to nodes",
+                        (node, stepDelay) =>
+                        {
+                            Thread.Sleep(stepDelay);
+                            PullImages(node);
+                        }, 
+                        node => node != cluster.FirstManager);
                 }
                 else
                 {
                     // Just pull the images to all nodes in parallel if there's 
                     // no registry cache deployed.
 
-                    controller.AddStep("pull images", n => PullImages(n));
+                    controller.AddStep("pull images",
+                        (node, stepDelay) =>
+                        {
+                            Thread.Sleep(stepDelay);
+                            PullImages(node);
+                        });
                 }
 
                 controller.AddGlobalStep("cluster key/value",
@@ -320,7 +404,11 @@ OPTIONS:
 
                 if (cluster.Pets.Count() > 0)
                 {
-                    controller.AddStep("cluster containers", n => clusterServices.DeployContainers(n));
+                    controller.AddStep("cluster containers",
+                        (node, stepDelay) =>
+                        {
+                            clusterServices.DeployContainers(node, stepDelay);
+                        });
                 }
 
                 if (cluster.Definition.Log.Enabled)
@@ -328,12 +416,31 @@ OPTIONS:
                     var logServices = new LogServices(cluster);
 
                     controller.AddGlobalStep("log services", () => logServices.Configure(cluster.FirstManager));
-                    controller.AddStep("log containers", n => logServices.DeployContainers(n));
+
+                    controller.AddStep("log containers",
+                        (node, stepDelay) =>
+                        {
+                            logServices.DeployContainers(node, stepDelay);
+                        });
                 }
 
                 controller.AddGlobalStep("dashboards", () => ConfigureDashboards());
-                controller.AddStep("check managers", n => ClusterDiagnostics.CheckManager(n, cluster.Definition), n => n.Metadata.IsManager);
-                controller.AddStep("check workers/pets", n => ClusterDiagnostics.CheckWorkersOrPet(n, cluster.Definition), n => n.Metadata.IsWorker || n.Metadata.IsPet);
+
+                controller.AddStep("check managers", 
+                    (node, stepDelay) =>
+                    {
+                        Thread.Sleep(stepDelay);
+                        ClusterDiagnostics.CheckManager(node, cluster.Definition);
+                    }, 
+                    node => node.Metadata.IsManager);
+
+                controller.AddStep("check workers/pets",
+                    (node, stepDelay) =>
+                    {
+                        Thread.Sleep(stepDelay);
+                        ClusterDiagnostics.CheckWorkersOrPet(node, cluster.Definition);
+                    }, 
+                    node => node.Metadata.IsWorker || node.Metadata.IsPet);
 
                 if (cluster.Definition.Log.Enabled)
                 {
@@ -369,9 +476,9 @@ OPTIONS:
             if (cluster.Definition.HostNode.PasswordLength > 0)
             {
                 controller.AddStep("strong password",
-                    n =>
+                    (node, stepDelay) =>
                     {
-                        SetStrongPassword(n);
+                        SetStrongPassword(node, stepDelay);
                     });
             }
 
@@ -385,7 +492,11 @@ OPTIONS:
             // manually login with the original credentials to diagnose
             // setup issues.
 
-            controller.AddStep("ssh secured", n => ConfigureSsh(n));
+            controller.AddStep("ssh secured",
+                (node, stepDelay) =>
+                {
+                    ConfigureSsh(node, stepDelay);
+                });
 
             // Start setup.
 
@@ -608,7 +719,8 @@ OPTIONS:
         /// Performs common node configuration.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void ConfigureCommon(SshProxy<NodeDefinition> node)
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        private void ConfigureCommon(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             //-----------------------------------------------------------------
             // NOTE: 
@@ -630,6 +742,8 @@ OPTIONS:
             node.InvokeIdempotentAction("setup-common",
                 () =>
                 {
+                    Thread.Sleep(stepDelay);
+
                     if (!cluster.Definition.Setup.Debug)
                     {
                         ConfigureBasic(node);
@@ -1075,11 +1189,14 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
         /// Completes manager node configuration.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void ConfigureManager(SshProxy<NodeDefinition> node)
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        private void ConfigureManager(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.InvokeIdempotentAction("setup-manager",
                 () =>
                 {
+                    Thread.Sleep(stepDelay);
+
                     // Configure the APT package proxy on the managers
                     // and configure the proxy selector for all nodes.
 
@@ -1200,12 +1317,15 @@ $@"docker login \
         /// nodes to the cluster.
         /// </summary>
         /// <param name="bootstrapManager">The target bootstrap manager server.</param>
-        private void CreateSwarm(SshProxy<NodeDefinition> bootstrapManager)
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        private void CreateSwarm(SshProxy<NodeDefinition> bootstrapManager, TimeSpan stepDelay)
         {
             if (clusterLogin.SwarmManagerToken != null && clusterLogin.SwarmWorkerToken != null)
             {
                 return; // Swarm has already been created.
             }
+
+            Thread.Sleep(stepDelay);
 
             bootstrapManager.Status = "create swarm";
             bootstrapManager.DockerCommand(RunOptions.FaultOnError, $"docker swarm init --advertise-addr {bootstrapManager.Metadata.PrivateAddress}:{cluster.Definition.Docker.SwarmPort}");
@@ -1397,7 +1517,8 @@ $@"docker login \
         /// Creates the standard cluster overlay networks.
         /// </summary>
         /// <param name="manager">The manager node.</param>
-        private void CreateClusterNetworks(SshProxy<NodeDefinition> manager)
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        private void CreateClusterNetworks(SshProxy<NodeDefinition> manager, TimeSpan stepDelay)
         {
             // $todo(jeff.lill):
             //
@@ -1409,6 +1530,8 @@ $@"docker login \
             manager.InvokeIdempotentAction("setup-docker-networks",
                 () =>
                 {
+                    Thread.Sleep(stepDelay);
+
                     manager.DockerCommand(
                         "docker network create",
                         "--driver", "overlay",
@@ -1569,7 +1692,8 @@ $@"docker login \
         /// Adds the node to the swarm cluster.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void JoinSwarm(SshProxy<NodeDefinition> node)
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        private void JoinSwarm(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             if (node == cluster.FirstManager)
             {
@@ -1582,6 +1706,8 @@ $@"docker login \
             node.InvokeIdempotentAction("setup-swarm-join",
                 () =>
                 {
+                    Thread.Sleep(stepDelay);
+
                     node.Status = "joining";
 
                     if (node.Metadata.IsManager)
@@ -1626,7 +1752,8 @@ StartLimitBurst=1051200";
         /// configuring them.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        private void CephPackages (SshProxy<NodeDefinition> node)
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        private void CephPackages (SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             if (!cluster.Definition.Ceph.Enabled)
             {
@@ -1652,6 +1779,8 @@ StartLimitBurst=1051200";
             node.InvokeIdempotentAction("setup-ceph-packages",
                 () =>
                 {
+                    Thread.Sleep(stepDelay);
+
                     node.Status = "ceph package install";
 
                     // Extract the Ceph release and version from the configuration.
@@ -2083,11 +2212,14 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
         /// Bootstraps the Ceph monitor/manager nodes.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void CephBootstrap(SshProxy<NodeDefinition> node)
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        private void CephBootstrap(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.InvokeIdempotentAction("setup-ceph-bootstrap",
                 () =>
                 {
+                    Thread.Sleep(stepDelay);
+
                     var cephUser = cluster.Definition.Ceph.Username;
                     var tempPath = "/tmp/ceph";
 
@@ -2336,11 +2468,14 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
         /// services and then creating and mounting a CephFS file system.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void CephCluster(SshProxy<NodeDefinition> node)
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        private void CephCluster(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.InvokeIdempotentAction("setup-ceph-osd",
                 () =>
                 {
+                    Thread.Sleep(stepDelay);
+
                     node.Status = "ceph-osd config";
 
                     var cephUser = cluster.Definition.Ceph.Username;
@@ -2846,7 +2981,7 @@ WantedBy=docker.service
                     () =>
                     {
                         firstManager.Status = "vault: mount neon-secret backend";
-                        cluster.VaultCommand("vault mount", "-path=neon-secret", "-description=Reserved for neonCLUSTER secrets", "generic");
+                        cluster.VaultCommand("vault mount", "-path=neon-secret", "generic");
                     });
 
                 // Mount the [transit] backend and create the cluster key.
@@ -2974,7 +3109,8 @@ WantedBy=docker.service
         /// Generates the SSH key to be used for authenticating SSH client connections.
         /// </summary>
         /// <param name="manager">A cluster manager node.</param>
-        private void GenerateClientSshKey(SshProxy<NodeDefinition> manager)
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        private void GenerateClientSshKey(SshProxy<NodeDefinition> manager, TimeSpan stepDelay)
         {
             // Here's some information explaining what how I'm doing this:
             //
@@ -2990,6 +3126,8 @@ WantedBy=docker.service
             {
                 return; // Key has already been created.
             }
+
+            Thread.Sleep(stepDelay);
 
             clusterLogin.SshClientKey = new SshClientKey();
 
@@ -3095,11 +3233,14 @@ chmod 666 /run/ssh-key*
         /// Changes the admin account's password on a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void SetStrongPassword(SshProxy<NodeDefinition> node)
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        private void SetStrongPassword(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.InvokeIdempotentAction("setup-strong-password",
                 () =>
                 {
+                    Thread.Sleep(stepDelay);
+
                     node.Status = "set strong password";
 
                     var script =
@@ -3177,11 +3318,14 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
         /// Configures SSH on a node.
         /// </summary>
         /// <param name="node">The target node.</param>
-        private void ConfigureSsh(SshProxy<NodeDefinition> node)
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        private void ConfigureSsh(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.InvokeIdempotentAction("setup-ssh",
                 () =>
                 {
+                    Thread.Sleep(stepDelay);
+
                     CommandBundle bundle;
 
                     // Here's some information explaining what how I'm doing this:

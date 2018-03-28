@@ -3,18 +3,16 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
+using Neon.Cluster.XenServer;
+using Neon.Common;
+using Neon.Net;
+using Newtonsoft.Json;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Linq;
 using System.Net;
 using System.Threading;
-
-using Newtonsoft.Json;
-
-using Neon.Cluster.XenServer;
-using Neon.Common;
-using Neon.Net;
 
 namespace Neon.Cluster
 {
@@ -194,9 +192,9 @@ namespace Neon.Cluster
             };
 
             controller.AddWaitUntilOnlineStep();
-            controller.AddStep("verify readiness", sshProxy => VerifyReady(sshProxy));
-            controller.AddStep("virtual machine template", sshProxy => CheckVmTemplate(sshProxy));
-            controller.AddStep("provision virtual machines", sshProxy => ProvisionVirtualMachines(sshProxy));
+            controller.AddStep("verify readiness", (node, stepDelay) => VerifyReady(node));
+            controller.AddStep("virtual machine template", (node, stepDelay) => CheckVmTemplate(node));
+            controller.AddStep("provision virtual machines", (node, stepDelay) => ProvisionVirtualMachines(node));
             controller.AddGlobalStep(string.Empty, () => Finish(), quiet: true);
 
             if (!controller.Run())

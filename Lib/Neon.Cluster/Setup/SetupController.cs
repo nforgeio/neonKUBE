@@ -39,28 +39,28 @@ namespace Neon.Cluster
 
         private class Step
         {
-            public string                                   Label;
-            public bool                                     Quiet;
-            public Action                                   GlobalAction;
-            public Action<SshProxy<NodeMetadata>>           NodeAction;
-            public Func<SshProxy<NodeMetadata>, bool>       Predicate;
-            public StepStatus                               Status;
-            public bool                                     NoParallelLimit;
-            public TimeSpan                                 StepStagger;
+            public string                                       Label;
+            public bool                                         Quiet;
+            public Action                                       GlobalAction;
+            public Action<SshProxy<NodeMetadata>, TimeSpan>     NodeAction;
+            public Func<SshProxy<NodeMetadata>, bool>           Predicate;
+            public StepStatus                                   Status;
+            public bool                                         NoParallelLimit;
+            public TimeSpan                                     StepStagger;
         }
 
         //---------------------------------------------------------------------
         // Implementation
 
-        private string                                      operationTitle;
-        private string                                      operationStatus;
-        private List<SshProxy<NodeMetadata>>                nodes;
-        private List<Step>                                  steps;
-        private Step                                        currentStep;
-        private bool                                        error;
-        private bool                                        hasNodeSteps;
-        private StringBuilder                               sbDisplay;
-        private string                                      lastDisplay;
+        private string                                          operationTitle;
+        private string                                          operationStatus;
+        private List<SshProxy<NodeMetadata>>                    nodes;
+        private List<Step>                                      steps;
+        private Step                                            currentStep;
+        private bool                                            error;
+        private bool                                            hasNodeSteps;
+        private StringBuilder                                   sbDisplay;
+        private string                                          lastDisplay;
 
         /// <summary>
         /// Constructor.
@@ -121,7 +121,12 @@ namespace Neon.Cluster
         /// Appends a configuration step.
         /// </summary>
         /// <param name="stepLabel">Brief step summary.</param>
-        /// <param name="nodeAction">The action to be performed on each node.</param>
+        /// <param name="nodeAction">
+        /// The action to be performed on each node.  Two parameters will be passed
+        /// to this action: the node's <see cref="SshProxy{T}"/> and a <see cref="TimeSpan"/>
+        /// indicating the amount of time the action should wait before performing
+        /// the operation, if the operation hasn't already been performed.
+        /// </param>
         /// <param name="nodePredicate">
         /// Optional predicate used to select the nodes that participate in the step
         /// or <c>null</c> to select all nodes.
@@ -140,13 +145,13 @@ namespace Neon.Cluster
         /// endpoint to start throttling access.
         /// </param>
         public void AddStep(string stepLabel,
-                            Action<SshProxy<NodeMetadata>> nodeAction,
+                            Action<SshProxy<NodeMetadata>, TimeSpan> nodeAction,
                             Func<SshProxy<NodeMetadata>, bool> nodePredicate = null,
                             bool quiet = false,
                             bool noParallelLimit = false,
                             int stepStaggerSeconds = 0)
         {
-            nodeAction    = nodeAction ?? new Action<SshProxy<NodeMetadata>>(n => { });
+            nodeAction    = nodeAction ?? new Action<SshProxy<NodeMetadata>, TimeSpan>((n, d) => { });
             nodePredicate = nodePredicate ?? new Func<SshProxy<NodeMetadata>, bool>(n => true);
 
             steps.Add(
@@ -198,11 +203,11 @@ namespace Neon.Cluster
             }
 
             AddStep(stepLabel,
-                n =>
+                (node, stepDelay) =>
                 {
-                    n.Status = status ?? "connecting";
-                    n.WaitForBoot(timeout: timeout);
-                    n.IsReady = true;
+                    node.Status = status ?? "connecting";
+                    node.WaitForBoot(timeout: timeout);
+                    node.IsReady = true;
                 },
                 nodePredicate,
                 quiet,
@@ -223,11 +228,11 @@ namespace Neon.Cluster
         public void AddDelayStep(string stepLabel, TimeSpan delay, string status = null, Func<SshProxy<NodeMetadata>, bool> nodePredicate = null, bool quiet = false)
         {
             AddStep(stepLabel,
-                n =>
+                (node, stepDeley) =>
                 {
-                    n.Status = status ?? $"delay: [{delay.TotalSeconds}] seconds";
+                    node.Status = status ?? $"delay: [{delay.TotalSeconds}] seconds";
                     Thread.Sleep(delay);
-                    n.IsReady = true;
+                    node.IsReady = true;
                 },
                 nodePredicate, 
                 quiet,
@@ -402,13 +407,14 @@ namespace Neon.Cluster
                                 try
                                 {
                                     var nodeDefinition = node.Metadata as NodeDefinition;
+                                    var stepDelay      = TimeSpan.Zero;
 
                                     if (nodeDefinition != null && nodeDefinition.StepDelay > TimeSpan.Zero)
                                     {
-                                        Thread.Sleep(nodeDefinition.StepDelay);
+                                        stepDelay = nodeDefinition.StepDelay;
                                     }
 
-                                    step.NodeAction(node);
+                                    step.NodeAction(node, stepDelay);
 
                                     node.Status  = "[x] DONE";
                                     node.IsReady = true;

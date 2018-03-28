@@ -400,11 +400,14 @@ $@"
         /// Deploys the log related containers on a node.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
-        public void DeployContainers(SshProxy<NodeDefinition> node)
+        /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
+        public void DeployContainers(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
             node.InvokeIdempotentAction("setup-neon-log-host",
                 () =>
                 {
+                    Thread.Sleep(stepDelay);
+
                     node.Status = "start: neon-log-host";
 
                     var response = node.DockerCommand(

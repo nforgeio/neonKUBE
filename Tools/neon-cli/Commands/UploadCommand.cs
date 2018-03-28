@@ -175,8 +175,10 @@ NOTES:
 
             operation.AddWaitUntilOnlineStep();
             operation.AddStep("upload",
-                node =>
+                (node, stepDelay) =>
                 {
+                    Thread.Sleep(stepDelay);
+
                     node.Status = "uploading";
 
                     if (isText)
