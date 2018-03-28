@@ -48,6 +48,7 @@ CLUSTER IDENTIFIERS:
     sshkey-client-pem       - client SSH private key (PEM format)
     sshkey-client-ppk       - client SSH private key (PPK format)
     sshkey-fingerprint      - SSH host key fingerprint
+    vault-token             - Vault root token
 
 NODE IDENTIFIERS:
 
@@ -81,6 +82,8 @@ NODE IDENTIFIERS:
             if (commandLine.Arguments.Length != 1)
             {
                 Console.Error.WriteLine("*** ERROR: VALUE-EXPR expected.");
+                Console.Error.WriteLine();
+                Console.Error.WriteLine(usage);
                 Program.Exit(1);
             }
 
@@ -156,6 +159,17 @@ NODE IDENTIFIERS:
                     case "sshkey-client-ppk":
 
                         Console.Write(clusterLogin.SshClientKey.PrivatePPK);
+                        break;
+
+                    case "vault-token":
+
+                        if (string.IsNullOrEmpty(clusterLogin.VaultCredentials.RootToken))
+                        {
+                            Console.WriteLine("*** ERROR: The current cluster login does not have ROOT privileges.");
+                            Program.Exit(1);
+                        }
+
+                        Console.Write(clusterLogin.VaultCredentials.RootToken);
                         break;
 
                     default:
