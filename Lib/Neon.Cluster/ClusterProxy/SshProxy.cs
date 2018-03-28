@@ -304,12 +304,12 @@ namespace Neon.Cluster
         /// <summary>
         /// Specifies the default options to be bitwise ORed with any specific
         /// options passed to a run or sudo execution command when the <see cref="RunOptions.Defaults"/> 
-        /// flag is specified.  This defaults to <see cref="RunOptions.LogOnErrorOnly"/>.
+        /// flag is specified.  This defaults to <see cref="RunOptions.None"/>.
         /// </summary>
         /// <remarks>
         /// Setting this is a good way to specify a global default for flags like <see cref="RunOptions.FaultOnError"/>.
         /// </remarks>
-        public RunOptions DefaultRunOptions { get; set; } = RunOptions.LogOnErrorOnly;
+        public RunOptions DefaultRunOptions { get; set; } = RunOptions.None;
 
         /// <summary>
         /// The PATH to use on the remote server when executing commands in the
@@ -1824,6 +1824,10 @@ echo $? > {cmdFolder}/exit
         /// <param name="runOptions">The execution options.</param>
         /// <param name="args">The optional command arguments.</param>
         /// <returns>The <see cref="CommandResponse"/>.</returns>
+        /// <exception cref="RemoteCommandException">
+        /// Thrown if the command returned a non-zero exit code and 
+        /// <see cref="RunOptions.FaultOnError"/> was passed.
+        /// </exception>
         /// <remarks>
         /// <note>
         /// <paramref name="command"/> may not include single quotes or redirect
@@ -1837,8 +1841,9 @@ echo $? > {cmdFolder}/exit
         /// The <paramref name="runOptions"/> flags control how this command functions.
         /// If <see cref="RunOptions.FaultOnError"/> is set, then commands that return
         /// a non-zero exit code will put the server into the faulted state by setting
-        /// <see cref="IsFaulted"/>=<c>true</c>.  This means that <see cref="IsReady"/> will 
-        /// always return <c>false</c> afterwards and subsequent calls to <see cref="RunCommand(string, object[])"/>
+        /// <see cref="IsFaulted"/>=<c>true</c> and throwing a <see cref="RemoteCommandException"/>.
+        /// This means that <see cref="IsReady"/> will  always return <c>false</c> 
+        /// afterwards and subsequent calls to <see cref="RunCommand(string, object[])"/>
         /// and <see cref="SudoCommand(string, object[])"/> will be ignored unless 
         /// <see cref="RunOptions.RunWhenFaulted"/> is passed with the future command. 
         /// <see cref="RunOptions.LogOnErrorOnly"/> indicates that command output should
@@ -2049,6 +2054,10 @@ echo $? > {cmdFolder}/exit
                     {
                         Status    = $"ERROR[{response.ExitCode}]";
                         IsFaulted = true;
+
+                        var message = redact ? "**REDACTED COMMAND**" : bashCommand;
+
+                        throw new RemoteCommandException($"[exitcode={response.ExitCode}: {message}");
                     }
                 }
             }
@@ -2105,6 +2114,8 @@ echo $? > {cmdFolder}/exit
             // executed and then disable this at the lower level, which would have 
             // logged the execution of the "__run.sh" script.
 
+            LogLine("----------------------------------------");
+
             if ((runOptions & RunOptions.Redact) != 0)
             {
                 LogLine($"START-BUNDLE: {Redacted}");
@@ -2120,6 +2131,9 @@ echo $? > {cmdFolder}/exit
             var response     = RunCommand($"cd {bundleFolder} && ./__run.sh", runOptions | RunOptions.LogBundle);
 
             response.BashCommand = bundle.ToBash();
+
+            LogLine($"END-BUNDLE");
+            LogLine("----------------------------------------");
 
             // Remove the bundle files.
 
@@ -2362,6 +2376,8 @@ echo $? > {cmdFolder}/exit
             // executed and then disable this at the lower level, which would have 
             // logged the execution of the "__run.sh" script.
 
+            LogLine("----------------------------------------");
+
             if ((runOptions & RunOptions.Redact) != 0)
             {
                 LogLine($"START-BUNDLE: {Redacted}");
@@ -2377,6 +2393,9 @@ echo $? > {cmdFolder}/exit
             var response     = SudoCommand($"cd {bundleFolder} && /bin/bash ./__run.sh", runOptions | RunOptions.LogBundle);
 
             response.BashCommand = bundle.ToBash();
+
+            LogLine($"END-BUNDLE");
+            LogLine("----------------------------------------");
 
             // Remove the bundle files.
 
