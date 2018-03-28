@@ -2722,7 +2722,7 @@ WantedBy=docker.service
 
                     manager.Status = "vault: unseal";
 
-                    manager.SudoCommand($"vault-direct unseal -reset");     // This clears any previous unseal attempts
+                    manager.SudoCommand($"vault-direct unseal -reset", RunOptions.None);    // This clears any previous uncompleted unseal attempts
 
                     for (int i = 0; i < clusterLogin.VaultCredentials.KeyThreshold; i++)
                     {
@@ -2797,154 +2797,152 @@ WantedBy=docker.service
         {
             var firstManager = cluster.FirstManager;
 
-            firstManager.InvokeIdempotentAction("setup-vault-initialize",
-                () =>
+            try
+            {
+                // Initialize the Vault cluster using the first manager if it
+                // hasn't already been initialized.
+
+                if (clusterLogin.VaultCredentials == null)
                 {
-                    try
-                    {
-                        // Initialize the Vault cluster using the first manager if it
-                        // hasn't already been initialized.
+                    firstManager.Status = "vault: init";
 
-                        if (clusterLogin.VaultCredentials == null)
+                    var response = firstManager.SudoCommand(
+                        "vault-direct init",
+                        cluster.SecureRunOptions | RunOptions.LogOnErrorOnly | RunOptions.FaultOnError,
+                        $"-key-shares={cluster.Definition.Vault.KeyCount}",
+                        $"-key-threshold={cluster.Definition.Vault.KeyThreshold}");
+
+                    if (response.ExitCode > 0)
+                    {
+                        firstManager.Fault($"[vault init] exit code [{response.ExitCode}]");
+                        return;
+                    }
+
+                    var rawVaultCredentials = response.OutputText;
+
+                    clusterLogin.VaultCredentials = VaultCredentials.FromInit(rawVaultCredentials, cluster.Definition.Vault.KeyThreshold);
+
+                    // Persist the Vault credentials.
+
+                    clusterLogin.Save();
+                }
+
+                // Unseal Vault.
+
+                VaultUnseal();
+
+                // Configure the audit backend so that it sends events to syslog.
+
+                firstManager.InvokeIdempotentAction("setup-vault-audit",
+                    () =>
+                    {
+                        firstManager.Status = "vault: audit enable";
+                        cluster.VaultCommand("vault audit-enable syslog tag=\"vault\" facility=\"AUTH\"");
+                    });
+
+                // Mount a [generic] backend dedicated to neonCLUSTER related secrets.
+
+                firstManager.InvokeIdempotentAction("setup-vault-mount-neon-secret",
+                    () =>
+                    {
+                        firstManager.Status = "vault: mount neon-secret backend";
+                        cluster.VaultCommand("vault mount", "-path=neon-secret", "-description=Reserved for neonCLUSTER secrets", "generic");
+                    });
+
+                // Mount the [transit] backend and create the cluster key.
+
+                firstManager.InvokeIdempotentAction("setup-vault-mount-transit",
+                    () =>
+                    {
+                        firstManager.Status = "vault: transit backend";
+                        cluster.VaultCommand("vault mount transit");
+                        cluster.VaultCommand($"vault write -f transit/keys/{NeonClusterConst.VaultTransitKey}");
+                    });
+
+                // Mount the [approle] backend.
+
+                firstManager.InvokeIdempotentAction("setup-vault-mount-approle",
+                    () =>
+                    {
+                        firstManager.Status = "vault: approle backend";
+                        cluster.VaultCommand("vault auth enable approle");
+                    });
+
+                // Initialize the standard policies.
+
+                firstManager.InvokeIdempotentAction("setup-vault-policies",
+                    () =>
+                    {
+                        firstManager.Status = "vault: policies";
+
+                        var writeCapabilities = VaultCapabilies.Create | VaultCapabilies.Read | VaultCapabilies.Update | VaultCapabilies.Delete | VaultCapabilies.List;
+                        var readCapabilities  = VaultCapabilies.Read | VaultCapabilies.List;
+
+                        cluster.CreateVaultPolicy(new VaultPolicy("neon-reader", "neon-secret/*", readCapabilities));
+                        cluster.CreateVaultPolicy(new VaultPolicy("neon-writer", "neon-secret/*", writeCapabilities));
+                        cluster.CreateVaultPolicy(new VaultPolicy("neon-cert-reader", "neon-secret/cert/*", readCapabilities));
+                        cluster.CreateVaultPolicy(new VaultPolicy("neon-cert-writer", "neon-secret/cert/*", writeCapabilities));
+                        cluster.CreateVaultPolicy(new VaultPolicy("neon-hosting-reader", "neon-secret/hosting/*", readCapabilities));
+                        cluster.CreateVaultPolicy(new VaultPolicy("neon-hosting-writer", "neon-secret/hosting/*", writeCapabilities));
+                        cluster.CreateVaultPolicy(new VaultPolicy("neon-service-reader", "neon-secret/service/*", readCapabilities));
+                        cluster.CreateVaultPolicy(new VaultPolicy("neon-service-writer", "neon-secret/service/*", writeCapabilities));
+                        cluster.CreateVaultPolicy(new VaultPolicy("neon-global-reader", "neon-secret/global/*", readCapabilities));
+                        cluster.CreateVaultPolicy(new VaultPolicy("neon-global-writer", "neon-secret/global/*", writeCapabilities));
+                    });
+
+                // Initialize the [neon-proxy-*] related service roles.  Each of these services 
+                // need read access to the TLS certificates and [neon-proxy-manager] also needs
+                // read access to the hosting options.
+
+                firstManager.InvokeIdempotentAction("setup-vault-roles",
+                    () =>
+                    {
+                        firstManager.Status = "vault: roles";
+
+                        cluster.CreateVaultAppRole("neon-proxy-manager", "neon-cert-reader", "neon-hosting-reader");
+                        cluster.CreateVaultAppRole("neon-proxy-public", "neon-cert-reader");
+                        cluster.CreateVaultAppRole("neon-proxy-private", "neon-cert-reader");
+                    });
+
+                // Store the the cluster hosting options in the Vault so services that need to
+                // perform hosting level operations will have the credentials and other information
+                // to modify the environment.  For example in cloud environments, the [neon-proxy-manager]
+                // service needs to be able to update the worker load balancer rules so they match
+                // the current PUBLIC routes.
+
+                firstManager.InvokeIdempotentAction("setup-vault-hostingoptions",
+                    () =>
+                    {
+                        firstManager.Status = "vault: hosting options";
+
+                        using (var vault = NeonClusterHelper.OpenVault(ClusterCredentials.FromVaultToken(clusterLogin.VaultCredentials.RootToken)))
                         {
-                            firstManager.Status = "vault: init";
+                            // Store the the cluster hosting options in the Vault so services that need to
+                            // perform hosting level operations will have the credentials and other information
+                            // to modify the environment.  For example in cloud environments, the [neon-proxy-manager]
+                            // service needs to be able to update the worker load balancer rules so they match
+                            // the current PUBLIC routes.
 
-                            var response = firstManager.SudoCommand(
-                                "vault-direct init",
-                                cluster.SecureRunOptions | RunOptions.LogOnErrorOnly | RunOptions.FaultOnError,
-                                $"-key-shares={cluster.Definition.Vault.KeyCount}",
-                                $"-key-threshold={cluster.Definition.Vault.KeyThreshold}");
+                            vault.WriteJsonAsync("neon-secret/hosting/options", cluster.Definition.Hosting).Wait();
 
-                            if (response.ExitCode > 0)
+                            // Store the zipped OpenVPN certificate authority files in the cluster Vault.
+
+                            var vpnCaCredentials = clusterLogin.VpnCredentials;
+
+                            if (vpnCaCredentials != null)
                             {
-                                firstManager.Fault($"[vault init] exit code [{response.ExitCode}]");
-                                return;
+                                var vpnCaFiles = VpnCaFiles.LoadZip(vpnCaCredentials.CaZip, vpnCaCredentials.CaZipKey);
+
+                                vpnCaFiles.Clean();
+                                vault.WriteBytesAsync("neon-secret/vpn/ca.zip.encrypted", vpnCaFiles.ToZipBytes(vpnCaCredentials.CaZipKey)).Wait();
                             }
-
-                            var rawVaultCredentials = response.OutputText;
-
-                            clusterLogin.VaultCredentials = VaultCredentials.FromInit(rawVaultCredentials, cluster.Definition.Vault.KeyThreshold);
-
-                            // Persist the Vault credentials.
-
-                            clusterLogin.Save();
                         }
-
-                        // Unseal Vault.
-
-                        VaultUnseal();
-
-                        // Configure the audit backend so that it sends events to syslog.
-
-                        firstManager.InvokeIdempotentAction("setup-vault-audit",
-                            () =>
-                            {
-                                firstManager.Status = "vault: audit enable";
-                                cluster.VaultCommand("vault audit-enable syslog tag=\"vault\" facility=\"AUTH\"");
-                            });
-
-                        // Mount a [generic] backend dedicated to neonCLUSTER related secrets.
-
-                        firstManager.InvokeIdempotentAction("setup-vault-mount-secret",
-                            () =>
-                            {
-                                firstManager.Status = "vault: mount neon-secret backend";
-                                cluster.VaultCommand("vault mount", "-path=neon-secret", "-description=Reserved for neonCLUSTER secrets", "generic");
-                            });
-
-                        // Mount the [transit] backend and create the cluster key.
-
-                        firstManager.InvokeIdempotentAction("setup-vault-mount-transit",
-                           () =>
-                           {
-                               firstManager.Status = "vault: transit backend";
-                               cluster.VaultCommand("vault mount transit");
-                               cluster.VaultCommand($"vault write -f transit/keys/{NeonClusterConst.VaultTransitKey}");
-                           });
-
-                        // Mount the [approle] backend.
-
-                        firstManager.InvokeIdempotentAction("setup-vault-mount-approle",
-                           () =>
-                           {
-                               firstManager.Status = "vault: approle backend";
-                               cluster.VaultCommand("vault auth-enable approle");
-                           });
-
-                        // Initialize the standard policies.
-
-                        firstManager.InvokeIdempotentAction("setup-vault-policies",
-                           () =>
-                           {
-                               firstManager.Status = "vault: policies";
-
-                               var writeCapabilities = VaultCapabilies.Create | VaultCapabilies.Read | VaultCapabilies.Update | VaultCapabilies.Delete | VaultCapabilies.List;
-                               var readCapabilities  = VaultCapabilies.Read | VaultCapabilies.List;
-
-                               cluster.CreateVaultPolicy(new VaultPolicy("neon-reader", "neon-secret/*", readCapabilities));
-                               cluster.CreateVaultPolicy(new VaultPolicy("neon-writer", "neon-secret/*", writeCapabilities));
-                               cluster.CreateVaultPolicy(new VaultPolicy("neon-cert-reader", "neon-secret/cert/*", readCapabilities));
-                               cluster.CreateVaultPolicy(new VaultPolicy("neon-cert-writer", "neon-secret/cert/*", writeCapabilities));
-                               cluster.CreateVaultPolicy(new VaultPolicy("neon-hosting-reader", "neon-secret/hosting/*", readCapabilities));
-                               cluster.CreateVaultPolicy(new VaultPolicy("neon-hosting-writer", "neon-secret/hosting/*", writeCapabilities));
-                               cluster.CreateVaultPolicy(new VaultPolicy("neon-service-reader", "neon-secret/service/*", readCapabilities));
-                               cluster.CreateVaultPolicy(new VaultPolicy("neon-service-writer", "neon-secret/service/*", writeCapabilities));
-                               cluster.CreateVaultPolicy(new VaultPolicy("neon-global-reader", "neon-secret/global/*", readCapabilities));
-                               cluster.CreateVaultPolicy(new VaultPolicy("neon-global-writer", "neon-secret/global/*", writeCapabilities));
-                           });
-
-                        // Initialize the [neon-proxy-*] related service roles.  Each of these services 
-                        // need read access to the TLS certificates and [neon-proxy-manager] also needs
-                        // read access to the hosting options.
-
-                        firstManager.InvokeIdempotentAction("setup-vault-roles",
-                           () =>
-                           {
-                               firstManager.Status = "vault: roles";
-
-                               cluster.CreateVaultAppRole("neon-proxy-manager", "neon-cert-reader", "neon-hosting-reader");
-                               cluster.CreateVaultAppRole("neon-proxy-public", "neon-cert-reader");
-                               cluster.CreateVaultAppRole("neon-proxy-private", "neon-cert-reader");
-                           });
-
-                        // Store the the cluster hosting options in the Vault so services that need to
-                        // perform hosting level operations will have the credentials and other information
-                        // to modify the environment.  For example in cloud environments, the [neon-proxy-manager]
-                        // service needs to be able to update the worker load balancer rules so they match
-                        // the current PUBLIC routes.
-
-                        firstManager.InvokeIdempotentAction("setup-vault-hostingoptions",
-                           () =>
-                           {
-                               using (var vault = NeonClusterHelper.OpenVault(ClusterCredentials.FromVaultToken(clusterLogin.VaultCredentials.RootToken)))
-                               {
-                                   // Store the the cluster hosting options in the Vault so services that need to
-                                   // perform hosting level operations will have the credentials and other information
-                                   // to modify the environment.  For example in cloud environments, the [neon-proxy-manager]
-                                   // service needs to be able to update the worker load balancer rules so they match
-                                   // the current PUBLIC routes.
-
-                                   vault.WriteJsonAsync("neon-secret/hosting/options", cluster.Definition.Hosting).Wait();
-
-                                   // Store the zipped OpenVPN certificate authority files in the cluster Vault.
-
-                                   var vpnCaCredentials = clusterLogin.VpnCredentials;
-
-                                   if (vpnCaCredentials != null)
-                                   {
-                                       var vpnCaFiles = VpnCaFiles.LoadZip(vpnCaCredentials.CaZip, vpnCaCredentials.CaZipKey);
-
-                                       vpnCaFiles.Clean();
-                                       vault.WriteBytesAsync("neon-secret/vpn/ca.zip.encrypted", vpnCaFiles.ToZipBytes(vpnCaCredentials.CaZipKey)).Wait();
-                                   }
-                               }
-                           });
-                    }
-                    finally
-                    {
-                        cluster.FirstManager.Status = string.Empty;
-                    }
-                });
+                    });
+            }
+            finally
+            {
+                cluster.FirstManager.Status = string.Empty;
+            }
         }
 
         /// <summary>
