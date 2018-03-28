@@ -524,7 +524,7 @@ export VAULT_TOKEN={ClusterLogin.VaultCredentials.RootToken}
 ",
                 isExecutable: true);
 
-            var response = GetHealthyManager().SudoCommand(bundle, SecureRunOptions);
+            var response = GetHealthyManager().SudoCommand(bundle, SecureRunOptions | RunOptions.FaultOnError);
 
             response.BashCommand = bundle.ToBash();
 
@@ -553,7 +553,7 @@ vault policy-write {policy.Name} policy.hcl
 
             bundle.AddFile("policy.hcl", policy);
 
-            var response = GetHealthyManager().SudoCommand(bundle, SecureRunOptions);
+            var response = GetHealthyManager().SudoCommand(bundle, SecureRunOptions | RunOptions.FaultOnError);
 
             response.BashCommand = bundle.ToBash();
 

@@ -2857,11 +2857,11 @@ WantedBy=docker.service
 
                     manager.Status = "vault: unseal";
 
-                    manager.SudoCommand($"vault-direct unseal -reset", RunOptions.None);    // This clears any previous uncompleted unseal attempts
+                    manager.SudoCommand($"vault-direct operator unseal -reset", RunOptions.None);    // This clears any previous uncompleted unseal attempts
 
                     for (int i = 0; i < clusterLogin.VaultCredentials.KeyThreshold; i++)
                     {
-                        manager.SudoCommand($"vault-direct unseal", cluster.SecureRunOptions | RunOptions.FaultOnError, clusterLogin.VaultCredentials.UnsealKeys[i]);
+                        manager.SudoCommand($"vault-direct operator unseal", cluster.SecureRunOptions | RunOptions.FaultOnError, clusterLogin.VaultCredentials.UnsealKeys[i]);
                     }
 
                     // Wait for Vault to indicate that it's unsealed and is
@@ -2980,8 +2980,8 @@ WantedBy=docker.service
                 firstManager.InvokeIdempotentAction("setup-vault-mount-neon-secret",
                     () =>
                     {
-                        firstManager.Status = "vault: mount neon-secret backend";
-                        cluster.VaultCommand("vault mount", "-path=neon-secret", "generic");
+                        firstManager.Status = "vault: enable neon-secret backend";
+                        cluster.VaultCommand("vault secrets enable", "-path=neon-secret", "generic");
                     });
 
                 // Mount the [transit] backend and create the cluster key.
@@ -2990,7 +2990,7 @@ WantedBy=docker.service
                     () =>
                     {
                         firstManager.Status = "vault: transit backend";
-                        cluster.VaultCommand("vault mount transit");
+                        cluster.VaultCommand("vault secrets enable transit");
                         cluster.VaultCommand($"vault write -f transit/keys/{NeonClusterConst.VaultTransitKey}");
                     });
 

@@ -246,7 +246,7 @@ NOTE: The following Vault commands are not supported:
                                 {
                                     Console.WriteLine($"[{manager.Name}] sealing...");
 
-                                    response = manager.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && vault-direct seal", cluster.SecureRunOptions);
+                                    response = manager.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && vault-direct seal", cluster.SecureRunOptions | RunOptions.FaultOnError);
 
                                     if (response.ExitCode == 0)
                                     {
@@ -410,7 +410,7 @@ NOTE: The following Vault commands are not supported:
 
                             foreach (var key in vaultCredentials.UnsealKeys)
                             {
-                                response = manager.SudoCommand($"vault-direct unseal {key}", cluster.SecureRunOptions);
+                                response = manager.SudoCommand($"vault-direct unseal {key}", cluster.SecureRunOptions | RunOptions.FaultOnError);
 
                                 if (response.ExitCode != 0)
                                 {
