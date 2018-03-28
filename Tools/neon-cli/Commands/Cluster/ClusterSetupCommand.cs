@@ -2923,6 +2923,10 @@ WantedBy=docker.service
                     }
                 }
             }
+
+            // Be really sure that vault is ready on all managers.
+
+            cluster.VaultWaitUntilReady();
         }
 
         /// <summary>

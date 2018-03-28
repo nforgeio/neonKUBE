@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
@@ -501,6 +502,43 @@ namespace Neon.Cluster
             if (!ClusterLogin.HasVaultRootCredentials)
             {
                 throw new InvalidOperationException($"[{nameof(ClusterProxy)}.{nameof(ClusterLogin)}] has not yet been initialized with the Vault root token.");
+            }
+        }
+
+        /// <summary>
+        /// Wait for all Vault instances to report being unsealed.
+        /// </summary>
+        public void VaultWaitUntilReady()
+        {
+            var readyManagers = new HashSet<string>();
+            var timeout       = TimeSpan.FromSeconds(120);
+            var timer         = new Stopwatch();
+
+            timer.Start();
+
+            while (readyManagers.Count < Managers.Count())
+            {
+                if (timer.Elapsed >= timeout)
+                {
+                    var sbNotReadyManagers = new StringBuilder();
+
+                    foreach (var manager in Managers.Where(m => !readyManagers.Contains(m.Name)))
+                    {
+                        sbNotReadyManagers.AppendWithSeparator(manager.Name, ", ");
+                    }
+
+                    throw new NeonClusterException($"Vault not unsealed after waiting [{timeout}] on: {sbNotReadyManagers}");
+                }
+
+                foreach (var manager in Managers.Where(m => !readyManagers.Contains(m.Name)))
+                {
+                    var response = manager.SudoCommand("vault-direct status");
+
+                    if (response.ExitCode == 0)
+                    {
+                        readyManagers.Add(manager.Name);
+                    }
+                }
             }
         }
 
