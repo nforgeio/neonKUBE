@@ -1223,6 +1223,25 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                             break;
                     }
 
+                    // Check to see whether the upgrade requires a reboot and
+                    // do that now if necessary.
+
+                    // $todo(jeff.lill):
+                    //
+                    // This is probably an extra step for managers because we
+                    // already restart managers after the [manager initialize]
+                    // step.  Perhaps we could relocate manager upgrade to
+                    // the initialize step and avoid this extra reboot.
+                    //
+                    // I'm not going to mess with this right now because there
+                    // could be some impacts on VPN config etc.
+
+                    if (node.FileExists("/var/run/reboot-required"))
+                    {
+                        node.Status = "reboot after update";
+                        node.Reboot();
+                    }
+
                     // Setup NTP.
 
                     node.Status = "run: setup-ntp.sh";
@@ -1421,6 +1440,15 @@ $@"docker login \
 
                             node.SudoCommand("apt-get dist-upgrade -yq --allow-unauthenticated");
                             break;
+                    }
+
+                    // Check to see whether the upgrade requires a reboot and
+                    // do that now if necessary.
+
+                    if (node.FileExists("/var/run/reboot-required"))
+                    {
+                        node.Status = "reboot after update";
+                        node.Reboot();
                     }
 
                     // Setup NTP.
