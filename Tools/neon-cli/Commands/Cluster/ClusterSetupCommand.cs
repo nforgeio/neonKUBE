@@ -3415,8 +3415,6 @@ systemctl restart sshd
             firstManager.InvokeIdempotentAction("setup-dashboards",
                 () =>
                 {
-                    return;     // $todo(jeff.lill): DELETE THIS!
-
                     // Create the [neon-fs] dashboard and related route.
 
                     if (cluster.Definition.Ceph.Enabled && cluster.Definition.Dashboard.Ceph)
@@ -3428,8 +3426,8 @@ systemctl restart sshd
                             Name        = "neonfs",
                             Title       = "NeonFS",
                             Folder      = NeonClusterConst.DashboardSystemFolder,
-                            Url         = $"http://healthy-manager:{NeonHostPorts.CephDashboard}",
-                            Description = "Cluster distributed file system dashboard"
+                            Url         = $"http://healthy-manager:{NeonHostPorts.ProxyPrivateHttpCephDashboard}",
+                            Description = "Ceph distributed file system"
                         };
 
                         cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDashboardsKey}/{cephDashboard.Name}", cephDashboard, Formatting.Indented).Wait();
@@ -3444,7 +3442,7 @@ systemctl restart sshd
                         route.Frontends.Add(
                             new ProxyHttpFrontend()
                             {
-                                ProxyPort = NeonHostPorts.CephDashboard
+                                ProxyPort = NeonHostPorts.ProxyPrivateHttpCephDashboard
                             });
 
                         foreach (var monNode in cluster.Nodes.Where(n => n.Metadata.Labels.CephMON))
@@ -3457,7 +3455,7 @@ systemctl restart sshd
                                 });
                         }
 
-                        cluster.PublicProxy.PutRoute(route);
+                        cluster.PrivateProxy.PutRoute(route);
                         firstManager.Status = string.Empty;
                     }
 

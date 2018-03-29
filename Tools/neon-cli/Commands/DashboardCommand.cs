@@ -318,9 +318,12 @@ dashboard names are reserved for use as commands:
                 Program.Exit(1);
             }
 
-            if (url.Host.Equals("healthy-manager").Equals(StringComparison.InvariantCultureIgnoreCase))
+            if (url.Host.Equals("healthy-manager", StringComparison.InvariantCultureIgnoreCase))
             {
-                url = new Uri($"{url.Scheme}//:{cluster.GetHealthyManager().PrivateAddress}:{url.Port}{url.PathAndQuery}");
+                // Special case the [health-manager] hostname by replacing it with
+                // the IP address of a healthy cluster manager node.
+
+                url = new Uri($"{url.Scheme}://{cluster.GetHealthyManager().PrivateAddress}:{url.Port}{url.PathAndQuery}");
             }
 
             NeonHelper.OpenBrowser(url.ToString());
