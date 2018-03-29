@@ -30,9 +30,15 @@ namespace Neon.Cluster
     public class ProxyHttpFrontend
     {
         /// <summary>
+        /// <para>
         /// The host name to be matched for this frontend.
+        /// </para>
+        /// <note>
+        /// This is required for routes targeting the proxy's default HTTP/S 
+        /// ports or if the route specifies more than one frontend.
+        /// </note>
         /// </summary>
-        [JsonProperty(PropertyName = "Host", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Host", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         public string Host { get; set; }
 
         /// <summary>
@@ -150,10 +156,31 @@ namespace Neon.Cluster
         /// <param name="route">The parent route.</param>
         public void Validate(ProxyValidationContext context, ProxyHttpRoute route)
         {
-            if (string.IsNullOrEmpty(Host) ||
-                !ClusterDefinition.DnsHostRegex.IsMatch(Host))
+            if (route.Frontends.Count > 1 ||
+                !string.IsNullOrEmpty(CertName) ||
+                ProxyPort == 0 ||
+                ProxyPort == NeonHostPorts.ProxyPublicHttp || ProxyPort == NeonHostPorts.ProxyPublicHttps ||
+                ProxyPort == NeonHostPorts.ProxyPrivateHttp || ProxyPort == NeonHostPorts.ProxyPrivateHttps)
             {
-                context.Error($"Route [{route.Name}] defines the invalid hostname [{Host}].");
+                // The host name is required so verify it.
+
+                if (string.IsNullOrEmpty(Host))
+                {
+                    context.Error($"Route [{route.Name}] has a frontend without a [{nameof(Host)}] specified.  HTTP routes targeting the default proxy HTTP/S ports, with more than one frontend, or secured by TLS requires frontend hostnames.");
+                }
+                else if (!ClusterDefinition.DnsHostRegex.IsMatch(Host))
+                {
+                    context.Error($"Route [{route.Name}] defines the invalid hostname [{Host}].");
+                }
+            }
+            else
+            {
+                // The host name is not required but verify it if one is specified.
+
+                if (!string.IsNullOrEmpty(Host) && !ClusterDefinition.DnsHostRegex.IsMatch(Host))
+                {
+                    context.Error($"Route [{route.Name}] defines the invalid hostname [{Host}].");
+                }
             }
 
             if (!string.IsNullOrEmpty(PathPrefix))

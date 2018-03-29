@@ -1005,14 +1005,14 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
                         {
                             haProxyFrontend = new HAProxyHttpFrontend()
                             {
-                                Port = frontend.ProxyPort,
+                                Port       = frontend.ProxyPort,
                                 PathPrefix = NormalizePathPrefix(frontend.PathPrefix)
                             };
 
                             haProxyFrontends.Add(frontend.ProxyPort, haProxyFrontend);
                         }
 
-                        var hostPath = $"{frontend.Host}:{NormalizePathPrefix(frontend.PathPrefix)}";
+                        var hostPath = $"{frontend.Host ?? string.Empty}:{NormalizePathPrefix(frontend.PathPrefix)}";
 
                         if (haProxyFrontend.HostPathMappings.ContainsKey(hostPath))
                         {
@@ -1137,12 +1137,18 @@ frontend {haProxyFrontend.Name}
                         {
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {{ ssl_fc_sni {host} }}");
                         }
-                        else
+                        else if (!string.IsNullOrEmpty(host))
                         {
                             var hostAclName = $"is-{host.Replace('.', '-')}";
 
                             sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {hostAclName}");
+                        }
+                        else
+                        {
+                            // The frontend does not specify a host so we'll always use the backend.
+
+                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value}");
                         }
                     }
 
@@ -1170,11 +1176,19 @@ frontend {haProxyFrontend.Name}
                             sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {{ ssl_fc_sni {host} }} {pathAclName}");
                         }
-                        else
+                        else if (!string.IsNullOrEmpty(host))
                         {
                             sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
                             sbHaProxy.AppendLine($"    acl                 {hostAclName} hdr_reg(host) -i {host}(:\\d+)?");
                             sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {hostAclName} {pathAclName}");
+                        }
+                        else
+                        {
+                            // The frontend does not specify a host so we'll use the backend
+                            // if only the path matches.
+
+                            sbHaProxy.AppendLine($"    acl                 {pathAclName} path_beg {path}");
+                            sbHaProxy.AppendLine($"    use_backend         {hostPathMapping.Value} if {pathAclName}");
                         }
                     }
                 }
