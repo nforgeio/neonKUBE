@@ -1159,7 +1159,7 @@ $@"# config file for ansible -- https://ansible.com/
 roles_path = {mappedRolesPath}:/etc/ansible/roles
 
 # uncomment this to disable SSH key host checking
-#host_key_checking = False
+host_key_checking = False
 
 # change the default callback, you can only have one 'stdout' type  enabled at a time.
 #stdout_callback = skippy
