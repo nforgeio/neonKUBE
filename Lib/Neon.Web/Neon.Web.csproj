@@ -7,7 +7,7 @@
     <Company>Jeff Lill</Company>
     <Product>neonCLUSTER</Product>
     <Description>Website and API related classes and enhancements.</Description>
-    <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
+    <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>BREAKING: Significant changes preparing for the upcoming 7.0.0.0 release.</PackageReleaseNotes>
     <LangVersion>latest</LangVersion>
   </PropertyGroup>

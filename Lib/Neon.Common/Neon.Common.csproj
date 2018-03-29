@@ -6,9 +6,9 @@
     <Version>6.2.0.0</Version>
     <Company>NeonForge, LLC</Company>
     <Authors>Jeff Lill</Authors>
-    <Description>Handy common code used by NeonForge projects.</Description>
+    <Description>neonFORGE common library.</Description>
     <PackageReleaseNotes>BREAKING: Significant changes preparing for the upcoming 7.0.0.0 release.</PackageReleaseNotes>
-    <Copyright>Copyright © 2016-2017 by NeonForge, LLC.  All rights reserved.</Copyright>
+    <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
     <AssemblyVersion>0.0.0.0</AssemblyVersion>
     <FileVersion>0.0.0.0</FileVersion>
     <Product>neonCLUSTER</Product>
