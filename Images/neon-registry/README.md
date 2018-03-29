@@ -18,9 +18,9 @@ This image derives from the offical [registry](https://hub.docker.com/_/registry
 
 # Environment Variables
 
-* **USERNAME** (*required*) - user ID used to authenticate with the registry.
+* **USERNAME** (*required*) - user ID that clients will use to authenticate with the registry.
 
-* **PASSWORD** (*required*) - password used to authenticate with the registry.
+* **PASSWORD** (*required*) - password that clients will use to authenticate with the registry.
 
 * **SECRET** (*required*) - a cryptographically random string used to persist state to clients to prevent tampering.  You must specify the same value for every registry instance in your cluster.
 
