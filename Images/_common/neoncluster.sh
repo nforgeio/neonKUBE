@@ -242,9 +242,6 @@ export NeonHostPorts_LogEsDataTcp=5006
 # SYSLOG events from the HAProxy based services and perhaps other sources.
 export NeonHostPorts_LogHostSysLog=5007
 
-# The port assigned to the cluster Ceph web dashboard.
-export NeonHostPorts_CephDashboard=5008
-
 # This port is reserved and must not be assigned to any service.  This is
 # currently referenced by the manager load balancer rule for Azure deployments
 # and it must not actually host a service.  See the [AzureHostingManager]
@@ -260,7 +257,7 @@ export NeonHostPorts_ReservedUnused=5099
 #
 # [5102-5109] are reserved for internal neonCLUSTER TCP routes.
 #
-# [5110-5299] are available for use by application services for TCP or
+# [5120-5299] are available for use by application services for TCP or
 #             HTTP/S traffic.
 
 # The public proxy port range.
@@ -277,7 +274,7 @@ export NeonHostPorts_ProxyPublicHttps=5101
 
 # The first [neon-proxy-public] port available for routing custom
 # HTTP/S or TCP services.
-export NeonHostPorts_ProxyPublicFirstUser=5110
+export NeonHostPorts_ProxyPublicFirstUser=5120
 
 # The first [neon-proxy-public] port available for routing custom
 # HTTP/S or TCP services.
@@ -291,7 +288,7 @@ export NeonHostPorts_ProxyPublicLastUser=5299
 #
 # [5302-5309] are reserved for internal neonCLUSTER TCP routes.
 #
-# [5310-5499] are available for use by application services for TCP or
+# [5320-5499] are available for use by application services for TCP or
 #             HTTP/S traffic.
 
 # The private proxy port range.
@@ -317,9 +314,12 @@ export NeonHostPorts_ProxyPrivateTcpLogCollector=5302
 # to the logging Elasticsearch cluster.
 export NeonHostPorts_ProxyPrivateHttpLogEsData=5303
 
+# The port assigned to the cluster Ceph web dashboard.
+export NeonHostPorts_ProxyPrivateHttpCephDashboard=5304
+
 # The first [neon-proxy-private] port available for routing custom
 # HTTP/S or TCP services.
-export NeonHostPorts_ProxyPrivatecFirstUser=5310
+export NeonHostPorts_ProxyPrivatecFirstUser=5320
 
 # The first [neon-proxy-private] port available for routing custom
 # HTTP/S or TCP services.

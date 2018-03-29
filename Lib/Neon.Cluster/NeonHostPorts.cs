@@ -114,11 +114,6 @@ namespace Neon.Cluster
         public const int LogHostSysLog = 5007;
 
         /// <summary>
-        /// The port assigned to the cluster Ceph web dashboard.
-        /// </summary>
-        public const int CephDashboard = 5008;
-
-        /// <summary>
         /// This port is reserved and must not be assigned to any service.  This is
         /// currently referenced by the manager load balancer rule for Azure deployments
         /// and it must not actually host a service.  See the <b>AzureHostingManager</b>
@@ -135,7 +130,7 @@ namespace Neon.Cluster
         //
         // [5102-5109] are reserved for internal neonCLUSTER TCP routes.
         //
-        // [5110-5299] are available for use by application services for TCP or
+        // [5120-5299] are available for use by application services for TCP or
         //             HTTP/S traffic.
 
         /// <summary>
@@ -164,7 +159,7 @@ namespace Neon.Cluster
         /// The first <b>neon-proxy-public</b> port available for routing custom
         /// HTTP/S or TCP services.
         /// </summary>
-        public const int ProxyPublicFirstUserPort = 5110;
+        public const int ProxyPublicFirstUserPort = 5120;
 
         /// <summary>
         /// The first <b>neon-proxy-public</b> port available for routing custom
@@ -180,7 +175,7 @@ namespace Neon.Cluster
         //
         // [5302-5309] are reserved for internal neonCLUSTER TCP routes.
         //
-        // [5310-5499] are available for use by application services for TCP or
+        // [5320-5499] are available for use by application services for TCP or
         //             HTTP/S traffic.
 
         /// <summary>
@@ -221,10 +216,15 @@ namespace Neon.Cluster
         public const int ProxyPrivateHttpLogEsData = 5303;
 
         /// <summary>
+        /// The port assigned to the cluster Ceph web dashboard.
+        /// </summary>
+        public const int ProxyPrivateHttpCephDashboard = 5304;
+
+        /// <summary>
         /// The first <b>neon-proxy-private</b> port available for routing custom
         /// HTTP/S or TCP services.
         /// </summary>
-        public const int ProxyPrivateFirstUserPort = 5310;
+        public const int ProxyPrivateFirstUserPort = 5320;
 
         /// <summary>
         /// The first <b>neon-proxy-private</b> port available for routing custom
