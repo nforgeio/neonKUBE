@@ -552,7 +552,7 @@ emailAddress            = optional              # email in DN is deprecated, use
             File.WriteAllText(caSignCnfPath, caSignCnf);
 
             // The x509_extensions sections are not really required by openssl or openvpn, but 
-            // allows extra security by telling OpenVPN that clients only may connect to servers 
+            // adds extra security by telling OpenVPN that clients may connect to servers 
             // only. nsCertType is required for the OpenVPN option ns-cert-type server|client; 
             // keyUsage and extendedKeyUsage are required for remote-cert-tls server|client.
 
