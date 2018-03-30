@@ -58,12 +58,13 @@ The Docker service command below shows how **neon-registry** can be deployed as 
 docker service create \
     --name neon-registry \
     --detach=false \
+    --mode global \
+    --constraint node.role==manager \
     --env USERNAME=MY-USER \
     --env PASSWORD=MY-PASSWORD \
     --env SECRET=MY-SECRET \
     --env LOG_LEVEL=info \
     --env READ_ONLY=false \
-    --constraint node.role==manager \
     --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
     --network neon-public \
     --restart-delay 10s \
@@ -84,14 +85,13 @@ mode: http
 frontends:
 - host: REGISTRY.MY-CLUSTER.COM
   certname: MY-CERT-NAME
-  proxyport: 5000
 backends:
 - server: neon-registry
   port: 5000
 ```
 &nbsp;
 
-This route accepts HTTPS requests on port 5000 on all of the cluster hosts, handles TLS termination and then forwards the requests to the **neon-registry** service as unencrypted HTTP on service port 5000.
+This route accepts HTTPS requests on the standard public SSL port on all of the cluster hosts, handles TLS termination and then forwards the requests to the **neon-registry** service as unencrypted HTTP on service port 5000.
 
 ## Deploy as a Container
 
