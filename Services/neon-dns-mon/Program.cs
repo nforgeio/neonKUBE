@@ -49,8 +49,8 @@ namespace NeonDnsHealth
         private static TimeSpan             warnInterval;
         private static ClusterDefinition    clusterDefinition;
         private static PolledTimer          warnTimer;
-        private static NeonDnsClient    dns;
-        private static Ping                 ping;
+        private static NeonDnsClient        dns;
+        private static Pinger               pinger;
 
         /// <summary>
         /// Application entry point.
@@ -80,8 +80,8 @@ namespace NeonDnsHealth
             // Create the DNS resolver client and the pinger we'll use
             // for health checks.
 
-            dns  = NeonDnsClient.CreateCaching(nameservers);
-            ping = new Ping();
+            dns    = NeonDnsClient.CreateCaching(nameservers);
+            pinger = new Pinger();
 
             // Create process terminator that handles process termination signals.
 
@@ -437,7 +437,7 @@ namespace NeonDnsHealth
                     pingTasks.Add(Task.Run(
                         async () =>
                         {
-                            var reply = await ping.SendPingAsync(address, (int)pingTimeout.TotalMilliseconds);
+                            var reply = await pinger.SendPingAsync(address, (int)pingTimeout.TotalMilliseconds);
 
                             if (reply.Status == IPStatus.Success)
                             {
