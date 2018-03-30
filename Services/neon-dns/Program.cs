@@ -26,7 +26,7 @@ using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
 
-namespace NeonDnsHealth
+namespace NeonDns
 {
     /// <summary>
     /// Implements the <b>neon-dns</b> service.  See 
