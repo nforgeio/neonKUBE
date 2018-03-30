@@ -26,7 +26,7 @@ using Neon.Diagnostics;
 using Neon.Docker;
 using Neon.Net;
 
-namespace NeonDnsHealth
+namespace NeonDnsMon
 {
     /// <summary>
     /// Maps hostnames to one or more IP addresses.

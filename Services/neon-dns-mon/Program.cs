@@ -29,7 +29,7 @@ using Neon.Docker;
 using Neon.Net;
 using Neon.Time;
 
-namespace NeonDnsHealth
+namespace NeonDnsMon
 {
     /// <summary>
     /// Implements the <b>neon-dns-mon</b> service.  See 
@@ -49,8 +49,7 @@ namespace NeonDnsHealth
         private static TimeSpan             warnInterval;
         private static ClusterDefinition    clusterDefinition;
         private static PolledTimer          warnTimer;
-        private static NeonDnsClient        dns;
-        private static Pinger               pinger;
+        private static HealthResolver       healthResolver;
 
         /// <summary>
         /// Application entry point.
@@ -77,11 +76,10 @@ namespace NeonDnsHealth
             warnTimer = new PolledTimer(warnInterval, autoReset: true);
             warnTimer.FireNow();    // Set so that the first warnings detected will be reported immediately.
 
-            // Create the DNS resolver client and the pinger we'll use
-            // for health checks.
+            // Create the object that will actually perform the hostname lookups
+            // and health pings.  This object caches things to improve performance.
 
-            dns    = NeonDnsClient.CreateCaching(nameservers);
-            pinger = new Pinger();
+            healthResolver = new HealthResolver(nameservers);
 
             // Create process terminator that handles process termination signals.
 
@@ -337,7 +335,14 @@ namespace NeonDnsHealth
                     continue;
                 }
 
+                // Clear the resolver at the beginning of each health check pass
+                // to purge any cached state from the previous pass.
+
+                healthResolver.Clear();
+
                 // Kick off the endpoint health checks.
+
+                var healthyAddresses = new HashSet<string>();
 
                 entryTasks.Add(Task.Run(
                     async () =>
@@ -422,7 +427,7 @@ namespace NeonDnsHealth
         {
             // Resolve the target DNS name, if required.
 
-            var addresses = await dns.LookupAsync(targetOverride ?? endpoint.Target);
+            var addresses = await healthResolver.LookupAsync(targetOverride ?? endpoint.Target);
 
             // Perform health checking if required.
 
@@ -437,9 +442,9 @@ namespace NeonDnsHealth
                     pingTasks.Add(Task.Run(
                         async () =>
                         {
-                            var reply = await pinger.SendPingAsync(address, (int)pingTimeout.TotalMilliseconds);
+                            var isHealthy = await healthResolver.SendPingAsync(address, pingTimeout);
 
-                            if (reply.Status == IPStatus.Success)
+                            if (isHealthy)
                             {
                                 lock (healthyAddresses)
                                 {
