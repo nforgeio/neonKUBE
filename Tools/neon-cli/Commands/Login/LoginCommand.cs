@@ -204,7 +204,7 @@ ARGUMENTS:
 
                 currentLogin.Save();
 
-                Console.WriteLine($"You are logged into [{clusterLogin.LoginName}]{viaVpn}.");
+                Console.WriteLine($"Logged into [{clusterLogin.LoginName}]{viaVpn}.");
                 Console.WriteLine("");
             }
             catch (Exception e)
