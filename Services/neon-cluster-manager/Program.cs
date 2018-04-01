@@ -33,8 +33,7 @@ namespace NeonClusterManager
     /// </summary>
     public static class Program
     {
-        private const string serviceName = "neon-cluster-manager";
-
+        private static readonly string serviceName           = $"neon-cluster-manager:{GitVersion}";
         private static readonly string serviceRootKey        = "neon/service/neon-cluster-manager";
         private static readonly string nodePollSecondsKey    = $"{serviceRootKey}/node_poll_seconds";
         private static readonly string vaultPollSecondsKey   = $"{serviceRootKey}/vault_poll_seconds";
@@ -137,10 +136,10 @@ namespace NeonClusterManager
 
 #pragma warning disable 162 // Unreachable code
 
-                if (ThisAssembly.Git.IsDirty)
-                {
-                    version += "-DIRTY";
-                }
+                //if (ThisAssembly.Git.IsDirty)
+                //{
+                //    version += "-DIRTY";
+                //}
 
 #pragma warning restore 162 // Unreachable code
 

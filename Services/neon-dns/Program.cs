@@ -35,8 +35,7 @@ namespace NeonDns
     /// </summary>
     public static class Program
     {
-        private const string serviceName = "neon-dns";
-
+        private static readonly string      serviceName = $"neon-dns:{GitVersion}";
         private static string               powerDnsHostsPath = "/etc/powerdns/hosts";
         private static string               reloadSignalPath  = "/neon-dns/reload";
         private static ProcessTerminator    terminator;
@@ -172,10 +171,10 @@ namespace NeonDns
 
 #pragma warning disable 162 // Unreachable code
 
-                if (ThisAssembly.Git.IsDirty)
-                {
-                    version += "-DIRTY";
-                }
+                //if (ThisAssembly.Git.IsDirty)
+                //{
+                //    version += "-DIRTY";
+                //}
 
 #pragma warning restore 162 // Unreachable code
 

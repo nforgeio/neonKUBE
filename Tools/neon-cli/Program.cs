@@ -865,10 +865,10 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
 
 #pragma warning disable 162 // Unreachable code
 
-                if (ThisAssembly.Git.IsDirty)
-                {
-                    version += "-DIRTY";
-                }
+                //if (ThisAssembly.Git.IsDirty)
+                //{
+                //    version += "-DIRTY";
+                //}
 
 #pragma warning restore 162 // Unreachable code
 

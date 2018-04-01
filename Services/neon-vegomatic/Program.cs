@@ -33,7 +33,7 @@ namespace NeonVegomatic
     /// </summary>
     public static class Program
     {
-        private const string serviceName = "neon-vegomatic";
+        private static readonly string serviceName = $"neon-vegomatic:{GitVersion}";
 
         private static ProcessTerminator    terminator;
         private static INeonLogger          log;
@@ -115,10 +115,10 @@ namespace NeonVegomatic
 
 #pragma warning disable 162 // Unreachable code
 
-                if (ThisAssembly.Git.IsDirty)
-                {
-                    version += "-DIRTY";
-                }
+                //if (ThisAssembly.Git.IsDirty)
+                //{
+                //    version += "-DIRTY";
+                //}
 
 #pragma warning restore 162 // Unreachable code
 
