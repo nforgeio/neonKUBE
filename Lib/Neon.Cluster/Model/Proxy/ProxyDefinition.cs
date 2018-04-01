@@ -51,8 +51,9 @@ namespace Neon.Cluster
         /// Validates the proxy definition.
         /// </summary>
         /// <param name="certificates">The dictionary of cluster certificates keyed by name.</param>
+        /// <param name="addImplicitFrontends">Optionally add any implicit frontends (e.g. for HTTPS redirect).</param>
         /// <returns>The <see cref="ProxyValidationContext"/>.</returns>
-        public ProxyValidationContext Validate(Dictionary<string, TlsCertificate> certificates)
+        public ProxyValidationContext Validate(Dictionary<string, TlsCertificate> certificates, bool addImplicitFrontends = false)
         {
             Covenant.Requires<ArgumentNullException>(certificates != null);
 
@@ -64,7 +65,7 @@ namespace Neon.Cluster
 
             foreach (var route in Routes.Values)
             {
-                route.Validate(context);
+                route.Validate(context, addImplicitFrontends: addImplicitFrontends);
             }
 
             // Verify that there are no existing frontend port/host conflicts:

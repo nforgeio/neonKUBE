@@ -389,6 +389,12 @@ See the documentation for more proxy route and setting details.
                     // adding the new route won't cause conflicts.  Currently errors will be
                     // detected only by the [neon-proxy-manager] which will log them and cease
                     // updating the cluster until the errors are corrected.
+                    //
+                    // An alternative would be to have some kind of service available in the
+                    // cluster to do this for us or perhaps having [neon-proxy-manager] generate
+                    // a summary of all of the certificates (names, covered hostnames, and 
+                    // expiration dates) and save this to Consul so it would be easy to
+                    // download.  Perhaps do the same for the routes?
 
                     if (commandLine.Arguments.Length != 1)
                     {
@@ -397,7 +403,7 @@ See the documentation for more proxy route and setting details.
                     }
 
                     // Load the route.  Note that we support reading routes as JSON or
-                    // YAML, automatcially detecting thew format.  We always persist
+                    // YAML, automatcially detecting the format.  We always persist
                     // routes as JSON though.
 
                     var routeFile = commandLine.Arguments[0];
@@ -429,6 +435,29 @@ See the documentation for more proxy route and setting details.
                         Program.Exit(1);
                     }
 
+                    // Validate a clone of the route with any implicit frontends.
+
+                    var clonedRoute = NeonHelper.JsonClone(proxyRoute);
+                    var context     = new ProxyValidationContext(proxyName, null)
+                    {
+                        ValidateCertificates = false    // Disable this because we didn't download the certs (see note above)
+                    };
+
+                    clonedRoute.Validate(context, addImplicitFrontends: true);
+
+                    if (context.HasErrors)
+                    {
+                        Console.Error.WriteLine("*** ERROR: One or more route errors:");
+                        Console.Error.WriteLine();
+
+                        foreach (var error in context.Errors)
+                        {
+                            Console.Error.WriteLine(error);
+                        }
+
+                        Program.Exit(1);
+                    }
+                    
                     if (proxyManager.PutRoute(proxyRoute))
                     {
                         Console.WriteLine($"Proxy [{proxyName}] route [{routeName}] has been updated.");

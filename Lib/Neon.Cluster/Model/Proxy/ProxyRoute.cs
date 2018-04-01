@@ -197,7 +197,8 @@ namespace Neon.Cluster
         /// Validates the instance.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public virtual void Validate(ProxyValidationContext context)
+        /// <param name="addImplicitFrontends">Optionally add any implicit frontends (e.g. for HTTPS redirect).</param>
+        public virtual void Validate(ProxyValidationContext context, bool addImplicitFrontends = false)
         {
             if (string.IsNullOrEmpty(Name))
             {
@@ -209,7 +210,9 @@ namespace Neon.Cluster
                 context.Error($"Proxy route name [{nameof(Name)}={Name}] is not valid.");
             }
 
-            if (!string.IsNullOrWhiteSpace(Resolver) && context.Settings.Resolvers.Count(r => string.Equals(Resolver, r.Name, StringComparison.OrdinalIgnoreCase)) == 0)
+            if (!string.IsNullOrWhiteSpace(Resolver) && 
+                context.Settings != null &&
+                context.Settings.Resolvers.Count(r => string.Equals(Resolver, r.Name, StringComparison.OrdinalIgnoreCase)) == 0)
             {
                 context.Error($"Proxy resolver [{nameof(Resolver)}={Resolver}] does not exist.");
             }

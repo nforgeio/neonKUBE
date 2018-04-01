@@ -64,9 +64,10 @@ namespace Neon.Cluster
         /// Validates the route.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public override void Validate(ProxyValidationContext context)
+        /// <param name="addImplicitFrontends">Optionally add any implicit frontends (e.g. for HTTPS redirect).</param>
+        public override void Validate(ProxyValidationContext context, bool addImplicitFrontends = false)
         {
-            base.Validate(context);
+            base.Validate(context, addImplicitFrontends);
 
             foreach (var frontend in Frontends)
             {

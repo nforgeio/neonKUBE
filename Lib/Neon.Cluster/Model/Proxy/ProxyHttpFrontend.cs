@@ -150,6 +150,29 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Returns the frontends's host and path as a string.
+        /// </summary>
+        [JsonIgnore]
+        internal string HostAndPath
+        {
+            get
+            {
+                var hostAndPath = Host.ToLowerInvariant();
+
+                if (!string.IsNullOrEmpty(PathPrefix))
+                {
+                    hostAndPath += PathPrefix;
+                }
+                else
+                {
+                    hostAndPath += "/";
+                }
+
+                return hostAndPath;
+            }
+        }
+
+        /// <summary>
         /// Validates the frontend.
         /// </summary>
         /// <param name="context">The validation context.</param>
@@ -203,7 +226,7 @@ namespace Neon.Cluster
                 }
             }
 
-            if (CertName != null)
+            if (CertName != null && context.ValidateCertificates)
             {
                 TlsCertificate certificate;
 

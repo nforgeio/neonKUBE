@@ -33,15 +33,14 @@ namespace Neon.Cluster
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="name">The proxy name.</param>
+        /// <param name="proxyName">The proxy name.</param>
         /// <param name="settings">The proxy settings.</param>
         /// <param name="certificates">The optional certificates as name/value tuples.</param>
-        public ProxyValidationContext(string name, ProxySettings settings, Dictionary<string, TlsCertificate> certificates = null)
+        public ProxyValidationContext(string proxyName, ProxySettings settings, Dictionary<string, TlsCertificate> certificates = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentNullException>(settings != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(proxyName));
 
-            this.Name         = name;
+            this.ProxyName    = proxyName;
             this.Settings     = settings;
             this.Certificates = certificates ?? new Dictionary<string, TlsCertificate>();
         }
@@ -49,7 +48,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Returns the proxy name.
         /// </summary>
-        public string Name { get; private set; }
+        public string ProxyName { get; private set; }
 
         /// <summary>
         /// Returns the proxy settings.
@@ -66,6 +65,11 @@ namespace Neon.Cluster
         /// Returns the list of error messages.
         /// </summary>
         public List<string> Errors { get; private set; } = new List<string>();
+
+        /// <summary>
+        /// Indicates that certificate references will be validated.  This defaults to <c>true</c>.
+        /// </summary>
+        public bool ValidateCertificates { get; set; } = true;
 
         /// <summary>
         /// Returns <c>true</c> if any errors were reported.

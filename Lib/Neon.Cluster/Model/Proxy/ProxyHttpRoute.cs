@@ -3,22 +3,15 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
+using Neon.Common;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Serialization;
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
-using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
-
-using Neon.Common;
 
 namespace Neon.Cluster
 {
@@ -39,9 +32,27 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Indicates whether HTTP requests should be redirected using HTTPS.
+        /// <para>
+        /// Indicates that HTTP requests should be redirected using HTTPS.
         /// This defaults to <c>false</c>.
+        /// </para>
+        /// <note>
+        /// See the remarks for more details about how this works.
+        /// </note>
         /// </summary>
+        /// <remarks>
+        /// <para>
+        /// This property works by implicitly adding an HTTP frontend for every defined
+        /// HTTPS frontend (ones that specify a <see cref="ProxyHttpFrontend.CertName"/>).
+        /// and then having each of the HTTP frontends emit a <b>302 temporary redirect</b>,
+        /// redirecting to the same URL with the <b>https://</b> scheme.
+        /// </para>
+        /// <note>
+        /// This only works for routes added to the <b>public</b> proxy on the <b>neon-public</b>
+        /// network and it also works only for HTTPS frontends with the port set to <b>0/5101</b>
+        /// and HTTP frontends with the port set to <b>0/5100</b>.
+        /// </note>
+        /// </remarks>
         [JsonProperty(PropertyName = "HttpsRedirect", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
         public bool HttpsRedirect { get; set; } = false;
@@ -199,18 +210,83 @@ namespace Neon.Cluster
         /// Validates the route.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public override void Validate(ProxyValidationContext context)
+        /// <param name="addImplicitFrontends">Optionally add any implicit frontends (e.g. for HTTPS redirect).</param>
+        public override void Validate(ProxyValidationContext context, bool addImplicitFrontends = false)
         {
-            base.Validate(context);
+            base.Validate(context, addImplicitFrontends);
 
             Frontends = Frontends ?? new List<ProxyHttpFrontend>();
             Backends  = Backends ?? new List<ProxyHttpBackend>();
 
+            if (HttpsRedirect)
+            {
+                if (!context.ProxyName.Equals("public", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    context.Error($"Route [{Name}] has [{nameof(HttpsRedirect)}={HttpsRedirect}] defined for [{context.ProxyName}] proxy.  This is supported only for the [public] proxy.");
+                }
+
+                if (addImplicitFrontends)
+                {
+                    //-------------------------------------------------------------
+                    // This is where we implicitly add an HTTP route for each HTTPS route
+                    // that redirects from the [http://] scheme to [https://].  We're 
+                    // going to clone each HTTPS frontend that targets the default port
+                    // [0/5100], and set [CertName=null] and then add this to the route
+                    // as the HTTP frontend, if it doesn't already exist.
+
+                    // Create a set of the hosts for the HTTP frontends explicitly specified 
+                    // by the cluster operator that already target the default HTTP port so
+                    // we can avoid overwriting any explicit frontends below.  These will
+                    // be keyed by: [host/path]
+
+                    var explicitHttpFrontends = new HashSet<string>();
+
+                    foreach (ProxyHttpFrontend httpFrontend in Frontends.Where(fe => !fe.Tls))
+                    {
+                        var hostAndPath = httpFrontend.HostAndPath;
+
+                        if (httpFrontend.ProxyPort == 0 || httpFrontend.ProxyPort == NeonHostPorts.ProxyPublicHttp)
+                        {
+                            if (!explicitHttpFrontends.Contains(hostAndPath))
+                            {
+                                explicitHttpFrontends.Add(hostAndPath);
+                            }
+                        }
+                    }
+
+                    // Add an implicit HTTP frontend for each HTTPS frontend if an explicit
+                    // HTTP frontend matching the [host/path] doesn't already exist.
+
+                    var newHttpFrontends = new List<ProxyHttpFrontend>();
+
+                    foreach (var httpsFrontend in Frontends.Where(fe => fe.Tls))
+                    {
+                        if (explicitHttpFrontends.Contains(httpsFrontend.HostAndPath))
+                        {
+                            continue;   // Never overwrite an explicitly specified HTTP frontend.
+                        }
+
+                        if (httpsFrontend.ProxyPort == 0 || httpsFrontend.ProxyPort == NeonHostPorts.ProxyPublicHttps)
+                        {
+                            var clone = NeonHelper.JsonClone(httpsFrontend);
+
+                            clone.CertName = null;
+                            clone.ProxyPort = 0;
+
+                            newHttpFrontends.Add(clone);
+                        }
+                    }
+
+                    foreach (var httpFrontend in newHttpFrontends)
+                    {
+                        this.Frontends.Add(httpFrontend);
+                    }
+                }
+            }
+
             if (!string.IsNullOrEmpty(CheckUri))
             {
-                Uri uri;
-
-                if (!Uri.TryCreate(CheckUri, UriKind.Relative, out uri))
+                if (!Uri.TryCreate(CheckUri, UriKind.Relative, out var uri))
                 {
                     context.Error($"Route [{Name}] has invalid [{nameof(CheckUri)}={CheckUri}].");
                 }
