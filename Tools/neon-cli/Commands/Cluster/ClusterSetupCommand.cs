@@ -3451,8 +3451,8 @@ systemctl restart sshd
 
                         var cephDashboard = new ClusterDashboard()
                         {
-                            Name        = "neonfs",
-                            Title       = "NeonFS",
+                            Name        = "ceph",
+                            Title       = "Ceph File System",
                             Folder      = NeonClusterConst.DashboardSystemFolder,
                             Url         = $"http://healthy-manager:{NeonHostPorts.ProxyPrivateHttpCephDashboard}",
                             Description = "Ceph distributed file system"
@@ -3462,10 +3462,28 @@ systemctl restart sshd
 
                         var route = new ProxyHttpRoute()
                         {
-                            Name     = "neonfs-dashboard",
+                            Name     = "neon-ceph-dashboard",
                             System   = true,
                             Resolver = null
                         };
+
+                        // We're going to consider only 2xx status codes as healthy because
+                        // standby CEPH-MGR nodes will try to redirect to the primary node
+                        // via the primary node's hostname.  This won't work because cluster
+                        // node hostnames are not DNS resolvable (e.g. on the operator's
+                        // workstation where browser displaying the dashboard is running).
+                        //
+                        // This setting will cause the standby nodes that will be returning
+                        // [302 temporary redirect] status codes as unhealthy, so that traffic
+                        // will only be routed to the primary.
+                        //
+                        // You can find more information here:
+                        //
+                        //      https://github.com/jefflill/NeonForge/issues/222
+
+                        route.CheckExpect = @"rstatus ^2\d\d";
+
+                        // Initialize the frontends and backends.
 
                         route.Frontends.Add(
                             new ProxyHttpFrontend()
@@ -3479,7 +3497,7 @@ systemctl restart sshd
                                 new ProxyHttpBackend()
                                 {
                                     Server = monNode.Metadata.PrivateAddress.ToString(),
-                                    Port   = NetworkPorts.CephDashboard
+                                    Port   = NetworkPorts.CephDashboard,
                                 });
                         }
 
