@@ -84,8 +84,8 @@ USAGE:
     neon cert combine PATH-CERT PATH-KEY PATH-OUTPUT
     neon cert get NAME
     neon cert list|ls [--expired | --expiring]
-    neon cert put NAME PATH
     neon cert remove|rm NAME
+    neon cert set NAME PATH
     neon cert split PATH PATH-CERT PATH-KEY 
     neon cert verify PATH
 
@@ -113,8 +113,8 @@ certificates, and then finally the private key.
                 --expiring  lists certificates that have expired
                             or will expire within 30 days.
 
-    put         Saves or updates a named cluster certificate.
     remove|rm   Removes a named cluster certificate.
+    set         Saves or updates a named cluster certificate.
     split       Splits a certificate into its parts.
     verify      Verifies a local certificate file.
 
@@ -303,7 +303,7 @@ certificates, and then finally the private key.
                     }
                     break;
 
-                case "put":
+                case "set":
 
                     Program.ConnectCluster();
 
@@ -383,7 +383,7 @@ certificates, and then finally the private key.
 
                 // These commands can be run in Docker without modification.
 
-                case "put":
+                case "set":
 
                     if (commandLine.Arguments.Length >= 4)
                     {

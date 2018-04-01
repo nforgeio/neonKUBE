@@ -44,8 +44,8 @@ USAGE:
     neon proxy NAME inspect
     neon proxy NAME [--all] [--sys] list|ls
     neon proxy NAME remove|rm ROUTE
-    neon proxy NAME put FILE
-    neon proxy NAME put -
+    neon proxy NAME set FILE
+    neon proxy NAME set -
     neon proxy NAME settings FILE
     neon proxy NAME settings -
     neon proxy NAME status
@@ -69,7 +69,7 @@ COMMANDS:
                       and settings.
     list|ls         - Lists the route names.
     remove|rm       - Removes a named route.
-    put             - Adds or updates a route from a file or by
+    set             - Adds or updates a route from a file or by
                       reading standard input.  JSON or YAML
                       input is supported.
     settings        - Updates the proxy global settings from a
@@ -108,16 +108,13 @@ and port number.
 Routes are specified using JSON or YAML.  Here's an example HTTP/S route that
 accepts HTTP traffic for [foo.com] and [www.foo.com] and redirects it to
 HTTPS and then also accepts HTTPS traffic using the [foo.com] certificate.
-Traffic is routed to the [foo_service] on port 80 which could be a Docker
-swarm mode service or DNS name.
+Traffic is routed to the Swarm [foo_service] on port 80.
 
     {
         ""Name"": ""my-http-route"",
         ""Mode"": ""http"",
         ""HttpsRedirect"": true,
         ""Frontends"": [
-            { ""Host"": ""foo.com"" },
-            { ""Host"": ""www.foo.com"" },
             { ""Host"": ""foo.com"", ""CertName"": ""foo.com"" },
             { ""Host"": ""www.foo.com"", ""CertName"": ""foo.com"" }
         ],
@@ -384,7 +381,7 @@ See the documentation for more proxy route and setting details.
                     }
                     break;
 
-                case "put":
+                case "set":
 
                     // $todo(jeff.lill):
                     //
@@ -518,7 +515,7 @@ See the documentation for more proxy route and setting details.
             {
                 switch (commandLine.Arguments[2])
                 {
-                    case "put":
+                    case "set":
                     case "settings":
 
                         shim.AddFile(commandLine.Arguments[3]);
