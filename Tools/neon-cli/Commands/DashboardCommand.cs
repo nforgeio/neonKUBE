@@ -64,6 +64,12 @@ dashboard names are reserved for use as commands:
         }
 
         /// <inheritdoc/>
+        public override string[] ExtendedOptions
+        {
+            get { return new string[] { "--title", "--folder", "--description" }; }
+        }
+
+        /// <inheritdoc/>
         public override void Help()
         {
             Console.WriteLine(usage);
@@ -83,6 +89,12 @@ dashboard names are reserved for use as commands:
                 "remove",
                 "set"
             };
+
+            if (commandLine.HasHelpOption)
+            {
+                Console.WriteLine(usage);
+                Program.Exit(0);
+            }
 
             var command = commandLine.Arguments.ElementAtOrDefault(0);
 
