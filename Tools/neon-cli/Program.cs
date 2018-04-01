@@ -78,7 +78,6 @@ COMMAND SUMMARY:
     neon exec               BASH-CMD
     neon file               create|decrypt|edit|encrypt|view PATH PASSWORD-NAME
     neon folder             FOLDER
-    neon get                [VALUE-EXPR]
     neon login              [--no-vpn] USER@CLUSTER
     neon login export       USER@CLUSTER
     neon login import       PATH
