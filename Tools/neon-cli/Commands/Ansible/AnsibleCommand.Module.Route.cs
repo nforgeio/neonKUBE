@@ -31,42 +31,42 @@ using Neon.Net;
 
 namespace NeonCli
 {
+    //---------------------------------------------------------------------
+    // neon_route:
+    //
+    // Synopsis:
+    // ---------
+    //
+    // Manages neonCLUSTER proxy routes.
+    //
+    // Requirements:
+    // -------------
+    //
+    // This module runs only within the [neon-cli] container when invoked
+    // by [neon ansible exec ...] or [neon ansible play ...].
+    //
+    // Options:
+    // --------
+    //
+    // parameter    required    default     choices     comments
+    // --------------------------------------------------------------------
+    //
+    // name         yes                                 neonCLUSTER route name
+    //
+    // proxy        yes                     private     identifies the target proxy
+    //                                      public
+    //
+    // route        see comment                         proxy route description
+    //                                                  required when [state=present]
+    //
+    // state        no          present     absent      indicates whether the route should
+    //                                      present     be created or removed
+    //
+    // force        no          false                   forces proxy rebuild when [state=present]
+    //                                                  even if the route is unchanged
+
     public partial class AnsibleCommand : CommandBase
     {
-        //---------------------------------------------------------------------
-        // neon_route:
-        //
-        // Synopsis:
-        // ---------
-        //
-        // Manages neonCLUSTER proxy routes.
-        //
-        // Requirements:
-        // -------------
-        //
-        // This module runs only within the [neon-cli] container when invoked
-        // by [neon ansible exec ...] or [neon ansible play ...].
-        //
-        // Options:
-        // --------
-        //
-        // parameter    required    default     choices     comments
-        // --------------------------------------------------------------------
-        //
-        // name         yes                                 neonCLUSTER route name
-        //
-        // proxy        yes                     private     identifies the target proxy
-        //                                      public
-        //
-        // route        see comment                         proxy route description
-        //                                                  required when [state=present]
-        //
-        // state        no          present     absent      indicates whether the route should
-        //                                      present     be created or removed
-        //
-        // force        no          false                   forces proxy rebuild when [state=present]
-        //                                                  even if the route is unchanged
-
         /// <summary>
         /// Implements the built-in <b>neon_route</b> module.
         /// </summary>

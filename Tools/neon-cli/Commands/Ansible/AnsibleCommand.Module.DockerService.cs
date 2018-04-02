@@ -30,35 +30,35 @@ using Neon.Net;
 
 namespace NeonCli
 {
+    //---------------------------------------------------------------------
+    // neon_docker_service:
+    //
+    // Synopsis:
+    // ---------
+    //
+    // Manages Docker services.
+    //
+    // Requirements:
+    // -------------
+    //
+    // This module runs only within the [neon-cli] container when invoked
+    // by [neon ansible exec ...] or [neon ansible play ...].
+    //
+    // Options:
+    // --------
+    //
+    // parameter    required    default     choices     comments
+    // --------------------------------------------------------------------
+    //
+    // name         yes                                 docker service name
+    //
+    // state        no          present     absent      indicates whether the service should
+    //                                      present     be created or removed
+    //
+    // force        no          false                   forces service update when [state=present]
+
     public partial class AnsibleCommand : CommandBase
     {
-        //---------------------------------------------------------------------
-        // neon_docker_service:
-        //
-        // Synopsis:
-        // ---------
-        //
-        // Manages Docker services.
-        //
-        // Requirements:
-        // -------------
-        //
-        // This module runs only within the [neon-cli] container when invoked
-        // by [neon ansible exec ...] or [neon ansible play ...].
-        //
-        // Options:
-        // --------
-        //
-        // parameter    required    default     choices     comments
-        // --------------------------------------------------------------------
-        //
-        // name         yes                                 docker service name
-        //
-        // state        no          present     absent      indicates whether the service should
-        //                                      present     be created or removed
-        //
-        // force        no          false                   forces service update when [state=present]
-
         /// <summary>
         /// Implements the built-in <b>neon_certificate</b> module.
         /// </summary>

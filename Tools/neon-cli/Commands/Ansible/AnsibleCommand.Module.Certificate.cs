@@ -30,40 +30,40 @@ using Neon.Net;
 
 namespace NeonCli
 {
+    //---------------------------------------------------------------------
+    // neon_certificate:
+    //
+    // Synopsis:
+    // ---------
+    //
+    // Manages neonCLUSTER TLS certificates.
+    //
+    // Requirements:
+    // -------------
+    //
+    // This module runs only within the [neon-cli] container when invoked
+    // by [neon ansible exec ...] or [neon ansible play ...].
+    //
+    // Options:
+    // --------
+    //
+    // parameter    required    default     choices     comments
+    // --------------------------------------------------------------------
+    //
+    // name         yes                                 neonCLUSTER certificate name
+    //
+    // value        see comment                         public certificate, any intermediate
+    //                                                  certificates and the private key in PEM 
+    //                                                  format.  Required when [state=present]
+    //
+    // state        no          present     absent      indicates whether the certificate should
+    //                                      present     be created or removed
+    //
+    // force        no          false                   resaves the certificate when [state=present]
+    //                                                  even if the certificate is the same
+
     public partial class AnsibleCommand : CommandBase
     {
-        //---------------------------------------------------------------------
-        // neon_certificate:
-        //
-        // Synopsis:
-        // ---------
-        //
-        // Manages neonCLUSTER TLS certificates.
-        //
-        // Requirements:
-        // -------------
-        //
-        // This module runs only within the [neon-cli] container when invoked
-        // by [neon ansible exec ...] or [neon ansible play ...].
-        //
-        // Options:
-        // --------
-        //
-        // parameter    required    default     choices     comments
-        // --------------------------------------------------------------------
-        //
-        // name         yes                                 neonCLUSTER certificate name
-        //
-        // value        see comment                         public certificate, any intermediate
-        //                                                  certificates and the private key in PEM 
-        //                                                  format.  Required when [state=present]
-        //
-        // state        no          present     absent      indicates whether the certificate should
-        //                                      present     be created or removed
-        //
-        // force        no          false                   resaves the certificate when [state=present]
-        //                                                  even if the certificate is the same
-
         /// <summary>
         /// Implements the built-in <b>neon_certificate</b> module.
         /// </summary>

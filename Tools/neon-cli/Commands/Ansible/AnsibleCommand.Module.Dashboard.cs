@@ -31,45 +31,45 @@ using Neon.Net;
 
 namespace NeonCli
 {
+    //---------------------------------------------------------------------
+    // neon_dns:
+    //
+    // Synopsis:
+    // ---------
+    //
+    // Manages neonCLUSTER dashboards.
+    //
+    // Requirements:
+    // -------------
+    //
+    // This module runs only within the [neon-cli] container when invoked
+    // by [neon ansible exec ...] or [neon ansible play ...].
+    //
+    // Options:
+    // --------
+    //
+    // parameter    required    default     choices     comments
+    // --------------------------------------------------------------------
+    //
+    // name         yes                                 dashboard name
+    //
+    // title        no                                  title to be used for this dashboard 
+    //                                                  when displayed in the global cluster
+    //                                                  dashboard
+    //
+    // folder       no                                  folder where this dashboard will be in 
+    //                                                  the global cluster dashboard.
+    //
+    // url          see comment                         dashboard URL.  Required  
+    //                                                  when [state=present]
+    //
+    // description  no                                  brief dashboard description
+    //
+    // state        no          present     absent      indicates whether the dashboard
+    //                                      present     should be created or removed
+
     public partial class AnsibleCommand : CommandBase
     {
-        //---------------------------------------------------------------------
-        // neon_dns:
-        //
-        // Synopsis:
-        // ---------
-        //
-        // Manages neonCLUSTER dashboards.
-        //
-        // Requirements:
-        // -------------
-        //
-        // This module runs only within the [neon-cli] container when invoked
-        // by [neon ansible exec ...] or [neon ansible play ...].
-        //
-        // Options:
-        // --------
-        //
-        // parameter    required    default     choices     comments
-        // --------------------------------------------------------------------
-        //
-        // name         yes                                 dashboard name
-        //
-        // title        no                                  title to be used for this dashboard 
-        //                                                  when displayed in the global cluster
-        //                                                  dashboard
-        //
-        // folder       no                                  folder where this dashboard will be in 
-        //                                                  the global cluster dashboard.
-        //
-        // url          see comment                         dashboard URL.  Required  
-        //                                                  when [state=present]
-        //
-        // description  no                                  brief dashboard description
-        //
-        // state        no          present     absent      indicates whether the dashboard
-        //                                      present     should be created or removed
-
         /// <summary>
         /// Implements the built-in <b>neon_dashboard</b> module.
         /// </summary>
