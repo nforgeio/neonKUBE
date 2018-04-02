@@ -1097,6 +1097,7 @@ namespace Neon.Common
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="input"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="input"/> is not valid.</exception>
         public static TEnum ParseEnum<TEnum>(string input, bool ignoreCase = false)
+            where TEnum : struct
         {
             return (TEnum)Enum.Parse(typeof(TEnum), input, ignoreCase);
         }
