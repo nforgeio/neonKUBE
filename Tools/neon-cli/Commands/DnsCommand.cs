@@ -204,7 +204,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
             // We're simply going to download and parse [neon/dns/answers/hosts.txt].
 
             var answers   = GetAnswers();
-            var entryHost = commandLine.Arguments.ElementAtOrDefault(2);
+            var entryHost = commandLine.Arguments.ElementAtOrDefault(1);
 
             Console.WriteLine();
 
@@ -349,10 +349,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                     Console.WriteLine(address);
                 }
 
-                if (addresses.Count > 1)
-                {
-                    Console.WriteLine();
-                }
+                Console.WriteLine();
             }
         }
 
