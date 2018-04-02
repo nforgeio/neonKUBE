@@ -49,7 +49,6 @@
     <None Include="dotnet\resolv.conf.head.sh" />
     <None Include="neon-cli\conf\ssh_config.conf" />
     <Content Include="neon-cli\modules\docker_stack.py" />
-    <Content Include="neon-cli\modules\docker_swarm_service.py" />
     <Content Include="neon-cluster-manager\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>
