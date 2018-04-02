@@ -58,6 +58,8 @@ namespace NeonCli
     //
     // force                    no          false                   forces service update when [state=present]
     //
+    // args                     no                                  array of service arguments
+    //
     // config                   no                                  array of configuration names
     //
     // constraint               no                                  array of placement constraints like
@@ -81,7 +83,8 @@ namespace NeonCli
     //
     // endpoint-mode            no          vip                     service endpoint mode (vip|dnsrr)
     //
-    // entrypoint               no                                  overrides the image entrypoint command
+    // entrypoint               no                                  array of strings overriding the image entrypoint
+    //                                                              command and arguments
     //
     // env                      no                                  array specifying environment variables to be
     //                                                              passed to the container like VARIABLE=VALUE
@@ -233,8 +236,13 @@ namespace NeonCli
             }
 
             /// <summary>
+            /// Optionally specifies service arguments.
+            /// </summary>
+            public List<string> Args { get; private set; } = new List<string>();
+
+            /// <summary>
             /// Optionally specifies credential specifications for Windows managed services.
-            /// These are formatted like <b>file://NAME</b> or <b>registry://key</b>.
+            /// These are formatted like <b>file://NAME</b> or <b>registry://KEY</b>.
             /// </summary>
             public List<string> CredentialSpec { get; private set; } = new List<string>();
 
@@ -286,9 +294,9 @@ namespace NeonCli
             public EndpointMode? EndpointMode { get; private set; }
 
             /// <summary>
-            /// Optionally overrides the image entrypoint.
+            /// Optionally overrides the image entrypoint command and arguments.
             /// </summary>
-            public string Entrypoint { get; set; }
+            public List<string> Entrypoint { get; private set; } = new List<string>();
 
             /// <summary>
             /// Specifies environment variables to be passed to the service containers.  These
@@ -322,7 +330,7 @@ namespace NeonCli
 
             /// <summary>
             /// Optionally specifies the interval between health checks.  This is an integer
-            /// with an optional unit: <b>ms|s|m|h</b>.
+            /// with an optional unit: <b>ns|us|ms|s|m|h</b> (defaults to <b>ns</b>).
             /// </summary>
             public string HeathInterval { get; set; }
 
@@ -335,13 +343,14 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the period after the service container starts when
             /// health check failures will be ignored. This is an integer with an 
-            /// optional unit: <b>ms|s|m|h</b>.
+            /// optional unit: <b>ns|us|ms|s|m|h</b> (defaults to <b>ns</b>).
             /// </summary>
             public string HealthStartPeriod { get; set; }
 
             /// <summary>
             /// Optionally specifies the maximum time to wait for a health check to
-            /// be completed.   This is an integer with an optional unit: <b>ms|s|m|h</b>.
+            /// be completed.   This is an integer with an optional unit: <b>ns|us|ms|s|m|h</b>
+            /// (defaults to <b>ns</b>).
             /// </summary>
             public string HealthTimeout { get; set; }
 
@@ -415,13 +424,13 @@ namespace NeonCli
             /// <summary>
             /// Optionally disable container health checks.
             /// </summary>
-            public bool NoHealthCheck { get; set; }
+            public bool? NoHealthCheck { get; set; }
 
             /// <summary>
             /// Optionally prevent querying the registry to resolve image digests
             /// and supported platforms.
             /// </summary>
-            public bool NoResolveImage { get; set; }
+            public bool? NoResolveImage { get; set; }
 
             /// <summary>
             /// Specifies service container placement preferences.  I'm not
@@ -460,11 +469,12 @@ namespace NeonCli
             /// Optionally specifies the condition when service containers will
             /// be restarted.
             /// </summary>
-            public RestartCondition RestartCondition { get; set; } = RestartCondition.Any;
+            public RestartCondition? RestartCondition { get; set; } = RestartCondition.Any;
 
             /// <summary>
             /// Optionally specifies the delay between restart attempts.  This is
-            /// an integer with one of the following units: <b>ns|us|ms|s|m|h</b>.
+            /// an integer with one of the following units: <b>ns|us|ms|s|m|h</b>
+            /// (defaults to <b>ns</b>).
             /// </summary>
             public string RestartDelay { get; set; }
 
@@ -475,13 +485,15 @@ namespace NeonCli
 
             /// <summary>
             /// Optionally specifies the Window used to evaluate the restart policy.
-            /// This is an integer with one of the following units: <b>ns|us|ms|s|m|h</b>.
+            /// This is an integer with one of the following units: <b>ns|us|ms|s|m|h</b>
+            /// (defaults to <b>ns</b>).
             /// </summary>
             public string RestartWindow { get; set; }
 
             /// <summary>
             /// Optionally specifies the delay between service task rollbacks.
-            /// This is an integer with one of the following units: <b>ns|us|ms|s|m|h</b>.
+            /// This is an integer with one of the following units: <b>ns|us|ms|s|m|h</b>
+            /// (defaults to <b>ns</b>).
             /// </summary>
             public string RollbackDelay { get; set; }
 
@@ -493,7 +505,7 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the time to wait after each task rollback to 
             /// monitor for failure.  This is an integer with one of the following
-            /// units: <b>ns|us|ms|s|m|h</b>.
+            /// units: <b>ns|us|ms|s|m|h</b> (defaults to <b>ns</b>).
             /// </summary>
             public string RollbackMonitor { get; set; }
 
@@ -517,7 +529,7 @@ namespace NeonCli
             /// Optionally specifies the time to wait for a service container to
             /// stop gracefully after being signalled to stop before Docker will
             /// kill it forcefully.  This is an integer with one of the following
-            /// units: <b>ns|us|ms|s|m|h</b>.
+            /// units: <b>ns|us|ms|s|m|h</b> (defaults to <b>ns</b>).
             /// </summary>
             public string StopGracePeriod { get; set; }
 
@@ -535,7 +547,8 @@ namespace NeonCli
 
             /// <summary>
             /// Optionally specifies the delay between service container updates.
-            /// This is an integer with one of the following units: <b>ns|us|ms|s|m|h</b>.
+            /// This is an integer with one of the following units: <b>ns|us|ms|s|m|h</b>
+            /// (defaults to <b>ns</b>).
             /// </summary>
             public string UpdateDelay { get; set; }
 
@@ -547,7 +560,7 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the time to wait after each service task update to 
             /// monitor for failure.  This is an integer with one of the following
-            /// units: <b>ns|us|ms|s|m|h</b>.
+            /// units: <b>ns|us|ms|s|m|h</b> (defaults to <b>ns</b>).
             /// </summary>
             public string UpdateMonitor { get; set; }
 
@@ -571,7 +584,7 @@ namespace NeonCli
             /// Optionally sends registry authentication details to swarm agents
             /// hosting the service containers.
             /// </summary>
-            public bool WithRegistryAuth { get; set; }
+            public bool? WithRegistryAuth { get; set; }
 
             /// <summary>
             /// Optionally specifies the working directory within the service container.
