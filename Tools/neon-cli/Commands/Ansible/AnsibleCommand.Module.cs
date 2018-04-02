@@ -324,6 +324,11 @@ namespace NeonCli
                         RunRouteModule(context);
                         break;
 
+                    case "neon_docker_service":
+
+                        RunDockerServiceModule(context);
+                        break;
+
                     default:
 
                         throw new ArgumentException($"[{module}] is not a recognized neonCLUSTER Ansible module.");

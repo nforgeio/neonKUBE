@@ -77,6 +77,7 @@
     <None Include="neon-cli\modules\neon_certificate.sh" />
     <None Include="neon-cli\modules\neon_dashboard.sh" />
     <None Include="neon-cli\modules\neon_dns.sh" />
+    <None Include="neon-cli\modules\neon_docker_service.sh" />
     <None Include="neon-cli\modules\neon_route.sh" />
     <None Include="neon-cluster-manager\build.ps1" />
     <None Include="neon-cluster-manager\docker-entrypoint.sh" />
