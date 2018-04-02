@@ -47,21 +47,178 @@ namespace NeonCli
     //
     // Options:
     // --------
-    //
-    // parameter    required    default     choices     comments
+    //                                      create
+    // parameter                required    default     choices     comments
     // --------------------------------------------------------------------
     //
-    // name         yes                                 docker service name
+    // name                     yes                                 docker service name
     //
-    // state        no          present     absent      indicates whether the service should
-    //                                      present     be created or removed
+    // state                    no          present     absent      indicates whether the service should
+    //                                                  present     be created or removed
     //
-    // force        no          false                   forces service update when [state=present]
+    // force                    no          false                   forces service update when [state=present]
+    //
+    // config                   no                                  array of configuration names
+    //
+    // constraint               no                                  array of placement constraints like
+    //                                                              LABEL==VALUE or LABEL!=VALUE
+    //
+    // container-label          no                                  array of container labels like
+    //                                                              LABEL=VALUE
+    //
+    // credential-spec          no                                  array of Windows credential specifications
+    //
+    // detach                   no          false                   specifies whether the service command should
+    //                                                              exit immediately or wait for the service changes
+    //                                                              to converge
+    //
+    // dns                      no                                  array of DNS nameserver IP addresses
+    //
+    // dns-option               no                                  array of DNS options like OPTION=VALUE
+    //
+    // dns-search               no                                  array of  DNS domains to be searched for 
+    //                                                              non-fully qualified hostnames
+    //
+    // endpoint-mode            no          vip                     service endpoint mode (vip|dnsrr)
+    //
+    // entrypoint               no                                  overrides the image entrypoint command
+    //
+    // env                      no                                  array specifying environment variables to be
+    //                                                              passed to the container like VARIABLE=VALUE
+    //                                                              or just VARIABLE
+    //
+    // env-file                 no                                  array of host environment variable specification
+    //                                                              file paths to be passed to the service containers
+    //
+    // generic-resource         no                                  array of generic resource requirements for
+    //                                                              service placement.
+    //
+    // group                    no                                  array of service container supplementary user groups 
+    //
+    // health-cmd               no                                  service container health check command
+    //
+    // health-interval          no                                  interval between service container health checks
+    //
+    // health-retries           no                                  number of consecutive health check failures before
+    //                                                              a service container is consider unhealthy
+    //
+    // health-start-period      no                                  delay after service container start before health
+    //                                                              checks are enforced
+    //
+    // health-timeout           no                                  maximum time to wait for a healh check command
+    //                                                          
+    // host                     no                                  array of hostname to IP address mappings to be
+    //                                                              resolved automatically within service containers,
+    //                                                              essentially like adding theses to the local 
+    //                                                              [/etc/hosts] file.  These are formatted like
+    //                                                              HOST:IP.
+    //
+    // hostname                                                     overrides [Name] as the DNS name for the service.
+    //
+    // isolation                no          default                 Windows isolation mode (default|process|hyperv)
+    //
+    // label                    no                                  array of service labels like LABEL=VALUE
+    //
+    // limit-cpu                no                                  specifies how many CPUs the service containers requires.
+    //                                                              This can be a floating point number (e.g. 1.5)
+    //
+    // limit-memory             no                                  specifies the maximum service container RAM as size 
+    //                                                              and units (b|k|m|g)
+    //
+    // log-driver               no                                  specifies the logging driver
+    //
+    // log-opt                  no                                  specifies the logging options
+    //
+    // mode                     no          replicated              specifies the service mode (replicated|global)
+    //
+    // mount                    no                                  array of structures specifying container bind mounts
+    //
+    // network                  no                                  array of networks to be attached
+    //
+    // no-health-check          no          false                   disable service container health checks
+    //
+    // no-resolve-image         no          false                   disable registry query to resolve image digest 
+    //                                                              and supported platforms
+    //
+    // placement-pref           no                                  array of placement preferences
+    //
+    // publish                  no                                  array of network port publication specifications like:
+    //                                      
+    //                                                                  published: 8080
+    //                                                                  target: 80
+    //                                                                  mode: ingress       (ingress|host}
+    //                                                                  protcol: tcp        (tcp|udp|sctp)
+    //
+    // read-only                no          false                   mount container root filesystem as read-only
+    //
+    // replicas                 no          1                       number of service tasks
+    //
+    // reserve-cpu              no                                  CPUs to be reserved for each service container.
+    //                                                              This is a floating point number.
+    //
+    // reserve-memory           no                                  RAM to be reserved for each service container as size 
+    //                                                              and units (b|k|m|g)
+    //
+    // restart-condition        no          any                     specifies restart condition (none|on-failure|any)
+    //
+    // restart-delay            no          5s                      Delay between service container restart attempts
+    //                                                              (ns|us|ms|s|m|h)
+    //
+    // restart-max-attempts     no          unlimited               maximum number of container restarts to be attempted
+    //
+    // restart-window           no                                  time window used to evaluate restart policy (ns|us|ms|s|m|h)
+    //
+    // rollback-delay           no          0s                      delay between task rollbacks (ns|us|ms|s|m|h)
+    //
+    // rollback-failure-action  no          pause                   action to take on service container rollback failure
+    //                                                              (pause|continue)
+    //
+    // rollback-max-failure-ratio no        0                       failure rate to tolerate during a rollback.
+    //
+    // rollback-monitor         no          5s                      time to monitor rolled back service containers for
+    //                                                              failure (ns|us|ms|s|m|h)
+    //
+    // rollback-order           no          stop-first              service container rollback order (stop-first|start-first)
+    //
+    // rollback-parallelism     no          1                       maximum number of service tasks to be rolled back
+    //                                                              simultaneously (0 to roll back all at once)
+    //
+    // secret                   no                                  array of secret names to be be exposed to the service
+    //
+    // stop-grace-period        no          10s                     maximum time to wait for a service container to 
+    //                                                              terminate gracefully (ns|us|ms|s|m|h)
+    //
+    // stop-signal              no          SIGTERM                 signal to be used to stop service containers
+    //
+    // tty                      no          false                   allocate a TTY for service containers
+    //
+    // update-delay             no          0s                      delay between task updates (ns|us|ms|s|m|h)
+    //
+    // update-failure-action    no          pause                   action to take on service container update failure
+    //                                                              (pause|continue)
+    //
+    // update-max-failure-ratio no          0                       failure rate to tolerate during an update.
+    //
+    // update-monitor           no          5s                      time to monitor updated service containers for
+    //                                                              failure (ns|us|ms|s|m|h)
+    //
+    // update-order             no          stop-first              service container update order (stop-first|start-first)
+    //
+    // update-parallelism       no          1                       maximum number of service tasks to be updated
+    //                                                              simultaneously (0 to update all at once)
+    //
+    // user                     no                                  container username of group: <name|uid>[:<group|gid>]
+    //
+    // with-registry-auth       no          false                   send registry authentication details to Swarm nodes
+    //
+    // workdir                  no                                  specifies command working directory within containers
 
     public partial class AnsibleCommand : CommandBase
     {
         //---------------------------------------------------------------------
         // Private types
+
+        // NOTE: The types below are accurate as of Docker API version 1.35.
 
         /// <summary>
         /// Specifies a Docker service.
@@ -74,6 +231,12 @@ namespace NeonCli
             public DockerService()
             {
             }
+
+            /// <summary>
+            /// Optionally specifies credential specifications for Windows managed services.
+            /// These are formatted like <b>file://NAME</b> or <b>registry://key</b>.
+            /// </summary>
+            public List<string> CredentialSpec { get; private set; } = new List<string>();
 
             /// <summary>
             /// Identifies the configurations to be made available to the service.
@@ -98,7 +261,7 @@ namespace NeonCli
             /// after signalling its creation or update rather than waiting for it
             /// to converge.
             /// </summary>
-            public bool Detach { get; set; }
+            public bool? Detach { get; set; }
 
             /// <summary>
             /// Specifies the DNS nameserver IP addresses for the container.
@@ -120,7 +283,7 @@ namespace NeonCli
             /// <summary>
             /// Specifies the endpoint mode.
             /// </summary>
-            public EndpointMode EndpointMode { get; private set; } = EndpointMode.Vip;
+            public EndpointMode? EndpointMode { get; private set; }
 
             /// <summary>
             /// Optionally overrides the image entrypoint.
@@ -167,7 +330,7 @@ namespace NeonCli
             /// Optionally specifies the number of times the <see cref="HealthCmd"/> can
             /// fail before a service container will be considered unhealthy.
             /// </summary>
-            public int HealthRetries { get; set; } = -1;
+            public int? HealthRetries { get; set; }
 
             /// <summary>
             /// Optionally specifies the period after the service container starts when
@@ -194,9 +357,14 @@ namespace NeonCli
             public string Hostname { get; set; }
 
             /// <summary>
+            /// Specifies the Docker image.
+            /// </summary>
+            public string Image { get; set; }
+
+            /// <summary>
             /// Service container isolation mode (Windows only).
             /// </summary>
-            public IsolationMode IsolationMode { get; set; }
+            public IsolationMode? IsolationMode { get; set; }
 
             /// <summary>
             /// Optionally specifies service labels.  These are formatted like <b>NAME=VALUE</b>.
@@ -206,7 +374,7 @@ namespace NeonCli
             /// <summary>
             /// Limits the number of CPUs to be assigned to the service containers.
             /// </summary>
-            public int LimitCpu { get; set; } = -1;
+            public int? LimitCpu { get; set; }
 
             /// <summary>
             /// Optionally specifies the maximum RAM to be assigned to the container.
@@ -227,13 +395,12 @@ namespace NeonCli
             /// <summary>
             /// Specifies the service mode.
             /// </summary>
-            public ServiceMode Mode { get; set; } = ServiceMode.Replicated;
+            public ServiceMode? Mode { get; set; }
 
             /// <summary>
-            /// Optionally specifies any service filesystem mounts.  We're not going to
-            /// try to parse this and will just pass anything through.
+            /// Optionally specifies any service filesystem mounts.
             /// </summary>
-            public List<string> Mount { get; private set; } = new List<string>();
+            public List<Mount> Mount { get; private set; } = new List<Mount>();
 
             /// <summary>
             /// The service name.
@@ -263,26 +430,25 @@ namespace NeonCli
             public List<string> PlacementPref { get; private set; } = new List<string>();
 
             /// <summary>
-            /// Optionally publish a service port to the ingress network.  I'm
-            /// not going to try to parse these.
+            /// Optionally publish a service port to the ingress network.
             /// </summary>
-            public List<string> Publish { get; private set; } = new List<string>();
+            public List<PublishPort> Publish { get; private set; } = new List<PublishPort>();
 
             /// <summary>
             /// Optionally mount the container's root filesystem as read-only.
             /// </summary>
-            public bool ReadOnly { get; set; }
+            public bool? ReadOnly { get; set; }
 
             /// <summary>
             /// Specifies the number of service instances deploy.
             /// </summary>
-            public int Replicas { get; set; } = 1;
+            public int? Replicas { get; set; }
 
             /// <summary>
             /// Optionally specifies the number of CPUs to reserve for each service
             /// instance.  This is a double so you can specify things like 1.5 CPUs.
             /// </summary>
-            public double ReserveCpu { get; set; } = -1.0;
+            public double? ReserveCpu { get; set; }
 
             /// <summary>
             /// Optionally specifies the RAM to reserver for each service instance.
@@ -322,7 +488,7 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the failure rate to tolerate during a rollback.
             /// </summary>
-            public double RollbackMaxFailureRatio { get; set; } = -1.0;
+            public double? RollbackMaxFailureRatio { get; set; }
 
             /// <summary>
             /// Optionally specifies the time to wait after each task rollback to 
@@ -334,13 +500,13 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the service task rollback order.
             /// </summary>
-            public OperationOrder RollbackOrder { get; set; } = OperationOrder.StopFirst;
+            public OperationOrder? RollbackOrder { get; set; }
 
             /// <summary>
             /// Optionally specifies the maximum number of service tasks to be
             /// rolled back at once.
             /// </summary>
-            public int RollbackParallism { get; set; } = -1;
+            public int? RollbackParallism { get; set; }
 
             /// <summary>
             /// Optionally specifies the secrets to be exposed to the service.
@@ -365,7 +531,7 @@ namespace NeonCli
             /// <summary>
             /// Optionally allocate a TTY for the service containers.
             /// </summary>
-            public bool Tty { get; set; }
+            public bool? Tty { get; set; }
 
             /// <summary>
             /// Optionally specifies the delay between service container updates.
@@ -376,7 +542,7 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the action to take when a service container update fails.
             /// </summary>
-            public UpdateFailureAction UpdateFailureAction { get; set; } = UpdateFailureAction.Pause;
+            public UpdateFailureAction? UpdateFailureAction { get; set; }
 
             /// <summary>
             /// Optionally specifies the time to wait after each service task update to 
@@ -388,13 +554,13 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the service task update order.
             /// </summary>
-            public OperationOrder UpdateOrder { get; set; } = OperationOrder.StopFirst;
+            public OperationOrder? UpdateOrder { get; set; }
 
             /// <summary>
             /// Optionally specifies the maximum number of service tasks to be
             /// updated at once.
             /// </summary>
-            public int UpdatekParallism { get; set; } = -1;
+            public int? UpdateParallism { get; set; }
 
             /// <summary>
             /// Optionally specifies the service container username/group.
@@ -478,13 +644,120 @@ namespace NeonCli
             Rollback
         }
 
+        private enum PortMode
+        {
+            [EnumMember(Value = "ingress")]
+            Ingress = 0,
+
+            [EnumMember(Value = "host")]
+            Host
+        }
+
+        private enum PortProtocol
+        {
+            [EnumMember(Value = "tcp")]
+            Tcp = 0,
+
+            [EnumMember(Value = "udp")]
+            Udp,
+
+            [EnumMember(Value = "sctp")]
+            Sctp
+        }
+
+        private class PublishPort
+        {
+            public int Published { get; set;}
+
+            public int Target { get; set; }
+
+            public PortMode Mode { get; set; }
+
+            public PortProtocol Protocol { get; set; }
+        }
+
+        private enum MountType
+        {
+            [EnumMember(Value = "volume")]
+            Volume = 0,
+
+            [EnumMember(Value = "bind")]
+            Bind,
+
+            [EnumMember(Value = "tempfs")]
+            Tmpfs
+        }
+
+        private enum MountConsistency
+        {
+            [EnumMember(Value = "default")]
+            Default,
+
+            [EnumMember(Value = "consistent")]
+            Consistent,
+
+            [EnumMember(Value = "cached")]
+            Cached,
+
+            [EnumMember(Value = "delegated")]
+            Delegated
+        }
+
+        private enum BindPropagation
+        {
+            [EnumMember(Value = "rprivate")]
+            RPrivate = 0,
+
+            [EnumMember(Value = "shared")]
+            Shared,
+
+            [EnumMember(Value = "slave")]
+            Slave,
+
+            [EnumMember(Value = "private")]
+            Private,
+
+            [EnumMember(Value = "rshared")]
+            RShared,
+
+            [EnumMember(Value = "rslave")]
+            RSlave
+        }
+
+        private class Mount
+        {
+            public MountType Type { get; set; }
+
+            public string Source { get; set; }
+
+            public string Target { get; set; }
+
+            public bool ReadOnly { get; set; }
+
+            public MountConsistency Consistency { get; set; }
+
+            public BindPropagation BindPropagation { get; set; }
+
+            public string VolumeDriver { get; set; }
+
+            public List<string> VolumeLabel { get; private set; } = new List<string>();
+
+            public bool VolumeNoCopy { get; set; }
+
+            public List<string> VolumeOpt { get; private set; } = new List<string>();
+
+            public long TmpfsSize { get; set; }
+
+            public string TmpfsMode { get; set; }
+        }
+
         //---------------------------------------------------------------------
         // Implementation
 
-            /// <summary>
-            /// Implements the built-in <b>neon_certificate</b> module.
-            /// </summary>
-            /// <param name="context">The module execution context.</param>
+        /// <summary>
+        /// Implements the built-in <b>neon_certificate</b> module.
+        /// </summary>
+        /// <param name="context">The module execution context.</param>
         private void RunDockerServiceModule(ModuleContext context)
         {
             // Obtain common arguments.
