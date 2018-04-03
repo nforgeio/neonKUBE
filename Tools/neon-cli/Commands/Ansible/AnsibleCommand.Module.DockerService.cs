@@ -47,6 +47,9 @@ namespace NeonCli
     //
     // Options:
     // --------
+    //
+    // NOTE: Durations without units will be assumed to be seconds.
+    //
     //                                      create
     // parameter                required    default     choices     comments
     // --------------------------------------------------------------------
@@ -330,7 +333,7 @@ namespace NeonCli
 
             /// <summary>
             /// Optionally specifies the interval between health checks.  This is an integer
-            /// with an optional unit: <b>ns|us|ms|s|m|h</b> (defaults to <b>ns</b>).
+            /// with an optional unit: <b>ns|us|ms|s|m|h</b> (defaults to <b>s</b>).
             /// </summary>
             public string HeathInterval { get; set; }
 
@@ -343,14 +346,14 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the period after the service container starts when
             /// health check failures will be ignored. This is an integer with an 
-            /// optional unit: <b>ns|us|ms|s|m|h</b> (defaults to <b>ns</b>).
+            /// optional unit: <b>ns|us|ms|s|m|h</b> (defaults to <b>s</b>).
             /// </summary>
             public string HealthStartPeriod { get; set; }
 
             /// <summary>
             /// Optionally specifies the maximum time to wait for a health check to
             /// be completed.   This is an integer with an optional unit: <b>ns|us|ms|s|m|h</b>
-            /// (defaults to <b>ns</b>).
+            /// (defaults to <b>s</b>).
             /// </summary>
             public string HealthTimeout { get; set; }
 
@@ -469,12 +472,12 @@ namespace NeonCli
             /// Optionally specifies the condition when service containers will
             /// be restarted.
             /// </summary>
-            public RestartCondition? RestartCondition { get; set; } = RestartCondition.Any;
+            public RestartCondition? RestartCondition { get; set; }
 
             /// <summary>
             /// Optionally specifies the delay between restart attempts.  This is
             /// an integer with one of the following units: <b>ns|us|ms|s|m|h</b>
-            /// (defaults to <b>ns</b>).
+            /// (defaults to <b>s</b>).
             /// </summary>
             public string RestartDelay { get; set; }
 
@@ -486,14 +489,14 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the Window used to evaluate the restart policy.
             /// This is an integer with one of the following units: <b>ns|us|ms|s|m|h</b>
-            /// (defaults to <b>ns</b>).
+            /// (defaults to <b>s</b>).
             /// </summary>
             public string RestartWindow { get; set; }
 
             /// <summary>
             /// Optionally specifies the delay between service task rollbacks.
             /// This is an integer with one of the following units: <b>ns|us|ms|s|m|h</b>
-            /// (defaults to <b>ns</b>).
+            /// (defaults to <b>s</b>).
             /// </summary>
             public string RollbackDelay { get; set; }
 
@@ -505,7 +508,7 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the time to wait after each task rollback to 
             /// monitor for failure.  This is an integer with one of the following
-            /// units: <b>ns|us|ms|s|m|h</b> (defaults to <b>ns</b>).
+            /// units: <b>ns|us|ms|s|m|h</b> (defaults to <b>s</b>).
             /// </summary>
             public string RollbackMonitor { get; set; }
 
@@ -529,7 +532,7 @@ namespace NeonCli
             /// Optionally specifies the time to wait for a service container to
             /// stop gracefully after being signalled to stop before Docker will
             /// kill it forcefully.  This is an integer with one of the following
-            /// units: <b>ns|us|ms|s|m|h</b> (defaults to <b>ns</b>).
+            /// units: <b>ns|us|ms|s|m|h</b> (defaults to <b>s</b>).
             /// </summary>
             public string StopGracePeriod { get; set; }
 
@@ -548,7 +551,7 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the delay between service container updates.
             /// This is an integer with one of the following units: <b>ns|us|ms|s|m|h</b>
-            /// (defaults to <b>ns</b>).
+            /// (defaults to <b>s</b>).
             /// </summary>
             public string UpdateDelay { get; set; }
 
@@ -560,7 +563,7 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the time to wait after each service task update to 
             /// monitor for failure.  This is an integer with one of the following
-            /// units: <b>ns|us|ms|s|m|h</b> (defaults to <b>ns</b>).
+            /// units: <b>ns|us|ms|s|m|h</b> (defaults to <b>s</b>).
             /// </summary>
             public string UpdateMonitor { get; set; }
 
@@ -773,6 +776,8 @@ namespace NeonCli
         /// <param name="context">The module execution context.</param>
         private void RunDockerServiceModule(ModuleContext context)
         {
+            var cluster = NeonClusterHelper.Cluster;
+
             // Obtain common arguments.
 
             if (!context.Arguments.TryGetValue<string>("name", out var name))
@@ -782,7 +787,7 @@ namespace NeonCli
 
             if (!ClusterDefinition.IsValidName(name))
             {
-                throw new ArgumentException($"[name={name}] is not a valid service name.");
+                throw new ArgumentException($"[name={name}] is not a valid Docker service name.");
             }
 
             if (!context.Arguments.TryGetValue<string>("state", out var state))
@@ -795,6 +800,63 @@ namespace NeonCli
             if (!context.Arguments.TryGetValue<bool>("force", out var force))
             {
                 force = false;
+            }
+
+            // Parse the service definition from the context arguments.
+
+            // $todo(jeff.lill): We could try harder to validate many fields.
+
+            var serviceDef = new DockerService();
+
+            serviceDef.Name = name;
+
+            foreach (var item in ParseStringArray(context, "args"))
+            {
+                serviceDef.Args.Add(item);
+            }
+
+            foreach (var item in ParseStringArray(context, "config"))
+            {
+                serviceDef.Config.Add(item);
+            }
+
+            foreach (var item in ParseStringArray(context, "constraint"))
+            {
+                serviceDef.Constraint.Add(item);
+            }
+
+            foreach (var item in ParseStringArray(context, "container-label"))
+            {
+                serviceDef.ContainerLabel.Add(item);
+            }
+
+            foreach (var item in ParseStringArray(context, "credential-spec"))
+            {
+                serviceDef.CredentialSpec.Add(item);
+            }
+
+            serviceDef.Detach = ParseBool(context, "detach");
+
+            foreach (var item in ParseIPAddressArray(context, "dns"))
+            {
+                serviceDef.Dns.Add(item);
+            }
+
+            foreach (var item in ParseStringArray(context, "dns-option"))
+            {
+                serviceDef.DnsOption.Add(item);
+            }
+
+            foreach (var item in ParseStringArray(context, "dns-search"))
+            {
+                serviceDef.DnsSearch.Add(item);
+            }
+
+            // Abort the operation if any errors were reported during parsing.
+
+            if (context.HasErrors)
+            {
+                return;
             }
 
             // We have the required arguments, so perform the operation.
@@ -812,6 +874,214 @@ namespace NeonCli
                 default:
 
                     throw new ArgumentException($"[state={state}] is not one of the valid choices: [absent] or [present].");
+            }
+        }
+
+        /// <summary>
+        /// Parses an argument as a string array.
+        /// </summary>
+        /// <param name="context">The module context.</param>
+        /// <param name="argName">The argument name.</param>
+        /// <returns>The string array.</returns>
+        private List<string> ParseStringArray(ModuleContext context, string argName)
+        {
+            var array = new List<string>();
+
+            if (!context.Arguments.TryGetValue(argName, out var jToken))
+            {
+                return array;
+            }
+
+            var jArray = jToken as JArray;
+
+            if (jArray == null)
+            {
+                context.WriteErrorLine($"[{argName}] is not an array.");
+                return array;
+            }
+
+            foreach (var item in jArray)
+            {
+                try
+                {
+                    array.Add(item.ToObject<string>());
+                }
+                catch
+                {
+                    context.WriteErrorLine($"[{argName}] array as one or more invalid elements.");
+                    return array;
+                }
+            }
+
+            return array;
+        }
+
+        /// <summary>
+        /// Parses a Docker time interval.
+        /// </summary>
+        /// <param name="context">The module context.</param>
+        /// <param name="argName">The argument name.</param>
+        /// <returns>The parsed duration in nanoseconds or <c>null</c>.</returns>
+        private long? ParseInterval(ModuleContext context, string argName)
+        {
+            if (!context.Arguments.TryGetValue(argName, out var jToken))
+            {
+                return null;
+            }
+
+            try
+            {
+                var orgValue = jToken.ToObject<string>();
+                var value    = orgValue;
+                var units    = 1000000000L;    // default unit is 1s = 1000000000ns
+
+                if (string.IsNullOrEmpty(value))
+                {
+                    return null;
+                }
+
+                if (value.EndsWith("ns", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    units = 1L;
+                    value = value.Substring(0, value.Length - 2);
+                }
+                else if (value.EndsWith("us", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    units = 1000L;
+                    value = value.Substring(0, value.Length - 2);
+                }
+                else if (value.EndsWith("ms", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    units = 1000000L;
+                    value = value.Substring(0, value.Length - 2);
+                }
+                else if (value.EndsWith("s", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    units = 1000000000L;
+                    value = value.Substring(0, value.Length - 1);
+                }
+                else if (value.EndsWith("m", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    units = 60 * 1000000000L;
+                    value = value.Substring(0, value.Length - 1);
+                }
+                else if (value.EndsWith("h", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    units = 60 * 60 * 1000000000L;
+                    value = value.Substring(0, value.Length - 1);
+                }
+                else if (!char.IsDigit(value.Last()))
+                {
+                    context.WriteErrorLine($"[{argName}={orgValue}] has an unknown unit.");
+                    return null;
+                }
+
+                if (long.TryParse(value, out var time))
+                {
+                    if (time < 0)
+                    {
+                        context.WriteErrorLine($"[{argName}={orgValue}] cannot be negative.");
+                        return null;
+                    }
+
+                    return time * units;
+                }
+                else
+                {
+                    context.WriteErrorLine($"[{argName}={orgValue}] is not a valid duration.");
+                    return null;
+                }
+            }
+            catch
+            {
+                context.WriteErrorLine($"[{argName}] cannot be converted into a string.");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Parses a boolean.
+        /// </summary>
+        /// <param name="context">The module context.</param>
+        /// <param name="argName">The argument name.</param>
+        /// <returns>The parsed boolean or <c>null</c>.</returns>
+        private bool? ParseBool(ModuleContext context, string argName)
+        {
+            if (!context.Arguments.TryGetValue(argName, out var jToken))
+            {
+                return null;
+            }
+
+            try
+            {
+                return jToken.ToObject<bool>();
+            }
+            catch
+            {
+                context.WriteErrorLine($"[{argName}] is not a valid boolean.");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Parses an argument as an <see cref="IPAddress"/> array.
+        /// </summary>
+        /// <param name="context">The module context.</param>
+        /// <param name="argName">The argument name.</param>
+        /// <returns>The IPAddress array.</returns>
+        private List<IPAddress> ParseIPAddressArray(ModuleContext context, string argName)
+        {
+            var stringArray = ParseStringArray(context, argName);
+            var array       = new List<IPAddress>();
+
+            foreach (var item in stringArray)
+            {
+                if (IPAddress.TryParse(item, out var address))
+                {
+                    array.Add(address);
+                }
+                else
+                {
+                    context.WriteErrorLine($"[{argName}] is includes invalid IP address [{item}].");
+                }
+            }
+
+            return array;
+        }
+
+        /// <summary>
+        /// Parses an enumeration.
+        /// </summary>
+        /// <typeparam name="TEnum">The enumeration type.</typeparam>
+        /// <param name="context">The module context.</param>
+        /// <param name="argName">The argument name.</param>
+        /// <returns>The enumeration value or <c>null</c>.</returns>
+        private TEnum? ParseEnum<TEnum>(ModuleContext context, string argName)
+            where TEnum : struct
+        {
+            if (!context.Arguments.TryGetValue(argName, out var jToken))
+            {
+                return null;
+            }
+
+            try
+            {
+                var value = jToken.ToObject<string>();
+
+                try
+                {
+                    return (TEnum?)NeonHelper.ParseEnum<TEnum>(value, ignoreCase: true);
+                }
+                catch
+                {
+                    context.WriteErrorLine($"[{argName}] is not a valid boolean.");
+                    return null;
+                }
+            }
+            catch
+            {
+                context.WriteErrorLine($"[{argName}] is not a valid boolean.");
+                return null;
             }
         }
     }

@@ -202,6 +202,11 @@ namespace NeonCli
             public List<string> StdOutLines { get; set; } = null;
 
             /// <summary>
+            /// Indicates whether one or more errors have been reported.
+            /// </summary>
+            public bool HasErrors { get; private set; }
+
+            /// <summary>
             /// Writes a line of text to the standard output lines.
             /// </summary>
             /// <param name="verbosity">The verbosity level for this message.</param>
@@ -220,6 +225,8 @@ namespace NeonCli
             /// <param name="value">The text to be written.</param>
             public void WriteErrorLine(string value = null)
             {
+                HasErrors = true;
+
                 error.Add(value ?? string.Empty);
             }
 
