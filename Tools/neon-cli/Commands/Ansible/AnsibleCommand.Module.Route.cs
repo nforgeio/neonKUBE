@@ -77,7 +77,7 @@ namespace NeonCli
 
             // Obtain common arguments.
 
-            context.WriteLine(Verbosity.Trace, $"Parsing [name]");
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [name]");
 
             if (!context.Arguments.TryGetValue<string>("name", out var name))
             {
@@ -89,7 +89,7 @@ namespace NeonCli
                 throw new ArgumentException($"[name={name}] is not a valid proxy route name.");
             }
 
-            context.WriteLine(Verbosity.Trace, $"Parsing [proxy]");
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [proxy]");
 
             if (!context.Arguments.TryGetValue<string>("proxy", out var proxy))
             {
@@ -113,7 +113,7 @@ namespace NeonCli
                     throw new ArgumentException($"[proxy={proxy}] is not a one of the valid choices: [private] or [public].");
             }
 
-            context.WriteLine(Verbosity.Trace, $"Parsing [state]");
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [state]");
 
             if (!context.Arguments.TryGetValue<string>("state", out var state))
             {
@@ -122,7 +122,7 @@ namespace NeonCli
 
             state = state.ToLowerInvariant();
 
-            context.WriteLine(Verbosity.Trace, $"Parsing [force]");
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [force]");
 
             if (!context.Arguments.TryGetValue<bool>("force", out var force))
             {
@@ -135,34 +135,34 @@ namespace NeonCli
             {
                 case "absent":
 
-                    context.WriteLine(Verbosity.Trace, $"Check if route [{name}] exists.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Check if route [{name}] exists.");
 
                     if (proxyManager.GetRoute(name) != null)
                     {
-                        context.WriteLine(Verbosity.Trace, $"Route [{name}] does exist.");
-                        context.WriteLine(Verbosity.Info, $"Deleting route [{name}].");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Route [{name}] does exist.");
+                        context.WriteLine(AnsibleVerbosity.Info, $"Deleting route [{name}].");
 
                         if (context.CheckMode)
                         {
-                            context.WriteLine(Verbosity.Info, $"Route [{name}] will be deleted when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Route [{name}] will be deleted when CHECKMODE is disabled.");
                         }
                         else
                         {
                             proxyManager.RemoveRoute(name);
-                            context.WriteLine(Verbosity.Trace, $"Route [{name}] deleted.");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Route [{name}] deleted.");
                         }
 
                         context.Changed = true;
                     }
                     else
                     {
-                        context.WriteLine(Verbosity.Trace, $"Route [{name}] does not exist.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Route [{name}] does not exist.");
                     }
                     break;
 
                 case "present":
 
-                    context.WriteLine(Verbosity.Trace, $"Parsing [route]");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [route]");
 
                     if (!context.Arguments.TryGetValue<JObject>("route", out var routeObject))
                     {
@@ -171,11 +171,11 @@ namespace NeonCli
 
                     var routeText = routeObject.ToString();
 
-                    context.WriteLine(Verbosity.Trace, "Parsing route");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Parsing route");
 
                     var newRoute = ProxyRoute.Parse(routeText, strict: true);
 
-                    context.WriteLine(Verbosity.Trace, "Route parsed successfully");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Route parsed successfully");
 
                     // Use the route name argument if the deserialized route doesn't
                     // have a name.  This will make it easier on operators because 
@@ -194,11 +194,11 @@ namespace NeonCli
                         throw new ArgumentException($"The [name={name}] argument and the route's [{nameof(ProxyRoute.Name)}={newRoute.Name}] property are not the same.");
                     }
 
-                    context.WriteLine(Verbosity.Trace, "Route name matched.");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Route name matched.");
 
                     // Validate the route.
 
-                    context.WriteLine(Verbosity.Trace, "Validating route.");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Validating route.");
 
                     var proxySettings = proxyManager.GetSettings();
 
@@ -233,7 +233,7 @@ namespace NeonCli
                         throw new ArgumentException("Access Denied: Root Vault credentials are required.");
                     }
 
-                    context.WriteLine(Verbosity.Trace, "Reading cluster certificates.");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Reading cluster certificates.");
 
                     using (var vault = NeonClusterHelper.OpenVault(Program.ClusterLogin.VaultCredentials.RootToken))
                     {
@@ -243,7 +243,7 @@ namespace NeonCli
 
                         foreach (var certName in vault.ListAsync("neon-secret/cert").Result)
                         {
-                            context.WriteLine(Verbosity.Trace, $"Reading: {certName}");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Reading: {certName}");
 
                             var certificate = vault.ReadJsonAsync<TlsCertificate>(NeonClusterHelper.GetVaultCertificateKey(certName)).Result;
 
@@ -251,7 +251,7 @@ namespace NeonCli
                         }
                     }
 
-                    context.WriteLine(Verbosity.Trace, $"[{validationContext.Certificates.Count}] cluster certificates downloaded.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"[{validationContext.Certificates.Count}] cluster certificates downloaded.");
 
                     // Actually perform the route validation.
 
@@ -259,11 +259,11 @@ namespace NeonCli
 
                     if (validationContext.HasErrors)
                     {
-                        context.WriteLine(Verbosity.Trace, $"[{validationContext.Errors.Count}] Route validation errors.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"[{validationContext.Errors.Count}] Route validation errors.");
 
                         foreach (var error in validationContext.Errors)
                         {
-                            context.WriteLine(Verbosity.Important, error);
+                            context.WriteLine(AnsibleVerbosity.Important, error);
                             context.WriteErrorLine(error);
                         }
 
@@ -271,55 +271,55 @@ namespace NeonCli
                         return;
                     }
 
-                    context.WriteLine(Verbosity.Trace, "Route is valid.");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Route is valid.");
 
                     // Try reading any existing route with this name and then determine
                     // whether the two versions of the route are actually different. 
 
-                    context.WriteLine(Verbosity.Trace, $"Looking for existing route [{name}]");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Looking for existing route [{name}]");
 
                     var existingRoute = proxyManager.GetRoute(name);
 
                     if (existingRoute != null)
                     {
-                        context.WriteLine(Verbosity.Trace, $"Route exists: checking for differences.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Route exists: checking for differences.");
 
                         context.Changed = !NeonHelper.JsonEquals(newRoute, existingRoute);
 
                         if (context.Changed)
                         {
-                            context.WriteLine(Verbosity.Trace, $"Routes are different.");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Routes are different.");
                         }
                         else
                         {
                             if (force)
                             {
                                 context.Changed = true;
-                                context.WriteLine(Verbosity.Trace, $"Routes are the same but since [force=true] we're going to update anyway.");
+                                context.WriteLine(AnsibleVerbosity.Trace, $"Routes are the same but since [force=true] we're going to update anyway.");
                             }
                             else
                             {
-                                context.WriteLine(Verbosity.Info, $"Routes are the same.  No need to update.");
+                                context.WriteLine(AnsibleVerbosity.Info, $"Routes are the same.  No need to update.");
                             }
                         }
                     }
                     else
                     {
                         context.Changed = true;
-                        context.WriteLine(Verbosity.Trace, $"Route [name={name}] does not exist.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Route [name={name}] does not exist.");
                     }
 
                     if (context.Changed)
                     {
                         if (context.CheckMode)
                         {
-                            context.WriteLine(Verbosity.Info, $"Route [{name}] will be updated when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Route [{name}] will be updated when CHECKMODE is disabled.");
                         }
                         else
                         {
-                            context.WriteLine(Verbosity.Trace, $"Updating route [{name}].");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating route [{name}].");
                             proxyManager.PutRoute(newRoute);
-                            context.WriteLine(Verbosity.Info, $"Route updated.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Route updated.");
                         }
                     }
 

@@ -103,42 +103,42 @@ namespace NeonCli
 
             var vaultPath = NeonClusterHelper.GetVaultCertificateKey(name);
 
-            context.WriteLine(Verbosity.Trace, $"Vault: Certificate path is [{vaultPath}]");
-            context.WriteLine(Verbosity.Trace, $"Vault: Opening Vault");
+            context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Certificate path is [{vaultPath}]");
+            context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Opening Vault");
 
             using (var vault = NeonClusterHelper.OpenVault(context.Login.VaultCredentials.RootToken))
             {
-                context.WriteLine(Verbosity.Trace, $"Vault: Opened");
+                context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Opened");
 
                 switch (state)
                 {
                     case "absent":
 
-                        context.WriteLine(Verbosity.Trace, $"Vault: checking for [{name}] certificate");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Vault: checking for [{name}] certificate");
 
                         if (vault.ExistsAsync(vaultPath).Result)
                         {
-                            context.WriteLine(Verbosity.Trace, $"Vault: [{name}] certificate exists");
-                            context.WriteLine(Verbosity.Trace, $"Vault: Deleting [{name}]");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Vault: [{name}] certificate exists");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Deleting [{name}]");
 
                             if (context.CheckMode)
                             {
-                                context.WriteLine(Verbosity.Info, $"Vault: Certificate [{name}] will be deleted when CHECKMODE is disabled.");
+                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: Certificate [{name}] will be deleted when CHECKMODE is disabled.");
                             }
                             else
                             {
                                 vault.DeleteAsync(vaultPath).Wait();
-                                context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate deleted");
+                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate deleted");
 
                                 TouchCertChanged();
-                                context.WriteLine(Verbosity.Trace, $"Consul: Signal the certificate change");
+                                context.WriteLine(AnsibleVerbosity.Trace, $"Consul: Signal the certificate change");
                             }
 
                             context.Changed = true;
                         }
                         else
                         {
-                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does not exist");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate does not exist");
                         }
                         break;
 
@@ -153,36 +153,36 @@ namespace NeonCli
 
                         certificate.Parse();
 
-                        context.WriteLine(Verbosity.Trace, $"Vault: Reading [{name}]");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Reading [{name}]");
 
                         var existingCert = vault.ReadJsonAsync<TlsCertificate>(vaultPath, noException: true).Result;
 
                         if (existingCert == null)
                         {
-                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does not exist");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate does not exist");
                             context.Changed = true;
                         }
                         else if (!NeonHelper.JsonEquals(existingCert, certificate) || force)
                         {
-                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate does exists but is different");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate does exists but is different");
                             context.Changed = true;
                         }
                         else
                         {
-                            context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate is unchanged");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate is unchanged");
                         }
 
                         if (context.Changed)
                         {
                             if (context.CheckMode)
                             {
-                                context.WriteLine(Verbosity.Info, $"Vault: Certificate [{name}] will be deleted when CHECKMODE is disabled.");
+                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: Certificate [{name}] will be deleted when CHECKMODE is disabled.");
                             }
                             else
                             {
-                                context.WriteLine(Verbosity.Trace, $"Vault: Saving [{name}] certificate");
+                                context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Saving [{name}] certificate");
                                 vault.WriteJsonAsync(vaultPath, certificate).Wait();
-                                context.WriteLine(Verbosity.Info, $"Vault: [{name}] certificate saved");
+                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate saved");
                             }
                         }
 

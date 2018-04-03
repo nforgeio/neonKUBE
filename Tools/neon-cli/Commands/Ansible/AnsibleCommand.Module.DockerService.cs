@@ -810,44 +810,44 @@ namespace NeonCli
 
             serviceDef.Name = name;
 
-            foreach (var item in ParseStringArray(context, "args"))
+            foreach (var item in context.ParseStringArray("args"))
             {
                 serviceDef.Args.Add(item);
             }
 
-            foreach (var item in ParseStringArray(context, "config"))
+            foreach (var item in context.ParseStringArray("config"))
             {
                 serviceDef.Config.Add(item);
             }
 
-            foreach (var item in ParseStringArray(context, "constraint"))
+            foreach (var item in context.ParseStringArray("constraint"))
             {
                 serviceDef.Constraint.Add(item);
             }
 
-            foreach (var item in ParseStringArray(context, "container-label"))
+            foreach (var item in context.ParseStringArray("container-label"))
             {
                 serviceDef.ContainerLabel.Add(item);
             }
 
-            foreach (var item in ParseStringArray(context, "credential-spec"))
+            foreach (var item in context.ParseStringArray("credential-spec"))
             {
                 serviceDef.CredentialSpec.Add(item);
             }
 
-            serviceDef.Detach = ParseBool(context, "detach");
+            serviceDef.Detach = context.ParseBool("detach");
 
-            foreach (var item in ParseIPAddressArray(context, "dns"))
+            foreach (var item in context.ParseIPAddressArray("dns"))
             {
                 serviceDef.Dns.Add(item);
             }
 
-            foreach (var item in ParseStringArray(context, "dns-option"))
+            foreach (var item in context.ParseStringArray("dns-option"))
             {
                 serviceDef.DnsOption.Add(item);
             }
 
-            foreach (var item in ParseStringArray(context, "dns-search"))
+            foreach (var item in context.ParseStringArray("dns-search"))
             {
                 serviceDef.DnsSearch.Add(item);
             }
@@ -874,214 +874,6 @@ namespace NeonCli
                 default:
 
                     throw new ArgumentException($"[state={state}] is not one of the valid choices: [absent] or [present].");
-            }
-        }
-
-        /// <summary>
-        /// Parses an argument as a string array.
-        /// </summary>
-        /// <param name="context">The module context.</param>
-        /// <param name="argName">The argument name.</param>
-        /// <returns>The string array.</returns>
-        private List<string> ParseStringArray(ModuleContext context, string argName)
-        {
-            var array = new List<string>();
-
-            if (!context.Arguments.TryGetValue(argName, out var jToken))
-            {
-                return array;
-            }
-
-            var jArray = jToken as JArray;
-
-            if (jArray == null)
-            {
-                context.WriteErrorLine($"[{argName}] is not an array.");
-                return array;
-            }
-
-            foreach (var item in jArray)
-            {
-                try
-                {
-                    array.Add(item.ToObject<string>());
-                }
-                catch
-                {
-                    context.WriteErrorLine($"[{argName}] array as one or more invalid elements.");
-                    return array;
-                }
-            }
-
-            return array;
-        }
-
-        /// <summary>
-        /// Parses a Docker time interval.
-        /// </summary>
-        /// <param name="context">The module context.</param>
-        /// <param name="argName">The argument name.</param>
-        /// <returns>The parsed duration in nanoseconds or <c>null</c>.</returns>
-        private long? ParseInterval(ModuleContext context, string argName)
-        {
-            if (!context.Arguments.TryGetValue(argName, out var jToken))
-            {
-                return null;
-            }
-
-            try
-            {
-                var orgValue = jToken.ToObject<string>();
-                var value    = orgValue;
-                var units    = 1000000000L;    // default unit is 1s = 1000000000ns
-
-                if (string.IsNullOrEmpty(value))
-                {
-                    return null;
-                }
-
-                if (value.EndsWith("ns", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    units = 1L;
-                    value = value.Substring(0, value.Length - 2);
-                }
-                else if (value.EndsWith("us", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    units = 1000L;
-                    value = value.Substring(0, value.Length - 2);
-                }
-                else if (value.EndsWith("ms", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    units = 1000000L;
-                    value = value.Substring(0, value.Length - 2);
-                }
-                else if (value.EndsWith("s", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    units = 1000000000L;
-                    value = value.Substring(0, value.Length - 1);
-                }
-                else if (value.EndsWith("m", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    units = 60 * 1000000000L;
-                    value = value.Substring(0, value.Length - 1);
-                }
-                else if (value.EndsWith("h", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    units = 60 * 60 * 1000000000L;
-                    value = value.Substring(0, value.Length - 1);
-                }
-                else if (!char.IsDigit(value.Last()))
-                {
-                    context.WriteErrorLine($"[{argName}={orgValue}] has an unknown unit.");
-                    return null;
-                }
-
-                if (long.TryParse(value, out var time))
-                {
-                    if (time < 0)
-                    {
-                        context.WriteErrorLine($"[{argName}={orgValue}] cannot be negative.");
-                        return null;
-                    }
-
-                    return time * units;
-                }
-                else
-                {
-                    context.WriteErrorLine($"[{argName}={orgValue}] is not a valid duration.");
-                    return null;
-                }
-            }
-            catch
-            {
-                context.WriteErrorLine($"[{argName}] cannot be converted into a string.");
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Parses a boolean.
-        /// </summary>
-        /// <param name="context">The module context.</param>
-        /// <param name="argName">The argument name.</param>
-        /// <returns>The parsed boolean or <c>null</c>.</returns>
-        private bool? ParseBool(ModuleContext context, string argName)
-        {
-            if (!context.Arguments.TryGetValue(argName, out var jToken))
-            {
-                return null;
-            }
-
-            try
-            {
-                return jToken.ToObject<bool>();
-            }
-            catch
-            {
-                context.WriteErrorLine($"[{argName}] is not a valid boolean.");
-                return null;
-            }
-        }
-
-        /// <summary>
-        /// Parses an argument as an <see cref="IPAddress"/> array.
-        /// </summary>
-        /// <param name="context">The module context.</param>
-        /// <param name="argName">The argument name.</param>
-        /// <returns>The IPAddress array.</returns>
-        private List<IPAddress> ParseIPAddressArray(ModuleContext context, string argName)
-        {
-            var stringArray = ParseStringArray(context, argName);
-            var array       = new List<IPAddress>();
-
-            foreach (var item in stringArray)
-            {
-                if (IPAddress.TryParse(item, out var address))
-                {
-                    array.Add(address);
-                }
-                else
-                {
-                    context.WriteErrorLine($"[{argName}] is includes invalid IP address [{item}].");
-                }
-            }
-
-            return array;
-        }
-
-        /// <summary>
-        /// Parses an enumeration.
-        /// </summary>
-        /// <typeparam name="TEnum">The enumeration type.</typeparam>
-        /// <param name="context">The module context.</param>
-        /// <param name="argName">The argument name.</param>
-        /// <returns>The enumeration value or <c>null</c>.</returns>
-        private TEnum? ParseEnum<TEnum>(ModuleContext context, string argName)
-            where TEnum : struct
-        {
-            if (!context.Arguments.TryGetValue(argName, out var jToken))
-            {
-                return null;
-            }
-
-            try
-            {
-                var value = jToken.ToObject<string>();
-
-                try
-                {
-                    return (TEnum?)NeonHelper.ParseEnum<TEnum>(value, ignoreCase: true);
-                }
-                catch
-                {
-                    context.WriteErrorLine($"[{argName}] is not a valid boolean.");
-                    return null;
-                }
-            }
-            catch
-            {
-                context.WriteErrorLine($"[{argName}] is not a valid boolean.");
-                return null;
             }
         }
     }

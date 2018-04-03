@@ -149,7 +149,7 @@ namespace NeonCli
 
             // Obtain common arguments.
 
-            context.WriteLine(Verbosity.Trace, $"Parsing [hostname]");
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [hostname]");
 
             if (!context.Arguments.TryGetValue<string>("hostname", out var hostname))
             {
@@ -161,7 +161,7 @@ namespace NeonCli
                 throw new ArgumentException($"[hostname={hostname}] is not a valid DNS hostname.");
             }
 
-            context.WriteLine(Verbosity.Trace, $"Parsing [state]");
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [state]");
 
             if (!context.Arguments.TryGetValue<string>("state", out var state))
             {
@@ -170,7 +170,7 @@ namespace NeonCli
 
             state = state.ToLowerInvariant();
 
-            context.WriteLine(Verbosity.Trace, $"Parsing [endpoints]");
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [endpoints]");
 
             if (!context.Arguments.TryGetValue<JToken>("endpoints", out var endpointsToken) && state == "present")
             {
@@ -185,28 +185,28 @@ namespace NeonCli
             {
                 case "absent":
 
-                    context.WriteLine(Verbosity.Trace, $"Check if DNS entry [{hostname}] exists.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Check if DNS entry [{hostname}] exists.");
 
                     if (consul.KV.Exists(hostKey).Result)
                     {
-                        context.WriteLine(Verbosity.Trace, $"DNS entry [{hostname}] does exist.");
-                        context.WriteLine(Verbosity.Info, $"Deleting DNS entry [{hostname}].");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry [{hostname}] does exist.");
+                        context.WriteLine(AnsibleVerbosity.Info, $"Deleting DNS entry [{hostname}].");
 
                         if (context.CheckMode)
                         {
-                            context.WriteLine(Verbosity.Info, $"DNS entry [{hostname}] will be deleted when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"DNS entry [{hostname}] will be deleted when CHECKMODE is disabled.");
                         }
                         else
                         {
                             consul.KV.Delete(hostKey);
-                            context.WriteLine(Verbosity.Trace, $"DNS entry [{hostname}] deleted.");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry [{hostname}] deleted.");
                         }
 
                         context.Changed = true;
                     }
                     else
                     {
-                        context.WriteLine(Verbosity.Trace, $"DNS entry [{hostname}] does not exist.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry [{hostname}] does not exist.");
                     }
                     break;
 
@@ -226,7 +226,7 @@ namespace NeonCli
                         endpoints.Add(item.ToObject<DnsEndpoint>());
                     }
 
-                    context.WriteLine(Verbosity.Trace, $"[{endpoints.Count}] endpoints parsed");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"[{endpoints.Count}] endpoints parsed");
 
                     // Construct the new entry.
 
@@ -238,17 +238,17 @@ namespace NeonCli
 
                     // Validate the new DNS entry.
 
-                    context.WriteLine(Verbosity.Trace, "Validating DNS entry.");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Validating DNS entry.");
 
                     var errors = newEntry.Validate(cluster.Definition, cluster.Definition.GetNodeGroups(excludeAllGroup: true));
 
                     if (errors.Count > 0)
                     {
-                        context.WriteLine(Verbosity.Trace, $"[{errors.Count}] DNS entry validation errors.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"[{errors.Count}] DNS entry validation errors.");
 
                         foreach (var error in errors)
                         {
-                            context.WriteLine(Verbosity.Important, error);
+                            context.WriteLine(AnsibleVerbosity.Important, error);
                             context.WriteErrorLine(error);
                         }
 
@@ -256,47 +256,47 @@ namespace NeonCli
                         return;
                     }
 
-                    context.WriteLine(Verbosity.Trace, "DNS entry is valid.");
+                    context.WriteLine(AnsibleVerbosity.Trace, "DNS entry is valid.");
 
                     // Try reading an existing entry with this name and then determine
                     // whether the two versions of the entry are actually different. 
 
-                    context.WriteLine(Verbosity.Trace, $"Look up existing DNS entry for [{hostname}]");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Look up existing DNS entry for [{hostname}]");
 
                     var existingEntry = consul.KV.GetObjectOrDefault<DnsEntry>(hostKey).Result;
 
                     if (existingEntry != null)
                     {
-                        context.WriteLine(Verbosity.Trace, $"DNS entry exists: checking for differences.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry exists: checking for differences.");
 
                         context.Changed = !NeonHelper.JsonEquals(newEntry, existingEntry);
 
                         if (context.Changed)
                         {
-                            context.WriteLine(Verbosity.Trace, $"DNS entries are different.");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"DNS entries are different.");
                         }
                         else
                         {
-                            context.WriteLine(Verbosity.Info, $"DNS entries are the same.  No need to update.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"DNS entries are the same.  No need to update.");
                         }
                     }
                     else
                     {
                         context.Changed = true;
-                        context.WriteLine(Verbosity.Trace, $"DNS entry for [hostname={hostname}] does not exist.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry for [hostname={hostname}] does not exist.");
                     }
 
                     if (context.Changed)
                     {
                         if (context.CheckMode)
                         {
-                            context.WriteLine(Verbosity.Info, $"DNS entry [{hostname}] will be updated when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"DNS entry [{hostname}] will be updated when CHECKMODE is disabled.");
                         }
                         else
                         {
-                            context.WriteLine(Verbosity.Trace, $"Updating DNS entry.");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating DNS entry.");
                             consul.KV.PutObject(hostKey, newEntry).Wait();
-                            context.WriteLine(Verbosity.Info, $"DNS entry updated.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"DNS entry updated.");
                         }
                     }
 

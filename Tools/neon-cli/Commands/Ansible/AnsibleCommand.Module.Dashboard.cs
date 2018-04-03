@@ -81,7 +81,7 @@ namespace NeonCli
 
             // Obtain common arguments.
 
-            context.WriteLine(Verbosity.Trace, $"Parsing [name]");
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [name]");
 
             if (!context.Arguments.TryGetValue<string>("name", out var name))
             {
@@ -93,7 +93,7 @@ namespace NeonCli
                 throw new ArgumentException($"[{name}] is not a valid dashboard name.");
             }
 
-            context.WriteLine(Verbosity.Trace, $"Parsing [state]");
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [state]");
 
             if (!context.Arguments.TryGetValue<string>("state", out var state))
             {
@@ -102,7 +102,7 @@ namespace NeonCli
 
             state = state.ToLowerInvariant();
 
-            context.WriteLine(Verbosity.Trace, $"Parsing [url]");
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [url]");
 
             if (!context.Arguments.TryGetValue<string>("url", out var url) && state == "present")
             {
@@ -128,28 +128,28 @@ namespace NeonCli
             {
                 case "absent":
 
-                    context.WriteLine(Verbosity.Trace, $"Check if dashboard [{name}] exists.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Check if dashboard [{name}] exists.");
 
                     if (consul.KV.Exists(dashboardKey).Result)
                     {
-                        context.WriteLine(Verbosity.Trace, $"Dashboard [{name}] does exist.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Dashboard [{name}] does exist.");
 
                         if (!context.CheckMode)
                         {
-                            context.WriteLine(Verbosity.Info, $"Deleting dashboard [{name}].");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Deleting dashboard [{name}].");
                             consul.KV.Delete(dashboardKey);
-                            context.WriteLine(Verbosity.Trace, $"Dashboard [{name}] deleted.");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Dashboard [{name}] deleted.");
                         }
                         else
                         {
-                            context.WriteLine(Verbosity.Info, $"Dashboard [{name}] will be deleted when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Dashboard [{name}] will be deleted when CHECKMODE is disabled.");
                         }
 
                         context.Changed = true;
                     }
                     else
                     {
-                        context.WriteLine(Verbosity.Trace, $"Dashboard [{name}] does not exist.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Dashboard [{name}] does not exist.");
                     }
                     break;
 
@@ -168,17 +168,17 @@ namespace NeonCli
 
                     // Validate the dashboard.
 
-                    context.WriteLine(Verbosity.Trace, "Validating dashboard.");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Validating dashboard.");
 
                     var errors = newDashboard.Validate(cluster.Definition);
 
                     if (errors.Count > 0)
                     {
-                        context.WriteLine(Verbosity.Trace, $"[{errors.Count}] dashboard validation errors.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"[{errors.Count}] dashboard validation errors.");
 
                         foreach (var error in errors)
                         {
-                            context.WriteLine(Verbosity.Important, error);
+                            context.WriteLine(AnsibleVerbosity.Important, error);
                             context.WriteErrorLine(error);
                         }
 
@@ -186,47 +186,47 @@ namespace NeonCli
                         return;
                     }
 
-                    context.WriteLine(Verbosity.Trace, "Dashboard is valid.");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Dashboard is valid.");
 
                     // Try reading any existing dashboard with this name and then determine
                     // whether the two versions are actually different. 
 
-                    context.WriteLine(Verbosity.Trace, $"Looking for existing dashboard [{name}]");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Looking for existing dashboard [{name}]");
 
                     var existingDashboard = consul.KV.GetObjectOrDefault<ClusterDashboard>(dashboardKey).Result;
 
                     if (existingDashboard != null)
                     {
-                        context.WriteLine(Verbosity.Trace, $"Dashboard exists: checking for differences.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Dashboard exists: checking for differences.");
 
                         context.Changed = !NeonHelper.JsonEquals(newDashboard, existingDashboard);
 
                         if (context.Changed)
                         {
-                            context.WriteLine(Verbosity.Trace, $"Dashboards are different.");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Dashboards are different.");
                         }
                         else
                         {
-                            context.WriteLine(Verbosity.Info, $"Dashboards are the same.  No need to update.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Dashboards are the same.  No need to update.");
                         }
                     }
                     else
                     {
                         context.Changed = true;
-                        context.WriteLine(Verbosity.Trace, $"Dashboard for [{name}] does not exist.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Dashboard for [{name}] does not exist.");
                     }
 
                     if (context.Changed)
                     {
                         if (context.CheckMode)
                         {
-                            context.WriteLine(Verbosity.Info, $"Dashboard [{name}] will be updated when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Dashboard [{name}] will be updated when CHECKMODE is disabled.");
                         }
                         else
                         {
-                            context.WriteLine(Verbosity.Trace, $"Updating dashboard.");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating dashboard.");
                             consul.KV.PutObject(dashboardKey, newDashboard).Wait();
-                            context.WriteLine(Verbosity.Info, $"Dashboard updated.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Dashboard updated.");
                         }
                     }
 
