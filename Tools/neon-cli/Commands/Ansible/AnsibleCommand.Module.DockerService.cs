@@ -101,7 +101,8 @@ namespace NeonCli
     //
     // group                    no                                  array of service container supplementary user groups 
     //
-    // health-cmd               no                                  service container health check command
+    // health-cmd               no                                  array of the service container health check command
+    //                                                              and arguments
     //
     // health-interval          no                                  interval between service container health checks
     //
@@ -213,7 +214,7 @@ namespace NeonCli
     // update-parallelism       no          1                       maximum number of service tasks to be updated
     //                                                              simultaneously (0 to update all at once)
     //
-    // user                     no                                  container username of group: <name|uid>[:<group|gid>]
+    // user                     no                                  container username/group: <name|uid>[:<group|gid>]
     //
     // with-registry-auth       no          false                   send registry authentication details to Swarm nodes
     //
@@ -329,13 +330,12 @@ namespace NeonCli
             /// Optionally specifies the command to be executed within the service containers
             /// to determine the container health status.
             /// </summary>
-            public string HealthCmd { get; set; }
+            public List<string> HealthCmd { get; set; } = new List<string>();
 
             /// <summary>
-            /// Optionally specifies the interval between health checks.  This is an integer
-            /// with an optional unit: <b>ns|us|ms|s|m|h</b> (defaults to <b>s</b>).
+            /// Optionally specifies the interval between health checks (nanoseconds).
             /// </summary>
-            public string HeathInterval { get; set; }
+            public long? HeathInterval { get; set; }
 
             /// <summary>
             /// Optionally specifies the number of times the <see cref="HealthCmd"/> can
@@ -345,17 +345,15 @@ namespace NeonCli
 
             /// <summary>
             /// Optionally specifies the period after the service container starts when
-            /// health check failures will be ignored. This is an integer with an 
-            /// optional unit: <b>ns|us|ms|s|m|h</b> (defaults to <b>s</b>).
+            /// health check failures will be ignored (nanoseconds).
             /// </summary>
-            public string HealthStartPeriod { get; set; }
+            public long? HealthStartPeriod { get; set; }
 
             /// <summary>
             /// Optionally specifies the maximum time to wait for a health check to
-            /// be completed.   This is an integer with an optional unit: <b>ns|us|ms|s|m|h</b>
-            /// (defaults to <b>s</b>).
+            /// be completed (nanoseconds).
             /// </summary>
-            public string HealthTimeout { get; set; }
+            public long? HealthTimeout { get; set; }
 
             /// <summary>
             /// Optionally specifies custom host/IP address mappings to be added to the service
@@ -376,7 +374,7 @@ namespace NeonCli
             /// <summary>
             /// Service container isolation mode (Windows only).
             /// </summary>
-            public IsolationMode? IsolationMode { get; set; }
+            public IsolationMode? Isolation { get; set; }
 
             /// <summary>
             /// Optionally specifies service labels.  These are formatted like <b>NAME=VALUE</b>.
@@ -386,13 +384,12 @@ namespace NeonCli
             /// <summary>
             /// Limits the number of CPUs to be assigned to the service containers.
             /// </summary>
-            public int? LimitCpu { get; set; }
+            public double? LimitCpu { get; set; }
 
             /// <summary>
-            /// Optionally specifies the maximum RAM to be assigned to the container.
-            /// This is an integer followed by a unit: <b>b|k|m|g</b>.
+            /// Optionally specifies the maximum RAM to be assigned to the container (bytes).
             /// </summary>
-            public string LimitMemory { get; set; }
+            public long? LimitMemory { get; set; }
 
             /// <summary>
             /// Optionally specifies the service logging driver.
@@ -463,10 +460,9 @@ namespace NeonCli
             public double? ReserveCpu { get; set; }
 
             /// <summary>
-            /// Optionally specifies the RAM to reserver for each service instance.
-            /// This is an integer followed by a unit: <b>b|k|m|g</b>.
+            /// Optionally specifies the RAM to reserver for each service instance (bytes).
             /// </summary>
-            public string ReserveMemory { get; set; }
+            public long? ReserveMemory { get; set; }
 
             /// <summary>
             /// Optionally specifies the condition when service containers will
@@ -475,30 +471,29 @@ namespace NeonCli
             public RestartCondition? RestartCondition { get; set; }
 
             /// <summary>
-            /// Optionally specifies the delay between restart attempts.  This is
-            /// an integer with one of the following units: <b>ns|us|ms|s|m|h</b>
-            /// (defaults to <b>s</b>).
+            /// Optionally specifies the delay between restart attempts (nanoseconds).
             /// </summary>
-            public string RestartDelay { get; set; }
+            public long? RestartDelay { get; set; }
 
             /// <summary>
             /// Optionally specifies the maximum number of service container restart attempts.
             /// </summary>
-            public int RestartMaxAttempts { get; set; } = -1;
+            public int? RestartMaxAttempts { get; set; } = -1;
 
             /// <summary>
-            /// Optionally specifies the Window used to evaluate the restart policy.
-            /// This is an integer with one of the following units: <b>ns|us|ms|s|m|h</b>
-            /// (defaults to <b>s</b>).
+            /// Optionally specifies the Window used to evaluate the restart policy (nanoseconds).
             /// </summary>
-            public string RestartWindow { get; set; }
+            public long? RestartWindow { get; set; }
 
             /// <summary>
-            /// Optionally specifies the delay between service task rollbacks.
-            /// This is an integer with one of the following units: <b>ns|us|ms|s|m|h</b>
-            /// (defaults to <b>s</b>).
+            /// Optionally specifies the delay between service task rollbacks (nanoseconds).
             /// </summary>
-            public string RollbackDelay { get; set; }
+            public long? RollbackDelay { get; set; }
+
+            /// <summary>
+            /// The action to take when service rollback fails.
+            /// </summary>
+            public RollbackFailureAction? RollbackFailureAction { get; set; }
 
             /// <summary>
             /// Optionally specifies the failure rate to tolerate during a rollback.
@@ -507,15 +502,14 @@ namespace NeonCli
 
             /// <summary>
             /// Optionally specifies the time to wait after each task rollback to 
-            /// monitor for failure.  This is an integer with one of the following
-            /// units: <b>ns|us|ms|s|m|h</b> (defaults to <b>s</b>).
+            /// monitor for failure (nanoseconds).
             /// </summary>
-            public string RollbackMonitor { get; set; }
+            public long? RollbackMonitor { get; set; }
 
             /// <summary>
             /// Optionally specifies the service task rollback order.
             /// </summary>
-            public OperationOrder? RollbackOrder { get; set; }
+            public RollbackOrder? RollbackOrder { get; set; }
 
             /// <summary>
             /// Optionally specifies the maximum number of service tasks to be
@@ -531,10 +525,9 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the time to wait for a service container to
             /// stop gracefully after being signalled to stop before Docker will
-            /// kill it forcefully.  This is an integer with one of the following
-            /// units: <b>ns|us|ms|s|m|h</b> (defaults to <b>s</b>).
+            /// kill it forcefully (nanoseconds).
             /// </summary>
-            public string StopGracePeriod { get; set; }
+            public long? StopGracePeriod { get; set; }
 
             /// <summary>
             /// Optionally specifies the signal to be used to stop service containers.
@@ -549,11 +542,9 @@ namespace NeonCli
             public bool? Tty { get; set; }
 
             /// <summary>
-            /// Optionally specifies the delay between service container updates.
-            /// This is an integer with one of the following units: <b>ns|us|ms|s|m|h</b>
-            /// (defaults to <b>s</b>).
+            /// Optionally specifies the delay between service container updates (nanoseconds).
             /// </summary>
-            public string UpdateDelay { get; set; }
+            public long? UpdateDelay { get; set; }
 
             /// <summary>
             /// Optionally specifies the action to take when a service container update fails.
@@ -561,16 +552,20 @@ namespace NeonCli
             public UpdateFailureAction? UpdateFailureAction { get; set; }
 
             /// <summary>
-            /// Optionally specifies the time to wait after each service task update to 
-            /// monitor for failure.  This is an integer with one of the following
-            /// units: <b>ns|us|ms|s|m|h</b> (defaults to <b>s</b>).
+            /// Optionally specifies the failure rate to tolerate during an update.
             /// </summary>
-            public string UpdateMonitor { get; set; }
+            public double? UpdateMaxFailureRatio { get; set; }
+
+            /// <summary>
+            /// Optionally specifies the time to wait after each service task update to 
+            /// monitor for failure (nanoseconds).
+            /// </summary>
+            public long? UpdateMonitor { get; set; }
 
             /// <summary>
             /// Optionally specifies the service task update order.
             /// </summary>
-            public OperationOrder? UpdateOrder { get; set; }
+            public UpdateOrder? UpdateOrder { get; set; }
 
             /// <summary>
             /// Optionally specifies the maximum number of service tasks to be
@@ -639,7 +634,16 @@ namespace NeonCli
             OnFailure
         }
 
-        private enum OperationOrder
+        private enum UpdateOrder
+        {
+            [EnumMember(Value = "stop-first")]
+            StopFirst = 0,
+
+            [EnumMember(Value = "start-first")]
+            StartFirst
+        }
+
+        private enum RollbackOrder
         {
             [EnumMember(Value = "stop-first")]
             StopFirst = 0,
@@ -658,6 +662,15 @@ namespace NeonCli
 
             [EnumMember(Value = "rollback")]
             Rollback
+        }
+
+        private enum RollbackFailureAction
+        {
+            [EnumMember(Value = "pause")]
+            Pause = 0,
+
+            [EnumMember(Value = "continue")]
+            Continue,
         }
 
         private enum PortMode
@@ -810,47 +823,81 @@ namespace NeonCli
 
             serviceDef.Name = name;
 
-            foreach (var item in context.ParseStringArray("args"))
-            {
-                serviceDef.Args.Add(item);
-            }
-
-            foreach (var item in context.ParseStringArray("config"))
-            {
-                serviceDef.Config.Add(item);
-            }
-
-            foreach (var item in context.ParseStringArray("constraint"))
-            {
-                serviceDef.Constraint.Add(item);
-            }
-
-            foreach (var item in context.ParseStringArray("container-label"))
-            {
-                serviceDef.ContainerLabel.Add(item);
-            }
-
-            foreach (var item in context.ParseStringArray("credential-spec"))
-            {
-                serviceDef.CredentialSpec.Add(item);
-            }
+            context.ParseStringArray(serviceDef.Args, "args");
+            context.ParseStringArray(serviceDef.Config, "config");
+            context.ParseStringArray(serviceDef.Constraint, "constraint");
+            context.ParseStringArray(serviceDef.ContainerLabel, "container-label");
+            context.ParseStringArray(serviceDef.CredentialSpec, "credential-spec");
 
             serviceDef.Detach = context.ParseBool("detach");
 
-            foreach (var item in context.ParseIPAddressArray("dns"))
-            {
-                serviceDef.Dns.Add(item);
-            }
+            context.ParseIPAddressArray(serviceDef.Dns, "dns");
+            context.ParseStringArray(serviceDef.Entrypoint, "entrypoint");
+            context.ParseStringArray(serviceDef.Env, "env");
+            context.ParseStringArray(serviceDef.EnvFile, "env-file");
+            context.ParseStringArray(serviceDef.GenericResource, "generic-resource");
+            context.ParseStringArray(serviceDef.Group, "group");
+            context.ParseStringArray(serviceDef.HealthCmd, "health-cmd");
 
-            foreach (var item in context.ParseStringArray("dns-option"))
-            {
-                serviceDef.DnsOption.Add(item);
-            }
+            serviceDef.HeathInterval     = context.ParseDockerInterval("health-interval");
+            serviceDef.HealthRetries     = context.ParseInt("health-retries", v => v >= 0);
+            serviceDef.HealthStartPeriod = context.ParseDockerInterval("health-start-period");
+            serviceDef.HealthTimeout     = context.ParseDockerInterval("health-timeout");
 
-            foreach (var item in context.ParseStringArray("dns-search"))
-            {
-                serviceDef.DnsSearch.Add(item);
-            }
+            context.ParseStringArray(serviceDef.Host, "host");
+
+            serviceDef.Hostname  = context.ParseString("hostname");
+            serviceDef.Isolation = context.ParseEnum<IsolationMode>("isolation");
+
+            context.ParseStringArray(serviceDef.Label, "label");
+
+            serviceDef.LimitCpu    = context.ParseDouble("limit-cpu", v => v > 0);
+            serviceDef.LimitMemory = context.ParseDockerMemorySize("limit-memory");
+            serviceDef.LogDriver   = context.ParseString("log-driver");
+            serviceDef.LogOpt      = context.ParseString("log-opt");
+            serviceDef.Mode        = context.ParseEnum<ServiceMode>("mode");
+
+            ParseBindMounts(context, serviceDef.Mount, "mount");
+
+            context.ParseStringArray(serviceDef.Network, "network");
+
+            serviceDef.NoHealthCheck  = context.ParseBool("no-health-check");
+            serviceDef.NoResolveImage = context.ParseBool("no-resolve-image");
+
+            context.ParseStringArray(serviceDef.PlacementPref, "placement-pref");
+
+            ParsePublishPorts(context, serviceDef.Publish, "publish");
+
+            serviceDef.ReadOnly                = context.ParseBool("read-only");
+            serviceDef.Replicas                = context.ParseInt("replicas", v => v >= 0);
+            serviceDef.ReserveCpu              = context.ParseDouble("reserve-cpu", v => v > 0);
+            serviceDef.ReserveMemory           = context.ParseDockerMemorySize("reserve-memory");
+            serviceDef.RestartCondition        = context.ParseEnum<RestartCondition>("restart-condition");
+            serviceDef.RestartDelay            = context.ParseDockerInterval("restart-delay");
+            serviceDef.RestartMaxAttempts      = context.ParseInt("restart-max-attempts", v => v >= 0);
+            serviceDef.RestartWindow           = context.ParseDockerInterval("restart-window");
+            serviceDef.RollbackDelay           = context.ParseDockerInterval("rollback-delay");
+            serviceDef.RollbackFailureAction   = context.ParseEnum<RollbackFailureAction>("rollback-failure-action");
+            serviceDef.RollbackMaxFailureRatio = context.ParseDouble("rollback-max-failure-ratio", v => v >= 0);
+            serviceDef.RollbackMonitor         = context.ParseDockerInterval("rollback-monitor");
+            serviceDef.RollbackOrder           = context.ParseEnum<RollbackOrder>("rollback-order");
+            serviceDef.RollbackParallism       = context.ParseInt("rollback-parallelism", v => v >= 0);
+
+            context.ParseStringArray(serviceDef.Secret, "secret");
+
+            serviceDef.StopGracePeriod       = context.ParseDockerInterval("stop-grace-period");
+            serviceDef.StopSignal            = context.ParseString("stop-signal");
+            serviceDef.ReadOnly              = context.ParseBool("read-only");
+            serviceDef.Tty                   = context.ParseBool("tty");
+            serviceDef.UpdateDelay           = context.ParseDockerInterval("update-delay");
+            serviceDef.UpdateFailureAction   = context.ParseEnum<UpdateFailureAction>("update-failure-action");
+            serviceDef.UpdateMaxFailureRatio = context.ParseDouble("update-max-failure-ratio", v => v >= 0);
+            serviceDef.UpdateMonitor         = context.ParseDockerInterval("update-monitor");
+            serviceDef.UpdateOrder           = context.ParseEnum<UpdateOrder>("update-order");
+            serviceDef.UpdateParallism       = context.ParseInt("update-parallelism", v => v >= 0);
+            serviceDef.User                  = context.ParseString("user");
+            serviceDef.WithRegistryAuth      = context.ParseBool("with-registry-auth");
+            serviceDef.WorkDir               = context.ParseString("workdir");
 
             // Abort the operation if any errors were reported during parsing.
 

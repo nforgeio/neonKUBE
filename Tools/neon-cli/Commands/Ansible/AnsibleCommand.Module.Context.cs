@@ -256,43 +256,156 @@ namespace NeonCli
         //---------------------------------------------------------------------
         // Parsing helpers
 
-
         /// <summary>
-        /// Parses an argument as a string array.
-        /// </summary>
+        /// Parses a boolean.
+        /// </summary>>
         /// <param name="argName">The argument name.</param>
-        /// <returns>The string array.</returns>
-        public List<string> ParseStringArray(string argName)
+        /// <returns>The parsed boolean or <c>null</c>.</returns>
+        public bool? ParseBool(string argName)
         {
-            var array = new List<string>();
-
             if (!Arguments.TryGetValue(argName, out var jToken))
             {
-                return array;
+                return null;
             }
 
-            var jArray = jToken as JArray;
-
-            if (jArray == null)
+            try
             {
-                WriteErrorLine($"[{argName}] is not an array.");
-                return array;
+                return jToken.ToObject<bool>();
+            }
+            catch
+            {
+                WriteErrorLine($"[{argName}] is not a valid boolean.");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Parses a string.
+        /// </summary>>
+        /// <param name="argName">The argument name.</param>
+        /// <returns>The parsed string or <c>null</c>.</returns>
+        public string ParseString(string argName, Func<string, bool> validator = null)
+        {
+            if (!Arguments.TryGetValue(argName, out var jToken))
+            {
+                return null;
             }
 
-            foreach (var item in jArray)
+            try
             {
+                var value = jToken.ToObject<string>();
+
+                if (validator != null && !validator(value))
+                {
+                    WriteErrorLine($"[{argName}={value}] is not valid.");
+                }
+
+                return value;
+            }
+            catch
+            {
+                WriteErrorLine($"[{argName}] is not a valid boolean.");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Parses an integer.
+        /// </summary>>
+        /// <param name="argName">The argument name.</param>
+        /// <param name="validator">Optional validation function.</param>
+        /// <returns>The parsed integer or <c>null</c>.</returns>
+        public int? ParseInt(string argName, Func<int, bool> validator = null)
+        {
+            if (!Arguments.TryGetValue(argName, out var jToken))
+            {
+                return null;
+            }
+
+            try
+            {
+                var valueString = jToken.ToObject<string>();
+                var value       = int.Parse(valueString);
+
+                if (validator != null && !validator(value))
+                {
+                    WriteErrorLine($"[{argName}={value}] is not valid.");
+                }
+
+                return value;
+            }
+            catch
+            {
+                WriteErrorLine($"[{argName}] is not a valid integer.");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Parses an integer.
+        /// </summary>>
+        /// <param name="argName">The argument name.</param>
+        /// <param name="validator">Optional validation function.</param>
+        /// <returns>The parsed double or <c>null</c>.</returns>
+        public double? ParseDouble(string argName, Func<double, bool> validator = null)
+        {
+            if (!Arguments.TryGetValue(argName, out var jToken))
+            {
+                return null;
+            }
+
+            try
+            {
+                var valueString = jToken.ToObject<string>();
+                var value       = double.Parse(valueString);
+
+                if (validator != null && !validator(value))
+                {
+                    WriteErrorLine($"[{argName}={value}] is not valid.");
+                }
+
+                return value;
+            }
+            catch
+            {
+                WriteErrorLine($"[{argName}] is not a valid double.");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Parses an enumeration.
+        /// </summary>
+        /// <typeparam name="TEnum">The enumeration type.</typeparam>
+        /// <param name="argName">The argument name.</param>
+        /// <returns>The enumeration value or <c>null</c>.</returns>
+        public TEnum? ParseEnum<TEnum>(string argName)
+            where TEnum : struct
+        {
+            if (!Arguments.TryGetValue(argName, out var jToken))
+            {
+                return null;
+            }
+
+            try
+            {
+                var valueString = jToken.ToObject<string>();
+
                 try
                 {
-                    array.Add(item.ToObject<string>());
+                    return (TEnum?)NeonHelper.ParseEnum<TEnum>(valueString, ignoreCase: true);
                 }
                 catch
                 {
-                    WriteErrorLine($"[{argName}] array as one or more invalid elements.");
-                    return array;
+                    WriteErrorLine($"[{argName}] is not a valid boolean.");
+                    return null;
                 }
             }
-
-            return array;
+            catch
+            {
+                WriteErrorLine($"[{argName}] is not a valid boolean.");
+                return null;
+            }
         }
 
         /// <summary>
@@ -310,8 +423,8 @@ namespace NeonCli
             try
             {
                 var orgValue = jToken.ToObject<string>();
-                var value    = orgValue;
-                var units    = 1000000000L;    // default unit is 1s = 1000000000ns
+                var value = orgValue;
+                var units = 1000000000L;    // default unit is 1s = 1000000000ns
 
                 if (string.IsNullOrEmpty(value))
                 {
@@ -378,11 +491,11 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Parses a boolean.
-        /// </summary>>
+        /// Parses a Docker memory size.
+        /// </summary>
         /// <param name="argName">The argument name.</param>
-        /// <returns>The parsed boolean or <c>null</c>.</returns>
-        public bool? ParseBool(string argName)
+        /// <returns>The parsed memory size in bytes.</returns>
+        public long? ParseDockerMemorySize(string argName)
         {
             if (!Arguments.TryGetValue(argName, out var jToken))
             {
@@ -391,24 +504,108 @@ namespace NeonCli
 
             try
             {
-                return jToken.ToObject<bool>();
+                var orgValue = jToken.ToObject<string>();
+                var value    = orgValue;
+                var units    = 1L;    // default unit is 1 byte
+
+                if (string.IsNullOrEmpty(value))
+                {
+                    return null;
+                }
+
+                if (value.EndsWith("b", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    units = 1L;
+                    value = value.Substring(0, value.Length - 1);
+                }
+                else if (value.EndsWith("k", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    units = 1000L;
+                    value = value.Substring(0, value.Length - 1);
+                }
+                else if (value.EndsWith("m", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    units = 1000000L;
+                    value = value.Substring(0, value.Length - 1);
+                }
+                else if (value.EndsWith("g", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    units = 1000000000L;
+                    value = value.Substring(0, value.Length - 1);
+                }
+                else if (!char.IsDigit(value.Last()))
+                {
+                    WriteErrorLine($"[{argName}={orgValue}] has an unknown unit.");
+                    return null;
+                }
+
+                if (long.TryParse(value, out var size))
+                {
+                    if (size < 0)
+                    {
+                        WriteErrorLine($"[{argName}={orgValue}] cannot be negative.");
+                        return null;
+                    }
+
+                    return size * units;
+                }
+                else
+                {
+                    WriteErrorLine($"[{argName}={orgValue}] is not a valid memory size.");
+                    return null;
+                }
             }
             catch
             {
-                WriteErrorLine($"[{argName}] is not a valid boolean.");
+                WriteErrorLine($"[{argName}] cannot be converted into a string.");
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Parses an argument as a string array.
+        /// </summary>
+        /// <param name="array">The output array.</param>
+        /// <param name="argName">The argument name.</param>
+        public void ParseStringArray(List<string> array, string argName)
+        {
+            if (!Arguments.TryGetValue(argName, out var jToken))
+            {
+                return;
+            }
+
+            var jArray = jToken as JArray;
+
+            if (jArray == null)
+            {
+                WriteErrorLine($"[{argName}] is not an array.");
+                return;
+            }
+
+            foreach (var item in jArray)
+            {
+                try
+                {
+                    array.Add(item.ToObject<string>());
+                }
+                catch
+                {
+                    WriteErrorLine($"[{argName}] array as one or more invalid elements.");
+                    return;
+                }
             }
         }
 
         /// <summary>
         /// Parses an argument as an <see cref="IPAddress"/> array.
         /// </summary>
+        /// <param name="array">The target array.</param>
         /// <param name="argName">The argument name.</param>
-        /// <returns>The IPAddress array.</returns>
-        public List<IPAddress> ParseIPAddressArray(string argName)
+        public void ParseIPAddressArray(List<IPAddress> array, string argName)
         {
-            var stringArray = ParseStringArray(argName);
-            var array = new List<IPAddress>();
+            var stringArray = new List<string>();
+
+            ParseStringArray(stringArray, argName);
 
             foreach (var item in stringArray)
             {
@@ -420,43 +617,6 @@ namespace NeonCli
                 {
                     WriteErrorLine($"[{argName}] is includes invalid IP address [{item}].");
                 }
-            }
-
-            return array;
-        }
-
-        /// <summary>
-        /// Parses an enumeration.
-        /// </summary>
-        /// <typeparam name="TEnum">The enumeration type.</typeparam>
-        /// <param name="argName">The argument name.</param>
-        /// <returns>The enumeration value or <c>null</c>.</returns>
-        public TEnum? ParseEnum<TEnum>(string argName)
-            where TEnum : struct
-        {
-            if (!Arguments.TryGetValue(argName, out var jToken))
-            {
-                return null;
-            }
-
-            try
-            {
-                var value = jToken.ToObject<string>();
-
-                try
-                {
-                    return (TEnum?)NeonHelper.ParseEnum<TEnum>(value, ignoreCase: true);
-                }
-                catch
-                {
-                    WriteErrorLine($"[{argName}] is not a valid boolean.");
-                    return null;
-                }
-            }
-            catch
-            {
-                WriteErrorLine($"[{argName}] is not a valid boolean.");
-                return null;
             }
         }
     }
