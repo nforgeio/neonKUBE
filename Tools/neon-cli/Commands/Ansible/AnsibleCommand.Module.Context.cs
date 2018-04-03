@@ -257,6 +257,38 @@ namespace NeonCli
         // Parsing helpers
 
         /// <summary>
+        /// Attempts to parse a boolean string.
+        /// </summary>
+        /// <param name="input">The input string.</param>
+        /// <param name="errorMessage">The optional context error message to log when the input string is not valid.</param>
+        /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
+        public bool? ParseBoolString(string input, string errorMessage = null)
+        {
+            switch (input.ToLowerInvariant())
+            {
+                case "0":
+                case "no":
+                case "false":
+
+                    return false;
+
+                case "1":
+                case "yes":
+                case "true":
+
+                    return true;
+
+                default:
+
+                    if (errorMessage != null)
+                    {
+                        WriteErrorLine(errorMessage);
+                    }
+                    return null;
+            }
+        }
+
+        /// <summary>
         /// Parses a boolean.
         /// </summary>>
         /// <param name="argName">The argument name.</param>
@@ -268,15 +300,14 @@ namespace NeonCli
                 return null;
             }
 
-            try
-            {
-                return jToken.ToObject<bool>();
-            }
-            catch
+            var value = ParseBoolString(jToken.ToObject<string>());
+
+            if (!value.HasValue)
             {
                 WriteErrorLine($"[{argName}] is not a valid boolean.");
-                return null;
             }
+
+            return value;
         }
 
         /// <summary>
@@ -567,11 +598,13 @@ namespace NeonCli
         /// </summary>
         /// <param name="array">The output array.</param>
         /// <param name="argName">The argument name.</param>
-        public void ParseStringArray(List<string> array, string argName)
+        public List<String> ParseStringArray(string argName)
         {
+            var array = new List<string>();
+
             if (!Arguments.TryGetValue(argName, out var jToken))
             {
-                return;
+                return array;
             }
 
             var jArray = jToken as JArray;
@@ -579,7 +612,7 @@ namespace NeonCli
             if (jArray == null)
             {
                 WriteErrorLine($"[{argName}] is not an array.");
-                return;
+                return array;
             }
 
             foreach (var item in jArray)
@@ -591,21 +624,21 @@ namespace NeonCli
                 catch
                 {
                     WriteErrorLine($"[{argName}] array as one or more invalid elements.");
-                    return;
+                    return array;
                 }
             }
+
+            return array;
         }
 
         /// <summary>
         /// Parses an argument as an <see cref="IPAddress"/> array.
         /// </summary>
-        /// <param name="array">The target array.</param>
         /// <param name="argName">The argument name.</param>
-        public void ParseIPAddressArray(List<IPAddress> array, string argName)
+        public List<IPAddress> ParseIPAddressArray(string argName)
         {
-            var stringArray = new List<string>();
-
-            ParseStringArray(stringArray, argName);
+            var array       = new List<IPAddress>();
+            var stringArray = ParseStringArray(argName);
 
             foreach (var item in stringArray)
             {
@@ -618,6 +651,8 @@ namespace NeonCli
                     WriteErrorLine($"[{argName}] is includes invalid IP address [{item}].");
                 }
             }
+
+            return array;
         }
     }
 }

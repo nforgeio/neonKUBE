@@ -73,8 +73,8 @@ namespace NeonCli
     //
     // credential-spec          no                                  array of Windows credential specifications
     //
-    // detach                   no          false                   specifies whether the service command should
-    //                                                              exit immediately or wait for the service changes
+    // detach                   no          false       true        specifies whether the service command should
+    //                                                  false       exit immediately or wait for the service changes
     //                                                              to converge
     //
     // dns                      no                                  array of DNS nameserver IP addresses
@@ -84,7 +84,8 @@ namespace NeonCli
     // dns-search               no                                  array of  DNS domains to be searched for 
     //                                                              non-fully qualified hostnames
     //
-    // endpoint-mode            no          vip                     service endpoint mode (vip|dnsrr)
+    // endpoint-mode            no          vip         vip         service endpoint mode
+    //                                                  dnsrr
     //
     // entrypoint               no                                  array of strings overriding the image entrypoint
     //                                                              command and arguments
@@ -122,7 +123,9 @@ namespace NeonCli
     //
     // hostname                                                     overrides [Name] as the DNS name for the service.
     //
-    // isolation                no          default                 Windows isolation mode (default|process|hyperv)
+    // isolation                no          default     default     Windows isolation mode
+    //                                                  process
+    //                                                  hyperv
     //
     // label                    no                                  array of service labels like LABEL=VALUE
     //
@@ -134,18 +137,39 @@ namespace NeonCli
     //
     // log-driver               no                                  specifies the logging driver
     //
-    // log-opt                  no                                  specifies the logging options
+    // log-opt                  no                                  specifies the logging options as an array of OPTION=VALUE strings.
     //
-    // mode                     no          replicated              specifies the service mode (replicated|global)
+    // mode                     no          replicated  replicated  specifies the service mode
+    //                                                  global
     //
-    // mount                    no                                  array of structures specifying container bind mounts
+    // mount                    no                                  array of structures specifying container bind mounts like:
+    //                                                              
+    //                                                                  type: volume                default: volume     (volume|bind|tmpfs)
+    //                                                                  source: NAME/PATH
+    //                                                                  target: PATH
+    //                                                                  readonly: true/false        default: false      (true|false)
+    //                                                                  consistency: default        default: default    (default|consistent|cached|delegated)
+    //                                                                  bind-propagation: rprivate  default: rprivate   (shared|slave|private|rshared,
+    //                                                                                                                   rslave|rprivate)
+    //                                                                  options for: type=volume
+    //                                                                  ------------------------
+    //                                                                  volume-driver: local        default: local
+    //                                                                  volume-label: [ ... ]       array of NAME=VALUE volume label strings
+    //                                                                  volume-nocopy: true         default: true       (true|false)
+    //                                                                  volume-opt: [ ... ]         array of OPTION=VALUE volume options
+    //
+    //                                                                  options for: type=tmpfs
+    //                                                                  -----------------------
+    //                                                                  tmpfs-size: 1000000         default: unlimited
+    //                                                                  tmpfs-mode: 1777            default: 1777
     //
     // network                  no                                  array of networks to be attached
     //
-    // no-health-check          no          false                   disable service container health checks
+    // no-health-check          no          false       true        disable service container health checks
+    //                                                  false
     //
-    // no-resolve-image         no          false                   disable registry query to resolve image digest 
-    //                                                              and supported platforms
+    // no-resolve-image         no          false       true        disable registry query to resolve image digest 
+    //                                                  false       and supported platforms
     //
     // placement-pref           no                                  array of placement preferences
     //
@@ -156,7 +180,8 @@ namespace NeonCli
     //                                                                  mode: ingress       (ingress|host}
     //                                                                  protcol: tcp        (tcp|udp|sctp)
     //
-    // read-only                no          false                   mount container root filesystem as read-only
+    // read-only                no          false       true        mount container root filesystem as read-only
+    //                                                  false
     //
     // replicas                 no          1                       number of service tasks
     //
@@ -166,9 +191,11 @@ namespace NeonCli
     // reserve-memory           no                                  RAM to be reserved for each service container as size 
     //                                                              and units (b|k|m|g)
     //
-    // restart-condition        no          any                     specifies restart condition (none|on-failure|any)
+    // restart-condition        no          any         any         specifies restart condition
+    //                                                  none
+    //                                                  on-failure
     //
-    // restart-delay            no          5s                      Delay between service container restart attempts
+    // restart-delay            no          5s          any         Delay between service container restart attempts
     //                                                              (ns|us|ms|s|m|h)
     //
     // restart-max-attempts     no          unlimited               maximum number of container restarts to be attempted
@@ -177,15 +204,16 @@ namespace NeonCli
     //
     // rollback-delay           no          0s                      delay between task rollbacks (ns|us|ms|s|m|h)
     //
-    // rollback-failure-action  no          pause                   action to take on service container rollback failure
-    //                                                              (pause|continue)
+    // rollback-failure-action  no          pause       pause       action to take on service container rollback failure
+    //                                                  continue
     //
     // rollback-max-failure-ratio no        0                       failure rate to tolerate during a rollback.
     //
     // rollback-monitor         no          5s                      time to monitor rolled back service containers for
     //                                                              failure (ns|us|ms|s|m|h)
     //
-    // rollback-order           no          stop-first              service container rollback order (stop-first|start-first)
+    // rollback-order           no          stop-first  stop-first  service container rollback order (stop-first|start-first)
+    //                                                  start-first
     //
     // rollback-parallelism     no          1                       maximum number of service tasks to be rolled back
     //                                                              simultaneously (0 to roll back all at once)
@@ -201,15 +229,17 @@ namespace NeonCli
     //
     // update-delay             no          0s                      delay between task updates (ns|us|ms|s|m|h)
     //
-    // update-failure-action    no          pause                   action to take on service container update failure
-    //                                                              (pause|continue)
+    // update-failure-action    no          pause       pause       action to take on service container update failure
+    //                                                  continue
+    //                                                  rollback
     //
     // update-max-failure-ratio no          0                       failure rate to tolerate during an update.
     //
     // update-monitor           no          5s                      time to monitor updated service containers for
     //                                                              failure (ns|us|ms|s|m|h)
     //
-    // update-order             no          stop-first              service container update order (stop-first|start-first)
+    // update-order             no          stop-first  stop-first  service container update order
+    //                                                  start-first
     //
     // update-parallelism       no          1                       maximum number of service tasks to be updated
     //                                                              simultaneously (0 to update all at once)
@@ -242,31 +272,31 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies service arguments.
             /// </summary>
-            public List<string> Args { get; private set; } = new List<string>();
+            public List<string> Args { get; set; } = new List<string>();
 
             /// <summary>
             /// Optionally specifies credential specifications for Windows managed services.
             /// These are formatted like <b>file://NAME</b> or <b>registry://KEY</b>.
             /// </summary>
-            public List<string> CredentialSpec { get; private set; } = new List<string>();
+            public List<string> CredentialSpec { get; set; } = new List<string>();
 
             /// <summary>
             /// Identifies the configurations to be made available to the service.
             /// These appear to look like file names without a directory.
             /// </summary>
-            public List<string> Config { get; private set; } = new List<string>();
+            public List<string> Config { get; set; } = new List<string>();
 
             /// <summary>
             /// Specifies service container placement constraints.  These will look
             /// like <b>LABEL=VALUE</b> or <b>LABEL!=VALUE</b>.
             /// </summary>
-            public List<string> Constraint { get; private set; } = new List<string>();
+            public List<string> Constraint { get; set; } = new List<string>();
 
             /// <summary>
             /// Specifies the service container labels.  These will look like
             /// <b>LABEL=VALUE</b>.
             /// </summary>
-            public List<string> ContainerLabel { get; private set; } = new List<string>();
+            public List<string> ContainerLabel { get; set; } = new List<string>();
 
             /// <summary>
             /// Indicates that the module should detach immediately from the service
@@ -278,53 +308,53 @@ namespace NeonCli
             /// <summary>
             /// Specifies the DNS nameserver IP addresses for the container.
             /// </summary>
-            public List<IPAddress> Dns { get; private set; } = new List<IPAddress>();
+            public List<IPAddress> Dns { get; set; } = new List<IPAddress>();
 
             /// <summary>
             /// DNS options.  I believe these will be formatted like <b>OPTION=VALUE</b>
             /// but I'm not going to enforce this because I'm not sure.  The options
             /// are described here: http://manpages.ubuntu.com/manpages/precise/man5/resolvconf.conf.5.html
             /// </summary>
-            public List<string> DnsOption { get; private set; } = new List<string>();
+            public List<string> DnsOption { get; set; } = new List<string>();
 
             /// <summary>
             /// Specifies the DNS domains to be searched for non-fully qualified hostnames.
             /// </summary>
-            public List<string> DnsSearch { get; private set; } = new List<string>();
+            public List<string> DnsSearch { get; set; } = new List<string>();
 
             /// <summary>
             /// Specifies the endpoint mode.
             /// </summary>
-            public EndpointMode? EndpointMode { get; private set; }
+            public EndpointMode? EndpointMode { get; set; }
 
             /// <summary>
             /// Optionally overrides the image entrypoint command and arguments.
             /// </summary>
-            public List<string> Entrypoint { get; private set; } = new List<string>();
+            public List<string> Entrypoint { get; set; } = new List<string>();
 
             /// <summary>
             /// Specifies environment variables to be passed to the service containers.  These
             /// will be formatted as <b>NAME=VALUE</b> to set explicit values or just <b>NAME</b>
             /// to pass the current value of a host variable.
             /// </summary>
-            public List<string> Env { get; private set; } = new List<string>();
+            public List<string> Env { get; set; } = new List<string>();
 
             /// <summary>
             /// Specifies the host files with environment variable definitions to be
             /// passed to the service containers.
             /// </summary>
-            public List<string> EnvFile { get; private set; } = new List<string>();
+            public List<string> EnvFile { get; set; } = new List<string>();
 
             /// <summary>
             /// Specifies additional service container placement constraints.  I'm not
             /// entirely sure of the format, so we're not going to parse these.
             /// </summary>
-            public List<string> GenericResource { get; private set; } = new List<string>();
+            public List<string> GenericResource { get; set; } = new List<string>();
 
             /// <summary>
             /// Specifies supplementary user groups for the service containers.
             /// </summary>
-            public List<string> Group { get; private set; } = new List<string>();
+            public List<string> Group { get; set; } = new List<string>();
 
             /// <summary>
             /// Optionally specifies the command to be executed within the service containers
@@ -359,7 +389,7 @@ namespace NeonCli
             /// Optionally specifies custom host/IP address mappings to be added to the service
             /// container's <b>/etc/hosts</b> file.  These are formatted like <b>HOST:IP</b>.
             /// </summary>
-            public List<string> Host { get; private set; } = new List<string>();
+            public List<string> Host { get; set; } = new List<string>();
 
             /// <summary>
             /// Optionally overrides <see cref="Name"/> as the service's DNS hostname.
@@ -399,7 +429,7 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the log driver options.
             /// </summary>
-            public string LogOpt { get; set; }
+            public List<string> LogOpt { get; set; } = new List<string>();
 
             /// <summary>
             /// Specifies the service mode.
@@ -409,7 +439,7 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies any service filesystem mounts.
             /// </summary>
-            public List<Mount> Mount { get; private set; } = new List<Mount>();
+            public List<Mount> Mount { get; set; } = new List<Mount>();
 
             /// <summary>
             /// The service name.
@@ -419,7 +449,7 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies any network attachments.
             /// </summary>
-            public List<string> Network { get; private set; } = new List<string>();
+            public List<string> Network { get; set; } = new List<string>();
 
             /// <summary>
             /// Optionally disable container health checks.
@@ -436,12 +466,12 @@ namespace NeonCli
             /// Specifies service container placement preferences.  I'm not
             /// entirely sure of the format, so we're not going to parse these.
             /// </summary>
-            public List<string> PlacementPref { get; private set; } = new List<string>();
+            public List<string> PlacementPref { get; set; } = new List<string>();
 
             /// <summary>
             /// Optionally publish a service port to the ingress network.
             /// </summary>
-            public List<PublishPort> Publish { get; private set; } = new List<PublishPort>();
+            public List<PublishPort> Publish { get; set; } = new List<PublishPort>();
 
             /// <summary>
             /// Optionally mount the container's root filesystem as read-only.
@@ -520,7 +550,7 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the secrets to be exposed to the service.
             /// </summary>
-            public List<string> Secret { get; private set; } = new List<string>();
+            public List<string> Secret { get; set; } = new List<string>();
 
             /// <summary>
             /// Optionally specifies the time to wait for a service container to
@@ -761,21 +791,21 @@ namespace NeonCli
 
             public string Target { get; set; }
 
-            public bool ReadOnly { get; set; }
+            public bool? ReadOnly { get; set; }
 
-            public MountConsistency Consistency { get; set; }
+            public MountConsistency? Consistency { get; set; }
 
-            public BindPropagation BindPropagation { get; set; }
+            public BindPropagation? BindPropagation { get; set; }
 
             public string VolumeDriver { get; set; }
 
             public List<string> VolumeLabel { get; private set; } = new List<string>();
 
-            public bool VolumeNoCopy { get; set; }
+            public bool? VolumeNoCopy { get; set; }
 
             public List<string> VolumeOpt { get; private set; } = new List<string>();
 
-            public long TmpfsSize { get; set; }
+            public long? TmpfsSize { get; set; }
 
             public string TmpfsMode { get; set; }
         }
@@ -823,51 +853,38 @@ namespace NeonCli
 
             serviceDef.Name = name;
 
-            context.ParseStringArray(serviceDef.Args, "args");
-            context.ParseStringArray(serviceDef.Config, "config");
-            context.ParseStringArray(serviceDef.Constraint, "constraint");
-            context.ParseStringArray(serviceDef.ContainerLabel, "container-label");
-            context.ParseStringArray(serviceDef.CredentialSpec, "credential-spec");
-
-            serviceDef.Detach = context.ParseBool("detach");
-
-            context.ParseIPAddressArray(serviceDef.Dns, "dns");
-            context.ParseStringArray(serviceDef.Entrypoint, "entrypoint");
-            context.ParseStringArray(serviceDef.Env, "env");
-            context.ParseStringArray(serviceDef.EnvFile, "env-file");
-            context.ParseStringArray(serviceDef.GenericResource, "generic-resource");
-            context.ParseStringArray(serviceDef.Group, "group");
-            context.ParseStringArray(serviceDef.HealthCmd, "health-cmd");
-
-            serviceDef.HeathInterval     = context.ParseDockerInterval("health-interval");
-            serviceDef.HealthRetries     = context.ParseInt("health-retries", v => v >= 0);
-            serviceDef.HealthStartPeriod = context.ParseDockerInterval("health-start-period");
-            serviceDef.HealthTimeout     = context.ParseDockerInterval("health-timeout");
-
-            context.ParseStringArray(serviceDef.Host, "host");
-
-            serviceDef.Hostname  = context.ParseString("hostname");
-            serviceDef.Isolation = context.ParseEnum<IsolationMode>("isolation");
-
-            context.ParseStringArray(serviceDef.Label, "label");
-
-            serviceDef.LimitCpu    = context.ParseDouble("limit-cpu", v => v > 0);
-            serviceDef.LimitMemory = context.ParseDockerMemorySize("limit-memory");
-            serviceDef.LogDriver   = context.ParseString("log-driver");
-            serviceDef.LogOpt      = context.ParseString("log-opt");
-            serviceDef.Mode        = context.ParseEnum<ServiceMode>("mode");
-
-            ParseBindMounts(context, serviceDef.Mount, "mount");
-
-            context.ParseStringArray(serviceDef.Network, "network");
-
-            serviceDef.NoHealthCheck  = context.ParseBool("no-health-check");
-            serviceDef.NoResolveImage = context.ParseBool("no-resolve-image");
-
-            context.ParseStringArray(serviceDef.PlacementPref, "placement-pref");
-
-            ParsePublishPorts(context, serviceDef.Publish, "publish");
-
+            serviceDef.Args                    = context.ParseStringArray("args");
+            serviceDef.Config                  = context.ParseStringArray("config");
+            serviceDef.Constraint              = context.ParseStringArray("constraint");
+            serviceDef.ContainerLabel          = context.ParseStringArray("container-label");
+            serviceDef.CredentialSpec          = context.ParseStringArray("credential-spec");
+            serviceDef.Detach                  = context.ParseBool("detach");
+            serviceDef.Dns                     = context.ParseIPAddressArray("dns");
+            serviceDef.Entrypoint              = context.ParseStringArray("entrypoint");
+            serviceDef.Env                     = context.ParseStringArray("env");
+            serviceDef.EnvFile                 = context.ParseStringArray("env-file");
+            serviceDef.GenericResource         = context.ParseStringArray("generic-resource");
+            serviceDef.Group                   = context.ParseStringArray("group");
+            serviceDef.HealthCmd               = context.ParseStringArray("health-cmd");
+            serviceDef.HeathInterval           = context.ParseDockerInterval("health-interval");
+            serviceDef.HealthRetries           = context.ParseInt("health-retries", v => v >= 0);
+            serviceDef.HealthStartPeriod       = context.ParseDockerInterval("health-start-period");
+            serviceDef.HealthTimeout           = context.ParseDockerInterval("health-timeout");
+            serviceDef.Host                    = context.ParseStringArray("host");
+            serviceDef.Hostname                = context.ParseString("hostname");
+            serviceDef.Isolation               = context.ParseEnum<IsolationMode>("isolation");
+            serviceDef.Label                   = context.ParseStringArray("label");
+            serviceDef.LimitCpu                = context.ParseDouble("limit-cpu", v => v > 0);
+            serviceDef.LimitMemory             = context.ParseDockerMemorySize("limit-memory");
+            serviceDef.LogDriver               = context.ParseString("log-driver");
+            serviceDef.LogOpt                  = context.ParseStringArray("log-opt");
+            serviceDef.Mode                    = context.ParseEnum<ServiceMode>("mode");
+            serviceDef.Mount                   = ParseMounts(context, "mount");
+            serviceDef.Network                 = context.ParseStringArray("network");
+            serviceDef.NoHealthCheck           = context.ParseBool("no-health-check");
+            serviceDef.NoResolveImage          = context.ParseBool("no-resolve-image");
+            serviceDef.PlacementPref           = context.ParseStringArray("placement-pref");
+            serviceDef.Publish                 = ParsePublishPorts(context, "publish");
             serviceDef.ReadOnly                = context.ParseBool("read-only");
             serviceDef.Replicas                = context.ParseInt("replicas", v => v >= 0);
             serviceDef.ReserveCpu              = context.ParseDouble("reserve-cpu", v => v > 0);
@@ -882,22 +899,20 @@ namespace NeonCli
             serviceDef.RollbackMonitor         = context.ParseDockerInterval("rollback-monitor");
             serviceDef.RollbackOrder           = context.ParseEnum<RollbackOrder>("rollback-order");
             serviceDef.RollbackParallism       = context.ParseInt("rollback-parallelism", v => v >= 0);
-
-            context.ParseStringArray(serviceDef.Secret, "secret");
-
-            serviceDef.StopGracePeriod       = context.ParseDockerInterval("stop-grace-period");
-            serviceDef.StopSignal            = context.ParseString("stop-signal");
-            serviceDef.ReadOnly              = context.ParseBool("read-only");
-            serviceDef.Tty                   = context.ParseBool("tty");
-            serviceDef.UpdateDelay           = context.ParseDockerInterval("update-delay");
-            serviceDef.UpdateFailureAction   = context.ParseEnum<UpdateFailureAction>("update-failure-action");
-            serviceDef.UpdateMaxFailureRatio = context.ParseDouble("update-max-failure-ratio", v => v >= 0);
-            serviceDef.UpdateMonitor         = context.ParseDockerInterval("update-monitor");
-            serviceDef.UpdateOrder           = context.ParseEnum<UpdateOrder>("update-order");
-            serviceDef.UpdateParallism       = context.ParseInt("update-parallelism", v => v >= 0);
-            serviceDef.User                  = context.ParseString("user");
-            serviceDef.WithRegistryAuth      = context.ParseBool("with-registry-auth");
-            serviceDef.WorkDir               = context.ParseString("workdir");
+            serviceDef.Secret                  = context.ParseStringArray("secret");
+            serviceDef.StopGracePeriod         = context.ParseDockerInterval("stop-grace-period");
+            serviceDef.StopSignal              = context.ParseString("stop-signal");
+            serviceDef.ReadOnly                = context.ParseBool("read-only");
+            serviceDef.Tty                     = context.ParseBool("tty");
+            serviceDef.UpdateDelay             = context.ParseDockerInterval("update-delay");
+            serviceDef.UpdateFailureAction     = context.ParseEnum<UpdateFailureAction>("update-failure-action");
+            serviceDef.UpdateMaxFailureRatio   = context.ParseDouble("update-max-failure-ratio", v => v >= 0);
+            serviceDef.UpdateMonitor           = context.ParseDockerInterval("update-monitor");
+            serviceDef.UpdateOrder             = context.ParseEnum<UpdateOrder>("update-order");
+            serviceDef.UpdateParallism         = context.ParseInt("update-parallelism", v => v >= 0);
+            serviceDef.User                    = context.ParseString("user");
+            serviceDef.WithRegistryAuth        = context.ParseBool("with-registry-auth");
+            serviceDef.WorkDir                 = context.ParseString("workdir");
 
             // Abort the operation if any errors were reported during parsing.
 
@@ -922,6 +937,89 @@ namespace NeonCli
 
                     throw new ArgumentException($"[state={state}] is not one of the valid choices: [absent] or [present].");
             }
+        }
+
+        /// <summary>
+        /// Parses the service's bind mounts.
+        /// </summary>
+        /// <param name="context">The module context.</param>
+        /// <param name="argName">The module argument name.</param>
+        private List<Mount> ParseMounts(ModuleContext context, string argName)
+        {
+            var mounts = new List<Mount>();
+
+            if (!context.Arguments.TryGetValue(argName, out var jToken))
+            {
+                return mounts;
+            }
+
+            var jArray = jToken as JArray;
+
+            if (jArray == null)
+            {
+                context.WriteErrorLine($"Expected [{argName}] to be an array of bind mount specifications.");
+                return mounts;
+            }
+
+            foreach (var item in jArray)
+            {
+                var jObject = item as JObject;
+
+                if (jObject != null)
+                {
+                    context.WriteErrorLine($"One or more of the [{argName}] elements is not a valid bind mount specification.");
+                    return mounts;
+                }
+
+                var mount = new Mount();
+                var value = String.Empty;
+
+                // Parse [type]
+
+                if (jObject.TryGetValue<string>("type", out value))
+                {
+                    if (Enum.TryParse<MountType>(value, true, out var mountType))
+                    {
+                        mount.Type = mountType;
+                    }
+                    else
+                    {
+                        context.WriteErrorLine($"One of the [{argName}] elements specifies the invalid [type={value}].");
+                        return mounts;
+                    }
+                }
+                else
+                {
+                    mount.Type = MountType.Volume;
+                }
+
+                // Parse [source]
+
+                if (jObject.TryGetValue<string>("source", out value))
+                {
+                    mount.Source = value;
+                }
+
+                // Parse [target]
+
+                if (jObject.TryGetValue<string>("target", out value))
+                {
+                    mount.Target = value;
+                }
+
+                // Parse [readonly]
+
+                if (jObject.TryGetValue<string>("readonly", out value))
+                {
+                    mount.ReadOnly = context.ParseBoolString(value, "Invalid [mount.readonly] value.");
+                }
+
+                // Do a bit of validation and then add the mount to the list.
+
+                mounts.Add(mount);
+            }
+
+            return mounts;
         }
     }
 }
