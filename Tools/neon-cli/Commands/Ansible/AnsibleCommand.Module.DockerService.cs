@@ -762,7 +762,7 @@ namespace NeonCli
             Delegated
         }
 
-        private enum BindPropagation
+        private enum MountBindPropagation
         {
             [EnumMember(Value = "rprivate")]
             RPrivate = 0,
@@ -795,7 +795,7 @@ namespace NeonCli
 
             public MountConsistency? Consistency { get; set; }
 
-            public BindPropagation? BindPropagation { get; set; }
+            public MountBindPropagation? BindPropagation { get; set; }
 
             public string VolumeDriver { get; set; }
 
@@ -944,6 +944,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="context">The module context.</param>
         /// <param name="argName">The module argument name.</param>
+        /// <returns>The list of <see cref="Mount"/> instances.</returns>
         private List<Mount> ParseMounts(ModuleContext context, string argName)
         {
             var mounts = new List<Mount>();
@@ -967,7 +968,7 @@ namespace NeonCli
 
                 if (jObject != null)
                 {
-                    context.WriteErrorLine($"One or more of the [{argName}] elements is not a valid bind mount specification.");
+                    context.WriteErrorLine($"One or more of the [{argName}] array elements is not a valid bind mount specification.");
                     return mounts;
                 }
 
@@ -984,7 +985,7 @@ namespace NeonCli
                     }
                     else
                     {
-                        context.WriteErrorLine($"One of the [{argName}] elements specifies the invalid [type={value}].");
+                        context.WriteErrorLine($"One of the [{argName}] array elements specifies the invalid [type={value}].");
                         return mounts;
                     }
                 }
@@ -1014,12 +1015,277 @@ namespace NeonCli
                     mount.ReadOnly = context.ParseBoolString(value, "Invalid [mount.readonly] value.");
                 }
 
-                // Do a bit of validation and then add the mount to the list.
+                // Parse [consistency]
+
+                if (jObject.TryGetValue<string>("consistency", out value))
+                {
+                    mount.Consistency = context.ParseEnumString<MountConsistency>(value, "Invalid [mount.consistency] value.");
+                }
+
+                // Parse [bind-propagation]
+
+                if (jObject.TryGetValue<string>("bind-propagation", out value))
+                {
+                    mount.BindPropagation = context.ParseEnumString<MountBindPropagation>(value, "Invalid [mount.bind-propagation] value.");
+                }
+
+                // Parse the [volume[ related options.
+
+                if (mount.Type == MountType.Volume)
+                {
+                    // Parse [volume-driver]
+
+                    if (jObject.TryGetValue<string>("volume-driver", out value))
+                    {
+                        mount.VolumeDriver = value;
+                    }
+                    else
+                    {
+                        mount.VolumeDriver = "local";
+                    }
+
+                    // Parse [volume-label]
+
+                    if (jObject.TryGetValue<JToken>("volume-label", out jToken))
+                    {
+                        jArray = jToken as JArray;
+
+                        if (jArray == null)
+                        {
+                            context.WriteErrorLine("Expected [mount.volume-label] to be an array of [LABEL=VALUE] strings.");
+                        }
+                        else
+                        {
+                            foreach (var label in jArray)
+                            {
+                                mount.VolumeLabel.Add(label.Value<string>());
+                            }
+                        }
+                    }
+
+                    // Parse [volume-nocopy]
+
+                    if (jObject.TryGetValue<string>("volume-nocopy", out value))
+                    {
+                        mount.VolumeNoCopy = context.ParseBoolString(value, "Invalid [mount.volume-nocopy] value.");
+                    }
+
+                    // Parse [volume-opt]
+
+                    if (jObject.TryGetValue<JToken>("volume-opt", out jToken))
+                    {
+                        jArray = jToken as JArray;
+
+                        if (jArray == null)
+                        {
+                            context.WriteErrorLine("Expected [mount.volume-opt] to be an array of [OPTION=VALUE] strings.");
+                        }
+                        else
+                        {
+                            foreach (var opt in jArray)
+                            {
+                                mount.VolumeOpt.Add(opt.Value<string>());
+                            }
+                        }
+                    }
+                }
+                else
+                {
+                    if (jObject.ContainsKey("volume-driver") ||
+                        jObject.ContainsKey("volume-label") ||
+                        jObject.ContainsKey("volume-nocopy") ||
+                        jObject.ContainsKey("volume-opt"))
+                    {
+                        context.WriteErrorLine($"[mount.volume-*] options are not allowed for [mount.type={mount.Type}].");
+                    }
+                }
+
+                // Parse [tmpfs] related options.
+
+                if (mount.Type == MountType.Tmpfs)
+                {
+                    // Parse [tmpfs-size]
+
+                    if (jObject.TryGetValue<string>("tmpfs-size", out value))
+                    {
+                        mount.TmpfsSize = context.ParseLongString(value, $"Invalid [mount.tmpfs-size={value}] value.");
+                    }
+
+                    if (mount.TmpfsSize == 0)
+                    {
+                        mount.TmpfsSize = null; // Treat this as unlimited
+                    }
+                    else if (mount.TmpfsSize < 0)
+                    {
+                        mount.TmpfsSize = null;
+                        context.WriteErrorLine($"Invalid [mount.tmpfs-size={value}] because negative sizes are not allowed.");
+                    }
+
+                    // Parse [tmpfs-mode].  We're going to allow 3 or 4 octal digits.
+
+                    if (jObject.TryGetValue<string>("tmpfs-size", out value))
+                    {
+                        var error = false;
+
+                        if (value.Length != 3 || value.Length != 4)
+                        {
+                            error = true;
+                        }
+                        else
+                        {
+                            foreach (var ch in value)
+                            {
+                                if (ch < '0' || '7' < ch)
+                                {
+                                    error = true;
+                                    break;
+                                }
+                            }
+                        }
+
+                        if (error)
+                        {
+                            context.WriteErrorLine($"Invalid [mount.tmpfs-mode={value}]: This must be three or four octal digits.");
+                        }
+                        else
+                        {
+                            mount.TmpfsMode = value;
+                        }
+                    }
+                }
+                else
+                {
+                    if (jObject.ContainsKey("tmpfs-size") ||
+                        jObject.ContainsKey("tmpfs-mode"))
+                    {
+                        context.WriteErrorLine($"[mount.tmpfs-*] options are not allowed for [mount.type={mount.Type}].");
+                    }
+                }
+
+                // Add the mount to the list.
 
                 mounts.Add(mount);
             }
 
             return mounts;
+        }
+
+        /// <summary>
+        /// Parses the service's published ports.
+        /// </summary>
+        /// <param name="context">The module context.</param>
+        /// <param name="argName">The module argument name.</param>
+        /// /// <returns>The list of <see cref="PublishPort"/> instances.</returns>
+        private List<PublishPort> ParsePublishPorts(ModuleContext context, string argName)
+        {
+            var publishedPorts = new List<PublishPort>();
+
+            if (!context.Arguments.TryGetValue(argName, out var jToken))
+            {
+                return publishedPorts;
+            }
+
+            var jArray = jToken as JArray;
+
+            if (jArray == null)
+            {
+                context.WriteErrorLine($"Expected [{argName}] to be an array of published port specifications.");
+                return publishedPorts;
+            }
+
+            foreach (var item in jArray)
+            {
+                var jObject = item as JObject;
+
+                if (jObject != null)
+                {
+                    context.WriteErrorLine($"One or more of the [{argName}] array elements is not a valid published port specification.");
+                    return publishedPorts;
+                }
+
+                var port  = new PublishPort();
+                var value = String.Empty;
+
+                // Parse [published]
+
+                if (jObject.TryGetValue<string>("published", out value))
+                {
+                    if (int.TryParse(value, out var publishedPort) && 0 < publishedPort && publishedPort <= ushort.MaxValue)
+                    {
+                        context.WriteErrorLine($"[{argName}[].published={value}] is not a valid port number.");
+                        return publishedPorts;
+                    }
+
+                    port.Published = publishedPort;
+                }
+                else
+                {
+                    context.WriteErrorLine($"[{argName}] array element lacks the required [published] property.");
+                    return publishedPorts;
+                }
+
+                // Parse [target]
+
+                if (jObject.TryGetValue<string>("target", out value))
+                {
+                    if (int.TryParse(value, out var targetPort) && 0 < targetPort && targetPort <= ushort.MaxValue)
+                    {
+                        context.WriteErrorLine($"[{argName}[].target={value}] is not a valid port number.");
+                        return publishedPorts;
+                    }
+
+                    port.Target = targetPort;
+                }
+                else
+                {
+                    context.WriteErrorLine($"[{argName}] array element lacks the required [target] property.");
+                    return publishedPorts;
+                }
+
+                // Parse [mode]
+
+                if (jObject.TryGetValue<string>("mode", out value))
+                {
+                    if (Enum.TryParse<PortMode>(value, true, out var portMode))
+                    {
+                        port.Mode = portMode;
+                    }
+                    else
+                    {
+                        context.WriteErrorLine($"[{argName}[].mode={value}] is invalid.");
+                        return publishedPorts;
+                    }
+                }
+                else
+                {
+                    port.Mode = PortMode.Ingress;
+                }
+
+                // Parse [protocol]
+
+                if (jObject.TryGetValue<string>("protocol", out value))
+                {
+                    if (Enum.TryParse<PortProtocol>(value, true, out var portProtocol))
+                    {
+                        port.Protocol = portProtocol;
+                    }
+                    else
+                    {
+                        context.WriteErrorLine($"One of the [{argName}] elements specifies the invalid [protocol={value}].");
+                        return publishedPorts;
+                    }
+                }
+                else
+                {
+                    port.Protocol = PortProtocol.Tcp;
+                }
+
+                // Add the mount to the list.
+
+                publishedPorts.Add(port);
+            }
+
+            return publishedPorts;
         }
     }
 }

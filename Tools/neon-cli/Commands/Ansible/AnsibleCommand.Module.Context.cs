@@ -260,7 +260,7 @@ namespace NeonCli
         /// Attempts to parse a boolean string.
         /// </summary>
         /// <param name="input">The input string.</param>
-        /// <param name="errorMessage">The optional context error message to log when the input string is not valid.</param>
+        /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
         /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
         public bool? ParseBoolString(string input, string errorMessage = null)
         {
@@ -285,6 +285,53 @@ namespace NeonCli
                         WriteErrorLine(errorMessage);
                     }
                     return null;
+            }
+        }
+
+        /// <summary>
+        /// Attempts to parse a long string.
+        /// </summary>
+        /// <param name="input">The input string.</param>
+        /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
+        /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
+        public long? ParseLongString(string input, string errorMessage = null)
+        {
+            if (long.TryParse(input, out var value))
+            {
+                return value;
+            }
+            else
+            {
+                if (errorMessage != null)
+                {
+                    WriteErrorLine(errorMessage);
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Attempts to parse an enumeration string.
+        /// </summary>
+        /// <param name="input">The input string.</param>
+        /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
+        /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
+        public TEnum? ParseEnumString<TEnum>(string input, string errorMessage = null)
+            where TEnum : struct
+        {
+            if (!Enum.TryParse<TEnum>(input, true, out var value))
+            {
+                if (errorMessage != null)
+                {
+                    WriteErrorLine(errorMessage);
+                }
+
+                return null;
+            }
+            else
+            {
+                return value;
             }
         }
 
