@@ -50,6 +50,8 @@ namespace NeonCli
     //
     // NOTE: Durations without units will be assumed to be seconds.
     //
+    // NOTE: Only the [name] parameter is required when [state=absent].
+    //
     //                                      create
     // parameter                required    default     choices     comments
     // --------------------------------------------------------------------
@@ -122,6 +124,8 @@ namespace NeonCli
     //                                                              HOST:IP.
     //
     // hostname                                                     overrides [Name] as the DNS name for the service.
+    //
+    // image                    yes                                 specifies the Docker image 
     //
     // isolation                no          default     default     Windows isolation mode
     //                                                  process
@@ -249,6 +253,10 @@ namespace NeonCli
     // with-registry-auth       no          false                   send registry authentication details to Swarm nodes
     //
     // workdir                  no                                  specifies command working directory within containers
+    //
+    // Examples:
+    // ---------
+    //
 
     public partial class AnsibleCommand : CommandBase
     {
@@ -365,7 +373,7 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the interval between health checks (nanoseconds).
             /// </summary>
-            public long? HeathInterval { get; set; }
+            public long? HealthInterval { get; set; }
 
             /// <summary>
             /// Optionally specifies the number of times the <see cref="HealthCmd"/> can
@@ -550,7 +558,7 @@ namespace NeonCli
             /// <summary>
             /// Optionally specifies the secrets to be exposed to the service.
             /// </summary>
-            public List<string> Secret { get; set; } = new List<string>();
+            public List<Secret> Secret { get; set; } = new List<Secret>();
 
             /// <summary>
             /// Optionally specifies the time to wait for a service container to
@@ -810,6 +818,19 @@ namespace NeonCli
             public string TmpfsMode { get; set; }
         }
 
+        public class Secret
+        {
+            public string Source { get; set; }
+            
+            public string Target { get; set; }
+
+            public string Uid { get; set; }
+
+            public string Gid { get; set; }
+
+            public string Mode { get; set; }
+        }
+
         //---------------------------------------------------------------------
         // Implementation
 
@@ -822,6 +843,8 @@ namespace NeonCli
             var cluster = NeonClusterHelper.Cluster;
 
             // Obtain common arguments.
+
+            context.WriteLine(AnsibleVerbosity.Trace, "Parsing common parameters.");
 
             if (!context.Arguments.TryGetValue<string>("name", out var name))
             {
@@ -845,74 +868,75 @@ namespace NeonCli
                 force = false;
             }
 
-            // Parse the service definition from the context arguments.
+            // Parse the service definition from the context parameters.
 
-            // $todo(jeff.lill): We could try harder to validate many fields.
+            context.WriteLine(AnsibleVerbosity.Trace, "Parsing service parameters.");
 
-            var serviceDef = new DockerService();
+            var service = new DockerService();
 
-            serviceDef.Name = name;
+            service.Name                    = name;
 
-            serviceDef.Args                    = context.ParseStringArray("args");
-            serviceDef.Config                  = context.ParseStringArray("config");
-            serviceDef.Constraint              = context.ParseStringArray("constraint");
-            serviceDef.ContainerLabel          = context.ParseStringArray("container-label");
-            serviceDef.CredentialSpec          = context.ParseStringArray("credential-spec");
-            serviceDef.Detach                  = context.ParseBool("detach");
-            serviceDef.Dns                     = context.ParseIPAddressArray("dns");
-            serviceDef.Entrypoint              = context.ParseStringArray("entrypoint");
-            serviceDef.Env                     = context.ParseStringArray("env");
-            serviceDef.EnvFile                 = context.ParseStringArray("env-file");
-            serviceDef.GenericResource         = context.ParseStringArray("generic-resource");
-            serviceDef.Group                   = context.ParseStringArray("group");
-            serviceDef.HealthCmd               = context.ParseStringArray("health-cmd");
-            serviceDef.HeathInterval           = context.ParseDockerInterval("health-interval");
-            serviceDef.HealthRetries           = context.ParseInt("health-retries", v => v >= 0);
-            serviceDef.HealthStartPeriod       = context.ParseDockerInterval("health-start-period");
-            serviceDef.HealthTimeout           = context.ParseDockerInterval("health-timeout");
-            serviceDef.Host                    = context.ParseStringArray("host");
-            serviceDef.Hostname                = context.ParseString("hostname");
-            serviceDef.Isolation               = context.ParseEnum<IsolationMode>("isolation");
-            serviceDef.Label                   = context.ParseStringArray("label");
-            serviceDef.LimitCpu                = context.ParseDouble("limit-cpu", v => v > 0);
-            serviceDef.LimitMemory             = context.ParseDockerMemorySize("limit-memory");
-            serviceDef.LogDriver               = context.ParseString("log-driver");
-            serviceDef.LogOpt                  = context.ParseStringArray("log-opt");
-            serviceDef.Mode                    = context.ParseEnum<ServiceMode>("mode");
-            serviceDef.Mount                   = ParseMounts(context, "mount");
-            serviceDef.Network                 = context.ParseStringArray("network");
-            serviceDef.NoHealthCheck           = context.ParseBool("no-health-check");
-            serviceDef.NoResolveImage          = context.ParseBool("no-resolve-image");
-            serviceDef.PlacementPref           = context.ParseStringArray("placement-pref");
-            serviceDef.Publish                 = ParsePublishPorts(context, "publish");
-            serviceDef.ReadOnly                = context.ParseBool("read-only");
-            serviceDef.Replicas                = context.ParseInt("replicas", v => v >= 0);
-            serviceDef.ReserveCpu              = context.ParseDouble("reserve-cpu", v => v > 0);
-            serviceDef.ReserveMemory           = context.ParseDockerMemorySize("reserve-memory");
-            serviceDef.RestartCondition        = context.ParseEnum<RestartCondition>("restart-condition");
-            serviceDef.RestartDelay            = context.ParseDockerInterval("restart-delay");
-            serviceDef.RestartMaxAttempts      = context.ParseInt("restart-max-attempts", v => v >= 0);
-            serviceDef.RestartWindow           = context.ParseDockerInterval("restart-window");
-            serviceDef.RollbackDelay           = context.ParseDockerInterval("rollback-delay");
-            serviceDef.RollbackFailureAction   = context.ParseEnum<RollbackFailureAction>("rollback-failure-action");
-            serviceDef.RollbackMaxFailureRatio = context.ParseDouble("rollback-max-failure-ratio", v => v >= 0);
-            serviceDef.RollbackMonitor         = context.ParseDockerInterval("rollback-monitor");
-            serviceDef.RollbackOrder           = context.ParseEnum<RollbackOrder>("rollback-order");
-            serviceDef.RollbackParallism       = context.ParseInt("rollback-parallelism", v => v >= 0);
-            serviceDef.Secret                  = context.ParseStringArray("secret");
-            serviceDef.StopGracePeriod         = context.ParseDockerInterval("stop-grace-period");
-            serviceDef.StopSignal              = context.ParseString("stop-signal");
-            serviceDef.ReadOnly                = context.ParseBool("read-only");
-            serviceDef.Tty                     = context.ParseBool("tty");
-            serviceDef.UpdateDelay             = context.ParseDockerInterval("update-delay");
-            serviceDef.UpdateFailureAction     = context.ParseEnum<UpdateFailureAction>("update-failure-action");
-            serviceDef.UpdateMaxFailureRatio   = context.ParseDouble("update-max-failure-ratio", v => v >= 0);
-            serviceDef.UpdateMonitor           = context.ParseDockerInterval("update-monitor");
-            serviceDef.UpdateOrder             = context.ParseEnum<UpdateOrder>("update-order");
-            serviceDef.UpdateParallism         = context.ParseInt("update-parallelism", v => v >= 0);
-            serviceDef.User                    = context.ParseString("user");
-            serviceDef.WithRegistryAuth        = context.ParseBool("with-registry-auth");
-            serviceDef.WorkDir                 = context.ParseString("workdir");
+            service.Args                    = context.ParseStringArray("args");
+            service.Config                  = context.ParseStringArray("config");
+            service.Constraint              = context.ParseStringArray("constraint");
+            service.ContainerLabel          = context.ParseStringArray("container-label");
+            service.CredentialSpec          = context.ParseStringArray("credential-spec");
+            service.Detach                  = context.ParseBool("detach");
+            service.Dns                     = context.ParseIPAddressArray("dns");
+            service.Entrypoint              = context.ParseStringArray("entrypoint");
+            service.Env                     = context.ParseStringArray("env");
+            service.EnvFile                 = context.ParseStringArray("env-file");
+            service.GenericResource         = context.ParseStringArray("generic-resource");
+            service.Group                   = context.ParseStringArray("group");
+            service.HealthCmd               = context.ParseStringArray("health-cmd");
+            service.HealthInterval           = context.ParseDockerInterval("health-interval");
+            service.HealthRetries           = context.ParseInt("health-retries", v => v >= 0);
+            service.HealthStartPeriod       = context.ParseDockerInterval("health-start-period");
+            service.HealthTimeout           = context.ParseDockerInterval("health-timeout");
+            service.Host                    = context.ParseStringArray("host");
+            service.Hostname                = context.ParseString("hostname");
+            service.Image                   = context.ParseString("image");
+            service.Isolation               = context.ParseEnum<IsolationMode>("isolation");
+            service.Label                   = context.ParseStringArray("label");
+            service.LimitCpu                = context.ParseDouble("limit-cpu", v => v > 0);
+            service.LimitMemory             = context.ParseDockerMemorySize("limit-memory");
+            service.LogDriver               = context.ParseString("log-driver");
+            service.LogOpt                  = context.ParseStringArray("log-opt");
+            service.Mode                    = context.ParseEnum<ServiceMode>("mode");
+            service.Mount                   = ParseMounts(context, "mount");
+            service.Network                 = context.ParseStringArray("network");
+            service.NoHealthCheck           = context.ParseBool("no-health-check");
+            service.NoResolveImage          = context.ParseBool("no-resolve-image");
+            service.PlacementPref           = context.ParseStringArray("placement-pref");
+            service.Publish                 = ParsePublishPorts(context, "publish");
+            service.ReadOnly                = context.ParseBool("read-only");
+            service.Replicas                = context.ParseInt("replicas", v => v >= 0);
+            service.ReserveCpu              = context.ParseDouble("reserve-cpu", v => v > 0);
+            service.ReserveMemory           = context.ParseDockerMemorySize("reserve-memory");
+            service.RestartCondition        = context.ParseEnum<RestartCondition>("restart-condition");
+            service.RestartDelay            = context.ParseDockerInterval("restart-delay");
+            service.RestartMaxAttempts      = context.ParseInt("restart-max-attempts", v => v >= 0);
+            service.RestartWindow           = context.ParseDockerInterval("restart-window");
+            service.RollbackDelay           = context.ParseDockerInterval("rollback-delay");
+            service.RollbackFailureAction   = context.ParseEnum<RollbackFailureAction>("rollback-failure-action");
+            service.RollbackMaxFailureRatio = context.ParseDouble("rollback-max-failure-ratio", v => v >= 0);
+            service.RollbackMonitor         = context.ParseDockerInterval("rollback-monitor");
+            service.RollbackOrder           = context.ParseEnum<RollbackOrder>("rollback-order");
+            service.RollbackParallism       = context.ParseInt("rollback-parallelism", v => v >= 0);
+            service.Secret                  = ParseSecretArray(context, "secret");
+            service.StopGracePeriod         = context.ParseDockerInterval("stop-grace-period");
+            service.StopSignal              = context.ParseString("stop-signal");
+            service.ReadOnly                = context.ParseBool("read-only");
+            service.Tty                     = context.ParseBool("tty");
+            service.UpdateDelay             = context.ParseDockerInterval("update-delay");
+            service.UpdateFailureAction     = context.ParseEnum<UpdateFailureAction>("update-failure-action");
+            service.UpdateMaxFailureRatio   = context.ParseDouble("update-max-failure-ratio", v => v >= 0);
+            service.UpdateMonitor           = context.ParseDockerInterval("update-monitor");
+            service.UpdateOrder             = context.ParseEnum<UpdateOrder>("update-order");
+            service.UpdateParallism         = context.ParseInt("update-parallelism", v => v >= 0);
+            service.User                    = context.ParseString("user");
+            service.WithRegistryAuth        = context.ParseBool("with-registry-auth");
+            service.WorkDir                 = context.ParseString("workdir");
 
             // Abort the operation if any errors were reported during parsing.
 
@@ -922,15 +946,75 @@ namespace NeonCli
             }
 
             // We have the required arguments, so perform the operation.
+            //
+            // Detect whether the service is already running by inspecting it
+            // then start when it's nor already running or update it if it is.
+
+            context.WriteLine(AnsibleVerbosity.Trace, "Inspecting current service state.");
+
+            var manager      = cluster.GetHealthyManager();
+            var response     = manager.DockerCommand("docker service inspect", service.Name);
+            var serviceState = response.ExitCode == 0 ? response.OutputText : null;
 
             switch (state)
             {
                 case "absent":
 
+                    context.WriteLine(AnsibleVerbosity.Trace, $"[state=absent] so removing [{service.Name}] service if it's running.");
+
+                    if (serviceState == null)
+                    {
+                        context.WriteLine(AnsibleVerbosity.Trace, $"No change required because [{service.Name}] service is not running.");
+                    }
+                    else
+                    {
+                        if (context.CheckMode)
+                        {
+                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service will be removed when CHECKMODE is disabled.");
+                        }
+                        else
+                        {
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Removing [{service.Name}] service.");
+
+                            response = manager.DockerCommand($"docker service rm {service.Name}");
+
+                            if (response.ExitCode == 0)
+                            {
+                                context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service was removed.");
+                            }
+                            else
+                            {
+                                context.WriteErrorLine(response.AllText);
+                            }
+                        }
+
+                        context.Changed = true;
+                    }
                     break;
 
                 case "present":
 
+                    // Perform some minimal parameter validation.
+
+                    // $todo(jeff.lill): We could try a lot harder to validate the service fields.
+
+                    if (service.Image == null)
+                    {
+                        context.WriteErrorLine("The [image] parameter is required.");
+                    }
+
+                    // Detect whether the service is already running by inspecting it
+                    // then start when it's not already running or update the existing
+                    // service.
+
+                    if (serviceState == null)
+                    {
+                        StartService(manager, context, service);
+                    }
+                    else
+                    {
+                        UpdateService(manager, context, service, serviceState);
+                    }
                     break;
 
                 default:
@@ -1121,9 +1205,9 @@ namespace NeonCli
                         context.WriteErrorLine($"Invalid [mount.tmpfs-size={value}] because negative sizes are not allowed.");
                     }
 
-                    // Parse [tmpfs-mode].  We're going to allow 3 or 4 octal digits.
+                    // Parse [tmpfs-mode]: We're going to allow 3 or 4 octal digits.
 
-                    if (jObject.TryGetValue<string>("tmpfs-size", out value))
+                    if (jObject.TryGetValue<string>("tmpfs-mode", out value))
                     {
                         var error = false;
 
@@ -1286,6 +1370,473 @@ namespace NeonCli
             }
 
             return publishedPorts;
+        }
+
+        /// <summary>
+        /// Parses the service's secrets.
+        /// </summary>
+        /// <param name="context">The module context.</param>
+        /// <param name="argName">The module argument name.</param>
+        /// /// <returns>The list of <see cref="Secret"/> instances.</returns>
+        private List<Secret> ParseSecretArray(ModuleContext context, string argName)
+        {
+            var secrets = new List<Secret>();
+
+            if (!context.Arguments.TryGetValue(argName, out var jToken))
+            {
+                return secrets;
+            }
+
+            var jArray = jToken as JArray;
+
+            if (jArray == null)
+            {
+                context.WriteErrorLine($"Expected [{argName}] to be an array of secret specifications.");
+                return secrets;
+            }
+
+            foreach (var item in jArray)
+            {
+                var jObject = item as JObject;
+
+                if (jObject != null)
+                {
+                    context.WriteErrorLine($"One or more of the [{argName}] array elements is not a valid secret specification.");
+                    return secrets;
+                }
+
+                var secret = new Secret();
+                var value  = String.Empty; 
+
+                // Parse [published]
+
+                if (jObject.TryGetValue<string>("source", out value))
+                {
+                    secret.Source = value;
+                }
+                else
+                {
+                    context.WriteErrorLine($"[{argName}] array element lacks the required [source] property.");
+                    return secrets;
+                }
+
+                // Parse [target]
+
+                if (jObject.TryGetValue<string>("target", out value))
+                {
+                    secret.Target = value;
+                }
+                else
+                {
+                    context.WriteErrorLine($"[{argName}] array element lacks the required [target] property.");
+                    return secrets;
+                }
+
+                // Parse [mode]: We're going to allow 3 or 4 octal digits.
+
+                if (jObject.TryGetValue<string>("mode", out value))
+                {
+                    var error = false;
+
+                    if (value.Length != 3 || value.Length != 4)
+                    {
+                        error = true;
+                    }
+                    else
+                    {
+                        foreach (var ch in value)
+                        {
+                            if (ch < '0' || '7' < ch)
+                            {
+                                error = true;
+                                break;
+                            }
+                        }
+                    }
+
+                    if (error)
+                    {
+                        context.WriteErrorLine($"Invalid [secret.mode={value}]: This must be three or four octal digits.");
+                    }
+                    else
+                    {
+                        secret.Mode = value;
+                    }
+                }
+
+                // Parse [uid]
+
+                if (jObject.TryGetValue<string>("uid", out value))
+                {
+                    secret.Uid = value;
+                }
+
+                // Parse [gid]
+
+                if (jObject.TryGetValue<string>("gid", out value))
+                {
+                    secret.Gid = value;
+                }
+
+                // Add the mount to the list.
+
+                secrets.Add(secret);
+            }
+
+            return secrets;
+        }
+
+        /// <summary>
+        /// Starts a Docker service from a definition.
+        /// </summary>
+        /// <param name="manager">Manager where the command will be executed.</param>
+        /// <param name="context">The Ansible module context.</param>
+        /// <param name="service">The Service definition.</param>
+        private void StartService(SshProxy<NodeDefinition> manager, ModuleContext context, DockerService service)
+        {
+            var args = new List<object>();
+
+            foreach (var config in service.Config)
+            {
+                args.Add($"--config={config}");
+            }
+
+            foreach (var constraint in service.Constraint)
+            {
+                args.Add($"--constraint={constraint}");
+            }
+
+            foreach (var label in service.ContainerLabel)
+            {
+                args.Add($"--container-label={label}");
+            }
+
+            foreach (var credential in service.CredentialSpec)
+            {
+                args.Add($"--credential-spec={credential}");
+            }
+
+            if (service.Detach.HasValue)
+            {
+                args.Add($"--detach={service.Detach.ToString().ToLowerInvariant()}");
+            }
+
+            foreach (var nameserver in service.Dns)
+            {
+                args.Add($"--dns={nameserver}");
+            }
+
+            foreach (var option in service.DnsOption)
+            {
+                args.Add($"--dns-option={option}");
+            }
+
+            foreach (var domain in service.DnsSearch)
+            {
+                args.Add($"--dns-search={domain}");
+            }
+
+            if (service.EndpointMode != EndpointMode.Vip)
+            {
+                args.Add($"--endpoint-mode={service.EndpointMode}");
+            }
+
+            if (service.Entrypoint.Count > 0)
+            {
+                var sb = new StringBuilder();
+
+                foreach (var item in service.Entrypoint)
+                {
+                    sb.AppendWithSeparator(item);
+                }
+
+                args.Add($"--entrypoint={sb}");
+            }
+
+            foreach (var env in service.Env)
+            {
+                args.Add($"--env={env}");
+            }
+
+            foreach (var envFile in service.EnvFile)
+            {
+                args.Add($"--env-file={envFile}");
+            }
+
+            foreach (var resource in service.GenericResource)
+            {
+                args.Add($"--generic-resource={resource}");
+            }
+
+            if (service.HealthCmd.Count > 0)
+            {
+                var sb = new StringBuilder();
+
+                foreach (var item in service.HealthCmd)
+                {
+                    sb.AppendWithSeparator(item);
+                }
+
+                args.Add($"--health-cmd={sb}");
+            }
+
+            if (service.HealthInterval.HasValue)
+            {
+                args.Add($"--health-interval={service.HealthInterval}");
+            }
+
+            if (service.HealthRetries.HasValue)
+            {
+                args.Add($"--health-retries={service.HealthRetries}");
+            }
+
+            if (service.HealthStartPeriod.HasValue)
+            {
+                args.Add($"--health-start-period={service.HealthStartPeriod}");
+            }
+
+            if (service.HealthTimeout.HasValue)
+            {
+                args.Add($"--health-timeout={service.HealthTimeout}");
+            }
+
+            foreach (var host in service.Host)
+            {
+                args.Add($"--host={host}");
+            }
+
+            if (!string.IsNullOrEmpty(service.Hostname))
+            {
+                args.Add($"--hostname={service.Hostname}");
+            }
+
+            if (service.Isolation.HasValue)
+            {
+                args.Add($"--isolation={service.Isolation}");
+            }
+
+            foreach (var label in service.Label)
+            {
+                args.Add($"--label={label}");
+            }
+
+            if (service.LimitCpu.HasValue)
+            {
+                args.Add($"--limit-cpu={service.LimitCpu}");
+            }
+
+            if (service.LimitMemory.HasValue)
+            {
+                args.Add($"--limit-memory={service.LimitMemory}");
+            }
+
+            if (service.LogDriver != null)
+            {
+                args.Add($"--log-driver={service.LogDriver}");
+            }
+
+            if (service.LogOpt.Count > 0)
+            {
+                var sb = new StringBuilder();
+
+                foreach (var option in service.LogOpt)
+                {
+                    sb.AppendWithSeparator(option, ",");
+                }
+
+                args.Add($"--log-opt={sb}");
+            }
+
+            if (service.Mode.HasValue)
+            {
+                args.Add($"--mode={service.Mode}");
+            }
+
+            foreach (var mount in service.Mount)
+            {
+                var sb = new StringBuilder();
+
+                sb.AppendWithSeparator($"type={mount.Type}", ",");
+
+                if (!string.IsNullOrEmpty(mount.Source))
+                {
+                    sb.AppendWithSeparator($"source={mount.Source}", ",");
+                }
+
+                if (!string.IsNullOrEmpty(mount.Target))
+                {
+                    sb.AppendWithSeparator($"target={mount.Target}", ",");
+                }
+
+                if (mount.ReadOnly.HasValue)
+                {
+                    sb.AppendWithSeparator($"readonly={mount.ReadOnly.Value.ToString().ToLowerInvariant()}", ",");
+                }
+
+                if (mount.Consistency.HasValue)
+                {
+                    sb.AppendWithSeparator($"consistency={mount.Consistency.Value}", ",");
+                }
+
+                if (mount.BindPropagation.HasValue)
+                {
+                    sb.AppendWithSeparator($"bind-propagation={mount.BindPropagation.Value}", ",");
+                }
+
+                if (!string.IsNullOrEmpty(mount.VolumeDriver))
+                {
+                    sb.AppendWithSeparator($"volume-driver={mount.VolumeDriver}", ",");
+                }
+
+                if (mount.VolumeNoCopy.HasValue)
+                {
+                    sb.AppendWithSeparator($"volume-nocopy={mount.VolumeNoCopy.Value.ToString().ToLowerInvariant()}", ",");
+                }
+
+                if (mount.VolumeOpt.Count > 0)
+                {
+                    foreach (var option in mount.VolumeOpt)
+                    {
+                        sb.AppendWithSeparator($"volume-opt={option}", ",");
+                    }
+                }
+
+                if (mount.TmpfsSize.HasValue)
+                {
+                    sb.AppendWithSeparator($"tmpfs-size={mount.TmpfsSize.Value}", ",");
+                }
+
+                if (!string.IsNullOrEmpty(mount.TmpfsMode))
+                {
+                    sb.AppendWithSeparator($"tmpfs-size={mount.TmpfsMode}", ",");
+                }
+
+                args.Add($"--mount={sb}");
+            }
+
+            args.Add($"--name={service.Name}");
+
+            foreach (var network in service.Network)
+            {
+                args.Add($"network={network}");
+            }
+
+            if (service.NoHealthCheck.HasValue)
+            {
+                args.Add($"--no-healthcheck={service.NoHealthCheck.Value.ToString().ToLowerInvariant()}");
+            }
+
+            if (service.NoResolveImage.HasValue)
+            {
+                args.Add($"--no-resolveimage={service.NoResolveImage.Value.ToString().ToLowerInvariant()}");
+            }
+
+            foreach (var preference in service.PlacementPref)
+            {
+                args.Add($"--placement-pref={preference}");
+            }
+
+            foreach (var port in service.Publish)
+            {
+                var sb = new StringBuilder();
+
+                sb.AppendWithSeparator($"published={port.Published}", ",");
+                sb.AppendWithSeparator($"target={port.Target}", ",");
+                sb.AppendWithSeparator($"mode={port.Mode}", ",");
+                sb.AppendWithSeparator($"protocol={port.Protocol}", ",");
+
+                args.Add($"--publish={sb}");
+            }
+
+            args.Add("--quiet");    // Always suppress progress.
+
+            if (service.ReadOnly.HasValue)
+            {
+                args.Add($"--readonly={service.ReadOnly.Value.ToString().ToLowerInvariant()}");
+            }
+
+            if (service.Replicas.HasValue)
+            {
+                args.Add($"--replicas={service.Replicas.Value}");
+            }
+
+            if (service.ReserveCpu.HasValue)
+            {
+                args.Add($"--reserve-cpu={service.ReserveCpu.Value}");
+            }
+
+            if (service.ReserveMemory.HasValue)
+            {
+                args.Add($"--reserve-memory={service.ReserveMemory.Value}");
+            }
+
+            if (service.RestartCondition.HasValue)
+            {
+                args.Add($"--restart-condition={service.RestartCondition.Value}");
+            }
+
+            if (service.RestartDelay.HasValue)
+            {
+                args.Add($"--restart-delay={service.RestartDelay.Value}");
+            }
+
+            if (service.RestartMaxAttempts.HasValue)
+            {
+                args.Add($"--restart-max-attempts={service.RestartMaxAttempts.Value}");
+            }
+
+            if (service.RestartWindow.HasValue)
+            {
+                args.Add($"--restart-window={service.RestartWindow.Value}");
+            }
+
+            if (service.RollbackDelay.HasValue)
+            {
+                args.Add($"--rollback-delay={service.RollbackDelay.Value}");
+            }
+
+            if (service.RollbackFailureAction.HasValue)
+            {
+                args.Add($"--rollback-failure-action={service.RollbackFailureAction.Value}");
+            }
+
+            if (service.RollbackMaxFailureRatio.HasValue)
+            {
+                args.Add($"--rollback-max-failure-ratio={service.RollbackMaxFailureRatio.Value}");
+            }
+
+            if (service.RollbackMonitor.HasValue)
+            {
+                args.Add($"--rollback-monitor={service.RollbackMonitor.Value}");
+            }
+
+            if (service.RollbackOrder.HasValue)
+            {
+                args.Add($"--rollback-order={service.RollbackOrder.Value}");
+            }
+
+            if (service.RollbackParallism.HasValue)
+            {
+                args.Add($"--rollback-parallelism={service.RollbackParallism.Value}");
+            }
+
+            foreach (var secret in service.Secret)
+            {
+
+            }
+
+            manager.DockerCommand("docker service create", args.ToArray());
+        }
+
+        /// <summary>
+        /// Updates an existing Docker service from a definition.
+        /// </summary>
+        /// <param name="manager">Manager where the command will be executed.</param>
+        /// <param name="context">The Ansible module context.</param>
+        /// <param name="service">The Service definition.</param>
+        /// <param name="serviceState">The service state from a <b>docker service inspect</b> command formatted as JSON.</param>
+        private void UpdateService(SshProxy<NodeDefinition> manager, ModuleContext context, DockerService service, string serviceState)
+        {
         }
     }
 }
