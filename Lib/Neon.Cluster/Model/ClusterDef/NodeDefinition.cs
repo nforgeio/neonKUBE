@@ -421,7 +421,7 @@ namespace Neon.Cluster
 
             if (Labels.CephOSDDriveSizeGB > 0)
             {
-                return Labels.CephOSDDriveSizeGB;
+                return Labels.CephOSDDriveSizeGB * NeonHelper.Giga;
             }
             else
             {
@@ -447,7 +447,7 @@ namespace Neon.Cluster
 
             if (Labels.CephOSDCacheSizeMB > 0)
             {
-                return Labels.CephOSDCacheSizeMB;
+                return Labels.CephOSDCacheSizeMB * NeonHelper.Mega;
             }
             else
             {
@@ -473,7 +473,7 @@ namespace Neon.Cluster
 
             if (Labels.CephOSDJournalSizeMB > 0)
             {
-                return Labels.CephOSDJournalSizeMB;
+                return Labels.CephOSDJournalSizeMB * NeonHelper.Mega;
             }
             else
             {
@@ -499,7 +499,7 @@ namespace Neon.Cluster
 
             if (Labels.CephMDSCacheSizeMB > 0)
             {
-                return Labels.CephMDSCacheSizeMB;
+                return Labels.CephMDSCacheSizeMB * NeonHelper.Mega;
             }
             else
             {
