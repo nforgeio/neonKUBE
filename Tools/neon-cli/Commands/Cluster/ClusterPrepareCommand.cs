@@ -158,6 +158,18 @@ Server Requirements:
                 cluster.SecureRunOptions = RunOptions.None;
             }
 
+            //-----------------------------------------------------------------
+            // $todo(jeff.lill):
+            //
+            // We're temporarily disabling redaction to make it easier to investigate
+            // Vault setup issues.  Remove this line before final launch.
+            //
+            //      https://github.com/jefflill/NeonForge/issues/225
+
+            cluster.SecureRunOptions = RunOptions.None;
+
+            //-----------------------------------------------------------------
+
             // Assign the VPN client return subnets to the manager nodes if VPN is enabled.
 
             if (cluster.Definition.Vpn.Enabled)
