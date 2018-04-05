@@ -29,6 +29,20 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 
+using NeonCli.Ansible.DockerService;
+
+// $todo(jeff.lill):
+//
+// Note that this implementation is designed to look more like the Docker
+// service create/update commands rather than the Docker REST API.  I think
+// this makes sense, since users will tend to have more experience with the
+// command line as opposed to the API.
+//
+// One consequence of this is that we won't be able to take advantage of the
+// REST API's built-in CAS (check-and-set) functionality around the version
+// returned by [docker service inspect].  I don't believe this is important
+// at this point.
+
 namespace NeonCli
 {
     //---------------------------------------------------------------------
@@ -126,6 +140,13 @@ namespace NeonCli
     // hostname                                                     overrides [Name] as the DNS name for the service.
     //
     // image                    yes                                 specifies the Docker image 
+    //
+    // image-update             no          false       true        specifies that the service [Image] should not be repulled
+    //                                                  false       and updated if the image and tag are unchanged, ignoring 
+    //                                                              the image SHA-256.  This is ignored for initial service
+    //                                                              creation and also if the [Image] explicitly specifies
+    //                                                              the image's SHA-256 when the service image is always
+    //                                                              updated.
     //
     // isolation                no          default     default     Windows isolation mode
     //                                                  process
@@ -315,13 +336,14 @@ namespace NeonCli
             service.GenericResource         = context.ParseStringArray("generic-resource");
             service.Group                   = context.ParseStringArray("group");
             service.HealthCmd               = context.ParseStringArray("health-cmd");
-            service.HealthInterval           = context.ParseDockerInterval("health-interval");
+            service.HealthInterval          = context.ParseDockerInterval("health-interval");
             service.HealthRetries           = context.ParseInt("health-retries", v => v >= 0);
             service.HealthStartPeriod       = context.ParseDockerInterval("health-start-period");
             service.HealthTimeout           = context.ParseDockerInterval("health-timeout");
             service.Host                    = context.ParseStringArray("host");
             service.Hostname                = context.ParseString("hostname");
             service.Image                   = context.ParseString("image");
+            service.ImageUpdate             = context.ParseBool("image-update");
             service.Isolation               = context.ParseEnum<IsolationMode>("isolation");
             service.Label                   = context.ParseStringArray("label");
             service.LimitCpu                = context.ParseDouble("limit-cpu", v => v > 0);
@@ -479,7 +501,7 @@ namespace NeonCli
                     {
                         // NOTE: UpdateService() handles the CheckMode logic and context logging.
 
-                        UpdateService(manager, context, service, serviceState);
+                        UpdateService(manager, context, force, service, serviceState);
                     }
                     break;
 
@@ -1406,9 +1428,10 @@ namespace NeonCli
         /// </summary>
         /// <param name="manager">The manager where the command will be executed.</param>
         /// <param name="context">The Ansible module context.</param>
+        /// <param name="force">Optionally specifies that the </param>
         /// <param name="service">The Service definition.</param>
         /// <param name="serviceState">The service state from a <b>docker service inspect</b> command formatted as JSON.</param>
-        private void UpdateService(SshProxy<NodeDefinition> manager, ModuleContext context, DockerServiceSpec service, string serviceState)
+        private void UpdateService(SshProxy<NodeDefinition> manager, ModuleContext context, bool force, DockerServiceSpec service, string serviceState)
         {
         }
     }
