@@ -487,14 +487,17 @@ namespace Neon.Cluster
             //         Since [/dev/shm] is a TMPFS, this file will no longer
             //         exist after a reboot.
             //
-            //      2. Actively ping the server with echo commands until I 
-            //         catch a [SshConnectionException], indicating that the 
-            //         server is probably rebotting,
+            //      2. Command the server to reboot.
             //
             //      3. Loop and attempt to reconnect.  After reconnecting,
             //         verify that the [/dev/shm/neon/rebooting] file is no
             //         longer present.  Reboot is complete if it's gone,
             //         otherwise, we need to continue trying.
+            //
+            //         We're also going to submit a new reboot command every 
+            //         10 seconds when [/dev/shm/neon/rebooting] is still present
+            //         in case the original reboot command was somehow missed
+            //         because the reboot command is not retried automatically.
             //  
             //         Note that step #3 is actually taken care of in the
             //         [WaitForBoot()] method.
@@ -507,22 +510,6 @@ namespace Neon.Cluster
             catch (SshConnectionException)
             {
                 // Ignoring this.
-            }
-
-            // Wait for the SSH server to shutdown.
-
-            while (true)
-            {
-                Thread.Sleep(TimeSpan.FromSeconds(5));
-
-                try
-                {
-                    sshClient.RunCommand("bash echo ping");
-                }
-                catch (SshConnectionException)
-                {
-                    break;
-                }
             }
 
             // Make sure we're disconnected.
@@ -712,43 +699,56 @@ namespace Neon.Cluster
 
             while (true)
             {
-                var sshClient = new SshClient(GetConnectionInfo());
-
-                try
+                using (var sshClient = new SshClient(GetConnectionInfo()))
                 {
-                    sshClient.Connect();
-
-                    // We need to verify that the [/dev/shm/neon/rebooting] file is not present
-                    // to ensure that the machine has actually restarted (see [Reboot()]
-                    // for more information.
-
-                    var response = sshClient.RunCommand($"if [ -f \"{RebootStatusPath}\" ] ; then exit 0; else exit 1; fi");
-
-                    if (response.ExitStatus != 0)
+                    try
                     {
-                        // [/dev/shm/neon/rebooting] file is not present, so we're done.
+                        sshClient.Connect();
 
-                        sshClient.Dispose();
-                        break;
+                        // We need to verify that the [/dev/shm/neon/rebooting] file is not present
+                        // to ensure that the machine has actually restarted (see [Reboot()]
+                        // for more information.
+
+                        var response = sshClient.RunCommand($"if [ -f \"{RebootStatusPath}\" ] ; then exit 0; else exit 1; fi");
+
+                        if (response.ExitStatus != 0)
+                        {
+                            // [/dev/shm/neon/rebooting] file is not present, so we're done.
+
+                            break;
+                        }
+                        else
+                        {
+                            // It's possible that the original reboot command was lost
+                            // and since that's not retried automatically, we'll resubmit
+                            // it here.
+
+                            try
+                            {
+                                sshClient.RunCommand("sudo reboot");
+                            }
+                            catch
+                            {
+                                // Intentionally ignoring any exceptions.
+                            }
+                        }
                     }
-                }
-                catch (Exception e)
-                {
-                    sshClient.Dispose();
-
-                    if (e is SshAuthenticationException)
+                    catch (Exception e)
                     {
-                        // Don't retry if the credentials are bad.
+                        if (e is SshAuthenticationException)
+                        {
+                            // Don't retry if the credentials are bad.
 
-                        throw;
+                            throw;
+                        }
+
+                        if (operationTimer.HasFired)
+                        {
+                            throw;
+                        }
+
+                        LogLine($"*** WARNING: Wait for boot failed: {NeonHelper.ExceptionError(e, includeInner: true)}");
                     }
-
-                    if (operationTimer.HasFired)
-                    {
-                        throw;
-                    }
-
-                    LogLine($"*** WARNING: Wait for boot failed: {NeonHelper.ExceptionError(e, includeInner: true)}");
                 }
 
                 Thread.Sleep(TimeSpan.FromSeconds(5));
