@@ -125,7 +125,7 @@ namespace NeonCli
         public bool Changed { get; set; } = false;
 
         /// <summary>
-        /// A boolean that indicates if the task was failed or not.
+        /// A boolean that indicates if the task failed or not.
         /// </summary>
         [JsonProperty(PropertyName = "failed", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(false)]
@@ -205,24 +205,24 @@ namespace NeonCli
         /// Writes a line of text to the standard output lines.
         /// </summary>
         /// <param name="verbosity">The verbosity level for this message.</param>
-        /// <param name="value">The text to be written.</param>
-        public void WriteLine(AnsibleVerbosity verbosity, string value = null)
+        /// <param name="text">The text to be written.</param>
+        public void WriteLine(AnsibleVerbosity verbosity, string text = null)
         {
             if (verbosity <= this.Verbosity)
             {
-                output.Add(value ?? string.Empty);
+                output.Add(text ?? string.Empty);
             }
         }
 
         /// <summary>
         /// Writes a line of text to the standard error lines.
         /// </summary>
-        /// <param name="value">The text to be written.</param>
-        public void WriteErrorLine(string value = null)
+        /// <param name="text">The text to be written.</param>
+        public void WriteErrorLine(string text = null)
         {
             HasErrors = true;
 
-            error.Add(value ?? string.Empty);
+            error.Add(text ?? string.Empty);
         }
 
         /// <summary>
@@ -262,7 +262,7 @@ namespace NeonCli
         /// <param name="input">The input string.</param>
         /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
         /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
-        public bool? ParseBoolString(string input, string errorMessage = null)
+        public bool? ParseBool(string input, string errorMessage = null)
         {
             switch (input.ToLowerInvariant())
             {
@@ -289,12 +289,35 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Attempts to parse a long string.
+        /// Attempts to parse an <c>int</c>.
         /// </summary>
         /// <param name="input">The input string.</param>
         /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
         /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
-        public long? ParseLongString(string input, string errorMessage = null)
+        public int? ParseInt(string input, string errorMessage = null)
+        {
+            if (int.TryParse(input, out var value))
+            {
+                return value;
+            }
+            else
+            {
+                if (errorMessage != null)
+                {
+                    WriteErrorLine(errorMessage);
+                }
+
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Attempts to parse a <c>long</c>.
+        /// </summary>
+        /// <param name="input">The input string.</param>
+        /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
+        /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
+        public long? ParseLong(string input, string errorMessage = null)
         {
             if (long.TryParse(input, out var value))
             {
@@ -317,7 +340,7 @@ namespace NeonCli
         /// <param name="input">The input string.</param>
         /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
         /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
-        public TEnum? ParseEnumString<TEnum>(string input, string errorMessage = null)
+        public TEnum? ParseEnum<TEnum>(string input, string errorMessage = null)
             where TEnum : struct
         {
             if (!Enum.TryParse<TEnum>(input, true, out var value))
@@ -347,7 +370,7 @@ namespace NeonCli
                 return null;
             }
 
-            var value = ParseBoolString(jToken.ToObject<string>());
+            var value = ParseBool(jToken.ToObject<string>());
 
             if (!value.HasValue)
             {
@@ -358,7 +381,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Parses a string.
+        /// Parses a <c>string</c>.
         /// </summary>>
         /// <param name="argName">The argument name.</param>
         /// <returns>The parsed string or <c>null</c>.</returns>
@@ -369,22 +392,14 @@ namespace NeonCli
                 return null;
             }
 
-            try
-            {
-                var value = jToken.ToObject<string>();
+            var value = jToken.ToObject<string>();
 
-                if (validator != null && !validator(value))
-                {
-                    WriteErrorLine($"[{argName}={value}] is not valid.");
-                }
-
-                return value;
-            }
-            catch
+            if (validator != null && !validator(value))
             {
-                WriteErrorLine($"[{argName}] is not a valid boolean.");
-                return null;
+                WriteErrorLine($"[{argName}={value}] is not valid.");
             }
+
+            return value;
         }
 
         /// <summary>
@@ -420,7 +435,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Parses an integer.
+        /// Parses a <c>double</c>.
         /// </summary>>
         /// <param name="argName">The argument name.</param>
         /// <param name="validator">Optional validation function.</param>
@@ -475,13 +490,13 @@ namespace NeonCli
                 }
                 catch
                 {
-                    WriteErrorLine($"[{argName}] is not a valid boolean.");
+                    WriteErrorLine($"[{argName}={valueString}] is not a valid [{nameof(TEnum)}].");
                     return null;
                 }
             }
             catch
             {
-                WriteErrorLine($"[{argName}] is not a valid boolean.");
+                WriteErrorLine($"[{argName}] is not a valid [{nameof(TEnum)}].");
                 return null;
             }
         }
@@ -501,8 +516,8 @@ namespace NeonCli
             try
             {
                 var orgValue = jToken.ToObject<string>();
-                var value = orgValue;
-                var units = 1000000000L;    // default unit is 1s = 1000000000ns
+                var value    = orgValue;
+                var units    = 1000000000L;    // default unit: 1s = 1000000000ns
 
                 if (string.IsNullOrEmpty(value))
                 {
@@ -541,7 +556,7 @@ namespace NeonCli
                 }
                 else if (!char.IsDigit(value.Last()))
                 {
-                    WriteErrorLine($"[{argName}={orgValue}] has an unknown unit.");
+                    WriteErrorLine($"[{argName}={orgValue}] has an unexpected unit.");
                     return null;
                 }
 
@@ -563,7 +578,7 @@ namespace NeonCli
             }
             catch
             {
-                WriteErrorLine($"[{argName}] cannot be converted into a string.");
+                WriteErrorLine($"[{argName}] cannot be converted into a time period.");
                 return null;
             }
         }
@@ -598,22 +613,22 @@ namespace NeonCli
                 }
                 else if (value.EndsWith("k", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    units = 1000L;
+                    units = (long)NeonHelper.Kilo;
                     value = value.Substring(0, value.Length - 1);
                 }
                 else if (value.EndsWith("m", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    units = 1000000L;
+                    units = (long)NeonHelper.Mega;
                     value = value.Substring(0, value.Length - 1);
                 }
                 else if (value.EndsWith("g", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    units = 1000000000L;
+                    units = (long)NeonHelper.Giga;
                     value = value.Substring(0, value.Length - 1);
                 }
                 else if (!char.IsDigit(value.Last()))
                 {
-                    WriteErrorLine($"[{argName}={orgValue}] has an unknown unit.");
+                    WriteErrorLine($"[{argName}={orgValue}] has an unexpected unit.");
                     return null;
                 }
 
@@ -635,7 +650,7 @@ namespace NeonCli
             }
             catch
             {
-                WriteErrorLine($"[{argName}] cannot be converted into a string.");
+                WriteErrorLine($"[{argName}] cannot be converted into a memory size.");
                 return null;
             }
         }

@@ -129,6 +129,11 @@ namespace NeonCli
                 force = false;
             }
 
+            if (context.HasErrors)
+            {
+                return;
+            }
+
             // We have the required arguments, so perform the operation.
 
             switch (state)
@@ -144,7 +149,7 @@ namespace NeonCli
 
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Route [{name}] will be deleted when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Route [{name}] would be deleted when CHECKMODE is disabled.");
                         }
                         else
                         {
@@ -313,7 +318,7 @@ namespace NeonCli
                     {
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Route [{name}] will be updated when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Route [{name}] would be updated when CHECKMODE is disabled.");
                         }
                         else
                         {

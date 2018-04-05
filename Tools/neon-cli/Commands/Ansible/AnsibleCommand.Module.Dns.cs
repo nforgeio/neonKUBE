@@ -177,6 +177,11 @@ namespace NeonCli
                 throw new ArgumentException($"[endpoints] module argument is required when [state={state}].");
             }
 
+            if (context.HasErrors)
+            {
+                return;
+            }
+            
             // We have the required arguments, so perform the operation.
 
             var hostKey = $"{NeonClusterConst.ConsulDnsEntriesKey}/{hostname}";
@@ -194,7 +199,7 @@ namespace NeonCli
 
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"DNS entry [{hostname}] will be deleted when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"DNS entry [{hostname}] would be deleted when CHECKMODE is disabled.");
                         }
                         else
                         {
@@ -290,7 +295,7 @@ namespace NeonCli
                     {
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"DNS entry [{hostname}] will be updated when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"DNS entry [{hostname}] would be updated when CHECKMODE is disabled.");
                         }
                         else
                         {

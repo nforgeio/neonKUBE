@@ -94,6 +94,11 @@ namespace NeonCli
                 force = false;
             }
 
+            if (context.HasErrors)
+            {
+                return;
+            }
+
             // We have the required arguments, so perform the operation.
 
             if (!context.Login.HasVaultRootCredentials)
@@ -123,7 +128,7 @@ namespace NeonCli
 
                             if (context.CheckMode)
                             {
-                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: Certificate [{name}] will be deleted when CHECKMODE is disabled.");
+                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: Certificate [{name}] would be deleted when CHECKMODE is disabled.");
                             }
                             else
                             {
@@ -176,7 +181,7 @@ namespace NeonCli
                         {
                             if (context.CheckMode)
                             {
-                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: Certificate [{name}] will be deleted when CHECKMODE is disabled.");
+                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: Certificate [{name}] would be deleted when CHECKMODE is disabled.");
                             }
                             else
                             {

@@ -354,8 +354,7 @@ namespace NeonCli
             public List<string> EnvFile { get; set; } = new List<string>();
 
             /// <summary>
-            /// Specifies additional service container placement constraints.  I'm not
-            /// entirely sure of the format, so we're not going to parse these.
+            /// Specifies additional service container placement constraints.
             /// </summary>
             public List<string> GenericResource { get; set; } = new List<string>();
 
@@ -420,7 +419,7 @@ namespace NeonCli
             public List<string> Label { get; set; } = new List<string>();
 
             /// <summary>
-            /// Limits the number of CPUs to be assigned to the service containers.
+            /// Limits the number of CPUs to be assigned to the service containers (double).
             /// </summary>
             public double? LimitCpu { get; set; }
 
@@ -569,8 +568,7 @@ namespace NeonCli
 
             /// <summary>
             /// Optionally specifies the signal to be used to stop service containers.
-            /// I believe this can be an integer or a signal name.  I'm not going to
-            /// parse it.
+            /// I believe this can be an integer or a signal name.
             /// </summary>
             public string StopSignal { get; set; }
 
@@ -751,7 +749,7 @@ namespace NeonCli
             [EnumMember(Value = "bind")]
             Bind,
 
-            [EnumMember(Value = "tempfs")]
+            [EnumMember(Value = "tmpfs")]
             Tmpfs
         }
 
@@ -922,7 +920,7 @@ namespace NeonCli
             service.RollbackMaxFailureRatio = context.ParseDouble("rollback-max-failure-ratio", v => v >= 0);
             service.RollbackMonitor         = context.ParseDockerInterval("rollback-monitor");
             service.RollbackOrder           = context.ParseEnum<RollbackOrder>("rollback-order");
-            service.RollbackParallism       = context.ParseInt("rollback-parallelism", v => v >= 0);
+            service.RollbackParallism       = context.ParseInt("rollback-parallelism", v => v > 0);
             service.Secret                  = ParseSecretArray(context, "secret");
             service.StopGracePeriod         = context.ParseDockerInterval("stop-grace-period");
             service.StopSignal              = context.ParseString("stop-signal");
@@ -933,7 +931,7 @@ namespace NeonCli
             service.UpdateMaxFailureRatio   = context.ParseDouble("update-max-failure-ratio", v => v >= 0);
             service.UpdateMonitor           = context.ParseDockerInterval("update-monitor");
             service.UpdateOrder             = context.ParseEnum<UpdateOrder>("update-order");
-            service.UpdateParallism         = context.ParseInt("update-parallelism", v => v >= 0);
+            service.UpdateParallism         = context.ParseInt("update-parallelism", v => v > 0);
             service.User                    = context.ParseString("user");
             service.WithRegistryAuth        = context.ParseBool("with-registry-auth");
             service.WorkDir                 = context.ParseString("workdir");
@@ -950,17 +948,47 @@ namespace NeonCli
             // Detect whether the service is already running by inspecting it
             // then start when it's nor already running or update it if it is.
 
-            context.WriteLine(AnsibleVerbosity.Trace, "Inspecting current service state.");
+            context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting [{service.Name}] service.");
 
             var manager      = cluster.GetHealthyManager();
-            var response     = manager.DockerCommand("docker service inspect", service.Name);
-            var serviceState = response.ExitCode == 0 ? response.OutputText : null;
+            var response     = manager.DockerCommand(RunOptions.None, "docker service inspect", service.Name);
+            var serviceState = (string)null;
+
+            if (response.ExitCode == 0)
+            {
+                serviceState = response.OutputText;
+                context.WriteLine(AnsibleVerbosity.Trace, $"{service.Name}] service exists.");
+            }
+            else
+            {
+                // $todo(jeff.lill): 
+                //
+                // I'm trying to distinguish between a a failure because the service doesn't
+                // exist and other potential failures (e.g. Docker is not running).
+                //
+                // This is a bit fragile.
+
+                if (response.ErrorText.StartsWith("Status: Error: no such service:", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    context.WriteLine(AnsibleVerbosity.Trace, $"{service.Name}] service does not exist.");
+                }
+                else
+                {
+                    context.WriteErrorLine(response.ErrorText);
+                    return;
+                }
+            }
+
+            if (context.HasErrors)
+            {
+                return;
+            }
 
             switch (state)
             {
                 case "absent":
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"[state=absent] so removing [{service.Name}] service if it's running.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"[state=absent] so removing [{service.Name}] service if it is running.");
 
                     if (serviceState == null)
                     {
@@ -970,13 +998,13 @@ namespace NeonCli
                     {
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service will be removed when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service would be removed when CHECKMODE is disabled.");
                         }
                         else
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Removing [{service.Name}] service.");
 
-                            response = manager.DockerCommand($"docker service rm {service.Name}");
+                            response = manager.DockerCommand(RunOptions.None, $"docker service rm {service.Name}");
 
                             if (response.ExitCode == 0)
                             {
@@ -1001,18 +1029,28 @@ namespace NeonCli
                     if (service.Image == null)
                     {
                         context.WriteErrorLine("The [image] parameter is required.");
+                        return;
                     }
-
-                    // Detect whether the service is already running by inspecting it
-                    // then start when it's not already running or update the existing
-                    // service.
 
                     if (serviceState == null)
                     {
-                        StartService(manager, context, service);
+                        context.Changed = true;
+
+                        if (context.CheckMode)
+                        {
+                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service would be created when CHECKMODE is disabled.");
+                        }
+                        else
+                        {
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Creating [{service.Name}] service.");
+                            CreateService(manager, context, service);
+                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service created.");
+                        }
                     }
                     else
                     {
+                        // NOTE: UpdateService() handles the CheckMode logic and context logging.
+
                         UpdateService(manager, context, service, serviceState);
                     }
                     break;
@@ -1096,24 +1134,24 @@ namespace NeonCli
 
                 if (jObject.TryGetValue<string>("readonly", out value))
                 {
-                    mount.ReadOnly = context.ParseBoolString(value, "Invalid [mount.readonly] value.");
+                    mount.ReadOnly = context.ParseBool(value, "Invalid [mount.readonly] value.");
                 }
 
                 // Parse [consistency]
 
                 if (jObject.TryGetValue<string>("consistency", out value))
                 {
-                    mount.Consistency = context.ParseEnumString<MountConsistency>(value, "Invalid [mount.consistency] value.");
+                    mount.Consistency = context.ParseEnum<MountConsistency>(value, $"Invalid [mount.consistency={value}] value.");
                 }
 
                 // Parse [bind-propagation]
 
                 if (jObject.TryGetValue<string>("bind-propagation", out value))
                 {
-                    mount.BindPropagation = context.ParseEnumString<MountBindPropagation>(value, "Invalid [mount.bind-propagation] value.");
+                    mount.BindPropagation = context.ParseEnum<MountBindPropagation>(value, $"Invalid [mount.bind-propagation={value}] value.");
                 }
 
-                // Parse the [volume[ related options.
+                // Parse the [volume] related options.
 
                 if (mount.Type == MountType.Volume)
                 {
@@ -1151,7 +1189,7 @@ namespace NeonCli
 
                     if (jObject.TryGetValue<string>("volume-nocopy", out value))
                     {
-                        mount.VolumeNoCopy = context.ParseBoolString(value, "Invalid [mount.volume-nocopy] value.");
+                        mount.VolumeNoCopy = context.ParseBool(value, $"Invalid [mount.volume-nocopy={value}] value.");
                     }
 
                     // Parse [volume-opt]
@@ -1192,7 +1230,7 @@ namespace NeonCli
 
                     if (jObject.TryGetValue<string>("tmpfs-size", out value))
                     {
-                        mount.TmpfsSize = context.ParseLongString(value, $"Invalid [mount.tmpfs-size={value}] value.");
+                        mount.TmpfsSize = context.ParseLong(value, $"Invalid [mount.tmpfs-size={value}] value.");
                     }
 
                     if (mount.TmpfsSize == 0)
@@ -1209,32 +1247,7 @@ namespace NeonCli
 
                     if (jObject.TryGetValue<string>("tmpfs-mode", out value))
                     {
-                        var error = false;
-
-                        if (value.Length != 3 || value.Length != 4)
-                        {
-                            error = true;
-                        }
-                        else
-                        {
-                            foreach (var ch in value)
-                            {
-                                if (ch < '0' || '7' < ch)
-                                {
-                                    error = true;
-                                    break;
-                                }
-                            }
-                        }
-
-                        if (error)
-                        {
-                            context.WriteErrorLine($"Invalid [mount.tmpfs-mode={value}]: This must be three or four octal digits.");
-                        }
-                        else
-                        {
-                            mount.TmpfsMode = value;
-                        }
+                        mount.TmpfsMode = ParseFileMode(context, value, $"[mount.tmpfs-mode={value}] is not a valid Linux file mode.");
                     }
                 }
                 else
@@ -1252,6 +1265,48 @@ namespace NeonCli
             }
 
             return mounts;
+        }
+
+        /// <summary>
+        /// Attempts to parse a Linux-style file mode string (3 or 4 octets).
+        /// </summary>
+        /// <param name="context">The module context.</param>
+        /// <param name="input">The input string.</param>
+        /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
+        /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
+        private string ParseFileMode(ModuleContext context, string input, string errorMessage = null)
+        {
+            var error = false;
+
+            if (input == null || input.Length != 3 || input.Length != 4)
+            {
+                error = true;
+            }
+            else
+            {
+                foreach (var ch in input)
+                {
+                    if (ch < '0' || '7' < ch)
+                    {
+                        error = true;
+                        break;
+                    }
+                }
+            }
+
+            if (error)
+            {
+                if (errorMessage != null)
+                {
+                    context.WriteErrorLine(errorMessage);
+                }
+
+                return null;
+            }
+            else
+            {
+                return input;
+            }
         }
 
         /// <summary>
@@ -1294,7 +1349,7 @@ namespace NeonCli
 
                 if (jObject.TryGetValue<string>("published", out value))
                 {
-                    if (int.TryParse(value, out var publishedPort) && 0 < publishedPort && publishedPort <= ushort.MaxValue)
+                    if (!int.TryParse(value, out var publishedPort) || publishedPort<= 0 && ushort.MaxValue < publishedPort)
                     {
                         context.WriteErrorLine($"[{argName}[].published={value}] is not a valid port number.");
                         return publishedPorts;
@@ -1312,7 +1367,7 @@ namespace NeonCli
 
                 if (jObject.TryGetValue<string>("target", out value))
                 {
-                    if (int.TryParse(value, out var targetPort) && 0 < targetPort && targetPort <= ushort.MaxValue)
+                    if (!int.TryParse(value, out var targetPort) || targetPort <= 0 && ushort.MaxValue < targetPort)
                     {
                         context.WriteErrorLine($"[{argName}[].target={value}] is not a valid port number.");
                         return publishedPorts;
@@ -1408,7 +1463,7 @@ namespace NeonCli
                 var secret = new Secret();
                 var value  = String.Empty; 
 
-                // Parse [published]
+                // Parse [source]
 
                 if (jObject.TryGetValue<string>("source", out value))
                 {
@@ -1416,7 +1471,7 @@ namespace NeonCli
                 }
                 else
                 {
-                    context.WriteErrorLine($"[{argName}] array element lacks the required [source] property.");
+                    context.WriteErrorLine($"A [{argName}] array element lacks the required [source] property.");
                     return secrets;
                 }
 
@@ -1428,57 +1483,46 @@ namespace NeonCli
                 }
                 else
                 {
-                    context.WriteErrorLine($"[{argName}] array element lacks the required [target] property.");
+                    context.WriteErrorLine($"A [{argName}] array element lacks the required [target] property.");
                     return secrets;
                 }
 
-                // Parse [mode]: We're going to allow 3 or 4 octal digits.
+                // Parse [mode]: We're going to allow 3 or 4 octets.
 
                 if (jObject.TryGetValue<string>("mode", out value))
                 {
-                    var error = false;
-
-                    if (value.Length != 3 || value.Length != 4)
-                    {
-                        error = true;
-                    }
-                    else
-                    {
-                        foreach (var ch in value)
-                        {
-                            if (ch < '0' || '7' < ch)
-                            {
-                                error = true;
-                                break;
-                            }
-                        }
-                    }
-
-                    if (error)
-                    {
-                        context.WriteErrorLine($"Invalid [secret.mode={value}]: This must be three or four octal digits.");
-                    }
-                    else
-                    {
-                        secret.Mode = value;
-                    }
+                    secret.Mode = ParseFileMode(context, value, $"[{argName}.mode={value}] is not a valid Linux file mode.");
                 }
 
                 // Parse [uid]
 
                 if (jObject.TryGetValue<string>("uid", out value))
                 {
-                    secret.Uid = value;
+                    if (!int.TryParse(value, out var parsed))
+                    {
+                        secret.Uid = value;
+                    }
+                    else
+                    {
+                        context.WriteErrorLine($"[{argName}.uid={value}] property is not a valid user ID.");
+                    }
                 }
 
                 // Parse [gid]
 
                 if (jObject.TryGetValue<string>("gid", out value))
                 {
-                    secret.Gid = value;
+                    if (!int.TryParse(value, out var parsed))
+                    {
+                        secret.Gid = value;
+                    }
+                    else
+                    {
+                        context.WriteErrorLine($"[{argName}.gid={value}] property is not a valid group ID.");
+                    }
                 }
 
-                // Add the mount to the list.
+                // Add the secret to the list.
 
                 secrets.Add(secret);
             }
@@ -1492,7 +1536,7 @@ namespace NeonCli
         /// <param name="manager">Manager where the command will be executed.</param>
         /// <param name="context">The Ansible module context.</param>
         /// <param name="service">The Service definition.</param>
-        private void StartService(SshProxy<NodeDefinition> manager, ModuleContext context, DockerService service)
+        private void CreateService(SshProxy<NodeDefinition> manager, ModuleContext context, DockerService service)
         {
             var args = new List<object>();
 
@@ -1742,8 +1786,8 @@ namespace NeonCli
 
                 sb.AppendWithSeparator($"published={port.Published}", ",");
                 sb.AppendWithSeparator($"target={port.Target}", ",");
-                sb.AppendWithSeparator($"mode={port.Mode}", ",");
                 sb.AppendWithSeparator($"protocol={port.Protocol}", ",");
+                sb.AppendWithSeparator($"mode={port.Mode}", ",");
 
                 args.Add($"--publish={sb}");
             }
@@ -1822,10 +1866,102 @@ namespace NeonCli
 
             foreach (var secret in service.Secret)
             {
+                var sb = new StringBuilder();
 
+                sb.AppendWithSeparator($"source={secret.Source}", ",");
+                sb.AppendWithSeparator($"target={secret.Target}", ",");
+
+                if (secret.Uid != null)
+                {
+                    sb.AppendWithSeparator($"uid={secret.Uid}", ",");
+                }
+
+                if (secret.Gid != null)
+                {
+                    sb.AppendWithSeparator($"uid={secret.Gid}", ",");
+                }
+
+                if (secret.Mode != null)
+                {
+                    sb.AppendWithSeparator($"mode={secret.Mode}", ",");
+                }
             }
 
-            manager.DockerCommand("docker service create", args.ToArray());
+            if (service.StopGracePeriod.HasValue)
+            {
+                args.Add($"--stop-grace-period={service.StopGracePeriod.Value}");
+            }
+
+            if (!string.IsNullOrEmpty(service.StopSignal))
+            {
+                args.Add($"--stop-signal={service.StopSignal}");
+            }
+
+            if (service.Tty.HasValue)
+            {
+                args.Add($"--tty={service.Tty.Value}");
+            }
+
+            if (service.UpdateDelay.HasValue)
+            {
+                args.Add($"--update-delay={service.UpdateDelay.Value}");
+            }
+
+            if (service.UpdateFailureAction.HasValue)
+            {
+                args.Add($"--update-failure-action={service.UpdateFailureAction.Value}");
+            }
+
+            if (service.UpdateMaxFailureRatio.HasValue)
+            {
+                args.Add($"--update-max-failure-ratio={service.UpdateMaxFailureRatio.Value}");
+            }
+
+            if (service.UpdateMonitor.HasValue)
+            {
+                args.Add($"--update-monitor={service.UpdateMonitor.Value}");
+            }
+
+            if (service.UpdateOrder.HasValue)
+            {
+                args.Add($"--update-order={service.UpdateOrder.Value}");
+            }
+
+            if (service.UpdateParallism.HasValue)
+            {
+                args.Add($"--update-parallelism={service.UpdateParallism.Value}");
+            }
+
+            if (!string.IsNullOrEmpty(service.User))
+            {
+                args.Add($"--user={service.User}");
+            }
+
+            if (service.WithRegistryAuth.HasValue)
+            {
+                args.Add($"--with-registry-auth={service.WithRegistryAuth.Value}");
+            }
+
+            if (!string.IsNullOrEmpty(service.WorkDir))
+            {
+                args.Add($"--workdir={service.WorkDir}");
+            }
+
+            // The Docker image any service arguments are passed as regular
+            // arguments, not command line options.
+
+            args.Add(service.Image);
+
+            foreach (var arg in service.Args)
+            {
+                args.Add(arg);
+            }
+
+            // Create the service.
+
+            var response = manager.DockerCommand(RunOptions.None, "docker service create", args.ToArray());
+
+
         }
 
         /// <summary>

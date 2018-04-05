@@ -120,6 +120,11 @@ namespace NeonCli
             context.Arguments.TryGetValue<string>("folder", out var folder);
             context.Arguments.TryGetValue<string>("description", out var description);
 
+            if (context.HasErrors)
+            {
+                return;
+            }
+
             // We have the required arguments, so perform the operation.
 
             var dashboardKey = $"{NeonClusterConst.ConsulDashboardsKey}/{name}";
@@ -142,7 +147,7 @@ namespace NeonCli
                         }
                         else
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Dashboard [{name}] will be deleted when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Dashboard [{name}] would be deleted when CHECKMODE is disabled.");
                         }
 
                         context.Changed = true;
@@ -220,7 +225,7 @@ namespace NeonCli
                     {
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Dashboard [{name}] will be updated when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Dashboard [{name}] would be updated when CHECKMODE is disabled.");
                         }
                         else
                         {
