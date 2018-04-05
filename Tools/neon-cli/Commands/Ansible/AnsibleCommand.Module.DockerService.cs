@@ -1531,9 +1531,9 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Starts a Docker service from a definition.
+        /// Starts a Docker service from a service definition.
         /// </summary>
-        /// <param name="manager">Manager where the command will be executed.</param>
+        /// <param name="manager">The manager where the command will be executed.</param>
         /// <param name="context">The Ansible module context.</param>
         /// <param name="service">The Service definition.</param>
         private void CreateService(SshProxy<NodeDefinition> manager, ModuleContext context, DockerService service)
@@ -1961,13 +1961,22 @@ namespace NeonCli
 
             var response = manager.DockerCommand(RunOptions.None, "docker service create", args.ToArray());
 
-
+            if (response.ExitCode != 0)
+            {
+                context.WriteErrorLine($"[{service.Name}] service start failed.");
+                context.WriteErrorLine($"[exitcode={response.ExitCode}]: {response.BashCommand}");
+                context.WriteErrorLine(response.AllText);
+            }
+            else
+            {
+                context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service started.");
+            }
         }
 
         /// <summary>
-        /// Updates an existing Docker service from a definition.
+        /// Updates an existing Docker service from a service definition.
         /// </summary>
-        /// <param name="manager">Manager where the command will be executed.</param>
+        /// <param name="manager">The manager where the command will be executed.</param>
         /// <param name="context">The Ansible module context.</param>
         /// <param name="service">The Service definition.</param>
         /// <param name="serviceState">The service state from a <b>docker service inspect</b> command formatted as JSON.</param>
