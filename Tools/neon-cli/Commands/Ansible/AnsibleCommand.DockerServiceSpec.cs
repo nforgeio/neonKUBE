@@ -139,13 +139,15 @@ namespace NeonCli.Ansible.DockerService
 
     public class PublishPort
     {
-        public int Published { get; set; }
+        public string Name { get; set; }
 
-        public int Target { get; set; }
+        public int? Published { get; set; }
 
-        public PortMode Mode { get; set; }
+        public int? Target { get; set; }
 
-        public PortProtocol Protocol { get; set; }
+        public PortMode? Mode { get; set; }
+
+        public PortProtocol? Protocol { get; set; }
     }
 
     public enum MountType
@@ -572,7 +574,7 @@ namespace NeonCli.Ansible.DockerService
         /// Optionally specifies the maximum number of service tasks to be
         /// rolled back at once.
         /// </summary>
-        public int? RollbackParallism { get; set; }
+        public long? RollbackParallism { get; set; }
 
         /// <summary>
         /// Optionally specifies the secrets to be exposed to the service.
@@ -627,7 +629,7 @@ namespace NeonCli.Ansible.DockerService
         /// Optionally specifies the maximum number of service tasks to be
         /// updated at once.
         /// </summary>
-        public int? UpdateParallism { get; set; }
+        public long? UpdateParallism { get; set; }
 
         /// <summary>
         /// Optionally specifies the service container username/group.
@@ -712,6 +714,7 @@ namespace NeonCli.Ansible.DockerService
             var spec         = (JObject)jArray[0]["Spec"];
             var taskTemplate = (JObject)spec["TaskTemplate"];
 
+            //-----------------------------------------------------------------
             // Service Labels
 
             var labels = (JObject)spec.GetValue("Labels");
@@ -721,6 +724,7 @@ namespace NeonCli.Ansible.DockerService
                 this.Label.Add($"{item.Key}={item.Value}");
             }
 
+            //-----------------------------------------------------------------
             // ContainerSpec
 
             var containerSpec = (JObject)taskTemplate["ContainerSpec"];
@@ -797,7 +801,7 @@ namespace NeonCli.Ansible.DockerService
                 var tmpfsOptions = GetObjectProperty(item, "TempfsOptions");
 
                 mount.TmpfsSize = GetLongProperty(tmpfsOptions, "SizeBytes");
-                mount.TmpfsMode = GetModeProperty(tmpfsOptions, "Mode");
+                mount.TmpfsMode = GetFileModeProperty(tmpfsOptions, "Mode");
 
                 this.Mount.Add(mount);
             }
@@ -865,7 +869,7 @@ namespace NeonCli.Ansible.DockerService
                 secret.Target = GetStringProperty(secretFile, "Name");
                 secret.Uid    = GetStringProperty(secretFile, "UID");
                 secret.Gid    = GetStringProperty(secretFile, "GID");
-                secret.Mode   = GetModeProperty(secretFile, "Mode");
+                secret.Mode   = GetFileModeProperty(secretFile, "Mode");
 
                 this.Secret.Add(secret);
             }
@@ -883,6 +887,7 @@ namespace NeonCli.Ansible.DockerService
 
             this.Isolation = GetEnumProperty<IsolationMode>(containerSpec, "Isolation");
 
+            //-----------------------------------------------------------------
             // Resources
 
             // $todo(jeff.lill):
@@ -922,6 +927,7 @@ namespace NeonCli.Ansible.DockerService
             this.RestartMaxAttempts = GetIntProperty(restartPolicy, "MaxAttempts");
             this.RestartWindow      = GetLongProperty(restartPolicy, "Windows");
 
+            //-----------------------------------------------------------------
             // Placement
 
             // $todo(jeff.lill):
@@ -935,6 +941,11 @@ namespace NeonCli.Ansible.DockerService
                 this.Constraint.Add(constraint);
             }
 
+            // $todo(jeff.lill): Ignoring the [Runtime] property.
+
+            //-----------------------------------------------------------------
+            // Network
+
             // $todo(jeff.lill):
             //
             // Networks are referenced by UUID, not name.  We'll use the network
@@ -945,12 +956,94 @@ namespace NeonCli.Ansible.DockerService
             // we might not be able to map a network ID to a name.
             //
             // In this case, we won't add the referenced network to this service
-            // specification.  The ultimate effect will be to potentially trigger 
-            // an uncessary service update, but since this will be super rare,
-            // I'm not going to worry about it.
+            // specification.  The ultimate impact will be to potentially trigger 
+            // an unnecessary service update, but since this will be super rare
+            // and shouldn't have any adverse impact, so I'm not going to worry
+            // about it.
 
             foreach (JObject network in GetArrayProperty(taskTemplate, "Networks"))
             {
+                if (network.TryGetValue("Target", out var networkIdToken))
+                {
+                    var networkId = (string)networkIdToken;
+
+                    if (networkIdToName.TryGetValue(networkId, out var networkName))
+                    {
+                        this.Network.Add(networkName);
+                    }
+                }
+            }
+
+            //-----------------------------------------------------------------
+            // LogDriver
+
+            var logDriver = GetObjectProperty(taskTemplate, "LogDriver");
+
+            this.LogDriver = GetStringProperty(logDriver, "Name");
+
+            var logOptions = GetObjectProperty(logDriver, "Options");
+
+            foreach (var item in logOptions)
+            {
+                this.LogOpt.Add($"{item.Key}={item.Value}");
+            }
+
+            //-----------------------------------------------------------------
+            // Mode
+
+            var mode       = (JObject)spec["Mode"];
+            var replicated = GetObjectProperty(mode, "Replicated");
+
+            if (mode.ContainsKey("Global"))
+            {
+                this.Mode = ServiceMode.Global;
+            }
+            else
+            {
+                this.Mode     = ServiceMode.Replicated;
+                this.Replicas = GetIntProperty(replicated, "Replicas");
+            }
+
+            //-----------------------------------------------------------------
+            // UpdateConfig
+
+            var updateConfig = (JObject)spec["UpdateConfig"];
+
+            this.UpdateParallism       = GetLongProperty(updateConfig, "Parallelism");
+            this.UpdateDelay           = GetLongProperty(updateConfig, "Delay");
+            this.UpdateFailureAction   = GetEnumProperty<UpdateFailureAction>(updateConfig, "FailureAction");
+            this.UpdateMonitor         = GetLongProperty(updateConfig, "Monitor");
+            this.UpdateMaxFailureRatio = GetDoubleProperty(updateConfig, "MaxFailureRatio");
+            this.UpdateOrder           = GetEnumProperty<UpdateOrder>(updateConfig, "Order");
+
+            //-----------------------------------------------------------------
+            // RollbackConfig
+
+            var rollbackConfig = (JObject)spec["RollbackConfig"];
+
+            this.RollbackParallism       = GetLongProperty(rollbackConfig, "Parallelism");
+            this.RollbackDelay           = GetLongProperty(rollbackConfig, "Delay");
+            this.RollbackFailureAction   = GetEnumProperty<RollbackFailureAction>(rollbackConfig, "FailureAction");
+            this.RollbackMonitor         = GetLongProperty(rollbackConfig, "Monitor");
+            this.RollbackMaxFailureRatio = GetDoubleProperty(rollbackConfig, "MaxFailureRatio");
+            this.RollbackOrder           = GetEnumProperty<RollbackOrder>(rollbackConfig, "Order");
+
+            //-----------------------------------------------------------------
+            // EndpointSpec
+
+            var endpointSpec = (JObject)spec["EndpointSpec"];
+
+            this.EndpointMode = GetEnumProperty<EndpointMode>(endpointSpec, "Mode");
+
+            foreach (JObject item in GetArrayProperty(endpointSpec, "Ports"))
+            {
+                var port = new PublishPort();
+
+                port.Name      = GetStringProperty(item, "Name");
+                port.Protocol  = GetEnumProperty<PortProtocol>(item, "Protocol");
+                port.Target    = GetIntProperty(item, "TargetPort");
+                port.Published = GetIntProperty(item, "PublishedPort");
+                port.Mode      = GetEnumProperty<PortMode>(item, "PublishMode");
             }
         }
 
@@ -1024,7 +1117,52 @@ namespace NeonCli.Ansible.DockerService
 
             if (jToken != null)
             {
-                return (bool)jToken;
+                switch (jToken.Type)
+                {
+                    case JTokenType.Boolean:
+
+                        return (bool)jToken;
+
+                    case JTokenType.Integer:
+
+                        return (long)jToken != 0;
+
+                    case JTokenType.Float:
+
+                        return (double)jToken != 0.0;
+
+                    case JTokenType.String:
+
+                        switch (((string)jToken).ToLowerInvariant())
+                        {
+                            case "0":
+                            case "false":
+                            case "off":
+                            case "no":
+
+                                return false;
+
+                            case "1":
+                            case "true":
+                            case "on":
+                            case "yes":
+
+                                return true;
+
+                            default:
+
+                                return false;
+                        }
+
+                    case JTokenType.None:
+                    case JTokenType.Null:
+
+                        return false;
+
+                    default:
+
+                        return false;
+                }
             }
             else
             {
@@ -1046,18 +1184,36 @@ namespace NeonCli.Ansible.DockerService
         {
             var jToken = GetProperty(jObject, name);
 
-            if (jToken != null)
-            {
-                return (int)jToken;
-            }
-            else
+            if (jToken == null)
             {
                 return null;
+            }
+
+            switch (jToken.Type)
+            {
+                case JTokenType.Integer:
+
+                    return (int)jToken;
+
+                case JTokenType.String:
+
+                    if (int.TryParse((string)jToken, out var value))
+                    {
+                        return value;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+
+                default:
+
+                    return null;
             }
         }
 
         /// <summary>
-        /// Looks up an <c>long</c> property, returning <c>null</c> if the
+        /// Looks up a <c>long</c> property, returning <c>null</c> if the
         /// property doesn't exist.
         /// </summary>
         /// <param name="jObject">The parent object or <c>null</c>.</param>
@@ -1070,13 +1226,74 @@ namespace NeonCli.Ansible.DockerService
         {
             var jToken = GetProperty(jObject, name);
 
-            if (jToken != null)
-            {
-                return (long)jToken;
-            }
-            else
+            if (jToken == null)
             {
                 return null;
+            }
+
+            switch (jToken.Type)
+            {
+                case JTokenType.Integer:
+
+                    return (long)jToken;
+
+                case JTokenType.String:
+
+                    if (long.TryParse((string)jToken, out var value))
+                    {
+                        return value;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+
+                default:
+
+                    return null;
+            }
+        }
+
+        /// <summary>
+        /// Looks up a <c>double</c> property, returning <c>null</c> if the
+        /// property doesn't exist.
+        /// </summary>
+        /// <param name="jObject">The parent object or <c>null</c>.</param>
+        /// <param name="name">The property name.</param>
+        /// <returns>
+        /// The property int or <c>null</c> if the property doesn't exist or
+        /// if <see cref="jObject"/> is <c>null</c>.
+        /// </returns>
+        private static double? GetDoubleProperty(JObject jObject, string name)
+        {
+            var jToken = GetProperty(jObject, name);
+
+            if (jToken == null)
+            {
+                return null;
+            }
+
+            switch (jToken.Type)
+            {
+                case JTokenType.Float:
+                case JTokenType.Integer:
+
+                    return (double)jToken;
+
+                case JTokenType.String:
+
+                    if (double.TryParse((string)jToken, out var value))
+                    {
+                        return value;
+                    }
+                    else
+                    {
+                        return null;
+                    }
+
+                default:
+
+                    return null;
             }
         }
 
@@ -1092,13 +1309,13 @@ namespace NeonCli.Ansible.DockerService
         /// The property value or <c>null</c> if the property doesn't exist or
         /// if <see cref="jObject"/> is <c>null</c>.
         /// </returns>
-        private static string GetModeProperty(JObject jObject, string name)
+        private static string GetFileModeProperty(JObject jObject, string name)
         {
-            var jToken = GetProperty(jObject, name);
+            var decimalMode = GetIntProperty(jObject, name);
 
-            if (jToken != null)
+            if (decimalMode.HasValue)
             {
-                return Convert.ToString((int)jToken, 8);
+                return Convert.ToString(decimalMode.Value, 8);
             }
             else
             {

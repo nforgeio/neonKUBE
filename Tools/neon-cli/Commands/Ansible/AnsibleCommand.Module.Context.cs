@@ -268,12 +268,14 @@ namespace NeonCli
             {
                 case "0":
                 case "no":
+                case "off":
                 case "false":
 
                     return false;
 
                 case "1":
                 case "yes":
+                case "on":
                 case "true":
 
                     return true;
