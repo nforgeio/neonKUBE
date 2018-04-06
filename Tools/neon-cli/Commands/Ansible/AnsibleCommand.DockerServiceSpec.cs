@@ -238,6 +238,19 @@ namespace NeonCli.Ansible.DockerService
         public string Mode { get; set; }
     }
 
+    public class Config
+    {
+        public string Source { get; set; }
+
+        public string Target { get; set; }
+
+        public string Uid { get; set; }
+
+        public string Gid { get; set; }
+
+        public string Mode { get; set; }
+    }
+
     /// <summary>
     /// Specifies a Docker service.
     /// </summary>
@@ -287,9 +300,8 @@ namespace NeonCli.Ansible.DockerService
 
         /// <summary>
         /// Identifies the configurations to be made available to the service.
-        /// These appear to look like file names without a directory.
         /// </summary>
-        public List<string> Config { get; set; } = new List<string>();
+        public List<Config> Config { get; set; } = new List<Config>();
 
         /// <summary>
         /// Specifies service container placement constraints.  These will look
@@ -681,6 +693,7 @@ namespace NeonCli.Ansible.DockerService
                 throw new ArgumentException("Invalid service inspection: expected a single element array.");
             }
 
+            //-----------------------------------------------------------------
             // Parse the network definitions so we can map network UUIDs to network names.
             // We're expecting the [docker network ls --no-trunc] output to look like:
             //
@@ -709,6 +722,7 @@ namespace NeonCli.Ansible.DockerService
                 }
             }
 
+            //-----------------------------------------------------------------
             // Extract the service properties from the service JSON.
 
             var spec         = (JObject)jArray[0]["Spec"];
@@ -761,6 +775,8 @@ namespace NeonCli.Ansible.DockerService
                 this.Group.Add(group);
             }
 
+            // $todo(jeff.lill): Ignoring [Privileges] for now.
+
             this.Tty      = GetBoolProperty(containerSpec, "TTY");
             this.ReadOnly = GetBoolProperty(containerSpec, "ReadOnly");
 
@@ -771,7 +787,7 @@ namespace NeonCli.Ansible.DockerService
                 mount.Target          = GetStringProperty(item, "Target");
                 mount.Source          = GetStringProperty(item, "Source");
                 mount.Type            = GetEnumProperty<MountType>(item, "Type").Value;
-                mount.ReadOnly        = GetBoolProperty(item, "ReadOnbly");
+                mount.ReadOnly        = GetBoolProperty(item, "ReadOnly");
                 mount.Consistency     = GetEnumProperty<MountConsistency>(item, "Consistency").Value;
 
                 var bindOptions = GetObjectProperty(item, "BindOptions");
@@ -809,6 +825,18 @@ namespace NeonCli.Ansible.DockerService
             this.StopSignal      = GetStringProperty(containerSpec, "StopSignal");
             this.StopGracePeriod = GetLongProperty(containerSpec, "StopGracePeriod");
 
+            // NOTE:
+            //
+            // [HealthCheck] is either an empty array, indicating that the HEALTHCHECK
+            // specified in the image (if any will be used).  Otherwise the first
+            // element of the the array describes the health check type with the
+            // command itself to follow.  Here's how this looks:
+            //
+            //      []                      - Use image health check
+            //      ["NONE"]                - Disable health checking
+            //      ["CMD", args...]        - Execute a command
+            //      ["CMD-SHELL", command]  - Run a command in the container's shell
+
             var healthCheck = GetObjectProperty(containerSpec, "HealthCheck");
 
             foreach (string arg in GetArrayProperty(healthCheck, "Test"))
@@ -823,12 +851,14 @@ namespace NeonCli.Ansible.DockerService
 
             foreach (string host in GetArrayProperty(containerSpec, "Hosts"))
             {
-                // $note: The REST API allows additional aliases to be specified after
-                //        the first host name.  We're going to ignore these because 
-                //        there's no way to specify these on the command line which
-                //        specifies these as:
+                // NOTE: 
                 //
-                //              HOST:IP
+                // The REST API allows additional aliases to be specified after
+                // the first host name.  We're going to ignore these because 
+                // there's no way to specify these on the command line which
+                // specifies these as:
+                //
+                //      HOST:IP
 
                 var fields = host.Split(',', StringSplitOptions.RemoveEmptyEntries);
 
@@ -853,7 +883,7 @@ namespace NeonCli.Ansible.DockerService
                 //
                 // I'm guessing here that the service inspect JSON uses ':'
                 // instead of '=' like the command line.  I'm going to 
-                // convert any colons.
+                // convert any colons to equal signs.
 
                 this.DnsOption.Add(option.Replace(':', '='));
             }
@@ -876,13 +906,18 @@ namespace NeonCli.Ansible.DockerService
 
             foreach (JObject configSpec in GetArrayProperty(containerSpec, "Configs"))
             {
-                // $todo(jeff.lill):
-                //
-                // It appears that the REST API has more options than are supported
-                // by the command line (user, group, mode,...).  We're going to 
-                // ignore these.
+                var config = new Config();
 
-                this.Config.Add(GetStringProperty(configSpec, "ConfigName"));
+                config.Source = GetStringProperty(configSpec, "SecretName");
+
+                var configFile = GetObjectProperty(configSpec, "File");
+
+                config.Target = GetStringProperty(configFile, "Name");
+                config.Uid    = GetStringProperty(configFile, "UID");
+                config.Gid    = GetStringProperty(configFile, "GID");
+                config.Mode   = GetFileModeProperty(configFile, "Mode");
+
+                this.Config.Add(config);
             }
 
             this.Isolation = GetEnumProperty<IsolationMode>(containerSpec, "Isolation");

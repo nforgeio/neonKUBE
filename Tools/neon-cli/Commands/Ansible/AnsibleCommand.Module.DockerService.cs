@@ -80,6 +80,13 @@ namespace NeonCli
     // args                     no                                  array of service arguments
     //
     // config                   no                                  array of configuration names
+    //                                                              each config entry looks like:
+    //
+    //                                                                  source      - secret name (required)
+    //                                                                  target      - target file path (required)
+    //                                                                  uid         - user ID (optional)
+    //                                                                  gid         - group ID (optional)
+    //                                                                  mode        - Linux file mode (optional/octal)
     //
     // constraint               no                                  array of placement constraints like
     //                                                              LABEL==VALUE or LABEL!=VALUE
@@ -200,10 +207,10 @@ namespace NeonCli
     //
     // publish                  no                                  array of network port publication specifications like:
     //                                      
-    //                                                                  published: 8080
-    //                                                                  target: 80
-    //                                                                  mode: ingress       (ingress|host}
-    //                                                                  protcol: tcp        (tcp|udp|sctp)
+    //                                                                  published: 8080     (required)
+    //                                                                  target: 80          (retured)
+    //                                                                  mode: ingress       (optional: ingress|host}
+    //                                                                  protcol: tcp        (optional: tcp|udp|sctp)
     //
     // read-only                no          false       true        mount container root filesystem as read-only
     //                                                  false
@@ -243,7 +250,14 @@ namespace NeonCli
     // rollback-parallelism     no          1                       maximum number of service tasks to be rolled back
     //                                                              simultaneously (0 to roll back all at once)
     //
-    // secret                   no                                  array of secret names to be be exposed to the service
+    // secret                   no                                  array of secrets to be be exposed to the service.
+    //                                                              each secret entry looks like:
+    //
+    //                                                                  source      - secret name (required)
+    //                                                                  target      - target file path (required)
+    //                                                                  uid         - user ID (optional)
+    //                                                                  gid         - group ID (optional)
+    //                                                                  mode        - Linux file mode (optional/octal)
     //
     // stop-grace-period        no          10s                     maximum time to wait for a service container to 
     //                                                              terminate gracefully (ns|us|ms|s|m|h)
@@ -324,7 +338,7 @@ namespace NeonCli
             service.Name                    = name;
 
             service.Args                    = context.ParseStringArray("args");
-            service.Config                  = context.ParseStringArray("config");
+            service.Config                  = ParseConfigArray(context, "config");
             service.Constraint              = context.ParseStringArray("constraint");
             service.ContainerLabel          = context.ParseStringArray("container-label");
             service.CredentialSpec          = context.ParseStringArray("credential-spec");
@@ -396,7 +410,7 @@ namespace NeonCli
             // We have the required arguments, so perform the operation.
             //
             // Detect whether the service is already running by inspecting it
-            // then start when it's nor already running or update it if it is.
+            // then start when it's not already running or update it if it is.
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting [{service.Name}] service.");
 
@@ -875,6 +889,109 @@ namespace NeonCli
             }
 
             return publishedPorts;
+        }
+
+        /// <summary>
+        /// Parses the service's configs.
+        /// </summary>
+        /// <param name="context">The module context.</param>
+        /// <param name="argName">The module argument name.</param>
+        /// /// <returns>The list of <see cref="Config"/> instances.</returns>
+        private List<Config> ParseConfigArray(ModuleContext context, string argName)
+        {
+            var configs = new List<Config>();
+
+            if (!context.Arguments.TryGetValue(argName, out var jToken))
+            {
+                return configs;
+            }
+
+            var jArray = jToken as JArray;
+
+            if (jArray == null)
+            {
+                context.WriteErrorLine($"Expected [{argName}] to be an array of config specifications.");
+                return configs;
+            }
+
+            foreach (var item in jArray)
+            {
+                var jObject = item as JObject;
+
+                if (jObject != null)
+                {
+                    context.WriteErrorLine($"One or more of the [{argName}] array elements is not a valid config specification.");
+                    return configs;
+                }
+
+                var config = new Config();
+                var value  = String.Empty;
+
+                // Parse [source]
+
+                if (jObject.TryGetValue<string>("source", out value))
+                {
+                    config.Source = value;
+                }
+                else
+                {
+                    context.WriteErrorLine($"A [{argName}] array element lacks the required [source] property.");
+                    return configs;
+                }
+
+                // Parse [target]
+
+                if (jObject.TryGetValue<string>("target", out value))
+                {
+                    config.Target = value;
+                }
+                else
+                {
+                    context.WriteErrorLine($"A [{argName}] array element lacks the required [target] property.");
+                    return configs;
+                }
+
+                // Parse [mode]: We're going to allow 3 or 4 octets.
+
+                if (jObject.TryGetValue<string>("mode", out value))
+                {
+                    config.Mode = ParseFileMode(context, value, $"[{argName}.mode={value}] is not a valid Linux file mode.");
+                }
+
+                // Parse [uid]
+
+                if (jObject.TryGetValue<string>("uid", out value))
+                {
+                    if (!int.TryParse(value, out var parsed))
+                    {
+                        config.Uid = value;
+                    }
+                    else
+                    {
+                        context.WriteErrorLine($"[{argName}.uid={value}] property is not a valid user ID.");
+                    }
+                }
+
+                // Parse [gid]
+
+                if (jObject.TryGetValue<string>("gid", out value))
+                {
+                    if (!int.TryParse(value, out var parsed))
+                    {
+                        config.Gid = value;
+                    }
+                    else
+                    {
+                        context.WriteErrorLine($"[{argName}.gid={value}] property is not a valid group ID.");
+                    }
+                }
+
+                // Add the config to the list.
+
+                configs.Add(config);
+            }
+
+            return configs;
         }
 
         /// <summary>
