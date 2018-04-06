@@ -709,7 +709,7 @@ namespace NeonCli.Ansible.DockerService
 
             // Extract the service properties from the service JSON.
 
-            var spec = (JObject)jArray[0]["Spec"];
+            var spec         = (JObject)jArray[0]["Spec"];
             var taskTemplate = (JObject)spec["TaskTemplate"];
 
             // Service Labels
@@ -797,7 +797,7 @@ namespace NeonCli.Ansible.DockerService
                 var tmpfsOptions = GetObjectProperty(item, "TempfsOptions");
 
                 mount.TmpfsSize = GetLongProperty(tmpfsOptions, "SizeBytes");
-                mount.TmpfsMode = GetStringProperty(tmpfsOptions, "Mode");
+                mount.TmpfsMode = GetModeProperty(tmpfsOptions, "Mode");
 
                 this.Mount.Add(mount);
             }
@@ -860,12 +860,12 @@ namespace NeonCli.Ansible.DockerService
 
                 secret.Source = GetStringProperty(secretSpec, "SecretName");
 
-                var secretFile = GetObjectProperty(secretSpec, "File"));
+                var secretFile = GetObjectProperty(secretSpec, "File");
 
                 secret.Target = GetStringProperty(secretFile, "Name");
                 secret.Uid    = GetStringProperty(secretFile, "UID");
                 secret.Gid    = GetStringProperty(secretFile, "GID");
-                secret.Mode   = GetStringProperty(secretFile, "Mode");
+                secret.Mode   = GetModeProperty(secretFile, "Mode");
 
                 this.Secret.Add(secret);
             }
@@ -885,7 +885,13 @@ namespace NeonCli.Ansible.DockerService
 
             // Resources
 
-            var resources   = GetObjectProperty(spec, "Resources");
+            // $todo(jeff.lill):
+            //
+            // I'm ignoring the [Limits.GenerticResources] and [Reservation.GenerticResources]
+            // right now because I suprised that there are two of these.  The command line
+            // looks like it only supports one global combined [GenericResources] concept.
+
+            var resources   = GetObjectProperty(taskTemplate, "Resources");
             var limits      = GetObjectProperty(resources, "Limits");
             var reservation = GetObjectProperty(resources, "Reservation");
 
@@ -893,7 +899,58 @@ namespace NeonCli.Ansible.DockerService
 
             if (nanoCpus.HasValue)
             {
+                this.LimitCpu = nanoCpus / 1000000000;
+            }
 
+            this.LimitMemory = GetLongProperty(limits, "MemoryBytes");
+
+            nanoCpus = GetLongProperty(reservation, "NanoCPUs");
+
+            if (nanoCpus.HasValue)
+            {
+                this.ReserveCpu = nanoCpus / 1000000000;
+            }
+
+            this.ReserveMemory = GetLongProperty(reservation, "MemoryBytes");
+
+            // RestartPolicy
+
+            var restartPolicy = GetObjectProperty(taskTemplate, "RestartPolicy");
+
+            this.RestartCondition   = GetEnumProperty<RestartCondition>(restartPolicy, "Condition");
+            this.RestartDelay       = GetLongProperty(restartPolicy, "Delay");
+            this.RestartMaxAttempts = GetIntProperty(restartPolicy, "MaxAttempts");
+            this.RestartWindow      = GetLongProperty(restartPolicy, "Windows");
+
+            // Placement
+
+            // $todo(jeff.lill):
+            //
+            // We're going to ignore the [Preferences] and [Platforms] fields for now.
+
+            var placement = GetObjectProperty(taskTemplate, "Placement");
+
+            foreach (string constraint in GetArrayProperty(placement, "Constraints"))
+            {
+                this.Constraint.Add(constraint);
+            }
+
+            // $todo(jeff.lill):
+            //
+            // Networks are referenced by UUID, not name.  We'll use the network
+            // map passed to the method to try to associate the network names.
+            //
+            // Note that it's possible (but unlikely) for the set of cluster networks
+            // to have changed between listing them and inspecting the service, so
+            // we might not be able to map a network ID to a name.
+            //
+            // In this case, we won't add the referenced network to this service
+            // specification.  The ultimate effect will be to potentially trigger 
+            // an uncessary service update, but since this will be super rare,
+            // I'm not going to worry about it.
+
+            foreach (JObject network in GetArrayProperty(taskTemplate, "Networks"))
+            {
             }
         }
 
@@ -1016,6 +1073,32 @@ namespace NeonCli.Ansible.DockerService
             if (jToken != null)
             {
                 return (long)jToken;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Looks up an <c>int</c> property converting it to an octal string
+        /// or returning <c>null</c> if the property doesn't exist.  This is
+        /// handy for parsing Linux style file modes from the decimal integers
+        /// Docker reports.
+        /// </summary>
+        /// <param name="jObject">The parent object or <c>null</c>.</param>
+        /// <param name="name">The property name.</param>
+        /// <returns>
+        /// The property value or <c>null</c> if the property doesn't exist or
+        /// if <see cref="jObject"/> is <c>null</c>.
+        /// </returns>
+        private static string GetModeProperty(JObject jObject, string name)
+        {
+            var jToken = GetProperty(jObject, name);
+
+            if (jToken != null)
+            {
+                return Convert.ToString((int)jToken, 8);
             }
             else
             {
