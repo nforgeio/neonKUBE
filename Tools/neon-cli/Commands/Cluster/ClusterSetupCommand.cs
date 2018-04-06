@@ -333,6 +333,29 @@ OPTIONS:
                             CephCluster(node, stepDelay);
                         }, 
                         noParallelLimit: true);
+
+                    // $hack(jeff.lill):
+                    //
+                    // We need to create a volume using this plugin on every cluster node
+                    // so that the plugin will be reported to cluster managers so they
+                    // will be able to schedule tasks using the plugin on these nodes.
+                    //
+                    // This appears to be a legacy plugin issue.  I suspect that this
+                    // won't be necessary for managed plugins.
+                    //
+                    //      https://github.com/jefflill/NeonForge/issues/226
+
+                    controller.AddStep("create neon volume",
+                        (node, stepDelay) =>
+                        {
+                            node.InvokeIdempotentAction("setup-neon-volume",
+                                () =>
+                                {
+                                    Thread.Sleep(stepDelay);
+                                    node.SudoCommand("docker volume create --driver=neon neon-do-not-remove");
+                                });
+                        },
+                        quiet: true);
                 }
 
                 controller.AddStep("networks",
