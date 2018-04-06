@@ -273,12 +273,14 @@ namespace Consul
             switch (input.ToLowerInvariant())
             {
                 case "0":
+                case "off":
                 case "no":
                 case "false":
 
                     return false;
 
                 case "1":
+                case "on":
                 case "yes":
                 case "true":
 
