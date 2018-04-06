@@ -333,29 +333,6 @@ OPTIONS:
                             CephCluster(node, stepDelay);
                         }, 
                         noParallelLimit: true);
-
-                    // $hack(jeff.lill):
-                    //
-                    // We need to create a volume using this plugin on every cluster node
-                    // so that the plugin will be reported to cluster managers so they
-                    // will be able to schedule tasks using the plugin on these nodes.
-                    //
-                    // This appears to be a legacy plugin issue.  I suspect that this
-                    // won't be necessary for managed plugins.
-                    //
-                    //      https://github.com/jefflill/NeonForge/issues/226
-
-                    controller.AddStep("create neon volume",
-                        (node, stepDelay) =>
-                        {
-                            node.InvokeIdempotentAction("setup-neon-volume",
-                                () =>
-                                {
-                                    Thread.Sleep(stepDelay);
-                                    node.SudoCommand("docker volume create --driver=neon neon-do-not-remove");
-                                });
-                        },
-                        quiet: true);
                 }
 
                 controller.AddStep("networks",
@@ -2036,33 +2013,6 @@ WantedBy=ceph-osd.target
 
                     node.SudoCommand("systemctl daemon-reload");
                 });
-
-            // Download and install the [neon-volume-plugin].
-
-            node.InvokeIdempotentAction("setup-neon-volume-plugin",
-                () =>
-                {
-                    node.Status = "neon-volume-plugin install";
-
-                    var installCommand = new CommandBundle("./install.sh");
-
-                    installCommand.AddFile("install.sh",
-$@"# Download and install the plugin.
-
-curl -4fsSLv --retry 10 --retry-delay 30 {cluster.Definition.Ceph.VolumePluginPackage} -o /tmp/neon-volume-plugin-deb 1>&2
-dpkg --install /tmp/neon-volume-plugin-deb
-rm /tmp/neon-volume-plugin-deb
-
-# Enable and start the plugin service.
-
-systemctl daemon-reload
-systemctl enable neon-volume-plugin
-systemctl start neon-volume-plugin
-",
-                        isExecutable: true);
-
-                    node.SudoCommand(installCommand);
-                });
         }
 
         /// <summary>
@@ -2758,6 +2708,51 @@ WantedBy=docker.service
                         node.SudoCommand($"mkdir -p /mnt/neonfs/neon && chown root:root /mnt/neonfs/neon && chmod 770 /mnt/neonfs/neon");
                     });
             }
+
+            // Download and install the [neon-volume-plugin].
+
+            node.InvokeIdempotentAction("setup-neon-volume-plugin",
+                () =>
+                {
+                    node.Status = "neon-volume-plugin: install";
+
+                    var installCommand = new CommandBundle("./install.sh");
+
+                    installCommand.AddFile("install.sh",
+$@"# Download and install the plugin.
+
+curl -4fsSLv --retry 10 --retry-delay 30 {cluster.Definition.Ceph.VolumePluginPackage} -o /tmp/neon-volume-plugin-deb 1>&2
+dpkg --install /tmp/neon-volume-plugin-deb
+rm /tmp/neon-volume-plugin-deb
+
+# Enable and start the plugin service.
+
+systemctl daemon-reload
+systemctl enable neon-volume-plugin
+systemctl start neon-volume-plugin
+",
+                        isExecutable: true);
+
+                    node.SudoCommand(installCommand);
+                });
+
+            node.InvokeIdempotentAction("setup-neon-volume",
+                () =>
+                {
+                    // $hack(jeff.lill):
+                    //
+                    // We need to create a volume using this plugin on every cluster node
+                    // so that the plugin will be reported to cluster managers so they
+                    // will be able to schedule tasks using the plugin on these nodes.
+                    //
+                    // This appears to be a legacy plugin issue.  I suspect that this
+                    // won't be necessary for managed plugins.
+                    //
+                    //      https://github.com/jefflill/NeonForge/issues/226
+
+                    node.Status = "neon-volume-plugin: register";
+                    node.SudoCommand("docker volume create --driver=neon neon-do-not-remove");
+                });
         }
 
         /// <summary> 
