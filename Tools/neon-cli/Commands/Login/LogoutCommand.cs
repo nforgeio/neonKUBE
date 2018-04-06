@@ -66,9 +66,7 @@ USAGE:
 
             if (clusterLogin == null)
             {
-                Console.WriteLine("*** You are not logged in.");
-                Console.WriteLine("");
-                return;
+                return; // Not logged in.
             }
 
             Console.WriteLine($"Logging out of [{clusterLogin.ClusterName}].");
