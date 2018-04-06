@@ -111,7 +111,7 @@ namespace Neon.Cluster
             this.IsReady        = false;
             this.ConnectTimeout = TimeSpan.FromSeconds(5);
             this.FileTimeout    = TimeSpan.FromSeconds(30);
-            this.RetryCount     = 5;
+            this.RetryCount     = 10;
         }
 
         /// <summary>
@@ -1561,6 +1561,7 @@ mono {scriptPath}.mono $@
                     {
                         LogLine($"WARNING: Safe SCP operation [{name}]: {NeonHelper.ExceptionError(e, includeInner: true)}");
                         InternalScpDisconnect();
+                        Thread.Sleep(TimeSpan.FromSeconds(5));
                     }
                     else
                     {
@@ -1613,6 +1614,7 @@ mono {scriptPath}.mono $@
                     {
                         LogLine($"WARNING: Safe SSH operation [{name}]: {NeonHelper.ExceptionError(e, includeInner: true)}");
                         InternalSshDisconnect();
+                        Thread.Sleep(TimeSpan.FromSeconds(5));
                     }
                     else
                     {
