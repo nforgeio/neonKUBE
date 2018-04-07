@@ -287,7 +287,7 @@ namespace NeonCli
     //
     // with-registry-auth       no          false                   send registry authentication details to Swarm nodes
     //
-    // workdir                  no                                  specifies command working directory within containers
+    // workdir                  no                                  command working directory within containers
     //
     // Examples:
     // ---------

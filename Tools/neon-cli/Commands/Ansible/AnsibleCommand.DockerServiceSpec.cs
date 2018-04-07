@@ -148,6 +148,34 @@ namespace NeonCli.Ansible.DockerService
         public PortMode? Mode { get; set; }
 
         public PortProtocol? Protocol { get; set; }
+
+        public string ToCommandOption()
+        {
+            var sb = new StringBuilder();
+
+            sb.AppendWithSeparator($"published={Published}", ",");
+            sb.AppendWithSeparator($"target={Target}", ",");
+
+            if (Mode.HasValue)
+            {
+                sb.AppendWithSeparator($"mode={Mode.Value}", ",");
+            }
+            else
+            {
+                sb.AppendWithSeparator($"mode=ingress", ",");
+            }
+
+            if (Protocol.HasValue)
+            {
+                sb.AppendWithSeparator($"protocol={Protocol.Value}", ",");
+            }
+            else
+            {
+                sb.AppendWithSeparator($"protocol=tcp", ",");
+            }
+
+            return sb.ToString();
+        }
     }
 
     public enum MountType
@@ -200,7 +228,7 @@ namespace NeonCli.Ansible.DockerService
 
     public class Mount
     {
-        public MountType Type { get; set; }
+        public MountType? Type { get; set; }
 
         public string Source { get; set; }
 
@@ -223,6 +251,88 @@ namespace NeonCli.Ansible.DockerService
         public long? TmpfsSize { get; set; }
 
         public string TmpfsMode { get; set; }
+
+        public string ToCommandOption()
+        {
+            var sb = new StringBuilder();
+
+            if (Type.HasValue)
+            {
+                sb.AppendWithSeparator($"type={Type.Value}", ",");
+            }
+            else
+            {
+                sb.AppendWithSeparator($"type=volume", ",");
+            }
+
+            if (Source != null)
+            {
+                sb.AppendWithSeparator($"source={Source}", ",");
+            }
+
+            if (Target != null)
+            {
+                sb.AppendWithSeparator($"target={Target}", ",");
+            }
+
+            if (ReadOnly.HasValue)
+            {
+                sb.AppendWithSeparator($"ReadOnly={ReadOnly.Value.ToString().ToLowerInvariant()}", ",");
+            }
+            else
+            {
+                sb.AppendWithSeparator($"ReadOnly=false", ",");
+            }
+
+            if (Consistency.HasValue)
+            {
+                sb.AppendWithSeparator($"consistency={Consistency.Value}", ",");
+            }
+            else
+            {
+                sb.AppendWithSeparator($"ReadOnly=default", ",");
+            }
+
+            if (BindPropagation.HasValue)
+            {
+                sb.AppendWithSeparator($"bind-propagation={BindPropagation.Value}", ",");
+            }
+            else
+            {
+                sb.AppendWithSeparator($"bind-propagation=rprivate", ",");
+            }
+
+            if (!Type.HasValue || Type.Value == MountType.Volume)
+            {
+                if (VolumeDriver != null)
+                {
+                    sb.AppendWithSeparator($"volume-driver={VolumeDriver}", ",");
+                }
+
+                if (VolumeNoCopy.HasValue)
+                {
+                    sb.AppendWithSeparator($"volume-nocopy={VolumeNoCopy.ToString().ToLowerInvariant()}", ",");
+                }
+                else
+                {
+                    sb.AppendWithSeparator($"volume-nocopy=true", ",");
+                }
+
+                // I believe this needs to be specified last in the command line option.
+
+                if (VolumeLabel.Count > 0)
+                {
+                    sb.AppendWithSeparator("volume-label=", ",");
+
+                    foreach (var label in VolumeLabel)
+                    {
+                        sb.AppendWithSeparator(label, ",");
+                    }
+                }
+            }
+
+            return sb.ToString();
+        }
     }
 
     public class Secret
@@ -236,6 +346,38 @@ namespace NeonCli.Ansible.DockerService
         public string Gid { get; set; }
 
         public string Mode { get; set; }
+
+        public string ToCommandOption()
+        {
+            var sb = new StringBuilder();
+
+            if (Source != null)
+            {
+                sb.AppendWithSeparator($"source={Source}", ",");
+            }
+
+            if (Target != null)
+            {
+                sb.AppendWithSeparator($"target={Target}", ",");
+            }
+
+            if (Uid != null)
+            {
+                sb.AppendWithSeparator($"uid={Uid}", ",");
+            }
+
+            if (Gid != null)
+            {
+                sb.AppendWithSeparator($"gid={Gid}", ",");
+            }
+
+            if (Mode != null)
+            {
+                sb.AppendWithSeparator($"mode={Mode}", ",");
+            }
+
+            return sb.ToString();
+        }
     }
 
     public class Config
@@ -249,6 +391,38 @@ namespace NeonCli.Ansible.DockerService
         public string Gid { get; set; }
 
         public string Mode { get; set; }
+
+        public string ToCommandOption()
+        {
+            var sb = new StringBuilder();
+
+            if (Source != null)
+            {
+                sb.AppendWithSeparator($"source={Source}", ",");
+            }
+
+            if (Target != null)
+            {
+                sb.AppendWithSeparator($"target={Target}", ",");
+            }
+
+            if (Uid != null)
+            {
+                sb.AppendWithSeparator($"uid={Uid}", ",");
+            }
+
+            if (Gid != null)
+            {
+                sb.AppendWithSeparator($"gid={Gid}", ",");
+            }
+
+            if (Mode != null)
+            {
+                sb.AppendWithSeparator($"mode={Mode}", ",");
+            }
+
+            return sb.ToString();
+        }
     }
 
     /// <summary>
