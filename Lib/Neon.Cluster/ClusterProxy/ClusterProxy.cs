@@ -515,9 +515,14 @@ namespace Neon.Cluster
             var timeout       = TimeSpan.FromSeconds(120);
             var timer         = new Stopwatch();
 
-            // Wait for all of the managers to repost being unsealed.
+            // Wait for all of the managers to report being unsealed.
 
             timer.Start();
+
+            foreach (var manager in Managers)
+            {
+                manager.Status = "vault: verify unsealed";
+            }
 
             while (readyManagers.Count < Managers.Count())
             {
@@ -540,6 +545,7 @@ namespace Neon.Cluster
                     if (response.ExitCode == 0)
                     {
                         readyManagers.Add(manager.Name);
+                        manager.Status = "vault: unsealed";
                     }
                 }
 
@@ -552,6 +558,11 @@ namespace Neon.Cluster
 
             readyManagers.Clear();
             timer.Restart();
+
+            foreach (var manager in Managers)
+            {
+                manager.Status = "vault: check ready";
+            }
 
             while (readyManagers.Count < Managers.Count())
             {
@@ -574,6 +585,7 @@ namespace Neon.Cluster
                     if (response.ExitCode == 0)
                     {
                         readyManagers.Add(manager.Name);
+                        manager.Status = "vault: ready";
                     }
                 }
 
@@ -585,6 +597,11 @@ namespace Neon.Cluster
             foreach (var manager in Managers.Where(m => !readyManagers.Contains(m.Name)))
             {
                 VaultCommandNoFault(manager, $"vault-direct delete secret {manager.Name}-ready");
+            }
+
+            foreach (var manager in Managers)
+            {
+                manager.Status = string.Empty;
             }
         }
 

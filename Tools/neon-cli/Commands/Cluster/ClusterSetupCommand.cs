@@ -2876,106 +2876,124 @@ systemctl start neon-volume-plugin
                 ServerCertificateCustomValidationCallback = (request, cert, chain, errors) => true
             };
 
-            using (var vaultJsonClient = new JsonClient(httpHandler, disposeHandler: true))
+            using (httpHandler)
             {
-                vaultJsonClient.BaseAddress = new Uri($"https://{firstManager.Name}.neon-vault.cluster:{NetworkPorts.Vault}/");
-
                 foreach (var manager in cluster.Managers)
                 {
-                    // Wait for Vault to start and be able to respond to requests.
-
-                    timer.Restart();
-
-                    while (true)
+                    using (var vaultJsonClient = new JsonClient(httpHandler, disposeHandler: false))
                     {
-                        if (timer.Elapsed > timeout)
+                        vaultJsonClient.BaseAddress = new Uri($"https://{manager.PrivateAddress}:{NetworkPorts.Vault}/");
+
+                        // Wait for Vault to start and be able to respond to requests.
+
+                        timer.Restart();
+
+                        manager.Status = "vault: start";
+
+                        while (true)
                         {
-                            manager.Fault($"[Vault] did not become ready after waiting [{timeout}].");
-                            return;
+                            if (timer.Elapsed > timeout)
+                            {
+                                manager.Fault($"[Vault] is not ready after waiting [{timeout}].");
+                                return;
+                            }
+
+                            try
+                            {
+                                var jsonResponse = vaultJsonClient.GetUnsafeAsync("/v1/sys/seal-status").Result;
+
+                                if (jsonResponse.IsSuccess)
+                                {
+                                    break;
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                manager.LogException(e);
+                                Thread.Sleep(TimeSpan.FromSeconds(1));
+                            }
                         }
 
-                        try
-                        {
-                            var jsonResponse = vaultJsonClient.GetUnsafeAsync("/v1/sys/seal-status").Result;
+                        // Unseal the Vault instance.
 
-                            if (jsonResponse.IsSuccess)
+                        manager.Status = "vault: unseal";
+
+                        manager.SudoCommand($"vault-direct operator unseal -reset", RunOptions.None);    // This clears any previous uncompleted unseal attempts
+
+                        for (int i = 0; i < clusterLogin.VaultCredentials.KeyThreshold; i++)
+                        {
+                            manager.SudoCommand($"vault-direct operator unseal", cluster.SecureRunOptions | RunOptions.FaultOnError, clusterLogin.VaultCredentials.UnsealKeys[i]);
+                        }
+
+                        // Wait for Vault to indicate that it's unsealed and is
+                        // ready to accept commands.
+
+                        timer.Reset();
+
+                        manager.Status = "vault: wait for unseal";
+
+                        while (true)
+                        {
+                            var response = manager.SudoCommand("vault-direct status", RunOptions.LogOutput);
+
+                            firstManager.Log($"*** VAULT STATUS: {response.ExitCode}/{response.AllText}");
+
+                            if (response.ExitCode == 0)
                             {
                                 break;
                             }
+
+                            Thread.Sleep(TimeSpan.FromSeconds(5));
                         }
-                        catch
+
+                        manager.Status = string.Empty;
+                    }
+
+                    // $todo(jeff.lill):
+                    //
+                    // Vault doesn't actually seem to be ready right away, even after
+                    // verifing that all of the Vault instances are unsealed.  I believe
+                    // this is because [neon-proxy-vault] has not yet realized that the
+                    // Vault instances have transitioned to being healthy.
+                    //
+                    // We're going to ping Vault status via the proxy/REST API until
+                    // it answers as ready.
+
+                    using (var vaultJsonClient = new JsonClient(httpHandler, disposeHandler: false))
+                    {
+                        vaultJsonClient.BaseAddress = new Uri($"https://{manager.PrivateAddress}:{NetworkPorts.Vault}/");
+
+                        manager.Status = "vault: stablize";
+
+                        timer.Reset();
+
+                        while (true)
                         {
-                            Thread.Sleep(TimeSpan.FromSeconds(1));
-                        }
-                    }
+                            if (timer.Elapsed >= timeout)
+                            {
+                                firstManager.Fault($"[Vault] cluster is not responding as ready after waiting [{timeout}].");
+                                return;
+                            }
 
-                    // Unseal the Vault instance.
+                            try
+                            {
+                                var jsonResponse = vaultJsonClient.GetAsync("/v1/sys/seal-status").Result;
 
-                    manager.Status = "vault: unseal";
+                                firstManager.Log($"*** VAULT STATUS-CODE: {jsonResponse.HttpResponse.StatusCode}/{jsonResponse.HttpResponse.ReasonPhrase}");
 
-                    manager.SudoCommand($"vault-direct operator unseal -reset", RunOptions.None);    // This clears any previous uncompleted unseal attempts
-
-                    for (int i = 0; i < clusterLogin.VaultCredentials.KeyThreshold; i++)
-                    {
-                        manager.SudoCommand($"vault-direct operator unseal", cluster.SecureRunOptions | RunOptions.FaultOnError, clusterLogin.VaultCredentials.UnsealKeys[i]);
-                    }
-
-                    // Wait for Vault to indicate that it's unsealed and is
-                    // ready to accept commands.
-
-                    timer.Reset();
-
-                    manager.Status = "vault: unseal wait";
-
-                    while (true)
-                    {
-                        var response = manager.SudoCommand("vault-direct status", RunOptions.LogOutput);
-
-                        if (response.ExitCode == 0)
-                        {
-                            break;
+                                if (jsonResponse.IsSuccess)
+                                {
+                                    break;
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                manager.LogException(e);
+                                Thread.Sleep(TimeSpan.FromSeconds(1));
+                            }
                         }
 
-                        Thread.Sleep(TimeSpan.FromSeconds(5));
-                    }
-
-                    manager.Status = string.Empty;
-                }
-
-                // $todo(jeff.lill):
-                //
-                // Vault doesn't actually seem to be ready right away, even after
-                // verifing that all of the Vault instances are unsealed.  I believe
-                // this is because [neon-proxy-vault] has not yet realized that the
-                // Vault instances have transitioned to being healthy.
-                //
-                // We're going to ping Vault status via the proxy/REST API until
-                // it answers as ready.
-
-                firstManager.Status = "vault: stablize";
-
-                timer.Reset();
-
-                while (true)
-                {
-                    if (timer.Elapsed >= timeout)
-                    {
-                        firstManager.Fault($"[Vault] cluster is not responding as ready after waiting [{timeout}].");
-                        return;
-                    }
-
-                    try
-                    {
-                        var jsonResponse = vaultJsonClient.GetAsync("/v1/sys/seal-status").Result;
-
-                        if (jsonResponse.IsSuccess)
-                        {
-                            break;
-                        }
-                    }
-                    catch
-                    {
-                        Thread.Sleep(TimeSpan.FromSeconds(1));
+                        manager.Status = string.Empty;
                     }
                 }
             }
@@ -3002,14 +3020,14 @@ systemctl start neon-volume-plugin
                     firstManager.Status = "vault: init";
 
                     var response = firstManager.SudoCommand(
-                        "vault-direct init",
+                        "vault-direct operator init",
                         cluster.SecureRunOptions | RunOptions.FaultOnError,
                         $"-key-shares={cluster.Definition.Vault.KeyCount}",
                         $"-key-threshold={cluster.Definition.Vault.KeyThreshold}");
 
-                    if (response.ExitCode > 0)
+                    if (response.ExitCode != 0)
                     {
-                        firstManager.Fault($"[vault init] exit code [{response.ExitCode}]");
+                        firstManager.Fault($"[vault operator init] exit code [{response.ExitCode}]");
                         return;
                     }
 
