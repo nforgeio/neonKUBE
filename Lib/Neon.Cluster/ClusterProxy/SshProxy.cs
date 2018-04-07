@@ -584,7 +584,7 @@ namespace Neon.Cluster
         /// <param name="e">The exception.</param>
         public void LogException(Exception e)
         {
-            LogLine($"*** ERROR: {NeonHelper.ExceptionError(e, includeInner: true)}");
+            LogLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
             LogLine($"*** STACK: {e.StackTrace}");
         }
 
@@ -595,7 +595,7 @@ namespace Neon.Cluster
         /// <param name="e">The exception.</param>
         public void LogException(string message, Exception e)
         {
-            LogLine($"*** ERROR: {message}: {NeonHelper.ExceptionError(e, includeInner: true)}");
+            LogLine($"*** ERROR: {message}: {NeonHelper.ExceptionError(e)}");
             LogLine($"*** STACK: {e.StackTrace}");
         }
 
@@ -754,7 +754,7 @@ namespace Neon.Cluster
                             throw;
                         }
 
-                        LogLine($"*** WARNING: Wait for boot failed: {NeonHelper.ExceptionError(e, includeInner: true)}");
+                        LogLine($"*** WARNING: Wait for boot failed: {NeonHelper.ExceptionError(e)}");
                     }
                 }
 
@@ -1566,7 +1566,7 @@ mono {scriptPath}.mono $@
                 {
                     if (i < RetryCount)
                     {
-                        LogLine($"WARNING: Safe SCP operation [{name}]: {NeonHelper.ExceptionError(e, includeInner: true)}");
+                        LogLine($"WARNING: Safe SCP operation [{name}]: {NeonHelper.ExceptionError(e)}");
                         InternalScpDisconnect();
                         Thread.Sleep(TimeSpan.FromSeconds(5));
                     }
@@ -1619,7 +1619,7 @@ mono {scriptPath}.mono $@
                 {
                     if (i < RetryCount)
                     {
-                        LogLine($"WARNING: Safe SSH operation [{name}]: {NeonHelper.ExceptionError(e, includeInner: true)}");
+                        LogLine($"WARNING: Safe SSH operation [{name}]: {NeonHelper.ExceptionError(e)}");
                         InternalSshDisconnect();
                         Thread.Sleep(TimeSpan.FromSeconds(5));
                     }
@@ -1681,7 +1681,7 @@ mono {scriptPath}.mono $@
                     }
                     catch (Exception e)
                     {
-                        LogLine($"*** WARNING: Safe operation [PING]: {NeonHelper.ExceptionError(e, includeInner: true)}");
+                        LogLine($"*** WARNING: Safe operation [PING]: {NeonHelper.ExceptionError(e)}");
                         InternalSshDisconnect();
                     }
                 }

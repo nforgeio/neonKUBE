@@ -678,7 +678,7 @@ namespace Neon.Cluster
                 // set the important ones here.
 
                 Environment.SetEnvironmentVariable("VAULT_ADDR", $"https://neon-vault.cluster:{NeonHostPorts.ProxyVault}");
-                Environment.SetEnvironmentVariable("VAULT_DIRECT_ADDR", $"https://manage-0.neon-vault.cluster:{NetworkPorts.Vault}");
+                Environment.SetEnvironmentVariable("VAULT_DIRECT_ADDR", $"https://{Cluster.FirstManager.Name}.neon-vault.cluster:{NetworkPorts.Vault}");
                 Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"neon-consul.cluster:{NetworkPorts.Consul}");
                 Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://neon-consul.cluster:{NetworkPorts.Consul}");
             }
@@ -1071,7 +1071,7 @@ namespace Neon.Cluster
                         }
                         else
                         {
-                            throw new NeonClusterException(NeonHelper.ExceptionError(e, includeInner: true));
+                            throw new NeonClusterException(NeonHelper.ExceptionError(e));
                         }
                     }
                 }
@@ -1107,7 +1107,7 @@ namespace Neon.Cluster
                     }
                     else
                     {
-                        throw new NeonClusterException(NeonHelper.ExceptionError(e, includeInner: true));
+                        throw new NeonClusterException(NeonHelper.ExceptionError(e));
                     }
                 }
             }

@@ -55,9 +55,9 @@ namespace Neon.Common
         /// </summary>
         /// <param name="e">The exception.</param>
         /// <param name="stackTrace">Optionally include the stack track.</param>
-        /// <param name="includeInner">Optionally information about any inner exception.</param>
+        /// <param name="excludeInner">Optionally exclude information about any inner exception.</param>
         /// <returns>The error string.</returns>
-        public static string ExceptionError(Exception e, bool stackTrace = false, bool includeInner = false)
+        public static string ExceptionError(Exception e, bool stackTrace = false, bool excludeInner = false)
         {
             Covenant.Requires<ArgumentNullException>(e != null);
 
@@ -78,9 +78,9 @@ namespace Neon.Common
             {
                 message = $"[{e.GetType().Name}]: {e.Message}";
 
-                if (includeInner && e.InnerException != null)
+                if (!excludeInner && e.InnerException != null)
                 {
-                    message += $" [[inner:{e.GetType().Name}]: {e.Message}]";
+                    message += $" [inner:{e.InnerException.GetType().Name}: {e.InnerException.Message}]";
                 }
 
                 if (stackTrace)
