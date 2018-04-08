@@ -896,7 +896,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
 
         /// <summary>
         /// Returns the command line as a string with sensitive information like a password
-        /// obscured.  This is suitable for using as a <see cref="SetupController"/>'s
+        /// are redacted.  This is suitable for using as a <see cref="SetupController"/>'s
         /// operation summary.
         /// </summary>
         public static string SafeCommandLine
@@ -912,19 +912,15 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                     return File.ReadAllText("__shim.org").Trim();
                 }
 
-                // Obscure the [-p=xxxx] and [--password=xxxx] options.
+                // Obscure the [--machine-password=xxxx] option.
 
                 var sb = new StringBuilder();
 
                 foreach (var item in CommandLine.Items)
                 {
-                    if (item.StartsWith("-p="))
+                    if (item.StartsWith("--machine-password"))
                     {
-                        sb.AppendWithSeparator("-p=[...]");
-                    }
-                    else if (item.StartsWith("--password="))
-                    {
-                        sb.AppendWithSeparator("--password=[...]");
+                        sb.AppendWithSeparator("--machine-password=[REDACTED]");
                     }
                     else
                     {
