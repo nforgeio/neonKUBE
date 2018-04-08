@@ -285,7 +285,7 @@ namespace Neon.Cluster
 
             if (xenHost.Template.Find(templateName) == null)
             {
-                xenSshProxy.Status = "download template (slow)";
+                xenSshProxy.Status = "download vm template (slow)";
                 xenHost.Template.Install(cluster.Definition.Hosting.XenServer.HostXvaUri, templateName);
             }
         }
