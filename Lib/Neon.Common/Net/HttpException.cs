@@ -43,8 +43,45 @@ namespace Neon.Net
             return $", uri=[{uri}]";
         }
 
+        /// <summary>
+        /// Constructs an exception message using an inner exception.
+        /// </summary>
+        /// <param name="message">The base message.</param>
+        /// <param name="innerException">The inner exception or <c>null</c>.</param>
+        private static string GetMessage(string message, Exception innerException)
+        {
+            var httpException = innerException as HttpException;
+
+            if (innerException != null)
+            {
+                return $"{message} [status={(int)httpException.StatusCode}{GetReasonString(httpException.ReasonPhrase)}{GetUriString(httpException.RequestUri)}]";
+            }
+            else
+            {
+                return message;
+            }
+        }
+
         //---------------------------------------------------------------------
         // Instance members
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="message">Exception message.</param>
+        /// <param name="innerException">Optional inner exception.</param>
+        public HttpException(string message, Exception innerException = null)
+            : base(GetMessage(message, innerException))
+        {
+            var httpException = innerException as HttpException;
+
+            if (httpException != null)
+            {
+                this.StatusCode   = httpException.StatusCode;
+                this.RequestUri   = httpException.RequestUri;
+                this.ReasonPhrase = httpException.ReasonPhrase ?? string.Empty;
+            }
+        }
 
         /// <summary>
         /// Constructor.

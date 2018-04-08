@@ -437,12 +437,12 @@ namespace Neon.Cluster
                     }
                     else
                     {
-                        throw new KeyNotFoundException($"Vault [path={path}] not found.");
+                        throw new KeyNotFoundException($"Vault [path={path}] not found.", e);
                     }
                 }
                 else
                 {
-                    throw;
+                    throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
                 }
             }
         }
@@ -527,7 +527,7 @@ namespace Neon.Cluster
             }
             catch (Exception e)
             {
-                throw new Exception($"Unable to access Vault [AppRole={roleName}]: {NeonHelper.ExceptionError(e)}");
+                throw new HttpException($"Unable to access Vault [AppRole={roleName}]", e);
             }
 
             // Fetch the role ID.
@@ -540,7 +540,7 @@ namespace Neon.Cluster
             }
             catch (Exception e)
             {
-                throw new Exception($"Unable to fetch the role ID for Vault [AppRole={roleName}]: {NeonHelper.ExceptionError(e)}");
+                throw new HttpException($"Unable to fetch the role ID for Vault [AppRole={roleName}]", e);
             }
 
             // Fetch a secret ID.
@@ -553,7 +553,7 @@ namespace Neon.Cluster
             }
             catch (Exception e)
             {
-                throw new Exception($"Unable to fetch the role ID for Vault [AppRole={roleName}]: {NeonHelper.ExceptionError(e)}");
+                throw new HttpException($"Unable to fetch the role ID for Vault [AppRole={roleName}]", e);
             }
 
             // Return the credentials.

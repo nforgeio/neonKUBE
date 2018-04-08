@@ -63,7 +63,7 @@ namespace Neon.Common
 
             var aggregate = e as AggregateException;
 
-            if (aggregate != null)
+            if (aggregate != null && aggregate.InnerExceptions.FirstOrDefault() != null)
             {
                 e = aggregate.InnerExceptions[0];
             }
@@ -85,7 +85,7 @@ namespace Neon.Common
 
                 if (stackTrace)
                 {
-                    message += $" [stack:{new StackTrace(e, skipFrames: 1, fNeedFileInfo: true)}]";
+                    message += $" [stack:{new StackTrace(e, skipFrames: 0, fNeedFileInfo: true)}]";
                 }
             }
 
