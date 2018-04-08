@@ -521,7 +521,7 @@ namespace NeonCli.Ansible.DockerService
         /// <summary>
         /// Optionally overrides the image entrypoint command and arguments.
         /// </summary>
-        public List<string> Entrypoint { get; set; } = new List<string>();
+        public List<string> Command { get; set; } = new List<string>();
 
         /// <summary>
         /// Specifies environment variables to be passed to the service containers.  These
@@ -550,6 +550,13 @@ namespace NeonCli.Ansible.DockerService
         /// Optionally specifies the command to be executed within the service containers
         /// to determine the container health status.
         /// </summary>
+        /// <remarks>
+        /// This list is empty to if the default image health command it to be
+        /// used, or else it will start with <b>NONE</b> to disable health checks,
+        /// <b>CMD</b> for a regular command followed by optional arguments or 
+        /// <b>CMD-SHELL</b> followed by a single argument that will be executed 
+        /// in the image's default shell.
+        /// </remarks>
         public List<string> HealthCmd { get; set; } = new List<string>();
 
         /// <summary>
@@ -850,27 +857,9 @@ namespace NeonCli.Ansible.DockerService
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(inspectJson));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(networksText));
 
-            // See the link below for more information on the REST API JSON format:
-            //
-            //      https://docs.docker.com/engine/api/v1.35/#operation/ServiceInspect
-            //
-            // The parsing code below basically follows the order of the properties
-            // as defined by the REST specification.
-
-            // We're expecting the inspection JSON to be a single item
-            // array holding the service information.
-
-            var jArray = JArray.Parse(inspectJson);
-
-            if (jArray.Count != 1)
-            {
-                throw new ArgumentException("Invalid service inspection: expected a single element array.");
-            }
-
             //-----------------------------------------------------------------
             // Parse the network definitions so we can map network UUIDs to network names.
             // We're expecting the [docker network ls --no-trunc] output to look like:
-            //
             // 
             //  NETWORK ID                                                         NAME                DRIVER              SCOPE
             //  f2c93c25908a391398ef5416940c06322f3ac5f72ea915dd6a09a2efa49677b5   bridge              bridge              local
@@ -896,14 +885,31 @@ namespace NeonCli.Ansible.DockerService
                 }
             }
 
+            // See the link below for more information on the REST API JSON format:
+            //
+            //      https://docs.docker.com/engine/api/v1.35/#operation/ServiceInspect
+            //
+            // The parsing code below basically follows the order of the properties
+            // as defined by the REST specification.
+
+            // We're expecting the inspection JSON to be a single item
+            // array holding the service information.
+
+            var jArray = JArray.Parse(inspectJson);
+
+            if (jArray.Count != 1)
+            {
+                throw new ArgumentException("Invalid service inspection: expected a single element array.");
+            }
+
             //-----------------------------------------------------------------
-            // Extract the service properties from the service JSON.
+            // Extract the current service state from the service JSON.
 
             var spec         = (JObject)jArray[0]["Spec"];
             var taskTemplate = (JObject)spec["TaskTemplate"];
 
             //-----------------------------------------------------------------
-            // Service Labels
+            // Spec.Labels
 
             var labels = (JObject)spec.GetValue("Labels");
 
@@ -913,7 +919,7 @@ namespace NeonCli.Ansible.DockerService
             }
 
             //-----------------------------------------------------------------
-            // ContainerSpec
+            // Spec.TaskTemplate.ContainerSpec
 
             var containerSpec = (JObject)taskTemplate["ContainerSpec"];
 
@@ -926,7 +932,7 @@ namespace NeonCli.Ansible.DockerService
 
             foreach (string arg in GetArrayProperty(containerSpec, "Command"))
             {
-                this.Entrypoint.Add(arg);
+                this.Command.Add(arg);
             }
 
             foreach (string arg in GetArrayProperty(containerSpec, "Args"))
@@ -1097,7 +1103,7 @@ namespace NeonCli.Ansible.DockerService
             this.Isolation = GetEnumProperty<IsolationMode>(containerSpec, "Isolation");
 
             //-----------------------------------------------------------------
-            // Resources
+            // Spec.TaskTemplate.Resources
 
             // $todo(jeff.lill):
             //
@@ -1127,7 +1133,8 @@ namespace NeonCli.Ansible.DockerService
 
             this.ReserveMemory = GetLongProperty(reservation, "MemoryBytes");
 
-            // RestartPolicy
+            //-----------------------------------------------------------------
+            // Spec.TaskTemplate.RestartPolicy
 
             var restartPolicy = GetObjectProperty(taskTemplate, "RestartPolicy");
 
@@ -1137,7 +1144,7 @@ namespace NeonCli.Ansible.DockerService
             this.RestartWindow      = GetLongProperty(restartPolicy, "Windows");
 
             //-----------------------------------------------------------------
-            // Placement
+            // Spec.TaskTemplatePlacement
 
             // $todo(jeff.lill):
             //
@@ -1153,7 +1160,7 @@ namespace NeonCli.Ansible.DockerService
             // $todo(jeff.lill): Ignoring the [Runtime] property.
 
             //-----------------------------------------------------------------
-            // Network
+            // Spec.TaskTemplate.Network
 
             // $todo(jeff.lill):
             //
@@ -1184,7 +1191,7 @@ namespace NeonCli.Ansible.DockerService
             }
 
             //-----------------------------------------------------------------
-            // LogDriver
+            // Spec.TaskTemplate.LogDriver
 
             var logDriver = GetObjectProperty(taskTemplate, "LogDriver");
 
@@ -1198,7 +1205,7 @@ namespace NeonCli.Ansible.DockerService
             }
 
             //-----------------------------------------------------------------
-            // Mode
+            // Spec.TaskTemplate.Mode
 
             var mode       = (JObject)spec["Mode"];
             var replicated = GetObjectProperty(mode, "Replicated");
@@ -1214,7 +1221,7 @@ namespace NeonCli.Ansible.DockerService
             }
 
             //-----------------------------------------------------------------
-            // UpdateConfig
+            // Spec.TaskTemplate.UpdateConfig
 
             var updateConfig = (JObject)spec["UpdateConfig"];
 
@@ -1226,7 +1233,7 @@ namespace NeonCli.Ansible.DockerService
             this.UpdateOrder           = GetEnumProperty<UpdateOrder>(updateConfig, "Order");
 
             //-----------------------------------------------------------------
-            // RollbackConfig
+            // Spec.TaskTemplate.RollbackConfig
 
             var rollbackConfig = (JObject)spec["RollbackConfig"];
 
@@ -1238,7 +1245,7 @@ namespace NeonCli.Ansible.DockerService
             this.RollbackOrder           = GetEnumProperty<RollbackOrder>(rollbackConfig, "Order");
 
             //-----------------------------------------------------------------
-            // EndpointSpec
+            // Spec.TaskTemplate.EndpointSpec
 
             var endpointSpec = (JObject)spec["EndpointSpec"];
 

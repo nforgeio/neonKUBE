@@ -344,7 +344,7 @@ namespace NeonCli
             service.CredentialSpec          = context.ParseStringArray("credential-spec");
             service.Detach                  = context.ParseBool("detach");
             service.Dns                     = context.ParseIPAddressArray("dns");
-            service.Entrypoint              = context.ParseStringArray("entrypoint");
+            service.Command              = context.ParseStringArray("entrypoint");
             service.Env                     = context.ParseStringArray("env");
             service.EnvFile                 = context.ParseStringArray("env-file");
             service.GenericResource         = context.ParseStringArray("generic-resource");
@@ -1152,11 +1152,11 @@ namespace NeonCli
                 args.Add($"--endpoint-mode={service.EndpointMode}");
             }
 
-            if (service.Entrypoint.Count > 0)
+            if (service.Command.Count > 0)
             {
                 var sb = new StringBuilder();
 
-                foreach (var item in service.Entrypoint)
+                foreach (var item in service.Command)
                 {
                     sb.AppendWithSeparator(item);
                 }
