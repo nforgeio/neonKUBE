@@ -19,7 +19,7 @@ namespace Neon.Cluster
     public class XenServerOptions
     {
         private const string defaultHostXvaUri        = "http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva";
-        private const string defaultTemplate          = "neon-template";
+        private const string defaultTemplate          = "neon-template";    // $todo(jeff.lill): Change this to: [neon-ubuntu-16.04-template] (https://github.com/jefflill/NeonForge/issues/229)
         private const string defaultStorageRepository = "Local storage";
 
         /// <summary>
@@ -51,7 +51,7 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Names the XenServer template to be used when creating neonCLUSTER nodes.  This defaults
-        /// to <b>neon-template</b>.
+        /// to <b>ubuntu-template</b>.
         /// </summary>
         [JsonProperty(PropertyName = "TemplateName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultTemplate)]
