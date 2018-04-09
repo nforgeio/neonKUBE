@@ -63,9 +63,16 @@ namespace Neon.Common
 
             var aggregate = e as AggregateException;
 
-            if (aggregate != null && aggregate.InnerExceptions.FirstOrDefault() != null)
+            if (aggregate != null)
             {
-                e = aggregate.InnerExceptions[0];
+                if (aggregate.InnerException != null)
+                {
+                    return ExceptionError(aggregate.InnerException, stackTrace, excludeInner);
+                }
+                else if (aggregate.InnerExceptions.Count > 0)
+                {
+                    return ExceptionError(aggregate.InnerExceptions[0], stackTrace, excludeInner);
+                }
             }
 
             string message;
