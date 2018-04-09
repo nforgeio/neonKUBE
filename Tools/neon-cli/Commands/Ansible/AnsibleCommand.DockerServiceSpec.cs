@@ -277,11 +277,11 @@ namespace NeonCli.Ansible.DockerService
 
             if (ReadOnly.HasValue)
             {
-                sb.AppendWithSeparator($"ReadOnly={ReadOnly.Value.ToString().ToLowerInvariant()}", ",");
+                sb.AppendWithSeparator($"readonly={ReadOnly.Value.ToString().ToLowerInvariant()}", ",");
             }
             else
             {
-                sb.AppendWithSeparator($"ReadOnly=false", ",");
+                sb.AppendWithSeparator($"readonly=false", ",");
             }
 
             if (Consistency.HasValue)
@@ -290,7 +290,7 @@ namespace NeonCli.Ansible.DockerService
             }
             else
             {
-                sb.AppendWithSeparator($"ReadOnly=default", ",");
+                sb.AppendWithSeparator($"consistency=default", ",");
             }
 
             if (BindPropagation.HasValue)
@@ -568,7 +568,7 @@ namespace NeonCli.Ansible.DockerService
         /// Optionally specifies the number of times the <see cref="HealthCmd"/> can
         /// fail before a service container will be considered unhealthy.
         /// </summary>
-        public int? HealthRetries { get; set; }
+        public long? HealthRetries { get; set; }
 
         /// <summary>
         /// Optionally specifies the period after the service container starts when
@@ -909,6 +909,11 @@ namespace NeonCli.Ansible.DockerService
             var taskTemplate = (JObject)spec["TaskTemplate"];
 
             //-----------------------------------------------------------------
+            // Spec.Name
+
+            this.Name = GetStringProperty(spec, "Name");
+
+            //-----------------------------------------------------------------
             // Spec.Labels
 
             var labels = (JObject)spec.GetValue("Labels");
@@ -919,7 +924,9 @@ namespace NeonCli.Ansible.DockerService
             }
 
             //-----------------------------------------------------------------
-            // Ignoring [Spec.TaskTemplate.PluginSpec] (currently experimental)
+            // Ignoring [Spec.TaskTemplate.PluginSpec] currently experimental
+            // and I'm not sure that modifying managed plugins with this module
+            // is a great idea anyway.
 
             //-----------------------------------------------------------------
             // Spec.TaskTemplate.ContainerSpec
@@ -961,6 +968,12 @@ namespace NeonCli.Ansible.DockerService
             // $todo(jeff.lill): Ignoring [Spec.TaskTemplate.Privileges] for now.
 
             this.Tty      = GetBoolProperty(containerSpec, "TTY");
+
+            // $todo(jeff.lill): Ignoring [Spec.TaskTemplate.OpenStdin] for now.
+            //
+            // I think this corresponds to the [docker run -i] flag for containers 
+            // but this doesn't make sense for services, right?
+
             this.ReadOnly = GetBoolProperty(containerSpec, "ReadOnly");
 
             foreach (JObject item in GetArrayProperty(containerSpec, "Mounts"))
@@ -1047,7 +1060,7 @@ namespace NeonCli.Ansible.DockerService
 
             this.HealthInterval    = GetLongProperty(healthCheck, "Interval");
             this.HealthTimeout     = GetLongProperty(healthCheck, "Timeout");
-            this.HealthRetries     = GetIntProperty(healthCheck, "Retries");
+            this.HealthRetries     = GetLongProperty(healthCheck, "Retries");
             this.HealthStartPeriod = GetLongProperty(healthCheck, "StartPeriod");
 
             foreach (string host in GetArrayProperty(containerSpec, "Hosts"))
@@ -1136,6 +1149,7 @@ namespace NeonCli.Ansible.DockerService
 
             var resources = GetObjectProperty(taskTemplate, "Resources");
             var limits    = GetObjectProperty(resources, "Limits");
+            
             var nanoCpus  = GetLongProperty(limits, "NanoCPUs");
 
             if (nanoCpus.HasValue)
@@ -1187,8 +1201,9 @@ namespace NeonCli.Ansible.DockerService
 
             // $todo(jeff.lill):
             //
-            // Networks are referenced by UUID, not name.  We'll use the network
-            // map passed to the method to try to associate the network names.
+            // Inspect reports networks are referenced by UUID, not name.  We'll 
+            // use the network map passed to the method to try to associate the
+            // network names.
             //
             // Note that it's possible (but unlikely) for the set of cluster networks
             // to have changed between listing them and inspecting the service, so
@@ -1231,16 +1246,21 @@ namespace NeonCli.Ansible.DockerService
             // Spec.TaskTemplate.Mode
 
             var mode       = (JObject)spec["Mode"];
-            var replicated = GetObjectProperty(mode, "Replicated");
 
             if (mode.ContainsKey("Global"))
             {
                 this.Mode = ServiceMode.Global;
             }
-            else
+            else if (mode.ContainsKey("Replicated"))
             {
+                var replicated = GetObjectProperty(mode, "Replicated");
+
                 this.Mode     = ServiceMode.Replicated;
                 this.Replicas = GetLongProperty(replicated, "Replicas");
+            }
+            else
+            {
+                throw new NotSupportedException("Unexpected service [Spec.TaskTemplate.Mode].");
             }
 
             //-----------------------------------------------------------------
@@ -1290,7 +1310,7 @@ namespace NeonCli.Ansible.DockerService
         // JSON helpers:
 
         /// <summary>
-        /// Looks up an object property, returning <c>null</c> if the
+        /// Looks up a <see cref="JToken"/> property, returning <c>null</c> if the
         /// property doesn't exist.
         /// </summary>
         /// <param name="jObject">The parent object or <c>null</c>.</param>
@@ -1299,7 +1319,7 @@ namespace NeonCli.Ansible.DockerService
         /// The property token or <c>null</c> if the property doesn't exist or
         /// if <see cref="jObject"/> is <c>null</c>.
         /// </returns>
-        private static JToken GetProperty(JObject jObject, string name)
+        private static JToken GetJTokenProperty(JObject jObject, string name)
         {
             if (jObject == null)
             {
@@ -1328,7 +1348,7 @@ namespace NeonCli.Ansible.DockerService
         /// </returns>
         private static string GetStringProperty(JObject jObject, string name)
         {
-            var jToken = GetProperty(jObject, name);
+            var jToken = GetJTokenProperty(jObject, name);
 
             if (jToken != null)
             {
@@ -1352,7 +1372,7 @@ namespace NeonCli.Ansible.DockerService
         /// </returns>
         private static bool? GetBoolProperty(JObject jObject, string name)
         {
-            var jToken = GetProperty(jObject, name);
+            var jToken = GetJTokenProperty(jObject, name);
 
             if (jToken != null)
             {
@@ -1421,7 +1441,7 @@ namespace NeonCli.Ansible.DockerService
         /// </returns>
         private static int? GetIntProperty(JObject jObject, string name)
         {
-            var jToken = GetProperty(jObject, name);
+            var jToken = GetJTokenProperty(jObject, name);
 
             if (jToken == null)
             {
@@ -1463,7 +1483,7 @@ namespace NeonCli.Ansible.DockerService
         /// </returns>
         private static long? GetLongProperty(JObject jObject, string name)
         {
-            var jToken = GetProperty(jObject, name);
+            var jToken = GetJTokenProperty(jObject, name);
 
             if (jToken == null)
             {
@@ -1505,7 +1525,7 @@ namespace NeonCli.Ansible.DockerService
         /// </returns>
         private static double? GetDoubleProperty(JObject jObject, string name)
         {
-            var jToken = GetProperty(jObject, name);
+            var jToken = GetJTokenProperty(jObject, name);
 
             if (jToken == null)
             {
@@ -1599,11 +1619,12 @@ namespace NeonCli.Ansible.DockerService
         /// </returns>
         private static JObject GetObjectProperty(JObject jObject, string name)
         {
-            var jToken = GetProperty(jObject, name);
+            var jToken = GetJTokenProperty(jObject, name);
+            var value  = jToken as JObject;
 
-            if (jToken != null)
+            if (value != null)
             {
-                return (JObject)jToken;
+                return value;
             }
             else
             {
@@ -1623,11 +1644,12 @@ namespace NeonCli.Ansible.DockerService
         /// </returns>
         private static JArray GetArrayProperty(JObject jObject, string name)
         {
-            var jToken = GetProperty(jObject, name);
+            var jToken = GetJTokenProperty(jObject, name);
+            var value  = jToken as JArray;
 
-            if (jToken != null)
+            if (value != null)
             {
-                return (JArray)jToken;
+                return value;
             }
             else
             {

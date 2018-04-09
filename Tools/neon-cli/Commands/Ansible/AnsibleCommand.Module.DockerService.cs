@@ -351,7 +351,7 @@ namespace NeonCli
             service.Group                   = context.ParseStringArray("group");
             service.HealthCmd               = context.ParseStringArray("health-cmd");
             service.HealthInterval          = context.ParseDockerInterval("health-interval");
-            service.HealthRetries           = context.ParseInt("health-retries", v => v >= 0);
+            service.HealthRetries           = context.ParseLong("health-retries", v => v >= 0);
             service.HealthStartPeriod       = context.ParseDockerInterval("health-start-period");
             service.HealthTimeout           = context.ParseDockerInterval("health-timeout");
             service.Host                    = context.ParseStringArray("host");
