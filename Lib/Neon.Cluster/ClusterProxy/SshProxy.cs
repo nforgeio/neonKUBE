@@ -505,9 +505,9 @@ namespace Neon.Cluster
             try
             {
                 SudoCommand($"touch {RebootStatusPath}");
-                Log("*** Reboot(): REBOOT");
+                Log("*** REBOOT");
                 SudoCommand("reboot", RunOptions.Defaults | RunOptions.Shutdown);
-                Log("*** Reboot(): REBOOT command submitted");
+                Log("*** REBOOT submitted");
             }
             catch (SshConnectionException)
             {
@@ -727,7 +727,7 @@ namespace Neon.Cluster
 
                             try
                             {
-                                Log("*** WaitForBoot(): REBOOT");
+                                Log("*** WAITFORBOOT: REBOOT");
                                 sshClient.RunCommand("sudo reboot");
                             }
                             catch
@@ -736,7 +736,7 @@ namespace Neon.Cluster
                             }
                             finally
                             {
-                                Log("*** WaitForBoot(): REBOOT command submitted");
+                                Log("*** WAITFORBOOT: REBOOT command submitted");
                             }
                         }
                     }
