@@ -2829,29 +2829,39 @@ systemctl start neon-volume-plugin
             // to forward any Vault related traffic to the primary Vault instance running on onez
             // of the managers because pets aren't part of the Swarm.
 
+            var vaultTasks = new List<Task>();
+
             foreach (var pet in cluster.Pets)
             {
-                pet.InvokeIdempotentAction("setup-proxy-vault",
+                var task = Task.Run(
                     () =>
                     {
-                        var steps   = new ConfigStepList();
-                        var command = CommandStep.CreateIdempotentDocker(pet.Name, "setup-neon-proxy-vault",
-                            "docker run",
-                            "--name", "neon-proxy-vault",
-                            "--detach",
-                            "--publish", $"{NeonHostPorts.ProxyVault}:{NetworkPorts.Vault}",
-                            "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
-                            "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
-                            "--env", $"LOG_LEVEL=INFO",
-                            "--restart", "always",
-                            Program.ResolveDockerImage(cluster.Definition.ProxyVaultImage));
+                        pet.InvokeIdempotentAction("setup-proxy-vault",
+                            () =>
+                            {
+                                var steps   = new ConfigStepList();
+                                var command = CommandStep.CreateIdempotentDocker(pet.Name, "setup-neon-proxy-vault",
+                                    "docker run",
+                                    "--name", "neon-proxy-vault",
+                                    "--detach",
+                                    "--publish", $"{NeonHostPorts.ProxyVault}:{NetworkPorts.Vault}",
+                                    "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
+                                    "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
+                                    "--env", $"LOG_LEVEL=INFO",
+                                    "--restart", "always",
+                                    Program.ResolveDockerImage(cluster.Definition.ProxyVaultImage));
 
-                        steps.Add(command);
-                        steps.Add(cluster.GetFileUploadSteps(new[] { pet }, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
+                                steps.Add(command);
+                                steps.Add(cluster.GetFileUploadSteps(new[] { pet }, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
 
-                        cluster.Configure(steps);
+                                cluster.Configure(steps);
+                            });
                     });
+
+                vaultTasks.Add(task);
             }
+
+            NeonHelper.WaitAllAsync(vaultTasks).Wait();
         }
 
         /// <summary>
