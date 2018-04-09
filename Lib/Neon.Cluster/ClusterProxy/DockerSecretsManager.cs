@@ -69,12 +69,29 @@ namespace Neon.Cluster
             bundle.AddFile("create-secret.sh",
 $@"#!/bin/bash
 
-docker secret inspect {secretName}
-
-if [ ""$?"" == ""0"" ] ; then
+if docker secret inspect {secretName} ; then
     echo ""Secret already exists; not setting it again.""
 else
     cat secret.dat | docker secret create {secretName} -
+
+    # It appears that Docker secrets may not be available
+    # immediately after they are created.  So, we're going 
+    # wait for a while until we can inspect the new secret.
+
+    count=0
+
+    while [ $count -le 30 ]
+    do
+        if docker secret inspect {secretName} ; then
+            exit 0
+        fi
+        
+        sleep 1
+        count=$(( count + 1 ))
+    done
+
+    echo ""Created secret [{secretName}] is not ready after 30 seconds."" >&2
+    exit 1
 fi
 ",
                 isExecutable: true);
