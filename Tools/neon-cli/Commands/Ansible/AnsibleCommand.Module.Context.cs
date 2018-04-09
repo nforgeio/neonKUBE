@@ -405,7 +405,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Parses an integer.
+        /// Parses an <c>int</c>.
         /// </summary>>
         /// <param name="argName">The argument name.</param>
         /// <param name="validator">Optional validation function.</param>
@@ -421,6 +421,38 @@ namespace NeonCli
             {
                 var valueString = jToken.ToObject<string>();
                 var value       = int.Parse(valueString);
+
+                if (validator != null && !validator(value))
+                {
+                    WriteErrorLine($"[{argName}={value}] is not valid.");
+                }
+
+                return value;
+            }
+            catch
+            {
+                WriteErrorLine($"[{argName}] is not a valid integer.");
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Parses a <c>long</c>.
+        /// </summary>>
+        /// <param name="argName">The argument name.</param>
+        /// <param name="validator">Optional validation function.</param>
+        /// <returns>The parsed integer or <c>null</c>.</returns>
+        public long? ParseLong(string argName, Func<long, bool> validator = null)
+        {
+            if (!Arguments.TryGetValue(argName, out var jToken))
+            {
+                return null;
+            }
+
+            try
+            {
+                var valueString = jToken.ToObject<string>();
+                var value = int.Parse(valueString);
 
                 if (validator != null && !validator(value))
                 {

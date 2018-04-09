@@ -344,7 +344,7 @@ namespace NeonCli
             service.CredentialSpec          = context.ParseStringArray("credential-spec");
             service.Detach                  = context.ParseBool("detach");
             service.Dns                     = context.ParseIPAddressArray("dns");
-            service.Command              = context.ParseStringArray("entrypoint");
+            service.Command                 = context.ParseStringArray("entrypoint");
             service.Env                     = context.ParseStringArray("env");
             service.EnvFile                 = context.ParseStringArray("env-file");
             service.GenericResource         = context.ParseStringArray("generic-resource");
@@ -372,12 +372,12 @@ namespace NeonCli
             service.PlacementPref           = context.ParseStringArray("placement-pref");
             service.Publish                 = ParsePublishPorts(context, "publish");
             service.ReadOnly                = context.ParseBool("read-only");
-            service.Replicas                = context.ParseInt("replicas", v => v >= 0);
+            service.Replicas                = context.ParseLong("replicas", v => v >= 0);
             service.ReserveCpu              = context.ParseDouble("reserve-cpu", v => v > 0);
             service.ReserveMemory           = context.ParseDockerMemorySize("reserve-memory");
             service.RestartCondition        = context.ParseEnum<RestartCondition>("restart-condition");
             service.RestartDelay            = context.ParseDockerInterval("restart-delay");
-            service.RestartMaxAttempts      = context.ParseInt("restart-max-attempts", v => v >= 0);
+            service.RestartMaxAttempts      = context.ParseLong("restart-max-attempts", v => v >= 0);
             service.RestartWindow           = context.ParseDockerInterval("restart-window");
             service.RollbackDelay           = context.ParseDockerInterval("rollback-delay");
             service.RollbackFailureAction   = context.ParseEnum<RollbackFailureAction>("rollback-failure-action");

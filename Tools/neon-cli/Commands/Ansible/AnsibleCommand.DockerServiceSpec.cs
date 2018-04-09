@@ -703,7 +703,7 @@ namespace NeonCli.Ansible.DockerService
         /// <summary>
         /// Specifies the number of service instances deploy.
         /// </summary>
-        public int? Replicas { get; set; }
+        public long? Replicas { get; set; }
 
         /// <summary>
         /// Optionally specifies the number of CPUs to reserve for each service
@@ -730,7 +730,7 @@ namespace NeonCli.Ansible.DockerService
         /// <summary>
         /// Optionally specifies the maximum number of service container restart attempts.
         /// </summary>
-        public int? RestartMaxAttempts { get; set; } = -1;
+        public long? RestartMaxAttempts { get; set; } = -1;
 
         /// <summary>
         /// Optionally specifies the Window used to evaluate the restart policy (nanoseconds).
@@ -919,6 +919,9 @@ namespace NeonCli.Ansible.DockerService
             }
 
             //-----------------------------------------------------------------
+            // Ignoring [Spec.TaskTemplate.PluginSpec] (currently experimental)
+
+            //-----------------------------------------------------------------
             // Spec.TaskTemplate.ContainerSpec
 
             var containerSpec = (JObject)taskTemplate["ContainerSpec"];
@@ -955,7 +958,7 @@ namespace NeonCli.Ansible.DockerService
                 this.Group.Add(group);
             }
 
-            // $todo(jeff.lill): Ignoring [Privileges] for now.
+            // $todo(jeff.lill): Ignoring [Spec.TaskTemplate.Privileges] for now.
 
             this.Tty      = GetBoolProperty(containerSpec, "TTY");
             this.ReadOnly = GetBoolProperty(containerSpec, "ReadOnly");
@@ -970,34 +973,52 @@ namespace NeonCli.Ansible.DockerService
                 mount.ReadOnly        = GetBoolProperty(item, "ReadOnly");
                 mount.Consistency     = GetEnumProperty<MountConsistency>(item, "Consistency").Value;
 
-                var bindOptions = GetObjectProperty(item, "BindOptions");
-
-                mount.BindPropagation = GetEnumProperty<MountBindPropagation>(bindOptions, "Propagation");
-
-                var volumeOptions = GetObjectProperty(item, "VolumeOptions");
-
-                mount.VolumeNoCopy = GetBoolProperty(volumeOptions, "NoCopy");
-
-                foreach (var label in GetObjectProperty(volumeOptions, "Labels"))
+                switch (mount.Type)
                 {
-                    mount.VolumeLabel.Add($"{label.Key}={label.Value}");
+                    case MountType.Bind:
+
+                        {
+                            var bindOptions = GetObjectProperty(item, "BindOptions");
+
+                            mount.BindPropagation = GetEnumProperty<MountBindPropagation>(bindOptions, "Propagation");
+                        }
+                        break;
+
+                    case MountType.Volume:
+
+                        {
+                            var volumeOptions = GetObjectProperty(item, "VolumeOptions");
+
+                            mount.VolumeNoCopy = GetBoolProperty(volumeOptions, "NoCopy");
+
+                            foreach (var label in GetObjectProperty(volumeOptions, "Labels"))
+                            {
+                                mount.VolumeLabel.Add($"{label.Key}={label.Value}");
+                            }
+
+                            var driverConfig = GetObjectProperty(item, "DriverConfig");
+
+                            mount.VolumeDriver = GetStringProperty(driverConfig, "Name");
+
+                            var sb = new StringBuilder();
+
+                            foreach (var option in GetObjectProperty(volumeOptions, "Options"))
+                            {
+                                sb.AppendWithSeparator($"{option.Key}={option.Value}", ",");
+                            }
+                        }
+                        break;
+
+                    case MountType.Tmpfs:
+
+                        {
+                            var tmpfsOptions = GetObjectProperty(item, "TempfsOptions");
+
+                            mount.TmpfsSize = GetLongProperty(tmpfsOptions, "SizeBytes");
+                            mount.TmpfsMode = GetFileModeProperty(tmpfsOptions, "Mode");
+                        }
+                        break;
                 }
-
-                var driverConfig = GetObjectProperty(item, "DriverConfig");
-
-                mount.VolumeDriver = GetStringProperty(driverConfig, "Name");
-
-                var sb = new StringBuilder();
-
-                foreach (var option in GetObjectProperty(volumeOptions, "Options"))
-                {
-                    sb.AppendWithSeparator($"{option.Key}={option.Value}", ",");
-                }
-
-                var tmpfsOptions = GetObjectProperty(item, "TempfsOptions");
-
-                mount.TmpfsSize = GetLongProperty(tmpfsOptions, "SizeBytes");
-                mount.TmpfsMode = GetFileModeProperty(tmpfsOptions, "Mode");
 
                 this.Mount.Add(mount);
             }
@@ -1007,7 +1028,7 @@ namespace NeonCli.Ansible.DockerService
 
             // NOTE:
             //
-            // [HealthCheck] is either an empty array, indicating that the HEALTHCHECK
+            // [HealthCheck.Test] is either an empty array, indicating that the HEALTHCHECK
             // specified in the image (if any will be used).  Otherwise the first
             // element of the the array describes the health check type with the
             // command itself to follow.  Here's how this looks:
@@ -1040,7 +1061,7 @@ namespace NeonCli.Ansible.DockerService
                 //
                 //      HOST:IP
 
-                var fields = host.Split(',', StringSplitOptions.RemoveEmptyEntries);
+                var fields = host.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
                 this.Host.Add($"{fields[0]}:{fields[1]}");
             }
@@ -1088,7 +1109,7 @@ namespace NeonCli.Ansible.DockerService
             {
                 var config = new Config();
 
-                config.Source = GetStringProperty(configSpec, "SecretName");
+                config.Source = GetStringProperty(configSpec, "ConfigName");
 
                 var configFile = GetObjectProperty(configSpec, "File");
 
@@ -1107,28 +1128,30 @@ namespace NeonCli.Ansible.DockerService
 
             // $todo(jeff.lill):
             //
-            // I'm ignoring the [Limits.GenerticResources] and [Reservation.GenerticResources]
-            // right now because I suprised that there are two of these.  The command line
-            // looks like it only supports one global combined [GenericResources] concept.
+            // I'm ignoring the [Limits.GenericResources] and [Reservation.GenericResources]
+            // properties right now because I suprised that there are two of these.  The command
+            // line appears to support only one global combined [GenericResources] concept.
 
-            var resources   = GetObjectProperty(taskTemplate, "Resources");
-            var limits      = GetObjectProperty(resources, "Limits");
-            var reservation = GetObjectProperty(resources, "Reservation");
+            const long oneBillion = 1000000000L;
 
-            var nanoCpus = GetLongProperty(limits, "NanoCPUs");
+            var resources = GetObjectProperty(taskTemplate, "Resources");
+            var limits    = GetObjectProperty(resources, "Limits");
+            var nanoCpus  = GetLongProperty(limits, "NanoCPUs");
 
             if (nanoCpus.HasValue)
             {
-                this.LimitCpu = nanoCpus / 1000000000;
+                this.LimitCpu = nanoCpus / oneBillion;
             }
 
             this.LimitMemory = GetLongProperty(limits, "MemoryBytes");
+
+            var reservation = GetObjectProperty(resources, "Reservation");
 
             nanoCpus = GetLongProperty(reservation, "NanoCPUs");
 
             if (nanoCpus.HasValue)
             {
-                this.ReserveCpu = nanoCpus / 1000000000;
+                this.ReserveCpu = nanoCpus / oneBillion;
             }
 
             this.ReserveMemory = GetLongProperty(reservation, "MemoryBytes");
@@ -1140,8 +1163,8 @@ namespace NeonCli.Ansible.DockerService
 
             this.RestartCondition   = GetEnumProperty<RestartCondition>(restartPolicy, "Condition");
             this.RestartDelay       = GetLongProperty(restartPolicy, "Delay");
-            this.RestartMaxAttempts = GetIntProperty(restartPolicy, "MaxAttempts");
-            this.RestartWindow      = GetLongProperty(restartPolicy, "Windows");
+            this.RestartMaxAttempts = GetLongProperty(restartPolicy, "MaxAttempts");
+            this.RestartWindow      = GetLongProperty(restartPolicy, "Window");
 
             //-----------------------------------------------------------------
             // Spec.TaskTemplatePlacement
@@ -1217,7 +1240,7 @@ namespace NeonCli.Ansible.DockerService
             else
             {
                 this.Mode     = ServiceMode.Replicated;
-                this.Replicas = GetIntProperty(replicated, "Replicas");
+                this.Replicas = GetLongProperty(replicated, "Replicas");
             }
 
             //-----------------------------------------------------------------
