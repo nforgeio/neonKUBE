@@ -171,6 +171,35 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Performs an action on a new thread, killing the thread if it hasn't
+        /// terminate within a specified timeout.
+        /// </summary>
+        /// <param name="actionName">Idenfies the action for logging purposes.</param>
+        /// <param name="action">The action to be performed.</param>
+        /// <param name="timeout">The timeout.</param>
+        private void DeadlockBreaker(string actionName, Action action, TimeSpan timeout)
+        {
+            // $todo(jeff.lill): 
+            //
+            // This is part of the mitegation for:
+            //
+            //      https://github.com/jefflill/NeonForge/issues/230
+            //      https://github.com/sshnet/SSH.NET/issues/355
+
+            var threadStart = new ThreadStart(action);
+            var thread      = new Thread(threadStart);
+
+            thread.Start();
+
+            if (!thread.Join(timeout))
+            {
+                LogLine($"*** DEADLOCK BREAK: {actionName}");
+                thread.Abort();
+                LogLine($"*** DEADLOCK BREAK COMPLETE: {actionName}");
+            }
+        }
+
+        /// <summary>
         /// Closes any open connections to the Linux server but leaves open the
         /// opportunity to reconnect later.
         /// </summary>
@@ -187,6 +216,20 @@ namespace Neon.Cluster
         /// </remarks>
         public void Disconnect()
         {
+            // $todo(jeff.lill):
+            //
+            // We sometimes see a deadlock when disposing SSH.NET clients.
+            //
+            //      https://github.com/jefflill/NeonForge/issues/230
+            //      https://github.com/sshnet/SSH.NET/issues/355
+            //
+            // I'm going to try to mitigate this by doing the dispose
+            // on another thread and having that thread killed if it
+            // it appears to be deadlocked.  Note that this will likely
+            // result in resource leaks.
+
+            var deadlockTimeout = TimeSpan.FromSeconds(5);
+
             lock (syncLock)
             {
                 if (sshClient != null)
@@ -195,7 +238,7 @@ namespace Neon.Cluster
                     {
                         if (sshClient.IsConnected)
                         {
-                            sshClient.Dispose();
+                            DeadlockBreaker("SSH Client Dispose", () => sshClient.Dispose(), deadlockTimeout);
                         }
                     }
                     finally
@@ -210,7 +253,7 @@ namespace Neon.Cluster
                     {
                         if (scpClient.IsConnected)
                         {
-                            scpClient.Dispose();
+                            DeadlockBreaker("SCP Client Dispose", () => scpClient.Dispose(), deadlockTimeout);
                         }
                     }
                     finally
@@ -511,7 +554,7 @@ namespace Neon.Cluster
             }
             catch (SshConnectionException)
             {
-                // Ignoring this.
+                LogLine("*** REBOOT: SshConnectionException");
             }
 
             // Make sure we're disconnected.
