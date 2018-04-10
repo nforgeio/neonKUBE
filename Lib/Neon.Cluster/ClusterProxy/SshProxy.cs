@@ -177,7 +177,7 @@ namespace Neon.Cluster
         /// <param name="actionName">Idenfies the action for logging purposes.</param>
         /// <param name="action">The action to be performed.</param>
         /// <param name="timeout">The timeout.</param>
-        private void DeadlockBreaker(string actionName, Action action, TimeSpan timeout)
+        private void DeadlockBreak(string actionName, Action action, TimeSpan timeout)
         {
             // $todo(jeff.lill): 
             //
@@ -188,6 +188,8 @@ namespace Neon.Cluster
 
             var threadStart = new ThreadStart(action);
             var thread      = new Thread(threadStart);
+
+            LogLine($"*** DEADLOCK EXECUTE: {actionName}");
 
             thread.Start();
 
@@ -238,7 +240,7 @@ namespace Neon.Cluster
                     {
                         if (sshClient.IsConnected)
                         {
-                            DeadlockBreaker("SSH Client Dispose", () => sshClient.Dispose(), deadlockTimeout);
+                            DeadlockBreak("SSH Client Dispose", () => sshClient.Dispose(), deadlockTimeout);
                         }
                     }
                     finally
@@ -253,7 +255,7 @@ namespace Neon.Cluster
                     {
                         if (scpClient.IsConnected)
                         {
-                            DeadlockBreaker("SCP Client Dispose", () => scpClient.Dispose(), deadlockTimeout);
+                            DeadlockBreak("SCP Client Dispose", () => scpClient.Dispose(), deadlockTimeout);
                         }
                     }
                     finally
