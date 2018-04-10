@@ -52,7 +52,7 @@ namespace Neon.Net
         {
             var httpException = innerException as HttpException;
 
-            if (innerException != null)
+            if (httpException != null)
             {
                 return $"{message} [status={(int)httpException.StatusCode}{GetReasonString(httpException.ReasonPhrase)}{GetUriString(httpException.RequestUri)}]";
             }
