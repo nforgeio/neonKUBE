@@ -25,8 +25,6 @@ namespace Neon.Cluster
     /// </remarks>
     public static class NeonClusterConst
     {
-        public const string DELETETHIS = "Test";
-
         /// <summary>
         /// Name for the built-in cluster user that has the ability to manage other users.
         /// </summary>
