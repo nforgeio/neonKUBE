@@ -207,7 +207,7 @@ namespace NeonCli
 
                     var proxySettings = proxyManager.GetSettings();
 
-                    var validationContext = new ProxyValidationContext(name, proxySettings);
+                    var validationContext = new ProxyValidationContext(proxy, proxySettings);
 
                     // $hack(jeff.lill):
                     //
