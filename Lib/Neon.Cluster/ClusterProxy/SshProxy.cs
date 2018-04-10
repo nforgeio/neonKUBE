@@ -705,6 +705,8 @@ namespace Neon.Cluster
                 {
                     try
                     {
+                        LogLine($"*** WAITFORBOOT: CONNECT TO [{sshClient.ConnectionInfo.Host}:{sshClient.ConnectionInfo.Port}]");
+
                         sshClient.Connect();
 
                         // We need to verify that the [/dev/shm/neon/rebooting] file is not present
