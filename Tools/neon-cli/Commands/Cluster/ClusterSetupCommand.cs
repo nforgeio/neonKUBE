@@ -238,6 +238,7 @@ OPTIONS:
             controller.AddStep("manager initialize",
                 (node, stepDelay) =>
                 {
+                    node.LogLine($"*** TEST={NeonClusterConst.DELETETHIS}");
                     ConfigureCommon(node, stepDelay);
                 },
                 node => node.Metadata.IsManager);
