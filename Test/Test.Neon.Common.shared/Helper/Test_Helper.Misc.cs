@@ -32,6 +32,17 @@ namespace TestCommon
         }
 
         [Fact]
+        public void NullableEquals()
+        {
+            Assert.True(NeonHelper.NullableEquals((int?)null, (int?)null));
+            Assert.True(NeonHelper.NullableEquals((int?)1, (int?)1));
+
+            Assert.False(NeonHelper.NullableEquals((int?)null, (int?)1));
+            Assert.False(NeonHelper.NullableEquals((int?)1, (int?)null));
+            Assert.False(NeonHelper.NullableEquals((int?)1, (int?)2));
+        }
+
+        [Fact]
         public void TryParseHex_Int()
         {
             int v;

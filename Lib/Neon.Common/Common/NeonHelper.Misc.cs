@@ -36,6 +36,32 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Determines whether two nullable values are equal.
+        /// </summary>
+        /// <typeparam name="T">The base value type.</typeparam>
+        /// <param name="v1">Value #1.</param>
+        /// <param name="v2">Value #2.</param>
+        /// <returns><c>true</c> if the values are equal.</returns>
+        public static bool NullableEquals<T>(T? v1, T? v2)
+            where T : struct
+        {
+            if (!v1.HasValue && !v2.HasValue)
+            {
+                return true;
+            }
+            else if (v1.HasValue && !v2.HasValue)
+            {
+                return false;
+            }
+            else if (!v1.HasValue && v2.HasValue)
+            {
+                return false;
+            }
+
+            return v1.Value.Equals(v2.Value);
+        }
+
+        /// <summary>
         /// Converts Windows line endings (CR-LF) to Linux/Unix line endings (LF).
         /// </summary>
         /// <param name="input">The input string or <c>null</c>.</param>
