@@ -35,6 +35,9 @@ namespace NeonCli.Ansible.DockerService
 {
     // NOTE: The types below are accurate as of Docker API version 1.35.
 
+    /// <summary>
+    /// Service endpoint mode.
+    /// </summary>
     public enum EndpointMode
     {
         [EnumMember(Value = "vip")]
@@ -44,6 +47,9 @@ namespace NeonCli.Ansible.DockerService
         DnsRR
     }
 
+    /// <summary>
+    /// Service isolation mode (Windows only).
+    /// </summary>
     public enum IsolationMode
     {
         [EnumMember(Value = "default")]
@@ -56,6 +62,9 @@ namespace NeonCli.Ansible.DockerService
         HyperV
     }
 
+    /// <summary>
+    /// Service mode.
+    /// </summary>
     public enum ServiceMode
     {
         [EnumMember(Value = "replicated")]
@@ -65,6 +74,9 @@ namespace NeonCli.Ansible.DockerService
         Global
     }
 
+    /// <summary>
+    /// Service restart condition.
+    /// </summary>
     public enum RestartCondition
     {
         [EnumMember(Value = "any")]
@@ -77,6 +89,9 @@ namespace NeonCli.Ansible.DockerService
         OnFailure
     }
 
+    /// <summary>
+    /// Service update rollback order.
+    /// </summary>
     public enum UpdateOrder
     {
         [EnumMember(Value = "stop-first")]
@@ -86,6 +101,9 @@ namespace NeonCli.Ansible.DockerService
         StartFirst
     }
 
+    /// <summary>
+    /// Service task rollback order.
+    /// </summary>
     public enum RollbackOrder
     {
         [EnumMember(Value = "stop-first")]
@@ -95,6 +113,9 @@ namespace NeonCli.Ansible.DockerService
         StartFirst
     }
 
+    /// <summary>
+    /// Service update failure action.
+    /// </summary>
     public enum UpdateFailureAction
     {
         [EnumMember(Value = "pause")]
@@ -107,6 +128,9 @@ namespace NeonCli.Ansible.DockerService
         Rollback
     }
 
+    /// <summary>
+    /// Service rollback failure action.
+    /// </summary>
     public enum RollbackFailureAction
     {
         [EnumMember(Value = "pause")]
@@ -116,6 +140,9 @@ namespace NeonCli.Ansible.DockerService
         Continue,
     }
 
+    /// <summary>
+    /// Service port mode.
+    /// </summary>
     public enum PortMode
     {
         [EnumMember(Value = "ingress")]
@@ -125,6 +152,9 @@ namespace NeonCli.Ansible.DockerService
         Host
     }
 
+    /// <summary>
+    /// Service port protocol.
+    /// </summary>
     public enum PortProtocol
     {
         [EnumMember(Value = "tcp")]
@@ -137,16 +167,15 @@ namespace NeonCli.Ansible.DockerService
         Sctp
     }
 
+    /// <summary>
+    /// Service port publication specification.
+    /// </summary>
     public class PublishPort
     {
         public string Name { get; set; }
-
         public int? Published { get; set; }
-
         public int? Target { get; set; }
-
         public PortMode? Mode { get; set; }
-
         public PortProtocol? Protocol { get; set; }
 
         public override string ToString()
@@ -209,6 +238,9 @@ namespace NeonCli.Ansible.DockerService
         }
     }
 
+    /// <summary>
+    /// Service mount type.
+    /// </summary>
     public enum MountType
     {
         [EnumMember(Value = "volume")]
@@ -221,6 +253,9 @@ namespace NeonCli.Ansible.DockerService
         Tmpfs
     }
 
+    /// <summary>
+    /// Service mount consistency.
+    /// </summary>
     public enum MountConsistency
     {
         [EnumMember(Value = "default")]
@@ -236,6 +271,9 @@ namespace NeonCli.Ansible.DockerService
         Delegated
     }
 
+    /// <summary>
+    /// Service mount propagation.
+    /// </summary>
     public enum MountBindPropagation
     {
         [EnumMember(Value = "rprivate")]
@@ -257,30 +295,22 @@ namespace NeonCli.Ansible.DockerService
         RSlave
     }
 
+    /// <summary>
+    /// Service mount specification.
+    /// </summary>
     public class Mount
     {
         public MountType? Type { get; set; }
-
         public string Source { get; set; }
-
         public string Target { get; set; }
-
         public bool? ReadOnly { get; set; }
-
         public MountConsistency? Consistency { get; set; }
-
         public MountBindPropagation? BindPropagation { get; set; }
-
         public string VolumeDriver { get; set; }
-
         public List<string> VolumeLabel { get; private set; } = new List<string>();
-
         public bool? VolumeNoCopy { get; set; }
-
         public List<string> VolumeOpt { get; private set; } = new List<string>();
-
         public long? TmpfsSize { get; set; }
-
         public string TmpfsMode { get; set; }
 
         public override string ToString()
@@ -397,16 +427,15 @@ namespace NeonCli.Ansible.DockerService
         }
     }
 
+    /// <summary>
+    /// Service secret.
+    /// </summary>
     public class Secret
     {
         public string Source { get; set; }
-
         public string Target { get; set; }
-
         public string Uid { get; set; }
-
         public string Gid { get; set; }
-
         public string Mode { get; set; }
 
         public override string ToString()
@@ -473,16 +502,15 @@ namespace NeonCli.Ansible.DockerService
         }
     }
 
+    /// <summary>
+    /// Service config.
+    /// </summary>
     public class Config
     {
         public string Source { get; set; }
-
         public string Target { get; set; }
-
         public string Uid { get; set; }
-
         public string Gid { get; set; }
-
         public string Mode { get; set; }
 
         public override string ToString()
