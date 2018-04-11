@@ -1597,6 +1597,8 @@ $@"docker login \
             manager.InvokeIdempotentAction("setup-node-labels",
                 () =>
                 {
+                    manager.Status = "labeling";
+
                     foreach (var node in cluster.Nodes.Where(n => n.Metadata.InSwarm))
                     {
                         var labelDefinitions = new List<string>();
@@ -1658,8 +1660,6 @@ $@"docker login \
 
                                 }).Wait();
                         }
-
-                        node.Status = "labeling";
                     }
                 });
         }
