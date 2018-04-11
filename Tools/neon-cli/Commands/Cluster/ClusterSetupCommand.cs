@@ -1558,13 +1558,6 @@ $@"docker login \
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         private void CreateClusterNetworks(SshProxy<NodeDefinition> manager, TimeSpan stepDelay)
         {
-            // $todo(jeff.lill):
-            //
-            // Enable the network encryption when Docker networking seems
-            // to stablize.  Here's the tracking issue:
-            //
-            //      https://github.com/jefflill/NeonForge/issues/102
-
             manager.InvokeIdempotentAction("setup-docker-networks",
                 () =>
                 {
