@@ -149,7 +149,7 @@ namespace NeonCli.Ansible.DockerService
 
         public PortProtocol? Protocol { get; set; }
 
-        public string ToCommandOption()
+        public override string ToString()
         {
             var sb = new StringBuilder();
 
@@ -175,6 +175,37 @@ namespace NeonCli.Ansible.DockerService
             }
 
             return sb.ToString();
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as PublishPort;
+
+            if (object.ReferenceEquals(this, other))
+            {
+                return true;
+            }
+            else if (this == null && other == null)
+            {
+                return true;
+            }
+            else if (this == null && other != null)
+            {
+                return false;
+            }
+            else if (this != null && other == null)
+            {
+                return false;
+            }
+            else
+            {
+                return this.ToString() == other.ToString();
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 
@@ -252,7 +283,7 @@ namespace NeonCli.Ansible.DockerService
 
         public string TmpfsMode { get; set; }
 
-        public string ToCommandOption()
+        public override string ToString()
         {
             var sb = new StringBuilder();
 
@@ -333,6 +364,37 @@ namespace NeonCli.Ansible.DockerService
 
             return sb.ToString();
         }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as Mount;
+
+            if (object.ReferenceEquals(this, other))
+            {
+                return true;
+            }
+            else if (this == null && other == null)
+            {
+                return true;
+            }
+            else if (this == null && other != null)
+            {
+                return false;
+            }
+            else if (this != null && other == null)
+            {
+                return false;
+            }
+            else
+            {
+                return this.ToString() == other.ToString();
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 
     public class Secret
@@ -347,7 +409,7 @@ namespace NeonCli.Ansible.DockerService
 
         public string Mode { get; set; }
 
-        public string ToCommandOption()
+        public override string ToString()
         {
             var sb = new StringBuilder();
 
@@ -378,6 +440,37 @@ namespace NeonCli.Ansible.DockerService
 
             return sb.ToString();
         }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as Secret;
+
+            if (object.ReferenceEquals(this, other))
+            {
+                return true;
+            }
+            else if (this == null && other == null)
+            {
+                return true;
+            }
+            else if (this == null && other != null)
+            {
+                return false;
+            }
+            else if (this != null && other == null)
+            {
+                return false;
+            }
+            else
+            {
+                return this.ToString() == other.ToString();
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
     }
 
     public class Config
@@ -392,7 +485,7 @@ namespace NeonCli.Ansible.DockerService
 
         public string Mode { get; set; }
 
-        public string ToCommandOption()
+        public override string ToString()
         {
             var sb = new StringBuilder();
 
@@ -422,6 +515,37 @@ namespace NeonCli.Ansible.DockerService
             }
 
             return sb.ToString();
+        }
+
+        public override bool Equals(object obj)
+        {
+            var other = obj as Config;
+
+            if (object.ReferenceEquals(this, other))
+            {
+                return true;
+            }
+            else if (this == null && other == null)
+            {
+                return true;
+            }
+            else if (this == null && other != null)
+            {
+                return false;
+            }
+            else if (this != null && other == null)
+            {
+                return false;
+            }
+            else
+            {
+                return this.ToString() == other.ToString();
+            }
+        }
+
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
         }
     }
 
@@ -449,6 +573,659 @@ namespace NeonCli.Ansible.DockerService
             service.Parse(context, inspectJson, networksText);
 
             return service;
+        }
+
+        /// <summary>
+        /// Generates the <b>docker service update</b> command arguments that updates 
+        /// the service whose current state is passed so that it matches the updated
+        /// state.
+        /// </summary>
+        /// <param name="context">The module context.</param>
+        /// <param name="current">The current service state as loaded by <see cref="FromDockerInspect(ModuleContext, string, string)"/>.</param>
+        /// <param name="update">The required new service state.</param>
+        /// <returns>
+        /// The <b>docker service update</b> command arguments as a list.  
+        /// This does  not include the <b>docker service update</b> prefix.
+        /// </returns>
+        public static List<string> DockerUpdateCommand(ModuleContext context, DockerServiceSpec current, DockerServiceSpec update)
+        {
+            var outputArgs = new List<string>();
+
+            if (!AreIdentical(current.Args, update.Args))
+            {
+                // The service arguments are specified together in a single
+                // quoted and space separated string.  Note that we don't need
+                // to quote the arguments here because that will happen when
+                // when we actually execute the update command.
+                //
+                // NOTE: This is a bit broken from a Docker design perspective
+                //       because it implicitly assumes that service arguments
+                //       never include spaces.  This is probably a reasonable
+                //       assumption for Linux by may be an issue for Windows.
+
+                outputArgs.Add("--args");
+
+                var sb = new StringBuilder();
+
+                foreach (var item in update.Args)
+                {
+                    sb.AppendWithSeparator(item.ToString());
+                }
+
+                outputArgs.Add(sb.ToString());
+            }
+
+            AppendUpdateListArgs(context, outputArgs, "--config", current.Config, update.Config, state => state.Source);
+            AppendUpdateListArgs(context, outputArgs, "--constraint", current.Constraint, update.Constraint, SimpleNameExtractor);
+            AppendUpdateListArgs(context, outputArgs, "--container-label", current.ContainerLabel, update.ContainerLabel, SimpleNameExtractor);
+            AppendUpdateListArgs(context, outputArgs, "--credential-spec", current.CredentialSpec, update.CredentialSpec);
+            AppendUpdateListArgs(context, outputArgs, "--dns", current.Dns, update.Dns);
+            AppendUpdateListArgs(context, outputArgs, "--dns-option", current.DnsOption, update.DnsOption, SimpleNameExtractor);
+            AppendUpdateListArgs(context, outputArgs, "--dns-search", current.DnsSearch, update.DnsSearch);
+            AppendUpdateListArgs(context, outputArgs, "--constraint", current.Constraint, update.Constraint, SimpleNameExtractor);
+            AppendUpdateEnumArgs<EndpointMode>(context, outputArgs, "--endpoint-mode", current.EndpointMode, update.EndpointMode);
+
+            if (!AreIdentical(current.Command, update.Command))
+            {
+                // NOTE: I think the Docker design here may be broken because it
+                //       doesn't look like it's possible to remove an entrypoint
+                //       override because that would require passing an empty string
+                //       argument which will end up being ignored.
+                //
+                //       We're going to detect and fail when we see this.
+
+                // $todo(jeff.lill):
+                //
+                // We could potentially address this using the REST API but I
+                // don't want to go there right now.
+
+                if (update.Command.Count == 0)
+                {
+                    context.WriteErrorLine("It is not possible to remove an existing [--entrypoint] override.");
+                }
+                else
+                {
+                    var sb = new StringBuilder();
+
+                    foreach (var item in update.Command)
+                    {
+                        sb.AppendWithSeparator(item);
+                    }
+
+                    outputArgs.Add("--entrypoint");
+                    outputArgs.Add(sb.ToString());
+                }
+            }
+
+            AppendUpdateListArgs(context, outputArgs, "--env", current.Env, update.Env, SimpleNameExtractor);
+            AppendUpdateListArgs(context, outputArgs, "--group", current.Group, update.Group, SimpleNameExtractor);
+
+            if (!AreIdentical(current.HealthCmd, update.HealthCmd))
+            {
+                // NOTE: I think the Docker design here may be broken because it
+                //       doesn't look like it's possible to remove an health command
+                //       override because that would require passing an empty string
+                //       argument which will end up being ignored.
+                //
+                //       We're going to detect and fail when we see this.
+
+                // $todo(jeff.lill):
+                //
+                // We could potentially address this using the REST API but I
+                // don't want to go there right now.
+
+                if (update.HealthCmd.Count == 0)
+                {
+                    context.WriteErrorLine("It is not possible to remove an existing [--health-cmd] override.");
+                }
+                else
+                {
+                    var sb = new StringBuilder();
+
+                    foreach (var item in update.HealthCmd)
+                    {
+                        sb.AppendWithSeparator(item);
+                    }
+
+                    outputArgs.Add("--health-cmd");
+                    outputArgs.Add(sb.ToString());
+                }
+            }
+
+            AppendUpdateDurationArgs(context, outputArgs, "--health-interval", current.HealthInterval, update.HealthInterval);
+            AppendUpdateLongArgs(context, outputArgs, "--health-retries", current.HealthRetries, update.HealthRetries);
+            AppendUpdateDurationArgs(context, outputArgs, "--health-startperiod", current.HealthStartPeriod, update.HealthStartPeriod);
+            AppendUpdateDurationArgs(context, outputArgs, "--health-timeout", current.HealthTimeout, update.HealthTimeout);
+            AppendUpdateListArgs(context, outputArgs, "--host", current.Host, update.Host);
+            AppendUpdateStringArgs(context, outputArgs, "--hostname", current.Hostname, update.Hostname);
+            AppendUpdateStringArgs(context, outputArgs, "--image", current.Image, update.Image);
+            AppendUpdateEnumArgs(context, outputArgs, "--isolation", current.Isolation, update.Isolation);
+            AppendUpdateListArgs(context, outputArgs, "--label", current.Label, update.Label);
+            AppendUpdateDoubleArgs(context, outputArgs, "--limit-cpu", current.LimitCpu, update.LimitCpu);
+            AppendUpdateLongArgs(context, outputArgs, "--limit-memory", current.LimitMemory, update.LimitMemory);
+            AppendUpdateStringArgs(context, outputArgs, "--log-driver", current.LogDriver, update.LogDriver);
+
+            if (!AreIdentical(current.LogOpt, update.LogOpt))
+            {
+                // The [docker service update] command does not include [--log-opt-add]
+                // and [--log-opt-rm] options to manage log options individually, so we're
+                // just going to build up a comma separator string of [OPTION=VALUE].
+
+                var sb = new StringBuilder();
+
+                foreach (var option in update.LogOpt)
+                {
+                    sb.AppendWithSeparator(option, ",");
+                }
+
+                outputArgs.Add("--log-opt");
+                outputArgs.Add(sb.ToString());
+            }
+
+            AppendUpdateListArgs(context, outputArgs, "--mount", current.Mount, update.Mount, mount => mount.Target);
+            AppendUpdateListArgs(context, outputArgs, "--network", current.Network, update.Network);
+            AppendUpdateBoolArgs(context, outputArgs, "--no-health-check", current.NoHealthCheck, update.NoHealthCheck);
+            AppendUpdateBoolArgs(context, outputArgs, "--no-resolve-image", current.NoResolveImage, update.NoResolveImage);
+
+            // $todo(jeff.lill): Ignoring [--placement-pref].
+
+            AppendUpdateListArgs(context, outputArgs, "--publish", current.Publish, update.Publish);
+            AppendUpdateBoolArgs(context, outputArgs, "--read-only", current.ReadOnly, update.ReadOnly);
+            AppendUpdateLongArgs(context, outputArgs, "--replicas", current.Replicas, update.Replicas);
+            AppendUpdateDoubleArgs(context, outputArgs, "--reserve-cpu", current.ReserveCpu, update.ReserveCpu);
+            AppendUpdateLongArgs(context, outputArgs, "--reserve-memory", current.ReserveMemory, update.ReserveMemory);
+            AppendUpdateEnumArgs(context, outputArgs, "--restart-condition", current.RestartCondition, update.RestartCondition);
+            AppendUpdateDurationArgs(context, outputArgs, "--restart-delay", current.RestartDelay, update.RestartDelay);
+            AppendUpdateLongArgs(context, outputArgs, "--restart-max-attempts", current.RestartMaxAttempts, update.RestartMaxAttempts);
+            AppendUpdateDurationArgs(context, outputArgs, "--restart-window", current.RestartWindow, update.RestartWindow);
+            AppendUpdateDurationArgs(context, outputArgs, "--rollback-delay", current.RollbackDelay, update.RollbackDelay);
+            AppendUpdateEnumArgs(context, outputArgs, "--rollback-failure-action", current.RollbackFailureAction, update.RollbackFailureAction);
+            AppendUpdateDoubleArgs(context, outputArgs, "--rollback-max-failure-ratio", current.RollbackMaxFailureRatio, update.RollbackMaxFailureRatio);
+            AppendUpdateDurationArgs(context, outputArgs, "--rollback-monitor", current.RollbackMonitor, update.RollbackMonitor);
+            AppendUpdateEnumArgs(context, outputArgs, "--rollback-order", current.RollbackOrder, update.RollbackOrder);
+            AppendUpdateLongArgs(context, outputArgs, "--rollback-parallelism", current.RollbackParallism, update.RollbackParallism);
+            AppendUpdateListArgs(context, outputArgs, "--secret", current.Secret, update.Secret);
+            AppendUpdateDurationArgs(context, outputArgs, "--stop-grace-period", current.StopGracePeriod, update.StopGracePeriod);
+            AppendUpdateStringArgs(context, outputArgs, "--stop-signal", current.StopSignal, update.StopSignal);
+            AppendUpdateBoolArgs(context, outputArgs, "--tty", current.Tty, update.Tty);
+            AppendUpdateDurationArgs(context, outputArgs, "--update-delay", current.UpdateDelay, update.UpdateDelay);
+            AppendUpdateEnumArgs(context, outputArgs, "--update-failure-action", current.UpdateFailureAction, update.UpdateFailureAction);
+            AppendUpdateDoubleArgs(context, outputArgs, "--update-max-failure-ratio", current.UpdateMaxFailureRatio, update.UpdateMaxFailureRatio);
+            AppendUpdateDurationArgs(context, outputArgs, "--update-monitor", current.UpdateMonitor, update.UpdateMonitor);
+            AppendUpdateEnumArgs(context, outputArgs, "--update-order", current.UpdateOrder, update.UpdateOrder);
+            AppendUpdateLongArgs(context, outputArgs, "--update-parallelism", current.UpdateParallism, update.UpdateParallism);
+            AppendUpdateStringArgs(context, outputArgs, "--user", current.User, update.User);
+            AppendUpdateBoolArgs(context, outputArgs, "--with-registry-auth", current.WithRegistryAuth, update.WithRegistryAuth);
+            AppendUpdateStringArgs(context, outputArgs, "--workdir", current.WorkDir, update.WorkDir);
+
+#if TODO
+            // We're not currently handling these service properties.
+
+            AppendUpdateArgs(outputArgs, "--generic-resource", current.GenericResource, update.GenericResource, SimpleNameExtractor);
+#endif
+
+            return outputArgs;
+        }
+
+        /// <summary>
+        /// Helper state name extractor function for string state that is specified
+        /// like: <b>NAME</b> or <b>NAME=VALUE</b>.
+        /// </summary>
+        /// <param name="state">The state string.</param>
+        /// <returns>The extracted name.</returns>
+        private static string SimpleNameExtractor(string state)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(state));
+
+            var equalsPos = state.IndexOf('=');
+
+            if (equalsPos == -1)
+            {
+                return state;
+            }
+            else
+            {
+                return state.Substring(0, equalsPos);
+            }
+        }
+
+        /// <summary>
+        /// Compares two lists to determine whether the have the same elements
+        /// in the same order.
+        /// </summary>
+        /// <typeparam name="T">The element type.</typeparam>
+        /// <param name="current">The current list.</param>
+        /// <param name="update">The updated list.</param>
+        /// <returns><c>true</c> if the lists are identical.</returns>
+        private static bool AreIdentical<T>(List<T> current, List<T> update)
+        {
+            Covenant.Requires<ArgumentNullException>(current != null);
+            Covenant.Requires<ArgumentNullException>(update != null);
+
+            if (current.Count != update.Count)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < current.Count; i++)
+            {
+                if (current[i].ToString() != update[i].ToString())
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Compares two lists to determine whether the have the same elements
+        /// but potentially in a different order.
+        /// </summary>
+        /// <typeparam name="T">The element type.</typeparam>
+        /// <param name="current">The current list.</param>
+        /// <param name="update">The updated list.</param>
+        /// <returns><c>true</c> if the lists are equlivalent.</returns>
+        private static bool AreEquivalent<T>(List<T> current, List<T> update)
+        {
+            Covenant.Requires<ArgumentNullException>(current != null);
+            Covenant.Requires<ArgumentNullException>(update != null);
+
+            if (current.Count != update.Count)
+            {
+                return false;
+            }
+
+            var currentSet = new Dictionary<string, bool>();
+            var updateSet  = new Dictionary<string, bool>();
+
+            for (int i = 0; i < current.Count; i++)
+            {
+                currentSet[current[i].ToString()] = true;
+                updateSet[update[i].ToString()] = true;
+            }
+
+            foreach (var item in currentSet.Keys)
+            {
+                if (!updateSet.ContainsKey(item))
+                {
+                    return false;
+                }
+            }
+
+            foreach (var item in updateSet.Keys)
+            {
+                if (!currentSet.ContainsKey(item))
+                {
+                    return false;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Returns the name to use for removing specific state from a service.
+        /// </summary>
+        /// <typeparam name="T">The option type.</typeparam>
+        /// <param name="state">The current state.</param>
+        /// <param name="nameExtractor">
+        /// Optional function that extracts the name to be used for removing the item from
+        /// the service from the item value.  This deefaults to the entire item value if
+        /// no extractor is specified.
+        /// </param>
+        /// <returns>
+        /// The extracted name if <paramref name="nameExtractor"/> is not <c>null</c> 
+        /// or else the option value rendered as a string.
+        /// </returns>
+        private static string GetStateName<T>(T state, Func<T, string> nameExtractor = null)
+        {
+            if (nameExtractor != null)
+            {
+                return nameExtractor(state);
+            }
+            else
+            {
+                return state.ToString();
+            }
+        }
+
+        /// <summary>
+        /// Compares the <paramref name="current"/> and <paramref name="update"/> lists describing a
+        /// service parameter for the current service state and the required updated state and when
+        /// these differ, generates the command line <paramref name="option"/> and values required
+        /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
+        /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
+        /// </summary>
+        /// <typeparam name="T">The option type.</typeparam>
+        /// <param name="context">The module context.</param>
+        /// <param name="outputArgs">The output command line arguments list.</param>
+        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="current">The current service state.</param>
+        /// <param name="update">The required updated service state.</param>
+        /// <param name="nameExtractor">
+        /// Optional function that extracts the name to be used for removing the item from
+        /// the service from the item value.  This deefaults to the entire item value if
+        /// no extractor is specified.
+        /// </param>
+        /// <remarks>
+        /// <para>
+        /// The <c>docker service update</c> commands allows for individual items like
+        /// environment variables, secrets, bind mounts,... to be added or removed from
+        /// a running service via options like <b>--env-add</b> and <b>--env-rm</b>.
+        /// </para>
+        /// <para>
+        /// This method compares the two lists passed and generates the necessary <b>add/rm</b>
+        /// arguments to update the service state using <paramref name="option"/> as the base
+        /// option name to which <b>-add</b> or <b>--rm</b> will be appended as necessary.
+        /// </para>
+        /// <para>
+        /// The <paramref name="nameExtractor"/> function is required for sertvice state where
+        /// the <b>rm</b> option identifies the option by a subfield of the option value
+        /// (e.g. the target port for a <b>--publish-rm port</b> option).
+        /// </para>
+        /// </remarks>
+        private static void AppendUpdateListArgs<T>(ModuleContext context, List<string> outputArgs, string option, List<T> current, List<T> update, Func<T, string> nameExtractor = null)
+        {
+            if (AreEquivalent(current, update))
+            {
+                return; // No changes detected.
+            }
+
+            // Append options to remove current service state that's not desired for the update.
+
+            var currentSet = new Dictionary<string, T>();
+            var updateSet  = new Dictionary<string, T>();
+
+            for (int i = 0; i < current.Count; i++)
+            {
+                currentSet[GetStateName(current[i], nameExtractor)] = current[i];
+                updateSet[GetStateName(update[i], nameExtractor)]   = update[i];
+            }
+
+            // Generate a [*-rm] option to remove state that exists in the current service
+            // state but is not desired or will change for the updated service.
+
+            foreach (var currentItem in currentSet.Values)
+            {
+                var stateName = GetStateName(currentItem, nameExtractor);
+                var remove    = false;
+
+                if (updateSet.TryGetValue(stateName, out var updateItem))
+                {
+                    remove = current.ToString() != updateItem.ToString();
+                }
+                else
+                {
+                    remove = true;
+                }
+
+                if (remove)
+                {
+                    outputArgs.Add($"{option}-rm");
+                    outputArgs.Add(stateName);
+                }
+            }
+
+            // Generate a [*-add] option to add state that exists in the updated service
+            // or will change for the updated service.
+
+            foreach (var updateItem in updateSet.Values)
+            {
+                var stateName = GetStateName(updateItem, nameExtractor);
+                var add       = false;
+
+                if (currentSet.TryGetValue(stateName, out var currentItem))
+                {
+                    add = current.ToString() != updateItem.ToString();
+                }
+                else
+                {
+                    add = true;
+                }
+
+                if (add)
+                {
+                    outputArgs.Add($"{option}-add");
+                    outputArgs.Add(updateItem.ToString());
+                }
+            }
+        }
+
+        /// <summary>
+        /// Compares the <paramref name="current"/> and <paramref name="update"/> string values 
+        /// describing a service parameter for the current service state and the required updated state and 
+        /// when these differ, generates the command line <paramref name="option"/> and values required
+        /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
+        /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
+        /// </summary>
+        /// <typeparam name="T">The option type.</typeparam>
+        /// <param name="context">The module context.</param>
+        /// <param name="outputArgs">The output command line arguments list.</param>
+        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="current">The current service state.</param>
+        /// <param name="update">The required updated service state.</param>
+        private static void AppendUpdateStringArgs(ModuleContext context, List<string> outputArgs, string option, string current, string update)
+        {
+            if (string.IsNullOrEmpty(update))
+            {
+                context.WriteErrorLine($"It is not possible to set an empty [{option}] option.");
+            }
+
+            // Return if no change is detected.
+
+            if (current == update)
+            {
+                return;
+            }
+
+            outputArgs.Add($"{option}");
+            outputArgs.Add(update.ToString());
+        }
+
+        /// <summary>
+        /// Compares the <paramref name="current"/> and <paramref name="update"/> <c>double</c> values 
+        /// describing a service parameter for the current service state and the required updated state and 
+        /// when these differ, generates the command line <paramref name="option"/> and values required
+        /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
+        /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
+        /// </summary>
+        /// <typeparam name="T">The option type.</typeparam>
+        /// <param name="context">The module context.</param>
+        /// <param name="outputArgs">The output command line arguments list.</param>
+        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="current">The current service state.</param>
+        /// <param name="update">The required updated service state.</param>
+        private static void AppendUpdateDoubleArgs(ModuleContext context, List<string> outputArgs, string option, double? current, double? update)
+        {
+            // Return if no change is detected.
+
+            if (NeonHelper.NullableEquals(current, update))
+            {
+                return;
+            }
+
+            // Default [update] to 0.0
+
+            if (!update.HasValue)
+            {
+                update = 0;
+            }
+
+            outputArgs.Add($"{option}");
+            outputArgs.Add(update.Value.ToString("#.#"));
+        }
+
+        /// <summary>
+        /// Compares the <paramref name="current"/> and <paramref name="update"/> scaler <c>bool</c> values 
+        /// describing a service parameter for the current service state and the required updated state and 
+        /// when these differ, generates the command line <paramref name="option"/> and values required
+        /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
+        /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
+        /// </summary>
+        /// <typeparam name="T">The option type.</typeparam>
+        /// <param name="context">The module context.</param>
+        /// <param name="outputArgs">The output command line arguments list.</param>
+        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="current">The current service state.</param>
+        /// <param name="update">The required updated service state.</param>
+        private static void AppendUpdateBoolArgs(ModuleContext context, List<string> outputArgs, string option, bool? current, bool? update)
+        {
+            // Return if no change is detected.
+
+            if (NeonHelper.NullableEquals(current, update))
+            {
+                return;
+            }
+
+            // Default [update] to [false].
+
+            if (!update.HasValue)
+            {
+                update = false;
+            }
+
+            outputArgs.Add($"{option}");
+            outputArgs.Add(update.Value ? "1" : "0");
+        }
+
+        /// <summary>
+        /// Compares the <paramref name="current"/> and <paramref name="update"/> scaler enumeration values 
+        /// describing a service parameter for the current service state and the required updated state and 
+        /// when these differ, generates the command line <paramref name="option"/> and values required
+        /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
+        /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
+        /// </summary>
+        /// <typeparam name="T">The option type.</typeparam>
+        /// <param name="context">The module context.</param>
+        /// <param name="outputArgs">The output command line arguments list.</param>
+        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="current">The current service state.</param>
+        /// <param name="update">The required updated service state.</param>
+        private static void AppendUpdateEnumArgs<T>(ModuleContext context, List<string> outputArgs, string option, T? current, T? update)
+            where T : struct
+        {
+            // Return if no change is detected.
+
+            if (NeonHelper.NullableEquals(current, update))
+            {
+                return;
+            }
+
+            // Default [update] to the default enum value (the one set to zero).
+
+            if (!update.HasValue)
+            {
+                update = default(T);
+            }
+
+            outputArgs.Add($"{option}");
+            outputArgs.Add(update.ToString());
+        }
+
+        /// <summary>
+        /// Compares the <paramref name="current"/> and <paramref name="update"/> duration values describing a
+        /// service parameter for the current service state and the required updated state and when
+        /// these differ, generates the command line <paramref name="option"/> and values required
+        /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
+        /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
+        /// </summary>
+        /// <typeparam name="T">The option type.</typeparam>
+        /// <param name="context">The module context.</param>
+        /// <param name="outputArgs">The output command line arguments list.</param>
+        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="current">The current service state (nanoseconds).</param>
+        /// <param name="update">The required updated service state (nanoseconds).</param>
+        private static void AppendUpdateDurationArgs(ModuleContext context, List<string> outputArgs, string option, long? current, long? update)
+        {
+            // Return if no change is detected.
+
+            if (NeonHelper.NullableEquals(current, update))
+            {
+                return;
+            }
+
+            // $hack(jeff.lill):
+            //
+            // I'm assuming that I can specify [0ns] to reset to the default value.
+
+            if (!update.HasValue)
+            {
+                update = 0L;
+            }
+
+            outputArgs.Add($"{option}");
+            outputArgs.Add($"{update}ns");
+        }
+
+        /// <summary>
+        /// Compares the <paramref name="current"/> and <paramref name="update"/> <c>int</c> values describing a
+        /// service parameter for the current service state and the required updated state and when
+        /// these differ, generates the command line <paramref name="option"/> and values required
+        /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
+        /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
+        /// </summary>
+        /// <typeparam name="T">The option type.</typeparam>
+        /// <param name="context">The module context.</param>
+        /// <param name="outputArgs">The output command line arguments list.</param>
+        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="current">The current service state (nanoseconds).</param>
+        /// <param name="update">The required updated service state (nanoseconds).</param>
+        private static void AppendIntUpdateArgs(ModuleContext context, List<string> outputArgs, string option, int? current, int? update)
+        {
+            // Return if no change is detected.
+
+            if (NeonHelper.NullableEquals(current, update))
+            {
+                return;
+            }
+
+            // $hack(jeff.lill):
+            //
+            // I'm assuming that I can specify [0] to reset to the default value.
+
+            if (!update.HasValue)
+            {
+                update = 0;
+            }
+
+            outputArgs.Add($"{option}");
+            outputArgs.Add($"{update}");
+        }
+
+        /// <summary>
+        /// Compares the <paramref name="current"/> and <paramref name="update"/> <c>long</c> values describing a
+        /// service parameter for the current service state and the required updated state and when
+        /// these differ, generates the command line <paramref name="option"/> and values required
+        /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
+        /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
+        /// </summary>
+        /// <typeparam name="T">The option type.</typeparam>
+        /// <param name="context">The module context.</param>
+        /// <param name="outputArgs">The output command line arguments list.</param>
+        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="current">The current service state (nanoseconds).</param>
+        /// <param name="update">The required updated service state (nanoseconds).</param>
+        private static void AppendUpdateLongArgs(ModuleContext context, List<string> outputArgs, string option, long? current, long? update)
+        {
+            // Return if no change is detected.
+
+            if (NeonHelper.NullableEquals(current, update))
+            {
+                return;
+            }
+
+            // $hack(jeff.lill):
+            //
+            // I'm assuming that I can specify [0] to reset to the default value.
+
+            if (!update.HasValue)
+            {
+                update = 0L;
+            }
+
+            outputArgs.Add($"{option}");
+            outputArgs.Add($"{update}");
         }
 
         //---------------------------------------------------------------------
