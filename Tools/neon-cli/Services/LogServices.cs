@@ -302,7 +302,6 @@ $@"
             route.Frontends.Add(
                 new ProxyHttpFrontend()
                 {
-                     Host      = NeonHosts.LogEsData,
                      ProxyPort = NeonHostPorts.ProxyPrivateHttpLogEsData
                 });
 
