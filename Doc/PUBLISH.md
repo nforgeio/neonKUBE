@@ -5,7 +5,7 @@
 3. Update `$/nuget-version.txt` (or `GitHub/nuget-version.txt` in the solution) with the 
    new package version.
 
-4. Manually clean and rebuild the entire solution.
+4. Manually clean and rebuild the entire solution: RELEASE configuration.
 
 5. Execute `$/Toolbin/nuget-neonforge-public.ps1` to publish the packages to **Nuget.org**.
 
