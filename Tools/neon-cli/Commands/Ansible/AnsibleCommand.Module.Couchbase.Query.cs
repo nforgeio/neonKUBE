@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AnsibleCommand.Module.Query.cs
+// FILE:	    AnsibleCommand.Module.Couchbase.Query.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -56,14 +56,14 @@ namespace NeonCli
         // --------------------------------------------------------------------
         //
         // servers      yes                                 array specifying one or more target
-        //                                                  Couchbase servers.  Each entry can be 
-        //                                                  an IP address, a FQDN, cluster node
-        //                                                  name or cluster node group name.
+        //                                                  Couchbase servers.  Each element can 
+        //                                                  be an IP address, a FQDN, cluster
+        //                                                  node name or cluster node group name
         //
         // port         no          8091                    Couchbase server port
         //                          18902 (for SSL)
         //
-        // ssl          no          no          yes         use SSL to secure the connections.
+        // ssl          no          no          yes         use SSL to secure the connections
         //                                      no
         //
         // bucket       yes                                 identifies the target bucket
@@ -74,14 +74,115 @@ namespace NeonCli
         //
         // query        yes                                 specifies the Couchbase nickel query
         //
+        // limit        no          0                       specifies the maximum number of documents
+        //                                                  to be returned (0 for unlimited)
+        //
+        // format       no          json-lines  json-array  write output as a JSON array
+        //                                      json-lines  write output as one JSON object per line
+        //
+        // path         no                                  optionally write the output to a file
+        //                                                  or to the module output when this isn't
+        //                                                  specified
+        //                                      
         // Remarks:
         // --------
         //
-        // This module simply connects to the Couchbase server and submits the query.
+        // This module simply connects to the Couchbase server and submits the query.  Results
+        // will be returned as a JSON array of documents.
         //
         // Examples:
         // ---------
         //
+
+        //---------------------------------------------------------------------
+        // Private types
+
+        /// <summary>
+        /// Handles serialization of query results.
+        /// </summary>
+        private sealed class CouchbaseQueryResultWriter : IDisposable
+        {
+            private ModuleContext       context;
+            private CouchbaseFileFormat format;
+            private TextWriter          writer;
+
+            /// <summary>
+            /// Constructor.
+            /// </summary>
+            /// <param name="format">Specifies the output format.</param>
+            /// <param name="path">Optional output file path.</param>
+            public CouchbaseQueryResultWriter(ModuleContext context, CouchbaseFileFormat format, string path = null)
+            {
+                this.context = context;
+                this.format  = format;
+
+                if (!string.IsNullOrEmpty(path))
+                {
+                    writer = new StreamWriter(path, append: false, encoding: Encoding.UTF8);
+                }
+
+                if (format == CouchbaseFileFormat.JsonArray)
+                {
+                    WriteLine("[");
+                }
+            }
+
+            /// <summary>
+            /// Writes a line of text to the output.
+            /// </summary>
+            /// <param name="line">The text.</param>
+            private void WriteLine(string line)
+            {
+                if (writer != null)
+                {
+                    writer.WriteLine(line);
+                }
+                else
+                {
+                    context.WriteLine(AnsibleVerbosity.Important, line);
+                }
+            }
+
+            /// <summary>
+            /// Writes a document to the output.
+            /// </summary>
+            /// <param name="document">The document.</param>
+            /// <param name="isLast">Indicates whether this is the last document.</param>
+            public void WriteDocument(JObject document, bool isLast)
+            {
+                var json = document.ToString(Formatting.None);
+
+                if (format == CouchbaseFileFormat.JsonArray)
+                {
+                    if (isLast)
+                    {
+                        WriteLine(json);
+                    }
+                    else
+                    {
+                        WriteLine($"{json},");
+                    }
+                }
+                else
+                {
+                    WriteLine(json);
+                }
+            }
+
+            /// <inheritdoc/>
+            public void Dispose()
+            {
+                if (format == CouchbaseFileFormat.JsonArray)
+                {
+                    WriteLine("]");
+                }
+
+                writer.Dispose();
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
 
         /// <summary>
         /// Implements the built-in <b>neon_couchbase_query</b> module.
@@ -89,117 +190,59 @@ namespace NeonCli
         /// <param name="context">The module execution context.</param>
         private void RunCouchbaseQueryModule(ModuleContext context)
         {
-            var cluster = NeonClusterHelper.Cluster;
-            var nodeGroups = cluster.Definition.GetNodeGroups(excludeAllGroup: true);
-            var settings = new CouchbaseSettings();
+            var cluster       = NeonClusterHelper.Cluster;
+            var nodeGroups    = cluster.Definition.GetNodeGroups(excludeAllGroup: true);
 
             //-----------------------------------------------------------------
             // Parse the module arguments.
 
-            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [servers]");
+            var couchbaseArgs = ParseCouchbaseSettings(context);
 
-            var servers = context.ParseStringArray("servers");
-
-            if (servers.Count == 0)
+            if (couchbaseArgs == null)
             {
-                throw new ArgumentException($"[servers] must specify at least one server.");
+                return;
             }
-
-            var ssl = context.ParseBool("ssl");
-
-            if (!ssl.HasValue)
-            {
-                ssl = false;
-            }
-
-            var scheme = ssl.Value ? "https" : "http";
-
-            var port = context.ParseInt("port", v => 0 < v && v <= ushort.MaxValue);
-
-            foreach (var server in servers)
-            {
-                // The server can be an IP address, FQDN (with at least one dot), a cluster
-                // node name or a cluster node group name.
-
-                if (IPAddress.TryParse(server, out var address))
-                {
-                    settings.Servers.Add(new Uri($"{scheme}://{address}:{port}"));
-                }
-                else if (server.Contains("."))
-                {
-                    // Must be a FQDN
-
-                    settings.Servers.Add(new Uri($"{scheme}://{server}:{port}"));
-                }
-                else
-                {
-                    if (nodeGroups.TryGetValue(server, out var group))
-                    {
-                        // It's a node group so add a URL with the IP address for each
-                        // group node.
-
-                        foreach (var node in group)
-                        {
-                            settings.Servers.Add(new Uri($"{scheme}://{node.PrivateAddress}:{port}"));
-                        }
-                    }
-                    else
-                    {
-                        // Must be a node name.
-
-                        if (cluster.Definition.NodeDefinitions.TryGetValue(server, out var node))
-                        {
-                            settings.Servers.Add(new Uri($"{scheme}://{node.PrivateAddress}:{port}"));
-                        }
-                        else
-                        {
-                            context.WriteErrorLine($"[{server}] is not a valid IP address, FQDN, or known cluster node or node group name.");
-                            return;
-                        }
-                    }
-                }
-            }
-
-            settings.Bucket = context.ParseString("bucket", v => !string.IsNullOrWhiteSpace(v));
-
-            var credentials = new Credentials()
-            {
-                Username = context.ParseString("username"),
-                Password = context.ParseString("password")
-            };
-
-            if (!settings.IsValid)
-            {
-                context.WriteErrorLine("Invalid Couchbase connection settings.");
-            }
-
-            // var bucket = settings
 
             var query = context.ParseString("query", q => !string.IsNullOrWhiteSpace(q));
+
+            if (context.HasErrors)
+            {
+                return;
+            }
+
+            var format = context.ParseEnum<CouchbaseFileFormat>("format");
+
+            if (!format.HasValue)
+            {
+                format = default(CouchbaseFileFormat);
+            }
+
+            var limit = context.ParseLong("limit", v => v >= 0);
+
+            if (!limit.HasValue || limit.Value == 0)
+            {
+                limit = long.MaxValue;
+            }
+
+            var path = context.ParseString("path");
 
             //-----------------------------------------------------------------
             // Execute the query.
 
-            var bucket  = settings.OpenBucket(credentials);
+            var bucket  = couchbaseArgs.Settings.OpenBucket(couchbaseArgs.Credentials);
             var results = bucket.QuerySafeAsync<JObject>(query).Result;
+            var count   = Math.Min(results.Count, limit.Value);
 
-            context.WriteLine(AnsibleVerbosity.Important, "[");
-
-            for (int i = 0; i < results.Count; i++)
+            using (var writer = new CouchbaseQueryResultWriter(context, format.Value, path))
             {
-                var document  = results[i];
-                var isLast    = i == results.Count - 1;
-                var json      = document.ToString(Formatting.Indented);
-
-                if (!isLast)
+                for (int i = 0; i < count; i++)
                 {
-                    json += ","; // These need to be comma separated for the encompassing array.
+                    var document = results[i];
+                    var isLast   = i == count - 1;
+
+                    writer.WriteDocument(document, isLast);
                 }
-
-                context.WriteLine(AnsibleVerbosity.Important, json);
             }
-
-            context.WriteLine(AnsibleVerbosity.Important, "]");
         }
     }
 }

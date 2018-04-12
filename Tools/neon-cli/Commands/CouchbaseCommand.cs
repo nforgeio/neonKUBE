@@ -75,7 +75,7 @@ COMMANDS:
 
     upsert      Upserts a JSON object to the bucket using KEY as
                 the object key if present or UUID otherwise.  For
-                object arrays, the special [@key] property will
+                object arrays, the special [@@key] property will
                 be used as the key if present, otherwise the
                 objects will be persisted using a UUID.
 ";
@@ -240,7 +240,7 @@ COMMANDS:
                         {
                             if (key != null)
                             {
-                                Console.Error.WriteLine("*** WARN: [--key] option is ignored when upserting an array of objects.  Specifiy a [@key] property in each object to customize the key.");
+                                Console.Error.WriteLine("*** WARN: [--key] option is ignored when upserting an array of objects.  Specifiy a [@@key] property in each object to customize the key.");
                             }
 
                             // Verify that the array contains only objects.
@@ -260,7 +260,7 @@ COMMANDS:
 
                             foreach (JObject element in jArray)
                             {
-                                var keyProperty = element.GetValue("@key");
+                                var keyProperty = element.GetValue("@@key");
 
                                 if (keyProperty != null)
                                 {
@@ -282,7 +282,7 @@ COMMANDS:
                                             break;
                                     }
 
-                                    element.Remove("@key"); // We don't perisit the special key property.
+                                    element.Remove("@@key"); // We don't perisit the special key property.
                                 }
                                 else
                                 {
