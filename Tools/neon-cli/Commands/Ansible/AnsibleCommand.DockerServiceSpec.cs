@@ -613,7 +613,7 @@ namespace NeonCli.Ansible.DockerService
         /// <param name="update">The required new service state.</param>
         /// <returns>
         /// The <b>docker service update</b> command arguments as a list.  
-        /// This does  not include the <b>docker service update</b> prefix.
+        /// This does not include the <b>docker service update</b> prefix.
         /// </returns>
         public static List<string> DockerUpdateCommand(ModuleContext context, DockerServiceSpec current, DockerServiceSpec update)
         {
@@ -629,7 +629,7 @@ namespace NeonCli.Ansible.DockerService
                 // NOTE: This is a bit broken from a Docker design perspective
                 //       because it implicitly assumes that service arguments
                 //       never include spaces.  This is probably a reasonable
-                //       assumption for Linux by may be an issue for Windows.
+                //       assumption for Linux but may be an issue for Windows.
 
                 outputArgs.Add("--args");
 
