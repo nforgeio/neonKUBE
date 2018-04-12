@@ -106,6 +106,11 @@ namespace NeonCli
                         RunDockerServiceModule(context);
                         break;
 
+                    case "neon_couchbase_import":
+
+                        RunCouchbaseImportModule(context);
+                        break;
+
                     case "neon_couchbase_query":
 
                         RunCouchbaseQueryModule(context);
