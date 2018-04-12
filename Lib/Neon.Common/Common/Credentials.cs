@@ -70,7 +70,7 @@ namespace Neon.Common
         [JsonIgnore]
         public bool HasUsernamePassword
         {
-            get { return !string.IsNullOrEmpty(Username) && !string.IsNullOrEmpty(Password); }
+            get { return !string.IsNullOrEmpty(Username); }
         }
     }
 }
