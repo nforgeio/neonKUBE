@@ -106,6 +106,11 @@ namespace NeonCli
                         RunDockerServiceModule(context);
                         break;
 
+                    case "neon_couchbase_query":
+
+                        RunCouchbaseQueryModule(context);
+                        break;
+
                     default:
 
                         throw new ArgumentException($"[{module}] is not a recognized neonCLUSTER Ansible module.");

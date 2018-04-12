@@ -16,6 +16,7 @@ using System.Threading;
 using System.Threading.Tasks;
 
 using Consul;
+using Couchbase;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft;
 using Newtonsoft.Json;
@@ -88,9 +89,9 @@ namespace NeonCli
         /// <param name="context">The module execution context.</param>
         private void RunCouchbaseQueryModule(ModuleContext context)
         {
-            var cluster    = NeonClusterHelper.Cluster;
+            var cluster = NeonClusterHelper.Cluster;
             var nodeGroups = cluster.Definition.GetNodeGroups(excludeAllGroup: true);
-            var settings   = new CouchbaseSettings();
+            var settings = new CouchbaseSettings();
 
             //-----------------------------------------------------------------
             // Parse the module arguments.
@@ -159,15 +160,46 @@ namespace NeonCli
                 }
             }
 
-            var bucket   = context.ParseString("bucket", v => !string.IsNullOrWhiteSpace(v));
-            var username = context.ParseString("username");
-            var password = context.ParseString("password");
-            var query    = context.ParseString("query", q => !string.IsNullOrWhiteSpace(q));
+            settings.Bucket = context.ParseString("bucket", v => !string.IsNullOrWhiteSpace(v));
+
+            var credentials = new Credentials()
+            {
+                Username = context.ParseString("username"),
+                Password = context.ParseString("password")
+            };
+
+            if (!settings.IsValid)
+            {
+                context.WriteErrorLine("Invalid Couchbase connection settings.");
+            }
+
+            // var bucket = settings
+
+            var query = context.ParseString("query", q => !string.IsNullOrWhiteSpace(q));
 
             //-----------------------------------------------------------------
             // Execute the query.
 
+            var bucket  = settings.OpenBucket(credentials);
+            var results = bucket.QuerySafeAsync<JObject>(query).Result;
 
+            context.WriteLine(AnsibleVerbosity.Important, "[");
+
+            for (int i = 0; i < results.Count; i++)
+            {
+                var document  = results[i];
+                var isLast    = i == results.Count - 1;
+                var json      = document.ToString(Formatting.Indented);
+
+                if (!isLast)
+                {
+                    json += ","; // These need to be comma separated for the encompassing array.
+                }
+
+                context.WriteLine(AnsibleVerbosity.Important, json);
+            }
+
+            context.WriteLine(AnsibleVerbosity.Important, "]");
         }
     }
 }

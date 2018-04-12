@@ -27,6 +27,7 @@
   <ItemGroup>
     <ProjectReference Include="..\..\Lib\Neon.Cluster\Neon.Cluster.csproj" />
     <ProjectReference Include="..\..\Lib\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\..\Lib\Neon.Couchbase\Neon.Couchbase.csproj" />
   </ItemGroup>
 
   <ItemGroup>
