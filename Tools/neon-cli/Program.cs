@@ -150,7 +150,7 @@ is just acting as a shim.
 For limited circumstances, it may be desirable to have the tool actually
 perform the command on the operator's workstation rather than within a
 Docker container.  You can accomplish this by using the [--noshim].
-Note that the tool may require admin privileges for --noshim mode.
+Note that the tool may require admin privileges for [--noshim] mode.
 ";
             // Disable any logging that might be performed by library classes.
 
