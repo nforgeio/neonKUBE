@@ -191,7 +191,7 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Performs a small read operation to verify that the database connection 
+        /// Performs small read/query operations to verify that the database connection 
         /// is healthy.
         /// </summary>
         /// <param name="bucket">The bucket.</param>
@@ -204,6 +204,12 @@ namespace Couchbase
             // handle the operation.
 
             await bucket.FindSafeAsync<string>("neon-healthcheck");
+
+            // It appears that we need to separately verify that query is
+            // ready too.  This query should be very low impact because
+            // it's only returning one item.
+
+            await bucket.QueryAsync<string>($"select name from {bucket.Name} limit 1");
         }
 
         /// <summary>
