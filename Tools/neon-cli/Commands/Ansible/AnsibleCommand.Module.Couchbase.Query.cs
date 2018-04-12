@@ -71,14 +71,12 @@ namespace NeonCli
         //
         // password     yes                                 specifies the Couchbase password
         //
-        // queries      yes                                 array specifying one or more Couchbase
-        //                                                  nickel queries
+        // query        yes                                 specifies the Couchbase nickel query
         //
         // Remarks:
         // --------
         //
-        // This module simply connects to the Couchbase server and then submits the queries
-        // one at a time.
+        // This module simply connects to the Couchbase server and submits the query.
         //
         // Examples:
         // ---------
@@ -90,9 +88,9 @@ namespace NeonCli
         /// <param name="context">The module execution context.</param>
         private void RunCouchbaseQueryModule(ModuleContext context)
         {
-            var cluster = NeonClusterHelper.Cluster;
+            var cluster    = NeonClusterHelper.Cluster;
             var nodeGroups = cluster.Definition.GetNodeGroups(excludeAllGroup: true);
-            var settings = new CouchbaseSettings();
+            var settings   = new CouchbaseSettings();
 
             //-----------------------------------------------------------------
             // Parse the module arguments.
@@ -164,15 +162,12 @@ namespace NeonCli
             var bucket   = context.ParseString("bucket", v => !string.IsNullOrWhiteSpace(v));
             var username = context.ParseString("username");
             var password = context.ParseString("password");
-            var queries  = context.ParseStringArray("queries");
-
-            if (queries.Count == 0)
-            {
-
-            }
+            var query    = context.ParseString("query", q => !string.IsNullOrWhiteSpace(q));
 
             //-----------------------------------------------------------------
-            // 
+            // Execute the query.
+
+
         }
     }
 }
