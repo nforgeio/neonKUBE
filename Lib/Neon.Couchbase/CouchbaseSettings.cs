@@ -103,6 +103,14 @@ namespace Neon.Data
         public int MinPoolConnections { get; set; } = 2;
 
         /// <summary>
+        /// Maximum number of seconds to wait for the bucket to become ready 
+        /// after connecting.  (defaults to <b>30</b>).
+        /// </summary>
+        [JsonProperty(PropertyName = "BucketReadyTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(30)]
+        public int BucketReadyTimeout { get; set; } = 30;
+
+        /// <summary>
         /// Returns <c>true</c> if the settings are valid.
         /// </summary>
         [JsonIgnore]

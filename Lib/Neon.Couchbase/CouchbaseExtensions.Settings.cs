@@ -14,6 +14,7 @@ using Couchbase.Core.Serialization;
 
 using Neon.Common;
 using Neon.Data;
+using Neon.Time;
 
 namespace Couchbase
 {
@@ -74,6 +75,7 @@ namespace Couchbase
         /// <param name="username">Optional username.</param>
         /// <param name="password">Optional password.</param>
         /// <returns>The connected <see cref="CouchbaseBucket"/>.</returns>
+        /// <exception cref="TimeoutException">Thrown if the bucket didn't become ready in time.</exception>
         public static IBucket OpenBucket(this CouchbaseSettings settings, string username = null, string password = null)
         {
             var config = settings.ToClientConfig();
@@ -97,8 +99,13 @@ namespace Couchbase
                 });
 
             var cluster = new Cluster(config);
-            
-            return cluster.OpenBucket(settings.Bucket);
+            var bucket  = cluster.OpenBucket(settings.Bucket);
+
+            // Wait until the bucket is ready.
+
+            bucket.WaitUntilReadyAsync(TimeSpan.FromSeconds(settings.BucketReadyTimeout)).Wait();
+
+            return bucket;
         }
 
         /// <summary>

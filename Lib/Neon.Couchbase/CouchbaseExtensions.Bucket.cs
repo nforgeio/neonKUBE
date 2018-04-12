@@ -19,6 +19,7 @@ using Couchbase.N1QL;
 using Neon.Common;
 using Neon.Data;
 using Neon.Retry;
+using Neon.Time;
 
 namespace Couchbase
 {
@@ -193,6 +194,7 @@ namespace Couchbase
         /// Performs a small read operation to verify that the database connection 
         /// is healthy.
         /// </summary>
+        /// <param name="bucket">The bucket.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <exception cref="CouchbaseResponseException">Thrown if the operation failed.</exception>
         public static async Task CheckAsync(this IBucket bucket)
@@ -202,6 +204,37 @@ namespace Couchbase
             // handle the operation.
 
             await bucket.FindSafeAsync<string>("neon-healthcheck");
+        }
+
+        /// <summary>
+        /// Waits until the bucket is ready by performing a series of small
+        /// read operations.
+        /// </summary>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="timeout">The maximum time to wait.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="TimeoutException">Thrown if the operation timed out.</exception>
+        public static async Task WaitUntilReadyAsync(this IBucket bucket, TimeSpan timeout)
+        {
+            var timer     = new PolledTimer(timeout);
+            var exception = (Exception)null;
+
+            while (!timer.HasFired)
+            {
+                try
+                {
+                    await bucket.CheckAsync();
+                    return;     // No exception thrown, so we must be good.
+                }
+                catch (CouchbaseResponseException e)
+                {
+                    // Ignore these until the bucket is ready or we timeout.
+
+                    exception = e;
+                }
+            }
+
+            throw new TimeoutException($"Timeout waiting for [bucket={bucket.Name}] to become ready within [{timeout}].", exception);
         }
 
         /// <summary>
