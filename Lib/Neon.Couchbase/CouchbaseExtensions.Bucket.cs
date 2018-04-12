@@ -232,6 +232,8 @@ namespace Couchbase
 
                     exception = e;
                 }
+
+                Thread.Sleep(TimeSpan.FromMilliseconds(500));
             }
 
             throw new TimeoutException($"Timeout waiting for [bucket={bucket.Name}] to become ready within [{timeout}].", exception);
