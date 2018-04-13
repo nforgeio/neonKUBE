@@ -450,8 +450,8 @@ namespace NeonCli.Ansible
 
                     // $todo(jeff.lill): 
                     //
-                    // Would be nice not to read this whole thing in memory
-                    // and then essentially duplicate it by parsing.
+                    // Would be nice not to read this whole thing in memory and then
+                    // effectibely duplicating it in memory again when parsing.
 
                     var jToken = JToken.Parse(File.ReadAllText(source));
 

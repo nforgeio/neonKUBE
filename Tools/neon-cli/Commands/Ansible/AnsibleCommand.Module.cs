@@ -81,6 +81,8 @@ namespace NeonCli
 
                 NeonClusterHelper.OpenCluster(login);
 
+                // Run the module.
+
                 switch (module.ToLowerInvariant())
                 {
                     case "neon_certificate":
@@ -127,6 +129,7 @@ namespace NeonCli
             {
                 context.Failed  = true;
                 context.Message = e.Message;
+
                 context.WriteErrorLine(e.Message);
             }
 
