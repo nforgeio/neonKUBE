@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Cluster</RootNamespace>
     <Authors>Jeff Lill</Authors>
-    <Version>6.3.2.0</Version>
+    <Version>6.3.3.0</Version>
     <Company>Jeff Lill</Company>
     <Product>neonCLUSTER</Product>
     <Description>neonCLUSTER management.</Description>
