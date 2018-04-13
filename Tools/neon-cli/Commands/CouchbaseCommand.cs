@@ -47,7 +47,7 @@ USAGE:
     neon couchbase query TARGET -
 
     neon couchbase upsert [--key=KEY] TARGET JSON
-    neon couchbase upsert [--key=KEY] TARGET @JSON-FILE
+    neon couchbase upsert [--key=KEY] TARGET JSON-FILE
     neon couchbase upsert [--key=KEY] TARGET -
 
 ARGUMENTS:
@@ -60,26 +60,45 @@ ARGUMENTS:
 
     QUERY           - A N1QL query (quoted as required).
     QUERY-FILE      - Name of a file with a N1QL query.
-    JSON            - JSON object being upserted.
-    @JSON-FILE      - Name of the file with the JSON object
-                      or array of JSON objects to be upserted.
-    -               - Indicates that the query or JSON will be 
-                      read from STDIN.
+    JSON            - JSON document being upserted.
+    JSON-FILE       - Name of the file with the JSON documents
+                      to upserted (one per line).
+    -               - Indicates that the query or JSON documents
+                      will be read from STDIN.
 
 OPTIONS:
 
-    --key           - (optional) key to user for object upserts
+    --key           - (optional) specifies the key pattern to be
+                      used for document upserts.  See note below.
     
 COMMANDS:
 
     query       Performs a N1QL query and writes the JSON results
                 to STDOUT.
 
-    upsert      Upserts a JSON object to the bucket using KEY as
-                the object key if present or UUID otherwise.  For
-                object arrays, the special [@@key] property will
-                be used as the key if present, otherwise the
-                objects will be persisted using a UUID.
+    upsert      Upserts JSON documents to the bucket.  See the note
+                below describing how document keys are constructed.
+
+NOTE: Document Keys
+-------------------
+The [neon couchbase upsert] command loads JSON documents into the
+specified Couchbase database and bucket.  By default, each document
+will be persited using a generated UUID as the key.  You can 
+customize this in two ways:
+
+    * Include a top-level property named [@@key] in each document.  This will
+      be removed and then used as the document key when present.  Note that
+      [@@key] will be ignored if a specific key pattern is specified. 
+
+    * Specify the [key] module parameter.  This is a string that may include
+      references to top-level document properties like %PROPERTY% or the
+      build-in key generators:
+
+            #UUID#          - inserts a UUID
+            #MONO_INCR#     - inserts an integer counter (starting at 1)
+
+      Note that you'll need to escape any '%' or '#' characters that are
+      to be included in the key by using '%%' or '##'.
 ";
         /// <inheritdoc/>
         public override string[] Words
@@ -200,101 +219,56 @@ COMMANDS:
                             Program.Exit(1);
                         }
 
-                        var jsonText = commandLine.Arguments[0];
+                        var fileArg = commandLine.Arguments[0];
+                        var input   = (Stream)null;
 
-                        if (jsonText == "-")
+                        if (fileArg == "-")
                         {
                             // Read the object from STDIN.
 
-                            jsonText = NeonHelper.ReadStandardInputText();
+                            input = Console.OpenStandardInput();
                         }
-                        else if (jsonText.StartsWith("@"))
+                        else
                         {
-                            // Read the query from the file.
-
-                            jsonText = File.ReadAllText(jsonText.Substring(1));
+                            input = new FileStream(fileArg, FileMode.Open, FileAccess.ReadWrite);
                         }
 
-                        var jToken  = JsonConvert.DeserializeObject<JToken>(jsonText);
-                        var jObject = jToken as JObject;
-                        var jArray  = jToken as JArray;
+                        var keyPattern  = commandLine.GetOption("--key");
+                        var upsertError = false;
 
-                        if (jObject == null && jArray == null)
+                        using (var reader = new StreamReader(input, Encoding.UTF8))
                         {
-                            Console.Error.WriteLine("*** ERROR: JSON argument must be an object or array of objects.");
+                            var importer = new CouchbaseImporter(
+                                message =>
+                                {
+                                    upsertError = true;
+                                    Console.Error.WriteLine($"*** ERROR: {message}");
+                                }, 
+                                bucket, keyPattern);
+
+                            foreach (var line in reader.Lines())
+                            {
+                                if (line.Trim() == string.Empty)
+                                {
+                                    continue;   // Ignore blank lines
+                                }
+
+                                var item = JToken.Parse(line);
+
+                                if (item.Type != JTokenType.Object)
+                                {
+                                    upsertError = true;
+                                    Console.Error.WriteLine($"*** ERROR: [{fileArg}] includes one or more lines with non-document objects.");
+                                    break;
+                                }
+
+                                importer.WriteDocument((JObject)item);
+                            }
+                        }
+
+                        if (upsertError)
+                        {
                             Program.Exit(1);
-                        }
-
-                        var key = commandLine.GetOption("--key");
-
-                        if (jObject != null)
-                        {
-                            if (string.IsNullOrWhiteSpace(key))
-                            {
-                                key = EntityHelper.CreateUuid();
-                            }
-
-                            var upsertResult = bucket.Upsert(key, jObject);
-
-                            upsertResult.EnsureSuccess();
-                        }
-                        else if (jArray != null)
-                        {
-                            if (key != null)
-                            {
-                                Console.Error.WriteLine("*** WARN: [--key] option is ignored when upserting an array of objects.  Specifiy a [@@key] property in each object to customize the key.");
-                            }
-
-                            // Verify that the array contains only objects.
-
-                            foreach (var element in jArray)
-                            {
-                                jObject = element as JObject;
-
-                                if (jObject == null)
-                                {
-                                    Console.Error.WriteLine("*** ERROR: JSON array has one or more elements that is not an object.");
-                                    Program.Exit(1);
-                                }
-                            }
-
-                            // Upsert the objects.
-
-                            foreach (JObject element in jArray)
-                            {
-                                var keyProperty = element.GetValue("@@key");
-
-                                if (keyProperty != null)
-                                {
-                                    switch (keyProperty.Type)
-                                    {
-                                        case JTokenType.String:
-                                        case JTokenType.Integer:
-                                        case JTokenType.Float:
-                                        case JTokenType.Guid:
-                                        case JTokenType.Date:
-                                        case JTokenType.Uri:
-
-                                            key = keyProperty.ToString();
-                                            break;
-
-                                        default:
-
-                                            key = EntityHelper.CreateUuid();
-                                            break;
-                                    }
-
-                                    element.Remove("@@key"); // We don't perisit the special key property.
-                                }
-                                else
-                                {
-                                    key = EntityHelper.CreateUuid();
-                                }
-
-                                var upsertResult = bucket.Upsert(key, element);
-
-                                upsertResult.EnsureSuccess();
-                            }
                         }
                         break;
 

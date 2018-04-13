@@ -106,7 +106,7 @@ namespace NeonCli.Ansible
         //
         //      * Specify the [key] module parameter.  This is a string that may include
         //        references to top-level document properties like %PROPERTY% or the
-        //        build-in values:
+        //        build-in key generators:
         //
         //              #UUID#          - inserts a UUID
         //              #MONO_INCR#     - inserts an integer counter (starting at 1)

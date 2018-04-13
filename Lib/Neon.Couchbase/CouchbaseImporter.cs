@@ -26,7 +26,7 @@ namespace Neon.Data
         private bool            errorsDetected;
         private IBucket         bucket;
         private string          keyPattern;
-        private bool            checkMode;
+        private bool            dryRun;
         private long            docNumber;
         private StringBuilder   sbKey;      // Using a common instance for performance
 
@@ -36,13 +36,16 @@ namespace Neon.Data
         /// <param name="errorSink">Action invoked when an error is encountered.</param>
         /// <param name="bucket">The target Couchbase bucket.</param>
         /// <param name="keyPattern">The key pattern (or <c>null</c>).</param>
-        /// <param name="checkMode">Pass <c>true</c> to process the file but not actually persist anything.</param>
-        public CouchbaseImporter(Action<string> errorSink, IBucket bucket, string keyPattern, bool checkMode)
+        /// <param name="dryRun">
+        /// Optionally specify that the class should go through the motions but 
+        /// not actually persist anything.
+        /// </param>
+        public CouchbaseImporter(Action<string> errorSink, IBucket bucket, string keyPattern, bool dryRun = false)
         {
             this.errorSink  = errorSink;
             this.bucket     = bucket;
             this.keyPattern = keyPattern;
-            this.checkMode  = checkMode;
+            this.dryRun     = dryRun;
             this.docNumber  = 1;
             this.sbKey      = new StringBuilder();
         }
@@ -260,7 +263,7 @@ namespace Neon.Data
                 document.Remove("@@key"); // We don't persist the special key property.
             }
 
-            if (!checkMode)
+            if (!dryRun)
             {
                 bucket.Upsert(key, document);
             }
