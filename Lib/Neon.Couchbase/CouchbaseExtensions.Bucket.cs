@@ -201,7 +201,7 @@ namespace Couchbase
         {
             // Note that it doesn't matter if this key actually exists 
             // in the database.  We're just verifying that the database
-            // handle the operation.
+            // is ready to handle the operation.
 
             await bucket.FindSafeAsync<string>("neon-healthcheck");
 
@@ -209,7 +209,7 @@ namespace Couchbase
             // ready too.  This query should be very low impact because
             // it's only returning one item.
 
-            await bucket.QueryAsync<string>($"select name from {bucket.Name} limit 1");
+            await bucket.QueryAsync<dynamic>($"select * from {bucket.Name} limit 1");
         }
 
         /// <summary>
