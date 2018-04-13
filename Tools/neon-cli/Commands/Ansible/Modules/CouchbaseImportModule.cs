@@ -261,7 +261,7 @@ namespace NeonCli.Ansible
                         context.Changed = true;
                     }
 
-                    context.WriteLine(AnsibleVerbosity.Info, $"[{importer.DocumentCount}] documents were added.");
+                    context.WriteLine(AnsibleVerbosity.Info, $"[{importer.DocumentCount}] documents were imported.");
                 }
             }
         }
