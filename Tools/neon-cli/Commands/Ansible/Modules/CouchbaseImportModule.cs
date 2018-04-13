@@ -127,7 +127,7 @@ namespace NeonCli.Ansible
         //  - name: test
         //    hosts: localhost
         //    tasks:
-        //      - name: couchbase import
+        //      - name: import example
         //        neon_couchbase_import:
         //          name: import
         //          servers:

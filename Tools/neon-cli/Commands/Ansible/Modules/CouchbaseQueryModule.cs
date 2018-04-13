@@ -99,6 +99,23 @@ namespace NeonCli.Ansible
         // Examples:
         // ---------
         //
+        // This example executes the [select * from test] query and writes the output
+        // documents to [data.txt] as one JSON object per line.
+        // 
+        //  - name: test
+        //    hosts: localhost
+        //    tasks:
+        //      - name: query example
+        //        neon_couchbase_query:
+        //          name: query
+        //          servers:
+        //            - 10.50.0.3
+        //          bucket: test
+        //          username: Administrator
+        //          password: password
+        //          query: "select * from test"
+        //          output: data.txt
+        //          format: json-lines
 
         //---------------------------------------------------------------------
         // Private types
