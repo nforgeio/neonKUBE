@@ -86,7 +86,7 @@ namespace NeonCli.Ansible
         //                                      json-lines  write output as one JSON object per line
         //
         // output       no                                  optionally write the documents to
-        //                                                  this file (UTF-8) rather then to
+        //                                                  this file (UTF-8) rather than to
         //                                                  the Ansible module output
         //                                      
         // Remarks:
@@ -182,7 +182,11 @@ namespace NeonCli.Ansible
                     WriteLine("]");
                 }
 
-                writer.Dispose();
+                if (writer != null)
+                {
+                    writer.Dispose();
+                    writer = null;
+                }
             }
         }
 
