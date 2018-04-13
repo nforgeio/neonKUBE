@@ -89,7 +89,7 @@ namespace Neon.Common
         /// <param name="stackTrace">Optionally include the stack track.</param>
         /// <param name="excludeInner">Optionally exclude information about any inner exception.</param>
         /// <returns>The error string.</returns>
-        public static string ExceptionError(Exception e, bool stackTrace = true, bool excludeInner = false)
+        public static string ExceptionError(Exception e, bool stackTrace = false, bool excludeInner = false)
         {
             Covenant.Requires<ArgumentNullException>(e != null);
 
