@@ -204,12 +204,6 @@ namespace Couchbase
             // is ready to handle the operation.
 
             await bucket.FindSafeAsync<string>("neon-healthcheck");
-
-            // It appears that we need to separately verify that query is
-            // ready too.  This query should be very low impact because
-            // it's only returning one item.
-
-            await bucket.QueryAsync<dynamic>($"select * from {bucket.Name} limit 1");
         }
 
         /// <summary>
