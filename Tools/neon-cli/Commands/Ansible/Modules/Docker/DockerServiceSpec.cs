@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AnsibleCommand.DockerServiceSpec.cs
+// FILE:	    DockerServiceSpec.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -31,7 +31,7 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 
-namespace NeonCli.Ansible.DockerService
+namespace NeonCli.Ansible.Docker
 {
     // NOTE: The types below are accurate as of Docker API version 1.35.
 

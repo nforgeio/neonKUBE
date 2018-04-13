@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AnsibleCommand.Module.DockerService.cs
+// FILE:	    DockerServiceModule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -29,7 +29,7 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 
-using NeonCli.Ansible.DockerService;
+using NeonCli.Ansible.Docker;
 
 // $todo(jeff.lill):
 //
@@ -43,7 +43,7 @@ using NeonCli.Ansible.DockerService;
 // returned by [docker service inspect].  I don't believe this is important
 // at this point.
 
-namespace NeonCli
+namespace NeonCli.Ansible
 {
     //---------------------------------------------------------------------
     // neon_docker_service:
@@ -293,13 +293,13 @@ namespace NeonCli
     // ---------
     //
 
-    public partial class AnsibleCommand : CommandBase
+    /// <summary>
+    /// Implements the <b>neon_docker_service</b> Ansible module.
+    /// </summary>
+    public class DockerServiceModule : IAnsibleModule
     {
-        /// <summary>
-        /// Implements the built-in <b>neon_certificate</b> module.
-        /// </summary>
-        /// <param name="context">The module context.</param>
-        private void RunDockerServiceModule(ModuleContext context)
+        /// <inheritdoc/>
+        public void Run(ModuleContext context)
         {
             var cluster = NeonClusterHelper.Cluster;
 

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AnsibleCommand.Module.Dashboard.cs
+// FILE:	    DashboardModule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -29,10 +29,10 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 
-namespace NeonCli
+namespace NeonCli.Ansible
 {
     //---------------------------------------------------------------------
-    // neon_dns:
+    // neon_dashboard:
     //
     // Synopsis:
     // ---------
@@ -68,13 +68,16 @@ namespace NeonCli
     // state        no          present     absent      indicates whether the dashboard
     //                                      present     should be created or removed
 
-    public partial class AnsibleCommand : CommandBase
+    /// <summary>
+    /// Implements the <b>neon_dashboard</b> Ansible module.
+    /// </summary>
+    public class DashboardModule : IAnsibleModule
     {
         /// <summary>
         /// Implements the built-in <b>neon_dashboard</b> module.
         /// </summary>
         /// <param name="context">The module context.</param>
-        private void RunDashboardModule(ModuleContext context)
+        public void Run(ModuleContext context)
         {
             var cluster = NeonClusterHelper.Cluster;
             var consul  = NeonClusterHelper.Consul;

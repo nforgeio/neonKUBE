@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AnsibleCommand.Module.Couchbase.Query.cs
+// FILE:	    CouchbaseQueryModule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -31,9 +31,14 @@ using Neon.Data;
 using Neon.IO;
 using Neon.Net;
 
-namespace NeonCli
+using NeonCli.Ansible.Couchbase;
+
+namespace NeonCli.Ansible
 {
-    public partial class AnsibleCommand : CommandBase
+    /// <summary>
+    /// Implements the <b>neon_couchbase_query</b> Ansible module.
+    /// </summary>
+    public class CouchbaseQueryModule : IAnsibleModule
     {
         //---------------------------------------------------------------------
         // neon_couchbase_query:
@@ -184,11 +189,8 @@ namespace NeonCli
         //---------------------------------------------------------------------
         // Implementation
 
-        /// <summary>
-        /// Implements the built-in <b>neon_couchbase_query</b> module.
-        /// </summary>
-        /// <param name="context">The module context.</param>
-        private void RunCouchbaseQueryModule(ModuleContext context)
+        /// <inheritdoc/>
+        public void Run(ModuleContext context)
         {
             var cluster       = NeonClusterHelper.Cluster;
             var nodeGroups    = cluster.Definition.GetNodeGroups(excludeAllGroup: true);
@@ -196,7 +198,7 @@ namespace NeonCli
             //-----------------------------------------------------------------
             // Parse the module arguments.
 
-            var couchbaseArgs = ParseCouchbaseSettings(context);
+            var couchbaseArgs = CouchbaseArgs.Parse(context);
 
             if (couchbaseArgs == null)
             {

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AnsibleCommand.Module.Dns.cs
+// FILE:	    DnsModule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -29,9 +29,12 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 
-namespace NeonCli
+namespace NeonCli.Ansible
 {
-    public partial class AnsibleCommand : CommandBase
+    /// <summary>
+    /// Implements the <b>neon_dns</b> Ansible module.
+    /// </summary>
+    public class DnsModule : IAnsibleModule
     {
         //---------------------------------------------------------------------
         // neon_dns:
@@ -138,11 +141,8 @@ namespace NeonCli
         //        - target: group=swarm
         //          check: yes
 
-        /// <summary>
-        /// Implements the built-in <b>neon_dns</b> module.
-        /// </summary>
-        /// <param name="context">The module context.</param>
-        private void RunDnsModule(ModuleContext context)
+        /// <inheritdoc/>
+        public void Run(ModuleContext context)
         {
             var cluster = NeonClusterHelper.Cluster;
             var consul  = NeonClusterHelper.Consul;

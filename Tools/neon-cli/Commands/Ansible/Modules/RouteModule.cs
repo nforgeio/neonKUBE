@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AnsibleCommand.Module.Route.cs
+// FILE:	    RouteModule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -29,7 +29,7 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 
-namespace NeonCli
+namespace NeonCli.Ansible
 {
     //---------------------------------------------------------------------
     // neon_route:
@@ -65,13 +65,13 @@ namespace NeonCli
     // force        no          false                   forces proxy rebuild when [state=present]
     //                                                  even if the route is unchanged
 
-    public partial class AnsibleCommand : CommandBase
+    /// <summary>
+    /// Implements the <b>neon_route</b> Ansible module.
+    /// </summary>
+    public class RouteModule : IAnsibleModule
     {
-        /// <summary>
-        /// Implements the built-in <b>neon_route</b> module.
-        /// </summary>
-        /// <param name="context">The module context.</param>
-        private void RunRouteModule(ModuleContext context)
+        /// <inheritdoc/>
+        public void Run(ModuleContext context)
         {
             ProxyManager    proxyManager;
 

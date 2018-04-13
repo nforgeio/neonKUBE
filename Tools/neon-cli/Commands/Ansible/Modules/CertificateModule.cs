@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AnsibleCommand.Module.Certificate.cs
+// FILE:	    CertificateModule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,7 +28,7 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 
-namespace NeonCli
+namespace NeonCli.Ansible
 {
     //---------------------------------------------------------------------
     // neon_certificate:
@@ -62,13 +62,13 @@ namespace NeonCli
     // force        no          false                   resaves the certificate when [state=present]
     //                                                  even if the certificate is the same
 
-    public partial class AnsibleCommand : CommandBase
+    /// <summary>
+    /// Implements the <b>neon_certificate</b> Ansible module.
+    /// </summary>
+    public class CertificateModule : IAnsibleModule
     {
-        /// <summary>
-        /// Implements the built-in <b>neon_certificate</b> module.
-        /// </summary>
-        /// <param name="context">The module context.</param>
-        private void RunCertificateModule(ModuleContext context)
+        /// <inheritdoc/>
+        public void Run(ModuleContext context)
         {
             // Obtain common arguments.
 

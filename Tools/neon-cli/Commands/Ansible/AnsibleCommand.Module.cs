@@ -28,6 +28,8 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 
+using NeonCli.Ansible;
+
 namespace NeonCli
 {
     public partial class AnsibleCommand : CommandBase
@@ -83,37 +85,37 @@ namespace NeonCli
                 {
                     case "neon_certificate":
 
-                        RunCertificateModule(context);
+                        new CertificateModule().Run(context);
                         break;
 
                     case "neon_dashboard":
 
-                        RunDashboardModule(context);
+                        new DashboardModule().Run(context);
                         break;
 
                     case "neon_dns":
 
-                        RunDnsModule(context);
+                        new DnsModule().Run(context);
                         break;
 
                     case "neon_route":
 
-                        RunRouteModule(context);
+                        new RouteModule().Run(context);
                         break;
 
                     case "neon_docker_service":
 
-                        RunDockerServiceModule(context);
+                        new DockerServiceModule().Run(context);
                         break;
 
                     case "neon_couchbase_import":
 
-                        RunCouchbaseImportModule(context);
+                        new CouchbaseImportModule().Run(context);
                         break;
 
                     case "neon_couchbase_query":
 
-                        RunCouchbaseQueryModule(context);
+                        new CouchbaseQueryModule().Run(context);
                         break;
 
                     default:

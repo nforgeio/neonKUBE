@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AnsibleCommand.Module.Context.cs
+// FILE:	    ModuleContext.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,29 +28,8 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 
-namespace NeonCli
+namespace NeonCli.Ansible
 {
-    /// <summary>
-    /// Enumerates the output verbosity levels.
-    /// </summary>
-    public enum AnsibleVerbosity : int
-    {
-        /// <summary>
-        /// Always writes output.
-        /// </summary>
-        Important = 0,
-
-        /// <summary>
-        /// Writes information messages.
-        /// </summary>
-        Info = 1,
-
-        /// <summary>
-        /// Writes trace messages.
-        /// </summary>
-        Trace = 2
-    }
-
     /// <summary>
     /// Module execution state.
     /// </summary>

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AnsibleCommand.Module.Couchbase.Import.cs
+// FILE:	    CouchbaseImportModule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -32,9 +32,14 @@ using Neon.Data;
 using Neon.IO;
 using Neon.Net;
 
-namespace NeonCli
+using NeonCli.Ansible.Couchbase;
+
+namespace NeonCli.Ansible
 {
-    public partial class AnsibleCommand : CommandBase
+    /// <summary>
+    /// Implements the <b>neon_couchbase_import</b> module.
+    /// </summary>
+    public class CouchbaseImportModule : IAnsibleModule
     {
         //---------------------------------------------------------------------
         // neon_couchbase_import:
@@ -389,11 +394,8 @@ namespace NeonCli
         //---------------------------------------------------------------------
         // Implementation
 
-        /// <summary>
-        /// Implements the built-in <b>neon_couchbase_import</b> module.
-        /// </summary>
-        /// <param name="context">The module context.</param>
-        private void RunCouchbaseImportModule(ModuleContext context)
+        /// <inheritdoc/>
+        public void Run(ModuleContext context)
         {
             var cluster    = NeonClusterHelper.Cluster;
             var nodeGroups = cluster.Definition.GetNodeGroups(excludeAllGroup: true);
@@ -401,7 +403,7 @@ namespace NeonCli
             //-----------------------------------------------------------------
             // Parse the module arguments.
 
-            var couchbaseArgs = ParseCouchbaseSettings(context);
+            var couchbaseArgs = CouchbaseArgs.Parse(context);
 
             if (couchbaseArgs == null)
             {

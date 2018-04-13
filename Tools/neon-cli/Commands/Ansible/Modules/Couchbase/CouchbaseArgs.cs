@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    AnsibleCommand.Module.Couchbase.cs
+// FILE:	    CouchbaseArgs.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -32,59 +32,22 @@ using Neon.Data;
 using Neon.IO;
 using Neon.Net;
 
-namespace NeonCli
+namespace NeonCli.Ansible.Couchbase
 {
-    public partial class AnsibleCommand : CommandBase
+    /// <summary>
+    /// Common Couchbase module arguments.
+    /// </summary>
+    public class CouchbaseArgs
     {
         //---------------------------------------------------------------------
-        // Common Couchbase module code.
-
-        private enum CouchbaseFileFormat
-        {
-            /// <summary>
-            /// Format with one JSON document per line.
-            /// </summary>
-            [EnumMember(Value = "json-lines")]
-            JsonLines = 0,
-
-            /// <summary>
-            /// Format as a JSON array of documents.
-            /// </summary>
-            [EnumMember(Value = "json-array")]
-            JsonArray
-        }
-
-        /// <summary>
-        /// Common Couchbase module arguments.
-        /// </summary>
-        private class CouchbaseArgs
-        {
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            public CouchbaseArgs()
-            {
-                Settings    = new CouchbaseSettings();
-                Credentials = new Credentials();
-            }
-
-            /// <summary>
-            /// The Couchbase settings.
-            /// </summary>
-            public CouchbaseSettings Settings { get; set; }
-
-            /// <summary>
-            /// The Couchbase credentials.
-            /// </summary>
-            public Credentials Credentials { get; set; }
-        }
+        // Static members
 
         /// <summary>
         /// Parses the Couchbase settings from the common module arguments.
         /// </summary>
         /// <param name="context">The module context.</param>
         /// <returns>The <see cref="CouchbaseArgs"/> or <c>null</c> if there's an error.</returns>
-        private CouchbaseArgs ParseCouchbaseSettings(ModuleContext context)
+        public static CouchbaseArgs Parse(ModuleContext context)
         {
             var cluster       = NeonClusterHelper.Cluster;
             var nodeGroups    = cluster.Definition.GetNodeGroups(excludeAllGroup: true);
@@ -162,5 +125,27 @@ namespace NeonCli
 
             return couchbaseArgs;
         }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        public CouchbaseArgs()
+        {
+            Settings    = new CouchbaseSettings();
+            Credentials = new Credentials();
+        }
+
+        /// <summary>
+        /// The Couchbase settings.
+        /// </summary>
+        public CouchbaseSettings Settings { get; set; }
+
+        /// <summary>
+        /// The Couchbase credentials.
+        /// </summary>
+        public Credentials Credentials { get; set; }
     }
 }
