@@ -17,6 +17,7 @@ using System.Threading.Tasks;
 
 using Consul;
 using Couchbase;
+using Couchbase.N1QL;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft;
 using Newtonsoft.Json;
@@ -77,7 +78,7 @@ namespace NeonCli.Ansible
         //
         // password     yes                                 specifies the Couchbase password
         //
-        // query        yes                                 specifies the Couchbase nickel query
+        // query        yes                                 specifies the Couchbase N1QL query
         //
         // limit        no          0                       specifies the maximum number of documents
         //                                                  to be returned (0 for unlimited)
@@ -123,7 +124,7 @@ namespace NeonCli.Ansible
 
                 if (!string.IsNullOrEmpty(path))
                 {
-                    writer = new StreamWriter(path, append: false, encoding: Encoding.UTF8);
+                    writer = new StreamWriter(path, append: false, encoding: System.Text.Encoding.UTF8);
                 }
 
                 if (format == CouchbaseFileFormat.JsonArray)
@@ -235,18 +236,37 @@ namespace NeonCli.Ansible
             //-----------------------------------------------------------------
             // Execute the query.
 
-            var bucket  = couchbaseArgs.Settings.OpenBucket(couchbaseArgs.Credentials);
-            var results = bucket.QuerySafeAsync<JObject>(query).Result;
-            var count   = Math.Min(results.Count, limit.Value);
-
-            using (var writer = new CouchbaseQueryResultWriter(context, format.Value, output))
+            using (var bucket = couchbaseArgs.Settings.OpenBucket(couchbaseArgs.Credentials))
             {
-                for (int i = 0; i < count; i++)
+                try
                 {
-                    var document = results[i];
-                    var isLast   = i == count - 1;
+                    var results = bucket.QuerySafeAsync<JObject>(query).Result;
+                    var count   = Math.Min(results.Count, limit.Value);
 
-                    writer.WriteDocument(document, isLast);
+                    using (var writer = new CouchbaseQueryResultWriter(context, format.Value, output))
+                    {
+                        for (int i = 0; i < count; i++)
+                        {
+                            var document = results[i];
+                            var isLast = i == count - 1;
+
+                            writer.WriteDocument(document, isLast);
+                        }
+                    }
+                }
+                catch (AggregateException e)
+                {
+                    var queryException = e.GetTrigger<CouchbaseQueryResponseException>();
+
+                    if (queryException == null)
+                    {
+                        throw;
+                    }
+
+                    foreach (var error in queryException.Errors)
+                    {
+                        context.WriteErrorLine($"Couchbase [{error.Code}]: {error.Message}");
+                    }
                 }
             }
         }

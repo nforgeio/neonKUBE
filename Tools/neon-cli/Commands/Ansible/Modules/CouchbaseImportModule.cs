@@ -441,81 +441,83 @@ namespace NeonCli.Ansible
             //-----------------------------------------------------------------
             // Import the data.
 
-            var bucket   = couchbaseArgs.Settings.OpenBucket(couchbaseArgs.Credentials);
-            var importer = new CouchbaseImporter(context, bucket, keyPattern, context.CheckMode);
-
-            switch (format.Value)
+            using (var bucket = couchbaseArgs.Settings.OpenBucket(couchbaseArgs.Credentials))
             {
-                case CouchbaseFileFormat.JsonArray:
+                var importer = new CouchbaseImporter(context, bucket, keyPattern, context.CheckMode);
 
-                    // $todo(jeff.lill): 
-                    //
-                    // Would be nice not to read this whole thing in memory and then
-                    // effectibely duplicating it in memory again when parsing.
+                switch (format.Value)
+                {
+                    case CouchbaseFileFormat.JsonArray:
 
-                    var jToken = JToken.Parse(File.ReadAllText(source));
+                        // $todo(jeff.lill): 
+                        //
+                        // Would be nice not to read this whole thing in memory and then
+                        // effectibely duplicating it in memory again when parsing.
 
-                    if (jToken.Type != JTokenType.Array)
-                    {
-                        context.WriteErrorLine($"[{source}] is not a JSON array of documents.");
-                        return;
-                    }
+                        var jToken = JToken.Parse(File.ReadAllText(source));
 
-                    var jArray = (JArray)jToken;
-
-                    foreach (var item in jArray)
-                    {
-                        if (item.Type != JTokenType.Object)
+                        if (jToken.Type != JTokenType.Array)
                         {
-                            context.WriteErrorLine($"[{source}] includes one or more non-document objects in the array.");
+                            context.WriteErrorLine($"[{source}] is not a JSON array of documents.");
                             return;
                         }
 
-                        importer.WriteDocument((JObject)item);
-                    }
-                    break;
+                        var jArray = (JArray)jToken;
 
-                case CouchbaseFileFormat.JsonLines:
-
-                    using (var reader = new StreamReader(source, Encoding.UTF8))
-                    {
-                        foreach (var line in reader.Lines())
+                        foreach (var item in jArray)
                         {
-                            if (line.Trim() == string.Empty)
-                            {
-                                continue;   // Ignore blank lines
-                            }
-
-                            var item = JToken.Parse(line);
-
                             if (item.Type != JTokenType.Object)
                             {
-                                context.WriteErrorLine($"[{source}] includes one or more lines with non-document objects.");
+                                context.WriteErrorLine($"[{source}] includes one or more non-document objects in the array.");
                                 return;
                             }
 
                             importer.WriteDocument((JObject)item);
                         }
-                    }
-                    break;
+                        break;
 
-                default:
+                    case CouchbaseFileFormat.JsonLines:
 
-                    throw new NotImplementedException($"Format [{format}] is not implemented.");
-            }
+                        using (var reader = new StreamReader(source, Encoding.UTF8))
+                        {
+                            foreach (var line in reader.Lines())
+                            {
+                                if (line.Trim() == string.Empty)
+                                {
+                                    continue;   // Ignore blank lines
+                                }
 
-            if (context.CheckMode)
-            {
-                context.WriteLine(AnsibleVerbosity.Info, $"[{importer.DocumentCount}] documents will be added when CHECKMODE is disabled.");
-            }
-            else
-            {
-                if (importer.DocumentCount > 0)
-                {
-                    context.Changed = true;
+                                var item = JToken.Parse(line);
+
+                                if (item.Type != JTokenType.Object)
+                                {
+                                    context.WriteErrorLine($"[{source}] includes one or more lines with non-document objects.");
+                                    return;
+                                }
+
+                                importer.WriteDocument((JObject)item);
+                            }
+                        }
+                        break;
+
+                    default:
+
+                        throw new NotImplementedException($"Format [{format}] is not implemented.");
                 }
 
-                context.WriteLine(AnsibleVerbosity.Info, $"[{importer.DocumentCount}] documents were added.");
+                if (context.CheckMode)
+                {
+                    context.WriteLine(AnsibleVerbosity.Info, $"[{importer.DocumentCount}] documents will be added when CHECKMODE is disabled.");
+                }
+                else
+                {
+                    if (importer.DocumentCount > 0)
+                    {
+                        context.Changed = true;
+                    }
+
+                    context.WriteLine(AnsibleVerbosity.Info, $"[{importer.DocumentCount}] documents were added.");
+                }
             }
         }
     }
