@@ -21,37 +21,37 @@ namespace TestCommon
     public class Test_Exception
     {
         [Fact]
-        public void TriggeredBy()
+        public void Contains()
         {
-            Assert.False(((Exception)null).TriggeredBy<Exception>());
+            Assert.False(((Exception)null).Contains<Exception>());
 
-            Assert.True(new KeyNotFoundException().TriggeredBy<KeyNotFoundException>());
-            Assert.False(new KeyNotFoundException().TriggeredBy<IndexOutOfRangeException>());
+            Assert.True(new KeyNotFoundException().Contains<KeyNotFoundException>());
+            Assert.False(new KeyNotFoundException().Contains<IndexOutOfRangeException>());
 
-            Assert.True(new IndexOutOfRangeException("message", new KeyNotFoundException("key")).TriggeredBy<KeyNotFoundException>());
-            Assert.True(new IndexOutOfRangeException("message", new IndexOutOfRangeException("message", new KeyNotFoundException("key"))).TriggeredBy<KeyNotFoundException>());
-            Assert.False(new IndexOutOfRangeException("message", new KeyNotFoundException("key")).TriggeredBy<FormatException>());
+            Assert.True(new IndexOutOfRangeException("message", new KeyNotFoundException("key")).Contains<KeyNotFoundException>());
+            Assert.True(new IndexOutOfRangeException("message", new IndexOutOfRangeException("message", new KeyNotFoundException("key"))).Contains<KeyNotFoundException>());
+            Assert.False(new IndexOutOfRangeException("message", new KeyNotFoundException("key")).Contains<FormatException>());
 
-            Assert.False(new AggregateException().TriggeredBy<KeyNotFoundException>());
-            Assert.True(new AggregateException(new KeyNotFoundException("key")).TriggeredBy<KeyNotFoundException>());
-            Assert.True(new AggregateException(new IndexOutOfRangeException("message", new KeyNotFoundException("key"))).TriggeredBy<KeyNotFoundException>());
+            Assert.False(new AggregateException().Contains<KeyNotFoundException>());
+            Assert.True(new AggregateException(new KeyNotFoundException("key")).Contains<KeyNotFoundException>());
+            Assert.True(new AggregateException(new IndexOutOfRangeException("message", new KeyNotFoundException("key"))).Contains<KeyNotFoundException>());
         }
 
         [Fact]
-        public void GetTrigger()
+        public void Find()
         {
-            Assert.Null (((Exception)null).GetTrigger<Exception>());
+            Assert.Null (((Exception)null).Find<Exception>());
 
-            Assert.NotNull(new KeyNotFoundException().GetTrigger<KeyNotFoundException>());
-            Assert.Null(new KeyNotFoundException().GetTrigger<IndexOutOfRangeException>());
+            Assert.NotNull(new KeyNotFoundException().Find<KeyNotFoundException>());
+            Assert.Null(new KeyNotFoundException().Find<IndexOutOfRangeException>());
 
-            Assert.Equal("key", new IndexOutOfRangeException("message", new KeyNotFoundException("key")).GetTrigger<KeyNotFoundException>().Message);
-            Assert.Equal("key", new IndexOutOfRangeException("message", new IndexOutOfRangeException("message", new KeyNotFoundException("key"))).GetTrigger<KeyNotFoundException>().Message);
-            Assert.Null(new IndexOutOfRangeException("message", new KeyNotFoundException("key")).GetTrigger<FormatException>());
+            Assert.Equal("key", new IndexOutOfRangeException("message", new KeyNotFoundException("key")).Find<KeyNotFoundException>().Message);
+            Assert.Equal("key", new IndexOutOfRangeException("message", new IndexOutOfRangeException("message", new KeyNotFoundException("key"))).Find<KeyNotFoundException>().Message);
+            Assert.Null(new IndexOutOfRangeException("message", new KeyNotFoundException("key")).Find<FormatException>());
 
-            Assert.Null(new AggregateException().GetTrigger<KeyNotFoundException>());
-            Assert.Equal("key", new AggregateException(new KeyNotFoundException("key")).GetTrigger<KeyNotFoundException>().Message);
-            Assert.Equal("key", new AggregateException(new IndexOutOfRangeException("message", new KeyNotFoundException("key"))).GetTrigger<KeyNotFoundException>().Message);
+            Assert.Null(new AggregateException().Find<KeyNotFoundException>());
+            Assert.Equal("key", new AggregateException(new KeyNotFoundException("key")).Find<KeyNotFoundException>().Message);
+            Assert.Equal("key", new AggregateException(new IndexOutOfRangeException("message", new KeyNotFoundException("key"))).Find<KeyNotFoundException>().Message);
         }
     }
 }

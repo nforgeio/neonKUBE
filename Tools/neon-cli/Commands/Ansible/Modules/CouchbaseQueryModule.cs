@@ -256,7 +256,7 @@ namespace NeonCli.Ansible
                 }
                 catch (AggregateException e)
                 {
-                    var queryException = e.GetTrigger<CouchbaseQueryResponseException>();
+                    var queryException = e.Find<CouchbaseQueryResponseException>();
 
                     if (queryException == null)
                     {

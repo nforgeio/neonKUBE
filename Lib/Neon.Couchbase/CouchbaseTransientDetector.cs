@@ -41,15 +41,15 @@ namespace Couchbase
             // I'm not sure if they all should acutually be considered as transient.
             // We need to come back and do a deeper analysis.
 
-            return e.TriggeredBy<TransientException>()
-                || e.TriggeredBy<ServerUnavailableException>()
-                || e.TriggeredBy<TemporaryLockFailureException>()
-                || e.TriggeredBy<BufferUnavailableException>()
-                || e.TriggeredBy<ConnectionUnavailableException>()
-                || e.TriggeredBy<RemoteHostClosedException>()
-                || e.TriggeredBy<RemoteHostTimeoutException>()
-                || e.TriggeredBy<SendTimeoutExpiredException>()
-                || e.TriggeredBy<TransportFailureException>();
+            return e.Contains<TransientException>()
+                || e.Contains<ServerUnavailableException>()
+                || e.Contains<TemporaryLockFailureException>()
+                || e.Contains<BufferUnavailableException>()
+                || e.Contains<ConnectionUnavailableException>()
+                || e.Contains<RemoteHostClosedException>()
+                || e.Contains<RemoteHostTimeoutException>()
+                || e.Contains<SendTimeoutExpiredException>()
+                || e.Contains<TransportFailureException>();
         }
     }
 }
