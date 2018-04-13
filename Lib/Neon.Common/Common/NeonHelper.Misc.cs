@@ -13,6 +13,7 @@ using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Reflection;
+using System.Runtime.Serialization;
 using System.Security.Cryptography;
 using System.Text;
 using System.Threading;
@@ -25,6 +26,11 @@ namespace Neon.Common
 {
     public static partial class NeonHelper
     {
+        // This is used by [ParseEnumUsingAttributes()] to cache reflected
+        // [EnumMember] attributes decorating enumeration values.
+
+        private static Dictionary<Type, Dictionary<string, int>> enumToMembers = new Dictionary<Type, Dictionary<string, int>>();
+
         /// <summary>
         /// Determines whether an integer is odd.
         /// </summary>
@@ -83,7 +89,7 @@ namespace Neon.Common
         /// <param name="stackTrace">Optionally include the stack track.</param>
         /// <param name="excludeInner">Optionally exclude information about any inner exception.</param>
         /// <returns>The error string.</returns>
-        public static string ExceptionError(Exception e, bool stackTrace = false, bool excludeInner = false)
+        public static string ExceptionError(Exception e, bool stackTrace = true, bool excludeInner = false)
         {
             Covenant.Requires<ArgumentNullException>(e != null);
 
@@ -1129,10 +1135,90 @@ namespace Neon.Common
         /// <returns>The parsed value.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="input"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="input"/> is not valid.</exception>
+        /// <remarks>
+        /// <note>
+        /// This method <b>does not</b> honor any <see cref="EnumMemberAttribute"/>
+        /// decorating the enumeration.
+        /// </note>
+        /// </remarks>
         public static TEnum ParseEnum<TEnum>(string input, bool ignoreCase = false)
             where TEnum : struct
         {
             return (TEnum)Enum.Parse(typeof(TEnum), input, ignoreCase);
+        }
+
+        /// <summary>
+        /// Typesafe <c>enum</c> parser that also honors any <see cref="EnumMemberAttribute"/>
+        /// decorating the enumeration values.  This is case insensitive.
+        /// </summary>
+        /// <typeparam name="TEnum">The enumeration type.</typeparam>
+        /// <param name="input">The input string.</param>
+        /// <returns>The parsed value.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="input"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="input"/> is not valid.</exception>
+        public static TEnum ParseEnumUsingAttributes<TEnum>(string input)
+            where TEnum : struct
+        {
+            // Try parsing the enumeration using the standard mechanism.
+            // Note that this does not honor any [EnumMember] attributes.
+
+            if (Enum.TryParse<TEnum>(input, true, out var value))
+            {
+                return value;
+            }
+
+            // That didn't work, so we'll see if we have a cached [EnumMember]
+            // map for the type.  Note that we only need to lock [enumToMembers]
+            // because any child dictionaries will be real-only after being added.
+
+            Dictionary<string, int> members;
+
+            lock (enumToMembers)
+            {
+                enumToMembers.TryGetValue(typeof(TEnum), out members);
+            }
+
+            if (members != null)
+            {
+                if (members.TryGetValue(input, out var value1))
+                {
+                    return (TEnum)Enum.ToObject(typeof(TEnum), value1);
+                }
+                else
+                {
+                    throw new ArgumentException($"[{input}] is not a valid [{typeof(TEnum).Name}] value.");
+                }
+            }
+
+            // We don't have a cached [EnumMember] dictionary for this
+            // enumeration type yet, so we're going to build one and
+            // try again.
+
+            members = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
+
+            foreach (var member in typeof(TEnum).GetFields(BindingFlags.Public | BindingFlags.Static))
+            {
+                var enumMember = member.GetCustomAttribute<EnumMemberAttribute>();
+
+                if (enumMember != null)
+                {
+                    members[enumMember.Value] = (int)member.GetRawConstantValue();
+                }
+            }
+
+            lock (enumToMembers)
+            {
+                enumToMembers[typeof(Enum)] = members;
+            }
+
+            if (members.TryGetValue(input, out var value2))
+            {
+                return (TEnum)Enum.ToObject(typeof(TEnum), value2);
+            }
+            else
+            {
+                throw new ArgumentException($"[{input}] is not a valid [{typeof(TEnum).Name}] value.");
+            }
         }
 
         /// <summary>

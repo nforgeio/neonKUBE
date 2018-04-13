@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Threading.Tasks;
 
@@ -343,7 +344,10 @@ namespace TestCommon
         private enum TestEnum
         {
             Value1,
-            Value2
+            Value2,
+
+            [EnumMember(Value = "foo-bar")]
+            FooBar
         }
 
         [Fact]
@@ -355,6 +359,17 @@ namespace TestCommon
 
             Assert.Equal(TestEnum.Value1, NeonHelper.ParseEnum<TestEnum>("value1", ignoreCase: true));
             Assert.Equal(TestEnum.Value2, NeonHelper.ParseEnum<TestEnum>("VALUE2", ignoreCase: true));
+
+            // This method should honor [EnumMember] attributes too.
+
+            Assert.Equal(TestEnum.Value1, NeonHelper.ParseEnumUsingAttributes<TestEnum>("value1"));
+            Assert.Equal(TestEnum.Value2, NeonHelper.ParseEnumUsingAttributes<TestEnum>("VALUE2"));
+            Assert.Equal(TestEnum.FooBar, NeonHelper.ParseEnumUsingAttributes<TestEnum>("FooBar"));
+            Assert.Equal(TestEnum.FooBar, NeonHelper.ParseEnumUsingAttributes<TestEnum>("foo-bar"));
+            Assert.Equal(TestEnum.FooBar, NeonHelper.ParseEnumUsingAttributes<TestEnum>("FOO-BAR"));
+
+            Assert.Throws<ArgumentNullException>(() => NeonHelper.ParseEnumUsingAttributes<TestEnum>(null));
+            Assert.Throws<ArgumentException>(() => NeonHelper.ParseEnumUsingAttributes<TestEnum>("BAD"));
         }
 
         [Fact]
