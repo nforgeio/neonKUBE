@@ -97,8 +97,6 @@ namespace NeonCli
         {
             Arguments = JObject.Parse(File.ReadAllText(argsPath));
 
-            LogDebug(Arguments.ToString());
-
             if (Arguments.TryGetValue<int>("_ansible_verbosity", out var ansibleVerbosity))
             {
                 this.Verbosity = (AnsibleVerbosity)ansibleVerbosity;
