@@ -80,9 +80,9 @@ namespace NeonCli
         // format       no          json-lines  json-array  write output as a JSON array
         //                                      json-lines  write output as one JSON object per line
         //
-        // path         no                                  optionally write the output to a file
-        //                                                  or to the module output when this isn't
-        //                                                  specified
+        // output       no                                  optionally write the documents to
+        //                                                  this file (UTF-8) rather then to
+        //                                                  the Ansible module output
         //                                      
         // Remarks:
         // --------
@@ -187,7 +187,7 @@ namespace NeonCli
         /// <summary>
         /// Implements the built-in <b>neon_couchbase_query</b> module.
         /// </summary>
-        /// <param name="context">The module execution context.</param>
+        /// <param name="context">The module context.</param>
         private void RunCouchbaseQueryModule(ModuleContext context)
         {
             var cluster       = NeonClusterHelper.Cluster;
@@ -224,7 +224,7 @@ namespace NeonCli
                 limit = long.MaxValue;
             }
 
-            var path = context.ParseString("path");
+            var output = context.ParseString("output");
 
             //-----------------------------------------------------------------
             // Execute the query.
@@ -233,7 +233,7 @@ namespace NeonCli
             var results = bucket.QuerySafeAsync<JObject>(query).Result;
             var count   = Math.Min(results.Count, limit.Value);
 
-            using (var writer = new CouchbaseQueryResultWriter(context, format.Value, path))
+            using (var writer = new CouchbaseQueryResultWriter(context, format.Value, output))
             {
                 for (int i = 0; i < count; i++)
                 {

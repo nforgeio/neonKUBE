@@ -67,7 +67,7 @@ namespace NeonCli
         /// <summary>
         /// Implements the built-in <b>neon_certificate</b> module.
         /// </summary>
-        /// <param name="context">The module execution context.</param>
+        /// <param name="context">The module context.</param>
         private void RunCertificateModule(ModuleContext context)
         {
             // Obtain common arguments.

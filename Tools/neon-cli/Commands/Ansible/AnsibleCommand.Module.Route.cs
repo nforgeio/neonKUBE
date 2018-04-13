@@ -70,7 +70,7 @@ namespace NeonCli
         /// <summary>
         /// Implements the built-in <b>neon_route</b> module.
         /// </summary>
-        /// <param name="context">The module execution context.</param>
+        /// <param name="context">The module context.</param>
         private void RunRouteModule(ModuleContext context)
         {
             ProxyManager    proxyManager;

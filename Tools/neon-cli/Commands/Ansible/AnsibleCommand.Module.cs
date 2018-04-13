@@ -123,13 +123,17 @@ namespace NeonCli
             }
             catch (Exception e)
             {
-                if (context == null)
-                {
-                    context = new ModuleContext();
-                }
-
                 context.Failed  = true;
                 context.Message = e.Message;
+                context.WriteErrorLine(e.Message);
+            }
+
+            // Handle non-exception based errors.
+
+            if (context.HasErrors && !context.Failed)
+            {
+                context.Failed  = true;
+                context.Message = context.GetFirstError();
             }
 
             Console.WriteLine(context.ToString());

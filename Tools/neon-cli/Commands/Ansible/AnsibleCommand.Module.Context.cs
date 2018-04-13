@@ -57,10 +57,10 @@ namespace NeonCli
     public class ModuleContext
     {
         private List<string>    output = new List<string>();
-        private List<string>    error  = new List<string>();
+        private List<string>    errors = new List<string>();
 
         /// <summary>
-        /// The modulke name.
+        /// The module name.
         /// </summary>
         [JsonIgnore]
         public string Module { get; set; }
@@ -97,10 +97,21 @@ namespace NeonCli
         {
             Arguments = JObject.Parse(File.ReadAllText(argsPath));
 
+            LogDebug(Arguments.ToString());
+
             if (Arguments.TryGetValue<int>("_ansible_verbosity", out var ansibleVerbosity))
             {
                 this.Verbosity = (AnsibleVerbosity)ansibleVerbosity;
             }
+
+            var checkMode = ParseBool("_ansible_check_mode");
+
+            if (!checkMode.HasValue)
+            {
+                checkMode = false;
+            }
+
+            this.CheckMode = checkMode.Value;
         }
 
         //-----------------------------------------------------------------
@@ -199,7 +210,18 @@ namespace NeonCli
         /// <summary>
         /// Indicates whether one or more errors have been reported.
         /// </summary>
-        public bool HasErrors { get; private set; }
+        public bool HasErrors
+        {
+            get { return errors.Count > 0; }
+        }
+
+        /// <summary>
+        /// Returns the first error line or <c>null</c>.
+        /// </summary>
+        public string GetFirstError()
+        {
+            return errors.FirstOrDefault();
+        }
 
         /// <summary>
         /// Writes a line of text to the standard output lines.
@@ -220,9 +242,19 @@ namespace NeonCli
         /// <param name="text">The text to be written.</param>
         public void WriteErrorLine(string text = null)
         {
-            HasErrors = true;
+            errors.Add(text ?? string.Empty);
+        }
 
-            error.Add(text ?? string.Empty);
+        /// <summary>
+        /// Appends a line of text to the <b>ansible-debug.log</b> file in the
+        /// current directory for development and debugging purposes.
+        /// </summary>
+        /// <param name="line">The line of text to be logged.</param>
+        public void LogDebug(string line = null)
+        {
+            line = line ?? string.Empty;
+
+            File.AppendAllText("ansible-debug.log", line + Environment.NewLine);
         }
 
         /// <summary>
@@ -236,9 +268,9 @@ namespace NeonCli
             {
                 StdErrLines = StdErr.ToLines().ToList();
             }
-            else if (error.Count > 0)
+            else if (errors.Count > 0)
             {
-                StdErrLines = error;
+                StdErrLines = errors;
             }
 
             if (!string.IsNullOrEmpty(StdOut))
@@ -257,13 +289,18 @@ namespace NeonCli
         // Parsing helpers
 
         /// <summary>
-        /// Attempts to parse a boolean string.
+        /// Attempts to parse a boolean value.
         /// </summary>
         /// <param name="input">The input string.</param>
         /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
-        /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
-        public bool? ParseBool(string input, string errorMessage = null)
+        /// <returns>The parsed value or <c>null</c> if the input was <c>null</c> or invalid.</returns>
+        public bool? ParseBoolValue(string input, string errorMessage = null)
         {
+            if (string.IsNullOrEmpty(input))
+            {
+                return null;
+            }
+
             switch (input.ToLowerInvariant())
             {
                 case "0":
@@ -291,13 +328,18 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Attempts to parse an <c>int</c>.
+        /// Attempts to parse an <c>int</c> value.
         /// </summary>
         /// <param name="input">The input string.</param>
         /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
-        /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
-        public int? ParseInt(string input, string errorMessage = null)
+        /// <returns>The parsed value or <c>null</c> if the input was <c>null</c> or invalid.</returns>
+        public int? ParseIntValue(string input, string errorMessage = null)
         {
+            if (string.IsNullOrEmpty(input))
+            {
+                return null;
+            }
+
             if (int.TryParse(input, out var value))
             {
                 return value;
@@ -314,13 +356,18 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Attempts to parse a <c>long</c>.
+        /// Attempts to parse a <c>long</c> value.
         /// </summary>
         /// <param name="input">The input string.</param>
         /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
-        /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
-        public long? ParseLong(string input, string errorMessage = null)
+        /// <returns>The parsed value or <c>null</c> if the input was <c>null</c> or invalid.</returns>
+        public long? ParseLongValue(string input, string errorMessage = null)
         {
+            if (string.IsNullOrEmpty(input))
+            {
+                return null;
+            }
+
             if (long.TryParse(input, out var value))
             {
                 return value;
@@ -337,14 +384,19 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Attempts to parse an enumeration string.
+        /// Attempts to parse an enumeration value.
         /// </summary>
         /// <param name="input">The input string.</param>
         /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
-        /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
-        public TEnum? ParseEnum<TEnum>(string input, string errorMessage = null)
+        /// <returns>The parsed value or <c>null</c> if the input was <c>null</c> or invalid.</returns>
+        public TEnum? ParseEnumValue<TEnum>(string input, string errorMessage = null)
             where TEnum : struct
         {
+            if (string.IsNullOrEmpty(input))
+            {
+                return null;
+            }
+
             if (!Enum.TryParse<TEnum>(input, true, out var value))
             {
                 if (errorMessage != null)
@@ -361,7 +413,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Parses a boolean.
+        /// Parses a boolean argument.
         /// </summary>>
         /// <param name="argName">The argument name.</param>
         /// <returns>The parsed boolean or <c>null</c>.</returns>
@@ -372,7 +424,7 @@ namespace NeonCli
                 return null;
             }
 
-            var value = ParseBool(jToken.ToObject<string>());
+            var value = ParseBoolValue((string)jToken);
 
             if (!value.HasValue)
             {
@@ -383,7 +435,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Parses a <c>string</c>.
+        /// Parses a <c>string</c> argument.
         /// </summary>>
         /// <param name="argName">The argument name.</param>
         /// <returns>The parsed string or <c>null</c>.</returns>
@@ -394,7 +446,7 @@ namespace NeonCli
                 return null;
             }
 
-            var value = jToken.ToObject<string>();
+            var value = (string)jToken;
 
             if (validator != null && !validator(value))
             {
@@ -405,7 +457,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Parses an <c>int</c>.
+        /// Parses an <c>int</c> argument.
         /// </summary>>
         /// <param name="argName">The argument name.</param>
         /// <param name="validator">Optional validation function.</param>
@@ -419,7 +471,7 @@ namespace NeonCli
 
             try
             {
-                var valueString = jToken.ToObject<string>();
+                var valueString = (string)jToken;
                 var value       = int.Parse(valueString);
 
                 if (validator != null && !validator(value))
@@ -437,7 +489,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Parses a <c>long</c>.
+        /// Parses a <c>long</c> argument.
         /// </summary>>
         /// <param name="argName">The argument name.</param>
         /// <param name="validator">Optional validation function.</param>
@@ -451,8 +503,8 @@ namespace NeonCli
 
             try
             {
-                var valueString = jToken.ToObject<string>();
-                var value = int.Parse(valueString);
+                var valueString = (string)jToken;
+                var value       = int.Parse(valueString);
 
                 if (validator != null && !validator(value))
                 {
@@ -469,7 +521,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Parses a <c>double</c>.
+        /// Parses a <c>double</c> argument.
         /// </summary>>
         /// <param name="argName">The argument name.</param>
         /// <param name="validator">Optional validation function.</param>
@@ -483,7 +535,7 @@ namespace NeonCli
 
             try
             {
-                var valueString = jToken.ToObject<string>();
+                var valueString = (string)jToken;
                 var value       = double.Parse(valueString);
 
                 if (validator != null && !validator(value))
@@ -501,7 +553,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Parses an enumeration.
+        /// Parses an enumeration argument.
         /// </summary>
         /// <typeparam name="TEnum">The enumeration type.</typeparam>
         /// <param name="argName">The argument name.</param>
@@ -516,21 +568,21 @@ namespace NeonCli
 
             try
             {
-                var valueString = jToken.ToObject<string>();
+                var valueString = (string)jToken;
 
                 try
                 {
-                    return (TEnum?)NeonHelper.ParseEnum<TEnum>(valueString, ignoreCase: true);
+                    return (TEnum?)NeonHelper.ParseEnumUsingAttributes<TEnum>(valueString);
                 }
                 catch
                 {
-                    WriteErrorLine($"[{argName}={valueString}] is not a valid [{nameof(TEnum)}].");
+                    WriteErrorLine($"[{argName}={valueString}] is not a valid [{typeof(TEnum).Name}].");
                     return null;
                 }
             }
             catch
             {
-                WriteErrorLine($"[{argName}] is not a valid [{nameof(TEnum)}].");
+                WriteErrorLine($"[{argName}] is not a valid [{typeof(TEnum).Name}].");
                 return null;
             }
         }
@@ -549,7 +601,7 @@ namespace NeonCli
 
             try
             {
-                var orgValue = jToken.ToObject<string>();
+                var orgValue = (string)jToken;
                 var value    = orgValue;
                 var units    = 1000000000L;    // default unit: 1s = 1000000000ns
 
@@ -631,7 +683,7 @@ namespace NeonCli
 
             try
             {
-                var orgValue = jToken.ToObject<string>();
+                var orgValue = (string)jToken;
                 var value    = orgValue;
                 var units    = 1L;    // default unit is 1 byte
 
@@ -715,7 +767,7 @@ namespace NeonCli
             {
                 try
                 {
-                    array.Add(item.ToObject<string>());
+                    array.Add((string)item);
                 }
                 catch
                 {

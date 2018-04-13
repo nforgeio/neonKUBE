@@ -73,7 +73,7 @@ namespace NeonCli
         /// <summary>
         /// Implements the built-in <b>neon_dashboard</b> module.
         /// </summary>
-        /// <param name="context">The module execution context.</param>
+        /// <param name="context">The module context.</param>
         private void RunDashboardModule(ModuleContext context)
         {
             var cluster = NeonClusterHelper.Cluster;

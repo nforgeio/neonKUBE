@@ -298,7 +298,7 @@ namespace NeonCli
         /// <summary>
         /// Implements the built-in <b>neon_certificate</b> module.
         /// </summary>
-        /// <param name="context">The module execution context.</param>
+        /// <param name="context">The module context.</param>
         private void RunDockerServiceModule(ModuleContext context)
         {
             var cluster = NeonClusterHelper.Cluster;
@@ -598,21 +598,21 @@ namespace NeonCli
 
                 if (jObject.TryGetValue<string>("readonly", out value))
                 {
-                    mount.ReadOnly = context.ParseBool(value, "Invalid [mount.readonly] value.");
+                    mount.ReadOnly = context.ParseBoolValue(value, "Invalid [mount.readonly] value.");
                 }
 
                 // Parse [consistency]
 
                 if (jObject.TryGetValue<string>("consistency", out value))
                 {
-                    mount.Consistency = context.ParseEnum<MountConsistency>(value, $"Invalid [mount.consistency={value}] value.");
+                    mount.Consistency = context.ParseEnumValue<MountConsistency>(value, $"Invalid [mount.consistency={value}] value.");
                 }
 
                 // Parse [bind-propagation]
 
                 if (jObject.TryGetValue<string>("bind-propagation", out value))
                 {
-                    mount.BindPropagation = context.ParseEnum<MountBindPropagation>(value, $"Invalid [mount.bind-propagation={value}] value.");
+                    mount.BindPropagation = context.ParseEnumValue<MountBindPropagation>(value, $"Invalid [mount.bind-propagation={value}] value.");
                 }
 
                 // Parse the [volume] related options.
@@ -653,7 +653,7 @@ namespace NeonCli
 
                     if (jObject.TryGetValue<string>("volume-nocopy", out value))
                     {
-                        mount.VolumeNoCopy = context.ParseBool(value, $"Invalid [mount.volume-nocopy={value}] value.");
+                        mount.VolumeNoCopy = context.ParseBoolValue(value, $"Invalid [mount.volume-nocopy={value}] value.");
                     }
 
                     // Parse [volume-opt]
@@ -694,7 +694,7 @@ namespace NeonCli
 
                     if (jObject.TryGetValue<string>("tmpfs-size", out value))
                     {
-                        mount.TmpfsSize = context.ParseLong(value, $"Invalid [mount.tmpfs-size={value}] value.");
+                        mount.TmpfsSize = context.ParseLongValue(value, $"Invalid [mount.tmpfs-size={value}] value.");
                     }
 
                     if (mount.TmpfsSize == 0)

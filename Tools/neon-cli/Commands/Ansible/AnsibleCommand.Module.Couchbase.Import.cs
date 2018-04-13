@@ -73,10 +73,10 @@ namespace NeonCli
         //
         // password     yes                                 specifies the Couchbase password
         //
-        // path         yes                                 JSON file with the JSON documents
-        //                                                  to be loaded
+        // source       yes                                 text file with the JSON documents
+        //                                                  to be loaded (UTF-8 encoded)
         //
-        // format       no          json-lines  json-array  file holds an array of JSON objects
+        // format       no          json-lines  json-array  file holds an JSON array of objects
         //                                      json-lines  file holds JSON objects (one per line)
         //
         // key          no                                  specifies the key pattern to be when
@@ -84,6 +84,8 @@ namespace NeonCli
         //                                                  generated when this isn't specified.
         //                                                  See the remarks for more information.
         //
+        //                                                  NOTE: You should surround the key
+        //                                                        value with double quotes.
         // Remarks:
         // --------
         //
@@ -110,6 +112,27 @@ namespace NeonCli
         // Examples:
         // ---------
         //
+        // This example imports JSON objects from [data.txt] formatted as one JSON
+        // object per line to Couchbase at 10.50.0.3 using the credentials passed,
+        // generating IDs as an integer counter.
+        //
+        // Note that we surrounded the key pattern with double quotes to prevent
+        // Ansible from treating the leading '#' as a comment.
+        //
+        //  - name: test
+        //    hosts: localhost
+        //    tasks:
+        //      - name: couchbase import
+        //        neon_couchbase_import:
+        //          name: import
+        //          servers:
+        //            - 10.50.0.3
+        //          bucket: test
+        //          username: Administrator
+        //          password: password
+        //          source: data.txt
+        //          format: json-lines
+        //          key: "#MONO_INCR#"
 
         //---------------------------------------------------------------------
         // Private types
@@ -117,11 +140,12 @@ namespace NeonCli
         /// <summary>
         /// Handles persisting JSON documents to Couchbase.
         /// </summary>
-        private class CouchbaseImportWriter
+        private class CouchbaseImporter
         {
             private ModuleContext   context;
             private IBucket         bucket;
             private string          keyPattern;
+            private bool            checkMode;
             private long            docNumber;
             private StringBuilder   sbKey;      // Using a common instance for performance
 
@@ -131,11 +155,13 @@ namespace NeonCli
             /// <param name="context">The module context.</param>
             /// <param name="bucket">The target Couchbase bucket.</param>
             /// <param name="keyPattern">The key pattern (or <c>null</c>).</param>
-            public CouchbaseImportWriter(ModuleContext context, IBucket bucket, string keyPattern)
+            /// <param name="checkMode">Pass <c>true</c> to process the file but not actually persist anything.</param>
+            public CouchbaseImporter(ModuleContext context, IBucket bucket, string keyPattern, bool checkMode)
             {
                 this.context    = context;
                 this.bucket     = bucket;
                 this.keyPattern = keyPattern;
+                this.checkMode  = checkMode;
                 this.docNumber  = 1;
                 this.sbKey      = new StringBuilder();
             }
@@ -156,7 +182,7 @@ namespace NeonCli
 
                 if (context.HasErrors)
                 {
-                    // Stop writing documents when we've reported errors.
+                    // Stop writing documents after we've reported errors.
 
                     return;
                 }
@@ -179,7 +205,7 @@ namespace NeonCli
                             key = docNumber.ToString();
                             break;
 
-                        // We need to parse the key pattern. 
+                        // Actually parse the thing. 
 
                         default:
 
@@ -195,7 +221,7 @@ namespace NeonCli
                                 {
                                     case '#':
 
-                                        if (pos < keyPattern.Length && keyPattern[pos + 1] == '#')
+                                        if (pos < keyPattern.Length - 1 && keyPattern[pos + 1] == '#')
                                         {
                                             // Escaped '#'
 
@@ -211,7 +237,7 @@ namespace NeonCli
 
                                             if (posEnd == -1)
                                             {
-                                                context.WriteErrorLine($"Key pattern [{keyPattern}] is missing a closing [#].");
+                                                context.WriteErrorLine($"Key pattern [{keyPattern}] is missing the closing [#].");
                                                 return;
                                             }
 
@@ -219,19 +245,19 @@ namespace NeonCli
 
                                             switch (identifier)
                                             {
-                                                case "#UUID#":
+                                                case "UUID":
 
                                                     sbKey.Append(EntityHelper.CreateUuid());
                                                     break;
 
-                                                case "#MONO_INCR#":
+                                                case "MONO_INCR":
 
                                                     sbKey.Append(docNumber);
                                                     break;
 
                                                 default:
 
-                                                    context.WriteErrorLine($"Key pattern [{keyPattern}] includes unknown generator [#{identifier}#].");
+                                                    context.WriteErrorLine($"Key pattern [{keyPattern}] includes unknown key generator [#{identifier}#].");
                                                     return;
                                             }
 
@@ -241,7 +267,7 @@ namespace NeonCli
 
                                     case '%':
 
-                                        if (pos < keyPattern.Length && keyPattern[pos + 1] == '%')
+                                        if (pos < keyPattern.Length - 1 && keyPattern[pos + 1] == '%')
                                         {
                                             // Escaped '%'
 
@@ -257,7 +283,7 @@ namespace NeonCli
 
                                             if (posEnd == -1)
                                             {
-                                                context.WriteErrorLine($"Key pattern [{keyPattern}] is missing a closing [%].");
+                                                context.WriteErrorLine($"Key pattern [{keyPattern}] is missing the closing [%].");
                                                 return;
                                             }
 
@@ -280,11 +306,16 @@ namespace NeonCli
 
                                                     default:
 
-                                                        context.WriteErrorLine($"Document number [{docNumber}] does is missing the [{propertyName}] property referenced by the key pattern.");
+                                                        context.WriteErrorLine($"Document number [{docNumber}] has an invalid [{propertyName}] property referenced by the key pattern.");
                                                         return;
                                                 }
 
                                                 pos = posEnd;
+                                            }
+                                            else
+                                            {
+                                                context.WriteErrorLine($"Document number [{docNumber}] is missing the [{propertyName}] property referenced by the key pattern.");
+                                                return;
                                             }
                                         }
                                         break;
@@ -338,8 +369,20 @@ namespace NeonCli
                     document.Remove("@@key"); // We don't perisit the special key property.
                 }
 
-                bucket.Upsert(key, document);
+                if (!checkMode)
+                {
+                    bucket.Upsert(key, document);
+                }
+
                 docNumber++;
+            }
+
+            /// <summary>
+            /// Returns the number of persisted documents.
+            /// </summary>
+            public long DocumentCount
+            {
+                get { return docNumber - 1; }
             }
         }
 
@@ -347,9 +390,9 @@ namespace NeonCli
         // Implementation
 
         /// <summary>
-        /// Implements the built-in <b>neon_couchbase_query</b> module.
+        /// Implements the built-in <b>neon_couchbase_import</b> module.
         /// </summary>
-        /// <param name="context">The module execution context.</param>
+        /// <param name="context">The module context.</param>
         private void RunCouchbaseImportModule(ModuleContext context)
         {
             var cluster    = NeonClusterHelper.Cluster;
@@ -372,17 +415,17 @@ namespace NeonCli
                 format = default(CouchbaseFileFormat);
             }
 
-            var path = context.ParseString("path");
+            var source = context.ParseString("source");
 
-            if (string.IsNullOrEmpty(path))
+            if (string.IsNullOrEmpty(source))
             {
-                context.WriteErrorLine("[path] module parameter is required.");
+                context.WriteErrorLine("[source] module parameter is required.");
                 return;
             }
 
-            if (!File.Exists(path))
+            if (!File.Exists(source))
             {
-                context.WriteErrorLine($"File [{path}] does not exist.");
+                context.WriteErrorLine($"File [{source}] does not exist.");
                 return;
             }
 
@@ -396,8 +439,8 @@ namespace NeonCli
             //-----------------------------------------------------------------
             // Import the data.
 
-            var bucket = couchbaseArgs.Settings.OpenBucket(couchbaseArgs.Credentials);
-            var writer = new CouchbaseImportWriter(context, bucket, keyPattern);
+            var bucket   = couchbaseArgs.Settings.OpenBucket(couchbaseArgs.Credentials);
+            var importer = new CouchbaseImporter(context, bucket, keyPattern, context.CheckMode);
 
             switch (format.Value)
             {
@@ -408,11 +451,11 @@ namespace NeonCli
                     // Would be nice not to read this whole thing in memory
                     // and then essentially duplicate it by parsing.
 
-                    var jToken = JToken.Parse(File.ReadAllText(path));
+                    var jToken = JToken.Parse(File.ReadAllText(source));
 
                     if (jToken.Type != JTokenType.Array)
                     {
-                        context.WriteErrorLine($"[{path}] is not a JSON array of documents.");
+                        context.WriteErrorLine($"[{source}] is not a JSON array of documents.");
                         return;
                     }
 
@@ -422,17 +465,17 @@ namespace NeonCli
                     {
                         if (item.Type != JTokenType.Object)
                         {
-                            context.WriteErrorLine($"[{path}] includes one or more non-document objects in the array.");
+                            context.WriteErrorLine($"[{source}] includes one or more non-document objects in the array.");
                             return;
                         }
 
-                        writer.WriteDocument((JObject)item);
+                        importer.WriteDocument((JObject)item);
                     }
                     break;
 
                 case CouchbaseFileFormat.JsonLines:
 
-                    using (var reader = new StreamReader(path, Encoding.UTF8))
+                    using (var reader = new StreamReader(source, Encoding.UTF8))
                     {
                         foreach (var line in reader.Lines())
                         {
@@ -445,11 +488,11 @@ namespace NeonCli
 
                             if (item.Type != JTokenType.Object)
                             {
-                                context.WriteErrorLine($"[{path}] includes one or more non-document objects.");
+                                context.WriteErrorLine($"[{source}] includes one or more lines with non-document objects.");
                                 return;
                             }
 
-                            writer.WriteDocument((JObject)item);
+                            importer.WriteDocument((JObject)item);
                         }
                     }
                     break;
@@ -457,6 +500,20 @@ namespace NeonCli
                 default:
 
                     throw new NotImplementedException($"Format [{format}] is not implemented.");
+            }
+
+            if (context.CheckMode)
+            {
+                context.WriteLine(AnsibleVerbosity.Info, $"[{importer.DocumentCount}] documents will be added when CHECKMODE is disabled.");
+            }
+            else
+            {
+                if (importer.DocumentCount > 0)
+                {
+                    context.Changed = true;
+                }
+
+                context.WriteLine(AnsibleVerbosity.Info, $"[{importer.DocumentCount}] documents were added.");
             }
         }
     }
