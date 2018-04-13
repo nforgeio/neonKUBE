@@ -128,9 +128,9 @@ namespace NeonCli
             catch (Exception e)
             {
                 context.Failed  = true;
-                context.Message = e.Message;
+                context.Message = NeonHelper.ExceptionError(e);
 
-                context.WriteErrorLine(e.Message);
+                context.WriteErrorLine(context.Message);
             }
 
             // Handle non-exception based errors.
