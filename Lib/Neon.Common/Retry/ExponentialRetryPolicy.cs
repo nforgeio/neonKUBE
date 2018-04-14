@@ -10,6 +10,8 @@ using System.Diagnostics.Contracts;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.Diagnostics;
+
 namespace Neon.Retry
 {
     /// <summary>
@@ -17,22 +19,42 @@ namespace Neon.Retry
     /// first at an initial interval and then doubles the interval up to a limit
     /// for a specified maximum number of times.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// You can enable transient error logging by passing a non-empty <b>logCategory</b>
+    /// name to the constructor.  This creates an embedded <see cref="INeonLogger"/>
+    /// using that name and any retried transient errors will then be logged as
+    /// warnings including <b>[transient-retry]</b> in the message.
+    /// </para>
+    /// <note>
+    /// Only the retried errors will be logged.  The final exception thrown after
+    /// all retries fail will not be logged because it's assumed that these will
+    /// be caught and handled upstack by application code.
+    /// </note>
+    /// <para>
+    /// Choose a category name that can be used to easily identify the affected
+    /// component.  For example, <b>couchbase:my-cluster</b> to identify a
+    /// specific Couchbase cluster.
+    /// </para>
+    /// </remarks>
     public class ExponentialRetryPolicy : IRetryPolicy
     {
-        private Func<Exception, bool> transientDetector;
+        private Func<Exception, bool>   transientDetector;
+        private INeonLogger             log;
 
         /// <summary>
         /// Constructs the retry policy with a specific transitent detection function.
         /// </summary>
         /// <param name="transientDetector">
-        /// A function that determines whether an exception is transient 
+        /// Optionally specifies the function that determines whether an exception is transient 
         /// (see <see cref="TransientDetector"/>).  You can pass <c>null</c>
         /// if all exceptions are to be considered to be transient.
         /// </param>
-        /// <param name="maxAttempts">The maximum number of times an action should be retried (defaults to <b>5</b>.</param>
-        /// <param name="initialRetryInterval">The initial retry interval between retry attempts (defaults to <b>1 second</b>).</param>
-        /// <param name="maxRetryInterval">The maximum retry interval (defaults to essentially unlimited: 24 hours).</param>
-        public ExponentialRetryPolicy(Func<Exception, bool> transientDetector = null, int maxAttempts = 5, TimeSpan? initialRetryInterval = null, TimeSpan? maxRetryInterval = null)
+        /// <param name="maxAttempts">Optionally specifies the maximum number of times an action should be retried (defaults to <b>5</b>).</param>
+        /// <param name="initialRetryInterval">Optionally specifies the initial retry interval between retry attempts (defaults to <b>1 second</b>).</param>
+        /// <param name="maxRetryInterval">Optionally specifies the maximum retry interval (defaults to essentially unlimited: 24 hours).</param>
+        /// <param name="logCategory">Optionally enables transient error logging by specifying a log category.</param>
+        public ExponentialRetryPolicy(Func<Exception, bool> transientDetector = null, int maxAttempts = 5, TimeSpan? initialRetryInterval = null, TimeSpan? maxRetryInterval = null, string logCategory = null)
         {
             Covenant.Requires<ArgumentException>(maxAttempts > 0);
             Covenant.Requires<ArgumentException>(initialRetryInterval == null || initialRetryInterval > TimeSpan.Zero);
@@ -47,22 +69,29 @@ namespace Neon.Retry
             {
                 InitialRetryInterval = MaxRetryInterval;
             }
+
+            if (!string.IsNullOrEmpty(logCategory))
+            {
+                log = LogManager.Default.GetLogger(logCategory);
+            }
         }
 
         /// <summary>
         /// Constructs the retry policy to handle a specific exception type as transient.
         /// </summary>
         /// <param name="exceptionType">The exception type to be considered to be transient.</param>
-        /// <param name="maxAttempts">The maximum number of times an action should be retried (defaults to <b>5</b>.</param>
-        /// <param name="initialRetryInterval">The initial retry interval between retry attempts (defaults to <b>1 second</b>).</param>
-        /// <param name="maxRetryInterval">The maximum retry interval (defaults to essentially unlimited: 24 hours).</param>
-        public ExponentialRetryPolicy(Type exceptionType, int maxAttempts = 5, TimeSpan? initialRetryInterval = null, TimeSpan? maxRetryInterval = null)
+        /// <param name="maxAttempts">Optionally specifies the maximum number of times an action should be retried (defaults to <b>5</b>).</param>
+        /// <param name="initialRetryInterval">Optionally specifies the initial retry interval between retry attempts (defaults to <b>1 second</b>).</param>
+        /// <param name="maxRetryInterval">Optionally specifies the maximum retry interval (defaults to essentially unlimited: 24 hours).</param>
+        /// <param name="logCategory">Optionally enables transient error logging by specifying a log category.</param>
+        public ExponentialRetryPolicy(Type exceptionType, int maxAttempts = 5, TimeSpan? initialRetryInterval = null, TimeSpan? maxRetryInterval = null, string logCategory = null)
             : this
             (
                 e => e != null && exceptionType == e.GetType(),
                 maxAttempts,
                 initialRetryInterval,
-                maxRetryInterval
+                maxRetryInterval,
+                logCategory
             )
         {
         }
@@ -71,10 +100,11 @@ namespace Neon.Retry
         /// Constructs the retry policy to handle a multiple exception types as transient.
         /// </summary>
         /// <param name="exceptionTypes">The exception type to be considered to be transient.</param>
-        /// <param name="maxAttempts">The maximum number of times an action should be retried (defaults to <b>5</b>.</param>
-        /// <param name="initialRetryInterval">The initial retry interval between retry attempts (defaults to <b>1 second</b>).</param>
-        /// <param name="maxRetryInterval">The maximum retry interval (defaults to essentially unlimited: 24 hours).</param>
-        public ExponentialRetryPolicy(Type[] exceptionTypes, int maxAttempts = 5, TimeSpan? initialRetryInterval = null, TimeSpan? maxRetryInterval = null)
+        /// <param name="maxAttempts">Optionally specifies the maximum number of times an action should be retried (defaults to <b>5</b>).</param>
+        /// <param name="initialRetryInterval">Optionally specifies the initial retry interval between retry attempts (defaults to <b>1 second</b>).</param>
+        /// <param name="maxRetryInterval">Optionally specifies the maximum retry interval (defaults to essentially unlimited: 24 hours).</param>
+        /// <param name="logCategory">Optionally enables transient error logging by specifying a log category.</param>
+        public ExponentialRetryPolicy(Type[] exceptionTypes, int maxAttempts = 5, TimeSpan? initialRetryInterval = null, TimeSpan? maxRetryInterval = null, string logCategory = null)
             : this
             (
                 e =>
@@ -98,7 +128,8 @@ namespace Neon.Retry
                 },
                 maxAttempts,
                 initialRetryInterval,
-                maxRetryInterval
+                maxRetryInterval,
+                logCategory
             )
         {
         }
@@ -146,6 +177,7 @@ namespace Neon.Retry
                         throw;
                     }
 
+                    log?.LogWarn("[transient-retry]", e);
                     await Task.Delay(interval);
 
                     interval = TimeSpan.FromTicks(interval.Ticks * 2);
@@ -177,6 +209,7 @@ namespace Neon.Retry
                         throw;
                     }
 
+                    log?.LogWarn("[transient-retry]", e);
                     await Task.Delay(interval);
 
                     interval = TimeSpan.FromTicks(interval.Ticks * 2);
