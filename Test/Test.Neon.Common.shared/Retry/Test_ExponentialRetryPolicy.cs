@@ -62,7 +62,7 @@ namespace TestCommon
         [Fact]
         public void Defaults()
         {
-            var policy = new ExponentialRetryPolicy(TransientDetector);
+            var policy = new ExponentialRetryPolicy(TransientDetector, logCategory: "test");
 
             Assert.Equal(5, policy.MaxAttempts);
             Assert.Equal(TimeSpan.FromSeconds(1), policy.InitialRetryInterval);

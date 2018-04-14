@@ -36,10 +36,9 @@ namespace Neon.Retry
     /// specific Couchbase cluster.
     /// </para>
     /// </remarks>
-    public class LinearRetryPolicy : IRetryPolicy
+    public class LinearRetryPolicy : RetryPolicyBase, IRetryPolicy
     {
-        private Func<Exception, bool>   transientDetector;
-        private INeonLogger             log;
+        private Func<Exception, bool> transientDetector;
 
         /// <summary>
         /// Constructs the retry policy with a specific transitent detection function.d
@@ -53,6 +52,7 @@ namespace Neon.Retry
         /// <param name="retryInterval">Optionally specifies time interval between retry attempts (defaults to <b>1 second</b>).</param>
         /// <param name="logCategory">Optionally enables transient error logging by specifying a log category.</param>
         public LinearRetryPolicy(Func<Exception, bool> transientDetector = null, int maxAttempts = 5, TimeSpan? retryInterval = null, string logCategory = null)
+            : base(logCategory)
         {
             Covenant.Requires<ArgumentException>(maxAttempts > 0);
             Covenant.Requires<ArgumentException>(retryInterval == null || retryInterval >= TimeSpan.Zero);
@@ -60,11 +60,6 @@ namespace Neon.Retry
             this.transientDetector = transientDetector ?? (e => true);
             this.MaxAttempts       = maxAttempts;
             this.RetryInterval     = retryInterval ?? TimeSpan.FromSeconds(1);
-
-            if (!string.IsNullOrEmpty(logCategory))
-            {
-                log = LogManager.Default.GetLogger(logCategory);
-            }
         }
 
         /// <summary>
@@ -132,7 +127,7 @@ namespace Neon.Retry
         public TimeSpan RetryInterval { get; private set; }
 
         /// <inheritdoc/>
-        public IRetryPolicy Clone()
+        public override IRetryPolicy Clone()
         {
             // The class is invariant we can safely return ourself.
 
@@ -140,7 +135,7 @@ namespace Neon.Retry
         }
 
         /// <inheritdoc/>
-        public async Task InvokeAsync(Func<Task> action)
+        public override async Task InvokeAsync(Func<Task> action)
         {
             var attempts = 0;
 
@@ -158,14 +153,14 @@ namespace Neon.Retry
                         throw;
                     }
 
-                    log?.LogWarn("[transient-retry]", e);
+                    LogTransient(e);
                     await Task.Delay(RetryInterval);
                 }
             }
         }
 
         /// <inheritdoc/>
-        public async Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action)
+        public override async Task<TResult> InvokeAsync<TResult>(Func<Task<TResult>> action)
         {
             var attempts = 0;
 
@@ -182,7 +177,7 @@ namespace Neon.Retry
                         throw;
                     }
 
-                    log?.LogWarn("[transient-retry]", e);
+                    LogTransient(e);
                     await Task.Delay(RetryInterval);
                 }
             }
