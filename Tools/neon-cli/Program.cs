@@ -59,7 +59,6 @@ COMMAND SUMMARY:
     neon ansible galaxy     ARGS
     neon ansible play       ARGS
     neon ansible vault      ARGS
-    neon cluster add        LOGIN-PATH
     neon cluster example
     neon cluster get        VALUE-EXPR
     neon cluster prepare    [CLUSTER-DEF]
