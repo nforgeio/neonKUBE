@@ -24,12 +24,12 @@ namespace Neon.Retry
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="logCategory">Optionally enables transient error logging by specifying a log category.</param>
-        public RetryPolicyBase(string logCategory = null)
+        /// <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
+        public RetryPolicyBase(string sourceModule = null)
         {
-            if (!string.IsNullOrEmpty(logCategory))
+            if (!string.IsNullOrEmpty(sourceModule))
             {
-                log = LogManager.Default.GetLogger(logCategory);
+                log = LogManager.Default.GetLogger(sourceModule);
             }
         }
 

@@ -59,9 +59,9 @@ namespace Neon.Diagnostics
         /// <summary>
         /// Returns a named logger.
         /// </summary>
-        /// <param name="categoryName">The case sensitive logger event category (defaults to <c>null</c>).</param>
+        /// <param name="sourceModule">The case sensitive logger event source module (defaults to <c>null</c>).</param>
         /// <returns>The <see cref="INeonLogger"/> instance.</returns>
-        INeonLogger GetLogger(string categoryName = null);
+        INeonLogger GetLogger(string sourceModule = null);
 
         /// <summary>
         /// Returns a logger to be associated with a specific type.  This method

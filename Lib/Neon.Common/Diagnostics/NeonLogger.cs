@@ -25,7 +25,7 @@ namespace Neon.Diagnostics
     internal class NeonLogger : INeonLogger, ILogger
     {
         private ILogManager logManager;
-        private string      categoryName;
+        private string      sourceModule;
         private bool        infoAsDebug;
         private long        emitCount;
 
@@ -54,8 +54,8 @@ namespace Neon.Diagnostics
         /// Constructs a named instance.
         /// </summary>
         /// <param name="logManager">The parent log manager or <c>null</c>.</param>
-        /// <param name="categoryName">Identifies the event category or <c>null</c>.</param>
-        /// <param name="noisyAspNet">Enables normal (noisy) logging of ASP.NET <b>INFO</b> events (see note in remarks).</param>
+        /// <param name="sourceModule">Optionally identifies the event source module or <c>null</c>.</param>
+        /// <param name="noisyAspNet">Optionally enables normal (noisy) logging of ASP.NET <b>INFO</b> events (see note in remarks).</param>
         /// <remarks>
         /// <para>
         /// The instances returned will log nothing if <paramref name="logManager"/>
@@ -74,17 +74,17 @@ namespace Neon.Diagnostics
         /// </para>
         /// </note>
         /// </remarks>
-        public NeonLogger(ILogManager logManager, string categoryName = null, bool noisyAspNet = false)
+        public NeonLogger(ILogManager logManager, string sourceModule = null, bool noisyAspNet = false)
         {
             this.logManager   = logManager ?? LogManager.Disabled;
-            this.categoryName = categoryName ?? string.Empty;
+            this.sourceModule = sourceModule ?? string.Empty;
 
             // $hack(jeff.lill):
             //
             // We're going to assume that ASP.NET related loggers are always
             // prefixed by: [Microsoft.AspNetCore]
 
-            this.infoAsDebug = !noisyAspNet && categoryName != null && categoryName.StartsWith("Microsoft.AspNetCore.");
+            this.infoAsDebug = !noisyAspNet && sourceModule != null && sourceModule.StartsWith("Microsoft.AspNetCore.");
         }
 
         /// <inheritdoc/>
@@ -175,13 +175,13 @@ namespace Neon.Diagnostics
 
             message = Normalize(message);
 
-            lock (categoryName)
+            lock (sourceModule)
             {
                 var module = string.Empty;
 
-                if (!string.IsNullOrEmpty(categoryName))
+                if (!string.IsNullOrEmpty(this.sourceModule))
                 {
-                    module = $" [module:{categoryName}]";
+                    module = $" [module:{this.sourceModule}]";
                 }
 
                 var activity = string.Empty;

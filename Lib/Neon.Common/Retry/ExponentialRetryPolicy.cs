@@ -52,9 +52,9 @@ namespace Neon.Retry
         /// <param name="maxAttempts">Optionally specifies the maximum number of times an action should be retried (defaults to <b>5</b>).</param>
         /// <param name="initialRetryInterval">Optionally specifies the initial retry interval between retry attempts (defaults to <b>1 second</b>).</param>
         /// <param name="maxRetryInterval">Optionally specifies the maximum retry interval (defaults to essentially unlimited: 24 hours).</param>
-        /// <param name="logCategory">Optionally enables transient error logging by specifying a log category.</param>
-        public ExponentialRetryPolicy(Func<Exception, bool> transientDetector = null, int maxAttempts = 5, TimeSpan? initialRetryInterval = null, TimeSpan? maxRetryInterval = null, string logCategory = null)
-            : base(logCategory)
+        /// <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
+        public ExponentialRetryPolicy(Func<Exception, bool> transientDetector = null, int maxAttempts = 5, TimeSpan? initialRetryInterval = null, TimeSpan? maxRetryInterval = null, string sourceModule = null)
+            : base(sourceModule)
         {
             Covenant.Requires<ArgumentException>(maxAttempts > 0);
             Covenant.Requires<ArgumentException>(initialRetryInterval == null || initialRetryInterval > TimeSpan.Zero);
@@ -78,15 +78,15 @@ namespace Neon.Retry
         /// <param name="maxAttempts">Optionally specifies the maximum number of times an action should be retried (defaults to <b>5</b>).</param>
         /// <param name="initialRetryInterval">Optionally specifies the initial retry interval between retry attempts (defaults to <b>1 second</b>).</param>
         /// <param name="maxRetryInterval">Optionally specifies the maximum retry interval (defaults to essentially unlimited: 24 hours).</param>
-        /// <param name="logCategory">Optionally enables transient error logging by specifying a log category.</param>
-        public ExponentialRetryPolicy(Type exceptionType, int maxAttempts = 5, TimeSpan? initialRetryInterval = null, TimeSpan? maxRetryInterval = null, string logCategory = null)
+        /// <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
+        public ExponentialRetryPolicy(Type exceptionType, int maxAttempts = 5, TimeSpan? initialRetryInterval = null, TimeSpan? maxRetryInterval = null, string sourceModule = null)
             : this
             (
                 e => e != null && exceptionType == e.GetType(),
                 maxAttempts,
                 initialRetryInterval,
                 maxRetryInterval,
-                logCategory
+                sourceModule
             )
         {
         }
@@ -98,8 +98,8 @@ namespace Neon.Retry
         /// <param name="maxAttempts">Optionally specifies the maximum number of times an action should be retried (defaults to <b>5</b>).</param>
         /// <param name="initialRetryInterval">Optionally specifies the initial retry interval between retry attempts (defaults to <b>1 second</b>).</param>
         /// <param name="maxRetryInterval">Optionally specifies the maximum retry interval (defaults to essentially unlimited: 24 hours).</param>
-        /// <param name="logCategory">Optionally enables transient error logging by specifying a log category.</param>
-        public ExponentialRetryPolicy(Type[] exceptionTypes, int maxAttempts = 5, TimeSpan? initialRetryInterval = null, TimeSpan? maxRetryInterval = null, string logCategory = null)
+        /// <param name="sourceModule">Optionally enables transient error logging by identifying the source module (defaults to <c>null</c>).</param>
+        public ExponentialRetryPolicy(Type[] exceptionTypes, int maxAttempts = 5, TimeSpan? initialRetryInterval = null, TimeSpan? maxRetryInterval = null, string sourceModule = null)
             : this
             (
                 e =>
@@ -124,7 +124,7 @@ namespace Neon.Retry
                 maxAttempts,
                 initialRetryInterval,
                 maxRetryInterval,
-                logCategory
+                sourceModule
             )
         {
         }

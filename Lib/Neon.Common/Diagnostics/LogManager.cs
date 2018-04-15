@@ -225,9 +225,9 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public INeonLogger GetLogger(string categoryName = null)
+        public INeonLogger GetLogger(string sourceModule = null)
         {
-            return InternalGetLogger(categoryName);
+            return InternalGetLogger(sourceModule);
         }
 
         /// <inheritdoc/>
@@ -266,9 +266,9 @@ namespace Neon.Diagnostics
         }
 
         /// <inheritdoc/>
-        public ILogger CreateLogger(string categoryName)
+        public ILogger CreateLogger(string sourceModule)
         {
-            return (ILogger)GetLogger(categoryName);
+            return (ILogger)GetLogger(sourceModule);
         }
     }
 }
