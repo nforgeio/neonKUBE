@@ -95,6 +95,11 @@ namespace NeonCli
                         new DashboardModule().Run(context);
                         break;
 
+                    case "neon_docker_service":
+
+                        new DockerServiceModule().Run(context);
+                        break;
+
                     case "neon_dns":
 
                         new DnsModule().Run(context);
@@ -105,14 +110,14 @@ namespace NeonCli
                         new RouteModule().Run(context);
                         break;
 
-                    case "neon_docker_service":
-
-                        new DockerServiceModule().Run(context);
-                        break;
-
                     case "neon_couchbase_import":
 
                         new CouchbaseImportModule().Run(context);
+                        break;
+
+                    case "neon_couchbase_index":
+
+                        new CouchbaseIndexModule().Run(context);
                         break;
 
                     case "neon_couchbase_query":

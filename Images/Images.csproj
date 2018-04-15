@@ -76,6 +76,7 @@
     <None Include="golang\README.md" />
     <None Include="neon-cli\modules\neon_certificate.sh" />
     <None Include="neon-cli\modules\neon_couchbase_import.sh" />
+    <None Include="neon-cli\modules\neon_couchbase_index.sh" />
     <None Include="neon-cli\modules\neon_couchbase_query.sh" />
     <None Include="neon-cli\modules\neon_dashboard.sh" />
     <None Include="neon-cli\modules\neon_dns.sh" />

@@ -319,8 +319,16 @@ ARGUMENTS:
 
 MODULES:
 
-    neon_certificate    - Manages cluster TLS certificates
-    neon_proxy          - Manager cluster proxy routes
+    neon_certificate        - Manages cluster TLS certificates
+    neon_couchbase_import   - Imports Couchbase data
+    neon_couchbase_index    - Manages Couchbase indexes
+    neon_couchbase_query    - Executes a Couchbase query
+    neon_dashboard          - Manages cluster dashboards
+    neon_dns                - Manages cluster DNS
+    neon_docker_service     - Manages cluster Docker services
+    neon_route              - Manages proxy routes
+    neon_proxy              - Manager cluster proxy routes
+    
 ";
 
         private const string sshClientPrivateKeyPath = "/dev/shm/ansible/ssh-client.key";   // Path to the SSH private client key (on a container RAM drive)
