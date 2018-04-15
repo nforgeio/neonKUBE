@@ -61,6 +61,7 @@ COMMAND SUMMARY:
     neon ansible vault      ARGS
     neon cluster example
     neon cluster get        VALUE-EXPR
+    neon cluster node       ARGS
     neon cluster prepare    [CLUSTER-DEF]
     neon cluster setup      [CLUSTER-DEF]
     neon cluster verify     [CLUSTER-DEF]
@@ -214,6 +215,7 @@ Note that the tool may require admin privileges for [--noshim] mode.
                     new ClusterCommand(),
                     new ClusterExampleCommand(),
                     new ClusterGetCommand(),
+                    new ClusterNodeCommand(),
                     new ClusterPrepareCommand(),
                     new ClusterSetupCommand(),
                     new ClusterVerifyCommand(),

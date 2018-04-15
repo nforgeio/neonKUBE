@@ -22,7 +22,7 @@ using Neon.Common;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>cluster property</b> command.
+    /// Implements the <b>cluster get</b> command.
     /// </summary>
     public class ClusterGetCommand : CommandBase
     {
