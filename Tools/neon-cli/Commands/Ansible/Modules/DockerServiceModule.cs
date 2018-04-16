@@ -292,6 +292,9 @@ namespace NeonCli.Ansible
     // Examples:
     // ---------
     //
+    // This example creates or updates a certificate from a variable:
+    //
+    //  - name: test
 
     /// <summary>
     /// Implements the <b>neon_docker_service</b> Ansible module.

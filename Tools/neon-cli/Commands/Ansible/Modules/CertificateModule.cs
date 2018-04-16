@@ -61,6 +61,47 @@ namespace NeonCli.Ansible
     //
     // force        no          false                   resaves the certificate when [state=present]
     //                                                  even if the certificate is the same
+    //
+    // Examples:
+    // ---------
+    //
+    // This example creates or updates an explicitly specified certificate:
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: foo.com certificate
+    //        neon_certificate:
+    //          name: foo.com
+    //          state: present
+    //          value: |
+    //            -----BEGIN CERTIFICATE-----
+    //            MIIFUTCCBDmgAwIBAgIQQAs/u3q0c8hRqxu20YgHWzANBgkqhkiG9w0BAQsFADCB
+    //            kDELMAkGA1UEBhMCR0IxGzAZBgNVBAgTEkdyZWF0ZXIgTWFuY2hlc3RlcjEQMA4G
+    //            A1UEBxMHU2FsZm9yZDEaMBgGA1UEChMRQ09NT0RPIENBIExpbWl0ZWQxNjA0BgNV
+    //            ...
+    //            -----END CERTIFICATE-----
+    //
+    // This example creates or updates a certificate from a variable:
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: foo.com certificate
+    //        neon_certificate:
+    //          name: foo.com
+    //          state: present
+    //          value: "{{ FOO_COM_CERTIFICATE }}"
+    //
+    // This example deletes a certificate if it exists:
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: foo.com certificate
+    //        neon_certificate:
+    //          name: foo.com
+    //          state: absent
 
     /// <summary>
     /// Implements the <b>neon_certificate</b> Ansible module.

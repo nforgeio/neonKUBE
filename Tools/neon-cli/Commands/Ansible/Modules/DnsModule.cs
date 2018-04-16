@@ -85,61 +85,91 @@ namespace NeonCli.Ansible
         //
         // This simple example associates a single IP address to FOO.COM:
         //
-        //      hostname: foo.com
-        //      state: present
-        //      endpoints:
-        //        - target: 10.0.0.30
+        //  - name: test
+        //    hosts: localhost
+        //    tasks:
+        //      - name: DNS task
+        //        neon_dns:
+        //          hostname: foo.com
+        //          state: present
+        //          endpoints:
+        //            - target: 10.0.0.30
         //
         // This example enables health checks for a single address:
         //
-        //      hostname: foo.com
-        //      state: present
-        //      endpoints:
-        //        - target: 10.0.0.30
-        //          check: yes
+        //  - name: test
+        //    hosts: localhost
+        //    tasks:
+        //      - name: DNS task
+        //        neon_dns:
+        //          hostname: foo.com
+        //          state: present
+        //          endpoints:
+        //            - target: 10.0.0.30
+        //              check: yes
         //
         // This example associates multiple addresses, some with health
         // checks and others without:
         //
-        //      hostname: foo.com
-        //      state: present
-        //      endpoints:
-        //        - target: 10.0.0.30
-        //          check: yes
-        //        - target: 10.0.0.31
-        //          check: no
-        //        - target: 10.0.0.32
-        //          check: yes
+        //  - name: test
+        //    hosts: localhost
+        //    tasks:
+        //      - name: DNS task
+        //        neon_dns:
+        //          hostname: foo.com
+        //          state: present
+        //          endpoints:
+        //            - target: 10.0.0.30
+        //              check: yes
+        //            - target: 10.0.0.31
+        //              check: no
+        //            - target: 10.0.0.32
+        //              check: yes
         //
         // This example simulates a CNAME record by associating WWW.GOOGLE.COM
         // with the FOO.COM.  This means DNS lookups for FOO.COM will return
         // the last IP address we retrieved for WWW.GOOGLE.COM:
         //
-        //      hostname: foo.com
-        //      state: present
-        //      endpoints:
-        //        - target: www.google.com
+        //  - name: test
+        //    hosts: localhost
+        //    tasks:
+        //      - name: DNS task
+        //        neon_dns:
+        //          hostname: foo.com
+        //          state: present
+        //          endpoints:
+        //            - target: www.google.com
         //
         // This example expands the neonCLUSTER [swarm] host group so that
         // FOO.COM will resolve to the IP addresses for all cluster Swarm
         // nodes.  Checking is now enabled, so the IP addresses for all Swarm
         // nodes will be returned, regardless of their health.
         //
-        //      hostname: foo.com
-        //      state: present
-        //      endpoints:
-        //        - target: group=swarm
+        //  - name: test
+        //    hosts: localhost
+        //    tasks:
+        //      - name: DNS task
+        //        neon_dns:
+        //          hostname: foo.com
+        //          state: present
+        //          endpoints:
+        //            - target: group=swarm
         //
         // This example expands the neonCLUSTER [swarm] host group so that
         // FOO.COM will resolve to the IP addresses for all cluster Swarm
         // nodes.  Checking is enabled this time, so the IP addresses for 
         // healthy Swarm nodes will be returned, regardless of their health.
         //
-        //      hostname: foo.com
-        //      state: present
-        //      endpoints:
-        //        - target: group=swarm
-        //          check: yes
+        //  - name: test
+        //    hosts: localhost
+        //    tasks:
+        //      - name: DNS task
+        //        neon_dns:
+        //          hostname: foo.com
+        //          state: present
+        //          endpoints:
+        //            - target: group=swarm
+        //              check: yes
 
         /// <inheritdoc/>
         public void Run(ModuleContext context)

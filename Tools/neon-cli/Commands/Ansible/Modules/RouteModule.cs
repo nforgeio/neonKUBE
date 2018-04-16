@@ -64,6 +64,92 @@ namespace NeonCli.Ansible
     //
     // force        no          false                   forces proxy rebuild when [state=present]
     //                                                  even if the route is unchanged
+    //
+    // Examples:
+    // ---------
+    //
+    // This example creates a public HTTP route listening that forwards
+    // HTTP traffic for [http://test.com and http://www.test.com] 
+    // to the TEST Docker service port 80.
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: route task
+    //        neon_route:
+    //          name: test
+    //          proxy: public
+    //          state: present
+    //          route:
+    //            mode: http
+    //            checkuri: /_health/check.php
+    //            checkmethod: GET
+    //            frontends:
+    //              - host: test.com
+    //              - host: www.test.com
+    //            backends:
+    //              - server: TEST
+    //                port: 80
+    //
+    // This example creates a public HTTP route listening that terminates
+    // HTTPS traffic for [https://test.com and https://www.test.com] using
+    // the certificate saved to the Ansible TEST_COM_CERT variable and then
+    // forwards the unencrypted traffic onto the TEST service.  The route
+    // is also configured have the client redirect any HTTP traffic to 
+    // to HTTPS.
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: route task
+    //        neon_route:
+    //          name: test
+    //          proxy: public
+    //          state: present
+    //          httpsredirect: yes
+    //          route:
+    //            mode: http
+    //            checkuri: /_health/check.php
+    //            checkmethod: GET
+    //            frontends:
+    //              - host: test.com
+    //                certname: "{{ TEST_COM_CERT }}"
+    //              - host: www.test.com
+    //                certname: "{{ TEST_COM_CERT }}"
+    //            backends:
+    //              - server: TEST
+    //                port: 80
+    //
+    // This example adds a public TCP route that forwards traffic
+    // sent to port 5120 to each of the host nodes in the [DATABASE]
+    // cluster host group on port 8080.
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: route task
+    //        neon_route:
+    //          name: test
+    //          proxy: public
+    //          state: present
+    //          route:
+    //            mode: tcp
+    //            frontends:
+    //              - port: 5120
+    //            backends:
+    //              - group: DATABASE
+    //                port: 8080
+    //
+    // This example removes any existing route named TEST.
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: route task
+    //        neon_route:
+    //          name: test
+    //          proxy: public
+    //          state: absent
 
     /// <summary>
     /// Implements the <b>neon_route</b> Ansible module.

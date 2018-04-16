@@ -60,13 +60,39 @@ namespace NeonCli.Ansible
     // folder       no                                  folder where this dashboard will be in 
     //                                                  the global cluster dashboard.
     //
-    // url          see comment                         dashboard URL.  Required  
-    //                                                  when [state=present]
+    // url          see comment                         dashboard URL. Required when [state=present]
     //
     // description  no                                  brief dashboard description
     //
     // state        no          present     absent      indicates whether the dashboard
     //                                      present     should be created or removed
+    //
+    // Examples
+    // --------
+    //
+    // This example creates a dashboard named [google] that displays the
+    // search engine:
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: google dashboard
+    //        neon_dashboard:
+    //          name: google
+    //          title: Google Search
+    //          url: http://www.google.com
+    //          description: Everything on the web
+    //          state: present
+    //
+    // This example removes the [google] dashboard if it exists:
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: google dashboard
+    //        neon_dashboard:
+    //          name: google
+    //          state: absent
 
     /// <summary>
     /// Implements the <b>neon_dashboard</b> Ansible module.
