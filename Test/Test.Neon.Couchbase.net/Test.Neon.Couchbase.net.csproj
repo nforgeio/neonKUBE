@@ -50,6 +50,9 @@
     <Reference Include="Couchbase.Lite.Storage.SystemSQLite, Version=1.4.1.0, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Couchbase.Lite.Storage.SystemSQLite.1.4.1\lib\net45\Couchbase.Lite.Storage.SystemSQLite.dll</HintPath>
     </Reference>
+    <Reference Include="Couchbase.NetClient">
+      <HintPath>..\..\packages\CouchbaseNetClient.2.5.9\lib\net45\Couchbase.NetClient.dll</HintPath>
+    </Reference>
     <Reference Include="ICSharpCode.SharpZipLib.Portable, Version=0.86.0.51803, Culture=neutral, processorArchitecture=MSIL">
       <HintPath>..\..\packages\SharpZipLib.Portable.0.86.0.0003\lib\portable-net45+netcore45+wp8+win8+wpa81+MonoTouch+MonoAndroid+Xamarin.iOS10\ICSharpCode.SharpZipLib.Portable.dll</HintPath>
     </Reference>
@@ -114,6 +117,14 @@
     <ProjectReference Include="..\..\Lib\Neon.Couchbase.Lite.net\Neon.Couchbase.Lite.net.csproj">
       <Project>{5d528831-61ad-41c3-8bb4-50ababf9ae99}</Project>
       <Name>Neon.Couchbase.Lite.net</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.Couchbase.SyncGateway\Neon.Couchbase.SyncGateway.csproj">
+      <Project>{7017af13-9c49-4c31-8304-9354d86e2886}</Project>
+      <Name>Neon.Couchbase.SyncGateway</Name>
+    </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.Couchbase\Neon.Couchbase.csproj">
+      <Project>{7ab3c81c-8f25-4f42-b992-947acdf34056}</Project>
+      <Name>Neon.Couchbase</Name>
     </ProjectReference>
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj">
       <Project>{468e440f-2284-483d-a54a-ec540c85f76e}</Project>

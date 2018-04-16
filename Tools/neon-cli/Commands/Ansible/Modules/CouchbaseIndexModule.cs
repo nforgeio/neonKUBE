@@ -94,6 +94,9 @@ namespace NeonCli.Ansible
         // primary      no          no          yes         indicates that this is PRIMARY index
         //                                      no
         //
+        // namespace    no          default                 specifies the index namespace.  This
+        //                                                  defaults to the current bucket namespace.
+        //
         // type         no          gsi         gsi         specifies the index type
         //                                      view
         //
@@ -225,6 +228,13 @@ namespace NeonCli.Ansible
                 type = default(IndexType);
             }
 
+            var namespaceId = context.ParseString("namespace");
+
+            if (string.IsNullOrEmpty(namespaceId))
+            {
+                namespaceId = "default";
+            }
+
             var keys  = context.ParseStringArray("keys");
             var where = context.ParseString("where");
             var nodes = context.ParseStringArray("nodes");
@@ -263,6 +273,17 @@ namespace NeonCli.Ansible
                 return;
             }
 
+            string keyspace;
+
+            if (!string.IsNullOrEmpty(namespaceId))
+            {
+                keyspace = $"{namespaceId}:{couchbaseArgs.Settings.Bucket}";
+            }
+            else
+            {
+                keyspace = couchbaseArgs.Settings.Bucket;
+            }
+
             //-----------------------------------------------------------------
             // Perform the operation.
 
@@ -278,7 +299,7 @@ namespace NeonCli.Ansible
                         dynamic existing = await retry.InvokeAsync<dynamic>(
                             async () =>
                             {
-                                return (await bucket.QuerySafeAsync<dynamic>($"select * from system:indexes where name = `{name}`")).FirstOrDefault();
+                                return (await bucket.QuerySafeAsync<dynamic>($"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)} and namespace_id={CbHelper.Literal(namespaceId)} and name={CbHelper.Literal(name)}")).FirstOrDefault();
                             });
 
                         switch (state)
@@ -309,11 +330,11 @@ namespace NeonCli.Ansible
 
                                 if (primary.Value)
                                 {
-                                    sbCreateIndexQuery.Append($"create primary index {name} on {bucket} using {type.ToString().ToUpperInvariant()}");
+                                    sbCreateIndexQuery.Append($"create primary index {CbHelper.Literal(name)} on {CbHelper.Literal(bucket.Name)} using {type.ToString().ToUpperInvariant()}");
                                 }
                                 else
                                 {
-                                    sbCreateIndexQuery.Append($"create index {name} on {bucket} using {type.ToString().ToUpperInvariant()}");
+                                    sbCreateIndexQuery.Append($"create index {CbHelper.Literal(name)} on {CbHelper.Literal(bucket.Name)} using {type.ToString().ToUpperInvariant()}");
                                 }
 
                                 // Append the WHERE clause.
@@ -363,7 +384,7 @@ namespace NeonCli.Ansible
                                             sbCreateIndexQuery.Append(", ");
                                         }
 
-                                        sbCreateIndexQuery.Append($"\"{node}\"");
+                                        sbCreateIndexQuery.Append(CbHelper.Literal(node));
                                     }
 
                                     sbCreateIndexQuery.Append("]");
@@ -383,7 +404,7 @@ namespace NeonCli.Ansible
                                     // properties with the module parameters to determine whether we
                                     // need to remove and recreate it.
 
-                                    var index = existing["indexes"];
+                                    var index   = existing["indexes"];
                                     var changed = false;
 
                                     // Compare the old/new index types.
@@ -520,7 +541,7 @@ namespace NeonCli.Ansible
                                         await retry.InvokeAsync(
                                             async () =>
                                             {
-                                                await bucket.QuerySafeAsync<dynamic>($"drop index {bucket} using {type}");
+                                                await bucket.QuerySafeAsync<dynamic>($"drop index {bucket.Name} using {type}");
                                             });
 
                                         context.WriteLine(AnsibleVerbosity.Trace, $"Index [{name}] was dropped.");
