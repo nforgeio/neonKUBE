@@ -64,8 +64,8 @@ namespace NeonCli.Ansible
         // parameter    required    default     choices     comments
         // --------------------------------------------------------------------
         //
-        // servers      yes                                 array specifying one or more target
-        //                                                  Couchbase servers.  Each element can 
+        // nodes        yes                                 array specifying one or more target
+        //                                                  Couchbase nodes.  Each element can 
         //                                                  be an IP address, a FQDN, cluster
         //                                                  node name or cluster node group name
         //
@@ -97,7 +97,8 @@ namespace NeonCli.Ansible
         // namespace    no          default                 specifies the index namespace.  This
         //                                                  defaults to the current bucket namespace.
         //
-        // type         no          gsi         gsi         specifies the index type
+        // type         no          local       local       specifies the index type
+        //                                      gsi
         //                                      view
         //
         // keys         see comment                         array of document fields, scalar
@@ -110,22 +111,24 @@ namespace NeonCli.Ansible
         //                                                  to create for a GSI or VIEW index
         //                                                  (see the WARNING in remarks below).
         //
-        // nodes        no                                  optional identifies the specific
-        //                                                  nodes where the index is to be
+        // servers      no                                  optionally identifies the specific
+        //                                                  index servers where the index is to be
         //                                                  hosted.  This is an array of network
         //                                                  endpoints like "node1:8091" or 
         //                                                  '10.0.0.200:8091".  Cannot be used
-        //                                                  with [replicas].
+        //                                                  with [replicas].  This is ignored for
+        //                                                  non-GSI indexes.
         //
-        // defer_build  no          no          yes         optionally starts index creation
-        //                                      no          but DOES NOT wait for the index
-        //                                                  build to complete
-        //
-        // replicas     no          NODE-COUNT              specifies the number of index
-        //                                                  replicas.  This defaults to the
-        //                                                  number of nodes in the cluster.
-        //                                                  This cannot be used with [nodes].
+        // replicas     no          see comment             optionally specifies the number of
+        //                                                  GSI based index replicas to deploy.  
+        //                                                  This defaults to 1.  Note that this 
+        //                                                  cannot be used with [servers].  This
+        //                                                  is ignored for non-GSI indexes.
         //                                      
+        // defer_build  no          no          yes         optionally defers creation of a GSI
+        //                                                  index until a separate [BUILD INDEX...]
+        //                                                  query is submitted.  See remarks.
+        //
         // Remarks:
         // --------
         //
@@ -138,7 +141,29 @@ namespace NeonCli.Ansible
         // property, scalar aggregate function or array expression.  You may also filter
         // the index by specifying a WHERE clause.
         //
-        // WARNING!
+        // GSI Indexes
+        // -----------
+        // By default, indexes will be hosted locally hosted within the cluster buckets.
+        // For more advanced environments, it's possible to host indexes on separate
+        // index servers for more efficent use of memory and often better query performance.
+        //
+        // The [servers] and [replicas] module arguments can be used to control where
+        // GSI indexes will be placed.  When neither of these are specified, Couchbase
+        // will choose a single index server and locate the index there.  You can explicitly
+        // specify the number of index servers by setting [replicas] to an integer count.
+        // You can also explicitly choose index servers by setting [servers].
+        //
+        // When creating multiple GSI indexes at the same time, you may want to specify
+        // [defer_build=yes].  This creates the index but defers actually building it
+        // until a separate [BUILD INDEX ...] query is executed, identifying a set of
+        // GSI indexes to be built together.  This can be much more efficient because
+        // only a single document scan will be required rather than performing a separate
+        // scan for each index.
+        //
+        // Use the [neon_couchbase_query] module to submit the BUILD INDEX query.
+        //
+        // WHERE CLAUSE WARNING!
+        // ---------------------
         //
         // This module is not currently capable of deeply parsing the [where] expression
         // so that it can compared to the canonical form that will be returned as the 
@@ -168,6 +193,81 @@ namespace NeonCli.Ansible
         // Examples:
         // ---------
         //
+        // This example creates a LOCAL primary index.
+        //
+        //  Equivalent to: CREATE PRIMARY INDEX idx_primary ON test
+        //
+        //  - name: test
+        //    hosts: localhost
+        //    tasks:
+        //      - name: primary index
+        //        neon_couchbase_index:
+        //          nodes:
+        //            - couchbase-0.mydomain.com
+        //              couchbase-1.mydomain.com
+        //              couchbase-2.mydomain.com
+        //          bucket: test
+        //          username: Administrator
+        //          password: password
+        //          state: present
+        //          name: idx_primary
+        //          primary: yes
+        //
+        // This example creates a local secondary index on two document
+        // keys: Name and Age.
+        //
+        //  Equivalent to: CREATE INDEX idx_name_age ON test (Name, Age)
+        //
+        //  - name: test
+        //    hosts: localhost
+        //    tasks:
+        //      - name: secondary index
+        //        neon_couchbase_index:
+        //          nodes:
+        //            - couchbase-0.mydomain.com
+        //              couchbase-1.mydomain.com
+        //              couchbase-2.mydomain.com
+        //          bucket: test
+        //          username: Administrator
+        //          password: password
+        //          state: present
+        //          name: idx_name_age
+        //          keys:
+        //            - Name
+        //            - Age
+        //
+        // This example creates a local secondary index with a filtering
+        // WHERE clause.
+        //
+        //  Equivalent to: CREATE INDEX idx_seniors ON test (Name, Age) where Age >= 65
+        //
+        //  - name: test
+        //    hosts: localhost
+        //    tasks:
+        //      - name: secondary index
+        //        neon_couchbase_index:
+        //          nodes:
+        //            - couchbase-0.mydomain.com
+        //              couchbase-1.mydomain.com
+        //              couchbase-2.mydomain.com
+        //          bucket: test
+        //          username: Administrator
+        //          password: password
+        //          state: present
+        //          name: idx_seniors
+        //          keys:
+        //            - Name
+        //            - Age
+        //          where: "(65 <= `Age`)"
+        //
+        // Note that the WHERE value exactly matches the [condition] property that
+        // will be set for the index.  This was obtained by manually creating the
+        // index first in toy cluster and then queried via:
+        //
+        //      SELECT * FROM system:indexes WHERE name = "idx_seniors"'
+        //
+        // The [where] parameter must EXACTLY MATCH what Couchbase is going to
+        // set as the condition for index comparisons to work properly.
 
         //---------------------------------------------------------------------
         // Private types
@@ -177,7 +277,8 @@ namespace NeonCli.Ansible
         /// </summary>
         private enum IndexType
         {
-            Gsi = 0,
+            Local = 0,
+            Gsi,
             View
         }
 
@@ -212,6 +313,13 @@ namespace NeonCli.Ansible
                 force = false;
             }
 
+            var buildNow = context.ParseBool("build_all");
+
+            if (!buildNow.HasValue)
+            {
+                buildNow = false;
+            }
+
             var name = context.ParseString("name", v => new Regex(@"[a-z][a-z0-0#_]*", RegexOptions.IgnoreCase).IsMatch(v));
 
             var primary = context.ParseBool("primary");
@@ -235,10 +343,10 @@ namespace NeonCli.Ansible
                 namespaceId = "default";
             }
 
-            var keys  = context.ParseStringArray("keys");
-            var where = context.ParseString("where");
-            var nodes = context.ParseStringArray("nodes");
-            var defer = context.ParseBool("defer_build");
+            var keys    = context.ParseStringArray("keys");
+            var where   = context.ParseString("where");
+            var servers = context.ParseStringArray("servers");
+            var defer   = context.ParseBool("defer_build");
 
             if (!defer.HasValue)
             {
@@ -251,13 +359,13 @@ namespace NeonCli.Ansible
             {
                 if (keys.Count > 0)
                 {
-                    context.WriteErrorLine("PRIMARY indexes do not allow any [keys] to be specified.");
+                    context.WriteErrorLine("PRIMARY indexes do not allow [keys] to be specified.");
                     return;
                 }
 
                 if (!string.IsNullOrEmpty(where))
                 {
-                    context.WriteErrorLine("PRIMARY indexes do not support [where] to be specified.");
+                    context.WriteErrorLine("PRIMARY indexes do not support the [where] clause.");
                     return;
                 }
             }
@@ -267,15 +375,15 @@ namespace NeonCli.Ansible
                 return;
             }
 
-            if (replicas.HasValue && nodes.Count > 0)
+            if (type.Value == IndexType.Gsi && replicas.HasValue && servers.Count > 0)
             {
-                context.WriteErrorLine("Only one of [nodes] or [replicas] may be specified for any index.");
+                context.WriteErrorLine("Only one of [servers] or [replicas] may be specified for a GSI index.");
                 return;
             }
 
             string keyspace;
 
-            if (!string.IsNullOrEmpty(namespaceId))
+            if (!string.IsNullOrEmpty(namespaceId) && namespaceId != "default")
             {
                 keyspace = $"{namespaceId}:{couchbaseArgs.Settings.Bucket}";
             }
@@ -292,37 +400,13 @@ namespace NeonCli.Ansible
                 {
                     using (var bucket = couchbaseArgs.Settings.OpenBucket(couchbaseArgs.Credentials))
                     {
-                        var retry = new LinearRetryPolicy(CouchbaseTransientDetector.IsTransient, sourceModule: bucket.Name);
-
                         // Fetch the index if it already exists.
 
-                        dynamic existing = await retry.InvokeAsync<dynamic>(
-                            async () =>
-                            {
-                                return (await bucket.QuerySafeAsync<dynamic>($"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)} and namespace_id={CbHelper.Literal(namespaceId)} and name={CbHelper.Literal(name)}")).FirstOrDefault();
-                            });
+                        var existing = (await bucket.QuerySafeAsync<dynamic>($"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)} and namespace_id={CbHelper.Literal(namespaceId)} and name={CbHelper.Literal(name)}")).FirstOrDefault();
 
                         switch (state)
                         {
                             case "present":
-
-                                // Default [replicas] to the number of Couchbase nodes if the
-                                // count or target nodes aren't explicitly specified.
-
-                                if (!replicas.HasValue && nodes.Count == 0)
-                                {
-                                    context.WriteLine(AnsibleVerbosity.Trace, "Discovering the number of Couchbase nodes.");
-
-                                    var results = await retry.InvokeAsync(
-                                        async () =>
-                                        {
-                                            return await bucket.QuerySafeAsync<dynamic>("");
-                                        });
-
-                                    replicas = results.Count;
-
-                                    context.WriteLine(AnsibleVerbosity.Trace, $"Discovered [{replicas}] Couchbase nodes.");
-                                }
 
                                 // Generate the index creation query.
 
@@ -330,16 +414,23 @@ namespace NeonCli.Ansible
 
                                 if (primary.Value)
                                 {
-                                    sbCreateIndexQuery.Append($"create primary index {CbHelper.Literal(name)} on {CbHelper.Literal(bucket.Name)} using {type.ToString().ToUpperInvariant()}");
+                                    sbCreateIndexQuery.Append($"create primary index {CbHelper.LiteralName(name)} on {CbHelper.Literal(bucket.Name)}");
                                 }
                                 else
                                 {
-                                    sbCreateIndexQuery.Append($"create index {CbHelper.Literal(name)} on {CbHelper.Literal(bucket.Name)} using {type.ToString().ToUpperInvariant()}");
+                                    sbCreateIndexQuery.Append($"create index {CbHelper.LiteralName(name)} on {CbHelper.Literal(bucket.Name)}");
                                 }
 
-                                // Append the WHERE clause.
+                                // Append the USING clause for non-LOCAL indexes.
 
-                                if (!string.IsNullOrEmpty(where))
+                                if (type.Value != IndexType.Local)
+                                {
+                                    sbCreateIndexQuery.AppendWithSeparator($"using {type.ToString().ToUpperInvariant()}");
+                                }
+
+                                // Append the WHERE clause for non-PRIMARY indexes.
+
+                                if (!primary.Value && !string.IsNullOrEmpty(where))
                                 {
                                     // Ensure that the WHERE clause is surrounded by "( ... )".
 
@@ -358,43 +449,46 @@ namespace NeonCli.Ansible
                                     sbCreateIndexQuery.AppendWithSeparator($"where {queryWhere}");
                                 }
 
-                                // Append the WITH clause.
+                                // Append the WITH clause for GSI and VIEW (aka non-LOCAL) indexes.
 
-                                sbCreateIndexQuery.AppendWithSeparator("with {");
-
-                                if (defer.Value)
+                                if (type.Value != IndexType.Local)
                                 {
-                                    sbCreateIndexQuery.AppendWithSeparator("\"defer_build\":true");
-                                }
+                                    sbCreateIndexQuery.AppendWithSeparator("with {");
 
-                                if (nodes.Count > 0)
-                                {
-                                    sbCreateIndexQuery.AppendWithSeparator("\"nodes\": [", ", ");
-
-                                    var first = true;
-
-                                    foreach (var node in nodes)
+                                    if (defer.Value && type.Value == IndexType.Gsi)
                                     {
-                                        if (first)
-                                        {
-                                            first = false;
-                                        }
-                                        else
-                                        {
-                                            sbCreateIndexQuery.Append(", ");
-                                        }
-
-                                        sbCreateIndexQuery.Append(CbHelper.Literal(node));
+                                        sbCreateIndexQuery.AppendWithSeparator("\"defer_build\":true");
                                     }
 
-                                    sbCreateIndexQuery.Append("]");
-                                }
-                                else
-                                {
-                                    sbCreateIndexQuery.AppendWithSeparator($"\"num_replica\":{replicas}", ", ");
-                                }
+                                    if (servers.Count > 0)
+                                    {
+                                        sbCreateIndexQuery.AppendWithSeparator("\"nodes\": [", ", ");
 
-                                sbCreateIndexQuery.AppendWithSeparator("}");
+                                        var first = true;
+
+                                        foreach (var server in servers)
+                                        {
+                                            if (first)
+                                            {
+                                                first = false;
+                                            }
+                                            else
+                                            {
+                                                sbCreateIndexQuery.Append(", ");
+                                            }
+
+                                            sbCreateIndexQuery.Append(CbHelper.Literal(server));
+                                        }
+
+                                        sbCreateIndexQuery.Append("]");
+                                    }
+                                    else
+                                    {
+                                        sbCreateIndexQuery.AppendWithSeparator($"\"num_replica\":{CbHelper.Literal(replicas.Value)}", ", ");
+                                    }
+
+                                    sbCreateIndexQuery.AppendWithSeparator("}");
+                                }
 
                                 // Add or update the index.
 
@@ -406,6 +500,12 @@ namespace NeonCli.Ansible
 
                                     var index   = existing["indexes"];
                                     var changed = false;
+
+                                    if (force)
+                                    {
+                                        changed = true;
+                                        context.WriteLine(AnsibleVerbosity.Info, "Rebuilding index because [force=yes].");
+                                    }
 
                                     // Compare the old/new index types.
 
@@ -482,22 +582,11 @@ namespace NeonCli.Ansible
                                             context.Changed = true;
 
                                             context.WriteLine(AnsibleVerbosity.Trace, $"Removing existing index [{name}].");
-
-                                            await retry.InvokeAsync(
-                                                async () =>
-                                                {
-                                                    await bucket.QuerySafeAsync<dynamic>($"drop index {name}");
-                                                });
-
+                                            await bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(name)}");
                                             context.WriteLine(AnsibleVerbosity.Trace, $"Dropped index [{name}].");
+
                                             context.WriteLine(AnsibleVerbosity.Trace, $"Recreating index [{name}].");
-
-                                            await retry.InvokeAsync(
-                                                async () =>
-                                                {
-                                                    await bucket.QuerySafeAsync<dynamic>(sbCreateIndexQuery.ToString());
-                                                });
-
+                                            await bucket.QuerySafeAsync<dynamic>(sbCreateIndexQuery.ToString());
                                             context.WriteLine(AnsibleVerbosity.Info, $"Created index [{name}].");
                                         }
                                     }
@@ -513,13 +602,7 @@ namespace NeonCli.Ansible
                                         context.Changed = true;
 
                                         context.WriteLine(AnsibleVerbosity.Trace, $"Creating index [{name}].");
-
-                                        await retry.InvokeAsync(
-                                            async () =>
-                                            {
-                                                await bucket.QuerySafeAsync<dynamic>(sbCreateIndexQuery.ToString());
-                                            });
-
+                                        await bucket.QuerySafeAsync<dynamic>(sbCreateIndexQuery.ToString());
                                         context.WriteLine(AnsibleVerbosity.Info, $"Created index [{name}].");
                                     }
                                 }
@@ -537,13 +620,7 @@ namespace NeonCli.Ansible
                                     {
                                         context.Changed = true;
                                         context.WriteLine(AnsibleVerbosity.Info, $"Dropping index [{name}].");
-
-                                        await retry.InvokeAsync(
-                                            async () =>
-                                            {
-                                                await bucket.QuerySafeAsync<dynamic>($"drop index {bucket.Name} using {type}");
-                                            });
-
+                                        await bucket.QuerySafeAsync<dynamic>($"drop index {bucket.Name} using {type}");
                                         context.WriteLine(AnsibleVerbosity.Trace, $"Index [{name}] was dropped.");
                                     }
                                 }
@@ -554,6 +631,7 @@ namespace NeonCli.Ansible
                                 throw new ArgumentException($"[state={state}] is not one of the valid choices: [absent] or [present].");
                         }
                     }
+
                 }).Wait();
         }
     }
