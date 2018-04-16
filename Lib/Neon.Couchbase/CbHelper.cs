@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Globalization;
 using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
@@ -154,6 +155,46 @@ namespace Couchbase
             sb.Append('`');
 
             return sb.ToString();
+        }
+
+        /// <summary>
+        /// Converts an <c>int</c> into a literal value.
+        /// </summary>
+        /// <param name="value">The input value.</param>
+        /// <returns>The literal value.</returns>
+        public static string Literal(int value)
+        {
+            return value.ToString();
+        }
+
+        /// <summary>
+        /// Converts a <c>long</c> into a literal value.
+        /// </summary>
+        /// <param name="value">The input value.</param>
+        /// <returns>The literal value.</returns>
+        public static string Literal(long value)
+        {
+            return value.ToString();
+        }
+
+        /// <summary>
+        /// Converts a <c>bool</c> into a literal value.
+        /// </summary>
+        /// <param name="value">The input value.</param>
+        /// <returns>The literal value.</returns>
+        public static string Literal(bool value)
+        {
+            return value ? "TRUE" : "FALSE";
+        }
+
+        /// <summary>
+        /// Converts a <c>double</c> into a literal value.
+        /// </summary>
+        /// <param name="value">The input value.</param>
+        /// <returns>The literal value.</returns>
+        public static string Literal(double value)
+        {
+            return value.ToString("G", NumberFormatInfo.InvariantInfo);
         }
     }
 }
