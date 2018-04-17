@@ -176,7 +176,7 @@ namespace NeonCli.Ansible
                         }
                         else
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Dashboard [{name}] would be deleted when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Dashboard [{name}] would be deleted when CHECK-MODE is disabled.");
                         }
 
                         context.Changed = true;
@@ -254,7 +254,7 @@ namespace NeonCli.Ansible
                     {
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Dashboard [{name}] would be updated when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Dashboard [{name}] would be updated when CHECK-MODE is disabled.");
                         }
                         else
                         {

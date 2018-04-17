@@ -289,6 +289,13 @@ namespace NeonCli.Ansible
     //
     // workdir                  no                                  command working directory within containers
     //
+    // Check Mode:
+    // -----------
+    //
+    // This module supports the [--check] Ansible command line option and [check_mode] task
+    // property by determining whether any changes would have been made and also logging
+    // a desciption of the changes when Ansible verbosity is increased.
+    //
     // Examples:
     // ---------
     //
@@ -465,7 +472,7 @@ namespace NeonCli.Ansible
                     {
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service would be removed when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service would be removed when CHECK-MODE is disabled.");
                         }
                         else
                         {
@@ -505,7 +512,7 @@ namespace NeonCli.Ansible
 
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service would be created when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service would be created when CHECK-MODE is disabled.");
                         }
                         else
                         {

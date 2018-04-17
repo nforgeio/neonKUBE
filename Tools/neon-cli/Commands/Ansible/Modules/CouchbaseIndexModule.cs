@@ -653,7 +653,7 @@ namespace NeonCli.Ansible
                                     {
                                         if (context.CheckMode)
                                         {
-                                            context.WriteLine(AnsibleVerbosity.Important, $"Index [{indexId}] will be rebuilt when CHECKMODE is disabled.");
+                                            context.WriteLine(AnsibleVerbosity.Important, $"Index [{indexId}] will be rebuilt when CHECK-MODE is disabled.");
                                             context.WriteLine(AnsibleVerbosity.Trace, $"Create command: {sbCreateIndexCommand}");
                                         }
                                         else
@@ -682,7 +682,7 @@ namespace NeonCli.Ansible
                                 {
                                     if (context.CheckMode)
                                     {
-                                        context.WriteLine(AnsibleVerbosity.Important, $"Index [{indexId}] will be created when CHECKMODE is disabled.");
+                                        context.WriteLine(AnsibleVerbosity.Important, $"Index [{indexId}] will be created when CHECK-MODE is disabled.");
                                         context.WriteLine(AnsibleVerbosity.Trace, $"{sbCreateIndexCommand}");
 
                                     }
@@ -703,7 +703,7 @@ namespace NeonCli.Ansible
                                 {
                                     if (context.CheckMode)
                                     {
-                                        context.WriteLine(AnsibleVerbosity.Important, $"Index [{indexId}] will be dropped when CHECKMODE is disabled.");
+                                        context.WriteLine(AnsibleVerbosity.Important, $"Index [{indexId}] will be dropped when CHECK-MODE is disabled.");
                                     }
                                     else
                                     {

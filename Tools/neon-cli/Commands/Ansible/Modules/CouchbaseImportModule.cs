@@ -91,6 +91,13 @@ namespace NeonCli.Ansible
         //
         //                                                  NOTE: You should surround the key
         //                                                        value with double quotes.
+        // Check Mode:
+        // -----------
+        //
+        // This module supports the [--check] Ansible command line option and [check_mode] task
+        // property by determining whether any changes would have been made and also logging
+        // a desciption of the changes when Ansible verbosity is increased.
+        //
         // Remarks:
         // --------
         //
@@ -250,17 +257,14 @@ namespace NeonCli.Ansible
                         throw new NotImplementedException($"Format [{format}] is not implemented.");
                 }
 
+                context.Changed = importer.DocumentCount > 0;
+
                 if (context.CheckMode)
                 {
-                    context.WriteLine(AnsibleVerbosity.Info, $"[{importer.DocumentCount}] documents will be added when CHECKMODE is disabled.");
+                    context.WriteLine(AnsibleVerbosity.Info, $"[{importer.DocumentCount}] documents will be added when CHECK-MODE is disabled.");
                 }
                 else
                 {
-                    if (importer.DocumentCount > 0)
-                    {
-                        context.Changed = true;
-                    }
-
                     context.WriteLine(AnsibleVerbosity.Info, $"[{importer.DocumentCount}] documents were imported.");
                 }
             }

@@ -65,6 +65,13 @@ namespace NeonCli.Ansible
     // force        no          false                   forces proxy rebuild when [state=present]
     //                                                  even if the route is unchanged
     //
+    // Check Mode:
+    // -----------
+    //
+    // This module supports the [--check] Ansible command line option and [check_mode] task
+    // property by determining whether any changes would have been made and also logging
+    // a desciption of the changes when Ansible verbosity is increased.
+    //
     // Examples:
     // ---------
     //
@@ -235,7 +242,7 @@ namespace NeonCli.Ansible
 
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Route [{name}] would be deleted when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Route [{name}] would be deleted when CHECK-MODE is disabled.");
                         }
                         else
                         {
@@ -399,12 +406,12 @@ namespace NeonCli.Ansible
                         context.Changed = true;
                         context.WriteLine(AnsibleVerbosity.Trace, $"Route [name={name}] does not exist.");
                     }
-
+                     
                     if (context.Changed)
                     {
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Route [{name}] would be updated when CHECKMODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Route [{name}] would be updated when CHECK-MODE is disabled.");
                         }
                         else
                         {
