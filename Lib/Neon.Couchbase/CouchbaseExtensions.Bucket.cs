@@ -72,7 +72,7 @@ namespace Couchbase
         /// <param name="status">The status code.</param>
         /// <param name="replicateOrPersist">Indicates whether the operation has replication or persistance constraints.</param>
         /// <returns><c>true</c> for a transient error.</returns>
-        private static bool IsTransientStatus(ResponseStatus status, bool replicateOrPersist)
+        public static bool IsTransientStatus(ResponseStatus status, bool replicateOrPersist)
         {
             switch (status)
             {
@@ -98,7 +98,7 @@ namespace Couchbase
         /// </summary>
         /// <param name="result">The operation result.</param>
         /// <param name="replicateOrPersist">Indicates whether the operation has replication or persistance constraints.</param>
-        private static void VerifySuccess(IOperationResult result, bool replicateOrPersist)
+        public static void VerifySuccess(IOperationResult result, bool replicateOrPersist)
         {
             if (result.Success)
             {
@@ -124,7 +124,7 @@ namespace Couchbase
         /// <typeparam name="T">The result type.</typeparam>
         /// <param name="result">The operation result.</param>
         /// <param name="replicateOrPersist">Indicates whether the operation has replication or persistance constraints.</param>
-        private static void VerifySuccess<T>(IOperationResult<T> result, bool replicateOrPersist)
+        public static void VerifySuccess<T>(IOperationResult<T> result, bool replicateOrPersist)
         {
             if (result.Success)
             {
@@ -150,7 +150,7 @@ namespace Couchbase
         /// <typeparam name="T">The document content type.</typeparam>
         /// <param name="result">The operation result.</param>
         /// <param name="replicateOrPersist">Indicates whether the operation has replication or persistance constraints.</param>
-        private static void VerifySuccess<T>(IDocumentResult<T> result, bool replicateOrPersist)
+        public static void VerifySuccess<T>(IDocumentResult<T> result, bool replicateOrPersist)
         {
             if (result.Success)
             {
@@ -175,7 +175,7 @@ namespace Couchbase
         /// </summary>
         /// <typeparam name="T">The document content type.</typeparam>
         /// <param name="result">The operation result.</param>
-        private static void VerifySuccess<T>(IQueryResult<T> result)
+        public static void VerifySuccess<T>(IQueryResult<T> result)
         {
             if (result.Success)
             {
