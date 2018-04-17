@@ -97,8 +97,8 @@ namespace NeonCli.Ansible
         // namespace    no          default                 specifies the index namespace.  This
         //                                                  defaults to the current bucket namespace.
         //
-        // using        no          gsi         gsi         specifies the underlying index implementation
-        //                                      view
+        // using        no          gsi         gsi         specifies the underlying index
+        //                                      view        technology
         //
         // keys         see comment                         array of document fields, scalar
         //                                                  functions or array expressions to
@@ -119,8 +119,7 @@ namespace NeonCli.Ansible
         //
         // replicas     no          see comment             optionally specifies the number of
         //                                                  GSI based index replicas to deploy.  
-        //                                                  This defaults to 1.  This is ignored
-        //                                                  for non-GSI indexes.
+        //                                                  Ignored for non-GSI indexes.
         //                                      
         // defer_build  no          no          yes         optionally defers creation of a GSI
         //                                                  index until a separate [BUILD INDEX...]
