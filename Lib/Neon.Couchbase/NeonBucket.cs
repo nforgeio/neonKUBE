@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonCouchbaseBucket.cs
+// FILE:	    NeonBucket.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -36,7 +36,7 @@ namespace Couchbase
     /// <summary>
     /// Wraps an <see cref="IBucket"/> adding some additional capabilities.
     /// </summary>
-    public class NeonCouchbaseBucket : IBucket
+    public class NeonBucket : IBucket
     {
         private IBucket bucket;
 
@@ -44,7 +44,7 @@ namespace Couchbase
         /// Constructor.
         /// </summary>
         /// <param name="bucket">The underlying Couchbase bucket implementation.</param>
-        public NeonCouchbaseBucket(IBucket bucket)
+        public NeonBucket(IBucket bucket)
         {
             Covenant.Requires<ArgumentNullException>(bucket != null);
 

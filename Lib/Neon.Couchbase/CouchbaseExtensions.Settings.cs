@@ -74,9 +74,9 @@ namespace Couchbase
         /// <param name="settings">The Couchbase settings.</param>
         /// <param name="username">Optional username.</param>
         /// <param name="password">Optional password.</param>
-        /// <returns>The connected <see cref="NeonCouchbaseBucket"/>.</returns>
+        /// <returns>The connected <see cref="NeonBucket"/>.</returns>
         /// <exception cref="TimeoutException">Thrown if the bucket didn't become ready in time.</exception>
-        public static NeonCouchbaseBucket OpenBucket(this CouchbaseSettings settings, string username = null, string password = null)
+        public static NeonBucket OpenBucket(this CouchbaseSettings settings, string username = null, string password = null)
         {
             var config = settings.ToClientConfig();
 
@@ -105,7 +105,7 @@ namespace Couchbase
 
             bucket.WaitUntilReadyAsync(TimeSpan.FromSeconds(settings.BucketReadyTimeout)).Wait();
 
-            return new NeonCouchbaseBucket(bucket);
+            return new NeonBucket(bucket);
         }
 
         /// <summary>
@@ -113,8 +113,8 @@ namespace Couchbase
         /// </summary>
         /// <param name="settings">The Couchbase settings.</param>
         /// <param name="credentials">The credentials.</param>
-        /// <returns>The connected <see cref="NeonCouchbaseBucket"/>.</returns>
-        public static NeonCouchbaseBucket OpenBucket(this CouchbaseSettings settings, Credentials credentials)
+        /// <returns>The connected <see cref="NeonBucket"/>.</returns>
+        public static NeonBucket OpenBucket(this CouchbaseSettings settings, Credentials credentials)
         {
             Covenant.Requires<ArgumentNullException>(credentials != null);
 
