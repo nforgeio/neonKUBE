@@ -43,7 +43,7 @@ namespace Couchbase
         /// </summary>
         /// <param name="settings">The Couchbase settings.</param>
         /// <param name="secretName">The Docker secret name.</param>
-        /// <returns>The connected <see cref="CouchbaseBucket"/>.</returns>
+        /// <returns>The connected <see cref="IBucket"/>.</returns>
         public static IBucket ConnectBucket(this CouchbaseSettings settings, string secretName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secretName));
