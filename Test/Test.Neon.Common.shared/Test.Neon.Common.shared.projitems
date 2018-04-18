@@ -60,5 +60,6 @@
     <Compile Include="$(MSBuildThisFileDirectory)Time\Test_PolledTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Time\Test_RecurringTimer.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Time\Test_SysTime.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Xunit\Test_DockerContainerFixture.cs" />
   </ItemGroup>
 </Project>
