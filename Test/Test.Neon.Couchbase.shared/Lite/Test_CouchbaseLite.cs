@@ -173,10 +173,10 @@ namespace TestLiteExtensions
 
                 Assert.Equal(doc.CurrentRevision, saved);
 
-                Assert.Equal(0, doc.CurrentRevision.AttachmentNames.Count());
+                Assert.Empty(doc.CurrentRevision.AttachmentNames);
                 Assert.Null(doc.CurrentRevision.GetAttachment("attach"));
 
-                Assert.Equal(0, saved.AttachmentNames.Count());
+                Assert.Empty(saved.AttachmentNames);
                 Assert.Null(saved.GetAttachment("attach"));
             }
         }
@@ -197,12 +197,12 @@ namespace TestLiteExtensions
 
                 // NOTE: These asserts pass.
 
-                Assert.Equal(1, unsaved.AttachmentNames.Count());
+                Assert.Single(unsaved.AttachmentNames);
                 Assert.NotNull(unsaved.GetAttachment("attach"));
 
                 var saved = unsaved.Save();
 
-                Assert.Equal(1, saved.AttachmentNames.Count());
+                Assert.Single(saved.AttachmentNames);
                 Assert.NotNull(saved.GetAttachment("attach"));
 
                 unsaved = saved.CreateRevision();
@@ -215,7 +215,7 @@ namespace TestLiteExtensions
 
                 // NOTE: These asserts will fail when Couchbase addresses issue #661
 
-                Assert.Equal(1, unsaved.AttachmentNames.Count());
+                Assert.Single(unsaved.AttachmentNames);
                 Assert.NotNull(unsaved.GetAttachment("attach"));
             }
         }

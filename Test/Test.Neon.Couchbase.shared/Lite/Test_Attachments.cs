@@ -52,8 +52,8 @@ namespace TestLiteExtensions
                 //-----------------------------------------
                 // Verify that we start out with no attachments.
 
-                Assert.Equal(0, doc.Attachments.Count());
-                Assert.Equal(0, doc.AttachmentNames.Count());
+                Assert.Empty(doc.Attachments);
+                Assert.Empty(doc.AttachmentNames);
                 Assert.Null(doc.GetAttachment("not-there"));
 
                 //-----------------------------------------
@@ -72,8 +72,8 @@ namespace TestLiteExtensions
                 doc.SetAttachment("attach-1", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, "type-1");
 
                 Assert.True(changed);
-                Assert.Equal(1, doc.Attachments.Count());
-                Assert.Equal(1, doc.AttachmentNames.Count());
+                Assert.Single(doc.Attachments);
+                Assert.Single(doc.AttachmentNames);
 
                 Assert.NotNull(doc.GetAttachment("attach-1"));
 
@@ -90,8 +90,8 @@ namespace TestLiteExtensions
                         changed = true;
                     };
 
-                Assert.Equal(1, doc.Attachments.Count());
-                Assert.Equal(1, doc.AttachmentNames.Count());
+                Assert.Single(doc.Attachments);
+                Assert.Single(doc.AttachmentNames);
 
                 using (var attachment = doc.GetAttachment("attach-1"))
                 {
@@ -132,8 +132,8 @@ namespace TestLiteExtensions
                 Assert.True(changed);
                 doc.Save();
 
-                Assert.Equal(1, doc.Attachments.Count());
-                Assert.Equal(1, doc.AttachmentNames.Count());
+                Assert.Single(doc.Attachments);
+                Assert.Single(doc.AttachmentNames);
 
                 Assert.Null(doc.GetAttachment("attach-1"));
 
@@ -155,8 +155,8 @@ namespace TestLiteExtensions
                 doc.SetAttachment("attach", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }, "type-1");
                 doc.Save();
 
-                Assert.Equal(1, doc.Attachments.Count());
-                Assert.Equal(1, doc.AttachmentNames.Count());
+                Assert.Single(doc.Attachments);
+                Assert.Single(doc.AttachmentNames);
 
                 using (var attachment = doc.GetAttachment("attach"))
                 {
@@ -166,14 +166,14 @@ namespace TestLiteExtensions
                 doc.Revise();
                 doc.RemoveAttachment("attach");
 
-                Assert.Equal(0, doc.Attachments.Count());
-                Assert.Equal(0, doc.AttachmentNames.Count());
+                Assert.Empty(doc.Attachments);
+                Assert.Empty(doc.AttachmentNames);
                 Assert.Null(doc.GetAttachment("attach"));
 
                 doc.Save();
 
-                Assert.Equal(0, doc.Attachments.Count());
-                Assert.Equal(0, doc.AttachmentNames.Count());
+                Assert.Empty(doc.Attachments);
+                Assert.Empty(doc.AttachmentNames);
                 Assert.Null(doc.GetAttachment("attach"));
             }
         }

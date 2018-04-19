@@ -39,7 +39,7 @@ namespace TestSyncGateway
 
                     // Database should start out with no roles.
 
-                    Assert.Equal(0, (await manager.RoleListAsync("db")).Count);
+                    Assert.Empty(await manager.RoleListAsync("db"));
 
                     // Create a couple roles and verify.
 
@@ -100,7 +100,7 @@ namespace TestSyncGateway
 
                     // Database should start out with no roles.
 
-                    Assert.Equal(0, (await manager.RoleListAsync("db")).Count);
+                    Assert.Empty(await manager.RoleListAsync("db"));
 
                     // Create a role and verify.
 

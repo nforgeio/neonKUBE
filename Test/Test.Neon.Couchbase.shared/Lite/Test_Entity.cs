@@ -1252,7 +1252,7 @@ namespace TestLiteExtensions
                 doc1.Save();
 
                 Assert.True(changed);
-                Assert.True(contentProps.Contains("Int"));
+                Assert.Contains("Int", contentProps);
                 Assert.Equal(10, doc2.Content.Int);
 
                 //-------------------------------

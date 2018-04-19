@@ -36,12 +36,12 @@ namespace TestSyncGateway
                     var manager   = gateway.CreateManager();
                     var databases = await manager.DatabaseListAsync();
 
-                    Assert.Equal(0, databases.Count);
+                    Assert.Empty(databases);
 
                     await TestCluster.CreateDatabaseAsync("db");
 
                     databases = await manager.DatabaseListAsync();
-                    Assert.Equal(1, databases.Count);
+                    Assert.Single(databases);
                     Assert.Contains(databases, db => db == "db");
                 }
             }
@@ -93,7 +93,7 @@ namespace TestSyncGateway
                     var manager   = gateway.CreateManager();
                     var databases = await manager.DatabaseListAsync();
 
-                    Assert.Equal(0, databases.Count);
+                    Assert.Empty(databases);
 
                     var config = new DatabaseConfiguration()
                     {
@@ -107,7 +107,7 @@ namespace TestSyncGateway
 
                     databases = await manager.DatabaseListAsync();
 
-                    Assert.Equal(1, databases.Count);
+                    Assert.Single(databases);
                     Assert.Contains(databases, db => db == "foo");
 
                     var status = await manager.DatabaseStatusAsync("foo");
@@ -123,7 +123,7 @@ namespace TestSyncGateway
 
                     databases = await manager.DatabaseListAsync();
 
-                    Assert.Equal(0, databases.Count);
+                    Assert.Empty(databases);
                 }
             }
             finally
@@ -144,7 +144,7 @@ namespace TestSyncGateway
                     var manager   = gateway.CreateManager();
                     var databases = await manager.DatabaseListAsync();
 
-                    Assert.Equal(0, databases.Count);
+                    Assert.Empty(databases);
 
                     var config = new DatabaseConfiguration()
                     {
@@ -158,7 +158,7 @@ namespace TestSyncGateway
 
                     databases = await manager.DatabaseListAsync();
 
-                    Assert.Equal(1, databases.Count);
+                    Assert.Single(databases);
                     Assert.Contains(databases, db => db == "foo");
 
                     var status = await manager.DatabaseStatusAsync("foo");

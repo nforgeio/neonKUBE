@@ -227,17 +227,17 @@ namespace TestLiteExtensions
 
                 var docCopy = db.GetBinderDocument<TestBinder>("1");
 
-                Assert.Equal(0, propList.Count);
+                Assert.Empty(propList);
 
                 // Add a new attachment.
 
                 docCopy.Revise();
                 docCopy.SetTestImage1(new byte[] { 0, 1, 2, 3, 4 });
 
-                Assert.Equal(0, propList.Count);    // Haven't saved anything yet
+                Assert.Empty(propList);    // Haven't saved anything yet
                 docCopy.Save();
 
-                Assert.Equal(1, propList.Count);
+                Assert.Single(propList);
                 Assert.Equal("TestImage1", propList[0]);
                 Assert.Equal(new byte[] { 0, 1, 2, 3, 4 }, File.ReadAllBytes(doc.TestImage1));
 
@@ -247,10 +247,10 @@ namespace TestLiteExtensions
                 docCopy.Revise();
                 docCopy.SetTestImage1(new byte[] { 5, 6, 7, 8, 9 });
 
-                Assert.Equal(0, propList.Count);    // Haven't saved anything yet
+                Assert.Empty(propList);    // Haven't saved anything yet
                 docCopy.Save();
 
-                Assert.Equal(1, propList.Count);
+                Assert.Single(propList);
                 Assert.Equal("TestImage1", propList[0]);
                 Assert.Equal(new byte[] { 5, 6, 7, 8, 9 }, File.ReadAllBytes(doc.TestImage1));
 
@@ -260,10 +260,10 @@ namespace TestLiteExtensions
                 docCopy.Revise();
                 docCopy.SetTestImage2(new byte[] { 9, 8, 7, 6, 5 });
 
-                Assert.Equal(0, propList.Count);    // Haven't saved anything yet
+                Assert.Empty(propList);    // Haven't saved anything yet
                 docCopy.Save();
 
-                Assert.Equal(1, propList.Count);
+                Assert.Single(propList);
                 Assert.Equal("TestImage2", propList[0]);
                 Assert.Equal(new byte[] { 9, 8, 7, 6, 5 }, File.ReadAllBytes(doc.TestImage2));
 
@@ -274,12 +274,12 @@ namespace TestLiteExtensions
                 docCopy.RemoveTestImage1();
                 docCopy.RemoveTestImage2();
 
-                Assert.Equal(0, propList.Count);    // Haven't saved anything yet
+                Assert.Empty(propList);    // Haven't saved anything yet
                 docCopy.Save();
 
                 Assert.Equal(2, propList.Count);
-                Assert.True(propList.Contains("TestImage1"));
-                Assert.True(propList.Contains("TestImage2"));
+                Assert.Contains("TestImage1", propList);
+                Assert.Contains("TestImage2", propList);
                 Assert.Null(doc.TestImage1);
                 Assert.Null(doc.TestImage2);
             }

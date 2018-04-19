@@ -120,7 +120,7 @@ namespace TestLiteExtensions
 
                 results = query.Run().ToList();
 
-                Assert.Equal(1, results.Count);
+                Assert.Single(results);
                 Assert.Equal($"Jeff-5", results[0].Key);
                 Assert.Equal($"Jeff-5", results[0].KeyString);
                 Assert.Equal($"Jeff-5", results[0].Document.Content.String);
@@ -201,7 +201,7 @@ namespace TestLiteExtensions
 
                 results = (await query.RunAsync()).ToList();
 
-                Assert.Equal(1, results.Count);
+                Assert.Single(results);
                 Assert.Equal($"Jeff-5", results[0].Key);
                 Assert.Equal($"Jeff-5", results[0].KeyString);
                 Assert.Equal($"Jeff-5", results[0].Document.Content.String);

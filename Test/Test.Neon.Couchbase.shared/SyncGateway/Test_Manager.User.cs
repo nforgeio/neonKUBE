@@ -39,7 +39,7 @@ namespace TestSyncGateway
 
                     // Database should start out with no users.
 
-                    Assert.Equal(0, (await manager.UserListAsync("db")).Count);
+                    Assert.Empty(await manager.UserListAsync("db"));
 
                     // Create a couple users and verify.
 
@@ -104,7 +104,7 @@ namespace TestSyncGateway
 
                     // Database should start out with no users.
 
-                    Assert.Equal(0, (await manager.UserListAsync("db")).Count);
+                    Assert.Empty(await manager.UserListAsync("db"));
 
                     // Create a user and verify.
 
