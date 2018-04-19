@@ -49,8 +49,9 @@ namespace Xunit
         /// <param name="dockerArgs">Optional arguments to be passed to the <b>docker run ...</b> command.</param>
         /// <param name="containerArgs">Optional arguments to be passed to the container.</param>
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
-        /// <exception cref="InvalidOperationException">Thrown if this is not called from 
-        /// within the <see cref="Action"/> method passed <see cref="ITestFixture.Initialize(Action)"/>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if this is not called from  within the <see cref="Action"/> method 
+        /// passed <see cref="ITestFixture.Initialize(Action)"/>
         /// </exception>
         /// <remarks>
         /// <note>

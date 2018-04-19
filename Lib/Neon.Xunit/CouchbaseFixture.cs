@@ -33,10 +33,14 @@ namespace Xunit
         /// </summary>
         /// <param name="settings">Optional Couchbase settings.</param>
         /// <param name="image">Optionally specifies the Couchbase container image (defaults to <b>neoncluster/couchbase-test:latest</b>).</param>
-        /// <param name="name">Optionall specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>
+        /// <param name="name">Optionally specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
         /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if this is not called from  within the <see cref="Action"/> method 
+        /// passed <see cref="ITestFixture.Initialize(Action)"/>
+        /// </exception>
         /// <remarks>
         /// <note>
         /// Some of the <paramref name="settings"/> properties will be ignored including 
@@ -54,6 +58,8 @@ namespace Xunit
             string              password = "password")
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
+
+            base.CheckWithinAction();
 
             lock (base.SyncRoot)
             {
