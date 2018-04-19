@@ -4,6 +4,7 @@
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
 using System;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 
 using Couchbase;
@@ -74,8 +75,10 @@ namespace Couchbase
         /// <param name="settings">The Couchbase settings.</param>
         /// <param name="username">The username.</param>
         /// <param name="password">The password.</param>
+        /// <param name="timeout">The optional timeout (defaults to 30 seconds).</param>
         /// <returns>The connected <see cref="NeonBucket"/>.</returns>
-        public static NeonBucket OpenBucket(this CouchbaseSettings settings, string username, string password)
+        /// <exception cref="TimeoutException">Thrown if the bucket is not ready after waiting <paramref name="timeout"/>.</exception>
+        public static NeonBucket OpenBucket(this CouchbaseSettings settings, string username, string password, TimeSpan timeout = default(TimeSpan))
         {
             var config = settings.ToClientConfig();
 
@@ -97,9 +100,62 @@ namespace Couchbase
 
             var cluster = new Cluster(config);
 
-            cluster.Authenticate(username, password);
+            // We have to wait for two Couchbase operations to complete
+            // successfully:
+            //
+            //      1. Authenticate
+            //      2. Open Bucket
+            //
+            // Each of these can fail if Couchbase isn't ready.  The Open Bucket
+            // can fail after the Authenticate succeeded because the bucket is still
+            // warming up.
 
-            return new NeonBucket(cluster.OpenBucket(settings.Bucket), settings);
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = TimeSpan.FromSeconds(30);
+            }
+
+            var stopwatch = new Stopwatch();
+
+            stopwatch.Start();
+
+            NeonHelper.WaitFor(
+                () =>
+                {
+                    try
+                    {
+                        cluster.Authenticate(username, password);
+                        return true;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                },
+                timeout: timeout,
+                pollTime: TimeSpan.FromSeconds(0.5));
+
+            timeout = timeout - stopwatch.Elapsed;  // Adjust the timeout downward by the time taken to authenticate.
+
+            var bucket = (NeonBucket)null;
+
+            NeonHelper.WaitFor(
+                () =>
+                {
+                    try
+                    {
+                        bucket = new NeonBucket(cluster.OpenBucket(settings.Bucket), settings);
+                        return true;
+                    }
+                    catch
+                    {
+                        return false;
+                    }
+                },
+                timeout: timeout,
+                pollTime: TimeSpan.FromSeconds(0.5));
+
+            return bucket;
         }
 
         /// <summary>
