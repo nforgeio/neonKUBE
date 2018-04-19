@@ -22,7 +22,8 @@ namespace TestCouchbase
 
     public class Test_CouchbaseFixture : IClassFixture<CouchbaseFixture>
     {
-        private CouchbaseFixture fixture;
+        private CouchbaseFixture    fixture;
+        private NeonBucket          bucket;
 
         public Test_CouchbaseFixture(CouchbaseFixture fixture)
         {
@@ -31,10 +32,7 @@ namespace TestCouchbase
             fixture.Initialize(
                 () =>
                 {
-                    // Have the Docker container fixture launch the Alpine image and
-                    // sleep for a (long) while.
-
-                    fixture.StartCouchbase();
+                    bucket = fixture.Start();
                 });
         }
 
@@ -44,9 +42,9 @@ namespace TestCouchbase
         [Fact]
         public async Task VerifyAsync()
         {
-            await fixture.Bucket.UpsertAsync("hello", "world!");
+            await bucket.UpsertSafeAsync("hello", "world!");
 
-            Assert.Equal("world!", await fixture.Bucket.GetSafeAsync<string>("hello"));
+            Assert.Equal("world!", await bucket.GetSafeAsync<string>("hello"));
         }
     }
 }
