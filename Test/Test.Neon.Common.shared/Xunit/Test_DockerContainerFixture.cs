@@ -29,7 +29,9 @@ namespace TestCouchbase
             // Have the Docker container fixture launch the Alpine image and
             // sleep for a (long) while.
 
-            fixture.RunContainer("alpine",
+            fixture.RunContainer(
+                "alpine",
+                containerName: "couchbase",
                 dockerArgs: new string[] { "--detach" },
                 containerArgs: new string[] { "sleep", "10000000" });
         }
