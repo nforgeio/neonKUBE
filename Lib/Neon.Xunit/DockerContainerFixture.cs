@@ -16,11 +16,9 @@ namespace Xunit
     /// fixture while tests are being performed and then deletes the
     /// container when the fixture is disposed.
     /// </summary>
-    public class DockerContainerFixture : IDisposable
+    /// <threadsafety instance="false"/>
+    public class DockerContainerFixture : TestFixture
     {
-        private object  syncRoot   = new object();
-        private bool    isDisposed = false;
-
         /// <summary>
         /// Constructs the fixture.
         /// </summary>
@@ -37,13 +35,23 @@ namespace Xunit
         }
 
         /// <summary>
-        /// Starts the container if it's not already running.
+        /// Returns the running container's short ID or <c>null</c> if the container
+        /// is not running.
+        /// </summary>
+        public string ContainerId { get; private set; }
+
+        /// <summary>
+        /// Starts the container.  This must be called only from within the 
+        /// <see cref="Action"/> passed to <see cref="ITestFixture.Initialize(Action)"/>.
         /// </summary>
         /// <param name="image">Specifies the container Docker image.</param>
         /// <param name="containerName">Specifies the container name.</param>
         /// <param name="dockerArgs">Optional arguments to be passed to the <b>docker run ...</b> command.</param>
         /// <param name="containerArgs">Optional arguments to be passed to the container.</param>
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <exception cref="InvalidOperationException">Thrown if this is not called from 
+        /// within the <see cref="Action"/> method passed <see cref="ITestFixture.Initialize(Action)"/>
+        /// </exception>
         /// <remarks>
         /// <note>
         /// You must specify a valid container <paramref name="containerName"/>so that the fixure
@@ -57,16 +65,13 @@ namespace Xunit
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(containerName));
 
-            lock (syncRoot)
-            {
-                if (isDisposed)
-                {
-                    throw new ObjectDisposedException(nameof(DockerContainerFixture));
-                }
+            base.CheckWithinAction();
 
-                if (ContainerId != null)
+            lock (base.SyncRoot)
+            {
+                if (IsInitialized)
                 {
-                    return;     // Container is already running
+                    return;
                 }
 
                 // Handle the special case where an earlier run of this contaainer was
@@ -124,23 +129,14 @@ namespace Xunit
             }
         }
 
-        /// <inheritdoc/>
-        public void Dispose()
-        {
-            Dispose(true);
-            GC.SuppressFinalize(this);
-        }
-
         /// <summary>
         /// Releases all associated resources.
         /// </summary>
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
-        protected virtual void Dispose(bool disposing)
+        protected override void Dispose(bool disposing)
         {
-            if (!isDisposed)
+            if (!base.IsDisposed)
             {
-                isDisposed = true;
-
                 if (ContainerId != null)
                 {
                     try
@@ -160,11 +156,5 @@ namespace Xunit
                 }
             }
         }
-
-        /// <summary>
-        /// Returns the running container's short ID or <c>null</c> if the container
-        /// is not running.
-        /// </summary>
-        public string ContainerId { get; private set; }
     }
 }

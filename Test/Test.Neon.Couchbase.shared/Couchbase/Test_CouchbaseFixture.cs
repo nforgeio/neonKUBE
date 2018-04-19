@@ -10,6 +10,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Couchbase;
+
 using Neon.Common;
 
 using Xunit;
@@ -26,10 +28,14 @@ namespace TestCouchbase
         {
             this.fixture = fixture;
 
-            // Have the Docker container fixture launch the Alpine image and
-            // sleep for a (long) while.
+            fixture.Initialize(
+                () =>
+                {
+                    // Have the Docker container fixture launch the Alpine image and
+                    // sleep for a (long) while.
 
-            fixture.StartCouchbase();
+                    fixture.StartCouchbase();
+                });
         }
 
         /// <summary>
@@ -39,6 +45,8 @@ namespace TestCouchbase
         public async Task VerifyAsync()
         {
             await fixture.Bucket.UpsertAsync("hello", "world!");
+
+            Assert.Equal("world!", await fixture.Bucket.GetSafeAsync<string>("hello"));
         }
     }
 }

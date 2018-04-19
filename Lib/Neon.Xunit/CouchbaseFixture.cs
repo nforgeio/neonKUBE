@@ -21,8 +21,6 @@ namespace Xunit
     /// </summary>
     public sealed class CouchbaseFixture : DockerContainerFixture
     {
-        private object syncRoot = new object();
-
         /// <summary>
         /// Constructs the fixture.
         /// </summary>
@@ -57,11 +55,11 @@ namespace Xunit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
-            lock (syncRoot)
+            lock (base.SyncRoot)
             {
-                if (Bucket != null)
+                if (IsInitialized)
                 {
-                    return;     // Couchbase has already been started.
+                    return;
                 }
 
                 RunContainer(image, name, new string[] { "--detach", "-p", "8091-8094:8091-8094", "-p", "11210:11210" }, env: env);
