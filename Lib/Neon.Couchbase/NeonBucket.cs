@@ -38,23 +38,25 @@ namespace Couchbase
     /// </summary>
     public class NeonBucket : IBucket
     {
-        private IBucket bucket;
+        private IBucket             bucket;
+        private CouchbaseSettings   settings;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="bucket">The underlying Couchbase bucket implementation.</param>
-        public NeonBucket(IBucket bucket)
+        /// <param name="settings">The Couchbase client settings.</param>
+        public NeonBucket(IBucket bucket, CouchbaseSettings settings)
         {
             Covenant.Requires<ArgumentNullException>(bucket != null);
+            Covenant.Requires<ArgumentNullException>(settings != null);
 
-            this.bucket = bucket;
-
-            //-----------------------------------------------------------------
-            // IBucket pass-thru implementations.
-
-
+            this.bucket   = bucket;
+            this.settings = settings;
         }
+
+        //-----------------------------------------------------------------
+        // IBucket pass-thru implementations.
 
         /// <inheritdoc/>
         public string Name => bucket.Name;

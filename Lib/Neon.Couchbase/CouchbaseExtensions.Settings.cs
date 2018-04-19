@@ -27,19 +27,21 @@ namespace Couchbase
         /// Returns a Couchbase cluster connection using specified settings and the username and password.
         /// </summary>
         /// <param name="settings">The Couchbase settings.</param>
-        /// <param name="adminUsername">Optional cluster admin username.</param>
-        /// <param name="adminPassword">Optional cluster admin password.</param>
+        /// <param name="username">The cluster username.</param>
+        /// <param name="password">The cluster password.</param>
         /// <returns>The connected <see cref="Cluster"/>.</returns>
-        public static Cluster OpenCluster(this CouchbaseSettings settings, string adminUsername, string adminPassword)
+        public static Cluster OpenCluster(this CouchbaseSettings settings, string username, string password)
         {
             Covenant.Requires<ArgumentNullException>(settings.Servers != null && settings.Servers.Count > 0);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
+            Covenant.Requires<ArgumentNullException>(password != null);
 
             var config  = settings.ToClientConfig();
             var cluster = new Cluster(config);
 
-            if (!string.IsNullOrEmpty(adminUsername) && !string.IsNullOrEmpty(adminPassword))
+            if (!string.IsNullOrEmpty(username) && !string.IsNullOrEmpty(password))
             {
-                cluster.Authenticate(new Authentication.PasswordAuthenticator(adminUsername, adminPassword));
+                cluster.Authenticate(new Authentication.PasswordAuthenticator(username, password));
             }
 
             return cluster;
@@ -49,34 +51,31 @@ namespace Couchbase
         /// Returns a Couchbase cluster connection using specified settings and <see cref="Credentials"/>.
         /// </summary>
         /// <param name="settings">The Couchbase settings.</param>
-        /// <param name="adminCredentials">The optional cluster admin credentials.</param>
+        /// <param name="credentials">Cluster credentials.</param>
         /// <returns>The connected <see cref="Cluster"/>.</returns>
-        public static Cluster OpenCluster(this CouchbaseSettings settings, Credentials adminCredentials = null)
+        public static Cluster OpenCluster(this CouchbaseSettings settings, Credentials credentials = null)
         {
             Covenant.Requires<ArgumentNullException>(settings.Servers != null && settings.Servers.Count > 0);
-            Covenant.Requires<ArgumentNullException>(adminCredentials == null || !string.IsNullOrEmpty(adminCredentials.Username));
-            Covenant.Requires<ArgumentNullException>(adminCredentials == null || !string.IsNullOrEmpty(adminCredentials.Password));
+            Covenant.Requires<ArgumentNullException>(credentials != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(credentials.Username));
+            Covenant.Requires<ArgumentNullException>(credentials.Password != null);
 
             var config  = settings.ToClientConfig();
             var cluster = new Cluster(config);
 
-            if (adminCredentials != null)
-            {
-                cluster.Authenticate(new Authentication.PasswordAuthenticator(adminCredentials.Username, adminCredentials.Password));
-            }
+            cluster.Authenticate(credentials.Username, credentials.Password);
 
             return cluster;
         }
 
         /// <summary>
-        /// Returns a Couchbase bucket connection using specified settings and the username and password.
+        /// Returns a Couchbase bucket connection using specified settings and the cluster credentials.
         /// </summary>
         /// <param name="settings">The Couchbase settings.</param>
-        /// <param name="username">Optional username.</param>
-        /// <param name="password">Optional password.</param>
+        /// <param name="username">The username.</param>
+        /// <param name="password">The password.</param>
         /// <returns>The connected <see cref="NeonBucket"/>.</returns>
-        /// <exception cref="TimeoutException">Thrown if the bucket didn't become ready in time.</exception>
-        public static NeonBucket OpenBucket(this CouchbaseSettings settings, string username = null, string password = null)
+        public static NeonBucket OpenBucket(this CouchbaseSettings settings, string username, string password)
         {
             var config = settings.ToClientConfig();
 
@@ -86,8 +85,6 @@ namespace Couchbase
                 new BucketConfiguration()
                 {
                     BucketName = settings.Bucket,
-                    Username   = username,
-                    Password   = password,
 
                     PoolConfiguration = new PoolConfiguration()
                     {
@@ -99,13 +96,10 @@ namespace Couchbase
                 });
 
             var cluster = new Cluster(config);
-            var bucket  = cluster.OpenBucket(settings.Bucket);
 
-            // Wait until the bucket is ready.
+            cluster.Authenticate(username, password);
 
-            bucket.WaitUntilReadyAsync(TimeSpan.FromSeconds(settings.BucketReadyTimeout)).Wait();
-
-            return new NeonBucket(bucket);
+            return new NeonBucket(cluster.OpenBucket(settings.Bucket), settings);
         }
 
         /// <summary>
