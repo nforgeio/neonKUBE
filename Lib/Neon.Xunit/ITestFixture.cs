@@ -84,6 +84,7 @@ namespace Xunit
     /// </item>
     /// </list>
     /// </remarks>
+    /// <threadsafety instance="false"/>
     public interface ITestFixture : IDisposable
     {
         /// <summary>
@@ -92,5 +93,10 @@ namespace Xunit
         /// </summary>
         /// <param name="action">The optional initialization action.</param>
         void Initialize(Action action = null);
+
+        /// <summary>
+        /// Returns <c>true</c> if the fixture has been initialized.
+        /// </summary>
+        bool IsInitialized { get; }
     }
 }

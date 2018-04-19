@@ -39,23 +39,23 @@ namespace Xunit
         /// <summary>
         /// Returns the object to be used for thread synchronization.
         /// </summary>
-        protected object SyncRoot { get; private set; }
+        protected object SyncRoot { get; set; }
 
         /// <summary>
         /// Returns <c>true</c> if the instance has been disposed.
         /// </summary>
-        protected bool IsDisposed { get; private set; }
+        protected bool IsDisposed { get; set; }
 
         /// <summary>
         /// Returns <c>true</c> if the <see cref="Initialize(Action)"/> method
         /// is running.
         /// </summary>
-        protected bool InAction { get; private set; }
+        protected bool InAction { get; set; }
 
         /// <summary>
         /// Returns <c>true</c> if the fixture has been initialized.
         /// </summary>
-        protected bool IsInitialized { get; private set; }
+        public bool IsInitialized { get; set; }
 
         /// <summary>
         /// Verifies that the fixture instance has not been disposed.
@@ -86,13 +86,13 @@ namespace Xunit
         /// </summary>
         /// <param name="action">The optional initialization action.</param>
         /// <exception cref="InvalidOperationException">Thrown if this is called from within the <see cref="Action"/>.</exception>
-        public void Initialize(Action action = null)
+        public virtual void Initialize(Action action = null)
         {
             CheckDisposed();
 
             if (InAction)
             {
-                throw new InvalidOperationException($"[{nameof(Initialize)}()] cannot be called recursively from within an initialization action.");
+                throw new InvalidOperationException($"[{nameof(Initialize)}()] cannot be called recursively from within the fixture initialization action.");
             }
 
             if (IsInitialized)
@@ -117,7 +117,6 @@ namespace Xunit
         public void Dispose()
         {
             Dispose(true);
-            GC.SuppressFinalize(this);
 
             IsDisposed = true;
         }
@@ -126,6 +125,12 @@ namespace Xunit
         /// Releases all associated resources.
         /// </summary>
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
-        protected abstract void Dispose(bool disposing);
+        protected virtual void Dispose(bool disposing)
+        {
+            if (disposing)
+            {
+                GC.SuppressFinalize(this);
+            }
+        }
     }
 }

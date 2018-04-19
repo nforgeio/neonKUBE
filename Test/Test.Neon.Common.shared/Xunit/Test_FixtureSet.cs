@@ -1,0 +1,116 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:	    Test_DockerContainerFixture.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+using Neon.Common;
+
+using Xunit;
+
+namespace TestCouchbase
+{
+    /// <summary>
+    /// Verify that a test fixture composed of other fixtures works.
+    /// </summary>
+    public class Test_FixtureSet : IClassFixture<TestFixtureSet>
+    {
+        //---------------------------------------------------------------------
+        // Private types
+
+        private class Fixture0 : TestFixture
+        {
+            public bool PublicIsDisposed => base.IsDisposed;
+            public bool PublicInAction => base.InAction;
+        }
+
+        private class Fixture1 : TestFixture
+        {
+            public bool PublicIsDisposed => base.IsDisposed;
+            public bool PublicInAction => base.InAction;
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
+        private TestFixtureSet  fixture;
+        private ITestFixture    fixture0;
+        private ITestFixture    fixture1;
+        private bool            fixture0Initialized;
+        private bool            fixture1Initialized;
+
+        public Test_FixtureSet(TestFixtureSet fixture)
+        {
+            this.fixture = fixture;
+
+            fixture.Add("zero", fixture0 = new Fixture0(),
+                () =>
+                {
+                    fixture0Initialized = true;
+                });
+
+            fixture.Add("one", fixture1 = new Fixture1(),
+                () =>
+                {
+                    fixture1Initialized = true;
+                });
+
+            fixture.Initialize(
+                () =>
+                {
+                    // Ensure that the subfixtures were initialized first
+                    // and that their actions were called.
+
+                    Covenant.Assert(fixture0Initialized);
+                    Covenant.Assert(fixture1Initialized);
+
+                    // Ensure that the subfixture indexers work.
+
+                    Covenant.Assert(fixture[0] == fixture0);
+                    Covenant.Assert(fixture[1] == fixture1);
+                    Covenant.Assert(fixture["zero"] == fixture0);
+                    Covenant.Assert(fixture["one"] == fixture1);
+                });
+        }
+
+        /// <summary>
+        /// Verify that fixtures look OK.
+        /// </summary>
+        [Fact]
+        public void Verify()
+        {
+            // Ensure that the subfixture indexers work.
+
+            Assert.True(fixture[0] == fixture0);
+            Assert.True(fixture[1] == fixture1);
+            Assert.True(fixture["zero"] == fixture0);
+            Assert.True(fixture["one"] == fixture1);
+
+            // Ensure that the enumerator and count works.
+
+            Assert.Equal(2, fixture.Count);
+
+            var list = new List<KeyValuePair<string, ITestFixture>>();
+
+            foreach (var subfixture in fixture)
+            {
+                list.Add(subfixture);
+            }
+
+            Assert.Equal(2, list.Count);
+
+            Assert.Equal("zero", list[0].Key);
+            Assert.Equal(fixture0, list[0].Value);
+
+            Assert.Equal("one", list[1].Key);
+            Assert.Equal(fixture1, list[1].Value);
+        }
+    }
+}

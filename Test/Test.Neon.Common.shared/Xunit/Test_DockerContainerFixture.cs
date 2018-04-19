@@ -16,8 +16,9 @@ using Xunit;
 
 namespace TestCouchbase
 {
+    /// <summary>
     // Verify that we can launch a Docker container fixture during tests.
-
+    /// </summary>
     public class Test_DockerContainerFixture : IClassFixture<DockerContainerFixture>
     {
         private DockerContainerFixture fixture;
