@@ -28,7 +28,12 @@
   <Import Project="..\Neon.Global\Neon.Global.projitems" Label="Shared" />
 
   <ItemGroup>
+    <PackageReference Include="CouchbaseNetClient" Version="2.5.9" />
+  </ItemGroup>
+
+  <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
+    <ProjectReference Include="..\Neon.Couchbase\Neon.Couchbase.csproj" />
   </ItemGroup>
 
 </Project>

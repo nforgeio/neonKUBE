@@ -16,7 +16,7 @@ namespace Xunit
     /// fixture while tests are being performed and then deletes the
     /// container when the fixture is disposed.
     /// </summary>
-    public sealed class DockerContainerFixture : IDisposable
+    public class DockerContainerFixture : IDisposable
     {
         private object  syncRoot   = new object();
         private bool    isDisposed = false;
@@ -29,12 +29,31 @@ namespace Xunit
         }
 
         /// <summary>
+        /// Finalizer.
+        /// </summary>
+        ~DockerContainerFixture()
+        {
+            Dispose(false);
+        }
+
+        /// <summary>
         /// Starts the container if it's not already running.
         /// </summary>
         /// <param name="image">Specifies the container Docker image.</param>
+        /// <param name="name">Optionally specifies the container name.</param>
         /// <param name="dockerArgs">Optional arguments to be passed to the <b>docker run ...</b> command.</param>
         /// <param name="containerArgs">Optional arguments to be passed to the container.</param>
-        public void RunContainer(string image, string[] dockerArgs = null, string[] containerArgs = null)
+        /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <remarks>
+        /// <note>
+        /// Although the <paramref name="name"/> parameter is optional, we recommend that you
+        /// specify a valid name because the fixure will remove any existing container with 
+        /// the same name before starting the new container.  This is very useful during 
+        /// test debugging when the test is interrupted before ensuring that the container
+        /// is stopped.
+        /// </note>
+        /// </remarks>
+        public void RunContainer(string image, string name = null, string[] dockerArgs = null, string[] containerArgs = null, string[] env = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
@@ -50,8 +69,49 @@ namespace Xunit
                     return;     // Container is already running
                 }
 
-                var argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, image, containerArgs);
-                var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                // Handle the special case where an earlier run of this contaainer was
+                // not stopped because the developer was debugging and interrupted the
+                // the unit tests before the fixture was disposed or a container with
+                // the same name is already running for some other reason.
+                //
+                // We're going to look for a existing container with the same name
+                // and remove it if its ID doesn't match the current container.
+
+                var args   = new string[] { "ps", "--filter", $"name={name}", "--format", "{{.ID}}" };
+                var result = NeonHelper.ExecuteCaptureStreams($"docker", args);
+
+                if (result.ExitCode == 0)
+                {
+                    var existingId = result.OutputText.Trim();
+
+                    if (!string.IsNullOrEmpty(existingId))
+                    {
+                        NeonHelper.Execute("docker", new object[] { "rm", "--force", existingId });
+                    }
+                }
+
+                // Start the container.
+
+                var extraArgs = new List<string>();
+
+                if (!string.IsNullOrEmpty(name))
+                {
+                    extraArgs.Add("--name");
+                    extraArgs.Add(name);
+                }
+
+                if (env != null)
+                {
+                    foreach (var variable in env)
+                    {
+                        extraArgs.Add("--env");
+                        extraArgs.Add(variable);
+                    }
+                }
+
+                var argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, extraArgs.ToArray(), image, containerArgs);
+
+                result = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
 
                 if (result.ExitCode != 0)
                 {
@@ -66,6 +126,16 @@ namespace Xunit
 
         /// <inheritdoc/>
         public void Dispose()
+        {
+            Dispose(true);
+            GC.SuppressFinalize(this);
+        }
+
+        /// <summary>
+        /// Releases all associated resources.
+        /// </summary>
+        /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
+        protected virtual void Dispose(bool disposing)
         {
             if (!isDisposed)
             {

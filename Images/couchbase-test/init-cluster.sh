@@ -67,3 +67,11 @@ couchbase-cli bucket-create \
     --bucket ${BUCKET_NAME} \
     --bucket-type couchbase \
     --bucket-ramsize ${BUCKET_RAM_MB}
+
+# ...and then create the user account with full cluster admin rights.
+
+couchbase-cli user-manage \
+    -u ${USERNAME} \
+    -p ${PASSWORD} \
+    --cluster localhost:8091 \
+    --roles admin

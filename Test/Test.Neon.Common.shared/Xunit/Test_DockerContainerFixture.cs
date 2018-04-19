@@ -26,7 +26,7 @@ namespace TestCouchbase
         {
             this.fixture = fixture;
 
-            // Have the Docker container fixture launch the Apline image and
+            // Have the Docker container fixture launch the Alpine image and
             // sleep for a (long) while.
 
             fixture.RunContainer("alpine",

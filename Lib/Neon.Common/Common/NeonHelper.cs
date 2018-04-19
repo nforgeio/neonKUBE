@@ -29,6 +29,11 @@ namespace Neon.Common
     public static partial class NeonHelper
     {
         /// <summary>
+        /// Used for thread synchronization.
+        /// </summary>
+        private static object syncRoot = new object();
+
+        /// <summary>
         /// Ordinal value of an ASCII carriage return.
         /// </summary>
         public const int CR = 0x0D;
@@ -92,6 +97,12 @@ namespace Neon.Common
         private static bool? isDevWorkstation;
 
         /// <summary>
+        /// The <see cref="Neon.Common.ServiceContainer"/> instance returned by 
+        /// <see cref="ServiceContainer"/>.
+        /// </summary>
+        private static ServiceContainer serviceContainer;
+
+        /// <summary>
         /// The root dependency injection service container used by Neon class libraries. 
         /// and applications.
         /// </summary>
@@ -110,16 +121,22 @@ namespace Neon.Common
         /// implementation should suffice for most purposes.
         /// </para>
         /// </remarks>
-        public static ServiceContainer ServiceContainer { get; set; }
-
-        /// <summary>
-        /// Static constructor.
-        /// </summary>
-        static NeonHelper()
+        public static ServiceContainer ServiceContainer
         {
-            // Dependency injection initialization:
+            get
+            {
+                lock (syncRoot)
+                {
+                    if (serviceContainer == null)
+                    {
+                        serviceContainer = new ServiceContainer();
+                    }
 
-            ServiceContainer = new ServiceContainer();
+                    return serviceContainer;
+                }
+            }
+
+            set { serviceContainer = value; }
         }
 
         /// <summary>

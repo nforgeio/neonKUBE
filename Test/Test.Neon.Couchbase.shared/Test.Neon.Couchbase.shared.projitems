@@ -10,6 +10,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Couchbase\Test_CbHelper.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)Couchbase\Test_CouchbaseFixture.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Couchbase\Test_NeonBucket.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LiteIntegration\DatabaseManager.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)LiteIntegration\Test_Integration.cs" />

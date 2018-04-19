@@ -55,8 +55,8 @@ namespace Neon.Data
         /// <remarks>
         /// <note>
         /// The value returned is a <see cref="Guid"/> converted to base-64 and then
-        /// made URI safe by replacing "=" characters with "-" and "/" to "_" and
-        /// removing any "=" padding charcters.
+        /// made URI safe by replacing "=" characters with "-" and "/" to "_" and 
+        /// also removing any "=" padding charcters.
         /// </note>
         /// </remarks>
         public static string CreateUuid()
