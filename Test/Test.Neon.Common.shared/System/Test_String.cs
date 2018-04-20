@@ -19,7 +19,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_String
+    public class Test_String : IClassFixture<ResetFixture>
     {
         [Fact]
         public void ToLines()

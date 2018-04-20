@@ -14,7 +14,7 @@ using Xunit;
 
 namespace LillTek.Common.Test
 {
-    public class Test_CsvWriter
+    public class Test_CsvWriter : IClassFixture<ResetFixture>
     {
         [Fact]
         public void CsvWriter_Basic()

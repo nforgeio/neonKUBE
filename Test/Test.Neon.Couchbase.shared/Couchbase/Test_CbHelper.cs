@@ -18,7 +18,7 @@ using Xunit;
 
 namespace TestCouchbase
 {
-    public class Test_CbHelper
+    public class Test_CbHelper : IClassFixture<ResetFixture>
     {
         [Fact]
         public void Literal_String()

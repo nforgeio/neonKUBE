@@ -18,7 +18,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_Exception
+    public class Test_Exception : IClassFixture<ResetFixture>
     {
         [Fact]
         public void Contains()

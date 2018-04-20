@@ -18,7 +18,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_PolledTimer
+    public class Test_PolledTimer : IClassFixture<ResetFixture>
     {
         [Fact]
         public void Normal()

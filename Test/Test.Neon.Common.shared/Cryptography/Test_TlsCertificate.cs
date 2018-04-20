@@ -17,7 +17,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_TlsCertificate
+    public class Test_TlsCertificate : IClassFixture<ResetFixture>
     {
         private const string TestCertPart =
 @"-----BEGIN CERTIFICATE-----

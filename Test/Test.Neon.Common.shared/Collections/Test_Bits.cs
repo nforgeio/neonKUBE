@@ -28,7 +28,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_Bits
+    public class Test_Bits : IClassFixture<ResetFixture>
     {
         [Fact]
         public void Bits_Basic()

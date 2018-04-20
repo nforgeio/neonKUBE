@@ -16,7 +16,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_TextReader
+    public class Test_TextReader : IClassFixture<ResetFixture>
     {
         [Fact]
         public void Lines_Empty()

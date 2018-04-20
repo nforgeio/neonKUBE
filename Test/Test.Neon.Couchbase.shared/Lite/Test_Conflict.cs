@@ -30,7 +30,7 @@ using Xunit;
 
 namespace TestLiteExtensions
 {
-    public class Test_Conflict
+    public class Test_Conflict : IClassFixture<ResetFixture>
     {
         public Test_Conflict()
         {

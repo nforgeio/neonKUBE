@@ -17,7 +17,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_TempFile
+    public class Test_TempFile : IClassFixture<ResetFixture>
     {
         [Fact]
         public void Basic()

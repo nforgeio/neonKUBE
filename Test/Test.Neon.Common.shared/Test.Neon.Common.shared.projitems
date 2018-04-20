@@ -64,7 +64,4 @@
     <Compile Include="$(MSBuildThisFileDirectory)Xunit\Test_DockerContainerFixture.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Xunit\Test_FixtureSet.cs" />
   </ItemGroup>
-  <ItemGroup>
-    <Folder Include="$(MSBuildThisFileDirectory)Couchbase\" />
-  </ItemGroup>
 </Project>

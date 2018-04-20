@@ -16,7 +16,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_WeakEventController
+    public class Test_WeakEventController : IClassFixture<ResetFixture>
     {
         //---------------------------------------------------------------------
         // Private types

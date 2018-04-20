@@ -14,7 +14,14 @@ using Neon.Common;
 namespace Xunit
 {
     /// <summary>
-    /// Defines the behavior of a Neon Xunit test fixture.
+    /// <para>
+    /// <b>Internal Use Only:</b> Defines the behavior of a Neon Xunit test fixture.
+    /// </para>
+    /// <note>
+    /// All test fixture implementations must inherit from <see cref="TestFixture"/> to
+    /// work properly.  Do not attempt to create a fixture from scratch that implements
+    /// this interface.
+    /// </note>
     /// </summary>
     /// <remarks>
     /// <para>

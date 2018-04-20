@@ -22,7 +22,7 @@ namespace TestSyncGateway
     /// <summary>
     /// Tests the Sync Gateway public REST API.
     /// </summary>
-    public sealed class Test_Public
+    public sealed class Test_Public : IClassFixture<ResetFixture>
     {
         [Fact]
         public async Task ServerInformation()

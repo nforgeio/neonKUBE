@@ -14,7 +14,7 @@ using Xunit;
 
 namespace LillTek.Common.Test
 {
-    public class Test_CsvTableReader
+    public class Test_CsvTableReader : IClassFixture<ResetFixture>
     {
         [Fact]
         public void CsvTableReader_EmptyTable()

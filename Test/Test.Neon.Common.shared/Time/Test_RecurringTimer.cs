@@ -20,7 +20,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_RecurringTimer
+    public class Test_RecurringTimer : IClassFixture<ResetFixture>
     {
         [Fact]
         public void RecurringTimer_Disabled()

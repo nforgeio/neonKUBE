@@ -22,7 +22,7 @@ using Xunit;
 
 namespace TestSyncGateway
 {
-    public class Test_ManagerEndToEnd
+    public class Test_ManagerEndToEnd : IClassFixture<ResetFixture>
     {
         private TimeSpan MaxWait = TimeSpan.FromSeconds(15);
 

@@ -17,7 +17,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_BlockStream
+    public class Test_BlockStream : IClassFixture<ResetFixture>
     {
         [Fact]
         public void Basic()

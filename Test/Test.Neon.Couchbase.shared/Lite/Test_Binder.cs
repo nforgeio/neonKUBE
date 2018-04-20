@@ -30,7 +30,7 @@ using Xunit;
 
 namespace TestLiteExtensions
 {
-    public class Test_Binder
+    public class Test_Binder : IClassFixture<ResetFixture>
     {
         public Test_Binder()
         {

@@ -26,7 +26,7 @@ using Xunit;
 
 namespace TestLiteIntegration
 {
-    public class Test_Integration
+    public class Test_Integration : IClassFixture<ResetFixture>
     {
         public Test_Integration()
         {

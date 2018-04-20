@@ -18,7 +18,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_PreprocessReader
+    public class Test_PreprocessReader : IClassFixture<ResetFixture>
     {
         private void SetVariables(PreprocessReader reader, KeyValuePair<string, string>[] variables)
         {

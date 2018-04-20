@@ -22,7 +22,7 @@ namespace TestSyncGateway
     /// <summary>
     /// Tests the Sync Gateway manager REST API.
     /// </summary>
-    public partial class Test_Manager
+    public partial class Test_Manager : IClassFixture<ResetFixture>
     {
         [Fact]
         public async Task RoleCreateRemoveList()

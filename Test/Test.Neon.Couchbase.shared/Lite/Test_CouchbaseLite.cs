@@ -33,7 +33,7 @@ namespace TestLiteExtensions
     /// <summary>
     /// Couchbase Lite low-level behavior tests.
     /// </summary>
-    public class Test_CouchbaseLite
+    public class Test_CouchbaseLite : IClassFixture<ResetFixture>
     {
         [Fact]
         public void RevisionProperties()

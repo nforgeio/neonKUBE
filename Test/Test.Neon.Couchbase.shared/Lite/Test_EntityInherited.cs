@@ -33,7 +33,7 @@ namespace TestLiteExtensions
     /// <summary>
     /// Verify that inherited entities work correctly.
     /// </summary>
-    public class Test_EntityInherited
+    public class Test_EntityInherited : IClassFixture<ResetFixture>
     {
         public Test_EntityInherited()
         {

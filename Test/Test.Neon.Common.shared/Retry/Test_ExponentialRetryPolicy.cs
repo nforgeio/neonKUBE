@@ -17,7 +17,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_ExponentialRetryPolicy
+    public class Test_ExponentialRetryPolicy : IClassFixture<ResetFixture>
     {
         private class TransientException : Exception
         {

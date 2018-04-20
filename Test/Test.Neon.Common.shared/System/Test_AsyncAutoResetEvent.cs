@@ -18,7 +18,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_AsyncAutoResetEvent
+    public class Test_AsyncAutoResetEvent : IClassFixture<ResetFixture>
     {
         private TimeSpan defaultTimeout = TimeSpan.FromSeconds(15);
 

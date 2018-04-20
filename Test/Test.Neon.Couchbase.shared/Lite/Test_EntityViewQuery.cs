@@ -30,7 +30,7 @@ using Xunit;
 
 namespace TestLiteExtensions
 {
-    public class Test_EntityViewQuery
+    public class Test_EntityViewQuery : IClassFixture<ResetFixture>
     {
         public Test_EntityViewQuery()
         {

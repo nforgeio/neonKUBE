@@ -18,7 +18,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_GoTimeSpan
+    public class Test_GoTimeSpan : IClassFixture<ResetFixture>
     {
         private bool AreClose(double v1, double v2)
         {

@@ -21,7 +21,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_NetHelper
+    public class Test_NetHelper : IClassFixture<ResetFixture>
     {
         [Fact]
         public void AddressEquals()

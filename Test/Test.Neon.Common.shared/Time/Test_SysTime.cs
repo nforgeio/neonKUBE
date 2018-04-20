@@ -18,7 +18,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_SysTime
+    public class Test_SysTime : IClassFixture<ResetFixture>
     {
         [Fact]
         public void InitialValue()

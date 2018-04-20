@@ -29,7 +29,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_ServicesContainer
+    public class Test_ServicesContainer : IClassFixture<ResetFixture>
     {
         public interface IService1
         {

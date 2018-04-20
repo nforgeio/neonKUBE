@@ -18,7 +18,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public partial class Test_EnvironmentParser
+    public partial class Test_EnvironmentParser : IClassFixture<ResetFixture>
     {
         private string Var(string name)
         {

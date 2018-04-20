@@ -30,7 +30,7 @@ using Xunit;
 
 namespace TestLiteExtensions
 {
-    public class Test_Manager
+    public class Test_Manager : IClassFixture<ResetFixture>
     {
         public Test_Manager()
         {

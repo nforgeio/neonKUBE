@@ -31,7 +31,7 @@ using Xunit;
 
 namespace TestLiteExtensions
 {
-    public class Test_DocLinkList
+    public class Test_DocLinkList : IClassFixture<ResetFixture>
     {
         public Test_DocLinkList()
         {

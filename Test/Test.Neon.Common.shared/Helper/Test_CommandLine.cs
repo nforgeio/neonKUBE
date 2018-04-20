@@ -20,7 +20,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_CommandLine
+    public class Test_CommandLine : IClassFixture<ResetFixture>
     {
         [Fact]
         public void Empty()

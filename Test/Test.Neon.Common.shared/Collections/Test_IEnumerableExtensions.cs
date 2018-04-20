@@ -28,7 +28,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_IEnumerableExtensions
+    public class Test_IEnumerableExtensions : IClassFixture<ResetFixture>
     {
         [Fact]
         public void SelectRandom_Single()

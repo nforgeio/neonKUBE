@@ -16,7 +16,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_Stream
+    public class Test_Stream : IClassFixture<ResetFixture>
     {
         [Fact]
         public void Write()

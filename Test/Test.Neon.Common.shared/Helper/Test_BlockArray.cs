@@ -16,7 +16,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_BlockArray
+    public class Test_BlockArray : IClassFixture<ResetFixture>
     {
         [Fact]
         public void Construction()

@@ -18,7 +18,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_StringBuilder
+    public class Test_StringBuilder : IClassFixture<ResetFixture>
     {
         [Fact]
         public void AppendLineLinux()

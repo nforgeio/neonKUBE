@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NullFixture.cs
+// FILE:	    ResetFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -13,7 +13,7 @@ namespace Xunit
 {
     /// <summary>
     /// Implements a <b>do-nothing</b> fixture that ensures that any previous
-    /// fixture state is cleared.  All test classes that don't need an explicit
+    /// fixture state is reset.  All test classes that don't need an explicit
     /// fixture should inherit from this.
     /// </summary>
     /// <remarks>
@@ -34,7 +34,7 @@ namespace Xunit
     /// </note>
     /// </remarks>
     /// <threadsafety instance="false"/>
-    public class NullFixture : TestFixture
+    public class ResetFixture : TestFixture
     {
     }
 }

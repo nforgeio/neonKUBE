@@ -18,7 +18,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_NetworkCidr
+    public class Test_NetworkCidr : IClassFixture<ResetFixture>
     {
         [Fact]
         public void Parse()

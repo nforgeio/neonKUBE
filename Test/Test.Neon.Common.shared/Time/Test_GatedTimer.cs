@@ -23,7 +23,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_GatedTimer
+    public class Test_GatedTimer : IClassFixture<ResetFixture>
     {
         GatedTimer      timer;
         private int     wait;

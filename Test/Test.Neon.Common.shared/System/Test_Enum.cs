@@ -19,7 +19,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_Enum
+    public class Test_Enum : IClassFixture<ResetFixture>
     {
         private enum Foo
         {

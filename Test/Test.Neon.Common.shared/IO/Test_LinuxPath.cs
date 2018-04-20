@@ -17,7 +17,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_LinuxPath
+    public class Test_LinuxPath : IClassFixture<ResetFixture>
     {
         [Fact]
         public void ChangeExtension()

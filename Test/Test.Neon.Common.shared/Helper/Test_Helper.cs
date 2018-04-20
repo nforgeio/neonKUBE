@@ -16,7 +16,7 @@ using Xunit;
 
 namespace TestCommon
 {
-    public partial class Test_Helper
+    public partial class Test_Helper : IClassFixture<ResetFixture>
     {
         [Fact]
         public void ParseCsv()
