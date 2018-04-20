@@ -6,6 +6,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Reflection;
 
 using Neon.Common;
 
@@ -30,6 +32,12 @@ namespace Xunit
     /// </code>
     /// </para>
     /// </note>
+    /// <para>
+    /// Test fixtures that modify global machine or other environmental state must
+    /// implement a <c>public static void EnsureReset()</c> method resets the state
+    /// to a reasonable default.  These will be reflected and called when the first
+    /// <see cref="TestFixture"/> is created by the test runner for every test class.
+    /// </para>
     /// </remarks>
     /// <threadsafety instance="false"/>
     public abstract class TestFixture : ITestFixture
@@ -38,10 +46,55 @@ namespace Xunit
         // Static members
 
         /// <summary>
-        /// 
+        /// Holds any reflected <c>public static void EnsureReset()</c> from any
+        /// <see cref="TestFixture"/> implementations.
         /// </summary>
-        public static void Reset()
+        private static List<MethodInfo> resetMethods;
+
+        /// <summary>
+        /// Resets the state of any reflected fixture implementations.
+        /// </summary>
+        private static void Reset()
         {
+            // Reflect the test fixture reset methods if we haven't already.
+
+            if (resetMethods != null)
+            {
+                resetMethods = new List<MethodInfo>();
+
+                foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
+                {
+                    foreach (var type in assembly.GetTypes())
+                    {
+                        var typeInfo = type.GetTypeInfo();
+
+                        if (typeInfo.ImplementedInterfaces.Contains(typeof(ITestFixture)))
+                        {
+                            var methodInfo = typeInfo.GetMethod("EnsureReset", BindingFlags.Public | BindingFlags.Static);
+
+                            if (methodInfo.ReturnType == typeof(void) && methodInfo.GetParameters().Length == 0)
+                            {
+                                resetMethods.Add(methodInfo);
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Call the reflected reset methods.
+
+            foreach (var method in resetMethods)
+            {
+                try
+                {
+                    method.Invoke(null, null);
+                }
+                catch
+                {
+                    // Intentionally ignoring any exceptions.
+                    // Not sure if anything else makes sense.
+                }
+            }
         }
 
         /// <summary>
