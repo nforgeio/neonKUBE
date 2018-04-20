@@ -34,9 +34,6 @@ namespace TestCouchbase
                 });
         }
 
-        /// <summary>
-        /// Verify that we can access the Couchbase bucket.
-        /// </summary>
         [Fact]
         public async Task BasicAsync()
         {
@@ -46,6 +43,38 @@ namespace TestCouchbase
             Assert.Equal("world!", await bucket.GetSafeAsync<string>("hello"));
             await bucket.RemoveSafeAsync("hello");
             Assert.Null(await bucket.FindSafeAsync<string>("hello"));
+        }
+
+        [Fact]
+        public async Task CasDetector()
+        {
+            // Verify that the CAS transient detector function works.
+
+            var result = await bucket.UpsertAsync("test", "zero");
+            var orgCas = result.Cas;
+
+            // Update the value.  We shouldn't see a CAS error.
+
+            result = await bucket.UpsertAsync("test", "one");
+
+            var newCas = result.Cas;
+
+            // Now attempt to update value using the old CAS.  This
+            // should throw the CAS mismatch exception.
+
+            var caught = (Exception)null;
+
+            try
+            {
+                await bucket.UpsertSafeAsync("test", "two", cas: orgCas);
+            }
+            catch (Exception e)
+            {
+                caught = e;
+            }
+
+            Assert.NotNull(caught);
+            Assert.True(CouchbaseTransientDetector.IsCasTransient(caught));
         }
     }
 }

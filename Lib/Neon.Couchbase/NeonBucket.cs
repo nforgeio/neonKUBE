@@ -29,7 +29,7 @@ using Neon.Data;
 using Neon.Retry;
 using Neon.Time;
 
-#pragma warning disable 0618    // Allowing calls to wrapped obsolete members.
+#pragma warning disable 0618    // Allow calls to wrapped obsolete members.
 
 namespace Couchbase
 {
