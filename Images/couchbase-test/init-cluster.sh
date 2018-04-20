@@ -58,7 +58,9 @@ do
     fi
 done
 
-# The cluster is ready, so create the bucket.
+# The cluster is ready, so create the bucket.  Note that we're
+# enabling FLUSH so it will be easy to clear the bucket state
+# for unit tests.
 
 couchbase-cli bucket-create \
     -u ${USERNAME} \
@@ -66,7 +68,8 @@ couchbase-cli bucket-create \
     --cluster localhost:8091 \
     --bucket ${BUCKET_NAME} \
     --bucket-type couchbase \
-    --bucket-ramsize ${BUCKET_RAM_MB}
+    --bucket-ramsize ${BUCKET_RAM_MB} \
+    --enable-flush 1
 
 # ...and then create the user account with full cluster admin rights.
 
