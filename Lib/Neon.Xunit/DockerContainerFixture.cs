@@ -83,7 +83,7 @@ namespace Xunit
                 // We're going to look for a existing container with the same name
                 // and remove it if its ID doesn't match the current container.
 
-                var args   = new string[] { "ps", "--filter", $"name={containerName}", "--format", "{{.ID}}" };
+                var args   = new string[] { "ps", "-a", "--filter", $"name={containerName}", "--format", "{{.ID}}" };
                 var result = NeonHelper.ExecuteCaptureStreams($"docker", args);
 
                 if (result.ExitCode == 0)
