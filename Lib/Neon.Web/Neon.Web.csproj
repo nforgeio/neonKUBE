@@ -2,7 +2,7 @@
 
   <PropertyGroup>
     <TargetFramework>netcoreapp2.0</TargetFramework>
-    <Version>6.3.4.0</Version>
+    <Version>6.3.5.0</Version>
     <Authors>Jeff Lill</Authors>
     <Company>Jeff Lill</Company>
     <Product>neonCLUSTER</Product>
@@ -10,6 +10,7 @@
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
     <PackageReleaseNotes>BREAKING: Significant changes preparing for the upcoming 7.0.0.0 release.</PackageReleaseNotes>
     <LangVersion>latest</LangVersion>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">

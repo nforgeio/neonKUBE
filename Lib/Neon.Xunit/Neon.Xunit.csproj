@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Stack.Xunit</RootNamespace>
-    <Version>6.3.4.0</Version>
+    <Version>6.3.5.0</Version>
     <Authors>Jeff Lill</Authors>
     <Company>NeonForge, LLC</Company>
     <Description>Xunit related extensions.</Description>
@@ -13,6 +13,7 @@
     <FileVersion>0.0.0.0</FileVersion>
     <Product>neonCLUSTER</Product>
     <LangVersion>latest</LangVersion>
+    <IsPackable>true</IsPackable>
   </PropertyGroup>
 
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|AnyCPU'">
