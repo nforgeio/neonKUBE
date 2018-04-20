@@ -76,9 +76,24 @@ namespace Couchbase
         /// <param name="username">The username.</param>
         /// <param name="password">The password.</param>
         /// <param name="timeout">The optional timeout (defaults to 30 seconds).</param>
+        /// <param name="ignoreDurability">Optionally configure the bucket to ignore durability parameters.</param>
         /// <returns>The connected <see cref="NeonBucket"/>.</returns>
         /// <exception cref="TimeoutException">Thrown if the bucket is not ready after waiting <paramref name="timeout"/>.</exception>
-        public static NeonBucket OpenBucket(this CouchbaseSettings settings, string username, string password, TimeSpan timeout = default(TimeSpan))
+        /// <remarks>
+        /// <para>
+        /// You may explicitly pass <paramref name="ignoreDurability"/><c>=true</c> for 
+        /// development and test environments where there may not be enough cluster nodes to
+        /// satisfy durability constraints.  If this is <c>null</c> (the default) then the bucket 
+        /// will look for the presence of the <b>DEV_WORKSTATION</b> environment variable
+        /// and ignore durability constraints if this variable exists, otherwise durability
+        /// constraints will be honored.
+        /// </para>
+        /// </remarks>
+        public static NeonBucket OpenBucket(this CouchbaseSettings settings, 
+            string username, 
+            string password, 
+            TimeSpan timeout = default(TimeSpan), 
+            bool? ignoreDurability = null)
         {
             var config = settings.ToClientConfig();
 
@@ -144,7 +159,7 @@ namespace Couchbase
                 {
                     try
                     {
-                        bucket = new NeonBucket(cluster.OpenBucket(settings.Bucket), settings);
+                        bucket = new NeonBucket(cluster.OpenBucket(settings.Bucket), settings, ignoreDurability);
                         return true;
                     }
                     catch
@@ -163,12 +178,27 @@ namespace Couchbase
         /// </summary>
         /// <param name="settings">The Couchbase settings.</param>
         /// <param name="credentials">The credentials.</param>
+        /// <param name="timeout">The optional timeout (defaults to 30 seconds).</param>
+        /// <param name="ignoreDurability">Optionally configure the bucket to ignore durability parameters.</param>
         /// <returns>The connected <see cref="NeonBucket"/>.</returns>
-        public static NeonBucket OpenBucket(this CouchbaseSettings settings, Credentials credentials)
+        /// <remarks>
+        /// <para>
+        /// You may explicitly pass <paramref name="ignoreDurability"/><c>=true</c> for 
+        /// development and test environments where there may not be enough cluster nodes to
+        /// satisfy durability constraints.  If this is <c>null</c> (the default) then the bucket 
+        /// will look for the presence of the <b>DEV_WORKSTATION</b> environment variable
+        /// and ignore durability constraints if this variable exists, otherwise durability
+        /// constraints will be honored.
+        /// </para>
+        /// </remarks>
+        public static NeonBucket OpenBucket(this CouchbaseSettings settings, 
+            Credentials credentials,
+            TimeSpan timeout = default(TimeSpan),
+            bool? ignoreDurability = null)
         {
             Covenant.Requires<ArgumentNullException>(credentials != null);
 
-            return settings.OpenBucket(credentials.Username, credentials.Password);
+            return settings.OpenBucket(credentials.Username, credentials.Password, timeout: timeout, ignoreDurability: ignoreDurability);
         }
 
         /// <summary>

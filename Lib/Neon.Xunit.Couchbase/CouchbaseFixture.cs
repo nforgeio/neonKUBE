@@ -94,5 +94,25 @@ namespace Xunit
         /// Returns the <see cref="CouchbaseSettings"/> used to connect to the bucket.
         /// </summary>
         public CouchbaseSettings Settings { get; private set; }
+
+        /// <summary>
+        /// Removes all data and indexes from the database bucket and then recreates the
+        /// primary index by default.
+        /// </summary>
+        /// <param name="noPrimaryIndex">Optionally disable creation of the primary index.</param>
+        public void Clear(bool noPrimaryIndex = false)
+        {
+            CheckDisposed();
+
+            using (var manager = Bucket.CreateManager())
+            {
+                manager.Flush();
+            }
+
+            if (!noPrimaryIndex)
+            {
+                Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName("idx_primary")} on {CbHelper.LiteralName(Bucket.Name)}").Wait();
+            }
+        }
     }
 }
