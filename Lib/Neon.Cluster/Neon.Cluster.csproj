@@ -5,7 +5,7 @@
     <RootNamespace>Neon.Cluster</RootNamespace>
     <Authors>Jeff Lill</Authors>
     <Version>6.3.5.0</Version>
-    <Company>Jeff Lill</Company>
+    <Company>neonFORGE, LLC</Company>
     <Product>neonCLUSTER</Product>
     <Description>neonCLUSTER management.</Description>
     <PackageReleaseNotes>BREAKING: Significant changes preparing for the upcoming 7.0.0.0 release.</PackageReleaseNotes>

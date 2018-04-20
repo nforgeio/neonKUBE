@@ -5,7 +5,7 @@
     <RootNamespace>Neon.Stack.Docker</RootNamespace>
     <Version>6.3.5.0</Version>
     <Authors>Jeff Lill</Authors>
-    <Company>NeonForge, LLC</Company>
+    <Company>neonFORGE, LLC</Company>
     <Description>Simple Docker REST API wrapper.</Description>
     <PackageReleaseNotes>BREAKING: Significant changes preparing for the upcoming 7.0.0.0 release.</PackageReleaseNotes>
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
