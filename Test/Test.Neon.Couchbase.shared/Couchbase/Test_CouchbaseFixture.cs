@@ -46,6 +46,8 @@ namespace TestCouchbase
         [Fact]
         public async Task BasicAsync()
         {
+            fixture.Flush();
+
             await bucket.UpsertSafeAsync("hello", "world!");
             Assert.Equal("world!", await bucket.GetSafeAsync<string>("hello"));
         }
