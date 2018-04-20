@@ -36,23 +36,82 @@ namespace Couchbase
     /// <summary>
     /// Wraps an <see cref="IBucket"/> adding some additional capabilities.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This bucket can be configured to ignore replicate and persist durability
+    /// constraints.  You can explicitly pass <c>ignoreDurability=true</c> to the
+    /// constructor for development and test environments where there may not be enough 
+    /// cluster nodes to satisfy durability constraints.  If this is <c>null</c> (the default)
+    /// then the bucket  will look for the presence of the <b>DEV_WORKSTATION</b> environment
+    /// variable and ignore durability constraints if this variable exists.
+    /// </para>
+    /// <para>
+    /// This means that production and staging environments that don't have the
+    /// <b>DEV_WORKSTATION</b> environment variable will enforce durability by
+    /// default and development/test environments that have this set will not
+    /// enforce durability be default.
+    /// </para>
+    /// </remarks>
     public class NeonBucket : IBucket
     {
         private IBucket             bucket;
         private CouchbaseSettings   settings;
+        private bool                ignoreDurability;
 
         /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="bucket">The underlying Couchbase bucket implementation.</param>
         /// <param name="settings">The Couchbase client settings.</param>
-        public NeonBucket(IBucket bucket, CouchbaseSettings settings)
+        /// <param name="ignoreDurability">Optionally configure the bucket to ignore durability parameters.</param>
+        /// <remarks>
+        /// <para>
+        /// You may explicitly pass <paramref name="ignoreDurability"/><c>=true</c> for 
+        /// development and test environments where there may not be enough cluster nodes to
+        /// satisfy durability constraints.  If this is <c>null</c> (the default) then the bucket 
+        /// will look for the presence of the <b>DEV_WORKSTATION</b> environment variable
+        /// and ignore durability constraints if this variable exists, otherwise durability
+        /// constraints will be honored.
+        /// </para>
+        /// </remarks>
+        public NeonBucket(IBucket bucket, CouchbaseSettings settings, bool? ignoreDurability = null)
         {
             Covenant.Requires<ArgumentNullException>(bucket != null);
             Covenant.Requires<ArgumentNullException>(settings != null);
 
             this.bucket   = bucket;
             this.settings = settings;
+
+            if (ignoreDurability.HasValue)
+            {
+                this.ignoreDurability = ignoreDurability.Value;
+            }
+            else
+            {
+                this.ignoreDurability = Environment.GetEnvironmentVariable("DEV_WORKSTATION") != null;
+            }
+        }
+
+        /// <summary>
+        /// Adjusts a <see cref="ReplicateTo"/> parameter based on the bucket's
+        /// durability mode.
+        /// </summary>
+        /// <param name="replicateTo">The input value.</param>
+        /// <returns>The value to actually use.</returns>
+        private ReplicateTo Adjust(ReplicateTo replicateTo)
+        {
+            return ignoreDurability ? ReplicateTo.Zero : replicateTo;
+        }
+
+        /// <summary>
+        /// Adjusts a <see cref="PersistTo"/> parameter based on the bucket's
+        /// durability mode.
+        /// </summary>
+        /// <param name="persistTo">The input value.</param>
+        /// <returns>The value to actually use.</returns>
+        private PersistTo Adjust(PersistTo persistTo)
+        {
+            return ignoreDurability ? PersistTo.Zero : persistTo;
         }
 
         //-----------------------------------------------------------------
@@ -688,25 +747,25 @@ namespace Couchbase
         /// <inheritdoc/>
         public IDocumentResult<T> Insert<T>(IDocument<T> document, ReplicateTo replicateTo)
         {
-            return bucket.Insert<T>(document, replicateTo);
+            return bucket.Insert<T>(document, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public IDocumentResult<T> Insert<T>(IDocument<T> document, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.Insert<T>(document, replicateTo, timeout);
+            return bucket.Insert<T>(document, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public IDocumentResult<T> Insert<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Insert<T>(document, replicateTo, persistTo);
+            return bucket.Insert<T>(document, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IDocumentResult<T> Insert<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Insert<T>(document, replicateTo, persistTo, timeout);
+            return bucket.Insert<T>(document, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -742,49 +801,49 @@ namespace Couchbase
         /// <inheritdoc/>
         public IOperationResult<T> Insert<T>(string key, T value, ReplicateTo replicateTo)
         {
-            return bucket.Insert<T>(key, value, replicateTo);
+            return bucket.Insert<T>(key, value, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Insert<T>(string key, T value, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.Insert<T>(key, value, replicateTo, timeout);
+            return bucket.Insert<T>(key, value, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Insert<T>(string key, T value, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Insert<T>(key, value, replicateTo, persistTo);
+            return bucket.Insert<T>(key, value, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Insert<T>(string key, T value, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Insert<T>(key, value, replicateTo, persistTo, timeout);
+            return bucket.Insert<T>(key, value, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Insert<T>(string key, T value, uint expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Insert<T>(key, value, expiration, replicateTo, persistTo);
+            return bucket.Insert<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Insert<T>(string key, T value, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Insert<T>(key, value, expiration, replicateTo, persistTo, timeout);
+            return bucket.Insert<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Insert<T>(string key, T value, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Insert<T>(key, value, expiration, replicateTo, persistTo);
+            return bucket.Insert<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Insert<T>(string key, T value, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Insert<T>(key, value, expiration, replicateTo, persistTo, timeout);
+            return bucket.Insert<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -802,25 +861,25 @@ namespace Couchbase
         /// <inheritdoc/>
         public Task<IDocumentResult<T>[]> InsertAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo)
         {
-            return bucket.InsertAsync<T>(documents, replicateTo);
+            return bucket.InsertAsync<T>(documents, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>[]> InsertAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.InsertAsync<T>(documents, replicateTo, timeout);
+            return bucket.InsertAsync<T>(documents, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>[]> InsertAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.InsertAsync<T>(documents, replicateTo, persistTo);
+            return bucket.InsertAsync<T>(documents, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>[]> InsertAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.InsertAsync<T>(documents, replicateTo, persistTo, timeout);
+            return bucket.InsertAsync<T>(documents, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -838,25 +897,25 @@ namespace Couchbase
         /// <inheritdoc/>
         public Task<IDocumentResult<T>> InsertAsync<T>(IDocument<T> document, ReplicateTo replicateTo)
         {
-            return bucket.InsertAsync<T>(document, replicateTo);
+            return bucket.InsertAsync<T>(document, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>> InsertAsync<T>(IDocument<T> document, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.InsertAsync<T>(document, replicateTo, timeout);
+            return bucket.InsertAsync<T>(document, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>> InsertAsync<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.InsertAsync<T>(document, replicateTo, persistTo);
+            return bucket.InsertAsync<T>(document, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>> InsertAsync<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.InsertAsync<T>(document, replicateTo, persistTo, timeout);
+            return bucket.InsertAsync<T>(document, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -892,49 +951,49 @@ namespace Couchbase
         /// <inheritdoc/>
         public Task<IOperationResult<T>> InsertAsync<T>(string key, T value, ReplicateTo replicateTo)
         {
-            return bucket.InsertAsync<T>(key, value, replicateTo);
+            return bucket.InsertAsync<T>(key, value, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> InsertAsync<T>(string key, T value, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.InsertAsync<T>(key, value, replicateTo, timeout);
+            return bucket.InsertAsync<T>(key, value, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> InsertAsync<T>(string key, T value, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.InsertAsync<T>(key, value, replicateTo, persistTo);
+            return bucket.InsertAsync<T>(key, value, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> InsertAsync<T>(string key, T value, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.InsertAsync<T>(key, value, replicateTo, persistTo, timeout);
+            return bucket.InsertAsync<T>(key, value, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> InsertAsync<T>(string key, T value, uint expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.InsertAsync<T>(key, value, expiration, replicateTo, persistTo);
+            return bucket.InsertAsync<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> InsertAsync<T>(string key, T value, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.InsertAsync<T>(key, value, expiration, replicateTo, persistTo, timeout);
+            return bucket.InsertAsync<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> InsertAsync<T>(string key, T value, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.InsertAsync<T>(key, value, expiration, replicateTo, persistTo);
+            return bucket.InsertAsync<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> InsertAsync<T>(string key, T value, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.InsertAsync<T>(key, value, expiration, replicateTo, persistTo, timeout);
+            return bucket.InsertAsync<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -1204,25 +1263,25 @@ namespace Couchbase
         /// <inheritdoc/>
         public ObserveResponse Observe(string key, ulong cas, bool deletion, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Observe(key, cas, deletion, replicateTo, persistTo);
+            return bucket.Observe(key, cas, deletion, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public ObserveResponse Observe(string key, ulong cas, bool deletion, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Observe(key, cas, deletion, replicateTo, persistTo, timeout);
+            return bucket.Observe(key, cas, deletion, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<ObserveResponse> ObserveAsync(string key, ulong cas, bool deletion, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.ObserveAsync(key, cas, deletion, replicateTo, persistTo);
+            return bucket.ObserveAsync(key, cas, deletion, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<ObserveResponse> ObserveAsync(string key, ulong cas, bool deletion, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.ObserveAsync(key, cas, deletion, replicateTo, persistTo, timeout);
+            return bucket.ObserveAsync(key, cas, deletion, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -1444,25 +1503,25 @@ namespace Couchbase
         /// <inheritdoc/>
         public IOperationResult Remove<T>(IDocument<T> document, ReplicateTo replicateTo)
         {
-            return bucket.Remove<T>(document, replicateTo);
+            return bucket.Remove<T>(document, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult Remove<T>(IDocument<T> document, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.Remove<T>(document, replicateTo, timeout);
+            return bucket.Remove<T>(document, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult Remove<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Remove<T>(document, replicateTo, persistTo);
+            return bucket.Remove<T>(document, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult Remove<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Remove<T>(document, replicateTo, persistTo, timeout);
+            return bucket.Remove<T>(document, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -1492,49 +1551,49 @@ namespace Couchbase
         /// <inheritdoc/>
         public IOperationResult Remove(string key, ReplicateTo replicateTo)
         {
-            return bucket.Remove(key, replicateTo);
+            return bucket.Remove(key, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult Remove(string key, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.Remove(key, replicateTo, timeout);
+            return bucket.Remove(key, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult Remove(string key, ulong cas, ReplicateTo replicateTo)
         {
-            return bucket.Remove(key, cas, replicateTo);
+            return bucket.Remove(key, cas, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult Remove(string key, ulong cas, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.Remove(key, cas, replicateTo, timeout);
+            return bucket.Remove(key, cas, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult Remove(string key, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Remove(key, replicateTo, persistTo);
+            return bucket.Remove(key, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult Remove(string key, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Remove(key, replicateTo, persistTo, timeout);
+            return bucket.Remove(key, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult Remove(string key, ulong cas, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Remove(key, cas, replicateTo, persistTo);
+            return bucket.Remove(key, cas, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult Remove(string key, ulong cas, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Remove(key, cas, replicateTo, persistTo, timeout);
+            return bucket.Remove(key, cas, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -1588,25 +1647,25 @@ namespace Couchbase
         /// <inheritdoc/>
         public Task<IOperationResult> RemoveAsync<T>(IDocument<T> document, ReplicateTo replicateTo)
         {
-            return bucket.RemoveAsync<T>(document, replicateTo);
+            return bucket.RemoveAsync<T>(document, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult> RemoveAsync<T>(IDocument<T> document, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.RemoveAsync<T>(document, replicateTo, timeout);
+            return bucket.RemoveAsync<T>(document, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult> RemoveAsync<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.RemoveAsync<T>(document, replicateTo, persistTo);
+            return bucket.RemoveAsync<T>(document, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult> RemoveAsync<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.RemoveAsync<T>(document, replicateTo, persistTo, timeout);
+            return bucket.RemoveAsync<T>(document, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -1624,25 +1683,25 @@ namespace Couchbase
         /// <inheritdoc/>
         public Task<IOperationResult[]> RemoveAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo)
         {
-            return bucket.RemoveAsync<T>(documents, replicateTo);
+            return bucket.RemoveAsync<T>(documents, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult[]> RemoveAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.RemoveAsync<T>(documents, replicateTo, timeout);
+            return bucket.RemoveAsync<T>(documents, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult[]> RemoveAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.RemoveAsync<T>(documents, replicateTo, persistTo);
+            return bucket.RemoveAsync<T>(documents, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult[]> RemoveAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.RemoveAsync<T>(documents, replicateTo, persistTo, timeout);
+            return bucket.RemoveAsync<T>(documents, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -1672,49 +1731,49 @@ namespace Couchbase
         /// <inheritdoc/>
         public Task<IOperationResult> RemoveAsync(string key, ReplicateTo replicateTo)
         {
-            return bucket.RemoveAsync(key, replicateTo);
+            return bucket.RemoveAsync(key, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult> RemoveAsync(string key, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.RemoveAsync(key, replicateTo, timeout);
+            return bucket.RemoveAsync(key, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult> RemoveAsync(string key, ulong cas, ReplicateTo replicateTo)
         {
-            return bucket.RemoveAsync(key, cas, replicateTo);
+            return bucket.RemoveAsync(key, cas, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult> RemoveAsync(string key, ulong cas, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.RemoveAsync(key, cas, replicateTo, timeout);
+            return bucket.RemoveAsync(key, cas, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult> RemoveAsync(string key, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.RemoveAsync(key, replicateTo, persistTo);
+            return bucket.RemoveAsync(key, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult> RemoveAsync(string key, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.RemoveAsync(key, replicateTo, persistTo, timeout);
+            return bucket.RemoveAsync(key, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult> RemoveAsync(string key, ulong cas, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.RemoveAsync(key, cas, replicateTo, persistTo);
+            return bucket.RemoveAsync(key, cas, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult> RemoveAsync(string key, ulong cas, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.RemoveAsync(key, cas, replicateTo, persistTo, timeout);
+            return bucket.RemoveAsync(key, cas, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -1732,25 +1791,25 @@ namespace Couchbase
         /// <inheritdoc/>
         public IDocumentResult<T> Replace<T>(IDocument<T> document, ReplicateTo replicateTo)
         {
-            return bucket.Replace<T>(document, replicateTo);
+            return bucket.Replace<T>(document, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public IDocumentResult<T> Replace<T>(IDocument<T> document, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.Replace<T>(document, replicateTo, timeout);
+            return bucket.Replace<T>(document, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public IDocumentResult<T> Replace<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Replace<T>(document, replicateTo, persistTo);
+            return bucket.Replace<T>(document, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IDocumentResult<T> Replace<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Replace<T>(document, replicateTo, persistTo, timeout);
+            return bucket.Replace<T>(document, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -1816,73 +1875,73 @@ namespace Couchbase
         /// <inheritdoc/>
         public IOperationResult<T> Replace<T>(string key, T value, ReplicateTo replicateTo)
         {
-            return bucket.Replace<T>(key, value, replicateTo);
+            return bucket.Replace<T>(key, value, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Replace<T>(string key, T value, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.Replace<T>(key, value, replicateTo, timeout);
+            return bucket.Replace<T>(key, value, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Replace<T>(string key, T value, ulong cas, ReplicateTo replicateTo)
         {
-            return bucket.Replace<T>(key, value, cas, replicateTo);
+            return bucket.Replace<T>(key, value, cas, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Replace<T>(string key, T value, ulong cas, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.Replace<T>(key, value, cas, replicateTo, timeout);
+            return bucket.Replace<T>(key, value, cas, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Replace<T>(string key, T value, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Replace<T>(key, value, replicateTo, persistTo);
+            return bucket.Replace<T>(key, value, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Replace<T>(string key, T value, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Replace<T>(key, value, replicateTo, persistTo, timeout);
+            return bucket.Replace<T>(key, value, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Replace<T>(string key, T value, ulong cas, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Replace<T>(key, value, cas, replicateTo, persistTo);
+            return bucket.Replace<T>(key, value, cas, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Replace<T>(string key, T value, ulong cas, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Replace<T>(key, value, cas, replicateTo, persistTo, timeout);
+            return bucket.Replace<T>(key, value, cas, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Replace<T>(string key, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Replace<T>(key, value, cas, expiration, replicateTo, persistTo);
+            return bucket.Replace<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Replace<T>(string key, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Replace<T>(key, value, cas, expiration, replicateTo, persistTo, timeout);
+            return bucket.Replace<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Replace<T>(string key, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Replace<T>(key, value, cas, expiration, replicateTo, persistTo);
+            return bucket.Replace<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Replace<T>(string key, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Replace<T>(key, value, cas, expiration, replicateTo, persistTo, timeout);
+            return bucket.Replace<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -1900,13 +1959,13 @@ namespace Couchbase
         /// <inheritdoc/>
         public Task<IDocumentResult<T>> ReplaceAsync<T>(IDocument<T> document, ReplicateTo replicateTo)
         {
-            return bucket.ReplaceAsync<T>(document, replicateTo);
+            return bucket.ReplaceAsync<T>(document, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>> ReplaceAsync<T>(IDocument<T> document, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.ReplaceAsync<T>(document, replicateTo, timeout);
+            return bucket.ReplaceAsync<T>(document, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -1924,37 +1983,37 @@ namespace Couchbase
         /// <inheritdoc/>
         public Task<IDocumentResult<T>[]> ReplaceAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo)
         {
-            return bucket.ReplaceAsync<T>(documents, replicateTo);
+            return bucket.ReplaceAsync<T>(documents, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>[]> ReplaceAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.ReplaceAsync<T>(documents, replicateTo, timeout);
+            return bucket.ReplaceAsync<T>(documents, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>[]> ReplaceAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.ReplaceAsync<T>(documents, replicateTo, persistTo);
+            return bucket.ReplaceAsync<T>(documents, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>[]> ReplaceAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.ReplaceAsync<T>(documents, replicateTo, persistTo, timeout);
+            return bucket.ReplaceAsync<T>(documents, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>> ReplaceAsync<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.ReplaceAsync<T>(document, replicateTo, persistTo);
+            return bucket.ReplaceAsync<T>(document, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>> ReplaceAsync<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.ReplaceAsync<T>(document, replicateTo, persistTo, timeout);
+            return bucket.ReplaceAsync<T>(document, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -2020,73 +2079,73 @@ namespace Couchbase
         /// <inheritdoc/>
         public Task<IOperationResult<T>> ReplaceAsync<T>(string key, T value, ReplicateTo replicateTo)
         {
-            return bucket.ReplaceAsync<T>(key, value, replicateTo);
+            return bucket.ReplaceAsync<T>(key, value, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> ReplaceAsync<T>(string key, T value, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.ReplaceAsync<T>(key, value, replicateTo, timeout);
+            return bucket.ReplaceAsync<T>(key, value, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> ReplaceAsync<T>(string key, T value, ulong cas, ReplicateTo replicateTo)
         {
-            return bucket.ReplaceAsync<T>(key, value, cas, replicateTo);
+            return bucket.ReplaceAsync<T>(key, value, cas, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> ReplaceAsync<T>(string key, T value, ulong cas, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.ReplaceAsync<T>(key, value, cas, replicateTo, timeout);
+            return bucket.ReplaceAsync<T>(key, value, cas, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> ReplaceAsync<T>(string key, T value, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.ReplaceAsync<T>(key, value, replicateTo, persistTo);
+            return bucket.ReplaceAsync<T>(key, value, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> ReplaceAsync<T>(string key, T value, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.ReplaceAsync<T>(key, value, replicateTo, persistTo, timeout);
+            return bucket.ReplaceAsync<T>(key, value, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> ReplaceAsync<T>(string key, T value, ulong cas, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.ReplaceAsync<T>(key, value, cas, replicateTo, persistTo);
+            return bucket.ReplaceAsync<T>(key, value, cas, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> ReplaceAsync<T>(string key, T value, ulong cas, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.ReplaceAsync<T>(key, value, cas, replicateTo, persistTo, timeout);
+            return bucket.ReplaceAsync<T>(key, value, cas, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> ReplaceAsync<T>(string key, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.ReplaceAsync<T>(key, value, cas, expiration, replicateTo, persistTo);
+            return bucket.ReplaceAsync<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> ReplaceAsync<T>(string key, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.ReplaceAsync<T>(key, value, cas, expiration, replicateTo, persistTo, timeout);
+            return bucket.ReplaceAsync<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> ReplaceAsync<T>(string key, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.ReplaceAsync<T>(key, value, cas, expiration, replicateTo, persistTo);
+            return bucket.ReplaceAsync<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> ReplaceAsync<T>(string key, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.ReplaceAsync<T>(key, value, cas, expiration, replicateTo, persistTo, timeout);
+            return bucket.ReplaceAsync<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -2248,25 +2307,25 @@ namespace Couchbase
         /// <inheritdoc/>
         public IDocumentResult<T> Upsert<T>(IDocument<T> document, ReplicateTo replicateTo)
         {
-            return bucket.Upsert<T>(document, replicateTo);
+            return bucket.Upsert<T>(document, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public IDocumentResult<T> Upsert<T>(IDocument<T> document, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.Upsert<T>(document, replicateTo, timeout);
+            return bucket.Upsert<T>(document, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public IDocumentResult<T> Upsert<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Upsert<T>(document, replicateTo, persistTo);
+            return bucket.Upsert<T>(document, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IDocumentResult<T> Upsert<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Upsert<T>(document, replicateTo, persistTo, timeout);
+            return bucket.Upsert<T>(document, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -2332,67 +2391,67 @@ namespace Couchbase
         /// <inheritdoc/>
         public IOperationResult<T> Upsert<T>(string key, T value, ReplicateTo replicateTo)
         {
-            return bucket.Upsert<T>(key, value, replicateTo);
+            return bucket.Upsert<T>(key, value, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Upsert<T>(string key, T value, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.Upsert<T>(key, value, replicateTo, timeout);
+            return bucket.Upsert<T>(key, value, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Upsert<T>(string key, T value, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Upsert<T>(key, value, replicateTo, persistTo);
+            return bucket.Upsert<T>(key, value, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Upsert<T>(string key, T value, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Upsert<T>(key, value, replicateTo, persistTo, timeout);
+            return bucket.Upsert<T>(key, value, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Upsert<T>(string key, T value, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Upsert<T>(key, value, expiration, replicateTo, persistTo, timeout);
+            return bucket.Upsert<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Upsert<T>(string key, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Upsert<T>(key, value, cas, expiration, replicateTo, persistTo);
+            return bucket.Upsert<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Upsert<T>(string key, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Upsert<T>(key, value, cas, expiration, replicateTo, persistTo, timeout);
+            return bucket.Upsert<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Upsert<T>(string key, T value, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Upsert<T>(key, value, expiration, replicateTo, persistTo);
+            return bucket.Upsert<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Upsert<T>(string key, T value, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Upsert<T>(key, value, expiration, replicateTo, persistTo, timeout);
+            return bucket.Upsert<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Upsert<T>(string key, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.Upsert<T>(key, value, cas, expiration, replicateTo, persistTo);
+            return bucket.Upsert<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public IOperationResult<T> Upsert<T>(string key, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.Upsert<T>(key, value, cas, expiration, replicateTo, persistTo, timeout);
+            return bucket.Upsert<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -2446,25 +2505,25 @@ namespace Couchbase
         /// <inheritdoc/>
         public Task<IDocumentResult<T>> UpsertAsync<T>(IDocument<T> document, ReplicateTo replicateTo)
         {
-            return bucket.UpsertAsync<T>(document, replicateTo);
+            return bucket.UpsertAsync<T>(document, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>> UpsertAsync<T>(IDocument<T> document, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.UpsertAsync<T>(document, replicateTo, timeout);
+            return bucket.UpsertAsync<T>(document, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>> UpsertAsync<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.UpsertAsync<T>(document, replicateTo, persistTo);
+            return bucket.UpsertAsync<T>(document, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>> UpsertAsync<T>(IDocument<T> document, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.UpsertAsync<T>(document, replicateTo, persistTo, timeout);
+            return bucket.UpsertAsync<T>(document, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -2482,25 +2541,25 @@ namespace Couchbase
         /// <inheritdoc/>
         public Task<IDocumentResult<T>[]> UpsertAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo)
         {
-            return bucket.UpsertAsync<T>(documents, replicateTo);
+            return bucket.UpsertAsync<T>(documents, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>[]> UpsertAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.UpsertAsync<T>(documents, replicateTo, timeout);
+            return bucket.UpsertAsync<T>(documents, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>[]> UpsertAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.UpsertAsync<T>(documents, replicateTo, persistTo);
+            return bucket.UpsertAsync<T>(documents, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IDocumentResult<T>[]> UpsertAsync<T>(List<IDocument<T>> documents, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.UpsertAsync<T>(documents, replicateTo, persistTo, timeout);
+            return bucket.UpsertAsync<T>(documents, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
@@ -2566,73 +2625,73 @@ namespace Couchbase
         /// <inheritdoc/>
         public Task<IOperationResult<T>> UpsertAsync<T>(string key, T value, ReplicateTo replicateTo)
         {
-            return bucket.UpsertAsync<T>(key, value, replicateTo);
+            return bucket.UpsertAsync<T>(key, value, Adjust(replicateTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> UpsertAsync<T>(string key, T value, ReplicateTo replicateTo, TimeSpan timeout)
         {
-            return bucket.UpsertAsync<T>(key, value, replicateTo, timeout);
+            return bucket.UpsertAsync<T>(key, value, Adjust(replicateTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> UpsertAsync<T>(string key, T value, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.UpsertAsync<T>(key, value, replicateTo, persistTo);
+            return bucket.UpsertAsync<T>(key, value, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> UpsertAsync<T>(string key, T value, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.UpsertAsync<T>(key, value, replicateTo, persistTo, timeout);
+            return bucket.UpsertAsync<T>(key, value, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> UpsertAsync<T>(string key, T value, uint expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.UpsertAsync<T>(key, value, expiration, replicateTo, persistTo);
+            return bucket.UpsertAsync<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> UpsertAsync<T>(string key, T value, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.UpsertAsync<T>(key, value, expiration, replicateTo, persistTo, timeout);
+            return bucket.UpsertAsync<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> UpsertAsync<T>(string key, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.UpsertAsync<T>(key, value, cas, expiration, replicateTo, persistTo);
+            return bucket.UpsertAsync<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> UpsertAsync<T>(string key, T value, ulong cas, uint expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.UpsertAsync<T>(key, value, cas, expiration, replicateTo, persistTo, timeout);
+            return bucket.UpsertAsync<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> UpsertAsync<T>(string key, T value, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.UpsertAsync<T>(key, value, expiration, replicateTo, persistTo);
+            return bucket.UpsertAsync<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> UpsertAsync<T>(string key, T value, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.UpsertAsync<T>(key, value, expiration, replicateTo, persistTo, timeout);
+            return bucket.UpsertAsync<T>(key, value, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> UpsertAsync<T>(string key, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo)
         {
-            return bucket.UpsertAsync<T>(key, value, cas, expiration, replicateTo, persistTo);
+            return bucket.UpsertAsync<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo));
         }
 
         /// <inheritdoc/>
         public Task<IOperationResult<T>> UpsertAsync<T>(string key, T value, ulong cas, TimeSpan expiration, ReplicateTo replicateTo, PersistTo persistTo, TimeSpan timeout)
         {
-            return bucket.UpsertAsync<T>(key, value, cas, expiration, replicateTo, persistTo, timeout);
+            return bucket.UpsertAsync<T>(key, value, cas, expiration, Adjust(replicateTo), Adjust(persistTo), timeout);
         }
     }
 }

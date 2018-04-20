@@ -77,12 +77,7 @@ namespace Couchbase
 
             var cbException = e.Find<CouchbaseKeyValueResponseException>();
 
-            if (cbException == null)
-            {
-                return false;
-            }
-
-            if (cbException.Status != ResponseStatus.KeyExists)
+            if (cbException == null || cbException.Status != ResponseStatus.KeyExists)
             {
                 return false;
             }

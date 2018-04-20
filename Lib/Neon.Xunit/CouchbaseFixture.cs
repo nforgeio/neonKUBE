@@ -37,7 +37,6 @@ namespace Xunit
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
         /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
-        /// <returns>The Couchbase <see cref="NeonBucket"/>.</returns>
         /// <exception cref="InvalidOperationException">
         /// Thrown if this is not called from  within the <see cref="Action"/> method 
         /// passed <see cref="ITestFixture.Initialize(Action)"/>
@@ -50,7 +49,7 @@ namespace Xunit
         /// <b>test</b> bucket by default (unless another is specified).
         /// </note>
         /// </remarks>
-        public NeonBucket Start(
+        public void Start(
             CouchbaseSettings   settings = null, 
             string              image    = "neoncluster/couchbase-test:latest",
             string              name     = "cb-test",
@@ -66,7 +65,7 @@ namespace Xunit
             {
                 if (IsInitialized)
                 {
-                    return Bucket;
+                    return;
                 }
 
                 RunContainer(image, name, new string[] { "--detach", "-p", "8091-8094:8091-8094", "-p", "11210:11210" }, env: env);
@@ -84,8 +83,6 @@ namespace Xunit
                 Bucket   = settings.OpenBucket(username, password);
                 Settings = settings;
             }
-
-            return Bucket;
         }
 
         /// <summary>
