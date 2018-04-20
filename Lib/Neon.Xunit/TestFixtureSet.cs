@@ -7,6 +7,7 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
 
 using Neon.Common;
 
@@ -146,7 +147,11 @@ namespace Xunit
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected override void Dispose(bool disposing)
         {
-            foreach (var fixture in fixtureList)
+            // Note that we're going to dispose the subfixtures in the
+            // reversed order from how they were created to avoid any 
+            // dependancy conflicts.
+
+            foreach (var fixture in fixtureList.Reverse<ITestFixture>())
             {
                 fixture.Dispose();
             }
