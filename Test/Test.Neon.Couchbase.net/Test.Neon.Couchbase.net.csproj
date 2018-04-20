@@ -138,6 +138,10 @@
       <Project>{7ab3c81c-8f25-4f42-b992-947acdf34056}</Project>
       <Name>Neon.Couchbase</Name>
     </ProjectReference>
+    <ProjectReference Include="..\..\Lib\Neon.Xunit.Couchbase\Neon.Xunit.Couchbase.csproj">
+      <Project>{ee0dfef2-ec42-4e49-857d-48baae14bbe6}</Project>
+      <Name>Neon.Xunit.Couchbase</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj">
       <Project>{468e440f-2284-483d-a54a-ec540c85f76e}</Project>
       <Name>Neon.Xunit</Name>
