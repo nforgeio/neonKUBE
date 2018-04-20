@@ -8,6 +8,7 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 
 using Couchbase;
+using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.Data;
@@ -37,6 +38,11 @@ namespace Xunit
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
         /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
+        /// <param name="primaryIndex">
+        /// Optionally override the name of the bucket's primary index or disable
+        /// primary index creation by passing <c>null</c>.  This defaults to
+        /// <b>idx_primary</b>.
+        /// </param>
         /// <exception cref="InvalidOperationException">
         /// Thrown if this is not called from  within the <see cref="Action"/> method 
         /// passed <see cref="ITestFixture.Initialize(Action)"/>
@@ -48,14 +54,21 @@ namespace Xunit
         /// endpoint for the Couchbase container.  Also, the fixture will connect to the 
         /// <b>test</b> bucket by default (unless another is specified).
         /// </note>
+        /// <para>
+        /// This method creates a primary index named <b>idx_primary</b> by default because
+        /// its very common for unit test to require a primary index.  You can change the
+        /// name of the index via the <paramref name="primaryIndex"/> parameter or you
+        /// can disable primary index creation by passing <c>null</c>.
+        /// </para>
         /// </remarks>
         public void Start(
-            CouchbaseSettings   settings = null, 
-            string              image    = "neoncluster/couchbase-test:latest",
-            string              name     = "cb-test",
-            string[]            env      = null,
-            string              username = "Administrator",
-            string              password = "password")
+            CouchbaseSettings   settings     = null, 
+            string              image        = "neoncluster/couchbase-test:latest",
+            string              name         = "cb-test",
+            string[]            env          = null,
+            string              username     = "Administrator",
+            string              password     = "password",
+            string              primaryIndex = "idx_primary")
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
@@ -82,6 +95,13 @@ namespace Xunit
 
                 Bucket   = settings.OpenBucket(username, password);
                 Settings = settings;
+
+                // Create the primary index if requested.
+
+                if (!string.IsNullOrEmpty(primaryIndex))
+                {
+                    Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)}").Wait();
+                }
             }
         }
 
@@ -99,19 +119,48 @@ namespace Xunit
         /// Removes all data and indexes from the database bucket and then recreates the
         /// primary index by default.
         /// </summary>
-        /// <param name="noPrimaryIndex">Optionally disable creation of the primary index.</param>
-        public void Clear(bool noPrimaryIndex = false)
+        /// <param name="primaryIndex">
+        /// Optionally override the name of the bucket's primary index or disable
+        /// primary index creation by passing <c>null</c>.  This defaults to
+        /// <b>idx_primary</b>.
+        /// </param>
+        /// <remarks>
+        /// <para>
+        /// This method creates a primary index named <b>idx_primary</b> by default because
+        /// its very common for unit test to require a primary index.  You can change the
+        /// name of the index via the <paramref name="primaryIndex"/> parameter or you
+        /// can disable primary index creation by passing <c>null</c>.
+        /// </para>
+        /// </remarks>
+        public void Flush(string primaryIndex = "idx_primary")
         {
             CheckDisposed();
+
+            // Flush the bucket data.
 
             using (var manager = Bucket.CreateManager())
             {
                 manager.Flush();
             }
 
-            if (!noPrimaryIndex)
+            // Drop all of the bucket indexes.
+
+            var existingIndexes = Bucket.QuerySafeAsync<JObject>("select * from system:indexes").Result;
+
+            foreach (var indexObject in existingIndexes)
             {
-                Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName("idx_primary")} on {CbHelper.LiteralName(Bucket.Name)}").Wait();
+                var index = (JObject)indexObject.GetValue("indexes");
+                var name  = (string)index.GetValue("name");
+                var type  = (string)index.GetValue("using");
+
+                Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(Bucket.Name)}.{CbHelper.LiteralName(name)} using {type}").Wait();
+            }
+
+            // Create the primary index if requested.
+
+            if (!string.IsNullOrEmpty(primaryIndex))
+            {
+                Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)}").Wait();
             }
         }
     }
