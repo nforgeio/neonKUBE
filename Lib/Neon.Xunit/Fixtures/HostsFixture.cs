@@ -37,9 +37,9 @@ namespace Xunit
     /// <threadsafety instance="false"/>
     public class HostsFixture : TestFixture
     {
-        //---------------------------------------------------------------------
         // Implementation Note:
         // --------------------
+        //
         // We're going to be adding records to the local DNS resolver hosts
         // file within a section that looks like:
         //
@@ -63,7 +63,7 @@ namespace Xunit
         //
         // It's possible that a test may be interrupted before being allowed to
         // complete and dispose the fixtures.  The base [TextFixture] class 
-        // addresses this by calling [EnsureReset()].
+        // addresses this by calling [EnsureReset()] as necessary.
 
         //---------------------------------------------------------------------
         // Static members
@@ -84,12 +84,9 @@ namespace Xunit
         /// Called by <see cref="TestFixture"/> to ensure that the hosts file
         /// contains no DNS records remaining after an interrupted test run.
         /// </summary>
-        internal static void EnsureReset()
+        public static void EnsureReset()
         {
-            if (RefCount == 0)
-            {
-                RemoveSection();
-            }
+            RemoveSection();
         }
 
         /// <summary>
@@ -102,7 +99,8 @@ namespace Xunit
         /// </param>
         private static void RemoveSection(string fixtureId = null)
         {
-            var sb = new StringBuilder();
+            var sb      = new StringBuilder();
+            var changed = false;
 
             if (File.Exists(HostsPath))
             {
@@ -120,6 +118,7 @@ namespace Xunit
                             if (line.StartsWith(endMarker))
                             {
                                 inSection = false;
+                                changed   = true;
                             }
                         }
                         else
@@ -127,6 +126,7 @@ namespace Xunit
                             if (line.StartsWith(startMarker))
                             {
                                 inSection = true;
+                                changed   = true;
                             }
                             else
                             {
@@ -136,6 +136,11 @@ namespace Xunit
                     }
                 }
             }
+
+            if (changed)
+            {
+                File.WriteAllText(HostsPath, sb.ToString());
+            }
         }
 
         //---------------------------------------------------------------------
@@ -144,7 +149,7 @@ namespace Xunit
         /// <summary>
         /// The GUID used to mark this fixture instance's entries in the hosts file.
         /// </summary>
-        private readonly string FixtureId = Guid.NewGuid().ToString("D");
+        private readonly string fixtureId = Guid.NewGuid().ToString("D");
 
         /// <summary>
         /// The DNS records.
@@ -194,6 +199,27 @@ namespace Xunit
         /// </summary>
         public void Commit()
         {
+            // Remove any existing section for this instance.
+
+            RemoveSection(fixtureId);
+
+            // Append any records to the end of the [hosts] file.
+
+            if (records.Count > 0)
+            {
+                var sb = new StringBuilder();
+
+                sb.AppendLine($"# START-HostsFixture-{fixtureId}");
+
+                foreach (var record in records)
+                {
+                    sb.AppendLine($"{record.Item2,-15}{record.Item1}");
+                }
+
+                sb.AppendLine($"# END-HostsFixture-{fixtureId}");
+
+                File.AppendAllText(HostsPath, sb.ToString());
+            }
         }
 
         /// <summary>
@@ -209,6 +235,8 @@ namespace Xunit
                     // This was the last [HostsFixture] instance in the test run
                     // so ensure that there are no remaining temporary records
                     // in the hosts file.
+
+                    RemoveSection(fixtureId);
                 }
             }
         }
