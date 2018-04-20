@@ -9,6 +9,7 @@
     <Import_RootNamespace>Test.Neon.Couchbase.shared</Import_RootNamespace>
   </PropertyGroup>
   <ItemGroup>
+    <Compile Include="$(MSBuildThisFileDirectory)AssemblyInfo.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Couchbase\Test_CbHelper.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Couchbase\Test_CouchbaseFixture.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)Couchbase\Test_NeonBucket.cs" />
