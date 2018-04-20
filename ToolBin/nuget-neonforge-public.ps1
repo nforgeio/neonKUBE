@@ -1,7 +1,7 @@
 # Publishes DEBUG builds of the NeonForge Nuget packages to the
 # local file system and public Nuget.org repositories.
 
-function Publish
+function SetVersion
 {
     [CmdletBinding()]
     param (
@@ -10,6 +10,16 @@ function Publish
     )
 
 	text pack-version "$env:NF_ROOT\nuget-version.txt" "$env:NF_ROOT\Lib\$project\$project.csproj"
+}
+
+function Publish
+{
+    [CmdletBinding()]
+    param (
+        [Parameter(Position=0, Mandatory=1)]
+        [string]$project
+    )
+
 	dotnet pack "$env:NF_ROOT\Lib\$project\$project.csproj" -c Release -o "$env:NF_build\nuget"
 
 	# It looks like [dotnet pack] doesn't include a zero revision number when
@@ -32,6 +42,18 @@ function Publish
 
 	neon run --vault-password-file=neon-git "$env:NF_ROOT\Devops\test\secrets.yaml" -- nuget push -Source nuget.org "$env:NF_BUILD\nuget\$project.$version.nupkg" %NUGET_API_KEY%
 }
+
+# Update the project version numbers first.
+
+SetVersion Neon.Cluster
+SetVersion Neon.Common
+SetVersion Neon.Couchbase
+SetVersion Neon.Docker
+SetVersion Neon.RabbitMQ
+SetVersion Neon.Web
+SetVersion Neon.Xunit
+
+# Then build and publish the projects.
 
 Publish Neon.Cluster
 Publish Neon.Common
