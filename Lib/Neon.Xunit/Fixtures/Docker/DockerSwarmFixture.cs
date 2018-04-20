@@ -14,6 +14,23 @@ namespace Xunit
     /// <summary>
     /// Used to manage local Swarm activities in unit tests.
     /// </summary>
+    /// <remarks>
+    /// <note>
+    /// <para>
+    /// <b>IMPORTANT:</b> The Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
+    /// support parallel test execution because fixtures may impact global machine state
+    /// like starting a Couchbase Docker container, modifying the local DNS <b>hosts</b>
+    /// file or managing a Docker Swarm or neonCLUSTER.
+    /// </para>
+    /// <para>
+    /// You should explicitly disable parallel execution in all test assemblies that
+    /// rely on test fixtures by adding a C# file called <c>AssemblyInfo.cs</c> with:
+    /// </para>
+    /// <code language="csharp">
+    /// [assembly: CollectionBehavior(DisableTestParallelization = true)]
+    /// </code>
+    /// </note>
+    /// </remarks>
     /// <threadsafety instance="false"/>
     public class DockerSwarmFixture : TestFixture
     {

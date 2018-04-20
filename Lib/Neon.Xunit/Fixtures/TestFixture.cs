@@ -14,9 +14,45 @@ namespace Xunit
     /// <summary>
     /// Abstract test fixture base class.
     /// </summary>
+    /// <remarks>
+    /// <note>
+    /// <para>
+    /// <b>IMPORTANT:</b> The Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
+    /// support parallel test execution because fixtures may impact global machine state
+    /// like starting a Couchbase Docker container, modifying the local DNS <b>hosts</b>
+    /// file or managing a Docker Swarm or neonCLUSTER.
+    /// </para>
+    /// <para>
+    /// You should explicitly disable parallel execution in all test assemblies that
+    /// rely on test fixtures by adding a C# file with:
+    /// <code language="csharp">
+    /// [assembly: CollectionBehavior(DisableTestParallelization = true)]
+    /// </code>
+    /// </para>
+    /// </note>
+    /// </remarks>
     /// <threadsafety instance="false"/>
     public abstract class TestFixture : ITestFixture
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// 
+        /// </summary>
+        public static void Reset()
+        {
+        }
+
+        /// <summary>
+        /// Used to track whether <see cref="Reset"/> should be called when
+        /// the first test fixture is created or when the last one is disposed.
+        /// </summary>
+        private static int RefCount = 0;
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         /// <summary>
         /// Constructs the fixture.
         /// </summary>
