@@ -61,8 +61,8 @@ namespace Xunit
         /// Starts the container.  This must be called only from within the 
         /// <see cref="Action"/> passed to <see cref="ITestFixture.Initialize(Action)"/>.
         /// </summary>
+        /// <param name="name">Specifies the container name.</param>
         /// <param name="image">Specifies the container Docker image.</param>
-        /// <param name="containerName">Specifies the container name.</param>
         /// <param name="dockerArgs">Optional arguments to be passed to the <b>docker run ...</b> command.</param>
         /// <param name="containerArgs">Optional arguments to be passed to the container.</param>
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
@@ -72,16 +72,16 @@ namespace Xunit
         /// </exception>
         /// <remarks>
         /// <note>
-        /// You must specify a valid container <paramref name="containerName"/>so that the fixure
+        /// You must specify a valid container <paramref name="name"/>so that the fixure
         /// can remove any existing container with the same name before starting the new container.
         /// This is very useful during test debugging when the test might be interrupted during 
         /// debugging before ensuring that the container is stopped.
         /// </note>
         /// </remarks>
-        public void RunContainer(string image, string containerName, string[] dockerArgs = null, string[] containerArgs = null, string[] env = null)
+        public void RunContainer(string name, string image, string[] dockerArgs = null, string[] containerArgs = null, string[] env = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(containerName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
             base.CheckWithinAction();
 
@@ -100,7 +100,7 @@ namespace Xunit
                 // We're going to look for a existing container with the same name
                 // and remove it if its ID doesn't match the current container.
 
-                var args   = new string[] { "ps", "-a", "--filter", $"name={containerName}", "--format", "{{.ID}}" };
+                var args   = new string[] { "ps", "-a", "--filter", $"name={name}", "--format", "{{.ID}}" };
                 var result = NeonHelper.ExecuteCaptureStreams($"docker", args);
 
                 if (result.ExitCode == 0)
@@ -117,10 +117,10 @@ namespace Xunit
 
                 var extraArgs = new List<string>();
 
-                if (!string.IsNullOrEmpty(containerName))
+                if (!string.IsNullOrEmpty(name))
                 {
                     extraArgs.Add("--name");
-                    extraArgs.Add(containerName);
+                    extraArgs.Add(name);
                 }
 
                 if (env != null)

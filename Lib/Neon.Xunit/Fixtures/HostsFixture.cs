@@ -181,44 +181,72 @@ namespace Xunit
         /// Optionally indicates that the change will not be committed to the hosts
         /// until <see cref="Commit"/> is called.  This defaults to <c>falsae</c>.
         /// </param>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if this is not called from  within the <see cref="Action"/> method 
+        /// passed <see cref="ITestFixture.Initialize(Action)"/>
+        /// </exception>
         public void AddHostAddress(string hostname, string address, bool deferCommit = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(address));
 
-            records.Add(new Tuple<string, string>(hostname, address));
+            base.CheckWithinAction();
 
-            if (!deferCommit)
+            lock (base.SyncRoot)
             {
-                Commit();
+                if (IsInitialized)
+                {
+                    return;
+                }
+
+                records.Add(new Tuple<string, string>(hostname, address));
+
+                if (!deferCommit)
+                {
+                    Commit();
+                }
             }
         }
 
         /// <summary>
         /// Commits the DNS records to the hosts file.
         /// </summary>
+        /// <exception cref="InvalidOperationException">
+        /// Thrown if this is not called from  within the <see cref="Action"/> method 
+        /// passed <see cref="ITestFixture.Initialize(Action)"/>
+        /// </exception>
         public void Commit()
         {
-            // Remove any existing section for this instance.
+            base.CheckWithinAction();
 
-            RemoveSection(fixtureId);
-
-            // Append any records to the end of the [hosts] file.
-
-            if (records.Count > 0)
+            lock (base.SyncRoot)
             {
-                var sb = new StringBuilder();
-
-                sb.AppendLine($"# START-HostsFixture-{fixtureId}");
-
-                foreach (var record in records)
+                if (IsInitialized)
                 {
-                    sb.AppendLine($"{record.Item2,-15} {record.Item1}");
+                    return;
                 }
 
-                sb.AppendLine($"# END-HostsFixture-{fixtureId}");
+                // Remove any existing section for this instance.
 
-                File.AppendAllText(HostsPath, sb.ToString());
+                RemoveSection(fixtureId);
+
+                // Append any records to the end of the [hosts] file.
+
+                if (records.Count > 0)
+                {
+                    var sb = new StringBuilder();
+
+                    sb.AppendLine($"# START-HostsFixture-{fixtureId}");
+
+                    foreach (var record in records)
+                    {
+                        sb.AppendLine($"{record.Item2,-15} {record.Item1}");
+                    }
+
+                    sb.AppendLine($"# END-HostsFixture-{fixtureId}");
+
+                    File.AppendAllText(HostsPath, sb.ToString());
+                }
             }
         }
 

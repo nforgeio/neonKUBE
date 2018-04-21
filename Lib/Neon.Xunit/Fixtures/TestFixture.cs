@@ -216,7 +216,6 @@ namespace Xunit
             try
             {
                 InAction = true;
-
                 action?.Invoke();
             }
             finally
@@ -242,6 +241,8 @@ namespace Xunit
 
                 IsDisposed = true;
                 RefCount--;
+
+                Covenant.Assert(RefCount >= 0, "Reference count underflow.");
             }
         }
 

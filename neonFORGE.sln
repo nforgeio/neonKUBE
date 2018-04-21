@@ -209,7 +209,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-vegomatic", "Services\
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-dns-mon", "Services\neon-dns-mon\neon-dns-mon.csproj", "{7D09D2A7-299E-4693-A547-064879F3B42B}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Neon.Xunit.Couchbase", "Lib\Neon.Xunit.Couchbase\Neon.Xunit.Couchbase.csproj", "{EE0DFEF2-EC42-4E49-857D-48BAAE14BBE6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Couchbase", "Lib\Neon.Xunit.Couchbase\Neon.Xunit.Couchbase.csproj", "{EE0DFEF2-EC42-4E49-857D-48BAAE14BBE6}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution

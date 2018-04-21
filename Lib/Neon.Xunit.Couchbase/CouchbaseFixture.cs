@@ -61,7 +61,7 @@ namespace Xunit
         /// can disable primary index creation by passing <c>null</c>.
         /// </para>
         /// </remarks>
-        public void Start(
+        public void StartCouchbase(
             CouchbaseSettings   settings     = null, 
             string              image        = "neoncluster/couchbase-test:latest",
             string              name         = "cb-test",
@@ -81,7 +81,7 @@ namespace Xunit
                     return;
                 }
 
-                RunContainer(image, name, new string[] { "--detach", "-p", "8091-8094:8091-8094", "-p", "11210:11210" }, env: env);
+                RunContainer(name, image, new string[] { "--detach", "-p", "8091-8094:8091-8094", "-p", "11210:11210" }, env: env);
 
                 settings = settings ?? new CouchbaseSettings();
 

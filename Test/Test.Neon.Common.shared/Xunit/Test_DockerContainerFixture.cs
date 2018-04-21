@@ -34,8 +34,8 @@ namespace TestCouchbase
                     // sleep for a (long) time.
 
                     fixture.RunContainer(
-                        "alpine",
-                        containerName: "couchbase",
+                        name: "couchbase",
+                        image: "alpine",
                         dockerArgs: new string[] { "--detach" },
                         containerArgs: new string[] { "sleep", "10000000" });
                 });
