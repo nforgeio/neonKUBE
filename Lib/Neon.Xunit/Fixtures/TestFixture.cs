@@ -58,19 +58,38 @@ namespace Xunit
         {
             // Reflect the test fixture reset methods if we haven't already.
 
-            if (resetMethods != null)
+            if (resetMethods == null)
             {
                 resetMethods = new List<MethodInfo>();
 
                 foreach (var assembly in AppDomain.CurrentDomain.GetAssemblies())
                 {
-                    foreach (var type in assembly.GetTypes())
+                    Type[] assemblyTypes;
+
+                    try
+                    {
+                        assemblyTypes = assembly.GetTypes();
+                    }
+                    catch (ReflectionTypeLoadException)
+                    {
+                        // We see this for some assemblies like the test runner itself.
+                        // We're going to ignore these.
+
+                        assemblyTypes = new Type[0];
+                    }
+
+                    foreach (var type in assemblyTypes)
                     {
                         var typeInfo = type.GetTypeInfo();
 
                         if (typeInfo.ImplementedInterfaces.Contains(typeof(ITestFixture)))
                         {
                             var methodInfo = typeInfo.GetMethod("EnsureReset", BindingFlags.Public | BindingFlags.Static);
+
+                            if (methodInfo == null)
+                            {
+                                continue;
+                            }
 
                             if (methodInfo.ReturnType == typeof(void) && methodInfo.GetParameters().Length == 0)
                             {
@@ -111,6 +130,11 @@ namespace Xunit
         /// </summary>
         public TestFixture()
         {
+            if (RefCount++ == 0)
+            {
+                Reset();
+            }
+
             this.SyncRoot      = new object();
             this.IsDisposed    = false;
             this.InAction      = false;
@@ -205,9 +229,20 @@ namespace Xunit
         /// <inheritdoc/>
         public void Dispose()
         {
-            Dispose(true);
+            if (!IsDisposed)
+            {
+                try
+                {
+                    Dispose(true);
+                }
+                catch
+                {
+                    // Ignoring any exceptions.
+                }
 
-            IsDisposed = true;
+                IsDisposed = true;
+                RefCount--;
+            }
         }
 
         /// <summary>

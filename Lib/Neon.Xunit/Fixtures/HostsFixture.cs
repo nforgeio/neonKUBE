@@ -71,7 +71,7 @@ namespace Xunit
         /// <summary>
         /// Path to the local DNS resolver's [hosts] file.
         /// </summary>
-        private static readonly string HostsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "drivers", "etc", "hosts");
+        private static readonly string HostsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "system32", "drivers", "etc", "hosts");
 
         /// <summary>
         /// Used to track how many fixture instances for the current test run
@@ -213,7 +213,7 @@ namespace Xunit
 
                 foreach (var record in records)
                 {
-                    sb.AppendLine($"{record.Item2,-15}{record.Item1}");
+                    sb.AppendLine($"{record.Item2,-15} {record.Item1}");
                 }
 
                 sb.AppendLine($"# END-HostsFixture-{fixtureId}");
