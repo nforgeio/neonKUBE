@@ -46,6 +46,34 @@ namespace Xunit
     /// members of a multi-node cluster as a safety measure to help avoid the
     /// possiblity of accidentially wiping out a production cluster.
     /// </note>
+    /// <para>
+    /// There are two basic patterns for using this fixture.
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    /// <term><b>initialize once</b></term>
+    /// <description>
+    /// <para>
+    /// The basic idea here is to have your test class initialize the cluster
+    /// once within the test class constructor inside of the initialize action
+    /// with common state and services that all of the tests can access.
+    /// </para>
+    /// <para>
+    /// This will be quite a bit faster than reconfiguring the cluster at the
+    /// beginning of every test and can work well for many situations.
+    /// </para>
+    /// </description>
+    /// </item>
+    /// <item>
+    /// <term><b>initialize every test</b></term>
+    /// <description>
+    /// For scenarios where the cluster must be cleared before every test,
+    /// you can use the <see cref="Reset()"/> method to reset its
+    /// state within each test method, populate the cluster as necessary,
+    /// and then perform your tests.
+    /// </description>
+    /// </item>
+    /// </list>
     /// </remarks>
     /// <threadsafety instance="false"/>
     public class DockerFixture : TestFixtureSet

@@ -62,8 +62,45 @@ namespace Xunit
         /// name of the index via the <paramref name="primaryIndex"/> parameter or you
         /// can disable primary index creation by passing <c>null</c>.
         /// </para>
+        /// <para>
+        /// There are three basic patterns for using this fixture.
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        /// <term><b>initialize once</b></term>
+        /// <description>
+        /// <para>
+        /// The basic idea here is to have your test class initialize Couchbase
+        /// once within the test class constructor inside of the initialize action
+        /// with common state that all of the tests can access.
+        /// </para>
+        /// <para>
+        /// This will be quite a bit faster than reconfiguring Couchbase at the
+        /// beginning of every test and can work well for many situations.
+        /// </para>
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <term><b>initialize every test</b></term>
+        /// <description>
+        /// For scenarios where Couchbase must be cleared before every test,
+        /// you can use the <see cref="Flush(string)"/> method to reset its
+        /// state within each test method, populate the database as necessary,
+        /// and then perform your tests.
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <term><b>docker integrated</b></term>
+        /// <description>
+        /// The <see cref="CouchbaseFixture"/> can also be added to the <see cref="DockerFixture"/>
+        /// and used within a swarm.  This is useful for testing multiple services and
+        /// also has the advantage of ensure that swarm/node state is fully reset
+        /// before the database container is started.
+        /// </description>
+        /// </item>
+        /// </list>
         /// </remarks>
-        public void StartCouchbase(
+        public void Start(
             CouchbaseSettings   settings     = null, 
             string              image        = "neoncluster/couchbase-test:latest",
             string              name         = "cb-test",
@@ -112,7 +149,7 @@ namespace Xunit
                     {
                         if (!string.IsNullOrEmpty(primaryIndex))
                         {
-                            await Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)}");
+                            await Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)} using gsi");
                         }
                         else
                         {
@@ -121,7 +158,7 @@ namespace Xunit
 
                             var dummyName = "idx_couchbase_test_fixture";
 
-                            await Bucket.QuerySafeAsync<dynamic>($"create index {CbHelper.LiteralName(dummyName)} on {CbHelper.LiteralName(Bucket.Name)} ({CbHelper.LiteralName("Field")})");
+                            await Bucket.QuerySafeAsync<dynamic>($"create index {CbHelper.LiteralName(dummyName)} on {CbHelper.LiteralName(Bucket.Name)} ({CbHelper.LiteralName("Field")}) using gsi");
                             await Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(Bucket.Name)}.{CbHelper.LiteralName(dummyName)} using gsi");
                         }
 
@@ -184,7 +221,7 @@ namespace Xunit
 
             if (!string.IsNullOrEmpty(primaryIndex))
             {
-                Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)}").Wait();
+                Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
             }
         }
     }

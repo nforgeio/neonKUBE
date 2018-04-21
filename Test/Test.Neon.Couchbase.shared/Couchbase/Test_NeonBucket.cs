@@ -34,7 +34,7 @@ namespace TestCouchbase
             fixture.Initialize(
                 () =>
                 {
-                   fixture.StartCouchbase();
+                   fixture.Start();
                 });
 
             bucket = fixture.Bucket;
