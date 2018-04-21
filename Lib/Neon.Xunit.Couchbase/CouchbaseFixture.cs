@@ -5,6 +5,7 @@
 
 using System;
 using System.Collections.Generic;
+using System.Diagnostics;
 using System.Diagnostics.Contracts;
 
 using Couchbase;
@@ -12,6 +13,7 @@ using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.Data;
+using Neon.Retry;
 
 namespace Xunit
 {
@@ -96,12 +98,34 @@ namespace Xunit
                 Bucket   = settings.OpenBucket(username, password);
                 Settings = settings;
 
-                // Create the primary index if requested.
+                // It appears that it may take a bit of time for the Couchbase query
+                // service to start in new container we started above.  We're going to
+                // retry creating the primary index (or a dummy index) until it works.
 
-                if (!string.IsNullOrEmpty(primaryIndex))
-                {
-                    Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)}").Wait();
-                }
+                var timeout = TimeSpan.FromMinutes(2);
+                var retry   = new LinearRetryPolicy(TransientDetector.Always, maxAttempts: (int)timeout.TotalSeconds, retryInterval: TimeSpan.FromSeconds(1));
+
+                primaryIndex = null;
+
+                retry.InvokeAsync(
+                    async () =>
+                    {
+                        if (!string.IsNullOrEmpty(primaryIndex))
+                        {
+                            await Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)}");
+                        }
+                        else
+                        {
+                            // Create a dummy index to ensure that the query service is ready
+                            // and then remove it.
+
+                            var dummyName = "idx_couchbase_test_fixture";
+
+                            await Bucket.QuerySafeAsync<dynamic>($"create index {CbHelper.LiteralName(dummyName)} on {CbHelper.LiteralName(Bucket.Name)} ({CbHelper.LiteralName("Field")})");
+                            await Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(Bucket.Name)}.{CbHelper.LiteralName(dummyName)} using gsi");
+                        }
+
+                    }).Wait();
             }
         }
 
