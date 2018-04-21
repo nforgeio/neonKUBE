@@ -48,7 +48,7 @@ namespace Xunit
     /// </note>
     /// </remarks>
     /// <threadsafety instance="false"/>
-    public class DockerFixture : TestFixture
+    public class DockerFixture : TestFixtureSet
     {
         //---------------------------------------------------------------------
         // Local types
