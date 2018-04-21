@@ -136,13 +136,19 @@ namespace System.IO
         /// Returns an enumerator that returns the lines of text from a <see cref="TextReader"/>.
         /// </summary>
         /// <param name="reader">The reader.</param>
+        /// <param name="ignoreBlank">Optionally skip empty lines or lines with oly whitespace.</param>
         /// <returns>The <see cref="IEnumerable{String}"/>.</returns>
-        public static IEnumerable<string> Lines(this TextReader reader)
+        public static IEnumerable<string> Lines(this TextReader reader, bool ignoreBlank = false)
         {
             Covenant.Requires<ArgumentNullException>(reader != null);
 
             for (var line = reader.ReadLine(); line != null; line = reader.ReadLine())
             {
+                if (ignoreBlank && line.Trim().Length == 0)
+                {
+                    continue;
+                }
+
                 yield return line;
             }
         }

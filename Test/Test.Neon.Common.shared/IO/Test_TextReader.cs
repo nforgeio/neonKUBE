@@ -79,5 +79,34 @@ done
             Assert.Equal(string.Empty, lines[4]);
             Assert.Equal("done", lines[5]);
         }
+
+        [Fact]
+        public void Lines_MultipleIgnoreBlank()
+        {
+            var lines = new List<string>();
+
+            using (var reader = new StringReader(
+$@"this
+is
+a
+test
+
+{"\t"}   {"\t"}
+done
+"))
+            {
+                foreach (var line in reader.Lines(ignoreBlank: true))
+                {
+                    lines.Add(line);
+                }
+            }
+
+            Assert.Equal(5, lines.Count);
+            Assert.Equal("this", lines[0]);
+            Assert.Equal("is", lines[1]);
+            Assert.Equal("a", lines[2]);
+            Assert.Equal("test", lines[3]);
+            Assert.Equal("done", lines[4]);
+        }
     }
 }
