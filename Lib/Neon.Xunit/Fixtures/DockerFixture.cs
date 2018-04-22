@@ -87,21 +87,14 @@ namespace Xunit
         public class SecretInfo
         {
             /// <summary>
-            /// Constructor.
-            /// </summary>
-            internal SecretInfo()
-            {
-            }
-
-            /// <summary>
             /// Returns the secret ID.
             /// </summary>
-            public string Id { get; internal set; }
+            public string Id { get; set; }
 
             /// <summary>
             /// Returns the secret name.
             /// </summary>
-            public string Name { get; internal set; }
+            public string Name { get; set; }
         }
 
         /// <summary>
@@ -110,21 +103,14 @@ namespace Xunit
         public class NetworkInfo
         {
             /// <summary>
-            /// Constructor.
-            /// </summary>
-            internal NetworkInfo()
-            {
-            }
-
-            /// <summary>
             /// Returns the network ID.
             /// </summary>
-            public string Id { get; internal set; }
+            public string Id { get; set; }
 
             /// <summary>
             /// Returns the network name.
             /// </summary>
-            public string Name { get; internal set; }
+            public string Name { get; set; }
         }
 
         /// <summary>
@@ -133,21 +119,14 @@ namespace Xunit
         public class ConfigInfo
         {
             /// <summary>
-            /// Constructor.
-            /// </summary>
-            internal ConfigInfo()
-            {
-            }
-
-            /// <summary>
             /// Returns the config ID.
             /// </summary>
-            public string Id { get; internal set; }
+            public string Id { get; set; }
 
             /// <summary>
             /// Returns the config name.
             /// </summary>
-            public string Name { get; internal set; }
+            public string Name { get; set; }
         }
 
         /// <summary>
@@ -156,21 +135,14 @@ namespace Xunit
         public class ServiceInfo
         {
             /// <summary>
-            /// Constructor.
-            /// </summary>
-            internal ServiceInfo()
-            {
-            }
-
-            /// <summary>
             /// Returns the service ID.
             /// </summary>
-            public string Id { get; internal set; }
+            public string Id { get; set; }
 
             /// <summary>
             /// Returns the service name.
             /// </summary>
-            public string Name { get; internal set; }
+            public string Name { get; set; }
         }
 
         /// <summary>
@@ -179,21 +151,14 @@ namespace Xunit
         public class StackInfo
         {
             /// <summary>
-            /// Constructor.
-            /// </summary>
-            internal StackInfo()
-            {
-            }
-
-            /// <summary>
             /// Returns the stack name.
             /// </summary>
-            public string Name { get; internal set; }
+            public string Name { get; set; }
 
             /// <summary>
             /// Returns the number of services deployed by the stack.
             /// </summary>
-            public int ServiceCount { get; internal set; }
+            public int ServiceCount { get; set; }
         }
 
         /// <summary>
@@ -202,35 +167,21 @@ namespace Xunit
         public class ContainerInfo
         {
             /// <summary>
-            /// Constructor.
-            /// </summary>
-            internal ContainerInfo()
-            {
-            }
-
-            /// <summary>
             /// Returns the container ID.
             /// </summary>
-            public string Id { get; internal set; }
+            public string Id { get; set; }
 
             /// <summary>
             /// Returns the container name.
             /// </summary>
-            public string Name { get; internal set; }
+            public string Name { get; set; }
         }
 
         /// <summary>
         /// Describes a Docker stack service.
         /// </summary>
-        private class StackService
+        public class StackService
         {
-            /// <summary>
-            /// Constructor.
-            /// </summary>
-            public StackService()
-            {
-            }
-
             /// <summary>
             /// The service name.
             /// </summary>
@@ -245,7 +196,7 @@ namespace Xunit
         /// <summary>
         /// Parses useful information from a Docker YAML compose file.
         /// </summary>
-        private class StackDefinition
+        public class StackDefinition
         {
             /// <summary>
             /// Constructor.
@@ -330,8 +281,7 @@ namespace Xunit
 
         /// <summary>
         /// Used to track how many fixture instances for the current test run
-        /// remain so we can determine when to ensure that the Docker Swarm
-        /// is reset.
+        /// remain so we can determine when reset the Docker Swarm.
         /// </summary>
         private static int RefCount = 0;
 
@@ -375,17 +325,59 @@ namespace Xunit
         }
 
         /// <summary>
-        /// Executes an arbitrary Docker command and returns the results.
+        /// Executes an arbitrary Docker command passing unformatted arguments
+        /// and returns the results.
         /// </summary>
         /// <param name="args">The <b>docker</b> command arguments.</param>
         /// <returns>The <see cref="ExecuteResult"/>.</returns>
-        public ExecuteResult DockerExecute(params object[] args)
+        /// <remarks>
+        /// <para>
+        /// This method formats any arguments passed so they will be suitable 
+        /// for passing on the command line by quoting and escaping them
+        /// as necessary.
+        /// </para>
+        /// <note>
+        /// This method is defined as <c>virtual</c> so that derived classes
+        /// can modify how Docker is called.  For example, the <c>ClusterFixture</c>
+        /// class implemented in another assembly will override this to run
+        /// the <b>docker</b> within a neonCLUSTER using <b>neon-cli</b>.
+        /// </note>
+        /// </remarks>
+        public virtual ExecuteResult DockerExecute(params object[] args)
         {
             lock (base.SyncRoot)
             {
                 base.CheckDisposed();
 
                 return NeonHelper.ExecuteCaptureStreams("docker", args);
+            }
+        }
+
+        /// <summary>
+        /// Executes an arbitrary Docker command passing a pre-formatted argument 
+        /// string and returns the results.
+        /// </summary>
+        /// <param name="argString">The <b>docker</b> command arguments.</param>
+        /// <returns>The <see cref="ExecuteResult"/>.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method assumes that the single string argument passed is already
+        /// formatted as required to pass on the command line.
+        /// </para>
+        /// <note>
+        /// This method is defined as <c>virtual</c> so that derived classes
+        /// can modify how Docker is called.  For example, the <c>ClusterFixture</c>
+        /// class implemented in another assembly will override this to run
+        /// the <b>docker</b> within a neonCLUSTER using <b>neon-cli</b>.
+        /// </note>
+        /// </remarks>
+        public virtual ExecuteResult DockerExecute(string argString)
+        {
+            lock (base.SyncRoot)
+            {
+                base.CheckDisposed();
+
+                return NeonHelper.ExecuteCaptureStreams("docker", argString);
             }
         }
 
