@@ -73,7 +73,7 @@ COMMAND SUMMARY:
     neon create uuid
     neon dashboard          DASHBOARD
     neon dns                ARGS
-    neon docker             ARGS
+    neon docker             -- CMD [ARGS]
     neon download           SOURCE TARGET [NODE]
     neon exec               BASH-CMD
     neon file               create|decrypt|edit|encrypt|view PATH PASSWORD-NAME

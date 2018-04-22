@@ -42,8 +42,7 @@ ARGUMENTS:
 
     VARS#                   - Path to a YAML (Ansible) variables file.
                               (This file may optionally be encrypted)
-    --                      - Indicates the start of the command/args
-                              to be invoked
+    --                      - Separates the command/args to be invoked
     CMD...                  - Command and arguments
 
 OPTIONS:

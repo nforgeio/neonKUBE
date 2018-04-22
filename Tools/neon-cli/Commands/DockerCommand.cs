@@ -32,11 +32,13 @@ and options as well are passed through to the Docker CLI.
 
 USAGE:
 
-    neon [OPTIONS] docker [ARGS...]     - Invokes a Docker command
+    neon [OPTIONS] docker -- CMD [ARGS...]
 
 ARGUMENTS:
 
-    ARGS        - The standard Docker command arguments and options
+    CMD             - A Docker command
+    --              - Separates the Docker command/args
+    ARGS            - Standard Docker arguments and options
 
 OPTIONS :
 
@@ -55,9 +57,10 @@ option to disable this behavior.
 
 The commands currently supporting auto upload are:
 
-    neon docker deploy
-    neon docker stack deploy
-    neon docker secret create
+    neon docker -- deploy
+    neon docker -- stack deploy
+    neon docker -- config create
+    neon docker -- secret create
 
 The other Docker commands supporting file arguments or that take
 input from [stdin] will need to be run directly on the host using
@@ -82,7 +85,7 @@ the [neon exec] command.
         /// <inheritdoc/>
         public override string SplitItem
         {
-            get { return "docker"; }
+            get { return "--"; }
         }
 
         /// <inheritdoc/>
@@ -94,16 +97,16 @@ the [neon exec] command.
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            // Split the command line on "docker".
+            // Split the command line on "--".
 
-            var split = commandLine.Split("docker");
+            var split = commandLine.Split("--");
 
             var leftCommandLine  = split.Left;
             var rightCommandLine = split.Right;
 
             // Basic initialization.
 
-            if (leftCommandLine.HasHelpOption)
+            if (leftCommandLine.HasHelpOption || rightCommandLine == null)
             {
                 Console.WriteLine(usage);
                 Program.Exit(0);
@@ -117,8 +120,8 @@ the [neon exec] command.
 
             // Determine which node we're going to target.
 
-            SshProxy<NodeDefinition>    node;
-            var                         nodeName = leftCommandLine.GetOption("--node", null);
+            var node     = (SshProxy<NodeDefinition>)null;
+            var nodeName = leftCommandLine.GetOption("--node", null);
 
             if (!string.IsNullOrEmpty(nodeName))
             {
@@ -147,6 +150,10 @@ the [neon exec] command.
                 else if (arg1 == "secret" && arg2 == "create")
                 {
                     SecretCreate(node, rightCommandLine);
+                }
+                else if (arg1 == "config" && arg2 == "create")
+                {
+                    ConfigCreate(node, rightCommandLine);
                 }
             }
 
@@ -296,6 +303,57 @@ the [neon exec] command.
             Program.Exit(response.ExitCode);
         }
 
+        /// <summary>
+        /// Executes a <b>docker config create</b> command.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <param name="rightCommandLine">The right split of the command line.</param>
+        private void ConfigCreate(SshProxy<NodeDefinition> node, CommandLine rightCommandLine)
+        {
+            // We're expecting a command like: 
+            //
+            //      docker config create [OPTIONS] CONFIG file|-
+            //
+            // where CONFIG is the name of the configuration and and [file]
+            // is the path to the config file or [-] indicates that
+            // the config is streaming in on stdin.
+            //
+            // We're going to run this as a command bundle that includes
+            // the config file.
+
+            if (rightCommandLine.Arguments.Length != 4)
+            {
+                Console.Error.WriteLine("*** ERROR: Expected: docker config create [OPTIONS] CONFIG file|-");
+                Program.Exit(0);
+            }
+
+            string  fileArg = rightCommandLine.Arguments[3];
+            byte[]  configData;
+
+            if (fileArg == "-")
+            {
+                configData = NeonHelper.ReadStandardInputBytes();
+            }
+            else
+            {
+                configData = File.ReadAllBytes(fileArg);
+            }
+
+            // Create and execute a command bundle.  Note that we're going to hardcode
+            // the config data path to [config.data].
+
+            rightCommandLine.Items[rightCommandLine.Items.Length - 1] = "config.data";
+
+            var bundle = new CommandBundle("docker", rightCommandLine.Items);
+
+            bundle.AddFile("config.data", configData);
+
+            var response = node.SudoCommand(bundle, cluster.SecureRunOptions | RunOptions.FaultOnError);
+
+            Console.Write(response.AllText);
+            Program.Exit(response.ExitCode);
+        }
+
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
@@ -303,9 +361,14 @@ the [neon exec] command.
 
             // We're going to upload files for a handful of Docker commands unless this is disabled.
 
-            var split            = shim.CommandLine.Split("docker");
+            var split            = shim.CommandLine.Split("--");
             var leftCommandLine  = split.Left;
             var rightCommandLine = split.Right;
+
+            if (rightCommandLine == null)
+            {
+                rightCommandLine = new CommandLine();
+            }
 
             if (leftCommandLine.HasOption("--no-upload"))
             {
@@ -327,6 +390,28 @@ the [neon exec] command.
                     if (arg2 == "deploy")
                     {
                         ShimDeploy(shim, rightCommandLine);
+                    }
+                    break;
+
+                case "config":
+
+                    if (arg2 == "create")
+                    {
+                        var path = rightCommandLine.Arguments.Skip(3).FirstOrDefault();
+
+                        if (path == null)
+                        {
+                            return new DockerShimInfo(isShimmed: true, ensureConnection: true);   // This is an error but we'll let Docker report it.
+                        }
+
+                        if (path == "-")
+                        {
+                            shim.AddStdin();
+                        }
+                        else
+                        {
+                            shim.AddFile(path);
+                        }
                     }
                     break;
 

@@ -377,6 +377,12 @@ MODULES:
             var rightCommandLine = commandSplit.Right;
             var command          = leftCommandLine.Arguments.ElementAtOrDefault(1);
 
+            if (leftCommandLine.HasHelpOption || rightCommandLine == null)
+            {
+                Help();
+                Program.Exit(0);
+            }
+
             // The [password] command operates in [--noshim] mode so we'll implement it here.
 
             if (command == "password")
