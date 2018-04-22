@@ -325,8 +325,8 @@ namespace Xunit
         }
 
         /// <summary>
-        /// Executes an arbitrary Docker command passing unformatted arguments
-        /// and returns the results.
+        /// Executes an arbitrary <b>docker</b> CLI command passing unformatted
+        /// arguments and returns the results.
         /// </summary>
         /// <param name="args">The <b>docker</b> command arguments.</param>
         /// <returns>The <see cref="ExecuteResult"/>.</returns>
@@ -354,8 +354,8 @@ namespace Xunit
         }
 
         /// <summary>
-        /// Executes an arbitrary Docker command passing a pre-formatted argument 
-        /// string and returns the results.
+        /// Executes an arbitrary <b>docker</b> CLI command passing a pre-formatted
+        /// argument  string and returns the results.
         /// </summary>
         /// <param name="argString">The <b>docker</b> command arguments.</param>
         /// <returns>The <see cref="ExecuteResult"/>.</returns>

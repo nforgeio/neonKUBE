@@ -127,8 +127,8 @@ namespace Xunit
         }
 
         /// <summary>
-        /// Executes an arbitrary Docker command on a cluster manager, passing
-        /// unformatted arguments and returns the results.
+        /// Executes an arbitrary <b>docker</b> CLI command on a cluster manager, 
+        /// passing unformatted arguments and returns the results.
         /// </summary>
         /// <param name="args">The <b>docker</b> command arguments.</param>
         /// <returns>The <see cref="ExecuteResult"/>.</returns>
@@ -145,13 +145,23 @@ namespace Xunit
             {
                 base.CheckDisposed();
 
-                return NeonHelper.ExecuteCaptureStreams("docker", args);
+                var neonArgs = new List<object>();
+
+                neonArgs.Add("docker");
+                neonArgs.Add("--");
+
+                foreach (var item in args)
+                {
+                    neonArgs.Add(item);
+                }
+
+                return NeonHelper.ExecuteCaptureStreams("neon", neonArgs.ToArray());
             }
         }
 
         /// <summary>
-        /// Executes an arbitrary Docker command on a cluster manager, passing 
-        /// a pre-formatted argument string and returns the results.
+        /// Executes an arbitrary <b>docker</b> CLI command on a cluster manager, 
+        /// passing  a pre-formatted argument string and returns the results.
         /// </summary>
         /// <param name="argString">The <b>docker</b> command arguments.</param>
         /// <returns>The <see cref="ExecuteResult"/>.</returns>
@@ -167,7 +177,54 @@ namespace Xunit
             {
                 base.CheckDisposed();
 
-                return NeonHelper.ExecuteCaptureStreams("docker", argString);
+                var neonArgs = "docker -- " + argString;
+
+                return NeonHelper.ExecuteCaptureStreams("docker", neonArgs);
+            }
+        }
+
+        /// <summary>
+        /// Executes an arbitrary <b>neon</b> CLI command passing unformatted
+        /// arguments and returns the results.
+        /// </summary>
+        /// <param name="args">The <b>neon</b> command arguments.</param>
+        /// <returns>The <see cref="ExecuteResult"/>.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method formats any arguments passed so they will be suitable 
+        /// for passing on the command line by quoting and escaping them
+        /// as necessary.
+        /// </para>
+        /// </remarks>
+        public virtual ExecuteResult NeonExecute(params object[] args)
+        {
+            lock (base.SyncRoot)
+            {
+                base.CheckDisposed();
+
+                return NeonHelper.ExecuteCaptureStreams("neon", args);
+            }
+        }
+
+        /// <summary>
+        /// Executes an arbitrary <b>neon</b> CLI command passing a pre-formatted 
+        /// argument string and returns the results.
+        /// </summary>
+        /// <param name="argString">The <b>neon</b> command arguments.</param>
+        /// <returns>The <see cref="ExecuteResult"/>.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method assumes that the single string argument passed is already
+        /// formatted as required to pass on the command line.
+        /// </para>
+        /// </remarks>
+        public virtual ExecuteResult NeonExecute(string argString)
+        {
+            lock (base.SyncRoot)
+            {
+                base.CheckDisposed();
+
+                return NeonHelper.ExecuteCaptureStreams("neon", argString);
             }
         }
 
