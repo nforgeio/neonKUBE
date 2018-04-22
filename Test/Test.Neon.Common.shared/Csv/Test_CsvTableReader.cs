@@ -11,12 +11,14 @@ using System.Text;
 using Neon.Csv;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace LillTek.Common.Test
 {
     public class Test_CsvTableReader : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvTableReader_EmptyTable()
         {
             CsvTableReader reader;
@@ -29,6 +31,7 @@ namespace LillTek.Common.Test
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvTableReader_NoRows()
         {
             CsvTableReader reader;
@@ -44,6 +47,7 @@ namespace LillTek.Common.Test
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvTableReader_Parsing()
         {
             CsvTableReader reader;
@@ -92,6 +96,7 @@ no,10
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvTableReader_DuplicateColumns()
         {
             CsvTableReader reader;

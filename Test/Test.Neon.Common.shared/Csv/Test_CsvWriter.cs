@@ -11,12 +11,14 @@ using System.Text;
 using Neon.Csv;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace LillTek.Common.Test
 {
     public class Test_CsvWriter : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvWriter_Basic()
         {
             StringBuilder sb = new StringBuilder();

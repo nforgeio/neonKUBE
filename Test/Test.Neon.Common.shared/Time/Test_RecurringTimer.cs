@@ -15,6 +15,7 @@ using Neon.Common;
 using Neon.Time;
 
 using Xunit;
+using Xunit.Neon;
 
 // $todo(jeff.lill): Need to add tests for MINUTE and QUARTERHOUR.
 
@@ -23,6 +24,7 @@ namespace TestCommon
     public class Test_RecurringTimer : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void RecurringTimer_Disabled()
         {
             RecurringTimer timer;
@@ -38,6 +40,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void RecurringTimer_Hourly()
         {
             RecurringTimer timer;
@@ -63,6 +66,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void RecurringTimer_Daily()
         {
             RecurringTimer timer;
@@ -88,6 +92,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void RecurringTimer_Interval()
         {
             RecurringTimer timer;
@@ -107,6 +112,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task RecurringTimer_Async()
         {
             var timer  = new RecurringTimer(RecurringTimerType.Interval, TimeSpan.FromSeconds(1));
@@ -119,6 +125,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task RecurringTimer_Set()
         {
             var timer = new RecurringTimer("Interval:00:00:05");
@@ -137,6 +144,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void RecurringTimer_Parse()
         {
             RecurringTimer timer;

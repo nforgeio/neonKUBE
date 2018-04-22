@@ -15,12 +15,14 @@ using Neon.Common;
 using Neon.Retry;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public class Test_Exception : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Contains()
         {
             Assert.False(((Exception)null).Contains<Exception>());
@@ -38,6 +40,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Find()
         {
             Assert.Null (((Exception)null).Find<Exception>());

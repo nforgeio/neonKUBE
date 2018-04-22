@@ -16,6 +16,7 @@ using Neon.Common;
 using Neon.Couchbase.SyncGateway;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestSyncGateway
 {
@@ -25,6 +26,7 @@ namespace TestSyncGateway
     public partial class Test_Manager : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task RoleCreateRemoveList()
         {
             await TestCluster.ClearAsync();
@@ -86,6 +88,7 @@ namespace TestSyncGateway
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task RoleGetUpdate()
         {
             await TestCluster.ClearAsync();

@@ -14,12 +14,14 @@ using Neon.Common;
 using Neon.IO;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public class Test_TempFile : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Basic()
         {
             var tempFile = new TempFile();
@@ -42,6 +44,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Unique()
         {
             var tempFile1 = new TempFile();
@@ -51,6 +54,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void DisposeWhenNone()
         {
             var tempFile = new TempFile();
@@ -61,6 +65,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void DisposeWhenLocked()
         {
             var tempFile = new TempFile();
@@ -84,6 +89,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CustomSuffix()
         {
             var tempFile = new TempFile(suffix: ".txt");
@@ -93,6 +99,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CustomFolder()
         {
             var tempFile = new TempFile(folder: "C:\\temp");
@@ -102,6 +109,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CustomFolderAndSuffix()
         {
             var tempFile = new TempFile(suffix: ".txt", folder: "C:\\temp");

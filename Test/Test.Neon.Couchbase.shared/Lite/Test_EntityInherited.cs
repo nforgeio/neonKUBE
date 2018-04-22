@@ -27,6 +27,7 @@ using Neon.DynamicData.Internal;
 using Test.Neon.Models;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestLiteExtensions
 {
@@ -44,6 +45,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void EntityTypeProperty()
         {
             // Verify that the special entity type properties return the 
@@ -56,6 +58,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void KnownTypes()
         {
             // Verify that we can read/write derived entities with known types.
@@ -174,6 +177,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Subentities()
         {
             using (var test = new TestDatabase())
@@ -242,6 +246,7 @@ namespace TestLiteExtensions
         }
             
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void InvalidCast()
         {
             // Verify the we get an exception if we attempt to load a document
@@ -279,6 +284,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void UnknownTypes()
         {
             // Verify that we can we can read an entity with an unknown derived type.
@@ -364,6 +370,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Equality()
         {
             var product1 = new Product();

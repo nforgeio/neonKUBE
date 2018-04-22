@@ -11,12 +11,14 @@ using System.Text;
 using Neon.Csv;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace LillTek.Common.Test
 {
     public class Test_CsvReader : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvReader_Basic()
         {
             string input =
@@ -33,12 +35,14 @@ namespace LillTek.Common.Test
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvReader_NoRows()
         {
             Assert.Null(new CsvReader("").Read());
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvReader_Ragged()
         {
             string input =
@@ -56,6 +60,7 @@ namespace LillTek.Common.Test
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvReader_EmptyFields()
         {
             string input =
@@ -73,6 +78,7 @@ namespace LillTek.Common.Test
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvReader_Quoted()
         {
             string input =
@@ -88,6 +94,7 @@ Row,""Two""
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvReader_QuotedMultiLine()
         {
             string input = "\"Hello\r\nWorld\",Col2\r\nRow,\"Two\"\r\n";
@@ -101,6 +108,7 @@ Row,""Two""
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvReader_LF_Terminated()
         {
             string input = "0-0,1-0,2-0\n0-1,1-1,2-1\n0-2,1-2,2-2";
@@ -115,6 +123,7 @@ Row,""Two""
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvReader_QuotedMultiLine_LF_Terminated()
         {
             string input = "\"Hello\nWorld\",Col2\nRow,\"Two\"";

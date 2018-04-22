@@ -14,12 +14,14 @@ using Neon.Common;
 using Neon.IO;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public class Test_LinuxPermissions : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void TryParse()
         {
             LinuxPermissions permissions;
@@ -40,6 +42,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Constructor()
         {
             var permissions = new LinuxPermissions();
@@ -122,6 +125,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Manual()
         {
             var permissions = new LinuxPermissions();
@@ -155,18 +159,17 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Malformed()
         {
-            // $note(jeff.lill): These won't be thrown because [Covenant.Requires<>()] is disabled.
-
-            //Assert.Throws<ArgumentNullException>(() => new LinuxPermissions(null));
-            //Assert.Throws<ArgumentNullException>(() => new LinuxPermissions(""));
-            //Assert.Throws<ArgumentException>(() => new LinuxPermissions("800"));
-            //Assert.Throws<ArgumentException>(() => new LinuxPermissions("080"));
-            //Assert.Throws<ArgumentException>(() => new LinuxPermissions("008"));
-            //Assert.Throws<ArgumentException>(() => new LinuxPermissions("0"));
-            //Assert.Throws<ArgumentException>(() => new LinuxPermissions("00"));
-            //Assert.Throws<ArgumentException>(() => new LinuxPermissions("00a"));
+            Assert.Throws<ArgumentNullException>(() => new LinuxPermissions(null));
+            Assert.Throws<ArgumentNullException>(() => new LinuxPermissions(""));
+            Assert.Throws<ArgumentException>(() => new LinuxPermissions("800"));
+            Assert.Throws<ArgumentException>(() => new LinuxPermissions("080"));
+            Assert.Throws<ArgumentException>(() => new LinuxPermissions("008"));
+            Assert.Throws<ArgumentException>(() => new LinuxPermissions("0"));
+            Assert.Throws<ArgumentException>(() => new LinuxPermissions("00"));
+            Assert.Throws<ArgumentException>(() => new LinuxPermissions("00a"));
         }
     }
 }

@@ -13,12 +13,14 @@ using System.Threading.Tasks;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public class Test_TextReader : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Lines_Empty()
         {
             var lines = new List<string>();
@@ -35,6 +37,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Lines_OneEmpty()
         {
             var lines = new List<string>();
@@ -52,6 +55,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Lines_Multiple()
         {
             var lines = new List<string>();
@@ -81,6 +85,7 @@ done
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Lines_MultipleIgnoreBlank()
         {
             var lines = new List<string>();

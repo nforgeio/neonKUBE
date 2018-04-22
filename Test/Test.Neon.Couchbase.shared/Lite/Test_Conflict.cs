@@ -27,6 +27,7 @@ using Neon.DynamicData.Internal;
 using Test.Neon.Models;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestLiteExtensions
 {
@@ -41,12 +42,14 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Default()
         {
             Assert.Equal(ConflictPolicyType.Ignore, ConflictPolicy.Default.Type);
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Ignore()
         {
             // Create conflicting revisions and then verify that one
@@ -78,6 +81,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Fail()
         {
             // Create conflicting revisions and then verify that 
@@ -105,6 +109,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void KeepThis()
         {
             // Create conflicting revisions and then verify that 
@@ -136,6 +141,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void KeepOther()
         {
             // Create conflicting revisions and then verify that 
@@ -211,6 +217,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Merge()
         {
             // Create conflicting revisions and then verify that 

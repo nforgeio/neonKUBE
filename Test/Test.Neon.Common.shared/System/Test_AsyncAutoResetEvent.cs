@@ -15,6 +15,7 @@ using Neon.Common;
 using Neon.Retry;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
@@ -108,6 +109,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Basic()
         {
             // Verify that an event that starts out unsignalled doesn't allow
@@ -209,6 +211,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task Auto()
         {
             // Verify that auto reset events actually reset automatically.
@@ -247,6 +250,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Error()
         {
             AsyncAutoResetEvent autoEvent;

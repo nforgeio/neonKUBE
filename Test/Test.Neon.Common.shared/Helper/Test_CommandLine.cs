@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 // $todo(jeff.lill):
 //
@@ -23,6 +24,7 @@ namespace TestCommon
     public class Test_CommandLine : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Empty()
         {
             var commandLine = new CommandLine(new string[0]);
@@ -39,6 +41,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Basic()
         {
             var commandLine = new CommandLine(new string[] { "one", "two", "three" });
@@ -48,6 +51,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Help()
         {
             var commandLine = new CommandLine(new string[] { "one", "--help" });
@@ -56,6 +60,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void DashArgs()
         {
             var commandLine = new CommandLine(new string[] { "foo", "-" });
@@ -82,6 +87,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void OptionsBasic()
         {
             var commandLine = new CommandLine(new string[] { "one", "-a=1", "two", "-b=2" });
@@ -98,6 +104,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void OptionsCaseSensitive()
         {
             var commandLine = new CommandLine(new string[] { "one", "-a=1", "-A=2" });
@@ -107,6 +114,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void OptionsDoubleDash()
         {
             var commandLine = new CommandLine(new string[] { "one", "--a=1", "--A=2" });
@@ -116,6 +124,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void OptionsValues()
         {
             var commandLine = new CommandLine(new string[] { "one", "-a=1", "-a=2" });
@@ -124,6 +133,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void OptionDefinition()
         {
             // Test matching the first option definition.
@@ -179,6 +189,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void OptionFlags()
         {
             var commandLine = new CommandLine(new string[] { "-a" });
@@ -195,6 +206,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void GetArguments()
         {
             var commandLine = new CommandLine(new string[] { "one", "two", "three" });
@@ -210,6 +222,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void StartsWithArgs()
         {
             var commandLine = new CommandLine(new string[] { "one", "two", "three" });
@@ -244,6 +257,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Split()
         {
             var commandLine = new CommandLine(new string[] { "one", "--x", "two", "three"});

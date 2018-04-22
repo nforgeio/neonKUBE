@@ -25,12 +25,14 @@ using Neon.Net;
 using Neon.Retry;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public class Test_IEnumerableExtensions : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void SelectRandom_Single()
         {
             var items = new int[] { 0, 1, 2, 3 };
@@ -57,6 +59,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void SelectRandom_Multiple()
         {
             var items    = new int[] { 0, 1, 2, 3 };
@@ -67,6 +70,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void SelectRandom_Exceptions()
         {
             Assert.Throws<ArgumentNullException>(() => ((IEnumerable<int>)null).SelectRandom());

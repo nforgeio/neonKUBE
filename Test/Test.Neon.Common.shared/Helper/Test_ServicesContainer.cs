@@ -26,6 +26,7 @@ using Neon.Net;
 using Neon.Retry;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
@@ -56,6 +57,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Empty()
         {
             var services = new ServiceContainer();
@@ -67,6 +69,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Singelton()
         {
             var services = new ServiceContainer();
@@ -90,6 +93,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Transient()
         {
             var services = new ServiceContainer();
@@ -115,6 +119,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Replace()
         {
             var services = new ServiceContainer();
@@ -143,6 +148,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Snapshot()
         {
             var services = new ServiceContainer();

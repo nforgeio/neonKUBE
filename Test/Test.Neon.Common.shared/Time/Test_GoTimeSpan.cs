@@ -15,6 +15,7 @@ using Neon.Common;
 using Neon.Time;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
@@ -29,6 +30,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Parse()
         {
             // Verify valid input.
@@ -98,6 +100,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Stringify()
         {
             Assert.Equal("0", GoTimeSpan.Zero.ToString());
@@ -128,6 +131,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Casting()
         {
             TimeSpan ts = GoTimeSpan.FromTimeSpan(TimeSpan.FromHours(10));

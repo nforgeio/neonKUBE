@@ -17,6 +17,7 @@ using Neon.Couchbase.SyncGateway;
 using Neon.Net;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestSyncGateway
 {
@@ -26,6 +27,7 @@ namespace TestSyncGateway
     public partial class Test_Manager : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task SessionCreateDetails()
         {
             await TestCluster.ClearAsync();
@@ -77,6 +79,7 @@ namespace TestSyncGateway
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task SessionRemoveByID()
         {
             await TestCluster.ClearAsync();
@@ -121,6 +124,7 @@ namespace TestSyncGateway
 
 #if TODO
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task SessionRemoveByUserID()
         {
             // $todo(jeff.lill):
@@ -172,6 +176,7 @@ namespace TestSyncGateway
 #endif
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task SessionRemoveUserSessions()
         {
             await TestCluster.ClearAsync();

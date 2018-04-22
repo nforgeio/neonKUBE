@@ -27,6 +27,7 @@ using Neon.DynamicData.Internal;
 using TestEntity = Test.Neon.Models.TestEntity;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestLiteExtensions
 {
@@ -36,6 +37,7 @@ namespace TestLiteExtensions
     public class Test_CouchbaseLite : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void RevisionProperties()
         {
             using (var test = new TestDatabase())
@@ -72,6 +74,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void ArrayClone()
         {
             // Verifying that ToArray() of an array actually makes a copy.
@@ -82,6 +85,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Attachments_Bytes()
         {
             using (var test = new TestDatabase())
@@ -109,6 +113,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Attachments_Stream()
         {
             var filePath = Path.GetTempFileName();
@@ -152,6 +157,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void RemoveAttachment()
         {
             using (var db = Manager.SharedInstance.GetDatabase("wonky"))
@@ -182,6 +188,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void REPORT_RemoveAttachment()
         {
             // Used to report a Couchbase Lite issue:
@@ -221,6 +228,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void REPORT_UnsavedAttachmentContentType()
         {
             // Used to report a Couchbase Lite issue:

@@ -11,5 +11,6 @@
   <ItemGroup>
     <Compile Include="$(MSBuildThisFileDirectory)Build.cs" />
     <Compile Include="$(MSBuildThisFileDirectory)BuildEnvironment.cs" />
+    <Compile Include="$(MSBuildThisFileDirectory)TestCategory.cs" />
   </ItemGroup>
 </Project>

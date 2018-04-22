@@ -28,6 +28,7 @@ using Neon.DynamicData.Internal;
 using Test.Neon.Models;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestLiteExtensions
 {
@@ -68,6 +69,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Basic()
         {
             using (var test = new TestDatabase())
@@ -156,6 +158,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Operations()
         {
             // Verify that entity link list operations work and also raise the correct 

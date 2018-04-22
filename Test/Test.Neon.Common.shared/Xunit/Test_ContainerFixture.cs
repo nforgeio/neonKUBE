@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCouchbase
 {
@@ -45,6 +46,7 @@ namespace TestCouchbase
         /// Verify that the container is running.
         /// </summary>
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Verify()
         {
             // We're going to use [docker ps --format "{{.ID}}"] to list the current

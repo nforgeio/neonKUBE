@@ -15,6 +15,7 @@ using Neon.Common;
 using Neon.Time;
 
 using Xunit;
+using Xunit.Neon;
 
 // $todo(jeff.lill):
 //
@@ -56,6 +57,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Basic()
         {
             count    = 0;
@@ -86,6 +88,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Dispose()
         {
             count    = 0;
@@ -102,6 +105,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Change()
         {
             // $todo(jeff.lill): Need to implement this.

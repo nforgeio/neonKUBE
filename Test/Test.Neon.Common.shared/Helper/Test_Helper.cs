@@ -13,12 +13,14 @@ using System.Threading.Tasks;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public partial class Test_Helper : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ParseCsv()
         {
             string[] fields;
@@ -66,6 +68,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void DoesNotThrow()
         {
             Assert.True(NeonHelper.DoesNotThrow(() => { }));
@@ -77,6 +80,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ExpandTabs()
         {
             // Test input without line endings.
@@ -141,6 +145,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void SequenceEquals_Enumerable()
         {
             Assert.True(NeonHelper.SequenceEqual((IEnumerable<string>)null, (IEnumerable<string>)null));
@@ -154,6 +159,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void SequenceEquals_Array()
         {
             Assert.True(NeonHelper.SequenceEqual((string[])null, (string[])null));
@@ -167,6 +173,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void SequenceEquals_List()
         {
             Assert.True(NeonHelper.SequenceEqual((List<string>)null, (List<string>)null));
@@ -180,6 +187,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ParseCounts()
         {
             // Verify that the units are correct.

@@ -15,6 +15,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCouchbase
 {
@@ -40,6 +41,7 @@ namespace TestCouchbase
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Lookup()
         {
             Assert.Equal(new IPAddress[] { IPAddress.Parse("1.2.3.4") }, Dns.GetHostAddresses("www.foo.com"));

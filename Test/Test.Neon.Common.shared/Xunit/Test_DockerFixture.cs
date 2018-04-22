@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestDocker
 {
@@ -52,6 +53,7 @@ services:
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Verify()
         {
             // Verify that the secrets, configs, networks, container, service, and stack were created.

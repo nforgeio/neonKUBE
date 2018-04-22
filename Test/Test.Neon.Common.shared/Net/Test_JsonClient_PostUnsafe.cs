@@ -25,12 +25,14 @@ using Neon.Net;
 using Neon.Retry;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public partial class Test_JsonClient
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostUnsafeAsync()
         {
             // Ensure that POST returning an explict type works.
@@ -92,6 +94,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostUnsafeAsync_NotJson()
         {
             // Ensure that POST returning a non-JSON content type returns a NULL document.
@@ -153,6 +156,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostUnsafeAsync_Args()
         {
             // Ensure that POST with query arguments work.
@@ -216,6 +220,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostUnsafeAsync_Dyanmic()
         {
             // Ensure that POST returning a dynamic works.
@@ -276,6 +281,7 @@ namespace TestCommon
         }
  
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostUnsafeAsync_Dynamic_NotJson()
         {
             // Ensure that POST returning non-JSON returns a NULL dynamic document.
@@ -336,6 +342,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostUnsafeAsync_Error()
         {
             // Ensure that POST returning a hard error works.
@@ -373,6 +380,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostUnsafeAsync_Retry()
         {
             // Ensure that POST will retry after soft errors.
@@ -383,6 +391,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostUnsafeAsync_NoRetryNull()
         {
             // Ensure that POST won't retry if [retryPolicy=NULL]
@@ -393,6 +402,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostUnsafeAsync_NoRetryExplicit()
         {
             // Ensure that POST won't retry if [retryPolicy=NoRetryPolicy]

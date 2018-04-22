@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 // $todo(jeff.lill): Verify logging behaviors.
 
@@ -26,6 +27,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void String()
         {
             var parser = new EnvironmentParser();
@@ -41,6 +43,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Integer()
         {
             var parser = new EnvironmentParser();
@@ -57,6 +60,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Double()
         {
             var parser = new EnvironmentParser();
@@ -73,6 +77,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Bool()
         {
             var parser = new EnvironmentParser();
@@ -118,6 +123,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void TimeSpan()
         {
             var parser = new EnvironmentParser();

@@ -25,12 +25,14 @@ using Neon.Net;
 using Neon.Retry;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public partial class Test_JsonClient
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutAsync()
         {
             // Ensure that PUT sending and returning an explict types works.
@@ -104,10 +106,11 @@ namespace TestCommon
 
                     Assert.Equal("Hello World!", reply.Value1);
                 }
-            };
+            }
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutDynamicAsync()
         {
             // Ensure that PUT sending a dynamic document works.
@@ -164,10 +167,11 @@ namespace TestCommon
 
                     Assert.Equal("Hello World!", reply.Value1);
                 }
-            };
+            }
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutAsync_NotJson()
         {
             // Ensure that PUT returning a non-JSON content type returns a NULL document.
@@ -225,10 +229,11 @@ namespace TestCommon
 
                     Assert.Null(reply);
                 }
-            };
+            }
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutAsync_Args()
         {
             // Ensure that PUT with query arguments work.
@@ -288,10 +293,11 @@ namespace TestCommon
                     Assert.Equal("test1", reply.Value1);
                     Assert.Equal("test2", reply.Value2);
                 }
-            };
+            }
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutAsync_Dyanmic()
         {
             // Ensure that PUT returning a dynamic works.
@@ -349,10 +355,11 @@ namespace TestCommon
 
                     Assert.Equal("Hello World!", (string)reply.Value1);
                 }
-            };
+            }
         }
  
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutAsync_Dynamic_NotJson()
         {
             // Ensure that PUT returning non-JSON returns a NULL dynamic document.
@@ -410,10 +417,11 @@ namespace TestCommon
 
                     Assert.Null(reply);
                 }
-            };
+            }
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutAsync_Error()
         {
             // Ensure that PUT returning a hard error works.
@@ -443,10 +451,11 @@ namespace TestCommon
 
                     await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.PutAsync(baseUri + "info", doc));
                 }
-            };
+            }
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutAsync_Retry()
         {
             // Ensure that PUT will retry after soft errors.
@@ -502,10 +511,11 @@ namespace TestCommon
                     Assert.Equal(2, attemptCount);
                     Assert.Equal("Hello World!", (string)reply.Value1);
                 }
-            };
+            }
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutAsync_NoRetryNull()
         {
             // Ensure that PUT won't retry if [retryPolicy=NULL]
@@ -552,10 +562,11 @@ namespace TestCommon
 
                     Assert.Equal(1, attemptCount);
                 }
-            };
+            }
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutAsync_NoRetryExplicit()
         {
             // Ensure that PUT won't retry if [retryPolicy=NoRetryPolicy]
@@ -602,7 +613,7 @@ namespace TestCommon
 
                     Assert.Equal(1, attemptCount);
                 }
-            };
+            }
         }
     }
 }

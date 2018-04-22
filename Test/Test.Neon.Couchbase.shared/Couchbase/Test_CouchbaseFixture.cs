@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Couchbase;
 using Newtonsoft.Json.Linq;
 using Xunit;
+using Xunit.Neon;
 
 using Neon.Common;
 
@@ -44,6 +45,7 @@ namespace TestCouchbase
         /// a very simple operation.
         /// </summary>
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task BasicAsync()
         {
             fixture.Flush();
@@ -53,6 +55,7 @@ namespace TestCouchbase
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task Flush()
         {
             var indexQuery = $"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}";

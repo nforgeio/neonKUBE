@@ -11,12 +11,14 @@ using System.Text;
 using Neon.Csv;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace LillTek.Common.Test
 {
     public class Test_CsvTableWriter : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvTableWriter_Basic()
         {
             string path = Path.GetTempFileName();
@@ -67,6 +69,7 @@ namespace LillTek.Common.Test
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvTableWriter_NullColumns()
         {
             string path = Path.GetTempFileName();
@@ -110,6 +113,7 @@ namespace LillTek.Common.Test
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvTableWriter_MissingColumns()
         {
             string path = Path.GetTempFileName();
@@ -157,6 +161,7 @@ namespace LillTek.Common.Test
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CsvTableWriter_BlankRow()
         {
             string path = Path.GetTempFileName();

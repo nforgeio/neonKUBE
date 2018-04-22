@@ -15,12 +15,14 @@ using Couchbase;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCouchbase
 {
     public class Test_CbHelper : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Literal_String()
         {
             Assert.Equal("NULL", CbHelper.Literal(null));
@@ -36,6 +38,7 @@ namespace TestCouchbase
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Literal_Name()
         {
             Assert.Throws<ArgumentNullException>(() => CbHelper.LiteralName(null));

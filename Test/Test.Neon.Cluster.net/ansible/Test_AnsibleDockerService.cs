@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_NeonCliAnsibleDockerService.cs
+// FILE:	    Test_AnsibleDockerService.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -13,19 +13,21 @@ using System.Threading.Tasks;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestNeonCluster
 {
-    public class Test_NeonCliAnsibleDockerService : IClassFixture<DockerFixture>
+    public class Test_AnsibleDockerService : IClassFixture<DockerFixture>
     {
         private DockerFixture docker;
 
-        public Test_NeonCliAnsibleDockerService(DockerFixture docker)
+        public Test_AnsibleDockerService(DockerFixture docker)
         {
             this.docker = docker;
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Test()
         {
         }

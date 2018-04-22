@@ -14,6 +14,7 @@ using Neon.Common;
 using Neon.Retry;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
@@ -51,6 +52,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Defaults()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -60,6 +62,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task FailAll()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -82,6 +85,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task FailAll_Result()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -104,6 +108,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task FailImmediate()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -125,6 +130,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task FailImmediate_Result()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -146,6 +152,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task FailDelayed()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -176,6 +183,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task FailDelayed_Result()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -206,6 +214,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task SuccessImmediate()
         {
             var policy  = new LinearRetryPolicy(TransientDetector);
@@ -226,6 +235,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task SuccessImmediate_Result()
         {
             var policy = new LinearRetryPolicy(TransientDetector);
@@ -245,6 +255,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task SuccessDelayed()
         {
             var policy  = new LinearRetryPolicy(TransientDetector);
@@ -271,6 +282,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task SuccessDelayed_Result()
         {
             var policy  = new LinearRetryPolicy(TransientDetector);
@@ -296,6 +308,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task SuccessCustom()
         {
             var policy  = new LinearRetryPolicy(TransientDetector, maxAttempts: 4, retryInterval: TimeSpan.FromSeconds(2));
@@ -325,6 +338,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task SuccessCustom_Result()
         {
             var policy = new LinearRetryPolicy(TransientDetector, maxAttempts: 4, retryInterval: TimeSpan.FromSeconds(2));

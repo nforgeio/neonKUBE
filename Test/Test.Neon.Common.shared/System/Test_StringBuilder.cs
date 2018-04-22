@@ -15,12 +15,14 @@ using Neon.Common;
 using Neon.Retry;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public class Test_StringBuilder : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void AppendLineLinux()
         {
             var sb = new StringBuilder();
@@ -32,6 +34,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void AppendWithSeparator()
         {
             var sb = new StringBuilder();
@@ -53,7 +56,6 @@ namespace TestCommon
             sb.AppendWithSeparator("three", ", ");
 
             Assert.Equal("one, two, three", sb.ToString());
-
         }
     }
 }

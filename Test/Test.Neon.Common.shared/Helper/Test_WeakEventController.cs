@@ -13,6 +13,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
@@ -65,6 +66,7 @@ namespace TestCommon
         private static bool collected;
         
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Basics()
         {
             // Verify that we can:
@@ -96,6 +98,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void VerifyGC()
         {
             // Verify that we can:

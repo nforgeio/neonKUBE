@@ -27,6 +27,7 @@ using Neon.DynamicData.Internal;
 using Test.Neon.Models;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestLiteExtensions
 {
@@ -41,6 +42,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Create()
         {
             using (var test = new TestDatabase())
@@ -67,6 +69,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Get()
         {
             using (var test = new TestDatabase())
@@ -93,6 +96,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void GetExisting()
         {
             using (var test = new TestDatabase())
@@ -118,6 +122,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Defaults()
         {
             // Verify that entity properties are initialized with default values.
@@ -134,6 +139,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void PropertyChanged()
         {
             using (var test = new TestDatabase())
@@ -188,6 +194,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Nested()
         {
             using (var test = new TestDatabase())
@@ -237,6 +244,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Nested_Detached()
         {
             using (var test = new TestDatabase())
@@ -282,6 +290,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Nested_PropertChanged()
         {
             using (var test = new TestDatabase())
@@ -342,6 +351,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Delete()
         {
             using (var test = new TestDatabase())
@@ -370,6 +380,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Metadata()
         {
             using (var test = new TestDatabase())
@@ -445,6 +456,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void ListString_Basic()
         {
             using (var test = new TestDatabase())
@@ -523,6 +535,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void ListString_Operations()
         {
             // Verify that list operations work and also raise the correct 
@@ -739,6 +752,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void EventsAfterRead()
         {
             using (var test = new TestDatabase())
@@ -832,6 +846,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void IsModified()
         {
             using (var test = new TestDatabase())
@@ -922,6 +937,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void ReadOnly()
         {
             using (var test = new TestDatabase())
@@ -953,6 +969,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void EntityEquals_Explicit()
         {
             // Verify that entities equality comparisions take into
@@ -1058,6 +1075,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void EntityEquals_Operator()
         {
             // Verify that entity equality and inequality
@@ -1137,6 +1155,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Cancel()
         {
             using (var test = new TestDatabase())
@@ -1186,6 +1205,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Timestamp()
         {
             using (var test = new TestDatabase())
@@ -1205,6 +1225,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Change()
         {
             // Verify that Change and PropertyChange events are raised when 
@@ -1286,6 +1307,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void EnumEntityType()
         {
             // Verify that the entity generator handles enumeration type values
@@ -1351,6 +1373,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void StringEntityType()
         {
             // Verify that the entity generator handles string type values
@@ -1416,6 +1439,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void EnumProperties()
         {
             // Verify that enum and enum array property types work.
@@ -1440,6 +1464,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void LinkedEntity()
         {
             // Verify that simple linked entities work.
@@ -1533,6 +1558,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void LinkedDocument()
         {
             // Verify that simple linked documents work.
@@ -1621,6 +1647,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void NoChange()
         {
             using (var test = new TestDatabase())

@@ -19,6 +19,7 @@ using Neon.Common;
 using Neon.Couchbase.SyncGateway;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestSyncGateway
 {
@@ -27,6 +28,7 @@ namespace TestSyncGateway
         private TimeSpan MaxWait = TimeSpan.FromSeconds(15);
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task SingleUser()
         {
             // Perform an end-to-end integration test where we provision
@@ -203,6 +205,7 @@ namespace TestSyncGateway
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task MultiUser()
         {
             // Perform an end-to-end integration test where we provision

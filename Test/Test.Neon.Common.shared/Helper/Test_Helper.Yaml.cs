@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 
 using Xunit;
+using Xunit.Neon;
 using YamlDotNet.Core;
 
 using Neon.Common;
@@ -22,6 +23,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void YamlSerialize()
         {
             var before =
@@ -47,6 +49,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void YamlDeserializeUnmatched()
         {
             const string normal =
@@ -79,6 +82,7 @@ unmatched: Hello
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void YamlException()
         {
             // Verify that we beautify exception messages. 
@@ -112,6 +116,7 @@ age: 56
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void YamlNotJson()
         {
             // Verify that we can identify and parse YAML (over JSON).
@@ -139,6 +144,7 @@ age: 56
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void YamlArray()
         {
             // Verify that we can YAML arrays.

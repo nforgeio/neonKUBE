@@ -24,6 +24,7 @@ using Neon.Net;
 using Neon.Retry;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
@@ -50,6 +51,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Defaults()
         {
             using (var jsonClient = new JsonClient())

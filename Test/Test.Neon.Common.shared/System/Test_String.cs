@@ -16,12 +16,14 @@ using Neon.Common;
 using Neon.Retry;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public class Test_String : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ToLines()
         {
             Assert.Empty(((string)null).ToLines());

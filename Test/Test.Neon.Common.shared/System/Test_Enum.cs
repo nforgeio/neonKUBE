@@ -16,6 +16,7 @@ using Neon.Common;
 using Neon.Retry;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
@@ -30,6 +31,7 @@ namespace TestCommon
         };
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ToMemberString()
         {
             Assert.Equal("Bar", Foo.Bar.ToMemberString());          // [Foo.Bar] doesn't have an [EnumMember] attribute so the enum identifer will be returned.

@@ -27,7 +27,7 @@ using Neon.DynamicData.Internal;
 using Test.Neon.Models;
 
 using Xunit;
-
+using Xunit.Neon;
 namespace TestLiteExtensions
 {
     public class Test_Attachments : IClassFixture<ResetFixture>
@@ -41,6 +41,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Basic()
         {
             using (var test = new TestDatabase())
@@ -145,6 +146,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Remove()
         {
             using (var test = new TestDatabase())

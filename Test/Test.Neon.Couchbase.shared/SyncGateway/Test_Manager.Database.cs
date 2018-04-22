@@ -16,6 +16,7 @@ using Neon.Common;
 using Neon.Couchbase.SyncGateway;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestSyncGateway
 {
@@ -25,6 +26,7 @@ namespace TestSyncGateway
     public partial class Test_Manager : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task DatabaseList()
         {
             await TestCluster.ClearAsync();
@@ -52,6 +54,7 @@ namespace TestSyncGateway
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task DatabaseStatus()
         {
             await TestCluster.ClearAsync();
@@ -82,6 +85,7 @@ namespace TestSyncGateway
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task DatabaseCreateRemove()
         {
             try
@@ -133,6 +137,7 @@ namespace TestSyncGateway
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task DatabaseConfig()
         {
             try
@@ -194,6 +199,7 @@ namespace TestSyncGateway
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task DatabaseCompact()
         {
             await TestCluster.ClearAsync();
@@ -227,6 +233,7 @@ namespace TestSyncGateway
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task DatabaseOnOffline()
         {
             await TestCluster.ClearAsync();
@@ -253,6 +260,7 @@ namespace TestSyncGateway
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task DatabasePurge()
         {
             await TestCluster.ClearAsync();
@@ -275,6 +283,7 @@ namespace TestSyncGateway
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task DatabaseResync()
         {
             await TestCluster.ClearAsync();

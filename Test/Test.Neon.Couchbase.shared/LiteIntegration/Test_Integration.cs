@@ -21,6 +21,7 @@ using Neon.Couchbase.SyncGateway;
 using Test.Neon.Models;
 
 using Xunit;
+using Xunit.Neon;
 
 #if !MANUAL
 
@@ -37,6 +38,7 @@ namespace TestLiteIntegration
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task Basic()
         {
             // Verify that [DatabaseManager] works.

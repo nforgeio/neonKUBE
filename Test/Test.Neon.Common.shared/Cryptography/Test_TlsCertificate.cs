@@ -14,6 +14,7 @@ using Neon.Common;
 using Neon.Cryptography;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
@@ -151,6 +152,7 @@ pu/xO28QOG8=
 -----END PRIVATE KEY-----
 ";
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void NormalizePem()
         {
             Assert.Equal("abcde\n", TlsCertificate.NormalizePem("abcde"));
@@ -159,6 +161,7 @@ pu/xO28QOG8=
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Constructor()
         {
             var cert = new TlsCertificate(TestCertPart + TestKeyPart);
@@ -175,6 +178,7 @@ pu/xO28QOG8=
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ConstructorErrors()
         {
             Assert.Throws<ArgumentException>(() => new TlsCertificate("not a cert"));
@@ -185,6 +189,7 @@ pu/xO28QOG8=
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Load()
         {
             var path1 = Path.GetTempFileName();
@@ -238,6 +243,7 @@ pu/xO28QOG8=
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ParseCertUtil_SAN()
         {
             // Verify a [CertUtil] dump of a SAN certificate.
@@ -392,6 +398,7 @@ CertUtil: -dump command completed successfully.
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ParseCertUtil()
         {
             // Verify a [CertUtil] dump of a non-SAN certificate.
@@ -546,6 +553,7 @@ CertUtil: -dump command completed successfully.
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ParseOpenSSL_SAN()
         {
             // Verify an [OpenSSL] dump of a SAN certificate.
@@ -672,6 +680,7 @@ ILBSnE7GA4ectcVZSL48xzheonKFGw==
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Verify()
         {
             // Verify basic fields.

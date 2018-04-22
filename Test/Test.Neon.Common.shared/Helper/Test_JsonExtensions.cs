@@ -16,12 +16,14 @@ using Newtonsoft.Json.Linq;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public class Test_JsonExtensions : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void TryGetValue()
         {
             const string jsonText =

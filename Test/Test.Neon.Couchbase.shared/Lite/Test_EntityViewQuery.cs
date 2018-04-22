@@ -27,6 +27,7 @@ using Neon.DynamicData.Internal;
 using Test.Neon.Models;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestLiteExtensions
 {
@@ -41,6 +42,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void Map()
         {
             // Verify that a entity view map function (without reduce) works.
@@ -72,6 +74,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public void EntityQuery()
         {
             // Test synchronous entity queries.
@@ -153,6 +156,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task EntityQueryAsync()
         {
             // Test asynchronous entity queries.
@@ -234,6 +238,7 @@ namespace TestLiteExtensions
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task EntityLiveQuery()
         {
             // Test live entity queries.
@@ -321,8 +326,8 @@ namespace TestLiteExtensions
             }
         }
 
-
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task EntityLiveQuery_PostFilter()
         {
             // Verify that post filters work for live queries.

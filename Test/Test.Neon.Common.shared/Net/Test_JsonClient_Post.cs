@@ -25,12 +25,14 @@ using Neon.Net;
 using Neon.Retry;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public partial class Test_JsonClient
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostAsync()
         {
             // Ensure that POST sending and returning an explict types works.
@@ -108,6 +110,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostDynamicAsync()
         {
             // Ensure that POST sending a dynamic document works.
@@ -168,6 +171,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostAsync_NotJson()
         {
             // Ensure that POST returning a non-JSON content type returns a NULL document.
@@ -229,6 +233,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostAsync_Args()
         {
             // Ensure that POST with query arguments work.
@@ -292,6 +297,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostAsync_Dyanmic()
         {
             // Ensure that POST returning a dynamic works.
@@ -353,6 +359,7 @@ namespace TestCommon
         }
  
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostAsync_Dynamic_NotJson()
         {
             // Ensure that POST returning non-JSON returns a NULL dynamic document.
@@ -414,6 +421,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostAsync_Error()
         {
             // Ensure that POST returning a hard error works.
@@ -447,6 +455,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostAsync_Retry()
         {
             // Ensure that POST will retry after soft errors.
@@ -506,6 +515,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostAsync_NoRetryNull()
         {
             // Ensure that POST won't retry if [retryPolicy=NULL]
@@ -556,6 +566,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PostAsync_NoRetryExplicit()
         {
             // Ensure that POST won't retry if [retryPolicy=NoRetryPolicy]

@@ -15,12 +15,14 @@ using Neon.Common;
 using Neon.Time;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public class Test_SysTime : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void InitialValue()
         {
             SysTime.Reset();
@@ -29,6 +31,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Delta()
         {
             DateTime start;
@@ -45,12 +48,14 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Infinite()
         {
             Assert.True(SysTime.Now + SysTime.Infinite >= DateTime.MaxValue - TimeSpan.FromDays(366));
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Resolution()
         {
             Assert.True(SysTime.Resolution > TimeSpan.Zero);

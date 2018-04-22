@@ -16,6 +16,7 @@ using Couchbase.Core;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCouchbase
 {
@@ -41,6 +42,7 @@ namespace TestCouchbase
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task BasicAsync()
         {
             // Basic test to verify that we can put/get/remove a document.
@@ -52,6 +54,7 @@ namespace TestCouchbase
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task CasTransientDetector()
         {
             // Verify that the CAS transient detector function works.
@@ -84,6 +87,7 @@ namespace TestCouchbase
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task DurabilityOverrides()
         {
             fixture.Flush();

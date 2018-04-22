@@ -15,12 +15,14 @@ using Neon.Common;
 using Neon.Time;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public class Test_PolledTimer : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Normal()
         {
             PolledTimer timer;
@@ -43,6 +45,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task Async()
         {
             var timer  = new PolledTimer(TimeSpan.FromSeconds(1.0));
@@ -58,6 +61,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ResetImmediate()
         {
             PolledTimer timer;
@@ -78,6 +82,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void AutoReset()
         {
             PolledTimer timer;
@@ -99,6 +104,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void FireNow()
         {
             PolledTimer timer;
@@ -110,6 +116,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Disable()
         {
             PolledTimer timer;

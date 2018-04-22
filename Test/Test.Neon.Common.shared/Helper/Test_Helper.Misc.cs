@@ -18,12 +18,14 @@ using Newtonsoft.Json.Linq;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public partial class Test_Helper : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void FromHex()
         {
             Assert.Equal(new byte[0], NeonHelper.FromHex(""), new CollectionComparer<byte>());
@@ -33,6 +35,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void NullableEquals()
         {
             Assert.True(NeonHelper.NullableEquals((int?)null, (int?)null));
@@ -44,6 +47,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void TryParseHex_Int()
         {
             int v;
@@ -68,6 +72,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void TryParseHex_Array()
         {
             byte[] v;
@@ -93,6 +98,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void HexDump()
         {
             byte[] data = Encoding.ASCII.GetBytes("0123456789ABCDEF");
@@ -109,6 +115,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void JTokenEquals()
         {
             // NULL tests
@@ -272,6 +279,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void GetRandomPassword()
         {
             // Test generating passwords of various lengths.
@@ -308,6 +316,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ArrayEquals_Byte()
         {
             Assert.True(NeonHelper.ArrayEquals(null, null));
@@ -321,6 +330,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void DeflateString()
         {
             const string compressable = "This is a test of the emergency broadcasting system. This is a test of the emergency broadcasting system. This is a test of the emergency broadcasting system.";
@@ -332,6 +342,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void DeflateBytes()
         {
             byte[] compressable = Encoding.UTF8.GetBytes("This is a test of the emergency broadcasting system. This is a test of the emergency broadcasting system. This is a test of the emergency broadcasting system.");
@@ -351,6 +362,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ParseEnum()
         {
             Assert.Throws<ArgumentNullException>(() => NeonHelper.ParseEnum<TestEnum>(null));
@@ -373,6 +385,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void CopyFolder()
         {
             using (var tempFolder = new TempFolder())
@@ -401,6 +414,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void NormalizeExecArgs()
         {
             Assert.Equal("", NeonHelper.NormalizeExecArgs());

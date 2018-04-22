@@ -14,6 +14,7 @@ using System.Threading.Tasks;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCouchbase
 {
@@ -84,6 +85,7 @@ namespace TestCouchbase
         /// Verify that fixtures look OK.
         /// </summary>
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Verify()
         {
             // Ensure that the subfixture indexers work.

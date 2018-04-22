@@ -13,12 +13,14 @@ using System.Threading.Tasks;
 using Neon.Common;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public class Test_Stream : IClassFixture<ResetFixture>
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void Write()
         {
             using (var ms = new MemoryStream())
@@ -42,6 +44,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task WriteAsync()
         {
             using (var ms = new MemoryStream())
@@ -65,6 +68,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void ReadToEnd()
         {
             using (var ms = new MemoryStream())
@@ -84,6 +88,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task ReadToEndAsync()
         {
             using (var ms = new MemoryStream())

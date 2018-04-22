@@ -25,12 +25,14 @@ using Neon.Net;
 using Neon.Retry;
 
 using Xunit;
+using Xunit.Neon;
 
 namespace TestCommon
 {
     public partial class Test_JsonClient
     {
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutUnsafeAsync()
         {
             // Ensure that PUT returning an explict type works.
@@ -92,6 +94,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutUnsafeAsync_NotJson()
         {
             // Ensure that PUT returning a non-JSON content type returns a NULL document.
@@ -153,6 +156,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutUnsafeAsync_Args()
         {
             // Ensure that PUT with query arguments work.
@@ -216,6 +220,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutUnsafeAsync_Dyanmic()
         {
             // Ensure that PUT returning a dynamic works.
@@ -276,6 +281,7 @@ namespace TestCommon
         }
  
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutUnsafeAsync_Dynamic_NotJson()
         {
             // Ensure that PUT returning non-JSON returns a NULL dynamic document.
@@ -336,6 +342,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutUnsafeAsync_Error()
         {
             // Ensure that PUT returning a hard error works.
@@ -373,6 +380,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutUnsafeAsync_Retry()
         {
             // Ensure that PUT will retry after soft errors.
@@ -383,6 +391,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutUnsafeAsync_NoRetryNull()
         {
             // Ensure that PUT won't retry if [retryPolicy=NULL]
@@ -393,6 +402,7 @@ namespace TestCommon
         }
 
         [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task PutUnsafeAsync_NoRetryExplicit()
         {
             // Ensure that PUT won't retry if [retryPolicy=NoRetryPolicy]
