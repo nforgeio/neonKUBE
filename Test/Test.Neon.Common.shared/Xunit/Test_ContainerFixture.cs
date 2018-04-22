@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_DockerContainerFixture.cs
+// FILE:	    Test_ContainerFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -19,11 +19,11 @@ namespace TestCouchbase
     /// <summary>
     // Verify that we can launch a Docker container fixture during tests.
     /// </summary>
-    public class Test_DockerContainerFixture : IClassFixture<ContainerFixture>
+    public class Test_ContainerFixture : IClassFixture<ContainerFixture>
     {
         private ContainerFixture fixture;
 
-        public Test_DockerContainerFixture(ContainerFixture fixture)
+        public Test_ContainerFixture(ContainerFixture fixture)
         {
             this.fixture = fixture;
 
