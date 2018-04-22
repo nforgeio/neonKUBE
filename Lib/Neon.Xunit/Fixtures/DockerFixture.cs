@@ -330,8 +330,8 @@ namespace Xunit
 
         /// <summary>
         /// Used to track how many fixture instances for the current test run
-        /// remain so we can determine when to ensure that all temporary DNS 
-        /// records have been removed.
+        /// remain so we can determine when to ensure that the Docker Swarm
+        /// is reset.
         /// </summary>
         private static int RefCount = 0;
 
