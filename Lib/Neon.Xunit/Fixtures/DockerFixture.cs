@@ -478,10 +478,11 @@ namespace Xunit
                     DockerExecute("rm", "--force", container.Id);
                 }
 
-                // Finally, prune the networks.  Note that since we've already
-                // removed all services and containers, this will effectively
-                // remove all networks.
+                // Finally, prune the volumes and networks.  Note that since 
+                // we've already removed all services and containers, this will 
+                // effectively remove all of these.
 
+                DockerExecute("volume", "prune", "--force");
                 DockerExecute("network", "prune", "--force");
             }
         }
