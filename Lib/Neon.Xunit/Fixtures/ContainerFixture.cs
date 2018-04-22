@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DockerContainerFixture.cs
+// FILE:	    ContainerFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -34,19 +34,19 @@ namespace Xunit
     /// </note>
     /// </remarks>
     /// <threadsafety instance="false"/>
-    public class DockerContainerFixture : TestFixture
+    public class ContainerFixture : TestFixture
     {
         /// <summary>
         /// Constructs the fixture.
         /// </summary>
-        public DockerContainerFixture()
+        public ContainerFixture()
         {
         }
 
         /// <summary>
         /// Finalizer.
         /// </summary>
-        ~DockerContainerFixture()
+        ~ContainerFixture()
         {
             Dispose(false);
         }

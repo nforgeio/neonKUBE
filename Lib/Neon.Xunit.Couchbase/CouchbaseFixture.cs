@@ -22,7 +22,7 @@ namespace Xunit
     /// fixture while tests are being performed and then deletes the
     /// container when the fixture is disposed.
     /// </summary>
-    public sealed class CouchbaseFixture : DockerContainerFixture
+    public sealed class CouchbaseFixture : ContainerFixture
     {
         /// <summary>
         /// Constructs the fixture.

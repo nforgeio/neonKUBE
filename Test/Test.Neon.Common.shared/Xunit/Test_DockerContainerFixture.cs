@@ -19,11 +19,11 @@ namespace TestCouchbase
     /// <summary>
     // Verify that we can launch a Docker container fixture during tests.
     /// </summary>
-    public class Test_DockerContainerFixture : IClassFixture<DockerContainerFixture>
+    public class Test_DockerContainerFixture : IClassFixture<ContainerFixture>
     {
-        private DockerContainerFixture fixture;
+        private ContainerFixture fixture;
 
-        public Test_DockerContainerFixture(DockerContainerFixture fixture)
+        public Test_DockerContainerFixture(ContainerFixture fixture)
         {
             this.fixture = fixture;
 
