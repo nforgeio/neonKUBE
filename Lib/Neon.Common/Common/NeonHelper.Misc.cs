@@ -1484,5 +1484,39 @@ namespace Neon.Common
                     return NeonHelper.YamlDeserialize<T>(input, strict);
             }
         }
+
+        /// <summary>
+        /// Parses common boolean literals.
+        /// </summary>
+        /// <param name="input">The input literal.</param>
+        /// <returns>The parsed output.</returns>
+        /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
+        public static bool ParseBool(string input)
+        {
+            Covenant.Requires<ArgumentNullException>(input != null);
+
+            switch (input.ToLowerInvariant())
+            {
+                case "0":
+                case "off":
+                case "no":
+                case "disabled":
+                case "false":
+
+                    return false;
+
+                case "1":
+                case "on":
+                case "yes":
+                case "enabled":
+                case "true":
+
+                    return true;
+
+                default:
+
+                    throw new FormatException($"[{input}] is not a valid boolean.");
+            }
+        }
     }
 }

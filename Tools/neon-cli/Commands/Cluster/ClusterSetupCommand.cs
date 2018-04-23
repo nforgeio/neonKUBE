@@ -342,11 +342,18 @@ OPTIONS:
                         }, 
                         node => node == cluster.FirstManager);
 
+                controller.AddStep("cluster settings",
+                    (node, stepDelay) =>
+                    {
+                        ClusterConsulSettings(node);
+                    },
+                    n => n == cluster.FirstManager);
+
                 controller.AddStep("node labels",
                     (node, stepDelay) =>
                     {
                         AddNodeLabels(node);
-                    }, 
+                    },
                     n => n == cluster.FirstManager);
 
                 if (cluster.Definition.Docker.RegistryCache)
@@ -1578,6 +1585,21 @@ $@"docker login \
                         "--subnet", cluster.Definition.Network.PrivateSubnet,
                         cluster.Definition.Network.PrivateAttachable ? "--attachable" : null,
                         NeonClusterConst.PrivateNetwork);
+                });
+        }
+
+        /// <summary>
+        /// Initializes the cluster's Consul settings.
+        /// </summary>
+        /// <param name="manager">The manager node.</param>
+        private void ClusterConsulSettings(SshProxy<NodeDefinition> manager)
+        {
+            manager.InvokeIdempotentAction("setup-cluster-settings",
+                () =>
+                {
+                    manager.Status = "saving settings";
+
+                    cluster.SetSetting(NeonClusterSettings.AllowUnitTesting, cluster.Definition.AllowUnitTesting);
                 });
         }
 

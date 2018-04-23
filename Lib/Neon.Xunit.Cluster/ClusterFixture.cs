@@ -13,12 +13,13 @@ using System.Threading;
 
 using YamlDotNet.RepresentationModel;
 
+using Neon.Cluster;
 using Neon.Common;
 
 namespace Xunit
 {
     /// <summary>
-    /// An Xunit test fixture used to manage a neonCLUSTER within unit tests.
+    /// An Xunit test fixture used to run unit tests on a neonCLUSTER.
     /// </summary>
     /// <remarks>
     /// <note>
@@ -37,15 +38,22 @@ namespace Xunit
     /// </code>
     /// </note>
     /// <para>
-    /// This fixture resets the state of the local Docker daemon before and after
-    /// the test runner executes the tests in a test class by removing all containers
-    /// and services as well as swarm items such as secrets, configs and networks.
+    /// This Xunit test fixture is used
     /// </para>
-    /// <note>
-    /// This fixture works only for local Docker instances that <b>ARE NOT</b>
-    /// members of a multi-node cluster as a safety measure to help avoid the
-    /// possiblity of accidentially wiping out a production cluster.
-    /// </note>
+    /// <para>
+    /// neonCLUSTERs do not allow the <see cref="ClusterFixture"/> to perform unit
+    /// tests by default, as a safety measure.  You can enable this before cluster
+    /// deployment by setting <see cref="ClusterDefinition.AllowUnitTesting"/><c>=true</c>
+    /// or by manually invoking this command for an existing cluster:
+    /// </para>
+    /// <code>
+    /// neon cluster set allow-unit-testing=yes
+    /// </code>
+    /// <para>
+    /// The specified cluster login file must be already present on the current
+    /// machine for the current user.  This method will logout from the current
+    /// cluster (if any) and then login to the one specified.
+    /// </para>
     /// <para>
     /// There are two basic patterns for using this fixture.
     /// </para>
@@ -124,6 +132,35 @@ namespace Xunit
 
                 Covenant.Assert(RefCount >= 0, "Reference count underflow.");
             }
+        }
+
+        /// <summary>
+        /// Connects the fixture to a cluster.
+        /// </summary>
+        /// <param name="login">The cluster login, like: <b>USER@CLUSTER</b>.</param>
+        /// <remarks>
+        /// <note>
+        /// <para>
+        /// neonCLUSTERs do not allow the <see cref="ClusterFixture"/> to perform unit
+        /// tests by default, as a safety measure.  You can enable this before cluster
+        /// deployment by setting <see cref="ClusterDefinition.AllowUnitTesting"/><c>=true</c>
+        /// or by manually invoking this command for an existing cluster:
+        /// </para>
+        /// <code>
+        /// neon cluster set allow-unit-testing=yes
+        /// </code>
+        /// </note>
+        /// <para>
+        /// The specified <paramref name="login"/> must be already present on the current
+        /// machine for the current user.  This method will logout from the current cluster
+        /// (if any) and then login to the specified cluster.
+        /// </para>
+        /// </remarks>
+        public void Login(string login)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(login));
+
+            throw new NotImplementedException("$todo(jeff.lill)");
         }
 
         /// <summary>
@@ -243,7 +280,13 @@ namespace Xunit
         /// <exception cref="InvalidOperationException">Thrown if the local Docker instance is a member of a multi-node swarm.</exception>
         public new void Reset()
         {
-            throw new NotImplementedException("$todo(jeff.lill");
+            // $todo(jeff.lill):
+            //
+            // I'm not going to worry about removing any containers just yet.
+            // Presumably, we'd leave any [neon-*] related containers running 
+            // by default and remove all other non-task (service or stack)
+            // containers on all nodes.  One thing to think about is whether
+            // this should apply to pet nodes as well.
         }
 
         /// <summary>

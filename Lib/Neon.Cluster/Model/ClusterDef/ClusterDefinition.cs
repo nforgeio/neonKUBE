@@ -54,6 +54,7 @@ namespace Neon.Cluster
         private const string        defaultDnsMonImage         = "neoncluster/neon-dns-mon:latest";
         private const string        defaultDrivePrefix         = "sd";
         private const int           defaultStepStaggerSeconds  = 5;
+        private const bool          defaultAllowUnitTesting      = false;
 
         /// <summary>
         /// Regex for verifying cluster names for hosts, routes, groups, etc.
@@ -299,6 +300,14 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "DebugMode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(false)]
         public bool DebugMode { get; set; } = false;
+
+        /// <summary>
+        /// Optionally enable unit testing on this cluster.  This is disabled by 
+        /// default for safety.
+        /// </summary>
+        [JsonProperty(PropertyName = "AllowUnitTesting", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultAllowUnitTesting)]
+        public bool AllowUnitTesting { get; set; } = defaultAllowUnitTesting;
 
         /// <summary>
         /// Specifies hosting related settings (e.g. the cloud provider).  This defaults to

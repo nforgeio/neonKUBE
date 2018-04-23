@@ -87,6 +87,9 @@ USAGE:
     //                    most of the extra neonCLUSTER features should be deployed.
     //                    This defaults to [false].
     //
+    //  AllowUnitTesting  Optionally enable unit testing on this cluster.  
+    //                    This defaults to [false]. 
+    //
     //  These properties specify the Docker image to be deployed for various
     //  cluster level services.  The reasonable default values for each are
     //  shown on the right.

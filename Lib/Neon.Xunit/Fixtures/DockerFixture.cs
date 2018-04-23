@@ -48,6 +48,18 @@ namespace Xunit
     /// possiblity of accidentially wiping out a production cluster.
     /// </note>
     /// <para>
+    /// This fixture is pretty easy to use.  Simply have your test class inherit
+    /// from <see cref="IClassFixture{DockerFixture}"/> and add a public constructor
+    /// that accepts a <see cref="DockerFixture"/> as the only argument.  Then
+    /// you can call it's <see cref="TestFixture.Initialize(Action)"/> method
+    /// within the constructor and optionally have your custom <see cref="Action"/>
+    /// use the fixture to initialize cluster services, networks, secrets, etc.
+    /// </para>
+    /// <para>
+    /// This fixture provides several methods for managing the cluster state.
+    /// These may be called within the test class constructor's
+    /// </para>
+    /// <para>
     /// There are two basic patterns for using this fixture.
     /// </para>
     /// <list type="table">
@@ -61,17 +73,21 @@ namespace Xunit
     /// </para>
     /// <para>
     /// This will be quite a bit faster than reconfiguring the cluster at the
-    /// beginning of every test and can work well for many situations.
+    /// beginning of every test and can work well for many situations but it
+    /// assumes that your test methods guarantee that running any test in 
+    /// any order will not impact the results of subsequent tests.  A good 
+    /// example of this is a series of read-only tests against a service
+    /// or database.
     /// </para>
     /// </description>
     /// </item>
     /// <item>
     /// <term><b>initialize every test</b></term>
     /// <description>
-    /// For scenarios where the cluster must be cleared before every test,
-    /// you can use the <see cref="Reset()"/> method to reset its
-    /// state within each test method, populate the cluster as necessary,
-    /// and then perform your tests.
+    /// For common scenarios where the cluster must be reset before every test,
+    /// you can call <see cref="Reset()"/> within the test class constructor
+    /// (but outside of the custom initialization <see cref="Action"/> to
+    /// reset the cluster state before the next test method is invoked.
     /// </description>
     /// </item>
     /// </list>

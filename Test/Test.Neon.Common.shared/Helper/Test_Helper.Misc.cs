@@ -431,5 +431,36 @@ namespace TestCommon
             Assert.Equal(@"one two three", NeonHelper.NormalizeExecArgs(new string[] { "one", "two", null }, "three"));
             Assert.Equal(@"one two three", NeonHelper.NormalizeExecArgs(new string[] { "one", "two", "" }, "three"));
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void ParseBool()
+        {
+            Assert.True(NeonHelper.ParseBool("1"));
+            Assert.True(NeonHelper.ParseBool("on"));
+            Assert.True(NeonHelper.ParseBool("yes"));
+            Assert.True(NeonHelper.ParseBool("enabled"));
+            Assert.True(NeonHelper.ParseBool("true"));
+
+            Assert.True(NeonHelper.ParseBool("1"));
+            Assert.True(NeonHelper.ParseBool("ON"));
+            Assert.True(NeonHelper.ParseBool("YES"));
+            Assert.True(NeonHelper.ParseBool("ENABLED"));
+            Assert.True(NeonHelper.ParseBool("TRUE"));
+
+            Assert.False(NeonHelper.ParseBool("0"));
+            Assert.False(NeonHelper.ParseBool("off"));
+            Assert.False(NeonHelper.ParseBool("no"));
+            Assert.False(NeonHelper.ParseBool("disabled"));
+            Assert.False(NeonHelper.ParseBool("false"));
+
+            Assert.False(NeonHelper.ParseBool("0"));
+            Assert.False(NeonHelper.ParseBool("OFF"));
+            Assert.False(NeonHelper.ParseBool("NO"));
+            Assert.False(NeonHelper.ParseBool("DISABLED"));
+            Assert.False(NeonHelper.ParseBool("FALSE"));
+
+            Assert.Throws<FormatException>(() => NeonHelper.ParseBool("invalid input"));
+        }
     }
 }

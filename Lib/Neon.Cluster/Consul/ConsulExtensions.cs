@@ -263,36 +263,6 @@ namespace Consul
         }
 
         /// <summary>
-        /// Parses common boolean literals.
-        /// </summary>
-        /// <param name="input">The input literal.</param>
-        /// <returns>The parsed output.</returns>
-        /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
-        private static bool ParseBool(string input)
-        {
-            switch (input.ToLowerInvariant())
-            {
-                case "0":
-                case "off":
-                case "no":
-                case "false":
-
-                    return false;
-
-                case "1":
-                case "on":
-                case "yes":
-                case "true":
-
-                    return true;
-
-                default:
-
-                    throw new FormatException($"[{input}] is not a valid boolean.");
-            }
-        }
-
-        /// <summary>
         /// Reads and parses a key as a <c>bool</c>, throwing an exception if the key doesn't exist.
         /// </summary>
         /// <param name="kv">The key/value endpoint.</param>
@@ -310,7 +280,7 @@ namespace Consul
         {
             var value = await GetString(kv, key, cancellationToken);
 
-            return ParseBool(value);
+            return NeonHelper.ParseBool(value);
         }
 
         /// <summary>
@@ -335,7 +305,7 @@ namespace Consul
                 return false;
             }
 
-            return ParseBool(value);
+            return NeonHelper.ParseBool(value);
         }
 
         /// <summary>

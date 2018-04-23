@@ -278,29 +278,18 @@ namespace NeonCli.Ansible
                 return null;
             }
 
-            switch (input.ToLowerInvariant())
+            try
             {
-                case "0":
-                case "no":
-                case "off":
-                case "false":
+                return NeonHelper.ParseBool(input);
+            }
+            catch (FormatException)
+            {
+                if (errorMessage != null)
+                {
+                    WriteErrorLine(errorMessage);
+                }
 
-                    return false;
-
-                case "1":
-                case "yes":
-                case "on":
-                case "true":
-
-                    return true;
-
-                default:
-
-                    if (errorMessage != null)
-                    {
-                        WriteErrorLine(errorMessage);
-                    }
-                    return null;
+                return null;
             }
         }
 
