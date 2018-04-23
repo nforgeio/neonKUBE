@@ -1008,7 +1008,7 @@ vault policy-write {policy.Name} policy.hcl
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
 
-            var key = $"neon/cluster/{name}";
+            var key = $"neon/cluster/settings/{name}";
 
             if (value == null)
             {
@@ -1035,7 +1035,7 @@ vault policy-write {policy.Name} policy.hcl
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
 
-            var key = $"neon/cluster/{name}";
+            var key = $"neon/cluster/settings/{name}";
 
             if (value == null)
             {

@@ -34,6 +34,7 @@ USAGE:
     neon cluster example
     neon cluster get        USER@CLUSTER
     neon cluster prepare    CLUSTER-DEF
+    neon cluster set        SETTING=VALUE
     neon cluster setup      CLUSTER-DEF
     neon cluster verify     CLUSTER-DEF
 
@@ -41,6 +42,7 @@ ARGUMENTS:
 
     CLUSTER-DEF         - Path to a cluster definition file.  This is
                           optional for some commands when logged in.
+    SETTING=VALUE       - Specifies a cluster setting assignment.
     USER@CLUSTER        - Specifies a cluster login username and cluster.
 ";
 

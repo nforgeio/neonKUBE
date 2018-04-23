@@ -1486,14 +1486,46 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Parses common boolean literals.
+        /// Attempts to parse a boolean from common literals.
         /// </summary>
         /// <param name="input">The input literal.</param>
-        /// <returns>The parsed output.</returns>
-        /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
-        public static bool ParseBool(string input)
+        /// <param name="value">Returns as the parsed value on success.</param>
+        /// <returns><c>true</c> on success.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method recognizes the following case insensitive literals:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        /// <term><c>false</c></term>
+        /// <description>
+        /// <para><b>0</b></para>
+        /// <para><b>off</b></para>
+        /// <para><b>no</b></para>
+        /// <para><b>disabled</b></para>
+        /// <para><b>false</b></para>
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <term><c>true</c></term>
+        /// <description>
+        /// <para><b>1</b></para>
+        /// <para><b>on</b></para>
+        /// <para><b>yes</b></para>
+        /// <para><b>enabled</b></para>
+        /// <para><b>true</b></para>
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </remarks>
+        public static bool TryParseBool(string input, out bool value)
         {
-            Covenant.Requires<ArgumentNullException>(input != null);
+            value = default(bool);
+
+            if (string.IsNullOrEmpty(input))
+            {
+                return false;
+            }
 
             switch (input.ToLowerInvariant())
             {
@@ -1503,7 +1535,8 @@ namespace Neon.Common
                 case "disabled":
                 case "false":
 
-                    return false;
+                    value = false;
+                    return true;
 
                 case "1":
                 case "on":
@@ -1511,11 +1544,59 @@ namespace Neon.Common
                 case "enabled":
                 case "true":
 
+                    value = true;
                     return true;
 
                 default:
 
-                    throw new FormatException($"[{input}] is not a valid boolean.");
+                    return false;
+            }
+        }
+
+        /// <summary>
+        /// Parses common boolean literals.
+        /// </summary>
+        /// <param name="input">The input literal.</param>
+        /// <returns>The parsed output.</returns>
+        /// <exception cref="FormatException">Thrown if the value is not valid.</exception>
+        /// <remarks>
+        /// <para>
+        /// This method recognizes the following case insensitive literals:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        /// <term><c>false</c></term>
+        /// <description>
+        /// <para><b>0</b></para>
+        /// <para><b>off</b></para>
+        /// <para><b>no</b></para>
+        /// <para><b>disabled</b></para>
+        /// <para><b>false</b></para>
+        /// </description>
+        /// </item>
+        /// <item>
+        /// <term><c>true</c></term>
+        /// <description>
+        /// <para><b>1</b></para>
+        /// <para><b>on</b></para>
+        /// <para><b>yes</b></para>
+        /// <para><b>enabled</b></para>
+        /// <para><b>true</b></para>
+        /// </description>
+        /// </item>
+        /// </list>
+        /// </remarks>
+        public static bool ParseBool(string input)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(input));
+
+            if (TryParseBool(input, out var value))
+            {
+                return value;
+            }
+            else
+            {
+                throw new FormatException($"[{input}] is not a valid boolean literal.");
             }
         }
     }

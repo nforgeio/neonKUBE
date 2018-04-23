@@ -39,12 +39,13 @@ USAGE:
 ARGUMENTS:
 
     VALUE       - identifies the desired value
-    NODE        - optionally names a specific node.
+    NODE        - optionally names a specific node
 
 CLUSTER IDENTIFIERS:
 
     username                - root account username
     password                - root account password
+    allow-unit-testing      - enable ClusterFixture unit testing (bool)
     sshkey-client-pem       - client SSH private key (PEM format)
     sshkey-client-ppk       - client SSH private key (PPK format)
     sshkey-fingerprint      - SSH host key fingerprint
@@ -170,6 +171,19 @@ NODE IDENTIFIERS:
                         }
 
                         Console.Write(clusterLogin.VaultCredentials.RootToken);
+                        break;
+
+                    case NeonClusterSettings.AllowUnitTesting:
+
+                        if (cluster.TryGetSettingBool(NeonClusterSettings.AllowUnitTesting, out var allowUnitTesting))
+                        {
+                            Console.Write(allowUnitTesting ? "true" : "false");
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Cluster setting [{valueExpr}] does not exist.");
+                            Program.Exit(1);
+                        }
                         break;
 
                     default:
