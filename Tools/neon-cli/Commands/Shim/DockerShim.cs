@@ -292,7 +292,7 @@ namespace NeonCli
         {
             if (stdInFile != null)
             {
-                throw new InvalidOperationException("Cannot specifiy more than one standard input.");
+                throw new InvalidOperationException("Cannot specify more than one standard input.");
             }
 
             stdInFile = $"stdin-{Guid.NewGuid().ToString("D")}";

@@ -611,7 +611,7 @@ $@"#----------------------------------------------------------------------------
 global
     daemon
 
-# Specifiy the maximum number of connections allowed for a proxy instance.
+# Specify the maximum number of connections allowed for a proxy instance.
 
     maxconn             {settings.MaxConnections}
 
@@ -1514,7 +1514,7 @@ $@"#----------------------------------------------------------------------------
 global
     daemon
 
-# Specifiy the maximum number of connections allowed for a proxy instance.
+# Specify the maximum number of connections allowed for a proxy instance.
 
     maxconn             {settings.MaxConnections}
 

@@ -31,7 +31,7 @@ namespace Neon.Cluster
     /// <para>
     /// These identifiers are intended to be set as the leading TD-Agent tag 
     /// segment for events emitted to the pipeline.  The typical case will be
-    /// to specifiy <b>--log-driver=fluentd</b> and <b>--log-opt tag=[value]</b> as one of
+    /// to specify <b>--log-driver=fluentd</b> and <b>--log-opt tag=[value]</b> as one of
     /// these strings when deploying a Docker service or container.  This gives 
     /// the <b>neon-log-collector</b> service enough information to customize 
     /// event parsing for the specific application.

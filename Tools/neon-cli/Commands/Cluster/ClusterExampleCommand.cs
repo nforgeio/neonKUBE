@@ -689,7 +689,7 @@ USAGE:
     // will be available for Swarm filtering operations.  Some labels
     // are also used during cluster configuration.
     //
-    // You'll use the [Labels] property to specifiy labels.  neonCLUSTER
+    // You'll use the [Labels] property to specify labels.  neonCLUSTER
     // predefines several labels.  You may extend these using [Labels.Custom].
     //
     // The following reserved labels are currently supported (see the documentation
