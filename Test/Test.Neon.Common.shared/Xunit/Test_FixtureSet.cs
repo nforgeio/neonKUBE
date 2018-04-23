@@ -51,13 +51,13 @@ namespace TestCouchbase
         {
             this.fixture = fixture;
 
-            fixture.Add("zero", fixture0 = new Fixture0(),
+            fixture.AddFixture("zero", fixture0 = new Fixture0(),
                 () =>
                 {
                     fixture0Initialized = true;
                 });
 
-            fixture.Add("one", fixture1 = new Fixture1(),
+            fixture.AddFixture("one", fixture1 = new Fixture1(),
                 () =>
                 {
                     fixture1Initialized = true;

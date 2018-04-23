@@ -44,16 +44,16 @@ namespace Xunit
         }
 
         /// <summary>
-        /// Adds a named fixture to the set.
+        /// Adds a named <see cref="ITestFixture"/> to the set.
         /// </summary>
         /// <param name="name">The fixture name (case insenstitive).</param>
         /// <param name="fixture">The fixture instance.</param>
         /// <param name="action">The optional <see cref="Action"/> to be called when the fixture is initialized.</param>
-        public void Add(string name, ITestFixture fixture, Action action = null)
+        public void AddFixture(string name, ITestFixture fixture, Action action = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentNullException>(fixture != null);
-            Covenant.Requires<InvalidOperationException>(!fixture.IsInitialized, "Subfixtures cannot be added after the fixture has been initialized.");
+            Covenant.Requires<InvalidOperationException>(!fixture.IsInitialized, "A subfixture cannot be added after it has already been initialized.");
 
             nameToFixture.Add(name, fixture);
             fixtureList.Add(fixture);
