@@ -57,38 +57,105 @@ namespace Xunit
     /// </para>
     /// <para>
     /// This fixture provides several methods for managing the cluster state.
-    /// These may be called within the test class constructor's
+    /// These may be called within the test class constructor's action method,
+    /// within the test constructor but outside of tha action, or within
+    /// the test methods:
     /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><b>Misc</b></term>
+    ///     <description>
+    ///     <see cref="Reset"/><br/>
+    ///     <see cref="DockerExecute(string)"/><br/>
+    ///     <see cref="DockerExecute(object[])"/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Services</b></term>
+    ///     <description>
+    ///     <see cref="CreateService(string, string, string[], string[], string[])"/><br/>
+    ///     <see cref="ListServices()"/><br/>
+    ///     <see cref="RemoveService(string)"/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Containers</b></term>
+    ///     <description>
+    ///     <see cref="CreateContainer(string, string, string[], string[], string[])"/><br/>
+    ///     <see cref="ListContainers()"/><br/>
+    ///     <see cref="RemoveContainer(string)"/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Stacks</b></term>
+    ///     <description>
+    ///     <see cref="DeployStack(string, string, string[], TimeSpan, TimeSpan)"/><br/>
+    ///     <see cref="ListStacks()"/><br/>
+    ///     <see cref="RemoveStack(string)"/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Secrets</b></term>
+    ///     <description>
+    ///     <see cref="CreateSecret(string, byte[], string[])"/><br/>
+    ///     <see cref="CreateSecret(string, string, string[])"/><br/>
+    ///     <see cref="ListSecrets()"/><br/>
+    ///     <see cref="RemoveSecret(string)"/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Configs</b></term>
+    ///     <description>
+    ///     <see cref="CreateConfig(string, byte[], string[])"/><br/>
+    ///     <see cref="CreateConfig(string, string, string[])"/><br/>
+    ///     <see cref="ListConfigs()"/><br/>
+    ///     <see cref="RemoveConfig(string)"/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Networks</b></term>
+    ///     <description>
+    ///     <see cref="CreateNetwork(string, string[])"/><br/>
+    ///     <see cref="ListNetworks()"/><br/>
+    ///     <see cref="RemoveNetwork(string)"/>
+    ///     </description>
+    /// </item>
+    /// </list>
+    /// <note>
+    /// <see cref="DockerFixture"/> derives from <see cref="TestFixtureSet"/> so you can
+    /// use <see cref="TestFixtureSet.AddFixture(string, ITestFixture, Action)"/> to add
+    /// additional fixtures within your custom initialization action for advanced scenarios.
+    /// </note>
     /// <para>
     /// There are two basic patterns for using this fixture.
     /// </para>
     /// <list type="table">
     /// <item>
-    /// <term><b>initialize once</b></term>
-    /// <description>
-    /// <para>
-    /// The basic idea here is to have your test class initialize the cluster
-    /// once within the test class constructor inside of the initialize action
-    /// with common state and services that all of the tests can access.
-    /// </para>
-    /// <para>
-    /// This will be quite a bit faster than reconfiguring the cluster at the
-    /// beginning of every test and can work well for many situations but it
-    /// assumes that your test methods guarantee that running any test in 
-    /// any order will not impact the results of subsequent tests.  A good 
-    /// example of this is a series of read-only tests against a service
-    /// or database.
-    /// </para>
-    /// </description>
+    ///     <term><b>initialize once</b></term>
+    ///     <description>
+    ///     <para>
+    ///     The basic idea here is to have your test class initialize the cluster
+    ///     once within the test class constructor inside of the initialize action
+    ///     with common state and services that all of the tests can access.
+    ///     </para>
+    ///     <para>
+    ///     This will be quite a bit faster than reconfiguring the cluster at the
+    ///     beginning of every test and can work well for many situations but it
+    ///     assumes that your test methods guarantee that running any test in 
+    ///     any order will not impact the results of subsequent tests.  A good 
+    ///     example of this is a series of read-only tests against a service
+    ///     or database.
+    ///     </para>
+    ///     </description>
     /// </item>
     /// <item>
-    /// <term><b>initialize every test</b></term>
-    /// <description>
-    /// For common scenarios where the cluster must be reset before every test,
-    /// you can call <see cref="Reset()"/> within the test class constructor
-    /// (but outside of the custom initialization <see cref="Action"/> to
-    /// reset the cluster state before the next test method is invoked.
-    /// </description>
+    ///     <term><b>initialize every test</b></term>
+    ///     <description>
+    ///     For common scenarios where the cluster must be reset before every test,
+    ///     you can call <see cref="Reset()"/> within the test class constructor
+    ///     (but outside of the custom initialization <see cref="Action"/> to
+    ///     reset the cluster state before the next test method is invoked.
+    ///     </description>
     /// </item>
     /// </list>
     /// </remarks>
@@ -482,14 +549,17 @@ namespace Xunit
 
                 // We also need to remove any running containers.
 
-                var sbContainerIds = new StringBuilder();
+                var containerIds = new List<string>();
 
                 foreach (var container in ListContainers())
                 {
-                    sbContainerIds.AppendWithSeparator(container.Id);
+                    containerIds.Add(container.Id);
                 }
 
-                DockerExecute("rm", "--force", sbContainerIds);
+                if (containerIds.Count > 0)
+                {
+                    DockerExecute("rm", "--force", containerIds.ToArray());
+                }
 
                 // Finally, prune the volumes and networks.  Note that since 
                 // we've already removed all services and containers, this will 

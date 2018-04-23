@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 using YamlDotNet.RepresentationModel;
@@ -38,7 +39,12 @@ namespace Xunit
     /// </code>
     /// </note>
     /// <para>
-    /// This Xunit test fixture is used
+    /// This Xunit test fixture can be used to run unit tests running on a fullly 
+    /// provisioned neonCLUSTER.  This is useful for performing integration tests
+    /// within a fully functional environment.  This fixture is similar to <see cref="DockerFixture"/>
+    /// and in fact, inherits some functionality from that, but <see cref="DockerFixture"/>
+    /// hosts tests against a local single node Docker Swarm rather than a full
+    /// neonCLUSTER.
     /// </para>
     /// <para>
     /// neonCLUSTERs do not allow the <see cref="ClusterFixture"/> to perform unit
@@ -50,36 +56,142 @@ namespace Xunit
     /// neon cluster set allow-unit-testing=yes
     /// </code>
     /// <para>
-    /// The specified cluster login file must be already present on the current
-    /// machine for the current user.  This method will logout from the current
-    /// cluster (if any) and then login to the one specified.
+    /// This fixture is pretty easy to use.  Simply have your test class inherit
+    /// from <see cref="IClassFixture{ClusterFixture}"/> and add a public constructor
+    /// that accepts a <see cref="ClusterFixture"/> as the only argument.  Then
+    /// you can call it's <see cref="ClusterFixture.Initialize(string, Action)"/> method within
+    /// the constructor passing the cluster login name as well as an <see cref="Action"/>.
+    /// You may also use the fixture to initialize cluster services, networks, secrets,
+    /// routes, etc. within your custom action.
     /// </para>
+    /// <note>
+    /// Do not call the base <see cref="TestFixture.Initialize(Action)"/> method
+    /// is not supported by this fixture and will throw an exception.
+    /// </note>
+    /// <para>
+    /// The specified cluster login file must be already present on the current
+    /// machine for the current user.  The <see cref="Login(string)"/> method will
+    /// logout from the current cluster (if any) and then login to the one specified.
+    /// </para>
+    /// <note>
+    /// You can also specify a <c>null</c> or empty login name.  In this case,
+    /// the fixture will attempt to retrieve the login name from the <b>NEON_TEST_CLUSTER</b>
+    /// environment variable.  This is very handy because it allows developers to
+    /// specify different target test clusters without having to bake this into the 
+    /// unit tests themselves.
+    /// </note>
+    /// <para>
+    /// This fixture provides several methods for managing the cluster state.
+    /// These may be called within the test class constructor's action method,
+    /// within the test constructor but outside of the action, or within
+    /// the test methods:
+    /// </para>
+    /// <list type="table">
+    /// <item>
+    ///     <term><b>Misc</b></term>
+    ///     <description>
+    ///     <see cref="Reset"/><br/>
+    ///     <see cref="DockerExecute(string)"/><br/>
+    ///     <see cref="DockerExecute(object[])"/>
+    ///     <see cref="NeonExecute(string)"/><br/>
+    ///     <see cref="NeonExecute(object[])"/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Services</b></term>
+    ///     <description>
+    ///     <see cref="DockerFixture.CreateService(string, string, string[], string[], string[])"/><br/>
+    ///     <see cref="DockerFixture.ListServices()"/><br/>
+    ///     <see cref="DockerFixture.RemoveService(string)"/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Containers</b></term>
+    ///     <description>
+    ///     <para>
+    ///     <b>Container functionality is not currently implemented by the fixture.</b>
+    ///     </para>
+    ///     <para>
+    ///     <see cref="CreateContainer(string, string, string[], string[], string[])"/><br/>
+    ///     <see cref="ListContainers()"/><br/>
+    ///     <see cref="RemoveContainer(string)"/>
+    ///     </para>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Stacks</b></term>
+    ///     <description>
+    ///     <see cref="DockerFixture.DeployStack(string, string, string[], TimeSpan, TimeSpan)"/><br/>
+    ///     <see cref="DockerFixture.ListStacks()"/><br/>
+    ///     <see cref="DockerFixture.RemoveStack(string)"/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Secrets</b></term>
+    ///     <description>
+    ///     <see cref="DockerFixture.CreateSecret(string, byte[], string[])"/><br/>
+    ///     <see cref="DockerFixture.CreateSecret(string, string, string[])"/><br/>
+    ///     <see cref="DockerFixture.ListSecrets()"/><br/>
+    ///     <see cref="DockerFixture.RemoveSecret(string)"/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Configs</b></term>
+    ///     <description>
+    ///     <see cref="DockerFixture.CreateConfig(string, byte[], string[])"/><br/>
+    ///     <see cref="DockerFixture.CreateConfig(string, string, string[])"/><br/>
+    ///     <see cref="DockerFixture.ListConfigs()"/><br/>
+    ///     <see cref="DockerFixture.RemoveConfig(string)"/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Networks</b></term>
+    ///     <description>
+    ///     <see cref="DockerFixture.CreateNetwork(string, string[])"/><br/>
+    ///     <see cref="DockerFixture.ListNetworks()"/><br/>
+    ///     <see cref="DockerFixture.RemoveNetwork(string)"/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Proxy Routes</b></term>
+    ///     <description>
+    ///     <see cref="PutRoute(ProxyRoute)"/><br/>
+    ///     <see cref="ListRoutes()"/><br/>
+    ///     <see cref="RemoveRoute(string)"/>
+    ///     </description>
+    /// </item>
+    /// </list>
+    /// <note>
+    /// <see cref="ClusterFixture"/> derives from <see cref="TestFixtureSet"/> so you can
+    /// use <see cref="TestFixtureSet.AddFixture(string, ITestFixture, Action)"/> to add
+    /// additional fixtures within your custom initialization action for advanced scenarios.
+    /// </note>
     /// <para>
     /// There are two basic patterns for using this fixture.
     /// </para>
     /// <list type="table">
     /// <item>
-    /// <term><b>initialize once</b></term>
-    /// <description>
-    /// <para>
-    /// The basic idea here is to have your test class initialize the cluster
-    /// once within the test class constructor inside of the initialize action
-    /// with common state and services that all of the tests can access.
-    /// </para>
-    /// <para>
-    /// This will be quite a bit faster than reconfiguring the cluster at the
-    /// beginning of every test and can work well for many situations.
-    /// </para>
-    /// </description>
+    ///     <term><b>initialize once</b></term>
+    ///     <description>
+    ///     <para>
+    ///     The basic idea here is to have your test class initialize the cluster
+    ///     once within the test class constructor inside of the initialize action
+    ///     with common state and services that all of the tests can access.
+    ///     </para>
+    ///     <para>
+    ///     This will be quite a bit faster than reconfiguring the cluster at the
+    ///     beginning of every test and can work well for many situations.
+    ///     </para>
+    ///     </description>
     /// </item>
     /// <item>
-    /// <term><b>initialize every test</b></term>
-    /// <description>
-    /// For scenarios where the cluster must be cleared before every test,
-    /// you can use the <see cref="Reset()"/> method to reset its
-    /// state within each test method, populate the cluster as necessary,
-    /// and then perform your tests.
-    /// </description>
+    ///     <term><b>initialize every test</b></term>
+    ///     <description>
+    ///     For scenarios where the cluster must be cleared before every test,
+    ///     you can use the <see cref="Reset()"/> method to reset its
+    ///     state within each test method, populate the cluster as necessary,
+    ///     and then perform your tests.
+    ///     </description>
     /// </item>
     /// </list>
     /// </remarks>
@@ -97,6 +209,9 @@ namespace Xunit
 
         //---------------------------------------------------------------------
         // Instance members
+
+        private ClusterProxy cluster;
+        private ClusterLogin clusterLogin;
         
         /// <summary>
         /// Constructs the fixture.
@@ -135,9 +250,85 @@ namespace Xunit
         }
 
         /// <summary>
+        /// <b>DO NOT USE:</b> This method is not supported by <see cref="ClusterFixture"/>.
+        /// Use <see cref="Initialize(string, Action)"/> instead.
+        /// </summary>
+        /// <param name="action">The optional custom initialization action.</param>
+        /// <exception cref="NotSupportedException">Thrown always.</exception>
+        public new void Initialize(Action action = null)
+        {
+            throw new NotSupportedException($"[{nameof(ClusterFixture)}.Initialize(Action)] is not supported.  Use {nameof(ClusterFixture)}.Initialize(string, Action)] instead.");
+        }
+
+        /// <summary>
+        /// Initializes the fixture if it hasn't already been intialized
+        /// by connecting the specified including invoking the optional
+        /// <see cref="Action"/>.
+        /// </summary>
+        /// <param name="login">
+        /// Specifies a cluster login like <b>USER@CLUSTER</b> or you can pass
+        /// <c>null</c> to connect to the cluster specified by the <b>NEON_TEST_CLUSTER</b>
+        /// environment variable.
+        /// </param>
+        /// <param name="action">The optional initialization action.</param>
+        /// <exception cref="InvalidOperationException">Thrown if this is called from within the <see cref="Action"/>.</exception>
+        public void Initialize(string login, Action action = null)
+        {
+            CheckDisposed();
+
+            if (InAction)
+            {
+                throw new InvalidOperationException($"[{nameof(Initialize)}()] cannot be called recursively from within the fixture initialization action.");
+            }
+
+            if (IsInitialized)
+            {
+                return;
+            }
+
+            // We need to connect the cluster before calling the base initialization
+            // method.  We're going to use [neon-cli] to log out of the current
+            // cluster and log into the new one.
+
+            if (string.IsNullOrEmpty(login))
+            {
+                login = Environment.GetEnvironmentVariable("NEON_TEST_CLUSTER");
+            }
+
+            if (string.IsNullOrEmpty(login))
+            {
+                throw new ArgumentException($"[{nameof(login)}] or the NEON_TEST_CLUSTER environment variable must specify the target cluster login.");
+            }
+
+            var loginInfo = NeonClusterHelper.SplitLogin(login);
+
+            if (!loginInfo.IsOK)
+            {
+                throw new ArgumentException($"Invalid username/cluster [{login}].  Expected something like: USER@CLUSTER");
+            }
+
+            var loginPath = NeonClusterHelper.GetLoginPath(loginInfo.Username, loginInfo.ClusterName);
+
+            if (!File.Exists(loginPath))
+            {
+                throw new ArgumentException($"Cluster login [{login}] does not exist on the current machine and user account.");
+            }
+
+            cluster = NeonClusterHelper.OpenRemoteCluster(loginPath: loginPath);
+
+            // Initialize the inherited classes.
+
+            base.Initialize(action);
+        }
+
+        /// <summary>
         /// Connects the fixture to a cluster.
         /// </summary>
-        /// <param name="login">The cluster login, like: <b>USER@CLUSTER</b>.</param>
+        /// <param name="login">
+        /// The cluster login, like: <b>USER@CLUSTER</b> or <c>null</c> to login
+        /// to the cluster named by the <b>NEON_TEST_CLUSTER</b> environment 
+        /// variable.
+        /// </param>
         /// <remarks>
         /// <note>
         /// <para>
@@ -156,11 +347,35 @@ namespace Xunit
         /// (if any) and then login to the specified cluster.
         /// </para>
         /// </remarks>
-        public void Login(string login)
+        public void Login(string login = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(login));
+            if (cluster != null)
+            {
+                throw new InvalidOperationException($"[{nameof(Login)}()] has already been called for this [{nameof(ClusterFixture)}].");
+            }
+
+            if (string.IsNullOrEmpty(login))
+            {
+                login = Environment.GetEnvironmentVariable("NEON_TEST_CLUSTER");
+
+                if (string.IsNullOrEmpty(login))
+                {
+                    throw new ArgumentException($"You must pass a valid cluster login name to [{nameof(ClusterFixture)}.{nameof(login)}()] or specify this as the NEON_TEST_CLUSTER environment variable.");
+                }
+            }
 
             throw new NotImplementedException("$todo(jeff.lill)");
+        }
+
+        /// <summary>
+        /// Ensures that cluster is connected.
+        /// </summary>
+        private void CheckCluster()
+        {
+            if (cluster == null)
+            {
+                throw new InvalidOperationException("Cluster is not connected.");
+            }
         }
 
         /// <summary>
@@ -181,6 +396,7 @@ namespace Xunit
             lock (base.SyncRoot)
             {
                 base.CheckDisposed();
+                this.CheckCluster();
 
                 var neonArgs = new List<object>();
 
@@ -213,6 +429,7 @@ namespace Xunit
             lock (base.SyncRoot)
             {
                 base.CheckDisposed();
+                this.CheckCluster();
 
                 var neonArgs = "docker -- " + argString;
 
@@ -238,6 +455,7 @@ namespace Xunit
             lock (base.SyncRoot)
             {
                 base.CheckDisposed();
+                this.CheckCluster();
 
                 return NeonHelper.ExecuteCaptureStreams("neon", args);
             }
@@ -260,6 +478,7 @@ namespace Xunit
             lock (base.SyncRoot)
             {
                 base.CheckDisposed();
+                this.CheckCluster();
 
                 return NeonHelper.ExecuteCaptureStreams("neon", argString);
             }
@@ -283,10 +502,77 @@ namespace Xunit
             // $todo(jeff.lill):
             //
             // I'm not going to worry about removing any containers just yet.
-            // Presumably, we'd leave any [neon-*] related containers running 
-            // by default and remove all other non-task (service or stack)
+            // Presumably, we'll want to leave any [neon-*] related containers
+            // running by default and remove all other non-task (service or stack)
             // containers on all nodes.  One thing to think about is whether
             // this should apply to pet nodes as well.
+
+            // Reset the basic Swarm state.
+
+            var serviceNames = new List<string>();
+
+            foreach (var service in ListServices())
+            {
+                serviceNames.Add(service.Name);
+            }
+
+            if (serviceNames.Count > 0)
+            {
+                DockerExecute("service", "rm", serviceNames.ToArray());
+            }
+
+            var stackNames = new List<string>();
+
+            foreach (var stack in ListStacks())
+            {
+                stackNames.Add(stack.Name);
+            }
+
+            if (stackNames.Count > 0)
+            {
+                DockerExecute("stack", "rm", serviceNames.ToArray());
+            }
+
+            // $todo(jeff.lill):
+            //
+            // The items below can probably be deleted in parallel
+            // as a perform improvement.
+
+            var secretNames = new List<string>();
+
+            foreach (var secret in ListSecrets())
+            {
+                secretNames.Add(secret.Name);
+            }
+
+            if (secretNames.Count > 0)
+            {
+                DockerExecute("secret", "rm", secretNames.ToArray());
+            }
+
+            var configNames = new List<string>();
+
+            foreach (var config in ListConfigs())
+            {
+                configNames.Add(config.Name);
+            }
+
+            if (configNames.Count > 0)
+            {
+                DockerExecute("config", "rm", configNames.ToArray());
+            }
+
+            var networkNames = new List<string>();
+
+            foreach (var network in ListNetworks())
+            {
+                networkNames.Add(network.Name);
+            }
+
+            if (networkNames.Count > 0)
+            {
+                DockerExecute("network", "rm", networkNames.ToArray());
+            }
         }
 
         /// <summary>
@@ -324,6 +610,35 @@ namespace Xunit
         public new void RemoveContainer(string name)
         {
             throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not support this method.");
+        }
+
+        /// <summary>
+        /// Saves a proxy route to the cluster.
+        /// </summary>
+        /// <param name="route">The route.</param>
+        public void PutRoute(ProxyRoute route)
+        {
+            Covenant.Requires<ArgumentNullException>(route != null);
+
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Lists the cluster proxy routes.
+        /// </summary>
+        /// <returns></returns>
+        public List<ProxyRoute> ListRoutes()
+        {
+            throw new NotImplementedException();
+        }
+
+        /// <summary>
+        /// Removes a proxy route.
+        /// </summary>
+        /// <param name="name">The route name.</param>
+        public void RemoveRoute(string name)
+        {
+            throw new NotImplementedException();
         }
     }
 }
