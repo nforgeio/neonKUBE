@@ -940,7 +940,8 @@ namespace Neon.Cluster
             return new ConsulClient(
                 config =>
                 {
-                    config.Address = ConsulUri;
+                    config.Address  = ConsulUri;
+                    config.WaitTime = TimeSpan.FromSeconds(60)
                 });
         }
 
