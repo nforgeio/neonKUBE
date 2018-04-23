@@ -941,7 +941,7 @@ namespace Neon.Cluster
                 config =>
                 {
                     config.Address  = ConsulUri;
-                    config.WaitTime = TimeSpan.FromSeconds(60)
+                    config.WaitTime = TimeSpan.FromSeconds(60);
                 });
         }
 
