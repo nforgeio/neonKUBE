@@ -9,6 +9,7 @@ using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
+using System.Text;
 using System.Threading;
 
 using YamlDotNet.RepresentationModel;
@@ -454,7 +455,7 @@ namespace Xunit
                     }
                 }
 
-                // Initialize swam mode.
+                // Initialize swarm mode.
 
                 result = NeonHelper.ExecuteCaptureStreams("docker", new object[] { "swarm", "init" });
 
@@ -465,10 +466,14 @@ namespace Xunit
 
                 // We also need to remove any running containers.
 
+                var sbContainerIds = new StringBuilder();
+
                 foreach (var container in ListContainers())
                 {
-                    DockerExecute("rm", "--force", container.Id);
+                    sbContainerIds.AppendWithSeparator(container.Id);
                 }
+
+                DockerExecute("rm", "--force", sbContainerIds);
 
                 // Finally, prune the volumes and networks.  Note that since 
                 // we've already removed all services and containers, this will 
@@ -552,7 +557,7 @@ namespace Xunit
                         services.Add(
                             new ServiceInfo()
                             {
-                                Id = fields[0],
+                                Id   = fields[0],
                                 Name = fields[1]
                             });
                     }
