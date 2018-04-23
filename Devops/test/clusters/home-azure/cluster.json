@@ -3,6 +3,7 @@
   "Datacenter": "westus2",
   "Environment": "development",
   "TimeSources": [ "0.pool.ntp.org" ],
+  "AllowUnitTesting": true,
   "Hosting": {
     "Environment": "azure",
     "CloudSubnet": "10.168.0.0/21",
@@ -25,7 +26,7 @@
     "Enabled": true
   },
   "HostNode": {
-    "Upgrade":  "partial",
+    "Upgrade": "partial",
     "SshAuth": "tls",
     "PasswordLength": 20
   },

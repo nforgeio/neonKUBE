@@ -4,6 +4,7 @@
   "Environment": "development",
   "TimeSources": [ "pool.ntp.org" ],
   "DebugMode": true,
+  "AllowUnitTesting": true,
   "Hosting": {
     "Environment": "local-hyper-v",
     "VmDriveFolder": "D:\\VM"

@@ -4,6 +4,7 @@
   "Environment": "development",
   "TimeSources": [ "pool.ntp.org" ],
   "DebugMode": true,
+  "AllowUnitTesting": true,
   "Hosting": {
     "Environment": "xenserver",
     "VmHostUsername": "root",
@@ -53,7 +54,7 @@
     "manager-0": {
       "Role": "manager",
       "PrivateAddress": "10.0.0.50",
-      "VmHost":  "xentest",
+      "VmHost": "xentest",
       "VmProcessors": 4,
       "VmMemory": "8GB",
       "VmDisk": "128GB",
