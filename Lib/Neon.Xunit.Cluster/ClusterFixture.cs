@@ -60,7 +60,7 @@ namespace Xunit
     /// This fixture is pretty easy to use.  Simply have your test class inherit
     /// from <see cref="IClassFixture{ClusterFixture}"/> and add a public constructor
     /// that accepts a <see cref="ClusterFixture"/> as the only argument.  Then
-    /// you can call it's <see cref="ClusterFixture.Initialize(string, Action)"/> method within
+    /// you can call it's <see cref="Initialize(string, Action)"/> method within
     /// the constructor passing the cluster login name as well as an <see cref="Action"/>.
     /// You may also use the fixture to initialize cluster services, networks, secrets,
     /// routes, etc. within your custom action.
@@ -71,7 +71,7 @@ namespace Xunit
     /// </note>
     /// <para>
     /// The specified cluster login file must be already present on the current
-    /// machine for the current user.  The <see cref="Login(string)"/> method will
+    /// machine for the current user.  The <see cref="Initialize(string, Action)"/> method will
     /// logout from the current cluster (if any) and then login to the one specified.
     /// </para>
     /// <note>
@@ -82,20 +82,21 @@ namespace Xunit
     /// unit tests themselves.
     /// </note>
     /// <para>
-    /// This fixture provides several methods for managing the cluster state.
-    /// These may be called within the test class constructor's action method,
-    /// within the test constructor but outside of the action, or within
-    /// the test methods:
+    /// This fixture provides several methods and properties for managing the 
+    /// cluster state.  These may be called within the test class constructor's 
+    /// action method, within the test constructor but outside of the action, 
+    /// or within the test class methods:
     /// </para>
     /// <list type="table">
     /// <item>
     ///     <term><b>Misc</b></term>
     ///     <description>
-    ///     <see cref="Reset"/><br/>
+    ///     <see cref="Cluster"/><br/>
     ///     <see cref="DockerExecute(string)"/><br/>
     ///     <see cref="DockerExecute(object[])"/>
     ///     <see cref="NeonExecute(string)"/><br/>
     ///     <see cref="NeonExecute(object[])"/>
+    ///     <see cref="Reset"/><br/>
     ///     </description>
     /// </item>
     /// <item>
@@ -214,9 +215,10 @@ namespace Xunit
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy    cluster;
-        private bool            resetOnInitialize;
-        private bool            disableChecks;
+        private ClusterProxy                                cluster;
+        private bool                                        resetOnInitialize;
+        private bool                                        disableChecks;
+        private Dictionary<string, List<NodeDefinition>>    nodeGroups;
 
         /// <summary>
         /// Constructs the fixture.
@@ -361,52 +363,6 @@ namespace Xunit
         }
 
         /// <summary>
-        /// Connects the fixture to a cluster.
-        /// </summary>
-        /// <param name="login">
-        /// The cluster login, like: <b>USER@CLUSTER</b> or <c>null</c> to login
-        /// to the cluster named by the <b>NEON_TEST_CLUSTER</b> environment 
-        /// variable.
-        /// </param>
-        /// <remarks>
-        /// <note>
-        /// <para>
-        /// neonCLUSTERs do not allow the <see cref="ClusterFixture"/> to perform unit
-        /// tests by default, as a safety measure.  You can enable this before cluster
-        /// deployment by setting <see cref="ClusterDefinition.AllowUnitTesting"/><c>=true</c>
-        /// or by manually invoking this command for an existing cluster:
-        /// </para>
-        /// <code>
-        /// neon cluster set allow-unit-testing=yes
-        /// </code>
-        /// </note>
-        /// <para>
-        /// The specified <paramref name="login"/> must be already present on the current
-        /// machine for the current user.  This method will logout from the current cluster
-        /// (if any) and then login to the specified cluster.
-        /// </para>
-        /// </remarks>
-        public void Login(string login = null)
-        {
-            if (cluster != null)
-            {
-                throw new InvalidOperationException($"[{nameof(Login)}()] has already been called for this [{nameof(ClusterFixture)}].");
-            }
-
-            if (string.IsNullOrEmpty(login))
-            {
-                login = Environment.GetEnvironmentVariable("NEON_TEST_CLUSTER");
-
-                if (string.IsNullOrEmpty(login))
-                {
-                    throw new ArgumentException($"You must pass a valid cluster login name to [{nameof(ClusterFixture)}.{nameof(login)}()] or specify this as the NEON_TEST_CLUSTER environment variable.");
-                }
-            }
-
-            throw new NotImplementedException("$todo(jeff.lill)");
-        }
-
-        /// <summary>
         /// Ensures that cluster is connected.
         /// </summary>
         private void CheckCluster()
@@ -434,6 +390,55 @@ namespace Xunit
                 !loginInfo.Username.Equals(cluster.ClusterLogin.Username, StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new InvalidOperationException($"Somebody logged into [{currentClusterLogin.Login}] while tests were running.");
+            }
+        }
+
+        /// <summary>
+        /// Returns the <see cref="global::Neon.Cluster.ClusterProxy"/> for the test cluster
+        /// that can be used to get information about the cluster as well as to invoke commands
+        /// on individual cluster nodes.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// The object returned by this property has several properties that may be useful for
+        /// unit tests:
+        /// </para>
+        /// <para>
+        /// <see cref="global::Neon.Cluster.ClusterProxy.ClusterLogin"/> returns the desearialized
+        /// cluster login information, including host node and HashiCorp Vault credentials. 
+        /// <see cref="global::Neon.Cluster.ClusterProxy.Definition"/> returns the cluster
+        /// definition.  You can also access the <see cref="global::Neon.Cluster.ClusterProxy.Nodes"/>
+        /// collection to obtain <see cref="SshProxy{NodeDefinition}"/> proxies that can be used
+        /// to submit SSH commands to cluster nodes.
+        /// </para>
+        /// </remarks>
+        public ClusterProxy Cluster
+        {
+            get
+            {
+                base.CheckDisposed();
+                this.CheckCluster();
+
+                return cluster;
+            }
+        }
+
+        /// <summary>
+        /// Returns a dictionary with the cluster node groups. 
+        /// </summary>
+        public Dictionary<string, List<NodeDefinition>> NodeGroups
+        {
+            get
+            {
+                base.CheckDisposed();
+                this.CheckCluster();
+
+                if (nodeGroups != null)
+                {
+                    nodeGroups = cluster.Definition.GetNodeGroups(excludeAllGroup: true);
+                }
+
+                return nodeGroups;
             }
         }
 
