@@ -257,6 +257,30 @@ namespace Neon.Cluster
         public ProxyManager PrivateProxy { get; private set; }
 
         /// <summary>
+        /// Returns the named proxy manager.
+        /// </summary>
+        /// <param name="name">The proxy manager name (one of <b>public</b> or <b>private</b>).</param>
+        public ProxyManager GetProxyManager(string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            switch (name.ToLowerInvariant())
+            {
+                case "public":
+
+                    return PublicProxy;
+
+                case "private":
+
+                    return PrivateProxy;
+
+                default:
+
+                    throw new ArgumentException($"[{name}] is not a valid proxy name.  Specify [public] or [private].");
+            }
+        }
+
+        /// <summary>
         /// Specifies the <see cref="RunOptions"/> to use when executing commands that 
         /// include secrets.  This defaults to <see cref="RunOptions.Redact"/> for best 
         /// security but may be changed to just <see cref="RunOptions.None"/> when debugging
