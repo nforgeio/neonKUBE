@@ -384,6 +384,22 @@ namespace Xunit
         }
 
         /// <summary>
+        /// Used for derived classes that need to disable the <see cref="Reset()"/>
+        /// call on construction
+        /// </summary>
+        /// <param name="reset">Optionally calls <see cref="Reset()"/> when the reference count is zero.</param>
+        protected DockerFixture(bool reset = false)
+        {
+            if (RefCount++ == 0)
+            {
+                if (reset)
+                {
+                    Reset();
+                }
+            }
+        }
+
+        /// <summary>
         /// Finalizer.
         /// </summary>
         ~DockerFixture()
@@ -478,7 +494,7 @@ namespace Xunit
         /// </remarks>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
         /// <exception cref="InvalidOperationException">Thrown if the local Docker instance is a member of a multi-node swarm.</exception>
-        public void Reset()
+        public virtual void Reset()
         {
             // We're going to accomplish this by leaving the (one node) swarm 
             // if we're running in swarm mode and then initializing the swarm.

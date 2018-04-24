@@ -214,17 +214,21 @@ namespace Xunit
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy cluster;
-        private ClusterLogin clusterLogin;
-        
+        private ClusterProxy    cluster;
+        private bool            resetOnInitialize;
+
         /// <summary>
         /// Constructs the fixture.
         /// </summary>
         public ClusterFixture()
+            : base(reset: false)
         {
             if (RefCount++ == 0)
             {
-                Reset();
+                // We need to wait until after we've connected to the
+                // cluster before calling [Reset()].
+
+                resetOnInitialize = true;
             }
         }
 
@@ -320,6 +324,14 @@ namespace Xunit
 
             cluster = NeonClusterHelper.OpenRemoteCluster(loginPath: loginPath);
 
+            // We needed to defer the [Reset()] call until after the cluster
+            // was connected.
+
+            if (resetOnInitialize)
+            {
+                Reset();
+            }
+
             // Initialize the inherited classes.
 
             base.Initialize(action);
@@ -379,6 +391,21 @@ namespace Xunit
             if (cluster == null)
             {
                 throw new InvalidOperationException("Cluster is not connected.");
+            }
+
+            var currentClusterLogin = CurrentClusterLogin.Load();
+
+            if (currentClusterLogin == null)
+            {
+                throw new InvalidOperationException("Somebody logged out from under the test cluster while tests were running.");
+            }
+
+            var loginInfo = NeonClusterHelper.SplitLogin(currentClusterLogin.Login);
+
+            if (!loginInfo.ClusterName.Equals(cluster.ClusterLogin.ClusterName, StringComparison.InvariantCultureIgnoreCase) ||
+                !loginInfo.Username.Equals(cluster.ClusterLogin.Username, StringComparison.InvariantCultureIgnoreCase))
+            {
+                throw new InvalidOperationException($"Somebody logged into [{currentClusterLogin.Login}] while tests were running.");
             }
         }
 
@@ -500,8 +527,7 @@ namespace Xunit
         /// </note>
         /// </remarks>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
-        /// <exception cref="InvalidOperationException">Thrown if the local Docker instance is a member of a multi-node swarm.</exception>
-        public new void Reset()
+        public override void Reset()
         {
             base.CheckDisposed();
             this.CheckCluster();
