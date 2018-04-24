@@ -17,14 +17,14 @@ namespace Neon
     internal static partial class Build
     {
         /// <summary>
-        /// The company name to use for all LillTek assemblies.
+        /// The company name to use for all Neon assemblies.
         /// </summary>
         public const string Company = "NeonForge, LLC";
 
         /// <summary>
         /// The copyright statement to be included in all assemblies.
         /// </summary>
-        public const string Copyright = "Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.  All rights reserved.";
+        public const string Copyright = "Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.";
 
         /// <summary>
         /// The product statement to be included in all assemblies.

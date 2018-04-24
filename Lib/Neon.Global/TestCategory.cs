@@ -33,7 +33,7 @@ namespace Xunit.Neon
         public const string NeonCluster = "Neon.Cluster";
 
         /// <summary>
-        /// Identifies <b>Neon.Couchbase</b> test.
+        /// Identifies <b>Neon.Couchbase</b> tests.
         /// </summary>
         public const string NeonCouchbase = "Neon.Couchbase";
 
