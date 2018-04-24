@@ -52,6 +52,7 @@ SetVersion Neon.Docker
 SetVersion Neon.RabbitMQ
 SetVersion Neon.Web
 SetVersion Neon.Xunit
+SetVersion Neon.Xunit.Cluster
 SetVersion Neon.Xunit.Couchbase
 
 # Then build and publish the projects.
@@ -63,5 +64,6 @@ Publish Neon.Docker
 Publish Neon.RabbitMQ
 Publish Neon.Web
 Publish Neon.Xunit
+Publish Neon.Xunit.Cluster
 Publish Neon.Xunit.Couchbase
 pause
