@@ -69,7 +69,7 @@ namespace Neon.Web
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public NeonController()
+        protected NeonController()
         {
         }
 
@@ -79,7 +79,7 @@ namespace Neon.Web
         /// which guarantees that a valid activity ID will be returned.
         /// </summary>
         [FromHeader(Name = "X-Activity-ID")]
-        public string InternalActivityId { get; set; }
+        protected string InternalActivityId { get; set; }
 
         /// <summary>
         /// Returns the opaque globally unique activity ID for the current operation.
@@ -102,7 +102,7 @@ namespace Neon.Web
         /// ID header included in the request or a newly generated ID.
         /// </para>
         /// </remarks>
-        public string ActivityId
+        protected string ActivityId
         {
             get
             {
@@ -165,106 +165,106 @@ namespace Neon.Web
         }
 
         /// <inheritdoc/>
-        public bool IsDebugEnabled => GetLogger().IsDebugEnabled;
+        protected bool IsDebugEnabled => GetLogger().IsDebugEnabled;
 
         /// <inheritdoc/>
-        public bool IsSInfoEnabled => GetLogger().IsSInfoEnabled;
+        protected bool IsSInfoEnabled => GetLogger().IsSInfoEnabled;
 
         /// <inheritdoc/>
-        public bool IsInfoEnabled => GetLogger().IsInfoEnabled;
+        protected bool IsInfoEnabled => GetLogger().IsInfoEnabled;
 
         /// <inheritdoc/>
-        public bool IsWarnEnabled => GetLogger().IsWarnEnabled;
+        protected bool IsWarnEnabled => GetLogger().IsWarnEnabled;
 
         /// <inheritdoc/>
-        public bool IsErrorEnabled => GetLogger().IsErrorEnabled;
+        protected bool IsErrorEnabled => GetLogger().IsErrorEnabled;
 
         /// <inheritdoc/>
-        public bool IsSErrorEnabled => GetLogger().IsSErrorEnabled;
+        protected bool IsSErrorEnabled => GetLogger().IsSErrorEnabled;
 
         /// <inheritdoc/>
-        public bool IsCriticalEnabled => GetLogger().IsCriticalEnabled;
+        protected bool IsCriticalEnabled => GetLogger().IsCriticalEnabled;
 
         /// <inheritdoc/>
-        public void Critical(object message, string activityId = null)
+        protected void Critical(object message, string activityId = null)
         {
             GetLogger().LogCritical(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
-        public void Critical(object message, Exception e, string activityId = null)
+        protected void Critical(object message, Exception e, string activityId = null)
         {
             GetLogger().LogCritical(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
-        public void Debug(object message, string activityId = null)
+        protected void Debug(object message, string activityId = null)
         {
             GetLogger().LogDebug(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
-        public void Debug(object message, Exception e, string activityId = null)
+        protected void Debug(object message, Exception e, string activityId = null)
         {
             GetLogger().LogDebug(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
-        public void Error(object message, string activityId = null)
+        protected void Error(object message, string activityId = null)
         {
             GetLogger().LogError(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
-        public void Error(object message, Exception e, string activityId = null)
+        protected void Error(object message, Exception e, string activityId = null)
         {
             GetLogger().LogError(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
-        public void Info(object message, string activityId = null)
+        protected void Info(object message, string activityId = null)
         {
             GetLogger().LogInfo(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
-        public void Info(object message, Exception e, string activityId = null)
+        protected void Info(object message, Exception e, string activityId = null)
         {
             GetLogger().LogInfo(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
-        public void SError(object message, string activityId = null)
+        protected void SError(object message, string activityId = null)
         {
             GetLogger().LogSError(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
-        public void SError(object message, Exception e, string activityId = null)
+        protected void SError(object message, Exception e, string activityId = null)
         {
             GetLogger().LogSError(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
-        public void SInfo(object message, string activityId = null)
+        protected void SInfo(object message, string activityId = null)
         {
             GetLogger().LogSInfo(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
-        public void SInfo(object message, Exception e, string activityId = null)
+        protected void SInfo(object message, Exception e, string activityId = null)
         {
             GetLogger().LogSInfo(message, e, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
-        public void Warn(object message, string activityId = null)
+        protected void Warn(object message, string activityId = null)
         {
             GetLogger().LogWarn(message, activityId ?? this.ActivityId);
         }
 
         /// <inheritdoc/>
-        public void Warn(object message, Exception e, string activityId = null)
+        protected void Warn(object message, Exception e, string activityId = null)
         {
             GetLogger().LogWarn(message, e, activityId ?? this.ActivityId);
         }
