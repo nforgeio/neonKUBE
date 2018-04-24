@@ -6,6 +6,7 @@
     <RootNamespace>Text</RootNamespace>
     <LangVersion>latest</LangVersion>
     <RuntimeIdentifier>win10-x64</RuntimeIdentifier>
+    <RunPostBuildEvent>OnOutputUpdated</RunPostBuildEvent>
   </PropertyGroup>
 
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
