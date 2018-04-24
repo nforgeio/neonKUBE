@@ -11,6 +11,7 @@ using System.IO;
 using System.Linq;
 using System.Text;
 using System.Threading;
+using System.Threading.Tasks;
 
 using YamlDotNet.RepresentationModel;
 
@@ -155,9 +156,12 @@ namespace Xunit
     /// <item>
     ///     <term><b>Proxy Routes</b></term>
     ///     <description>
-    ///     <see cref="PutRoute(ProxyRoute)"/><br/>
-    ///     <see cref="ListRoutes()"/><br/>
-    ///     <see cref="RemoveRoute(string)"/>
+    ///     <see cref="PutProxyRoute(string, ProxyRoute)"/><br/>
+    ///     <see cref="ListProxyRoutes(string)"/><br/>
+    ///     <see cref="RemoveProxyRoute(string, string)"/><br/>
+    ///     <see cref="RestartProxies()"/><br/>
+    ///     <see cref="RestartPublicProxies()"/><br/>
+    ///     <see cref="RestartPrivateProxies()"/>
     ///     </description>
     /// </item>
     /// </list>
@@ -499,6 +503,9 @@ namespace Xunit
         /// <exception cref="InvalidOperationException">Thrown if the local Docker instance is a member of a multi-node swarm.</exception>
         public new void Reset()
         {
+            base.CheckDisposed();
+            this.CheckCluster();
+
             // $todo(jeff.lill):
             //
             // I'm not going to worry about removing any containers just yet.
@@ -536,7 +543,7 @@ namespace Xunit
             // $todo(jeff.lill):
             //
             // The items below can probably be deleted in parallel
-            // as a perform improvement.
+            // as a performance improvement.
 
             var secretNames = new List<string>();
 
@@ -573,6 +580,39 @@ namespace Xunit
             {
                 DockerExecute("network", "rm", networkNames.ToArray());
             }
+
+            // Remove any user proxy routes.  We're going to assume that routes
+            // with names that start with "neon-" are built-in neonCLUSTER routes
+            // and we'll leave these alone.
+
+            var deletedRoutes = false;
+
+            foreach (var route in ListProxyRoutes("public"))
+            {
+                if (!route.Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (cluster.PublicProxy.RemoveRoute(route.Name))
+                    {
+                        deletedRoutes = true;
+                    }
+                }
+            }
+
+            foreach (var route in ListProxyRoutes("private"))
+            {
+                if (!route.Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    if (cluster.PrivateProxy.RemoveRoute(route.Name))
+                    {
+                        deletedRoutes = true;
+                    }
+                }
+            }
+        
+            if (deletedRoutes)
+            {
+                RestartProxies();
+            }
         }
 
         /// <summary>
@@ -587,6 +627,9 @@ namespace Xunit
         /// <exception cref="InvalidOperationException">Thrown always.</exception>
         public new void CreateContainer(string name, string image, string[] dockerArgs = null, string[] containerArgs = null, string[] env = null)
         {
+            base.CheckDisposed();
+            this.CheckCluster();
+
             throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not support this method.");
         }
 
@@ -598,6 +641,9 @@ namespace Xunit
         /// <exception cref="InvalidOperationException">Thrown always.</exception>
         public new List<ContainerInfo> ListContainers()
         {
+            base.CheckDisposed();
+            this.CheckCluster();
+
             throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not support this method.");
         }
 
@@ -609,36 +655,106 @@ namespace Xunit
         /// <exception cref="InvalidOperationException">Thrown always.</exception>
         public new void RemoveContainer(string name)
         {
+            base.CheckDisposed();
+            this.CheckCluster();
+
             throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not support this method.");
         }
 
         /// <summary>
         /// Saves a proxy route to the cluster.
         /// </summary>
+        /// <param name="proxy">The proxy name (<b>public</b> or <b>private</b>).</param>
         /// <param name="route">The route.</param>
-        public void PutRoute(ProxyRoute route)
+        public void PutProxyRoute(string proxy, ProxyRoute route)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(proxy));
             Covenant.Requires<ArgumentNullException>(route != null);
 
-            throw new NotImplementedException();
+            base.CheckDisposed();
+            this.CheckCluster();
+
+            var proxyManager = cluster.GetProxyManager(proxy);
+
+            proxyManager.PutRoute(route);
         }
 
         /// <summary>
         /// Lists the cluster proxy routes.
         /// </summary>
-        /// <returns></returns>
-        public List<ProxyRoute> ListRoutes()
+        /// <param name="proxy">The proxy name (<b>public</b> or <b>private</b>).</param>
+        /// <returns>The routes for the named proxy.</returns>
+        public List<ProxyRoute> ListProxyRoutes(string proxy)
         {
-            throw new NotImplementedException();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(proxy));
+
+            base.CheckDisposed();
+            this.CheckCluster();
+
+            var proxyManager = cluster.GetProxyManager(proxy);
+
+            return proxyManager.ListRoutes().ToList();
         }
 
         /// <summary>
         /// Removes a proxy route.
         /// </summary>
+        /// <param name="proxy">The proxy name (<b>public</b> or <b>private</b>).</param>
         /// <param name="name">The route name.</param>
-        public void RemoveRoute(string name)
+        public void RemoveProxyRoute(string proxy, string name)
         {
-            throw new NotImplementedException();
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(proxy));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            base.CheckDisposed();
+            this.CheckCluster();
+
+            var proxyManager = cluster.GetProxyManager(proxy);
+
+            proxyManager.RemoveRoute(name);
+        }
+
+        /// <summary>
+        /// Restarts cluster proxies to ensure that they's picked up any
+        /// proxy definition changes.
+        /// </summary>
+        public void RestartProxies()
+        {
+            // We'll restart these in parallel for better performance.
+
+            var tasks = NeonHelper.WaitAllAsync(
+                Task.Run(() => RestartPublicProxies()),
+                Task.Run(() => RestartPrivateProxies()));
+
+            tasks.Wait();
+        }
+
+        /// <summary>
+        /// Restarts the <b>public</b> p[roxies to ensure that they's picked up any
+        /// proxy definition changes.
+        /// </summary>
+        public void RestartPublicProxies()
+        {
+            // $todo(jeff.lill):
+            //
+            // We probably need to restart the proxy bridge containers on all
+            // of the pets as well.
+
+            DockerExecute("service", "update", "--force", "--update-parallelism", "0", "neon-proxy-public");
+        }
+
+        /// <summary>
+        /// Restarts the <b>private</b> p[roxies to ensure that they's picked up any
+        /// proxy definition changes.
+        /// </summary>
+        public void RestartPrivateProxies()
+        {
+            // $todo(jeff.lill):
+            //
+            // We probably need to restart the proxy bridge containers on all
+            // of the pets as well.
+
+            DockerExecute("service", "update", "--force", "--update-parallelism", "0", "neon-proxy-private");
         }
     }
 }
