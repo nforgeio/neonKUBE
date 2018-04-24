@@ -102,7 +102,7 @@ namespace Xunit
     ///     <term><b>Services</b></term>
     ///     <description>
     ///     <see cref="DockerFixture.CreateService(string, string, string[], string[], string[])"/><br/>
-    ///     <see cref="DockerFixture.ListServices()"/><br/>
+    ///     <see cref="DockerFixture.ListServices(bool)"/><br/>
     ///     <see cref="DockerFixture.RemoveService(string)"/>
     ///     </description>
     /// </item>
@@ -114,7 +114,7 @@ namespace Xunit
     ///     </para>
     ///     <para>
     ///     <see cref="CreateContainer(string, string, string[], string[], string[])"/><br/>
-    ///     <see cref="ListContainers()"/><br/>
+    ///     <see cref="ListContainers(bool)"/><br/>
     ///     <see cref="RemoveContainer(string)"/>
     ///     </para>
     ///     </description>
@@ -123,7 +123,7 @@ namespace Xunit
     ///     <term><b>Stacks</b></term>
     ///     <description>
     ///     <see cref="DockerFixture.DeployStack(string, string, string[], TimeSpan, TimeSpan)"/><br/>
-    ///     <see cref="DockerFixture.ListStacks()"/><br/>
+    ///     <see cref="DockerFixture.ListStacks(bool)"/><br/>
     ///     <see cref="DockerFixture.RemoveStack(string)"/>
     ///     </description>
     /// </item>
@@ -132,7 +132,7 @@ namespace Xunit
     ///     <description>
     ///     <see cref="DockerFixture.CreateSecret(string, byte[], string[])"/><br/>
     ///     <see cref="DockerFixture.CreateSecret(string, string, string[])"/><br/>
-    ///     <see cref="DockerFixture.ListSecrets()"/><br/>
+    ///     <see cref="DockerFixture.ListSecrets(bool)"/><br/>
     ///     <see cref="DockerFixture.RemoveSecret(string)"/>
     ///     </description>
     /// </item>
@@ -141,7 +141,7 @@ namespace Xunit
     ///     <description>
     ///     <see cref="DockerFixture.CreateConfig(string, byte[], string[])"/><br/>
     ///     <see cref="DockerFixture.CreateConfig(string, string, string[])"/><br/>
-    ///     <see cref="DockerFixture.ListConfigs()"/><br/>
+    ///     <see cref="DockerFixture.ListConfigs(bool)"/><br/>
     ///     <see cref="DockerFixture.RemoveConfig(string)"/>
     ///     </description>
     /// </item>
@@ -149,7 +149,7 @@ namespace Xunit
     ///     <term><b>Networks</b></term>
     ///     <description>
     ///     <see cref="DockerFixture.CreateNetwork(string, string[])"/><br/>
-    ///     <see cref="DockerFixture.ListNetworks()"/><br/>
+    ///     <see cref="DockerFixture.ListNetworks(bool)"/><br/>
     ///     <see cref="DockerFixture.RemoveNetwork(string)"/>
     ///     </description>
     /// </item>
@@ -492,7 +492,7 @@ namespace Xunit
 
                 var neonArgs = "docker -- " + argString;
 
-                return NeonHelper.ExecuteCaptureStreams("docker", neonArgs);
+                return NeonHelper.ExecuteCaptureStreams("neon", neonArgs);
             }
         }
 
@@ -684,16 +684,17 @@ namespace Xunit
             base.CheckDisposed();
             this.CheckCluster();
 
-            throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not support this method.");
+            throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not currently support container deployment.");
         }
 
         /// <summary>
         /// <b>DO NOTE USE:</b> This inherited method from <see cref="DockerFixture"/> doesn't
         /// make sense for a multi-node cluster.
         /// </summary>
+        /// <param name="includeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="DockerFixture.ContainerInfo"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown always.</exception>
-        public new List<ContainerInfo> ListContainers()
+        public new List<ContainerInfo> ListContainers(bool includeSystem = false)
         {
             base.CheckDisposed();
             this.CheckCluster();

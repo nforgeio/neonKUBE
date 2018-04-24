@@ -51,7 +51,6 @@ services:
       replicas: 2
 ";
                     cluster.DeployStack("test-stack", composeText);
-                    cluster.CreateContainer("test-container", "alpine", containerArgs: new string[] { "sleep", "1000000" });
                     cluster.CreateNetwork("test-network");
                 });
         }
@@ -70,11 +69,11 @@ services:
 
             Assert.Single(cluster.ListServices().Where(item => item.Name == "test-service"));
 
-            Assert.Single(cluster.ListStacks().Where(item => item.Name == "test-stack"));
-            Assert.Equal(1, cluster.ListStacks().First().ServiceCount);
+            var stack = cluster.ListStacks().SingleOrDefault(item => item.Name == "test-stack");
 
-            Assert.Single(cluster.ListContainers().Where(item => item.Name == "test-container"));
-            Assert.Single(cluster.ListContainers().Where(item => item.Name.StartsWith("test-stack_sleeper.1.")));
+            Assert.NotNull(stack);
+            Assert.Equal(1, stack.ServiceCount);
+            Assert.Single(cluster.ListServices().Where(item => item.Name.Equals("test-stack_sleeper")));
         }
     }
 }

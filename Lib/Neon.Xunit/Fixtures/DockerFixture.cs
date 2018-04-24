@@ -74,7 +74,7 @@ namespace Xunit
     ///     <term><b>Services</b></term>
     ///     <description>
     ///     <see cref="CreateService(string, string, string[], string[], string[])"/><br/>
-    ///     <see cref="ListServices()"/><br/>
+    ///     <see cref="ListServices(bool)"/><br/>
     ///     <see cref="RemoveService(string)"/>
     ///     </description>
     /// </item>
@@ -82,7 +82,7 @@ namespace Xunit
     ///     <term><b>Containers</b></term>
     ///     <description>
     ///     <see cref="CreateContainer(string, string, string[], string[], string[])"/><br/>
-    ///     <see cref="ListContainers()"/><br/>
+    ///     <see cref="ListContainers(bool)"/><br/>
     ///     <see cref="RemoveContainer(string)"/>
     ///     </description>
     /// </item>
@@ -90,7 +90,7 @@ namespace Xunit
     ///     <term><b>Stacks</b></term>
     ///     <description>
     ///     <see cref="DeployStack(string, string, string[], TimeSpan, TimeSpan)"/><br/>
-    ///     <see cref="ListStacks()"/><br/>
+    ///     <see cref="ListStacks(bool)"/><br/>
     ///     <see cref="RemoveStack(string)"/>
     ///     </description>
     /// </item>
@@ -99,7 +99,7 @@ namespace Xunit
     ///     <description>
     ///     <see cref="CreateSecret(string, byte[], string[])"/><br/>
     ///     <see cref="CreateSecret(string, string, string[])"/><br/>
-    ///     <see cref="ListSecrets()"/><br/>
+    ///     <see cref="ListSecrets(bool)"/><br/>
     ///     <see cref="RemoveSecret(string)"/>
     ///     </description>
     /// </item>
@@ -108,7 +108,7 @@ namespace Xunit
     ///     <description>
     ///     <see cref="CreateConfig(string, byte[], string[])"/><br/>
     ///     <see cref="CreateConfig(string, string, string[])"/><br/>
-    ///     <see cref="ListConfigs()"/><br/>
+    ///     <see cref="ListConfigs(bool)"/><br/>
     ///     <see cref="RemoveConfig(string)"/>
     ///     </description>
     /// </item>
@@ -116,7 +116,7 @@ namespace Xunit
     ///     <term><b>Networks</b></term>
     ///     <description>
     ///     <see cref="CreateNetwork(string, string[])"/><br/>
-    ///     <see cref="ListNetworks()"/><br/>
+    ///     <see cref="ListNetworks(bool)"/><br/>
     ///     <see cref="RemoveNetwork(string)"/>
     ///     </description>
     /// </item>
@@ -227,6 +227,16 @@ namespace Xunit
             /// Returns the service name.
             /// </summary>
             public string Name { get; set; }
+
+            /// <summary>
+            /// Returns the number of replicas desired.
+            /// </summary>
+            public int ReplicasDesired { get; set; }
+
+            /// <summary>
+            /// Returns the number of replicas actually deployed.
+            /// </summary>
+            public int ReplicasDeployed { get; set; }
         }
 
         /// <summary>
@@ -358,6 +368,18 @@ namespace Xunit
             /// Returns information about the stack's services.
             /// </summary>
             public List<StackService> Services { get; private set; }
+
+            /// <summary>
+            /// Returns the service name Docker will assign to a stack service.
+            /// </summary>
+            /// <param name="service"></param>
+            /// <returns>The service name.</returns>
+            public string GetServiceName(StackService service)
+            {
+                Covenant.Requires<ArgumentException>(Services.Contains(service));
+
+                return $"{Name}_{service.Name}";
+            }
         }
 
         //---------------------------------------------------------------------
@@ -528,7 +550,7 @@ namespace Xunit
             {
                 base.CheckDisposed();
 
-                var result = NeonHelper.ExecuteCaptureStreams("docker", new object[] { "info" });
+                var result = DockerExecute(new object[] { "info" });
 
                 if (result.ExitCode != 0)
                 {
@@ -560,7 +582,7 @@ namespace Xunit
 
                     // Leave the swarm, effectively reseting all swarm state.
 
-                    result = NeonHelper.ExecuteCaptureStreams("docker", new object[] { "swarm", "leave", "--force" });
+                    result = DockerExecute(new object[] { "swarm", "leave", "--force" });
 
                     if (result.ExitCode != 0)
                     {
@@ -570,7 +592,7 @@ namespace Xunit
 
                 // Initialize swarm mode.
 
-                result = NeonHelper.ExecuteCaptureStreams("docker", new object[] { "swarm", "init" });
+                result = DockerExecute(new object[] { "swarm", "init" });
 
                 if (result.ExitCode != 0)
                 {
@@ -635,7 +657,7 @@ namespace Xunit
                 }
 
                 var argsString = NeonHelper.NormalizeExecArgs("service", "create", extraArgs.ToArray(), dockerArgs, image, serviceArgs);
-                var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                var result     = DockerExecute(argsString);
 
                 if (result.ExitCode != 0)
                 {
@@ -647,15 +669,16 @@ namespace Xunit
         /// <summary>
         /// Returns information about the current swarm services.
         /// </summary>
+        /// <param name="includeSystem">Optionally include built-in neonCLUSTER services whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ServiceInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
-        public List<ServiceInfo> ListServices()
+        public List<ServiceInfo> ListServices(bool includeSystem = false)
         {
             lock (base.SyncRoot)
             {
                 base.CheckDisposed();
 
-                var result = DockerExecute("service", "ls", "--format", "{{.ID}}~{{.Name}}");
+                var result = DockerExecute("service", "ls", "--format", "{{.ID}}~{{.Name}}~{{.Replicas}}");
 
                 if (result.ExitCode != 0)
                 {
@@ -668,13 +691,21 @@ namespace Xunit
                 {
                     foreach (var line in reader.Lines(ignoreBlank: true))
                     {
-                        var fields = line.Split('~');
+                        var fields   = line.Split('~');
+                        var replicas = fields[2].Split('/');
+
+                        if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            continue;   // Ignore built-in neonCLUSTER secrets.
+                        }
 
                         services.Add(
                             new ServiceInfo()
                             {
-                                Id   = fields[0],
-                                Name = fields[1]
+                                Id               = fields[0],
+                                Name             = fields[1],
+                                ReplicasDesired  = int.Parse(replicas[0]),
+                                ReplicasDeployed = int.Parse(replicas[1])
                             });
                     }
                 }
@@ -704,7 +735,7 @@ namespace Xunit
                 extraArgs.Add(name);
 
                 var argsString = NeonHelper.NormalizeExecArgs("service", "rm", extraArgs.ToArray());
-                var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                var result     = DockerExecute(argsString);
 
                 if (result.ExitCode != 0)
                 {
@@ -750,7 +781,7 @@ namespace Xunit
                 }
 
                 var argsString = NeonHelper.NormalizeExecArgs("run", extraArgs.ToArray(), dockerArgs, image, containerArgs);
-                var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                var result     = DockerExecute(argsString);
 
                 if (result.ExitCode != 0)
                 {
@@ -762,9 +793,10 @@ namespace Xunit
         /// <summary>
         /// Returns information about the current Docker containers.
         /// </summary>
+        /// <param name="includeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ContainerInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
-        public List<ContainerInfo> ListContainers()
+        public List<ContainerInfo> ListContainers(bool includeSystem = false)
         {
             lock (base.SyncRoot)
             {
@@ -784,6 +816,11 @@ namespace Xunit
                     foreach (var line in reader.Lines(ignoreBlank: true))
                     {
                         var fields = line.Split('~');
+
+                        if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            continue;   // Ignore built-in neonCLUSTER containers.
+                        }
 
                         containers.Add(
                             new ContainerInfo()
@@ -821,7 +858,7 @@ namespace Xunit
                 extraArgs.Add("--force");
 
                 var argsString = NeonHelper.NormalizeExecArgs("rm", extraArgs.ToArray());
-                var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                var result     = DockerExecute(argsString);
 
                 if (result.ExitCode != 0)
                 {
@@ -873,7 +910,7 @@ namespace Xunit
                     File.WriteAllText(path, composeYaml);
 
                     var argsString = NeonHelper.NormalizeExecArgs("stack", "deploy", dockerArgs, "--compose-file", path, name);
-                    var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                    var result     = DockerExecute(argsString);
 
                     if (result.ExitCode != 0)
                     {
@@ -894,26 +931,15 @@ namespace Xunit
 
                 while (true)
                 {
-                    // $hack(jeff.lill):
-                    //
-                    // We're going to look for task container names that start with:
-                    //
-                    //      STACK_SERVICE.
-                    //
-                    // to identify the stack's service tasks.
+                    var services = ListServices(includeSystem: true);
 
-                    var containers = ListContainers();
-
-                    foreach (var service in stackDefinition.Services)
+                    foreach (var stackService in stackDefinition.Services)
                     {
-                        var taskPrefix = $"{stackDefinition.Name}_{service.Name}.";
+                        var serviceName = stackDefinition.GetServiceName(stackService);
+                        var service     = services.SingleOrDefault(s => s.Name.Equals(serviceName, StringComparison.InvariantCultureIgnoreCase));
 
-                        if (containers.Count(c => c.Name.StartsWith(taskPrefix, StringComparison.InvariantCultureIgnoreCase)) < service.Replicas)
+                        if (service != null && service.ReplicasDesired < service.ReplicasDeployed)
                         {
-                            // The number of containers with names matching the service
-                            // task name prefix is less than required replicas so break
-                            // out to continue waiting for the tasks to spin up.
-
                             goto notReady;
                         }
                     }
@@ -943,9 +969,10 @@ namespace Xunit
         /// <summary>
         /// Returns information about the current swarm stacks.
         /// </summary>
+        /// <param name="includeSystem">Optionally include built-in neonCLUSTER secrets whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="StackInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
-        public List<StackInfo> ListStacks()
+        public List<StackInfo> ListStacks(bool includeSystem = false)
         {
             lock (base.SyncRoot)
             {
@@ -965,6 +992,11 @@ namespace Xunit
                     foreach (var line in reader.Lines(ignoreBlank: true))
                     {
                         var fields = line.Split('~');
+
+                        if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            continue;   // Ignore built-in neonCLUSTER secrets.
+                        }
 
                         stacks.Add(
                             new StackInfo()
@@ -1000,7 +1032,7 @@ namespace Xunit
                 extraArgs.Add(name);
 
                 var argsString = NeonHelper.NormalizeExecArgs("stack", "rm", extraArgs.ToArray());
-                var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                var result     = DockerExecute(argsString);
 
                 if (result.ExitCode != 0)
                 {
@@ -1032,7 +1064,7 @@ namespace Xunit
                     File.WriteAllText(path, secretText);
 
                     var argsString = NeonHelper.NormalizeExecArgs("secret", "create", dockerArgs, name, path);
-                    var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                    var result     = DockerExecute(argsString);
 
                     if (result.ExitCode != 0)
                     {
@@ -1065,7 +1097,7 @@ namespace Xunit
                     File.WriteAllBytes(path, secretBytes);
 
                     var argsString = NeonHelper.NormalizeExecArgs("secret", "create", dockerArgs, name, path);
-                    var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                    var result     = DockerExecute(argsString);
 
                     if (result.ExitCode != 0)
                     {
@@ -1078,9 +1110,10 @@ namespace Xunit
         /// <summary>
         /// Returns information about the current swarm secrets.
         /// </summary>
+        /// <param name="includeSystem">Optionally include built-in neonCLUSTER secrets whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="SecretInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
-        public List<SecretInfo> ListSecrets()
+        public List<SecretInfo> ListSecrets(bool includeSystem = false)
         {
             lock (base.SyncRoot)
             {
@@ -1100,6 +1133,11 @@ namespace Xunit
                     foreach (var line in reader.Lines(ignoreBlank: true))
                     {
                         var fields = line.Split('~');
+
+                        if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            continue;   // Ignore built-in neonCLUSTER secrets.
+                        }
 
                         secrets.Add(
                             new SecretInfo()
@@ -1130,7 +1168,7 @@ namespace Xunit
                 // Remove the secret.
 
                 var argsString = NeonHelper.NormalizeExecArgs("secret", "rm", name);
-                var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                var result     = DockerExecute(argsString);
 
                 if (result.ExitCode != 0)
                 {
@@ -1162,7 +1200,7 @@ namespace Xunit
                     File.WriteAllText(path, configText);
 
                     var argsString = NeonHelper.NormalizeExecArgs("config", "create", dockerArgs, name, path);
-                    var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                    var result     = DockerExecute(argsString);
 
                     if (result.ExitCode != 0)
                     {
@@ -1195,7 +1233,7 @@ namespace Xunit
                     File.WriteAllBytes(path, configBytes);
 
                     var argsString = NeonHelper.NormalizeExecArgs("config", "create", dockerArgs, name, path);
-                    var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                    var result     = DockerExecute(argsString);
 
                     if (result.ExitCode != 0)
                     {
@@ -1208,9 +1246,10 @@ namespace Xunit
         /// <summary>
         /// Returns information about the current swarm configs.
         /// </summary>
+        /// <param name="includeSystem">Optionally include built-in neonCLUSTER configs whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ConfigInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
-        public List<ConfigInfo> ListConfigs()
+        public List<ConfigInfo> ListConfigs(bool includeSystem = false)
         {
             lock (base.SyncRoot)
             {
@@ -1230,6 +1269,11 @@ namespace Xunit
                     foreach (var line in reader.Lines(ignoreBlank: true))
                     {
                         var fields = line.Split('~');
+
+                        if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            continue;   // Ignore built-in neonCLUSTER configs.
+                        }
 
                         configs.Add(
                             new ConfigInfo()
@@ -1260,7 +1304,7 @@ namespace Xunit
                 // Remove the secret.
 
                 var argsString = NeonHelper.NormalizeExecArgs("config", "rm", name);
-                var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                var result     = DockerExecute(argsString);
 
                 if (result.ExitCode != 0)
                 {
@@ -1284,7 +1328,7 @@ namespace Xunit
                 base.CheckDisposed();
 
                 var argsString = NeonHelper.NormalizeExecArgs("network", "create", dockerArgs, name);
-                var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                var result     = DockerExecute(argsString);
 
                 if (result.ExitCode != 0)
                 {
@@ -1296,6 +1340,7 @@ namespace Xunit
         /// <summary>
         /// Returns information about the current swarm networks.
         /// </summary>
+        /// <param name="includeSystem">Optionally include built-in neonCLUSTER secrets whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="NetworkInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
         /// <remarks>
@@ -1305,7 +1350,7 @@ namespace Xunit
         /// or <b>none</b> in the listed networks.
         /// </note>
         /// </remarks>
-        public List<NetworkInfo> ListNetworks()
+        public List<NetworkInfo> ListNetworks(bool includeSystem = false)
         {
             lock (base.SyncRoot)
             {
@@ -1329,6 +1374,11 @@ namespace Xunit
                         if (DockerNetworks.Contains(fields[1]))
                         {
                             continue;   // Ignore built-in Docker networks.
+                        }
+
+                        if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            continue;   // Ignore built-in neonCLUSTER networks.
                         }
 
                         networks.Add(
@@ -1373,7 +1423,7 @@ namespace Xunit
                 // Remove the secret.
 
                 var argsString = NeonHelper.NormalizeExecArgs("network", "rm", name);
-                var result     = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
+                var result     = DockerExecute(argsString);
 
                 if (result.ExitCode != 0)
                 {
