@@ -369,6 +369,20 @@ namespace Xunit
         /// </summary>
         private static int RefCount = 0;
 
+        /// <summary>
+        /// Identifies the built-in Docker networks.  These networks will not
+        /// be returned by <see cref="ListNetworks"/> and cannot be deleted.
+        /// </summary>
+        protected static HashSet<string> DockerNetworks = 
+            new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
+            {
+                "bridge",
+                "docker_gwbridge",
+                "host",
+                "ingress",
+                "none"
+            };
+
         //---------------------------------------------------------------------
         // Instance members
         
@@ -1284,6 +1298,13 @@ namespace Xunit
         /// </summary>
         /// <returns>A list of <see cref="NetworkInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <remarks>
+        /// <note>
+        /// This method <b>DOES NOT</b> include built-in Docker networks such as
+        /// <b>bridge</b>, <b>docker_gwbridge</b>, <b>host</b>, <b>ingress</b>,
+        /// or <b>none</b> in the listed networks.
+        /// </note>
+        /// </remarks>
         public List<NetworkInfo> ListNetworks()
         {
             lock (base.SyncRoot)
@@ -1305,6 +1326,11 @@ namespace Xunit
                     {
                         var fields = line.Split('~');
 
+                        if (DockerNetworks.Contains(fields[1]))
+                        {
+                            continue;   // Ignore built-in Docker networks.
+                        }
+
                         networks.Add(
                             new NetworkInfo()
                             {
@@ -1323,9 +1349,22 @@ namespace Xunit
         /// </summary>
         /// <param name="name">The network name.</param>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="NotSupportedException">Thrown for built-in Docker networks.</exception>
+        /// <remarks>
+        /// <note>
+        /// This method <b>DOES NOT</b> allow the removal of built-in Docker networks 
+        /// such as <b>bridge</b>, <b>docker_gwbridge</b>, <b>host</b>, <b>ingress</b>,
+        /// or <b>none</b> in the listed networks.
+        /// </note>
+        /// </remarks>
         public void RemoveNetwork(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            if (DockerNetworks.Contains(name))
+            {
+                throw new NotSupportedException($"Cannot remove the built-in Docker network [{name}].");
+            }
 
             lock (base.SyncRoot)
             {
