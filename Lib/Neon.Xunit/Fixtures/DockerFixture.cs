@@ -641,7 +641,7 @@ namespace Xunit
             {
                 base.CheckDisposed();
 
-                var result = DockerExecute("service", "ls", "--format", "{{.ID}}\\t{{.Name}}");
+                var result = DockerExecute("service", "ls", "--format", "{{.ID}}~{{.Name}}");
 
                 if (result.ExitCode != 0)
                 {
@@ -654,7 +654,7 @@ namespace Xunit
                 {
                     foreach (var line in reader.Lines(ignoreBlank: true))
                     {
-                        var fields = line.Split('\t');
+                        var fields = line.Split('~');
 
                         services.Add(
                             new ServiceInfo()
@@ -756,7 +756,7 @@ namespace Xunit
             {
                 base.CheckDisposed();
 
-                var result = DockerExecute("ps", "--format", "{{.ID}}\\t{{.Names}}");
+                var result = DockerExecute("ps", "--format", "{{.ID}}~{{.Names}}");
 
                 if (result.ExitCode != 0)
                 {
@@ -769,7 +769,7 @@ namespace Xunit
                 {
                     foreach (var line in reader.Lines(ignoreBlank: true))
                     {
-                        var fields = line.Split('\t');
+                        var fields = line.Split('~');
 
                         containers.Add(
                             new ContainerInfo()
@@ -937,7 +937,7 @@ namespace Xunit
             {
                 base.CheckDisposed();
 
-                var result = DockerExecute("stack", "ls", "--format", "{{.Name}}\\t{{.Services}}");
+                var result = DockerExecute("stack", "ls", "--format", "{{.Name}}~{{.Services}}");
 
                 if (result.ExitCode != 0)
                 {
@@ -950,7 +950,7 @@ namespace Xunit
                 {
                     foreach (var line in reader.Lines(ignoreBlank: true))
                     {
-                        var fields = line.Split('\t');
+                        var fields = line.Split('~');
 
                         stacks.Add(
                             new StackInfo()
@@ -1072,7 +1072,7 @@ namespace Xunit
             {
                 base.CheckDisposed();
 
-                var result = DockerExecute("secret", "ls", "--format", "{{.ID}}\\t{{.Name}}");
+                var result = DockerExecute("secret", "ls", "--format", "{{.ID}}~{{.Name}}");
 
                 if (result.ExitCode != 0)
                 {
@@ -1085,7 +1085,7 @@ namespace Xunit
                 {
                     foreach (var line in reader.Lines(ignoreBlank: true))
                     {
-                        var fields = line.Split('\t');
+                        var fields = line.Split('~');
 
                         secrets.Add(
                             new SecretInfo()
@@ -1202,7 +1202,7 @@ namespace Xunit
             {
                 base.CheckDisposed();
 
-                var result = DockerExecute("config", "ls", "--format", "{{.ID}}\\t{{.Name}}");
+                var result = DockerExecute("config", "ls", "--format", "{{.ID}}~{{.Name}}");
 
                 if (result.ExitCode != 0)
                 {
@@ -1215,7 +1215,7 @@ namespace Xunit
                 {
                     foreach (var line in reader.Lines(ignoreBlank: true))
                     {
-                        var fields = line.Split('\t');
+                        var fields = line.Split('~');
 
                         configs.Add(
                             new ConfigInfo()
@@ -1290,7 +1290,7 @@ namespace Xunit
             {
                 base.CheckDisposed();
 
-                var result = DockerExecute("network", "ls", "--format", "{{.ID}}\\t{{.Name}}");
+                var result = DockerExecute("network", "ls", "--format", "{{.ID}}~{{.Name}}");
 
                 if (result.ExitCode != 0)
                 {
@@ -1303,7 +1303,7 @@ namespace Xunit
                 {
                     foreach (var line in reader.Lines(ignoreBlank: true))
                     {
-                        var fields = line.Split('\t');
+                        var fields = line.Split('~');
 
                         networks.Add(
                             new NetworkInfo()

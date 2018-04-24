@@ -70,6 +70,22 @@ namespace Neon.Common
                     {
                         return fullPath;
                     }
+
+                    // For programs paths without an extension, we're going
+                    // to try appending ".exe" and ".cmd".
+
+                    if (string.IsNullOrEmpty(Path.GetExtension(fullPath)))
+                    {
+                        foreach (var extension in new string[] { ".exe", ".cmd" })
+                        {
+                            var testPath = fullPath + extension;
+
+                            if (File.Exists(testPath))
+                            {
+                                return testPath;
+                            }
+                        }
+                    }
                 }
                 catch
                 {

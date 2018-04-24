@@ -8,7 +8,7 @@
     <ProjectGuid>{B6A3FA8D-E93D-4458-A7BE-5CA60924AD5D}</ProjectGuid>
     <OutputType>Library</OutputType>
     <AppDesignerFolder>Properties</AppDesignerFolder>
-    <RootNamespace>Test.Neon.Cluster.net</RootNamespace>
+    <RootNamespace>TestCluster</RootNamespace>
     <AssemblyName>Test.Neon.Cluster.net</AssemblyName>
     <TargetFrameworkVersion>v4.7</TargetFrameworkVersion>
     <FileAlignment>512</FileAlignment>
@@ -33,6 +33,9 @@
     <WarningLevel>4</WarningLevel>
   </PropertyGroup>
   <ItemGroup>
+    <Reference Include="Microsoft.Extensions.DependencyInjection, Version=2.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
+      <HintPath>..\..\packages\Microsoft.Extensions.DependencyInjection.2.0.0\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.dll</HintPath>
+    </Reference>
     <Reference Include="Microsoft.Extensions.DependencyInjection.Abstractions, Version=2.0.0.0, Culture=neutral, PublicKeyToken=adb9793829ddae60, processorArchitecture=MSIL">
       <HintPath>..\..\packages\Microsoft.Extensions.DependencyInjection.Abstractions.2.0.0\lib\netstandard2.0\Microsoft.Extensions.DependencyInjection.Abstractions.dll</HintPath>
     </Reference>
@@ -69,6 +72,10 @@
     <Compile Include="Xunit\Test_ClusterFixture.cs" />
   </ItemGroup>
   <ItemGroup>
+    <ProjectReference Include="..\..\External\SSH.NET\Renci.SshNet.NETCore\Renci.SshNet.NETCore.csproj">
+      <Project>{7e6b1954-7583-4021-82da-0de9c171f2b7}</Project>
+      <Name>Renci.SshNet.NETCore</Name>
+    </ProjectReference>
     <ProjectReference Include="..\..\Lib\Neon.Cluster\Neon.Cluster.csproj">
       <Project>{c23307a1-4e5a-4b83-a8eb-90de334868c6}</Project>
       <Name>Neon.Cluster</Name>

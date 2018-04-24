@@ -216,6 +216,7 @@ namespace Xunit
 
         private ClusterProxy    cluster;
         private bool            resetOnInitialize;
+        private bool            disableChecks;
 
         /// <summary>
         /// Constructs the fixture.
@@ -322,6 +323,28 @@ namespace Xunit
                 throw new ArgumentException($"Cluster login [{login}] does not exist on the current machine and user account.");
             }
 
+            // Use [neon-cli] to login the local machine and user account to the cluster.
+            // We're going temporarily set [disableChecks=true] so [NeonExecute()] won't
+            // barf because we're not connected to the cluster yet.
+
+            try
+            {
+                disableChecks = true;
+
+                var result = NeonExecute("login", login);
+
+                if (result.ExitCode != 0)
+                {
+                    throw new NeonClusterException($"[neon login {login}] command failed: {result.ErrorText}");
+                }
+            }
+            finally
+            {
+                disableChecks = false;
+            }
+
+            // Open a proxy to the cluster.
+
             cluster = NeonClusterHelper.OpenRemoteCluster(loginPath: loginPath);
 
             // We needed to defer the [Reset()] call until after the cluster
@@ -388,6 +411,11 @@ namespace Xunit
         /// </summary>
         private void CheckCluster()
         {
+            if (disableChecks)
+            {
+                return;
+            }
+
             if (cluster == null)
             {
                 throw new InvalidOperationException("Cluster is not connected.");
