@@ -65,13 +65,18 @@ namespace Xunit
         /// including invoking the optional <see cref="Action"/>.
         /// </summary>
         /// <param name="action">The optional initialization action.</param>
+        /// <returns>
+        /// <c>true</c> if the fixture wasn't previously initialized and
+        /// this method call initialized it or <c>false</c> if the fixture
+        /// was already initialized.
+        /// </returns>
         /// <exception cref="InvalidOperationException">Thrown if this is called from within the <see cref="Action"/>.</exception>
         /// <remarks>
         /// This method works by calling the initialization methods for each
         /// of the subfixtures in the order they were added and then calling 
         /// the optional <see cref="Action"/> afterwards.
         /// </remarks>
-        public override void Initialize(Action action = null)
+        public override bool Initialize(Action action = null)
         {
             CheckDisposed();
 
@@ -82,7 +87,7 @@ namespace Xunit
 
             if (IsInitialized)
             {
-                return;
+                return false;
             }
 
             // Initialize the subfixtures.
@@ -108,6 +113,8 @@ namespace Xunit
                 InAction      = false;
                 IsInitialized = true;       // Setting this even if the action failed.
             }
+
+            return true;
         }
 
         /// <summary>
