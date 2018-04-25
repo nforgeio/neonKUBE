@@ -23,6 +23,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		buildenv.cmd = buildenv.cmd
+		global.json = global.json
 		nuget-version.txt = nuget-version.txt
 		passwords.zip = passwords.zip
 		README.md = README.md
@@ -213,7 +214,7 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Couchbase", "Lib
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Cluster", "Lib\Neon.Xunit.Cluster\Neon.Xunit.Cluster.csproj", "{167C080E-3F81-4EB7-93BD-1D8671B51835}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "Test.Neon.Cluster", "Test\Test.Neon.Cluster\Test.Neon.Cluster.csproj", "{5443E291-C0F4-4EC6-97CF-999E4B8F28BE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Cluster", "Test\Test.Neon.Cluster\Test.Neon.Cluster.csproj", "{5443E291-C0F4-4EC6-97CF-999E4B8F28BE}"
 EndProject
 Global
 	GlobalSection(SharedMSBuildProjectFiles) = preSolution
