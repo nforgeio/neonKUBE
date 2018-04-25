@@ -411,7 +411,10 @@ namespace Xunit
         /// </summary>
         public static void EnsureReset()
         {
-            new DockerFixture(Stub.Param).Reset();
+            if (RefCount > 0)
+            {
+                new DockerFixture(Stub.Param).Reset();
+            }
         }
 
         //---------------------------------------------------------------------
