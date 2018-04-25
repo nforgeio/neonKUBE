@@ -18,6 +18,29 @@ namespace Xunit
     /// fixtures, providing an easy way to compose multiple separate fixtures
     /// into a single combined fixture.
     /// </summary>
+    /// <remarks>
+    /// <note>
+    /// <para>
+    /// <b>IMPORTANT:</b> The Neon <see cref="TestFixture"/> implementation <b>DOES NOT</b>
+    /// support parallel test execution because fixtures may impact global machine state
+    /// like starting a Couchbase Docker container, modifying the local DNS <b>hosts</b>
+    /// file or managing a Docker Swarm or neonCLUSTER.
+    /// </para>
+    /// <para>
+    /// You should explicitly disable parallel execution in all test assemblies that
+    /// rely on test fixtures by adding a C# file with:
+    /// <code language="csharp">
+    /// [assembly: CollectionBehavior(DisableTestParallelization = true)]
+    /// </code>
+    /// </para>
+    /// </note>
+    /// <para>
+    /// Serrived test fixtures that modify global machine or other environmental state
+    /// must implement a <c>public static void EnsureReset()</c> method resets the state
+    /// to a reasonable default.  These will be reflected and called when the first
+    /// <see cref="TestFixture"/> is created by the test runner for every test class.
+    /// </para>
+    /// </remarks>
     /// <threadsafety instance="false"/>
     public class TestFixtureSet : TestFixture, IEnumerable<KeyValuePair<string, ITestFixture>>
     {
