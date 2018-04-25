@@ -23,6 +23,11 @@ namespace Xunit.Neon
         public const string CategoryTrait = "Category";
 
         /// <summary>
+        /// Identifies sample tests.
+        /// </summary>
+        public const string Sample = "Sample";
+
+        /// <summary>
         /// Identifies <b>Neon.Common</b> tests.
         /// </summary>
         public const string NeonCommon = "Neon.Common";

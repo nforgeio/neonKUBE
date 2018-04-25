@@ -20,24 +20,24 @@ using Neon.Common;
 namespace TestCouchbase
 {
     /// <summary>
-    /// Verify]ies that we can launch a Docker container fixture during tests.
+    /// Verifies that we can launch a Docker container fixture during tests.
     /// </summary>
     public class Test_CouchbaseFixture : IClassFixture<CouchbaseFixture>
     {
-        private CouchbaseFixture    fixture;
+        private CouchbaseFixture    couchbase;
         private NeonBucket          bucket;
 
-        public Test_CouchbaseFixture(CouchbaseFixture fixture)
+        public Test_CouchbaseFixture(CouchbaseFixture couchbase)
         {
-            this.fixture = fixture;
+            this.couchbase = couchbase;
 
-            fixture.Initialize(
+            couchbase.Initialize(
                 () =>
                 {
-                    fixture.Start();
+                    couchbase.Start();
                 });
 
-            bucket = fixture.Bucket;
+            bucket = couchbase.Bucket;
         }
 
         /// <summary>
@@ -48,7 +48,7 @@ namespace TestCouchbase
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task BasicAsync()
         {
-            fixture.Flush();
+            couchbase.Flush();
 
             await bucket.UpsertSafeAsync("hello", "world!");
             Assert.Equal("world!", await bucket.GetSafeAsync<string>("hello"));
@@ -56,13 +56,13 @@ namespace TestCouchbase
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
-        public async Task Flush()
+        public async Task FlushAsync()
         {
             var indexQuery = $"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}";
 
             // Flush and verify that the primary index was created by default.
 
-            fixture.Flush();
+            couchbase.Flush();
 
             var indexes = await bucket.QuerySafeAsync<JObject>(indexQuery);
 
@@ -81,7 +81,7 @@ namespace TestCouchbase
             await bucket.UpsertSafeAsync("hello", "world!");
             Assert.Equal("world!", await bucket.GetSafeAsync<string>("hello"));
 
-            fixture.Flush(primaryIndex: null);
+            couchbase.Flush(primaryIndex: null);
             Assert.Null(await bucket.FindSafeAsync<string>("hello"));
 
             indexes = await bucket.QuerySafeAsync<JObject>(indexQuery);
@@ -90,7 +90,7 @@ namespace TestCouchbase
             // Flush the bucket again and verify that we can specify a
             // custom primary key index namee.
 
-            fixture.Flush(primaryIndex: "idx_custom");
+            couchbase.Flush(primaryIndex: "idx_custom");
 
             indexes = await bucket.QuerySafeAsync<JObject>(indexQuery);
 
@@ -110,7 +110,7 @@ namespace TestCouchbase
 
             Assert.Equal(2, indexes.Count);     // Expecting the primary and new secondary index
 
-            fixture.Flush(primaryIndex: null);
+            couchbase.Flush(primaryIndex: null);
 
             indexes = await bucket.QuerySafeAsync<JObject>(indexQuery);
 
