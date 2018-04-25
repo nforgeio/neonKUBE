@@ -99,7 +99,12 @@ namespace Xunit
         /// is not already initialized.
         /// </summary>
         /// <param name="action">The optional initialization action.</param>
-        void Initialize(Action action = null);
+        /// <returns>
+        /// <c>true</c> if the fixture wasn't previously initialized and
+        /// this method call initialized it or <c>false</c> if the fixture
+        /// was already initialized.
+        /// </returns>
+        bool Initialize(Action action = null);
 
         /// <summary>
         /// Returns <c>true</c> if the fixture has been initialized.

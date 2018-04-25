@@ -198,8 +198,13 @@ namespace Xunit
         /// including invoking the optional <see cref="Action"/>.
         /// </summary>
         /// <param name="action">The optional initialization action.</param>
+        /// <returns>
+        /// <c>true</c> if the fixture wasn't previously initialized and
+        /// this method call initialized it or <c>false</c> if the fixture
+        /// was already initialized.
+        /// </returns>
         /// <exception cref="InvalidOperationException">Thrown if this is called from within the <see cref="Action"/>.</exception>
-        public virtual void Initialize(Action action = null)
+        public virtual bool Initialize(Action action = null)
         {
             CheckDisposed();
 
@@ -210,7 +215,7 @@ namespace Xunit
 
             if (IsInitialized)
             {
-                return;
+                return false;
             }
 
             try
@@ -223,6 +228,8 @@ namespace Xunit
                 InAction      = false;
                 IsInitialized = true;       // Setting this even if the action failed.
             }
+
+            return true;
         }
 
         /// <inheritdoc/>
