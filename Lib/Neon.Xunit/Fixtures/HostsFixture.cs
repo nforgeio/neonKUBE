@@ -249,6 +249,12 @@ namespace Xunit
             }
         }
 
+        /// <imheritdoc/>
+        public override void Reset()
+        {
+            RemoveSection(fixtureId);
+        }
+
         /// <summary>
         /// Releases all associated resources.
         /// </summary>

@@ -54,7 +54,7 @@ namespace Xunit
         /// <summary>
         /// Resets the state of any reflected fixture implementations.
         /// </summary>
-        private static void Reset()
+        private static void EnsureReset()
         {
             // Reflect the test fixture reset methods if we haven't already.
 
@@ -84,7 +84,7 @@ namespace Xunit
 
                         if (typeInfo.ImplementedInterfaces.Contains(typeof(ITestFixture)))
                         {
-                            var methodInfo = typeInfo.GetMethod("EnsureReset", BindingFlags.Public | BindingFlags.Static);
+                            var methodInfo = typeInfo.GetMethod(nameof(TestFixtureSet.EnsureReset), BindingFlags.Public | BindingFlags.Static);
 
                             if (methodInfo == null)
                             {
@@ -117,7 +117,7 @@ namespace Xunit
         }
 
         /// <summary>
-        /// Used to track whether <see cref="Reset"/> should be called when
+        /// Used to track whether <see cref="EnsureReset"/> should be called when
         /// the first test fixture is created or when the last one is disposed.
         /// </summary>
         private static int RefCount = 0;
@@ -132,7 +132,7 @@ namespace Xunit
         {
             if (RefCount++ == 0)
             {
-                Reset();
+                EnsureReset();
             }
 
             this.SyncRoot      = new object();
@@ -263,6 +263,11 @@ namespace Xunit
             {
                 GC.SuppressFinalize(this);
             }
+        }
+
+        /// <inheritdoc/>
+        public virtual void Reset()
+        {
         }
     }
 }

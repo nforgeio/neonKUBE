@@ -125,7 +125,11 @@ namespace Xunit
         /// <exception cref="KeyNotFoundException">Thrown if the named fixture does not exist.</exception>
         public ITestFixture this[string name]
         {
-            get { return nameToFixture[name]; }
+            get
+            {
+                CheckDisposed();
+                return nameToFixture[name];
+            }
         }
 
         /// <summary>
@@ -137,7 +141,11 @@ namespace Xunit
         /// <exception cref="IndexOutOfRangeException">Thrown if <paramref name="index"/> is outside the range of valid indexes.</exception>
         public ITestFixture this[int index]
         {
-            get { return fixtureList[index]; }
+            get
+            {
+                CheckDisposed();
+                return fixtureList[index];
+            }
         }
 
         /// <summary>
@@ -164,6 +172,15 @@ namespace Xunit
             }
 
             base.Dispose(disposing);
+        }
+
+        /// <inheritdoc/>
+        public override void Reset()
+        {
+            foreach (var fixture in fixtureList)
+            {
+                fixture.Reset();
+            }
         }
 
         /// <summary>

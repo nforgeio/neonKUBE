@@ -110,5 +110,10 @@ namespace Xunit
         /// Returns <c>true</c> if the fixture has been initialized.
         /// </summary>
         bool IsInitialized { get; }
+
+        /// <summary>
+        /// Resets the fixture state.
+        /// </summary>
+        void Reset();
     }
 }

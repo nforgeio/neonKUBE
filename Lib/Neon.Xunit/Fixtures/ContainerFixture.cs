@@ -155,22 +155,30 @@ namespace Xunit
         {
             if (!base.IsDisposed)
             {
-                if (ContainerId != null)
-                {
-                    try
-                    {
-                        var args   = new string[] { "rm", "--force", ContainerId };
-                        var result = NeonHelper.ExecuteCaptureStreams($"docker", args);
+                Reset();
+            }
+        }
 
-                        if (result.ExitCode != 0)
-                        {
-                            throw new Exception($"Cannot remove container [{ContainerId}.");
-                        }
-                    }
-                    finally
+        /// <inheritdoc/>
+        public override void Reset()
+        {
+            // Remove the container if it's running.
+
+            if (ContainerId != null)
+            {
+                try
+                {
+                    var args   = new string[] { "rm", "--force", ContainerId };
+                    var result = NeonHelper.ExecuteCaptureStreams($"docker", args);
+
+                    if (result.ExitCode != 0)
                     {
-                        ContainerId = null;
+                        throw new Exception($"Cannot remove container [{ContainerId}.");
                     }
+                }
+                finally
+                {
+                    ContainerId = null;
                 }
             }
         }

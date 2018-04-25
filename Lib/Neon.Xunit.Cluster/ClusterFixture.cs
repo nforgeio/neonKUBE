@@ -114,7 +114,7 @@ namespace Xunit
     ///     <b>Container functionality is not currently implemented by the fixture.</b>
     ///     </para>
     ///     <para>
-    ///     <see cref="CreateContainer(string, string, string[], string[], string[])"/><br/>
+    ///     <see cref="RunContainer(string, string, string[], string[], string[])"/><br/>
     ///     <see cref="ListContainers(bool)"/><br/>
     ///     <see cref="RemoveContainer(string)"/>
     ///     </para>
@@ -691,7 +691,7 @@ namespace Xunit
         /// <param name="containerArgs">Optional arguments to be passed to the service.</param>
         /// <param name="env">Optional environment variables to be passed to the container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <exception cref="InvalidOperationException">Thrown always.</exception>
-        public new void CreateContainer(string name, string image, string[] dockerArgs = null, string[] containerArgs = null, string[] env = null)
+        public new void RunContainer(string name, string image, string[] dockerArgs = null, string[] containerArgs = null, string[] env = null)
         {
             base.CheckDisposed();
             this.CheckCluster();

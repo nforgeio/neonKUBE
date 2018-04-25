@@ -47,7 +47,7 @@ services:
       replicas: 2
 ";
                     docker.DeployStack("test-stack", composeText);
-                    docker.CreateContainer("test-container", "alpine", containerArgs: new string[] { "sleep", "1000000" });
+                    docker.RunContainer("test-container", "alpine", containerArgs: new string[] { "sleep", "1000000" });
                     docker.CreateNetwork("test-network");
                 });
         }

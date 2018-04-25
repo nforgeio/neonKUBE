@@ -81,7 +81,7 @@ namespace Xunit
     /// <item>
     ///     <term><b>Containers</b></term>
     ///     <description>
-    ///     <see cref="CreateContainer(string, string, string[], string[], string[])"/><br/>
+    ///     <see cref="RunContainer(string, string, string[], string[], string[])"/><br/>
     ///     <see cref="ListContainers(bool)"/><br/>
     ///     <see cref="RemoveContainer(string)"/>
     ///     </description>
@@ -405,9 +405,30 @@ namespace Xunit
                 "none"
             };
 
+        /// <summary>
+        /// Called by <see cref="TestFixture"/> to ensure that the hosts file
+        /// contains no DNS records remaining after an interrupted test run.
+        /// </summary>
+        public static void EnsureReset()
+        {
+            new DockerFixture(Stub.Param).Reset();
+        }
+
         //---------------------------------------------------------------------
         // Instance members
-        
+
+        private bool ignoreDispose;
+
+        /// <summary>
+        /// Special private constructor that doesn't do reference counting
+        /// or automatically reset the fixture state.
+        /// </summary>
+        /// <param name="param">Not used.</param>
+        private DockerFixture(Stub.Value param)
+        {
+            ignoreDispose = true;
+        }
+
         /// <summary>
         /// Constructs the fixture.
         /// </summary>
@@ -451,6 +472,11 @@ namespace Xunit
         {
             if (!base.IsDisposed)
             {
+                if (ignoreDispose)
+                {
+                    return;
+                }
+
                 if (--RefCount <= 0)
                 {
                     Reset();
@@ -530,7 +556,7 @@ namespace Xunit
         /// </remarks>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
         /// <exception cref="InvalidOperationException">Thrown if the local Docker instance is a member of a multi-node swarm.</exception>
-        public virtual void Reset()
+        public override void Reset()
         {
             // We're going to accomplish this by leaving the (one node) swarm 
             // if we're running in swarm mode and then initializing the swarm.
@@ -753,7 +779,7 @@ namespace Xunit
         /// <param name="containerArgs">Optional arguments to be passed to the service.</param>
         /// <param name="env">Optional environment variables to be passed to the container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
-        public void CreateContainer(string name, string image, string[] dockerArgs = null, string[] containerArgs = null, string[] env = null)
+        public void RunContainer(string name, string image, string[] dockerArgs = null, string[] containerArgs = null, string[] env = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
