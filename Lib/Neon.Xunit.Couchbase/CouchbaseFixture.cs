@@ -22,6 +22,21 @@ namespace Xunit
     /// fixture while tests are being performed and then deletes the
     /// container when the fixture is disposed.
     /// </summary>
+    /// <remarks>
+    /// <para>
+    /// This fixture assumes that Couchbase is not currently running on the
+    /// local workstation or as a container that is not named <b>cb-test</b>.
+    /// You may see port conflict errors if either of these assumptions are
+    /// not true.
+    /// </para>
+    /// <para>
+    /// A somewhat safer but slower alternative, is to use the <see cref="DockerFixture"/>
+    /// instead and add <see cref="CouchbaseFixture"/> as a subfixture.  The 
+    /// advantage is that <see cref="DockerFixture"/> will ensure that all
+    /// (potentially conflicting) containers are removed before the Couchbase
+    /// fixture is started.
+    /// </para>
+    /// </remarks>
     public sealed class CouchbaseFixture : ContainerFixture
     {
         /// <summary>
@@ -147,19 +162,38 @@ namespace Xunit
                 retry.InvokeAsync(
                     async () =>
                     {
-                        if (!string.IsNullOrEmpty(primaryIndex))
+                        if (Bucket == null)
                         {
-                            await Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)} using gsi");
+                            Bucket = settings.OpenBucket(username, password);
                         }
-                        else
+
+                        try
                         {
-                            // Create a dummy index to ensure that the query service is ready
-                            // and then remove it.
+                            if (!string.IsNullOrEmpty(primaryIndex))
+                            {
+                                await Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)} using gsi");
+                            }
+                            else
+                            {
+                                // Create a dummy index to ensure that the query service is ready
+                                // and then remove it.
 
-                            var dummyName = "idx_couchbase_test_fixture";
+                                var dummyName = "idx_couchbase_test_fixture";
 
-                            await Bucket.QuerySafeAsync<dynamic>($"create index {CbHelper.LiteralName(dummyName)} on {CbHelper.LiteralName(Bucket.Name)} ({CbHelper.LiteralName("Field")}) using gsi");
-                            await Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(Bucket.Name)}.{CbHelper.LiteralName(dummyName)} using gsi");
+                                await Bucket.QuerySafeAsync<dynamic>($"create index {CbHelper.LiteralName(dummyName)} on {CbHelper.LiteralName(Bucket.Name)} ({CbHelper.LiteralName("Field")}) using gsi");
+                                await Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(Bucket.Name)}.{CbHelper.LiteralName(dummyName)} using gsi");
+                            }
+                        }
+                        catch
+                        {
+                            // It looks like we need to open a new bucket if the query service wasn't
+                            // ready.  We'll dispose the old bucket and set it to NULL here and then
+                            // open a fresh bucket above when the retry policy tries again.
+
+                            Bucket.Dispose();
+                            Bucket = null;
+
+                            throw;
                         }
 
                     }).Wait();
