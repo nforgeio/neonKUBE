@@ -20,7 +20,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_String : IClassFixture<ResetFixture>
+    public class Test_String
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

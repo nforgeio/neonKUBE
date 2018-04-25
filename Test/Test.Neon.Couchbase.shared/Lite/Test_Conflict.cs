@@ -31,7 +31,7 @@ using Xunit.Neon;
 
 namespace TestLiteExtensions
 {
-    public class Test_Conflict : IClassFixture<ResetFixture>
+    public class Test_Conflict
     {
         public Test_Conflict()
         {

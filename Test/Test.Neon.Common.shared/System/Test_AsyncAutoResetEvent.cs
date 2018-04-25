@@ -19,7 +19,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_AsyncAutoResetEvent : IClassFixture<ResetFixture>
+    public class Test_AsyncAutoResetEvent
     {
         private TimeSpan defaultTimeout = TimeSpan.FromSeconds(15);
 

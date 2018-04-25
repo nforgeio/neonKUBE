@@ -29,7 +29,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_Bits : IClassFixture<ResetFixture>
+    public class Test_Bits
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

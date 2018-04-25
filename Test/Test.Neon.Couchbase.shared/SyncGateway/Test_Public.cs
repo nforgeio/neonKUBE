@@ -23,7 +23,7 @@ namespace TestSyncGateway
     /// <summary>
     /// Tests the Sync Gateway public REST API.
     /// </summary>
-    public sealed class Test_Public : IClassFixture<ResetFixture>
+    public sealed class Test_Public
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]

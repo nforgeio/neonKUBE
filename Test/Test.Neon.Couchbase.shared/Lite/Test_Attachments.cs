@@ -30,7 +30,7 @@ using Xunit;
 using Xunit.Neon;
 namespace TestLiteExtensions
 {
-    public class Test_Attachments : IClassFixture<ResetFixture>
+    public class Test_Attachments
     {
         public Test_Attachments()
         {

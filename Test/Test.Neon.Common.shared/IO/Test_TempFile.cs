@@ -18,7 +18,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_TempFile : IClassFixture<ResetFixture>
+    public class Test_TempFile
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

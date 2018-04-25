@@ -20,7 +20,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_Enum : IClassFixture<ResetFixture>
+    public class Test_Enum
     {
         private enum Foo
         {

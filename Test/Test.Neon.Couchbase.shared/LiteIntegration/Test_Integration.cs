@@ -27,7 +27,7 @@ using Xunit.Neon;
 
 namespace TestLiteIntegration
 {
-    public class Test_Integration : IClassFixture<ResetFixture>
+    public class Test_Integration
     {
         public Test_Integration()
         {

@@ -30,7 +30,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_ServicesContainer : IClassFixture<ResetFixture>
+    public class Test_ServicesContainer
     {
         public interface IService1
         {

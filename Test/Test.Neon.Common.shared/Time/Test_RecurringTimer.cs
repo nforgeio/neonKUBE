@@ -21,7 +21,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_RecurringTimer : IClassFixture<ResetFixture>
+    public class Test_RecurringTimer
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

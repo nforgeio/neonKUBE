@@ -31,7 +31,7 @@ using Xunit.Neon;
 
 namespace TestLiteExtensions
 {
-    public class Test_Manager : IClassFixture<ResetFixture>
+    public class Test_Manager
     {
         public Test_Manager()
         {

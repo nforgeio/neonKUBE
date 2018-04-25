@@ -19,7 +19,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public partial class Test_EnvironmentParser : IClassFixture<ResetFixture>
+    public partial class Test_EnvironmentParser
     {
         private string Var(string name)
         {

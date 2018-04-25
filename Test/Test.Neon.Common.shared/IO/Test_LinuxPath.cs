@@ -18,7 +18,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_LinuxPath : IClassFixture<ResetFixture>
+    public class Test_LinuxPath
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

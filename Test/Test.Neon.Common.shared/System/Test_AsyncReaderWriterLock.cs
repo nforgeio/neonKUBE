@@ -19,7 +19,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_AsyncReaderWriterLock : IClassFixture<ResetFixture>
+    public class Test_AsyncReaderWriterLock
     {
         private TimeSpan    defaultTimeout = TimeSpan.FromSeconds(15);  // Maximum time to wait for a test operation to complete.
         private TimeSpan    taskWait       = TimeSpan.FromSeconds(2);   // Delay time to allow a task to start (fragile)

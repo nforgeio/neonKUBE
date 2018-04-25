@@ -18,7 +18,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_ExponentialRetryPolicy : IClassFixture<ResetFixture>
+    public class Test_ExponentialRetryPolicy
     {
         private class TransientException : Exception
         {

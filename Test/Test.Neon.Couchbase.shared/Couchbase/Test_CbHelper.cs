@@ -19,7 +19,7 @@ using Xunit.Neon;
 
 namespace TestCouchbase
 {
-    public class Test_CbHelper : IClassFixture<ResetFixture>
+    public class Test_CbHelper
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]

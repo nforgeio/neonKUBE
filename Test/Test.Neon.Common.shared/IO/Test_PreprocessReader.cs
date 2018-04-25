@@ -19,7 +19,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_PreprocessReader : IClassFixture<ResetFixture>
+    public class Test_PreprocessReader
     {
         private void SetVariables(PreprocessReader reader, KeyValuePair<string, string>[] variables)
         {

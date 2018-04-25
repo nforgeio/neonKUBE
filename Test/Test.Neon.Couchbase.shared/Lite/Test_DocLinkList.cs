@@ -32,7 +32,7 @@ using Xunit.Neon;
 
 namespace TestLiteExtensions
 {
-    public class Test_DocLinkList : IClassFixture<ResetFixture>
+    public class Test_DocLinkList
     {
         public Test_DocLinkList()
         {

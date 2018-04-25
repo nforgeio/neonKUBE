@@ -31,7 +31,7 @@ using Xunit.Neon;
 
 namespace TestLiteExtensions
 {
-    public class Test_EntityViewQuery : IClassFixture<ResetFixture>
+    public class Test_EntityViewQuery
     {
         public Test_EntityViewQuery()
         {

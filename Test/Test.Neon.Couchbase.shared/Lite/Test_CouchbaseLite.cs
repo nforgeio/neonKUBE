@@ -34,7 +34,7 @@ namespace TestLiteExtensions
     /// <summary>
     /// Couchbase Lite low-level behavior tests.
     /// </summary>
-    public class Test_CouchbaseLite : IClassFixture<ResetFixture>
+    public class Test_CouchbaseLite
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]

@@ -17,7 +17,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_TextReader : IClassFixture<ResetFixture>
+    public class Test_TextReader
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

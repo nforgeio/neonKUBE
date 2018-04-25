@@ -19,7 +19,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_NetworkCidr : IClassFixture<ResetFixture>
+    public class Test_NetworkCidr
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

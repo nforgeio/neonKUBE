@@ -19,7 +19,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_PolledTimer : IClassFixture<ResetFixture>
+    public class Test_PolledTimer : IClassFixture<TestFixture>
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

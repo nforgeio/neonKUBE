@@ -23,7 +23,7 @@ namespace TestSyncGateway
     /// <summary>
     /// Tests the Sync Gateway manager REST API.
     /// </summary>
-    public partial class Test_Manager : IClassFixture<ResetFixture>
+    public partial class Test_Manager
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]

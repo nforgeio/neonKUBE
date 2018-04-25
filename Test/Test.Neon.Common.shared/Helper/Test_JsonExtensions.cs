@@ -20,7 +20,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_JsonExtensions : IClassFixture<ResetFixture>
+    public class Test_JsonExtensions
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

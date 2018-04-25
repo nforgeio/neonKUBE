@@ -17,7 +17,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_WeakEventController : IClassFixture<ResetFixture>
+    public class Test_WeakEventController
     {
         //---------------------------------------------------------------------
         // Private types

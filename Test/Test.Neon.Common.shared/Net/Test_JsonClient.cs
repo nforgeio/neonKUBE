@@ -28,7 +28,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public partial class Test_JsonClient : IClassFixture<ResetFixture>
+    public partial class Test_JsonClient
     {
         private const string baseUri = "http://127.0.0.10:80/";
 

@@ -17,7 +17,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_BlockArray : IClassFixture<ResetFixture>
+    public class Test_BlockArray
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

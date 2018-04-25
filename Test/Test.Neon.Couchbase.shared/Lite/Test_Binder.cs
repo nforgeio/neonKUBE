@@ -31,7 +31,7 @@ using Xunit.Neon;
 
 namespace TestLiteExtensions
 {
-    public class Test_Binder : IClassFixture<ResetFixture>
+    public class Test_Binder
     {
         public Test_Binder()
         {

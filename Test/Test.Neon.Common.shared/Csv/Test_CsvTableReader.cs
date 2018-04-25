@@ -15,7 +15,7 @@ using Xunit.Neon;
 
 namespace LillTek.Common.Test
 {
-    public class Test_CsvTableReader : IClassFixture<ResetFixture>
+    public class Test_CsvTableReader
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

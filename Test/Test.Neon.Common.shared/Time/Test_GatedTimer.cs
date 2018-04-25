@@ -24,7 +24,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_GatedTimer : IClassFixture<ResetFixture>
+    public class Test_GatedTimer
     {
         GatedTimer      timer;
         private int     wait;

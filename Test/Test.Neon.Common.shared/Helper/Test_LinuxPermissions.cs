@@ -18,7 +18,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_LinuxPermissions : IClassFixture<ResetFixture>
+    public class Test_LinuxPermissions
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

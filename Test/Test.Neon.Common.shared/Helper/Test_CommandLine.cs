@@ -21,7 +21,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_CommandLine : IClassFixture<ResetFixture>
+    public class Test_CommandLine
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

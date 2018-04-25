@@ -29,7 +29,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_IEnumerableExtensions : IClassFixture<ResetFixture>
+    public class Test_IEnumerableExtensions
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

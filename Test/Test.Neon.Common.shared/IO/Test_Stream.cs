@@ -17,7 +17,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_Stream : IClassFixture<ResetFixture>
+    public class Test_Stream
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

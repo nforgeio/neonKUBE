@@ -18,7 +18,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_TlsCertificate : IClassFixture<ResetFixture>
+    public class Test_TlsCertificate
     {
         private const string TestCertPart =
 @"-----BEGIN CERTIFICATE-----

@@ -19,7 +19,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_GoTimeSpan : IClassFixture<ResetFixture>
+    public class Test_GoTimeSpan
     {
         private bool AreClose(double v1, double v2)
         {

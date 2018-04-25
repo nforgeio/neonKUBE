@@ -22,7 +22,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public partial class Test_Helper : IClassFixture<ResetFixture>
+    public partial class Test_Helper
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]

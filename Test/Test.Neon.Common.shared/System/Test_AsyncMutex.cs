@@ -20,7 +20,7 @@ using Xunit.Neon;
 
 namespace TestCommon
 {
-    public class Test_AsyncMutex : IClassFixture<ResetFixture>
+    public class Test_AsyncMutex
     {
         private TimeSpan defaultTimeout = TimeSpan.FromSeconds(15);  // Maximum time to wait for a test operation to complete.
         private const int repeatCount = 4;
