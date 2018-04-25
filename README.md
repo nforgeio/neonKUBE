@@ -127,6 +127,14 @@ Follow steps below to configure a development or test workstation.
   * Run Cmdr and configure settings.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
+32. *Temporary*: Install components required by Blazer:
+
+    a. Install .NET Core and Visual Studio Communit previews as described: [here](https://blazor.net/docs/get-started.html)
+    b. Configure the following two NuGet package sources:
+
+        https://dotnet.myget.org/F/blazor-dev/api/v3/index.json
+        https://dotnet.myget.org/F/dotnet-core/api/v3/index.json
+
 # Git Branches and Docker Image Tagging Conventions
 
 We're going to standardize on some conventions for managing source control branches and published Docker image tags.
