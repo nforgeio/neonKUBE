@@ -27,7 +27,7 @@ namespace pubcore
         /// <summary>
         /// Tool version number.
         /// </summary>
-        public const string Version = "1.3";
+        public const string Version = "1.4";
 
         /// <summary>
         /// Program entrypoint.
@@ -158,7 +158,8 @@ or:
 
                 for (int i = 0; i < tryCount; i++)
                 {
-                    var process = new Process();
+                    var process  = new Process();
+                    var sbOutput = new StringBuilder();
 
                     process.StartInfo.FileName               = "dotnet.exe";
                     process.StartInfo.Arguments              = $"publish \"{projectPath}\" -c \"{config}\" -r {runtime} --no-restore --no-dependencies";
@@ -167,8 +168,8 @@ or:
                     process.StartInfo.RedirectStandardError  = true;
                     process.StartInfo.RedirectStandardOutput = true;
 
-                    process.OutputDataReceived += (s, e) => Console.WriteLine(e.Data);
-                    process.ErrorDataReceived  += (s, e) => Console.WriteLine(e.Data);
+                    process.OutputDataReceived += (s, e) => sbOutput.AppendLine(e.Data);
+                    process.ErrorDataReceived  += (s, e) => sbOutput.AppendLine(e.Data);
 
                     if (i > 0)
                     {
@@ -182,16 +183,30 @@ or:
                     process.BeginOutputReadLine();
                     process.WaitForExit();
 
+                    // Write the output capture from the [dotnet publish ...] operation to the program
+                    // STDOUT, prefixing each line with some text so that MSBUILD/Visual Studio won't
+                    // try to interpret error/warning messages.
+
+                    using (var reader = new StringReader(sbOutput.ToString()))
+                    {
+                        for (var line = reader.ReadLine(); line != null; line = reader.ReadLine())
+                        {
+                            Console.WriteLine($"   publish: {line}");
+                        }
+                    }
+
+                    // Report any errors and handle retries.
+
                     if (process.ExitCode != 0)
                     {
                         if (i < tryCount - 1)
                         {
-                            Console.Error.WriteLine($"*** WARNING: [dotnet publish] failed with [exitcode={process.ExitCode}].  Retrying after [{delay}].");
+                            Console.Error.WriteLine($"warning: [dotnet publish] failed with [exitcode={process.ExitCode}].  Retrying after [{delay}].");
                             Thread.Sleep(delay);
                         }
                         else
                         {
-                            Console.Error.WriteLine($"*** ERROR: [dotnet publish] failed with [exitcode={process.ExitCode}].");
+                            Console.Error.WriteLine($"error: [dotnet publish] failed with [exitcode={process.ExitCode}].");
                             Environment.Exit(process.ExitCode);
                         }
                     }
@@ -223,8 +238,6 @@ or:
                         // Remove the output folder and then recreate it to ensure
                         // that all old files will be removed.
 
-Console.WriteLine($"binFolder: {binFolder}");
-Console.WriteLine($"targetDir: {targetDir}");
                         if (Directory.Exists(binFolder))
                         {
                             Directory.Delete(binFolder, recursive: true);
