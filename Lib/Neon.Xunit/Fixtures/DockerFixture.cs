@@ -123,8 +123,8 @@ namespace Xunit
     /// </list>
     /// <note>
     /// <see cref="DockerFixture"/> derives from <see cref="TestFixtureSet"/> so you can
-    /// use <see cref="TestFixtureSet.AddFixture(string, ITestFixture, Action)"/> to add
-    /// additional fixtures within your custom initialization action for advanced scenarios.
+    /// use <see cref="TestFixtureSet.AddFixture{TFixture}(string, TFixture, Action{TFixture})"/>
+    /// to add additional fixtures within your custom initialization action for advanced scenarios.
     /// </note>
     /// <para>
     /// There are two basic patterns for using this fixture.
@@ -628,13 +628,24 @@ namespace Xunit
                     throw new Exception(result.ErrorText);
                 }
 
-                // We also need to remove any running containers.
+                // We also need to remove any running containers except for
+                // any containers belonging to sub-ContainerFixtures.
+
+                var subContainerFixtureIds = new HashSet<string>();
+
+                foreach (ContainerFixture fixture in base.Children.Where(f => f is ContainerFixture))
+                {
+                    subContainerFixtureIds.Add(fixture.ContainerId);
+                }
 
                 var containerIds = new List<string>();
 
                 foreach (var container in ListContainers())
                 {
-                    containerIds.Add(container.Id);
+                    if (!subContainerFixtureIds.Contains(container.Id))
+                    {
+                        containerIds.Add(container.Id);
+                    }
                 }
 
                 if (containerIds.Count > 0)

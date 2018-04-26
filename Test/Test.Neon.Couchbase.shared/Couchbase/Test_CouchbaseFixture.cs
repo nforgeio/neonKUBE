@@ -48,7 +48,7 @@ namespace TestCouchbase
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task Basic()
         {
-            couchbase.Reset();
+            couchbase.Flush();
 
             await bucket.UpsertSafeAsync("hello", "world!");
             Assert.Equal("world!", await bucket.GetSafeAsync<string>("hello"));
@@ -62,7 +62,7 @@ namespace TestCouchbase
 
             // Flush and verify that the primary index was created by default.
 
-            couchbase.Reset();
+            couchbase.Flush();
 
             var indexes = await bucket.QuerySafeAsync<JObject>(indexQuery);
 
@@ -81,7 +81,7 @@ namespace TestCouchbase
             await bucket.UpsertSafeAsync("hello", "world!");
             Assert.Equal("world!", await bucket.GetSafeAsync<string>("hello"));
 
-            couchbase.Reset();
+            couchbase.Flush();
             Assert.Null(await bucket.FindSafeAsync<string>("hello"));
 
             indexes = await bucket.QuerySafeAsync<JObject>(indexQuery);
@@ -96,7 +96,7 @@ namespace TestCouchbase
 
             Assert.Equal(2, indexes.Count);     // Expecting the primary and new secondary index
 
-            couchbase.Reset();
+            couchbase.Flush();
 
             indexes = await bucket.QuerySafeAsync<JObject>(indexQuery);
 

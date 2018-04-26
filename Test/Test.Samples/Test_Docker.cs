@@ -35,24 +35,22 @@ namespace TestDocker
 
         public Test_Dockers(DockerFixture docker)
         {
-            bool reset;
-
             this.docker = docker;
 
-            if (reset = docker.Initialize())
-            {
-                // We're going to add a [HostsFixture] so tests can modify
-                // the local [hosts] file to customize DNS lookups.  Note
-                // that subfixtures are identified by name and can be
-                // retrieved later using a fixture indexer.
+            var reset = docker.Initialize(
+                () =>
+                {
+                    // We're going to add a [HostsFixture] so tests can modify
+                    // the local [hosts] file to customize DNS lookups.  Note
+                    // that subfixtures are identified by name and can be
+                    // retrieved later using a fixture indexer.
 
-                docker.AddFixture("hosts", new HostsFixture());
+                    docker.AddFixture("hosts", new HostsFixture());
 
-                // Add a Couchbase instance to the test.
+                    // Add a Couchbase instance to the test.
 
-                couchbase = new CouchbaseFixture();
-                docker.AddFixture("couchbase", couchbase, () => couchbase.Start());
-            }
+                    docker.AddFixture("couchbase", new CouchbaseFixture(), subFixture => subFixture.Start());
+                });
 
             // Fetch the hosts fixture so it'll be easy to access from
             // the tests.
@@ -67,7 +65,7 @@ namespace TestDocker
                 // method hasn't already done so.
 
                 docker.Reset();
-                couchbase.Reset();
+                couchbase.Flush();
             }
         }
 
@@ -75,9 +73,10 @@ namespace TestDocker
         [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
         public void SimpleContainer()
         {
-            // Confirm that Docker starts out with no running contsainers.
+            // Confirm that Docker starts out with no running containers,
+            // besides the one for the Couchbase fixture.
 
-            Assert.Empty(docker.ListContainers());
+            Assert.Empty(docker.ListContainers().Where(c => c.Name != couchbase.ContainerName));
 
             // Spin up a sleeping container and verify that it's running.
 
@@ -99,7 +98,7 @@ namespace TestDocker
             Assert.Single(docker.ListServices().Where(s => s.Name == "sleeping-service"));
         }
 
-        //[Fact]
+        [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
         public async Task HostsDbServices()
         {

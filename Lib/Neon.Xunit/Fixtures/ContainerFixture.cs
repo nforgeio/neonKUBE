@@ -52,8 +52,14 @@ namespace Xunit
         }
 
         /// <summary>
+        /// Returns the running container's name <c>null</c> if the container
+        /// has not been started.
+        /// </summary>
+        public string ContainerName { get; private set; }
+
+        /// <summary>
         /// Returns the running container's short ID or <c>null</c> if the container
-        /// is not running.
+        /// has not been started.
         /// </summary>
         public string ContainerId { get; private set; }
 
@@ -142,7 +148,8 @@ namespace Xunit
                 }
                 else
                 {
-                    ContainerId = result.OutputText.Trim().Substring(0, 12);
+                    ContainerName = name;
+                    ContainerId   = result.OutputText.Trim().Substring(0, 12);
                 }
             }
         }
@@ -173,7 +180,7 @@ namespace Xunit
 
                     if (result.ExitCode != 0)
                     {
-                        throw new Exception($"Cannot remove container [{ContainerId}.");
+                        throw new Exception($"Cannot remove container [{ContainerId}].");
                     }
                 }
                 finally

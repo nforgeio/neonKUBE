@@ -59,7 +59,7 @@ namespace TestCouchbase
             // This call ensures that the database is reset to an empty
             // state before the test runner invokes each test method.
 
-            couchbase.Reset();
+            couchbase.Flush();
         }
 
         [Fact]

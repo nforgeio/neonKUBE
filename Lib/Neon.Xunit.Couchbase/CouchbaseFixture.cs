@@ -101,7 +101,7 @@ namespace Xunit
         /// <term><b>initialize every test</b></term>
         /// <description>
         /// For scenarios where Couchbase must be cleared before every test,
-        /// you can use the <see cref="Reset()"/> method to reset its
+        /// you can use the <see cref="Flush()"/> method to reset its
         /// state within each test method, populate the database as necessary,
         /// and then perform your tests.
         /// </description>
@@ -216,7 +216,7 @@ namespace Xunit
         /// Removes all data and indexes from the database bucket and then recreates the
         /// primary index if an index was specified when the fixture was started.
         /// </summary>
-        public override void Reset()
+        public void Flush()
         {
             CheckDisposed();
 

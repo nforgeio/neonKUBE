@@ -51,21 +51,21 @@ namespace TestCouchbase
         {
             this.fixture = fixture;
 
-            fixture.AddFixture("zero", fixture0 = new Fixture0(),
-                () =>
-                {
-                    fixture0Initialized = true;
-                });
-
-            fixture.AddFixture("one", fixture1 = new Fixture1(),
-                () =>
-                {
-                    fixture1Initialized = true;
-                });
-
             fixture.Initialize(
                 () =>
                 {
+                    fixture.AddFixture("zero", fixture0 = new Fixture0(),
+                        subFixture =>
+                        {
+                            fixture0Initialized = true;
+                        });
+
+                    fixture.AddFixture("one", fixture1 = new Fixture1(),
+                        subFixture =>
+                        {
+                            fixture1Initialized = true;
+                        });
+
                     // Ensure that the subfixtures were initialized first
                     // and that their actions were called.
 

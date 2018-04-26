@@ -46,7 +46,6 @@ namespace Xunit
     {
         private Dictionary<string, ITestFixture>    nameToFixture;
         private List<ITestFixture>                  fixtureList;
-        private List<Action>                        actionList;
 
         /// <summary>
         /// Constructor.
@@ -55,7 +54,6 @@ namespace Xunit
         {
             nameToFixture = new Dictionary<string, ITestFixture>(StringComparer.InvariantCultureIgnoreCase);
             fixtureList   = new List<ITestFixture>();
-            actionList    = new List<Action>();
         }
 
         /// <summary>
@@ -70,17 +68,21 @@ namespace Xunit
         /// Adds a named <see cref="ITestFixture"/> to the set.
         /// </summary>
         /// <param name="name">The fixture name (case insenstitive).</param>
-        /// <param name="fixture">The fixture instance.</param>
+        /// <param name="subFixture">The subfixture instance.</param>
         /// <param name="action">The optional <see cref="Action"/> to be called when the fixture is initialized.</param>
-        public void AddFixture(string name, ITestFixture fixture, Action action = null)
+        public void AddFixture<TFixture>(string name, TFixture subFixture, Action<TFixture> action = null)
+            where TFixture : ITestFixture
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-            Covenant.Requires<ArgumentNullException>(fixture != null);
-            Covenant.Requires<InvalidOperationException>(!fixture.IsInitialized, "A subfixture cannot be added after it has already been initialized.");
+            Covenant.Requires<ArgumentNullException>(subFixture != null);
+            Covenant.Requires<InvalidOperationException>(!subFixture.IsInitialized, "A subfixture cannot be added after it has already been initialized.");
 
-            nameToFixture.Add(name, fixture);
-            fixtureList.Add(fixture);
-            actionList.Add(action);
+            CheckDisposed();
+            CheckWithinAction();
+
+            subFixture.Initialize(() => action?.Invoke(subFixture));
+            nameToFixture.Add(name, subFixture);
+            fixtureList.Add(subFixture);
         }
 
         /// <summary>
@@ -113,16 +115,6 @@ namespace Xunit
                 return false;
             }
 
-            // Initialize the subfixtures.
-
-            for (int i = 0; i < Count; i++)
-            {
-                var subFixture = fixtureList[i];
-                var subAction  = actionList[i];
-
-                subFixture.Initialize(subAction);
-            }
-
             // Initialize this fixture.
 
             try
@@ -138,6 +130,14 @@ namespace Xunit
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Returns the subfixtures.
+        /// </summary>
+        public IEnumerable<ITestFixture> Children
+        {
+            get { return fixtureList; }
         }
 
         /// <summary>
