@@ -23,20 +23,24 @@ namespace TestCouchbase
     {
         private static readonly string HostsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "system32", "drivers", "etc", "hosts");
 
-        public Test_HostsFixture(HostsFixture fixture)
+        private HostsFixture hosts;
+
+        public Test_HostsFixture(HostsFixture hosts)
         {
-            fixture.Initialize(
+            this.hosts = hosts;
+
+            hosts.Initialize(
                 () =>
                 {
                     // Add some entries using deferred commit.
 
-                    fixture.AddHostAddress("www.foo.com", "1.2.3.4", deferCommit: true);
-                    fixture.AddHostAddress("www.bar.com", "5.6.7.8", deferCommit: true);
-                    fixture.Commit();
+                    hosts.AddHostAddress("www.foo.com", "1.2.3.4", deferCommit: true);
+                    hosts.AddHostAddress("www.bar.com", "5.6.7.8", deferCommit: true);
+                    hosts.Commit();
 
                     // Add an entry using auto commit.
 
-                    fixture.AddHostAddress("www.foobar.com", "1.1.1.1");
+                    hosts.AddHostAddress("www.foobar.com", "1.1.1.1");
                 });
         }
 
@@ -47,6 +51,26 @@ namespace TestCouchbase
             Assert.Equal(new IPAddress[] { IPAddress.Parse("1.2.3.4") }, Dns.GetHostAddresses("www.foo.com"));
             Assert.Equal(new IPAddress[] { IPAddress.Parse("5.6.7.8") }, Dns.GetHostAddresses("www.bar.com"));
             Assert.Equal(new IPAddress[] { IPAddress.Parse("1.1.1.1") }, Dns.GetHostAddresses("www.foobar.com"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void Reset()
+        {
+            // Verify that we can reset the hosts.
+
+            hosts.Reset();
+
+            Assert.NotEqual(new IPAddress[] { IPAddress.Parse("1.2.3.4") }, Dns.GetHostAddresses("www.foo.com"));
+            Assert.NotEqual(new IPAddress[] { IPAddress.Parse("5.6.7.8") }, Dns.GetHostAddresses("www.bar.com"));
+            Assert.NotEqual(new IPAddress[] { IPAddress.Parse("1.1.1.1") }, Dns.GetHostAddresses("www.foobar.com"));
+
+            // Restore the hosts so that other tests will work.
+
+            hosts.AddHostAddress("www.foo.com", "1.2.3.4", deferCommit: true);
+            hosts.AddHostAddress("www.bar.com", "5.6.7.8", deferCommit: true);
+            hosts.AddHostAddress("www.foobar.com", "1.1.1.1", deferCommit: true);
+            hosts.Commit();
         }
     }
 }

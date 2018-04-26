@@ -74,12 +74,6 @@ namespace Xunit
         private static readonly string HostsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "system32", "drivers", "etc", "hosts");
 
         /// <summary>
-        /// Used to track how many fixture instances for the current test run
-        /// remain so we can determine when to remove all temporary DNS records.
-        /// </summary>
-        private static int RefCount = 0;
-
-        /// <summary>
         /// Called by <see cref="TestFixture"/> to ensure that the hosts file
         /// contains no DNS records remaining after an interrupted test run.
         /// </summary>
@@ -129,7 +123,10 @@ namespace Xunit
                             }
                             else
                             {
-                                sb.AppendLine(line);
+                                if (!inSection)
+                                {
+                                    sb.AppendLine(line);
+                                }
                             }
                         }
                     }
@@ -160,7 +157,6 @@ namespace Xunit
         /// </summary>
         public HostsFixture()
         {
-            RefCount++;
         }
 
         /// <summary>
@@ -241,14 +237,10 @@ namespace Xunit
         {
             if (!base.IsDisposed)
             {
-                if (--RefCount <= 0)
-                {
-                    // This was the last [HostsFixture] instance in the test run
-                    // so ensure that there are no remaining temporary records
-                    // in the hosts file.
+                // Ensure that there are no remaining temporary records
+                // in the hosts file.
 
-                    RemoveSection(fixtureId);
-                }
+                RemoveSection(fixtureId);
             }
         }
     }

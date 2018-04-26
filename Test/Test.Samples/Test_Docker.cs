@@ -64,6 +64,7 @@ namespace TestDocker
                 // Reset the fixture state if the [Initialize()]
                 // method hasn't already done so.
 
+                hosts.Reset();
                 docker.Reset();
                 couchbase.Flush();
             }
@@ -100,16 +101,17 @@ namespace TestDocker
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
-        public async Task HostsDbServices()
+        public async Task HostsDbStacks()
         {
-            // Deploy a couple of simple NodeJS based services, one listening on 
-            // port 8080 and the other on 8081.  We're also going to use the
-            // [HostsFixture] to map a couple of DNS names to the local loopback
-            // address and then use these to query the services and finally,
+            // Deploy a couple of simple NodeJS based services as stacks, one 
+            // listening on  port 8080 and the other on 8081.  We're also going
+            // to use the [HostsFixture] to map a couple of DNS names to the local 
+            // loopback address and then use these to query the services and finally,
             // we're going to do some things to Couchbase.
 
-            // Confirm that Docker starts out with no running services.
+            // Confirm that Docker starts out with no running stacks or services.
 
+            Assert.Empty(docker.ListStacks());
             Assert.Empty(docker.ListServices());
 
             // Use the [HostsFixture] to initialize a couple DNS entries and then verify that these work.
@@ -122,6 +124,76 @@ namespace TestDocker
             Assert.Equal(new IPAddress[] { IPAddress.Parse("127.0.0.1") }, Dns.GetHostAddresses("bar.com"));
 
             // Spin up a couple of NodeJS services configuring them to return
+            // different text using the OUTPUT environment variable.
+
+            var fooCompose =
+@"version: '3'
+
+services:
+  web:
+    image: neoncluster/node
+    ports:
+      - ""8080:80""
+    environment:
+      - ""OUTPUT=FOO""
+";
+            docker.DeployStack("foo-stack", fooCompose);
+
+            var barCompose =
+@"version: '3'
+
+services:
+  web:
+    image: neoncluster/node
+    ports:
+      - ""8081:80""
+    environment:
+      - ""OUTPUT=BAR""
+";
+            docker.DeployStack("bar-stack", barCompose);
+
+            // Verify that each of the services are returning the expected output.
+
+            using (var client = new HttpClient())
+            {
+                Assert.Equal("FOO", client.GetStringAsync("http://foo.com:8080").Result.Trim());
+                Assert.Equal("BAR", client.GetStringAsync("http://bar.com:8081").Result.Trim());
+            }
+
+            // Do some Couchbase operations to prove that we can.
+
+            bucket.UpsertSafeAsync("one", "1").Wait();
+            bucket.UpsertSafeAsync("two", "2").Wait();
+
+            Assert.Equal("1", await bucket.GetSafeAsync<string>("one"));
+            Assert.Equal("2", await bucket.GetSafeAsync<string>("two"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
+        public async Task HostsDbServices()
+        {
+            // Deploy a couple of simple NodeJS based services, one listening on 
+            // port 8080 and the other on 8081.  We're also going to use the
+            // [HostsFixture] to map a couple of DNS names to the local loopback
+            // address and then use these to query the services and finally,
+            // we're going to do some things to Couchbase.
+
+            // Confirm that Docker starts out with no running stacks or services.
+
+            Assert.Empty(docker.ListStacks());
+            Assert.Empty(docker.ListStacks());
+
+            // Use the [HostsFixture] to initialize a couple DNS entries and then verify that these work.
+
+            hosts.AddHostAddress("foo.com", "127.0.0.1", deferCommit: true);
+            hosts.AddHostAddress("bar.com", "127.0.0.1", deferCommit: true);
+            hosts.Commit();
+
+            Assert.Equal(new IPAddress[] { IPAddress.Parse("127.0.0.1") }, Dns.GetHostAddresses("foo.com"));
+            Assert.Equal(new IPAddress[] { IPAddress.Parse("127.0.0.1") }, Dns.GetHostAddresses("bar.com"));
+
+            // Spin up a couple of NodeJS as stacks configuring them to return
             // different text using the OUTPUT environment variable.
 
             docker.CreateService("foo", "neoncluster/node", dockerArgs: new string[] { "--publish", "8080:80" }, env: new string[] { "OUTPUT=FOO" });
@@ -142,6 +214,60 @@ namespace TestDocker
 
             Assert.Equal("1", await bucket.GetSafeAsync<string>("one"));
             Assert.Equal("2", await bucket.GetSafeAsync<string>("two"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
+        public void ManageSecrets()
+        {
+            // We should start out with no swarm secrets.
+
+            Assert.Empty(docker.ListSecrets());
+
+            // Test adding and removing a secret.
+
+            docker.CreateSecret("my-secret", "Don't tell anyone!");
+            Assert.Single(docker.ListSecrets());
+            Assert.Equal("my-secret", docker.ListSecrets().First().Name);
+
+            docker.RemoveSecret("my-secret");
+            Assert.Empty(docker.ListSecrets());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
+        public void ManageConfigs()
+        {
+            // We should start out with no swarm configs.
+
+            Assert.Empty(docker.ListConfigs());
+
+            // Test adding and removing a secret.
+
+            docker.CreateConfig("my-config", "my settings");
+            Assert.Single(docker.ListConfigs());
+            Assert.Equal("my-config", docker.ListConfigs().First().Name);
+
+            docker.RemoveConfig("my-config");
+            Assert.Empty(docker.ListConfigs());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
+        public void ManageNetworks()
+        {
+            // We should start out with no swarm networks.
+
+            Assert.Empty(docker.ListNetworks());
+
+            // Test adding and removing a network.
+
+            docker.CreateNetwork("my-network");
+            Assert.Single(docker.ListNetworks());
+            Assert.Equal("my-network", docker.ListNetworks().First().Name);
+
+            docker.RemoveNetwork("my-network");
+            Assert.Empty(docker.ListNetworks());
         }
     }
 }

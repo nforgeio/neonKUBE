@@ -247,5 +247,15 @@ namespace Xunit
                 Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
             }
         }
+
+        /// <summary>
+        /// This method completely resets the fixture by removing the Couchbase 
+        /// container from Docker.  Use <see cref="Flush"/> if you just want to clear
+        /// the database,
+        /// </summary>
+        public override void Reset()
+        {
+            base.Reset();
+        }
     }
 }

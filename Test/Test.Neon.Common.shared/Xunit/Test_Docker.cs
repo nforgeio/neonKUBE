@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_DockerFixture.cs
+// FILE:	    Test_Docker.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -17,11 +17,11 @@ using Xunit.Neon;
 
 namespace TestDocker
 {
-    public class Test_DockerFixture : IClassFixture<DockerFixture>
+    public class Test_Docker : IClassFixture<DockerFixture>
     {
         private DockerFixture docker;
 
-        public Test_DockerFixture(DockerFixture fixture)
+        public Test_Docker(DockerFixture fixture)
         {
             this.docker = fixture;
 

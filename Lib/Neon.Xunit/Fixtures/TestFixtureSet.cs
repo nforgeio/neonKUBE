@@ -200,7 +200,9 @@ namespace Xunit
         /// <inheritdoc/>
         public override void Reset()
         {
-            foreach (var fixture in fixtureList)
+            // Reset all of the subfixtures.
+
+            foreach (var fixture in fixtureList.Reverse<ITestFixture>())
             {
                 fixture.Reset();
             }
