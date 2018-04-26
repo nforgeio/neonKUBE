@@ -180,16 +180,10 @@ namespace Xunit
         /// Optionally indicates that the change will not be committed to the hosts
         /// until <see cref="Commit"/> is called.  This defaults to <c>falsae</c>.
         /// </param>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if this is not called from  within the <see cref="Action"/> method 
-        /// passed <see cref="ITestFixture.Initialize(Action)"/>
-        /// </exception>
         public void AddHostAddress(string hostname, string address, bool deferCommit = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(address));
-
-            base.CheckWithinAction();
 
             lock (base.SyncRoot)
             {
@@ -205,14 +199,8 @@ namespace Xunit
         /// <summary>
         /// Commits the DNS records to the hosts file.
         /// </summary>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if this is not called from  within the <see cref="Action"/> method 
-        /// passed <see cref="ITestFixture.Initialize(Action)"/>
-        /// </exception>
         public void Commit()
         {
-            base.CheckWithinAction();
-
             lock (base.SyncRoot)
             {
                 // Remove any existing section for this instance.
