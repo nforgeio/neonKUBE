@@ -307,8 +307,16 @@ namespace TestCommon
                             int taskIndex = (int)state;
 
                             taskInfo[taskIndex].IsRunning = true;
-                            await manualEvent.WaitAsync();
-                            taskInfo[taskIndex].IsComplete = true;
+
+                            try
+                            {
+                                await manualEvent.WaitAsync();
+                                taskInfo[taskIndex].IsComplete = true;
+                            }
+                            catch (ObjectDisposedException)
+                            {
+                                // Ignore these
+                            }
                         },
                         i).Start();
                 }

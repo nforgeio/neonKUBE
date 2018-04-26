@@ -127,8 +127,16 @@ namespace TestCommon
                             int taskIndex = (int)state;
 
                             taskInfo[taskIndex].IsRunning = true;
-                            await autoEvent.WaitAsync();
-                            taskInfo[taskIndex].IsComplete = true;
+
+                            try
+                            {
+                                await autoEvent.WaitAsync();
+                                taskInfo[taskIndex].IsComplete = true;
+                            }
+                            catch (ObjectDisposedException)
+                            {
+                                // Ignore these
+                            }
                         },
                         i).Start();
                 }
@@ -155,8 +163,16 @@ namespace TestCommon
                             int taskIndex = (int)state;
 
                             taskInfo[taskIndex].IsRunning = true;
-                            await autoEvent.WaitAsync();
-                            taskInfo[taskIndex].IsComplete = true;
+
+                            try
+                            {
+                                await autoEvent.WaitAsync();
+                                taskInfo[taskIndex].IsComplete = true;
+                            }
+                            catch (ObjectDisposedException)
+                            {
+                                // Ignore these
+                            }
                         },
                         i).Start();
                 }
@@ -182,8 +198,16 @@ namespace TestCommon
                             int taskIndex = (int)state;
 
                             taskInfo[taskIndex].IsRunning = true;
-                            await autoEvent.WaitAsync();
-                            taskInfo[taskIndex].IsComplete = true;
+
+                            try
+                            {
+                                await autoEvent.WaitAsync();
+                                taskInfo[taskIndex].IsComplete = true;
+                            }
+                            catch (ObjectDisposedException)
+                            {
+                                // Ignore these
+                            }
                         },
                         i).Start();
                 }
