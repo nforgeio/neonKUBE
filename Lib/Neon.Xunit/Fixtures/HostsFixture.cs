@@ -193,11 +193,6 @@ namespace Xunit
 
             lock (base.SyncRoot)
             {
-                if (IsInitialized)
-                {
-                    return;
-                }
-
                 records.Add(new Tuple<string, string>(hostname, address));
 
                 if (!deferCommit)
@@ -220,11 +215,6 @@ namespace Xunit
 
             lock (base.SyncRoot)
             {
-                if (IsInitialized)
-                {
-                    return;
-                }
-
                 // Remove any existing section for this instance.
 
                 RemoveSection(fixtureId);

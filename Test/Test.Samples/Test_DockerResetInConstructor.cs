@@ -7,10 +7,12 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 using System.Linq;
+using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Retry;
 
 using Xunit;
 using Xunit.Neon;
@@ -32,22 +34,25 @@ namespace TestDocker
             if (docker.Initialize())
             {
                 // We're going to add a [HostsFixture] so tests can modify
-                // the local [hosts] file to customize DNS lookups.  These
-                // subfixtures are identified by name.
+                // the local [hosts] file to customize DNS lookups.  Note
+                // that subfixtures are identified by name and can be
+                // retrieved later using a fixture indexer.
 
                 docker.AddFixture("hosts", new HostsFixture());
-
-                // This call resets the local Docker daemon state if the
-                // Initialize() call above didn't already do this.  This
-                // saves doing an extra reset for the first executed test.
-                //
-                // This call ensures that Docker state is reset before
-                // the test runner invokes each test.
+            }
+            else
+            {
+                // Reset the fixture state.  We could have done this down
+                // below (outside of the IF statement), but doing this here
+                // will be a bit faster for the first test method invoked,
+                // because [Initialize()] already resets the fixture 
+                // the first time it's called for the test class.
 
                 docker.Reset();
             }
 
-            // Fetch the hosts fixture so the test methods can use it.
+            // Fetch the hosts fixture so it'll be easy to access from
+            // the tests.
 
             hosts = (HostsFixture)docker["hosts"];
         }
@@ -60,10 +65,10 @@ namespace TestDocker
 
             Assert.Empty(docker.ListContainers());
 
-            // Spin up a do-nothing service and verify that it's running.
+            // Spin up a sleeping container and verify that it's running.
 
-            docker.RunContainer("nothing-container", "alpine", containerArgs: new string[] { "sleep", "10000000" });
-            Assert.Single(docker.ListContainers().Where(s => s.Name == "nothing-container"));
+            docker.RunContainer("sleeping-container", "alpine", containerArgs: new string[] { "sleep", "10000000" });
+            Assert.Single(docker.ListContainers().Where(s => s.Name == "sleeping-container"));
         }
 
         [Fact]
@@ -74,10 +79,38 @@ namespace TestDocker
 
             Assert.Empty(docker.ListServices());
 
-            // Spin up a do-nothing service and verify that it's running.
+            // Spin up a sleeping service and verify that it's running.
 
-            docker.CreateService("nothing-service", "alpine", serviceArgs: new string[] { "sleep", "10000000" });
-            Assert.Single(docker.ListServices().Where(s => s.Name == "nothing-service"));
+            docker.CreateService("sleeping-service", "alpine", serviceArgs: new string[] { "sleep", "10000000" });
+            Assert.Single(docker.ListServices().Where(s => s.Name == "sleeping-service"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
+        public void HostsAndServices()
+        {
+            // Deploy a couple of simple NodeJS based services, one listening on 
+            // port 8080 and the other on 8081.  We're also going to use the
+            // [HostsFixture] to map a couple of DNS names to the local loopback
+            // address and then use these to query the services.
+
+            // Confirm that Docker starts out with no running services.
+
+            Assert.Empty(docker.ListServices());
+
+            // Spinup a couple of NodeJS services configuring them to return
+            // different string using the OUTPUT environment variable.
+
+            docker.CreateService("foo", "neoncluster/node", dockerArgs: new string[] { "--publish", "8080:80" }, env: new string[] { "OUTPUT=FOO" });
+            docker.CreateService("bar", "neoncluster/node", dockerArgs: new string[] { "--publish", "8081:80" }, env: new string[] { "OUTPUT=BAR" });
+
+            using (var client = new HttpClient())
+            {
+                // Verify that each of the services are returning the expected output.
+
+                Assert.Equal("FOO", client.GetStringAsync("http://foo.com:8080").Result);
+                Assert.Equal("BAR", client.GetStringAsync("http://bar.com:8081").Result);
+            }
         }
     }
 }
