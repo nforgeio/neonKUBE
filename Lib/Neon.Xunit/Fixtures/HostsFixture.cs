@@ -176,6 +176,12 @@ namespace Xunit
         /// Optionally indicates that the change will not be committed to the hosts
         /// until <see cref="Commit"/> is called.  This defaults to <c>falsae</c>.
         /// </param>
+        /// <remarks>
+        /// <note>
+        /// This method will not add the duplicate hostname/address mappings
+        /// to the fixture.
+        /// </note>
+        /// </remarks>
         public void AddHostAddress(string hostname, string address, bool deferCommit = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
@@ -183,6 +189,15 @@ namespace Xunit
 
             lock (base.SyncRoot)
             {
+                foreach (var record in records)
+                {
+                    if (record.Item1.Equals(hostname, StringComparison.InvariantCultureIgnoreCase) &&
+                        record.Item2.Equals(address, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        return;     // Don't add a duplicate record.
+                    }
+                }
+
                 records.Add(new Tuple<string, string>(hostname, address));
 
                 if (!deferCommit)
