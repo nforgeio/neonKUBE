@@ -168,8 +168,8 @@ namespace Xunit
     /// </list>
     /// <note>
     /// <see cref="ClusterFixture"/> derives from <see cref="TestFixtureSet"/> so you can
-    /// use <see cref="TestFixtureSet.AddFixture(string, ITestFixture, Action)"/> to add
-    /// additional fixtures within your custom initialization action for advanced scenarios.
+    /// use <see cref="TestFixtureSet.AddFixture{TFixture}(string, TFixture, Action{TFixture})"/> 
+    /// to add additional fixtures within your custom initialization action for advanced scenarios.
     /// </note>
     /// <para>
     /// There are two basic patterns for using this fixture.
