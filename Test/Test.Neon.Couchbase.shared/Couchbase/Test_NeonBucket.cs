@@ -43,7 +43,7 @@ namespace TestCouchbase
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
-        public async Task BasicAsync()
+        public async Task Basic()
         {
             // Basic test to verify that we can put/get/remove a document.
 
@@ -90,7 +90,7 @@ namespace TestCouchbase
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task DurabilityOverrides()
         {
-            fixture.Flush();
+            fixture.Reset();
 
             // Verify that the NeonBucket durability overrides work.  We're going
             // to be modifying the DEV_WORKSTATION environment variable so we

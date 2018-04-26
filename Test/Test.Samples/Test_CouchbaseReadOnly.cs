@@ -68,7 +68,7 @@ namespace TestCouchbase
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
-        public async Task OneAsync()
+        public async Task One()
         {
             Assert.Equal("1", await bucket.GetSafeAsync<string>("one"));
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("not-present"));
@@ -76,7 +76,7 @@ namespace TestCouchbase
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
-        public async Task TwoAsync()
+        public async Task Two()
         {
             Assert.Equal("2", await bucket.GetSafeAsync<string>("two"));
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("not-present"));

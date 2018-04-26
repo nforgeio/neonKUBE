@@ -58,11 +58,11 @@ namespace TestCouchbase
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
-        public async Task OneAsync()
+        public async Task One()
         {
             // Ensure that the database starts out empty.
 
-            couchbase.Flush();
+            couchbase.Reset();
 
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("one"));
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("two"));
@@ -74,7 +74,7 @@ namespace TestCouchbase
 
             // Do another flush just for fun.
 
-            couchbase.Flush();
+            couchbase.Reset();
 
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("one"));
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("two"));
@@ -82,11 +82,11 @@ namespace TestCouchbase
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
-        public async Task TwoAsync()
+        public async Task Two()
         {
             // Ensure that the database starts out empty.
 
-            couchbase.Flush();
+            couchbase.Reset();
 
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("one"));
             await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("two"));

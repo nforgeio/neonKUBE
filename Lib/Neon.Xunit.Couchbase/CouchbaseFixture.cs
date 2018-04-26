@@ -39,6 +39,8 @@ namespace Xunit
     /// </remarks>
     public sealed class CouchbaseFixture : ContainerFixture
     {
+        private string primaryIndex;
+
         /// <summary>
         /// Constructs the fixture.
         /// </summary>
@@ -99,7 +101,7 @@ namespace Xunit
         /// <term><b>initialize every test</b></term>
         /// <description>
         /// For scenarios where Couchbase must be cleared before every test,
-        /// you can use the <see cref="Flush(string)"/> method to reset its
+        /// you can use the <see cref="Reset()"/> method to reset its
         /// state within each test method, populate the database as necessary,
         /// and then perform your tests.
         /// </description>
@@ -157,8 +159,6 @@ namespace Xunit
                 var timeout = TimeSpan.FromMinutes(2);
                 var retry   = new LinearRetryPolicy(TransientDetector.Always, maxAttempts: (int)timeout.TotalSeconds, retryInterval: TimeSpan.FromSeconds(1));
 
-                primaryIndex = null;
-
                 retry.InvokeAsync(
                     async () =>
                     {
@@ -197,6 +197,8 @@ namespace Xunit
                         }
 
                     }).Wait();
+
+                this.primaryIndex = primaryIndex;
             }
         }
 
@@ -212,22 +214,9 @@ namespace Xunit
 
         /// <summary>
         /// Removes all data and indexes from the database bucket and then recreates the
-        /// primary index by default.
+        /// primary index if an index was specified when the fixture was started.
         /// </summary>
-        /// <param name="primaryIndex">
-        /// Optionally override the name of the bucket's primary index or disable
-        /// primary index creation by passing <c>null</c>.  This defaults to
-        /// <b>idx_primary</b>.
-        /// </param>
-        /// <remarks>
-        /// <para>
-        /// This method creates a primary index named <b>idx_primary</b> by default because
-        /// its very common for unit test to require a primary index.  You can change the
-        /// name of the index via the <paramref name="primaryIndex"/> parameter or you
-        /// can disable primary index creation by passing <c>null</c>.
-        /// </para>
-        /// </remarks>
-        public void Flush(string primaryIndex = "idx_primary")
+        public override void Reset()
         {
             CheckDisposed();
 

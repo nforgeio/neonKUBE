@@ -46,9 +46,9 @@ namespace TestCouchbase
         /// </summary>
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
-        public async Task BasicAsync()
+        public async Task Basic()
         {
-            couchbase.Flush();
+            couchbase.Reset();
 
             await bucket.UpsertSafeAsync("hello", "world!");
             Assert.Equal("world!", await bucket.GetSafeAsync<string>("hello"));
@@ -56,13 +56,13 @@ namespace TestCouchbase
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
-        public async Task FlushAsync()
+        public async Task Flush()
         {
             var indexQuery = $"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}";
 
             // Flush and verify that the primary index was created by default.
 
-            couchbase.Flush();
+            couchbase.Reset();
 
             var indexes = await bucket.QuerySafeAsync<JObject>(indexQuery);
 
@@ -81,25 +81,11 @@ namespace TestCouchbase
             await bucket.UpsertSafeAsync("hello", "world!");
             Assert.Equal("world!", await bucket.GetSafeAsync<string>("hello"));
 
-            couchbase.Flush(primaryIndex: null);
+            couchbase.Reset();
             Assert.Null(await bucket.FindSafeAsync<string>("hello"));
 
             indexes = await bucket.QuerySafeAsync<JObject>(indexQuery);
             Assert.Empty(indexes);
-
-            // Flush the bucket again and verify that we can specify a
-            // custom primary key index namee.
-
-            couchbase.Flush(primaryIndex: "idx_custom");
-
-            indexes = await bucket.QuerySafeAsync<JObject>(indexQuery);
-
-            Assert.Single(indexes);
-
-            index = (JObject)indexes.First().GetValue("indexes");
-
-            Assert.True((bool)index.GetValue("is_primary"));
-            Assert.Equal("idx_custom", (string)index.GetValue("name"));
 
             // Create a secondary index and verify that it along with the
             // primary index are deleted during a flush.
@@ -110,7 +96,7 @@ namespace TestCouchbase
 
             Assert.Equal(2, indexes.Count);     // Expecting the primary and new secondary index
 
-            couchbase.Flush(primaryIndex: null);
+            couchbase.Reset();
 
             indexes = await bucket.QuerySafeAsync<JObject>(indexQuery);
 

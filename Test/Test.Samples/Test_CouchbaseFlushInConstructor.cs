@@ -59,12 +59,12 @@ namespace TestCouchbase
             // This call ensures that the database is reset to an empty
             // state before the test runner invokes each test method.
 
-            couchbase.Flush();
+            couchbase.Reset();
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
-        public async Task OneAsync()
+        public async Task One()
         {
             // Ensure that the database starts out empty (because we flushed it in the constructor).
 
@@ -79,7 +79,7 @@ namespace TestCouchbase
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
-        public async Task TwoAsync()
+        public async Task Two()
         {
             // Ensure that the database starts out empty (because we flushed it in the constructor).
 
