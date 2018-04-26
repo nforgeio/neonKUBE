@@ -74,9 +74,7 @@ namespace TestCouchbase
             Assert.Equal("idx_primary", (string)index.GetValue("name"));
 
             // Write some data, verify that it was written then flush
-            // the bucket and verify that the data is gone.  We're also
-            // going to disable creation of the default primary index 
-            // and then verify that it was not created.
+            // the bucket and verify that the data is gone.
 
             await bucket.UpsertSafeAsync("hello", "world!");
             Assert.Equal("world!", await bucket.GetSafeAsync<string>("hello"));
@@ -84,11 +82,7 @@ namespace TestCouchbase
             couchbase.Flush();
             Assert.Null(await bucket.FindSafeAsync<string>("hello"));
 
-            indexes = await bucket.QuerySafeAsync<JObject>(indexQuery);
-            Assert.Empty(indexes);
-
-            // Create a secondary index and verify that it along with the
-            // primary index are deleted during a flush.
+            // Create a secondary index and verify.
 
             await bucket.QuerySafeAsync<dynamic>($"create index idx_foo on {CbHelper.LiteralName(bucket.Name)} ( {CbHelper.LiteralName("Test")} )");
 
@@ -96,11 +90,19 @@ namespace TestCouchbase
 
             Assert.Equal(2, indexes.Count);     // Expecting the primary and new secondary index
 
+            // Flush the database and then verify that only the
+            // recreated primary index exists.
+
             couchbase.Flush();
 
             indexes = await bucket.QuerySafeAsync<JObject>(indexQuery);
 
-            Assert.Empty(indexes);
+            Assert.Single(indexes);
+
+            index = (JObject)indexes.First().GetValue("indexes");
+
+            Assert.True((bool)index.GetValue("is_primary"));
+            Assert.Equal("idx_primary", (string)index.GetValue("name"));
         }
     }
 }
