@@ -4,7 +4,7 @@
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Xunit</RootNamespace>
     <PackageId>Neon.Xunit.Cluster</PackageId>
-    <Version>6.3.13.0</Version>
+    <Version>6.3.14.0</Version>
     <Authors>neonFORGE, LLC</Authors>
     <Product>neonCLUSTER</Product>
     <Description>neonCLUSTER unit testing helpers.</Description>
