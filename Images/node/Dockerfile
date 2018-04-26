@@ -12,12 +12,9 @@
 FROM        node:alpine
 MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
-ARG         TINI_VERSION
 
 COPY docker-entrypoint.sh   /
 COPY program.js             /
-
-ADD https://github.com/krallin/tini/releases/download/${TINI_VERSION}/tini /tini
 
 RUN chmod 700 /docker-entrypoint.sh \
     && apk add --update tini \
@@ -27,3 +24,4 @@ RUN chmod 700 /docker-entrypoint.sh \
 EXPOSE 80
 
 ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
+
