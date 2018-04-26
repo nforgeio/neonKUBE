@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_Dockers.cs
+// FILE:	    Test_Docker.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -26,14 +26,14 @@ namespace TestSamples
     // more complex test scenarios that deploy containers, services, databases,
     // and manage Docker swarm state.
 
-    public class Test_Dockers : IClassFixture<DockerFixture>
+    public class Test_Docker : IClassFixture<DockerFixture>
     {
         private DockerFixture       docker;
         private HostsFixture        hosts;
         private CouchbaseFixture    couchbase;
         private NeonBucket          bucket;         
 
-        public Test_Dockers(DockerFixture docker)
+        public Test_Docker(DockerFixture docker)
         {
             this.docker = docker;
 

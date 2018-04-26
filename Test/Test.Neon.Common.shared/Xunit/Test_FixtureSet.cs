@@ -16,7 +16,7 @@ using Neon.Common;
 using Xunit;
 using Xunit.Neon;
 
-namespace TestCouchbase
+namespace TestCommon
 {
     /// <summary>
     /// Verify that a test fixture composed of other fixtures works.

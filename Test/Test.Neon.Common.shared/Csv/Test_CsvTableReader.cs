@@ -13,7 +13,7 @@ using Neon.Csv;
 using Xunit;
 using Xunit.Neon;
 
-namespace LillTek.Common.Test
+namespace TestCommon
 {
     public class Test_CsvTableReader
     {

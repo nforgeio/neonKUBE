@@ -15,7 +15,7 @@ using Neon.Common;
 using Xunit;
 using Xunit.Neon;
 
-namespace TestCouchbase
+namespace TestCommon
 {
     /// <summary>
     // Verify that we can launch a Docker container fixture during tests.

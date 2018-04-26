@@ -17,7 +17,7 @@ using Neon.Common;
 using Xunit;
 using Xunit.Neon;
 
-namespace TestCouchbase
+namespace TestCommon
 {
     public class Test_HostsFixture : IClassFixture<HostsFixture>
     {
@@ -71,6 +71,33 @@ namespace TestCouchbase
             hosts.AddHostAddress("www.bar.com", "5.6.7.8", deferCommit: true);
             hosts.AddHostAddress("www.foobar.com", "1.1.1.1", deferCommit: true);
             hosts.Commit();
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void NoDuplicates()
+        {
+            // Ensure that duplicate host/IP mappings are iognored and are 
+            // not added to the fixture.
+
+            try
+            {
+                hosts.Reset();
+                hosts.AddHostAddress("www.foobar.com", "1.1.1.1");
+                hosts.AddHostAddress("www.foobar.com", "1.1.1.1");
+
+                Assert.Equal(new IPAddress[] { IPAddress.Parse("1.1.1.1") }, Dns.GetHostAddresses("www.foobar.com"));
+            }
+            finally
+            {
+                // Restore the hosts so the remaining tests won't be impacted.
+
+                hosts.Reset();
+                hosts.AddHostAddress("www.foo.com", "1.2.3.4", deferCommit: true);
+                hosts.AddHostAddress("www.bar.com", "5.6.7.8", deferCommit: true);
+                hosts.AddHostAddress("www.foobar.com", "1.1.1.1", deferCommit: true);
+                hosts.Commit();
+            }
         }
     }
 }
