@@ -11,10 +11,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Owin;
-using Microsoft.Owin;
-using Microsoft.Owin.Hosting;
-
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -36,36 +32,32 @@ namespace TestCommon
         {
             // Ensure that DELETE returning an explict type works.
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
-                        {
-                            var request  = context.Request;
-                            var response = context.Response;
+                    var request  = context.Request;
+                    var response = context.Response;
 
-                            if (request.Method != "DELETE")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                                return Task.Delay(0);
-                            }
+                    if (request.Method != "DELETE")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return;
+                    }
 
-                            if (request.Path.ToString() != "/info")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.NotFound;
-                                return Task.Delay(0);
-                            }
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
 
-                            var output = new ReplyDoc()
-                                {
-                                    Value1 = "Hello World!"
-                                };
+                    var output = new ReplyDoc()
+                    {
+                        Value1 = "Hello World!"
+                    };
 
-                            response.ContentType = "application/json";
+                    response.ContentType = "application/json";
 
-                            return response.WriteAsync(NeonHelper.JsonSerialize(output));
-                        });
+                    response.Write(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -78,7 +70,7 @@ namespace TestCommon
 
                     Assert.Equal("Hello World!", reply.Value1);
                 }
-            };
+            }
         }
 
         [Fact]
@@ -87,36 +79,32 @@ namespace TestCommon
         {
             // Ensure that DELETE returning a non-JSON content type returns a NULL document.
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    if (request.Method != "DELETE")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return;
+                    }
+
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    var output = new ReplyDoc()
                         {
-                            var request  = context.Request;
-                            var response = context.Response;
+                            Value1 = "Hello World!"
+                        };
 
-                            if (request.Method != "DELETE")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                                return Task.Delay(0);
-                            }
+                    response.ContentType = "application/not-json";
 
-                            if (request.Path.ToString() != "/info")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.NotFound;
-                                return Task.Delay(0);
-                            }
-
-                            var output = new ReplyDoc()
-                                {
-                                    Value1 = "Hello World!"
-                                };
-
-                            response.ContentType = "application/not-json";
-
-                            return response.WriteAsync(NeonHelper.JsonSerialize(output));
-                        });
+                    response.Write(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -125,7 +113,7 @@ namespace TestCommon
 
                     Assert.Null(reply);
                 }
-            };
+            }
         }
 
         [Fact]
@@ -134,37 +122,33 @@ namespace TestCommon
         {
             // Ensure that DELETE with query arguments work.
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    if (request.Method != "DELETE")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return;
+                    }
+
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    var output = new ReplyDoc()
                         {
-                            var request  = context.Request;
-                            var response = context.Response;
+                            Value1 = request.QueryGet("arg1"),
+                            Value2 = request.QueryGet("arg2")
+                        };
 
-                            if (request.Method != "DELETE")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                                return Task.Delay(0);
-                            }
+                    response.ContentType = "application/json";
 
-                            if (request.Path.ToString() != "/info")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.NotFound;
-                                return Task.Delay(0);
-                            }
-
-                            var output = new ReplyDoc()
-                                {
-                                    Value1 = request.Query.Get("arg1"),
-                                    Value2 = request.Query.Get("arg2")
-                                };
-
-                            response.ContentType = "application/json";
-
-                            return response.WriteAsync(NeonHelper.JsonSerialize(output));
-                        });
+                    response.Write(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -174,7 +158,7 @@ namespace TestCommon
                     Assert.Equal("test1", reply.Value1);
                     Assert.Equal("test2", reply.Value2);
                 }
-            };
+            }
         }
 
         [Fact]
@@ -183,36 +167,32 @@ namespace TestCommon
         {
             // Ensure that DELETE returning a dynamic works.
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    if (request.Method != "DELETE")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return;
+                    }
+
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    var output = new ReplyDoc()
                         {
-                            var request  = context.Request;
-                            var response = context.Response;
+                            Value1 = "Hello World!"
+                        };
 
-                            if (request.Method != "DELETE")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                                return Task.Delay(0);
-                            }
+                    response.ContentType = "application/json";
 
-                            if (request.Path.ToString() != "/info")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.NotFound;
-                                return Task.Delay(0);
-                            }
-
-                            var output = new ReplyDoc()
-                                {
-                                    Value1 = "Hello World!"
-                                };
-
-                            response.ContentType = "application/json";
-
-                            return response.WriteAsync(NeonHelper.JsonSerialize(output));
-                        });
+                    response.Write(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -221,7 +201,7 @@ namespace TestCommon
 
                     Assert.Equal("Hello World!", (string)reply.Value1);
                 }
-            };
+            }
         }
  
         [Fact]
@@ -230,36 +210,32 @@ namespace TestCommon
         {
             // Ensure that DELETE returning non-JSON returns a NULL dynamic document.
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    if (request.Method != "DELETE")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return;
+                    }
+
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    var output = new ReplyDoc()
                         {
-                            var request  = context.Request;
-                            var response = context.Response;
+                            Value1 = "Hello World!"
+                        };
 
-                            if (request.Method != "DELETE")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                                return Task.Delay(0);
-                            }
+                    response.ContentType = "application/not-json";
 
-                            if (request.Path.ToString() != "/info")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.NotFound;
-                                return Task.Delay(0);
-                            }
-
-                            var output = new ReplyDoc()
-                                {
-                                    Value1 = "Hello World!"
-                                };
-
-                            response.ContentType = "application/not-json";
-
-                            return response.WriteAsync(NeonHelper.JsonSerialize(output));
-                        });
+                    response.Write(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -268,7 +244,7 @@ namespace TestCommon
 
                     Assert.Null(reply);
                 }
-            };
+            }
         }
 
         [Fact]
@@ -277,25 +253,19 @@ namespace TestCommon
         {
             // Ensure that DELETE returning a hard error works.
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
-                        {
-                            var response = context.Response;
+                    var response = context.Response;
 
-                            response.StatusCode = (int)HttpStatusCode.NotFound;
-
-                            return Task.Delay(0);
-                        });
+                    response.StatusCode = (int)HttpStatusCode.NotFound;
                 }))
             {
                 using (var jsonClient = new JsonClient())
                 {
                     await Assert.ThrowsAsync<HttpException>(async () => await jsonClient.DeleteAsync(baseUri + "info"));
                 }
-            };
+            }
         }
 
         [Fact]
@@ -306,31 +276,27 @@ namespace TestCommon
 
             var attemptCount = 0;
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
-                        {
-                            var request  = context.Request;
-                            var response = context.Response;
+                    var request  = context.Request;
+                    var response = context.Response;
 
-                            if (attemptCount++ == 0)
-                            {
-                                response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                    if (attemptCount++ == 0)
+                    {
+                        response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
 
-                                return Task.Delay(0);
-                            }
+                        return;
+                    }
 
-                            var output = new ReplyDoc()
-                            {
-                                Value1 = "Hello World!"
-                            };
+                    var output = new ReplyDoc()
+                    {
+                        Value1 = "Hello World!"
+                    };
 
-                            response.ContentType = "application/json";
+                    response.ContentType = "application/json";
 
-                            return response.WriteAsync(NeonHelper.JsonSerialize(output));
-                        });
+                    response.Write(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -340,7 +306,7 @@ namespace TestCommon
                     Assert.Equal(2, attemptCount);
                     Assert.Equal("Hello World!", (string)reply.Value1);
                 }
-            };
+            }
         }
 
         [Fact]
@@ -351,31 +317,27 @@ namespace TestCommon
 
             var attemptCount = 0;
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
-                        {
-                            var request  = context.Request;
-                            var response = context.Response;
+                    var request  = context.Request;
+                    var response = context.Response;
 
-                            if (attemptCount++ == 0)
-                            {
-                                response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                    if (attemptCount++ == 0)
+                    {
+                        response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
 
-                                return Task.Delay(0);
-                            }
+                        return;
+                    }
 
-                            var output = new ReplyDoc()
-                            {
-                                Value1 = "Hello World!"
-                            };
+                    var output = new ReplyDoc()
+                    {
+                        Value1 = "Hello World!"
+                    };
 
-                            response.ContentType = "application/json";
+                    response.ContentType = "application/json";
 
-                            return response.WriteAsync(NeonHelper.JsonSerialize(output));
-                        });
+                    response.Write(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -384,7 +346,7 @@ namespace TestCommon
 
                     Assert.Equal(1, attemptCount);
                 }
-            };
+            }
         }
 
         [Fact]
@@ -395,31 +357,27 @@ namespace TestCommon
 
             var attemptCount = 0;
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
-                        {
-                            var request  = context.Request;
-                            var response = context.Response;
+                    var request  = context.Request;
+                    var response = context.Response;
 
-                            if (attemptCount++ == 0)
-                            {
-                                response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
+                    if (attemptCount++ == 0)
+                    {
+                        response.StatusCode = (int)HttpStatusCode.ServiceUnavailable;
 
-                                return Task.Delay(0);
-                            }
+                        return;
+                    }
 
-                            var output = new ReplyDoc()
-                            {
-                                Value1 = "Hello World!"
-                            };
+                    var output = new ReplyDoc()
+                    {
+                        Value1 = "Hello World!"
+                    };
 
-                            response.ContentType = "application/json";
+                    response.ContentType = "application/json";
 
-                            return response.WriteAsync(NeonHelper.JsonSerialize(output));
-                        });
+                    response.Write(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -428,7 +386,7 @@ namespace TestCommon
 
                     Assert.Equal(1, attemptCount);
                 }
-            };
+            }
         }
     }
 }

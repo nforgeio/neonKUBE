@@ -11,10 +11,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Owin;
-using Microsoft.Owin;
-using Microsoft.Owin.Hosting;
-
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -43,11 +39,6 @@ namespace TestCommon
         {
             public string Value1 { get; set; }
             public string Value2 { get; set; }
-        }
-
-        private string GetBodyText(IOwinRequest request)
-        {
-            return new StreamReader(request.Body).ReadToEnd();
         }
 
         [Fact]

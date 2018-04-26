@@ -29,13 +29,13 @@
   <Import Project="..\Neon.Global\Neon.Global.projitems" Label="Shared" />
 
   <ItemGroup>
+    <PackageReference Include="Microsoft.Net.Http.Server" Version="1.1.4" />
     <PackageReference Include="xunit" Version="2.3.1" />
     <PackageReference Include="YamlDotNet" Version="4.3.1" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\Neon.Common\Neon.Common.csproj" />
-    <ProjectReference Include="..\Neon.Couchbase\Neon.Couchbase.csproj" />
   </ItemGroup>
 
 </Project>

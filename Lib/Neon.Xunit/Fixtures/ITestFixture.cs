@@ -7,8 +7,6 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 
-using Couchbase;
-
 using Neon.Common;
 
 namespace Xunit

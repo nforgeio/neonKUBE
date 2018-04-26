@@ -11,10 +11,6 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-using Owin;
-using Microsoft.Owin;
-using Microsoft.Owin.Hosting;
-
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -36,36 +32,32 @@ namespace TestCommon
         {
             // Ensure that GET returning an explict type works.
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    if (request.Method != "GET")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return;
+                    }
+
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    var output = new ReplyDoc()
                         {
-                            var request  = context.Request;
-                            var response = context.Response;
+                            Value1 = "Hello World!"
+                        };
 
-                            if (request.Method != "GET")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                                return Task.Delay(0);
-                            }
+                    response.ContentType = "application/json";
 
-                            if (request.Path.ToString() != "/info")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.NotFound;
-                                return Task.Delay(0);
-                            }
-
-                            var output = new ReplyDoc()
-                                {
-                                    Value1 = "Hello World!"
-                                };
-
-                            response.ContentType = "application/json";
-
-                            return response.WriteAsync(NeonHelper.JsonSerialize(output));
-                        });
+                    response.Write(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -83,36 +75,32 @@ namespace TestCommon
         {
             // Ensure that GET returning a non-JSON content type returns a NULL document.
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    if (request.Method != "GET")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return;
+                    }
+
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    var output = new ReplyDoc()
                         {
-                            var request  = context.Request;
-                            var response = context.Response;
+                            Value1 = "Hello World!"
+                        };
 
-                            if (request.Method != "GET")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                                return Task.Delay(0);
-                            }
+                    response.ContentType = "application/not-json";
 
-                            if (request.Path.ToString() != "/info")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.NotFound;
-                                return Task.Delay(0);
-                            }
-
-                            var output = new ReplyDoc()
-                                {
-                                    Value1 = "Hello World!"
-                                };
-
-                            response.ContentType = "application/not-json";
-
-                            return response.WriteAsync(NeonHelper.JsonSerialize(output));
-                        });
+                    response.Write(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -130,37 +118,33 @@ namespace TestCommon
         {
             // Ensure that GET with query arguments work.
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    if (request.Method != "GET")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return;
+                    }
+
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    var output = new ReplyDoc()
                         {
-                            var request  = context.Request;
-                            var response = context.Response;
+                            Value1 = request.QueryGet("arg1"),
+                            Value2 = request.QueryGet("arg2")
+                        };
 
-                            if (request.Method != "GET")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                                return Task.Delay(0);
-                            }
+                    response.ContentType = "application/json";
 
-                            if (request.Path.ToString() != "/info")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.NotFound;
-                                return Task.Delay(0);
-                            }
-
-                            var output = new ReplyDoc()
-                                {
-                                    Value1 = request.Query.Get("arg1"),
-                                    Value2 = request.Query.Get("arg2")
-                                };
-
-                            response.ContentType = "application/json";
-
-                            return response.WriteAsync(NeonHelper.JsonSerialize(output));
-                        });
+                    response.Write(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -179,36 +163,32 @@ namespace TestCommon
         {
             // Ensure that GET returning a dynamic works.
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    if (request.Method != "GET")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return ;
+                    }
+
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    var output = new ReplyDoc()
                         {
-                            var request  = context.Request;
-                            var response = context.Response;
+                            Value1 = "Hello World!"
+                        };
 
-                            if (request.Method != "GET")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                                return Task.Delay(0);
-                            }
+                    response.ContentType = "application/json";
 
-                            if (request.Path.ToString() != "/info")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.NotFound;
-                                return Task.Delay(0);
-                            }
-
-                            var output = new ReplyDoc()
-                                {
-                                    Value1 = "Hello World!"
-                                };
-
-                            response.ContentType = "application/json";
-
-                            return response.WriteAsync(NeonHelper.JsonSerialize(output));
-                        });
+                    response.Write(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -226,36 +206,32 @@ namespace TestCommon
         {
             // Ensure that GET returning non-JSON returns a NULL dynamic document.
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
+                    var request  = context.Request;
+                    var response = context.Response;
+
+                    if (request.Method != "GET")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
+                        return;
+                    }
+
+                    if (request.Path.ToString() != "/info")
+                    {
+                        response.StatusCode = (int)HttpStatusCode.NotFound;
+                        return;
+                    }
+
+                    var output = new ReplyDoc()
                         {
-                            var request  = context.Request;
-                            var response = context.Response;
+                            Value1 = "Hello World!"
+                        };
 
-                            if (request.Method != "GET")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.MethodNotAllowed;
-                                return Task.Delay(0);
-                            }
+                    response.ContentType = "application/not-json";
 
-                            if (request.Path.ToString() != "/info")
-                            {
-                                response.StatusCode = (int)HttpStatusCode.NotFound;
-                                return Task.Delay(0);
-                            }
-
-                            var output = new ReplyDoc()
-                                {
-                                    Value1 = "Hello World!"
-                                };
-
-                            response.ContentType = "application/not-json";
-
-                            return response.WriteAsync(NeonHelper.JsonSerialize(output));
-                        });
+                    response.Write(NeonHelper.JsonSerialize(output));
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -273,18 +249,12 @@ namespace TestCommon
         {
             // Ensure that GET returning a hard error works.
 
-            using (WebApp.Start(baseUri,
-                app =>
+            using (new MockHttpServer(baseUri,
+                context =>
                 {
-                    app.Run(
-                        context =>
-                        {
-                            var response = context.Response;
+                    var response = context.Response;
 
-                            response.StatusCode = (int)HttpStatusCode.NotFound;
-
-                            return Task.Delay(0);
-                        });
+                    response.StatusCode = (int)HttpStatusCode.NotFound;
                 }))
             {
                 using (var jsonClient = new JsonClient())
@@ -298,7 +268,7 @@ namespace TestCommon
             };
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task GetUnsafeAsync_Retry()
         {
@@ -309,7 +279,7 @@ namespace TestCommon
             await Task.Delay(0);
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task GetUnsafeAsync_NoRetryNull()
         {
@@ -320,7 +290,7 @@ namespace TestCommon
             await Task.Delay(0);
         }
 
-        [Fact]
+        [Fact(Skip = "TODO")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public async Task GetUnsafeAsync_NoRetryExplicit()
         {
