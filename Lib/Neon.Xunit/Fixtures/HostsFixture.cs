@@ -226,6 +226,7 @@ namespace Xunit
         /// <imheritdoc/>
         public override void Reset()
         {
+            records.Clear();
             RemoveSection(fixtureId);
         }
 

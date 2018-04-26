@@ -18,7 +18,7 @@ using Xunit.Neon;
 
 using Neon.Common;
 
-namespace TestCouchbase
+namespace TestSamples
 {
     // This example the <see cref="CouchbaseFixture"/> directly to run general
     // tests against the database.  This test class's calls the Flush() method 

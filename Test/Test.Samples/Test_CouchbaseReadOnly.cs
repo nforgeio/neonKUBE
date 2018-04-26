@@ -18,7 +18,7 @@ using Xunit.Neon;
 
 using Neon.Common;
 
-namespace TestCouchbase
+namespace TestSamples
 {
     // This example the <see cref="CouchbaseFixture"/> directly to run some read-only
     // tests against the database.  This test class's constructor initializes

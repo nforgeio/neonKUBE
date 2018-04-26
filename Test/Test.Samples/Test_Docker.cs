@@ -20,7 +20,7 @@ using Neon.Retry;
 using Xunit;
 using Xunit.Neon;
 
-namespace TestDocker
+namespace TestSamples
 {
     // This sample demonstrates how to use the [DockerFixture] to implement
     // more complex test scenarios that deploy containers, services, databases,
@@ -99,6 +99,61 @@ namespace TestDocker
             Assert.Single(docker.ListServices().Where(s => s.Name == "sleeping-service"));
         }
 
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
+        public void ManageSecrets()
+        {
+            // We should start out with no swarm secrets.
+
+            Assert.Empty(docker.ListSecrets());
+
+            // Test adding and removing a secret.
+
+            docker.CreateSecret("my-secret", "Don't tell anyone!");
+            Assert.Single(docker.ListSecrets());
+            Assert.Equal("my-secret", docker.ListSecrets().First().Name);
+
+            docker.RemoveSecret("my-secret");
+            Assert.Empty(docker.ListSecrets());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
+        public void ManageConfigs()
+        {
+            // We should start out with no swarm configs.
+
+            Assert.Empty(docker.ListConfigs());
+
+            // Test adding and removing a secret.
+
+            docker.CreateConfig("my-config", "my settings");
+            Assert.Single(docker.ListConfigs());
+            Assert.Equal("my-config", docker.ListConfigs().First().Name);
+
+            docker.RemoveConfig("my-config");
+            Assert.Empty(docker.ListConfigs());
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
+        public void ManageNetworks()
+        {
+            // We should start out with no swarm networks.
+
+            Assert.Empty(docker.ListNetworks());
+
+            // Test adding and removing a network.
+
+            docker.CreateNetwork("my-network");
+            Assert.Single(docker.ListNetworks());
+            Assert.Equal("my-network", docker.ListNetworks().First().Name);
+
+            docker.RemoveNetwork("my-network");
+            Assert.Empty(docker.ListNetworks());
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
         public async Task HostsDbStacks()
@@ -167,6 +222,11 @@ services:
 
             Assert.Equal("1", await bucket.GetSafeAsync<string>("one"));
             Assert.Equal("2", await bucket.GetSafeAsync<string>("two"));
+
+            // Remove one of the stacks and verify.
+
+            docker.RemoveStack("foo-stack");
+            Assert.Empty(docker.ListStacks().Where(s => s.Name == "foo-stack"));
         }
 
         [Fact]
@@ -214,60 +274,11 @@ services:
 
             Assert.Equal("1", await bucket.GetSafeAsync<string>("one"));
             Assert.Equal("2", await bucket.GetSafeAsync<string>("two"));
-        }
 
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
-        public void ManageSecrets()
-        {
-            // We should start out with no swarm secrets.
+            // Remove one of the service and verify.
 
-            Assert.Empty(docker.ListSecrets());
-
-            // Test adding and removing a secret.
-
-            docker.CreateSecret("my-secret", "Don't tell anyone!");
-            Assert.Single(docker.ListSecrets());
-            Assert.Equal("my-secret", docker.ListSecrets().First().Name);
-
-            docker.RemoveSecret("my-secret");
-            Assert.Empty(docker.ListSecrets());
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
-        public void ManageConfigs()
-        {
-            // We should start out with no swarm configs.
-
-            Assert.Empty(docker.ListConfigs());
-
-            // Test adding and removing a secret.
-
-            docker.CreateConfig("my-config", "my settings");
-            Assert.Single(docker.ListConfigs());
-            Assert.Equal("my-config", docker.ListConfigs().First().Name);
-
-            docker.RemoveConfig("my-config");
-            Assert.Empty(docker.ListConfigs());
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
-        public void ManageNetworks()
-        {
-            // We should start out with no swarm networks.
-
-            Assert.Empty(docker.ListNetworks());
-
-            // Test adding and removing a network.
-
-            docker.CreateNetwork("my-network");
-            Assert.Single(docker.ListNetworks());
-            Assert.Equal("my-network", docker.ListNetworks().First().Name);
-
-            docker.RemoveNetwork("my-network");
-            Assert.Empty(docker.ListNetworks());
+            docker.RemoveStack("foo-service");
+            Assert.Empty(docker.ListServices().Where(s => s.Name == "foo-service"));
         }
     }
 }

@@ -1055,7 +1055,7 @@ namespace Xunit
         /// Removes a Docker stack.
         /// </summary>
         /// <param name="name">The stack name.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void RemoveStack(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -1068,7 +1068,6 @@ namespace Xunit
 
                 var extraArgs = new List<string>();
 
-                extraArgs.Add("--name");
                 extraArgs.Add(name);
 
                 var argsString = NeonHelper.NormalizeExecArgs("stack", "rm", extraArgs.ToArray());
