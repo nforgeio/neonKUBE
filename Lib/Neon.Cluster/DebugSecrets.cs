@@ -70,29 +70,29 @@ namespace Neon.Cluster
         /// <summary>
         /// Adds a string secret.
         /// </summary>
-        /// <param name="secretName">The secret name.</param>
+        /// <param name="name">The secret name.</param>
         /// <param name="value">The secret value string.</param>
         /// <returns>The current instance to support fluent-style coding.</returns>
-        public new DebugSecrets Add(string secretName, string value)
+        public new DebugSecrets Add(string name, string value)
         {
             value = value ?? string.Empty;
 
-            base.Add(secretName, value);
+            base.Add(name, value);
 
             return this;
         }
 
         /// <summary>
-        /// Adds an object as JSON.
+        /// Adds a secret object as JSON.
         /// </summary>
-        /// <param name="secretName">The secret name.</param>
+        /// <param name="name">The secret name.</param>
         /// <param name="value">The secret value.</param>
         /// <returns>The current instance to support fluent-style coding.</returns>
-        public DebugSecrets Add(string secretName, object value)
+        public DebugSecrets Add(string name, object value)
         {
             value = value ?? string.Empty;
 
-            base.Add(secretName, NeonHelper.JsonSerialize(value, Formatting.Indented));
+            base.Add(name, NeonHelper.JsonSerialize(value, Formatting.Indented));
 
             return this;
         }
@@ -101,16 +101,16 @@ namespace Neon.Cluster
         /// Adds Vault token credentials to the dictionary.  The credentials will be
         /// formatted as <see cref="ClusterCredentials"/> serialized to JSON.
         /// </summary>
-        /// <param name="secretName">The secret name.</param>
+        /// <param name="name">The secret name.</param>
         /// <param name="token">The Vault token.</param>
         /// <returns>The current instance to support fluent-style coding.</returns>
-        public DebugSecrets VaultToken(string secretName, string token)
+        public DebugSecrets VaultToken(string name, string token)
         {
             credentialRequests.Add(
                 new CredentialRequest()
                 {
                     Type       = CredentialType.VaultToken,
-                    SecretName = secretName,
+                    SecretName = name,
                     Token      = token
                 });
 
@@ -121,16 +121,16 @@ namespace Neon.Cluster
         /// Adds Vault AppRole credentials to the dictionary.  The credentials will be
         /// formatted as <see cref="ClusterCredentials"/> serialized to JSON.
         /// </summary>
-        /// <param name="secretName">The secret name.</param>
+        /// <param name="name">The secret name.</param>
         /// <param name="roleName">The Vault role name.</param>
         /// <returns>The current instance to support fluent-style coding.</returns>
-        public DebugSecrets VaultAppRole(string secretName, string roleName)
+        public DebugSecrets VaultAppRole(string name, string roleName)
         {
             credentialRequests.Add(
                 new CredentialRequest()
                 {
                     Type       = CredentialType.VaultAppRole,
-                    SecretName = secretName,
+                    SecretName = name,
                     RoleName   = roleName
                 });
 
@@ -141,10 +141,10 @@ namespace Neon.Cluster
         /// Creates a temporary Consul token with the specified access control policies
         /// and then adds the token as a named secret.
         /// </summary>
-        /// <param name="secretName">The secret name.</param>
+        /// <param name="name">The secret name.</param>
         /// <param name="policies">The Consul policy names or HCL.</param>
         /// <returns>The current instance to support fluent-style coding.</returns>
-        public DebugSecrets ConsulToken(string secretName, params string[] policies)
+        public DebugSecrets ConsulToken(string name, params string[] policies)
         {
             // $todo(jeff.lill): Implement this.
 

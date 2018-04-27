@@ -58,6 +58,7 @@ namespace Neon.Cluster
 
         private static INeonLogger                  log = LogManager.Default.GetLogger(typeof(NeonClusterHelper));
         private static Dictionary<string, string>   secrets;
+        private static Dictionary<string, string>   configs;
         private static bool                         externalConnection;
 
         /// <summary>
@@ -489,7 +490,7 @@ namespace Neon.Cluster
         /// Indicates whether the application is running outside of a Docker container
         /// but we're going to try to simulate the environment such that the application
         /// believe it is running in a container within a Docker cluster.  See 
-        /// <see cref="OpenRemoteCluster(DebugSecrets, string)"/> for more information.
+        /// <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> for more information.
         /// </summary>
         public static bool IsConnected { get; private set; } = false;
 
@@ -508,6 +509,7 @@ namespace Neon.Cluster
         /// neonCLUSTER for external tools as well as for development and debugging purposes.
         /// </summary>
         /// <param name="secrets">Optional emulated Docker secrets.</param>
+        /// <param name="configs">Optional emulated Docker configs.</param>
         /// <param name="loginPath">Optional path to a specific cluster login to override the current login.</param>
         /// <returns>The <see cref="ClusterProxy"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown if a cluster is already connected.</exception>
@@ -542,15 +544,16 @@ namespace Neon.Cluster
         ///     Simulating the presence of a mounted and executed <b>/etc/neoncluster/env-host</b> script.
         ///     </item>
         ///     <item>
-        ///     Simulated mounted Docker secrets.
+        ///     Emulated mounted Docker secrets via <paramref name="secrets"/> 
+        ///     and using <see cref="GetSecret(string)"/>.
+        ///     </item>
+        ///     <item>
+        ///     Emulated mounted Docker secrets via <paramref name="configs"/> 
+        ///     and using <see cref="GetConfig(string)"/>.
         ///     </item>
         ///     <item>
         ///     Temporarily modifying the local <b>hosts</b> file to add host entries
         ///     for local services like Vault and Consul.
-        ///     </item>
-        ///     <item>
-        ///     Emulating Docker secret delivery specified using and <paramref name="secrets"/> 
-        ///     and using <see cref="GetSecret(string)"/>.
         ///     </item>
         /// </list>
         /// <note>
@@ -560,9 +563,14 @@ namespace Neon.Cluster
         /// TLS.
         /// </note>
         /// <para>
-        /// Pass a <see cref="DebugSecrets"/> instance as <paramref name="secrets"/> to emulate 
+        /// Optionally pass a <see cref="DebugSecrets"/> instance as <paramref name="secrets"/> to emulate 
         /// the Docker secrets feature.  <see cref="DebugSecrets"/> may specify secrets as simple
         /// name/value pairs or may specify more complex Vault or Consul credentials.
+        /// </para>
+        /// <para>
+        /// Optionally pass a <see cref="DebugConfigs"/> instance as <paramref name="configs"/> to emulate 
+        /// the Docker configs feature.  <see cref="DebugConfigs"/> specifies Docker configs as simple
+        /// name/valie pairs.
         /// </para>
         /// <note>
         /// Applications may wish to use <see cref="NeonHelper.IsDevWorkstation"/> to detect when
@@ -572,7 +580,7 @@ namespace Neon.Cluster
         /// this.
         /// </note>
         /// </remarks>
-        public static ClusterProxy OpenRemoteCluster(DebugSecrets secrets = null, string loginPath = null)
+        public static ClusterProxy OpenRemoteCluster(DebugSecrets secrets = null, DebugConfigs configs = null, string loginPath = null)
         {
             if (IsConnected)
             {
@@ -610,11 +618,13 @@ namespace Neon.Cluster
 
             NeonClusterHelper.externalConnection = true;
 
-            // Support emulated secrets too.
+            // Support emulated secrets and configs too.
 
             secrets?.Realize(Cluster, ClusterLogin);
+            configs?.Realize(Cluster, ClusterLogin);
 
             NeonClusterHelper.secrets = secrets;
+            NeonClusterHelper.configs = configs;
 
             return NeonClusterHelper.Cluster;
         }
@@ -801,13 +811,14 @@ namespace Neon.Cluster
 
             NeonHelper.ModifyHostsFile(hosts);
 
-            NeonClusterHelper.secrets = new Dictionary<string, string>();
+            NeonClusterHelper.secrets = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            NeonClusterHelper.configs = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
             return NeonClusterHelper.Cluster;
         }
 
         /// <summary>
-        /// Resets any temporary configurations made by <see cref="OpenRemoteCluster(DebugSecrets, string)"/>
+        /// Resets any temporary configurations made by <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/>
         /// such as the modifications to the DNS resolver <b>hosts</b> file.  This should be called just
         /// before the application exits.
         /// </summary>
@@ -845,8 +856,8 @@ namespace Neon.Cluster
         /// <returns>The secret value or <c>null</c> if the secret doesn't exist.</returns>
         /// <remarks>
         /// <para>
-        /// This method can be used to retrieve a secret provisioned to a container via the
-        /// Docker secrets feature or a secret provided to <see cref="OpenRemoteCluster(DebugSecrets, string)"/> 
+        /// This method can be used to retrieve a secret provisioned to a service via the
+        /// Docker secrets feature or a secret provided to <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> 
         /// when we're emulating running the application as a cluster container.
         /// </para>
         /// <para>
@@ -864,7 +875,7 @@ namespace Neon.Cluster
             {
                 if (File.Exists(secretPath))
                 {
-                    return File.ReadAllText(Path.Combine(NodeHostFolders.DockerSecrets, name));
+                    return File.ReadAllText(secretPath);
                 }
             }
             catch (IOException)
@@ -897,8 +908,8 @@ namespace Neon.Cluster
         /// <returns>The secret of type <typeparamref name="T"/> or <c>null</c> if the secret doesn't exist.</returns>
         /// <remarks>
         /// <para>
-        /// This method can be used to retrieve a secret provisioned to a container via the
-        /// Docker secrets feature or a secret provided to <see cref="OpenRemoteCluster(DebugSecrets, string)"/> 
+        /// This method can be used to retrieve a secret provisioned to a service via the
+        /// Docker secrets feature or a secret provided to <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> 
         /// when we're emulating running the application as a cluster container.
         /// </para>
         /// <para>
@@ -925,6 +936,95 @@ namespace Neon.Cluster
             catch (Exception e)
             {
                 throw new ArgumentException($"Unable to parse local secret [{name}] as a [{typeof(T).FullName}].", e);
+            }
+        }
+
+        /// <summary>
+        /// Returns the value of a named config.
+        /// </summary>
+        /// <param name="name">The config name.</param>
+        /// <returns>The config value or <c>null</c> if the config doesn't exist.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method can be used to retrieve a config provisioned to a service via the
+        /// Docker configs feature or a config provided to <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> 
+        /// when we're emulating running the application as a cluster container.
+        /// </para>
+        /// <para>
+        /// Docker provisions configs by mounting the file at <b>/CONFIG-NAME</b> by default.
+        /// When the application is not running in debug mode, this method simply attempts to read
+        /// the requested config file from the root folder.
+        /// </para>
+        /// </remarks>
+        public static string GetConfig(string name)
+        {
+            var configPath = $"/{name}";
+
+            try
+            {
+                if (File.Exists(configPath))
+                {
+                    return File.ReadAllText(configPath);
+                }
+            }
+            catch (IOException)
+            {
+                return null;
+            }
+
+            if (configs == null)
+            {
+                return null;
+            }
+
+            string config;
+
+            if (configs.TryGetValue(name, out config))
+            {
+                return config;
+            }
+            else
+            {
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Returns the value of a named config for a specific type parsed from JSON.
+        /// </summary>
+        /// <typeparam name="T">The desired output type.</typeparam>
+        /// <param name="name">The config name.</param>
+        /// <returns>The config of type <typeparamref name="T"/> or <c>null</c> if the config doesn't exist.</returns>
+        /// <remarks>
+        /// <para>
+        /// This method can be used to retrieve a config provisioned to a container via the
+        /// Docker configs feature or a config provided to <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> 
+        /// when we're emulating running the application as a cluster container.
+        /// </para>
+        /// <para>
+        /// <para>
+        /// Docker provisions configs by mounting the file at <b>/CONFIG-NAME</b> by default.
+        /// When the application is not running in debug mode, this method simply attempts to read
+        /// the requested config file from the root folder.
+        /// </para>
+        /// </remarks>
+        public static T GetConfig<T>(string name)
+            where T : class, new()
+        {
+            var configJson = GetConfig(name);
+
+            if (configJson == null)
+            {
+                return null;
+            }
+
+            try
+            {
+                return NeonHelper.JsonDeserialize<T>(configJson);
+            }
+            catch (Exception e)
+            {
+                throw new ArgumentException($"Unable to parse local config [{name}] as a [{typeof(T).FullName}].", e);
             }
         }
 
@@ -1530,7 +1630,7 @@ namespace Neon.Cluster
 
             if (!credentials.HasUsernamePassword)
             {
-                throw new ArgumentException($"Credentials at [secret:{secretName}] do not include a username and password.");
+                throw new ArgumentException($"Credentials at [secret:{secretName}] does not include a username and password.");
             }
 
             return connectionSettings.OpenBucket(credentials);
