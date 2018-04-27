@@ -53,6 +53,9 @@ namespace NeonCli.Ansible
     //
     // name         yes                                 dashboard name
     //
+    // state        no          present     present     create or remove the dashboard
+    //                                      absent
+    //
     // title        no                                  title to be used for this dashboard 
     //                                                  when displayed in the global cluster
     //                                                  dashboard

@@ -72,8 +72,8 @@ namespace NeonCli.Ansible
     //
     // name                     yes                                 docker service name
     //
-    // state                    no          present     absent      indicates whether the service should
-    //                                                  present     be created or removed
+    // state                    no          present     present     indicates whether the service should
+    //                                                  absent      be created or removed
     //
     // force                    no          false                   forces service update when [state=present]
     //

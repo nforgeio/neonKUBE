@@ -1002,7 +1002,6 @@ namespace Neon.Cluster
         /// when we're emulating running the application as a cluster container.
         /// </para>
         /// <para>
-        /// <para>
         /// Docker provisions configs by mounting the file at <b>/CONFIG-NAME</b> by default.
         /// When the application is not running in debug mode, this method simply attempts to read
         /// the requested config file from the root folder.

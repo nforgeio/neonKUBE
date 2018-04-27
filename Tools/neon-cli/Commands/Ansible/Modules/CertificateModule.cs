@@ -56,8 +56,8 @@ namespace NeonCli.Ansible
     //                                                  certificates and the private key in PEM 
     //                                                  format.  Required when [state=present]
     //
-    // state        no          present     absent      indicates whether the certificate should
-    //                                      present     be created or removed
+    // state        no          present     present     indicates whether the certificate should
+    //                                      absent      be created or removed
     //
     // force        no          false                   resaves the certificate when [state=present]
     //                                                  even if the certificate is the same

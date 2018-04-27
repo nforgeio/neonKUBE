@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DnsModule.cs
+// FILE:	    DockerSecretModule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -29,12 +29,14 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 
+// $todo(jeff.lill): This needs to be implemented sometime.
+
 namespace NeonCli.Ansible
 {
     /// <summary>
-    /// Implements the <b>neon_dns</b> Ansible module.
+    /// Implements the <b>neon_docker_secret</b> Ansible module.
     /// </summary>
-    public class DnsModule : IAnsibleModule
+    public class DockerSecretModule : IAnsibleModule
     {
         //---------------------------------------------------------------------
         // neon_dns:
@@ -42,7 +44,8 @@ namespace NeonCli.Ansible
         // Synopsis:
         // ---------
         //
-        // Manages neonCLUSTER DNS host entries.
+        // Manages Docker secrets including implementing advanced secret roll-over
+        // behavors.
         //
         // Requirements:
         // -------------
@@ -56,13 +59,28 @@ namespace NeonCli.Ansible
         // parameter    required    default     choices     comments
         // --------------------------------------------------------------------
         //
-        // state        no          present     present     indicates whether the DNS entry
-        //                                      absent      should be created or removed
+        // state        no          present     present     indicates whether the secret 
+        //                                      absent      should be created, removed,
+        //                                      update      or updated if it exists
         //
-        // hostname     yes                                 DNS hostname
+        // name         yes                                 the secret name
         //
-        // endpoints    see comment                         target endpoint array (see remarks)  
-        //                                                  required when [state=present]
+        // bytes        see comment                         base-64 encoded binary secret
+        //                                                  data.  One of [bytes] or [text]
+        //                                                  must be present if state=present
+        //
+        // text         see comment                         secret text.  One of [bytes] or [text]
+        //                                                  must be present if state=present
+        //
+        // no_rotate    no          no          yes         disable secret rotation (see remarks)
+        //                                      no
+        //
+        // update_services no       no          yes         automatically update any services 
+        //                                      no          referencing the secret when rotation
+        //                                                  is enabled
+        //
+        // update_parallism no      1                       specifies how many replicas of a
+        //                                                  service will be updated in parallel
         //
         // Check Mode:
         // -----------
@@ -74,109 +92,51 @@ namespace NeonCli.Ansible
         // Remarks:
         // --------
         //
-        // The endpoints array is required when [state=present].  This describes
-        // the targets to be resolved for the hostname.  Each array element
-        // specifies the following fields:
+        // This module is used to manage Docker secrets.  Secrets can be specified as UTF-8
+        // encoded text or as base-64 encoded binary data.
         //
-        // field        required    default     choices     comments
-        // --------------------------------------------------------------------
+        // Secret Rotation:
         //
-        // target       yes                     IPADDRESS   IP address like: 10.0.0.55
-        //                                      HOSTNAME    CNAME like host: www.google.com
-        //                                      GROUP       Host group like: group=managers
+        // Docker secrets are somewhat cumbersome to use by default.  Here's how I believe
+        // the typical user wishes secrets would work:
         //
-        // check        no          no          yes/no      Require endpoint health checks
+        //      1. Create a secret named MY-SECRET
+        //      2. Deploy a service that uses MY-SECRET
+        //      3. Sometime later, update MY-SECRET with a new value
+        //      4. Update the service to pick up the new secret
         //
-        // Examples:
-        // ---------
+        // Unfortunately, this fails at step #3.  Docker doesn't include update secret
+        // functionality so you need to remove and then recreate the secret and Docker
+        // prevents a secret from being removed if it's referenced by any services.
+        // One workaround would be to remove the service, remove/recreate the secret,
+        // and then recreate the service.  The problem with this is that the service
+        // will be unavailable during this time.  It would be much better to be able
+        // to keep the service running and update it in-place.
         //
-        // This simple example associates a single IP address to FOO.COM:
+        // This module and the [neon secret ...] commands implement a secret naming
+        // convention so that secrets and services can be updated in place.
         //
-        //  - name: test
-        //    hosts: localhost
-        //    tasks:
-        //      - name: DNS task
-        //        neon_dns:
-        //          hostname: foo.com
-        //          state: present
-        //          endpoints:
-        //            - target: 10.0.0.30
+        // The convention is to automatically append a version number onto the end of
+        // the secret name persisted to Docker like MY-SECRET-0, MY-SECRET-1,...
+        // This version number is incremented automatically by this module and the
+        // [neon secret put MY-SECRET ...] command.  Under the covers, a new Docker
+        // secret will be created with an incremented version number.  Doing this
+        // avoids the "can't change a secret when referenced" Docker restriction
+        // encountered at step #3 above.
         //
-        // This example enables health checks for a single address:
+        // The next problem is updating any services that reference the secret
+        // so that they use the latest version.  This module will handle this
+        // if [update_services=yes].  Here's how this works:
         //
-        //  - name: test
-        //    hosts: localhost
-        //    tasks:
-        //      - name: DNS task
-        //        neon_dns:
-        //          hostname: foo.com
-        //          state: present
-        //          endpoints:
-        //            - target: 10.0.0.30
-        //              check: yes
+        //      1. All cluster secrets are listed so we'll be able to determine
+        //         the latest version of MY-SECRET.
         //
-        // This example associates multiple addresses, some with health
-        // checks and others without:
+        //      2. All cluster services are inspected to discover any services that
+        //         reference MY-SECRET or any version the secret like: MY-SECRET-#.
         //
-        //  - name: test
-        //    hosts: localhost
-        //    tasks:
-        //      - name: DNS task
-        //        neon_dns:
-        //          hostname: foo.com
-        //          state: present
-        //          endpoints:
-        //            - target: 10.0.0.30
-        //              check: yes
-        //            - target: 10.0.0.31
-        //              check: no
-        //            - target: 10.0.0.32
-        //              check: yes
-        //
-        // This example simulates a CNAME record by associating WWW.GOOGLE.COM
-        // with the FOO.COM.  This means DNS lookups for FOO.COM will return
-        // the last IP address we retrieved for WWW.GOOGLE.COM:
-        //
-        //  - name: test
-        //    hosts: localhost
-        //    tasks:
-        //      - name: DNS task
-        //        neon_dns:
-        //          hostname: foo.com
-        //          state: present
-        //          endpoints:
-        //            - target: www.google.com
-        //
-        // This example expands the neonCLUSTER [swarm] host group so that
-        // FOO.COM will resolve to the IP addresses for all cluster Swarm
-        // nodes.  Checking is now enabled, so the IP addresses for all Swarm
-        // nodes will be returned, regardless of their health.
-        //
-        //  - name: test
-        //    hosts: localhost
-        //    tasks:
-        //      - name: DNS task
-        //        neon_dns:
-        //          hostname: foo.com
-        //          state: present
-        //          endpoints:
-        //            - target: group=swarm
-        //
-        // This example expands the neonCLUSTER [swarm] host group so that
-        // FOO.COM will resolve to the IP addresses for all cluster Swarm
-        // nodes.  Checking is enabled this time, so the IP addresses for 
-        // healthy Swarm nodes will be returned, regardless of their health.
-        //
-        //  - name: test
-        //    hosts: localhost
-        //    tasks:
-        //      - name: DNS task
-        //        neon_dns:
-        //          hostname: foo.com
-        //          state: present
-        //          endpoints:
-        //            - target: group=swarm
-        //              check: yes
+        //      3. Each of these discovered services will be updated to pickup
+        //         that latest version of the secret.  [update_parallism] controls
+        //         how many replicas are updated in parallel.
 
         /// <inheritdoc/>
         public void Run(ModuleContext context)
