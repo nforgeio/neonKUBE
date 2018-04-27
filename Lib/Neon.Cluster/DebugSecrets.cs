@@ -21,7 +21,7 @@ namespace Neon.Cluster
 {
     /// <summary>
     /// Used to emulate Docker service secrets when debugging an application using 
-    /// <see cref="NeonClusterHelper.OpenRemoteCluster(DebugSecrets, string)"/>.
+    /// <see cref="NeonClusterHelper.OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/>.
     /// </summary>
     /// <remarks>
     /// <para>
@@ -60,6 +60,14 @@ namespace Neon.Cluster
         private List<CredentialRequest> credentialRequests = new List<CredentialRequest>();
         private ClusterLogin            clusterLogin;
         private VaultClient             vaultClient;
+
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public DebugSecrets()
+            : base(StringComparer.InvariantCultureIgnoreCase)
+        {
+        }
 
         /// <summary>
         /// The lifespan of Vault and Consul credentials created by this class.  This defaults
@@ -168,7 +176,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Called internally by <see cref="NeonClusterHelper.OpenRemoteCluster(DebugSecrets, string)"/> to 
+        /// Called internally by <see cref="NeonClusterHelper.OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> to 
         /// create any requested Vault and Consul credentials and add them to the dictionary.
         /// </summary>
         /// <param name="cluster">The attached cluster.</param>

@@ -30,7 +30,13 @@ namespace Neon.Cluster
     /// </remarks>
     public class DebugConfigs : Dictionary<string, string>
     {
-        private Dictionary<string, string>  configs = new Dictionary<string, string>(StringComparer.OrdinalIgnoreCase);
+        /// <summary>
+        /// Default constructor.
+        /// </summary>
+        public DebugConfigs()
+            : base(StringComparer.InvariantCultureIgnoreCase)
+        {
+        }
 
         /// <summary>
         /// Adds a named text config.
@@ -70,6 +76,8 @@ namespace Neon.Cluster
         /// <param name="clusterLogin">The cluster login information.</param>
         internal void Realize(ClusterProxy cluster, ClusterLogin clusterLogin)
         {
+            // This is a NOP because we already added all of the configs
+            // to the base dictionary in the [Add()] methods.
         }
     }
 }
