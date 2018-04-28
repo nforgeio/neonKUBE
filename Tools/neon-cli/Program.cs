@@ -129,7 +129,7 @@ OPTIONS:
                                           for development/testing purposes)
     --log-folder=LOG-FOLDER             - Optional log folder path
     -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
-                                          configured in parallel [default=4]
+                                          configured in parallel [default=5]
     --node=NODE                         - Some commands may be directed at
                                           specific node(s)
     --machine-password=PASSWORD         - Overrides default initial machine
@@ -185,7 +185,7 @@ Note that the tool may require admin privileges for [--noshim] mode.
                 CommandLine.DefineOption("--machine-password");
                 CommandLine.DefineOption("-os").Default = "ubuntu-16.04";
                 CommandLine.DefineOption("-q", "--quiet");
-                CommandLine.DefineOption("-m", "--max-parallel").Default = "4";
+                CommandLine.DefineOption("-m", "--max-parallel").Default = "5";
                 CommandLine.DefineOption("-w", "--wait").Default = "60";
                 CommandLine.DefineOption("--log-folder").Default = string.Empty;
 
