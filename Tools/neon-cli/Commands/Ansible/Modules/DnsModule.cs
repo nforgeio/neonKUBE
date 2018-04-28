@@ -244,7 +244,7 @@ namespace NeonCli.Ansible
                             context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry [{hostname}] deleted.");
                         }
 
-                        context.Changed = true;
+                        context.Changed = !context.CheckMode;
                     }
                     else
                     {
@@ -306,14 +306,15 @@ namespace NeonCli.Ansible
                     context.WriteLine(AnsibleVerbosity.Trace, $"Look up existing DNS entry for [{hostname}]");
 
                     var existingEntry = consul.KV.GetObjectOrDefault<DnsEntry>(hostKey).Result;
+                    var changed       = false;
 
                     if (existingEntry != null)
                     {
                         context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry exists: checking for differences.");
 
-                        context.Changed = !NeonHelper.JsonEquals(newEntry, existingEntry);
+                        changed = !NeonHelper.JsonEquals(newEntry, existingEntry);
 
-                        if (context.Changed)
+                        if (changed)
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"DNS entries are different.");
                         }
@@ -324,11 +325,11 @@ namespace NeonCli.Ansible
                     }
                     else
                     {
-                        context.Changed = true;
+                        changed = true;
                         context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry for [hostname={hostname}] does not exist.");
                     }
 
-                    if (context.Changed)
+                    if (changed)
                     {
                         if (context.CheckMode)
                         {
@@ -340,6 +341,8 @@ namespace NeonCli.Ansible
                             consul.KV.PutObject(hostKey, newEntry).Wait();
                             context.WriteLine(AnsibleVerbosity.Info, $"DNS entry updated.");
                         }
+
+                        context.Changed = !context.CheckMode;
                     }
 
                     break;

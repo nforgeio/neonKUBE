@@ -191,7 +191,7 @@ namespace NeonCli.Ansible
 
                     if (secretState != null)
                     {
-                        context.Changed = true;
+                        context.Changed = !context.CheckMode;
 
                         if (context.CheckMode)
                         {
@@ -251,8 +251,6 @@ namespace NeonCli.Ansible
                     }
                     else
                     {
-                        context.Changed = true;
-
                         if (context.CheckMode)
                         {
                             context.WriteLine(AnsibleVerbosity.Info, $"Secret [{secretName}] will be created when CHECK-MODE is disabled.");
@@ -277,6 +275,7 @@ namespace NeonCli.Ansible
                             if (response.ExitCode == 0)
                             {
                                 context.WriteLine(AnsibleVerbosity.Info, $"[{secretName}] secret was created.");
+                                context.Changed = !context.CheckMode;
                             }
                             else
                             {

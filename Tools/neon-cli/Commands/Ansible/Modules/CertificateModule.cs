@@ -187,7 +187,7 @@ namespace NeonCli.Ansible
                                 context.WriteLine(AnsibleVerbosity.Trace, $"Consul: Signal the certificate change");
                             }
 
-                            context.Changed = true;
+                            context.Changed = !context.CheckMode;
                         }
                         else
                         {
@@ -209,23 +209,28 @@ namespace NeonCli.Ansible
                         context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Reading [{name}]");
 
                         var existingCert = vault.ReadJsonAsync<TlsCertificate>(vaultPath, noException: true).Result;
+                        var changed      = false;
 
                         if (existingCert == null)
                         {
                             context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate does not exist");
-                            context.Changed = true;
+                            context.Changed = !context.CheckMode;
+
+                            changed = true;
                         }
                         else if (!NeonHelper.JsonEquals(existingCert, certificate) || force)
                         {
                             context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate does exists but is different");
-                            context.Changed = true;
+                            context.Changed = !context.CheckMode;
+
+                            changed = true;
                         }
                         else
                         {
                             context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate is unchanged");
                         }
 
-                        if (context.Changed)
+                        if (changed)
                         {
                             if (context.CheckMode)
                             {

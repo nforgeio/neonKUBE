@@ -182,7 +182,7 @@ namespace NeonCli.Ansible
                             context.WriteLine(AnsibleVerbosity.Info, $"Dashboard [{name}] will be deleted when CHECK-MODE is disabled.");
                         }
 
-                        context.Changed = true;
+                        context.Changed = !context.CheckMode;
                     }
                     else
                     {
@@ -231,14 +231,15 @@ namespace NeonCli.Ansible
                     context.WriteLine(AnsibleVerbosity.Trace, $"Looking for existing dashboard [{name}]");
 
                     var existingDashboard = consul.KV.GetObjectOrDefault<ClusterDashboard>(dashboardKey).Result;
+                    var changed           = false;
 
                     if (existingDashboard != null)
                     {
                         context.WriteLine(AnsibleVerbosity.Trace, $"Dashboard exists: checking for differences.");
 
-                        context.Changed = !NeonHelper.JsonEquals(newDashboard, existingDashboard);
+                        changed = !NeonHelper.JsonEquals(newDashboard, existingDashboard);
 
-                        if (context.Changed)
+                        if (changed)
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Dashboards are different.");
                         }
@@ -249,11 +250,11 @@ namespace NeonCli.Ansible
                     }
                     else
                     {
-                        context.Changed = true;
+                        changed = true;
                         context.WriteLine(AnsibleVerbosity.Trace, $"Dashboard for [{name}] does not exist.");
                     }
 
-                    if (context.Changed)
+                    if (changed)
                     {
                         if (context.CheckMode)
                         {
@@ -265,6 +266,8 @@ namespace NeonCli.Ansible
                             consul.KV.PutObject(dashboardKey, newDashboard).Wait();
                             context.WriteLine(AnsibleVerbosity.Info, $"Dashboard updated.");
                         }
+
+                        context.CheckMode = !context.CheckMode;
                     }
 
                     break;

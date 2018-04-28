@@ -657,7 +657,7 @@ namespace NeonCli.Ansible
                                         }
                                         else
                                         {
-                                            context.Changed = true;
+                                            context.Changed = !context.CheckMode;
 
                                             context.WriteLine(AnsibleVerbosity.Trace, $"Removing existing index [{indexId}].");
 
@@ -683,7 +683,6 @@ namespace NeonCli.Ansible
                                     {
                                         context.WriteLine(AnsibleVerbosity.Important, $"Index [{indexId}] will be created when CHECK-MODE is disabled.");
                                         context.WriteLine(AnsibleVerbosity.Trace, $"{sbCreateIndexCommand}");
-
                                     }
                                     else
                                     {

@@ -490,7 +490,7 @@ namespace NeonCli.Ansible
                             }
                         }
 
-                        context.Changed = true;
+                        context.Changed = !context.CheckMode;
                     }
                     break;
 
@@ -508,8 +508,6 @@ namespace NeonCli.Ansible
 
                     if (serviceState == null)
                     {
-                        context.Changed = true;
-
                         if (context.CheckMode)
                         {
                             context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service will be created when CHECK-MODE is disabled.");
@@ -519,6 +517,7 @@ namespace NeonCli.Ansible
                             context.WriteLine(AnsibleVerbosity.Trace, $"Creating [{service.Name}] service.");
                             CreateService(manager, context, service);
                             context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service created.");
+                            context.Changed = !context.CheckMode;
                         }
                     }
                     else

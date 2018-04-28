@@ -250,7 +250,7 @@ namespace NeonCli.Ansible
                             context.WriteLine(AnsibleVerbosity.Trace, $"Route [{name}] deleted.");
                         }
 
-                        context.Changed = true;
+                        context.Changed = !context.CheckMode;
                     }
                     else
                     {
@@ -377,14 +377,15 @@ namespace NeonCli.Ansible
                     context.WriteLine(AnsibleVerbosity.Trace, $"Looking for existing route [{name}]");
 
                     var existingRoute = proxyManager.GetRoute(name);
+                    var changed       = false;
 
                     if (existingRoute != null)
                     {
                         context.WriteLine(AnsibleVerbosity.Trace, $"Route exists: checking for differences.");
 
-                        context.Changed = !NeonHelper.JsonEquals(newRoute, existingRoute);
+                        changed = !NeonHelper.JsonEquals(newRoute, existingRoute);
 
-                        if (context.Changed)
+                        if (changed)
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Routes are different.");
                         }
@@ -392,7 +393,7 @@ namespace NeonCli.Ansible
                         {
                             if (force)
                             {
-                                context.Changed = true;
+                                changed = true;
                                 context.WriteLine(AnsibleVerbosity.Trace, $"Routes are the same but since [force=true] we're going to update anyway.");
                             }
                             else
@@ -403,11 +404,11 @@ namespace NeonCli.Ansible
                     }
                     else
                     {
-                        context.Changed = true;
+                        changed = true;
                         context.WriteLine(AnsibleVerbosity.Trace, $"Route [name={name}] does not exist.");
                     }
                      
-                    if (context.Changed)
+                    if (changed)
                     {
                         if (context.CheckMode)
                         {
@@ -418,9 +419,9 @@ namespace NeonCli.Ansible
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating route [{name}].");
                             proxyManager.PutRoute(newRoute);
                             context.WriteLine(AnsibleVerbosity.Info, $"Route updated.");
-                        }
+                            context.Changed = !context.CheckMode;
+                       }
                     }
-
                     break;
 
                 default:
