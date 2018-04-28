@@ -144,6 +144,10 @@ OPTIONS:
                     onError: message => Console.Error.WriteLine($"*** ERROR {message}"));
             }
 
+            // Emulate a cluster connection so the [NeonClusterHelper] methods will work.
+
+            NeonClusterHelper.OpenCluster(clusterLogin);
+
             // Generate a string with the IP addresses of the management nodes separated
             // by spaces.  We'll need this when we initialize the management nodes.
             //
@@ -176,7 +180,7 @@ OPTIONS:
             // $todo(jeff.lill):
             //
             // We're temporarily disabling redaction to make it easier to investigate
-            // Vault setup issues.  Remove this line before final launch.
+            // Vault setup issues.  Comment out or remove this line before final launch.
             //
             //      https://github.com/jefflill/NeonForge/issues/225
 
