@@ -46,7 +46,7 @@ cd "$env:NF_ROOT\Devops\test"
 
 if ($noshim)
 {
-	$env:SETUP_NO_TOOL_CONTAINER = "--noshim"
+	$env:SETUP_NOSHIM = "--noshim"
 }
 
 if ($imageTag -ne "")
