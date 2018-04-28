@@ -176,7 +176,7 @@ namespace NeonCli.Ansible
 
                             if (context.CheckMode)
                             {
-                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: Certificate [{name}] would be deleted when CHECK-MODE is disabled.");
+                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: Certificate [{name}] will be deleted when CHECK-MODE is disabled.");
                             }
                             else
                             {
@@ -229,7 +229,7 @@ namespace NeonCli.Ansible
                         {
                             if (context.CheckMode)
                             {
-                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: Certificate [{name}] would be deleted when CHECK-MODE is disabled.");
+                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: Certificate [{name}] will be deleted when CHECK-MODE is disabled.");
                             }
                             else
                             {
@@ -243,7 +243,7 @@ namespace NeonCli.Ansible
 
                     default:
 
-                        throw new ArgumentException($"[state={state}] is not one of the valid choices: [absent] or [present].");
+                        throw new ArgumentException($"[state={state}] is not one of the valid choices: [present] or [absent].");
                 }
             }
         }

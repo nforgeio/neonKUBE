@@ -472,7 +472,7 @@ namespace NeonCli.Ansible
                     {
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service would be removed when CHECK-MODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service will be removed when CHECK-MODE is disabled.");
                         }
                         else
                         {
@@ -512,7 +512,7 @@ namespace NeonCli.Ansible
 
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service would be created when CHECK-MODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service will be created when CHECK-MODE is disabled.");
                         }
                         else
                         {
@@ -531,7 +531,7 @@ namespace NeonCli.Ansible
 
                 default:
 
-                    throw new ArgumentException($"[state={state}] is not one of the valid choices: [absent] or [present].");
+                    throw new ArgumentException($"[state={state}] is not one of the valid choices: [present] or [absent].");
             }
         }
 

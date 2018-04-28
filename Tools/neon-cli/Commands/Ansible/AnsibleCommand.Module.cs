@@ -49,6 +49,7 @@ namespace NeonCli
                 Program.Exit(0);
             }
 
+            File.AppendAllText("log.txt", "*** 2\r\n");
             var context = new ModuleContext()
             {
                 Module = module
@@ -93,6 +94,16 @@ namespace NeonCli
                     case "neon_dashboard":
 
                         new DashboardModule().Run(context);
+                        break;
+
+                    case "neon_docker_config":
+
+                        //new DockerConfigModule().Run(context);
+                        break;
+
+                    case "neon_docker_secret":
+
+                        new DockerSecretModule().Run(context);
                         break;
 
                     case "neon_docker_service":

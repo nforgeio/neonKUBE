@@ -372,12 +372,12 @@ MODULES:
             }
 
             var login            = Program.ClusterLogin;
-            var commandSplit     = commandLine.Split("--");
+            var commandSplit     = commandLine.Split(SplitItem);
             var leftCommandLine  = commandSplit.Left;
             var rightCommandLine = commandSplit.Right;
             var command          = leftCommandLine.Arguments.ElementAtOrDefault(1);
 
-            if (leftCommandLine.HasHelpOption || rightCommandLine == null)
+            if (leftCommandLine.HasHelpOption)
             {
                 Help();
                 Program.Exit(0);
@@ -944,7 +944,7 @@ MODULES:
 
             if (command == "vault")
             {
-                var ansibleCommandLine = shim.CommandLine.Split("--").Right;
+                var ansibleCommandLine = shim.CommandLine.Split(SplitItem).Right;
 
                 if (ansibleCommandLine == null)
                 {
@@ -1009,7 +1009,7 @@ MODULES:
 
             // Add any [--env] options to the shim so they can be passed to the container.
 
-            var leftCommandLine = shim.CommandLine.Split("--").Left;
+            var leftCommandLine = shim.CommandLine.Split(SplitItem).Left;
 
             foreach (var envOption in leftCommandLine.GetOptionValues("--env"))
             {
