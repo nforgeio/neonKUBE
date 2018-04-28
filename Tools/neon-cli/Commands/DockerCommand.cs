@@ -99,7 +99,7 @@ the [neon exec] command.
         {
             // Split the command line on "--".
 
-            var split = commandLine.Split("--");
+            var split = commandLine.Split(SplitItem);
 
             var leftCommandLine  = split.Left;
             var rightCommandLine = split.Right;
@@ -361,7 +361,7 @@ the [neon exec] command.
 
             // We're going to upload files for a handful of Docker commands unless this is disabled.
 
-            var split            = shim.CommandLine.Split("--");
+            var split            = shim.CommandLine.Split(SplitItem);
             var leftCommandLine  = split.Left;
             var rightCommandLine = split.Right;
 
