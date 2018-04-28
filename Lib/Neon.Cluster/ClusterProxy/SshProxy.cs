@@ -2517,13 +2517,21 @@ echo $? > {cmdFolder}/exit
                 {
                     // Looks like a hard error.
 
-                    Fault(response.ErrorText.Trim());
+                    if (runOptions.HasFlag(RunOptions.FaultOnError))
+                    {
+                        Fault(response.ErrorText.Trim());
+                    }
+
                     return response;
                 }
             }
 
-            LogLine($"*** Operation failed after retrying [{maxAttempts}] times.");
-            Fault();
+            LogLine($"*** Operation failed after trying [{maxAttempts}] times.");
+
+            if (runOptions.HasFlag(RunOptions.FaultOnError))
+            {
+                Fault();
+            }
 
             return response;
         }
