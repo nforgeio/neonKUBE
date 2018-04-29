@@ -122,7 +122,6 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --noshim                            - See note below.
     --help                              - Display help
     --image-tag=TAG                     - Replaces any [:latest] Docker image
                                           tags when deploying a cluster (usually
@@ -136,8 +135,10 @@ OPTIONS:
                                           password: sysadmin0000
     --machine-username=USERNAME         - Overrides default initial machine
                                           username: sysadmin
+    --noshim                            - See note below.
     --os=ubuntu-16.04                   - Target host OS
     -q, --quiet                         - Disables operation progress
+    --noterminal                        - Disables the shimmed interactive terminal
     -w=SECONDS, --wait=SECONDS          - Seconds to delay for cluster
                                           stablization (defaults to 60s).
 
@@ -203,6 +204,7 @@ Note that the tool may require admin privileges for [--noshim] mode.
                 validOptions.Add("--wait");
                 validOptions.Add("--noshim");
                 validOptions.Add("--image-tag");
+                validOptions.Add("--noterminal");
 
                 if (CommandLine.Arguments.Length == 0)
                 {
@@ -387,6 +389,11 @@ Note that the tool may require admin privileges for [--noshim] mode.
                         var secretsMount = $"-v \"{secretsRoot}:/neoncluster\"";
                         var shimMount    = $"-v \"{shim.ShimExternalFolder}:/shim\"";
                         var options      = shim.Terminal ? "-it" : "-i";
+
+                        if (CommandLine.HasOption("--noterminal"))
+                        {
+                            options = "-i";
+                        }
 
                         // If the NEON_RUN_ENV=PATH environment variable exists and references an 
                         // existing file, then this instance of [neon] is running within the context 
