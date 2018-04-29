@@ -176,7 +176,7 @@ namespace NeonCli.Ansible
 
                 if (response.ErrorText.StartsWith("Status: Error: no such secret:", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    context.WriteLine(AnsibleVerbosity.Trace, $"{secretName}] secret does not exist.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"[{secretName}] secret does not exist.");
                 }
                 else
                 {

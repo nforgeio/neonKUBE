@@ -187,6 +187,7 @@ namespace NeonCli.Ansible
         /// <summary>
         /// Indicates whether one or more errors have been reported.
         /// </summary>
+        [JsonIgnore]
         public bool HasErrors
         {
             get { return errors.Count > 0; }
