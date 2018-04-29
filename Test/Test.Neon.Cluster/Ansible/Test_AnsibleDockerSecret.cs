@@ -25,7 +25,7 @@ namespace TestNeonCluster
         {
             this.cluster = cluster;
 
-            // We're going to use different secret names for each test
+            // We're going to use unique secret names for each test
             // so we only need to reset the test fixture once for
             // all tests implemented by this class.
 

@@ -113,7 +113,7 @@ namespace NeonCli.Ansible
         //  - name: test
         //    hosts: localhost
         //    tasks:
-        //      - name: create secret
+        //      - name: remove secret
         //        neon_docker_secret:
         //          name: my-secret
         //          state: absent
