@@ -27,7 +27,7 @@ namespace TestNeonCluster
 
             // NOTE: These tests do not require a cluster reset every time.
 
-            cluster.Initialize(login: null);
+            cluster.LoginAndInitialize();
         }
 
         [Fact]

@@ -60,7 +60,7 @@ namespace Xunit
     /// This fixture is pretty easy to use.  Simply have your test class inherit
     /// from <see cref="IClassFixture{ClusterFixture}"/> and add a public constructor
     /// that accepts a <see cref="ClusterFixture"/> as the only argument.  Then
-    /// you can call it's <see cref="Initialize(string, Action)"/> method within
+    /// you can call it's <see cref="LoginAndInitialize(string, Action)"/> method within
     /// the constructor passing the cluster login name as well as an <see cref="Action"/>.
     /// You may also use the fixture to initialize cluster services, networks, secrets,
     /// routes, etc. within your custom action.
@@ -71,7 +71,7 @@ namespace Xunit
     /// </note>
     /// <para>
     /// The specified cluster login file must be already present on the current
-    /// machine for the current user.  The <see cref="Initialize(string, Action)"/> method will
+    /// machine for the current user.  The <see cref="LoginAndInitialize(string, Action)"/> method will
     /// logout from the current cluster (if any) and then login to the one specified.
     /// </para>
     /// <note>
@@ -91,12 +91,15 @@ namespace Xunit
     /// <item>
     ///     <term><b>Misc</b></term>
     ///     <description>
+    ///     <see cref="ClearCertificates(bool)"/>
+    ///     <see cref="ClearConsul(bool)"/>
+    ///     <see cref="ClearVault(bool)"/>
     ///     <see cref="Cluster"/><br/>
     ///     <see cref="DockerExecute(string)"/><br/>
     ///     <see cref="DockerExecute(object[])"/>
     ///     <see cref="NeonExecute(string)"/><br/>
-    ///     <see cref="NeonExecute(object[])"/>
-    ///     <see cref="Reset"/><br/>
+    ///     <see cref="NeonExecute(object[])"/><br/>
+    ///     <see cref="Reset"/>
     ///     </description>
     /// </item>
     /// <item>
@@ -168,8 +171,8 @@ namespace Xunit
     ///     <see cref="PutProxyRoute(string, ProxyRoute)"/><br/>
     ///     <see cref="RemoveProxyRoute(string, string)"/><br/>
     ///     <see cref="RestartProxies()"/><br/>
-    ///     <see cref="RestartPublicProxies()"/><br/>
-    ///     <see cref="RestartPrivateProxies()"/>
+    ///     <see cref="RestartPrivateProxies()"/><br/>
+    ///     <see cref="RestartPublicProxies()"/>
     ///     </description>
     /// </item>
     /// </list>
@@ -269,7 +272,7 @@ namespace Xunit
 
         /// <summary>
         /// <b>DO NOT USE:</b> This method is not supported by <see cref="ClusterFixture"/>.
-        /// Use <see cref="Initialize(string, Action)"/> instead.
+        /// Use <see cref="LoginAndInitialize(string, Action)"/> instead.
         /// </summary>
         /// <param name="action">The optional custom initialization action.</param>
         /// <exception cref="NotSupportedException">Thrown always.</exception>
@@ -284,7 +287,7 @@ namespace Xunit
         /// <see cref="Action"/>.
         /// </summary>
         /// <param name="login">
-        /// Specifies a cluster login like <b>USER@CLUSTER</b> or you can pass
+        /// Optionally specifies a cluster login like <b>USER@CLUSTER</b> or you can pass
         /// <c>null</c> to connect to the cluster specified by the <b>NEON_TEST_CLUSTER</b>
         /// environment variable.
         /// </param>
@@ -295,7 +298,7 @@ namespace Xunit
         /// was already initialized.
         /// </returns>
         /// <exception cref="InvalidOperationException">Thrown if this is called from within the <see cref="Action"/>.</exception>
-        public bool Initialize(string login, Action action = null)
+        public bool LoginAndInitialize(string login = null, Action action = null)
         {
             CheckDisposed();
 
@@ -369,7 +372,7 @@ namespace Xunit
                 Reset();
             }
 
-            // Initialize the inherited classes.
+            // Initialize the inherited class.
 
             base.Initialize(action);
 
@@ -596,8 +599,10 @@ namespace Xunit
             // we won't see any reference conflicts.
 
             ClearConfigs();
-            ClearSecrets();
+            //ClearContainers();    // Not implemented yet.
+            ClearNetworks();
             ClearProxyRoutes();
+            ClearSecrets();
         }
 
         /// <summary>
@@ -651,19 +656,19 @@ namespace Xunit
         /// <b>DO NOTE USE:</b> This inherited method from <see cref="DockerFixture"/> doesn't
         /// make sense for a multi-node cluster.
         /// </summary>
-        /// <param name="removeSystemToo">Optionally remove system services as well.</param>
+        /// <param name="removeSystem">Optionally remove system services as well.</param>
         /// <remarks>
         /// By default, this method will not remove neonCLUSTER system containers
         /// whose names begin with <b>neon-</b>.  You can remove these too by
-        /// passing <paramref name="removeSystemToo"/><c>=true</c>.
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
-        public new void ClearContainers(bool removeSystemToo = false)
+        public new void ClearContainers(bool removeSystem = false)
         {
             throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not support this method.");
         }
 
         /// <summary>
-        /// Saves a proxy route to the cluster.
+        /// Persists a proxy route object to the cluster.
         /// </summary>
         /// <param name="proxy">The proxy name (<b>public</b> or <b>private</b>).</param>
         /// <param name="route">The route.</param>
@@ -681,11 +686,31 @@ namespace Xunit
         }
 
         /// <summary>
+        /// Persists a proxy route described as JSON or YAML text to the cluster.
+        /// </summary>
+        /// <param name="proxy">The proxy name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="jsonOrYaml">The route JSON or YAML description.</param>
+        public void PutProxyRoute(string proxy, string jsonOrYaml)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(proxy));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
+
+            base.CheckDisposed();
+            this.CheckCluster();
+
+            var proxyManager = cluster.GetProxyManager(proxy);
+            var route        = ProxyRoute.Parse(jsonOrYaml);
+
+            proxyManager.PutRoute(route);
+        }
+
+        /// <summary>
         /// Lists the cluster proxy routes.
         /// </summary>
         /// <param name="proxy">The proxy name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="includeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
         /// <returns>The routes for the named proxy.</returns>
-        public List<ProxyRoute> ListProxyRoutes(string proxy)
+        public List<ProxyRoute> ListProxyRoutes(string proxy, bool includeSystem = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(proxy));
 
@@ -693,8 +718,16 @@ namespace Xunit
             this.CheckCluster();
 
             var proxyManager = cluster.GetProxyManager(proxy);
+            var routes       = proxyManager.ListRoutes();
 
-            return proxyManager.ListRoutes().ToList();
+            if (includeSystem)
+            {
+                return routes.ToList();
+            }
+            else
+            {
+                return routes.Where(r => !r.Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase)).ToList();
+            }
         }
 
         /// <summary>
@@ -730,13 +763,10 @@ namespace Xunit
 
             foreach (var proxy in new string[] { "public", "private" })
             {
-                foreach (var route in ListProxyRoutes(proxy))
+                foreach (var route in ListProxyRoutes(proxy, removeSystem))
                 {
-                    if (removeSystem || !route.Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        RemoveProxyRoute(proxy, route.Name);
-                        deleted = true;
-                    }
+                    RemoveProxyRoute(proxy, route.Name);
+                    deleted = true;
                 }
             }
 

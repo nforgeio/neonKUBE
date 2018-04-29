@@ -29,7 +29,7 @@ namespace TestNeonCluster
             // so we only need to reset the test fixture once for
             // all tests implemented by this class.
 
-            cluster.Initialize(login: null);
+            cluster.LoginAndInitialize(login: null);
         }
 
         [Fact]
