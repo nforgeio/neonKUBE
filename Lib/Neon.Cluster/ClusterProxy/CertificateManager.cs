@@ -42,12 +42,14 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Deletes a cluster certificate if it exists.
+        /// Removes a cluster certificate if it exists.
         /// </summary>
         /// <param name="name">The certificate name.</param>
-        public void Delete(string name)
+        public void Remove(string name)
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
+
+            cluster.Vault.DeleteAsync(NeonClusterHelper.GetVaultCertificateKey(name)).Wait();
         }
 
         /// <summary>
@@ -79,14 +81,14 @@ namespace Neon.Cluster
         /// <exception cref="ArgumentException">Thrown if the cerfiticate  not valid.</exception>
         /// <remarks>
         /// <note>
-        /// The <paramref name="certificate"/> must me fully parsed (e.g. it's
-        /// <see cref="TlsCertificate.Parse"/> method must have been called at
+        /// The <paramref name="certificate"/> must be fully parsed (e.g. it's
+        /// <see cref="TlsCertificate.Parse()"/> method must have been called at
         /// some point to load the <see cref="TlsCertificate.Hosts"/>, 
         /// <see cref="TlsCertificate.ValidFrom"/> and <see cref="TlsCertificate.ValidUntil"/> 
         /// properties.
         /// </note>
         /// </remarks>
-        public void Set(string name, TlsCertificate certificate)
+        public void Put(string name, TlsCertificate certificate)
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
             Covenant.Requires<ArgumentNullException>(certificate != null);
