@@ -91,9 +91,29 @@ namespace NeonCli
                         new CertificateModule().Run(context);
                         break;
 
+                    case "neon_couchbase_import":
+
+                        new CouchbaseImportModule().Run(context);
+                        break;
+
+                    case "neon_couchbase_index":
+
+                        new CouchbaseIndexModule().Run(context);
+                        break;
+
+                    case "neon_couchbase_query":
+
+                        new CouchbaseQueryModule().Run(context);
+                        break;
+
                     case "neon_dashboard":
 
                         new DashboardModule().Run(context);
+                        break;
+
+                    case "neon_dns":
+
+                        new DnsModule().Run(context);
                         break;
 
                     case "neon_docker_config":
@@ -111,29 +131,9 @@ namespace NeonCli
                         new DockerServiceModule().Run(context);
                         break;
 
-                    case "neon_dns":
+                    case "neon_proxy_route":
 
-                        new DnsModule().Run(context);
-                        break;
-
-                    case "neon_route":
-
-                        new RouteModule().Run(context);
-                        break;
-
-                    case "neon_couchbase_import":
-
-                        new CouchbaseImportModule().Run(context);
-                        break;
-
-                    case "neon_couchbase_index":
-
-                        new CouchbaseIndexModule().Run(context);
-                        break;
-
-                    case "neon_couchbase_query":
-
-                        new CouchbaseQueryModule().Run(context);
+                        new ProxyRouteModule().Run(context);
                         break;
 
                     default:

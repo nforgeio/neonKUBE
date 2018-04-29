@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    RouteModule.cs
+// FILE:	    ProxyRouteModule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -32,7 +32,7 @@ using Neon.Net;
 namespace NeonCli.Ansible
 {
     //---------------------------------------------------------------------
-    // neon_route:
+    // neon_proxy_route:
     //
     // Synopsis:
     // ---------
@@ -161,7 +161,7 @@ namespace NeonCli.Ansible
     /// <summary>
     /// Implements the <b>neon_route</b> Ansible module.
     /// </summary>
-    public class RouteModule : IAnsibleModule
+    public class ProxyRouteModule : IAnsibleModule
     {
         /// <inheritdoc/>
         public void Run(ModuleContext context)
