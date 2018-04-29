@@ -15,7 +15,7 @@ using Neon.Common;
 using Xunit;
 using Xunit.Neon;
 
-namespace TestCluster
+namespace TestNeonCluster
 {
     public class Test_ClusterFixture : IClassFixture<ClusterFixture>
     {

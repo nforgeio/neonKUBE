@@ -17,11 +17,11 @@ using Xunit.Neon;
 
 namespace TestNeonCluster
 {
-    public class Test_AnsibleDockerService : IClassFixture<DockerFixture>
+    public class Test_AnsibleDockerService : IClassFixture<ClusterFixture>
     {
-        private DockerFixture docker;
+        private ClusterFixture docker;
 
-        public Test_AnsibleDockerService(DockerFixture docker)
+        public Test_AnsibleDockerService(ClusterFixture docker)
         {
             this.docker = docker;
         }
