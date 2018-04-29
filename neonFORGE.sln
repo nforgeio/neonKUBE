@@ -200,6 +200,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Cluster", "Lib\Neon.Xunit.Cluster\Neon.Xunit.Cluster.csproj", "{167C080E-3F81-4EB7-93BD-1D8671B51835}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Cluster", "Test\Test.Neon.Cluster\Test.Neon.Cluster.csproj", "{5443E291-C0F4-4EC6-97CF-999E4B8F28BE}"
+	ProjectSection(ProjectDependencies) = postProject
+		{7EC9D996-B464-4493-BF68-8A4A95AA3C83} = {7EC9D996-B464-4493-BF68-8A4A95AA3C83}
+	EndProjectSection
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Samples", "Test\Test.Samples\Test.Samples.csproj", "{95CD429A-C7C0-41CE-89B6-DF20DB78B297}"
 EndProject
