@@ -36,29 +36,218 @@ namespace TestNeonCluster
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void CreateText()
         {
-            using (TestHelper.TempFolder("test.yaml",
-@"
+            var name     = "secret-" + Guid.NewGuid().ToString("D");
+            var playbook =
+$@"
 - name: test
   hosts: localhost
   tasks:
     - name: create secret
       neon_docker_secret:
-        name: text-secret
+        name: {name}
         state: present
         text: password
-"))
-            {
-                var response = NeonHelper.ExecuteCaptureStreams("neon", new object[] { "ansible", "play", "--", "test.yaml"});
+";
+            // Create a new secret.
 
-                Assert.Equal(0, response.ExitCode);
-                Assert.Single(cluster.ListSecrets().Where(s => s.Name == "test-secret"));
-            }
+            var results = AnsiblePlayer.NeonPlay(playbook);
+
+            Assert.NotNull(results);
+
+            var taskResult = results.GetTaskResult("create secret");
+
+            Assert.NotNull(taskResult);
+            Assert.Equal("create secret", taskResult.TaskName);
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListSecrets().Where(s => s.Name == name));
+
+            // Run the playbook again but this time nothing should
+            // be changed because the secret already exists.
+
+            results = AnsiblePlayer.NeonPlay(playbook);
+
+            Assert.NotNull(results);
+
+            taskResult = results.GetTaskResult("create secret");
+
+            Assert.NotNull(taskResult);
+            Assert.Equal("create secret", taskResult.TaskName);
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+            Assert.Single(cluster.ListSecrets().Where(s => s.Name == name));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void CreateBytes()
+        {
+            var name     = "secret-" + Guid.NewGuid().ToString("D");
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: create secret
+      neon_docker_secret:
+        name: {name}
+        state: present
+        bytes: cGFzc3dvcmQ=
+";
+            // Create a new secret.
+
+            var results = AnsiblePlayer.NeonPlay(playbook);
+
+            Assert.NotNull(results);
+
+            var taskResult = results.GetTaskResult("create secret");
+
+            Assert.NotNull(taskResult);
+            Assert.Equal("create secret", taskResult.TaskName);
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListSecrets().Where(s => s.Name == name));
+
+            // Run the playbook again but this time nothing should
+            // be changed because the secret already exists.
+
+            results = AnsiblePlayer.NeonPlay(playbook);
+
+            Assert.NotNull(results);
+
+            taskResult = results.GetTaskResult("create secret");
+
+            Assert.NotNull(taskResult);
+            Assert.Equal("create secret", taskResult.TaskName);
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+            Assert.Single(cluster.ListSecrets().Where(s => s.Name == name));
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Remove()
         {
+            var name = "secret-" + Guid.NewGuid().ToString("D");
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: create secret
+      neon_docker_secret:
+        name: {name}
+        state: present
+        bytes: cGFzc3dvcmQ=
+";
+            // Create a new secret.
+
+            var results = AnsiblePlayer.NeonPlay(playbook);
+
+            Assert.NotNull(results);
+
+            var taskResult = results.GetTaskResult("create secret");
+
+            Assert.NotNull(taskResult);
+            Assert.Equal("create secret", taskResult.TaskName);
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListSecrets().Where(s => s.Name == name));
+
+            // Now remove it.
+
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: remove secret
+      neon_docker_secret:
+        name: {name}
+        state: absent
+        bytes: cGFzc3dvcmQ=
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+
+            Assert.NotNull(results);
+
+            taskResult = results.GetTaskResult("remove secret");
+
+            Assert.NotNull(taskResult);
+            Assert.Equal("remove secret", taskResult.TaskName);
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Empty(cluster.ListSecrets().Where(s => s.Name == name));
+
+            // Remove it again to verify that nothing changes.
+
+            results = AnsiblePlayer.NeonPlay(playbook);
+
+            Assert.NotNull(results);
+
+            taskResult = results.GetTaskResult("remove secret");
+
+            Assert.NotNull(taskResult);
+            Assert.Equal("remove secret", taskResult.TaskName);
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+            Assert.Empty(cluster.ListSecrets().Where(s => s.Name == name));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void ErrorNoName()
+        {
+            var name = "secret-" + Guid.NewGuid().ToString("D");
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: create secret
+      neon_docker_secret:
+        name: {name}
+        state: present
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+
+            Assert.NotNull(results);
+
+            var taskResult = results.GetTaskResult("create secret");
+
+            Assert.NotNull(taskResult);
+            Assert.Equal("create secret", taskResult.TaskName);
+            Assert.False(taskResult.Success);
+            Assert.False(taskResult.Changed);
+            Assert.Empty(cluster.ListSecrets().Where(s => s.Name == name));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void ErrorNoValue()
+        {
+            var name = "secret-" + Guid.NewGuid().ToString("D");
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: create secret
+      neon_docker_secret:
+        state: present
+        bytes: cGFzc3dvcmQ=
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+
+            Assert.NotNull(results);
+
+            var taskResult = results.GetTaskResult("create secret");
+
+            Assert.NotNull(taskResult);
+            Assert.Equal("create secret", taskResult.TaskName);
+            Assert.False(taskResult.Success);
+            Assert.False(taskResult.Changed);
+            Assert.Empty(cluster.ListSecrets().Where(s => s.Name == name));
         }
     }
 }
