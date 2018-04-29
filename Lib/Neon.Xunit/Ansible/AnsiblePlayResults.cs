@@ -1,0 +1,123 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:	    AnsiblePlayResults.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Text;
+
+using Neon.Common;
+
+namespace Xunit
+{
+    /// <summary>
+    /// Holds the results from an <see cref="AnsiblePlayer"/> play operation.
+    /// </summary>
+    public class AnsiblePlayResults
+    {
+        /// <summary>
+        /// Constructs an instance from the execution results of an
+        /// <see cref="AnsiblePlayer"/> play operation.
+        /// </summary>
+        /// <param name="rawResults">The execution results.</param>
+        internal AnsiblePlayResults(ExecuteResult rawResults)
+        {
+            Covenant.Requires<ArgumentNullException>(rawResults != null);
+
+            RawResults = rawResults;
+
+            if (rawResults.ExitCode != 0)
+            {
+                // Must be a command line argument or playbook syntax error.
+
+                throw new Exception(rawResults.ErrorText);
+            }
+
+            using (var reader = new StringReader(rawResults.OutputText))
+            {
+                string line;
+
+                // Skip over all lines until we see the first task line.
+
+                for (line = reader.ReadLine(); line != null; line = reader.ReadLine())
+                {
+                    if (line.StartsWith("TASK [") && line.EndsWith("**********"))
+                    {
+                        break;
+                    }
+                }
+
+                var sbTask   = new StringBuilder();
+                var lastTask = false;
+
+                while (!lastTask)
+                {
+                    // Capture the current line and any subsequent lines up to but not
+                    // including the next task marker or the PLAY RECAP line and then
+                    // use this to create the next task result.
+
+                    sbTask.AppendLine(line);
+
+                    for (line = reader.ReadLine(); line != null; line = reader.ReadLine())
+                    {
+                        if (line.StartsWith("TASK [") && line.EndsWith("**********"))
+                        {
+                            break;
+                        }
+                        else if (line.StartsWith("PLAY RECAP **********") && line.EndsWith("**********"))
+                        {
+                            lastTask = true;
+                            break;
+                        }
+
+                        sbTask.AppendLine(line);
+                    }
+
+                    var taskResult = new AnsibleTaskResult(sbTask.ToString());
+
+                    if (taskResult.HasStatus)
+                    {
+                        TaskResults.Add(taskResult);
+                    }
+
+                    if (!lastTask)
+                    {
+                        sbTask.Clear();
+                        sbTask.AppendLine(line);    // This is the first line of the next task
+                    }
+                }
+            }
+        }
+
+        /// <summary>
+        /// Returns the raw execution results.
+        /// </summary>
+        public ExecuteResult RawResults { get; private set; }
+
+        /// <summary>
+        /// Returns the list of <see cref="AnsibleTaskResult"/> instance in the order
+        /// of execution.
+        /// </summary>
+        public List<AnsibleTaskResult> TaskResults { get; private set; } = new List<AnsibleTaskResult>();
+
+        /// <summary>
+        /// Returns the first <see cref="AnsibleTaskResult"/> for a named task.
+        /// </summary>
+        /// <param name="taskName">The task name.</param>
+        /// <returns>The <see cref="AnsibleTaskResult"/> or <c>null</c> if the named task was not found.</returns>
+        /// <remarks>
+        /// <note>
+        /// Ansible does not enforce task name uniqueness, so it's possible
+        /// to have more than one task sharing the same name.
+        /// </note>
+        /// </remarks>
+        public AnsibleTaskResult GetTaskResult(string taskName)
+        {
+            return TaskResults.SingleOrDefault(tr => tr.TaskName == taskName);
+        }
+    }
+}
