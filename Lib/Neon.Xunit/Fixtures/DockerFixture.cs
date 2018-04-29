@@ -73,6 +73,7 @@ namespace Xunit
     /// <item>
     ///     <term><b>Services</b></term>
     ///     <description>
+    ///     <see cref="ClearServices(bool)"/><br/>
     ///     <see cref="CreateService(string, string, string[], string[], string[])"/><br/>
     ///     <see cref="ListServices(bool)"/><br/>
     ///     <see cref="RemoveService(string)"/>
@@ -81,14 +82,16 @@ namespace Xunit
     /// <item>
     ///     <term><b>Containers</b></term>
     ///     <description>
-    ///     <see cref="RunContainer(string, string, string[], string[], string[])"/><br/>
+    ///     <see cref="ClearContainers(bool)"/><br/>
     ///     <see cref="ListContainers(bool)"/><br/>
     ///     <see cref="RemoveContainer(string)"/>
+    ///     <see cref="RunContainer(string, string, string[], string[], string[])"/><br/>
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><b>Stacks</b></term>
     ///     <description>
+    ///     <see cref="ClearStacks(bool)"/><br/>
     ///     <see cref="DeployStack(string, string, string[], TimeSpan, TimeSpan)"/><br/>
     ///     <see cref="ListStacks(bool)"/><br/>
     ///     <see cref="RemoveStack(string)"/>
@@ -97,6 +100,7 @@ namespace Xunit
     /// <item>
     ///     <term><b>Secrets</b></term>
     ///     <description>
+    ///     <see cref="ClearSecrets(bool)"/><br/>
     ///     <see cref="CreateSecret(string, byte[], string[])"/><br/>
     ///     <see cref="CreateSecret(string, string, string[])"/><br/>
     ///     <see cref="ListSecrets(bool)"/><br/>
@@ -106,6 +110,7 @@ namespace Xunit
     /// <item>
     ///     <term><b>Configs</b></term>
     ///     <description>
+    ///     <see cref="ClearConfigs(bool)"/><br/>
     ///     <see cref="CreateConfig(string, byte[], string[])"/><br/>
     ///     <see cref="CreateConfig(string, string, string[])"/><br/>
     ///     <see cref="ListConfigs(bool)"/><br/>
@@ -115,6 +120,7 @@ namespace Xunit
     /// <item>
     ///     <term><b>Networks</b></term>
     ///     <description>
+    ///     <see cref="ClearNetworks(bool)"/><br/>
     ///     <see cref="CreateNetwork(string, string[])"/><br/>
     ///     <see cref="ListNetworks(bool)"/><br/>
     ///     <see cref="RemoveNetwork(string)"/>
@@ -785,6 +791,30 @@ namespace Xunit
         }
 
         /// <summary>
+        /// Removes all deployed services.
+        /// </summary>
+        /// <param name="removeSystem">Optionally remove system services as well.</param>
+        /// <remarks>
+        /// By default, this method will not remove neonCLUSTER system services
+        /// whose names begin with <b>neon-</b>.  You can remove these too by
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// </remarks>
+        public void ClearServices(bool removeSystem = false)
+        {
+            var names = new List<string>();
+
+            foreach (var service in ListServices(removeSystem))
+            {
+                names.Add(service.Name);
+            }
+
+            if (names.Count > 0)
+            {
+                DockerExecute("service", "rm", names.ToArray());
+            }
+        }
+
+        /// <summary>
         /// Creates a Docker container.
         /// </summary>
         /// <param name="name">The container name.</param>
@@ -905,6 +935,31 @@ namespace Xunit
                     throw new Exception($"Cannot remove container [{name}]: {result.ErrorText}");
                 }
             }
+        }
+
+        /// <summary>
+        /// Removes all running containers.
+        /// </summary>
+        /// <param name="removeSystem">Optionally remove system services as well.</param>
+        /// <remarks>
+        /// By default, this method will not remove neonCLUSTER system containers
+        /// whose names begin with <b>neon-</b>.  You can remove these too by
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// </remarks>
+        public void ClearContainers(bool removeSystem = false)
+        {
+            var ids = new List<string>();
+
+            foreach (var container in ListContainers(removeSystem))
+            {
+                ids.Add(container.Id);
+            }
+
+            if (ids.Count > 0)
+            {
+                DockerExecute("container", "rm", ids.ToArray());
+            }
+
         }
 
         /// <summary>
@@ -1081,6 +1136,30 @@ namespace Xunit
         }
 
         /// <summary>
+        /// Removes all deployed stacks.
+        /// </summary>
+        /// <param name="removeSystem">Optionally remove system stacks as well.</param>
+        /// <remarks>
+        /// By default, this method will not remove neonCLUSTER system stacks
+        /// whose names begin with <b>neon-</b>.  You can remove these too by
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// </remarks>
+        public void ClearStacks(bool removeSystem = false)
+        {
+            var names = new List<string>();
+
+            foreach (var stack in ListStacks(removeSystem))
+            {
+                names.Add(stack.Name);
+            }
+
+            if (names.Count > 0)
+            {
+                DockerExecute("stack", "rm", names.ToArray());
+            }
+        }
+
+        /// <summary>
         /// Creates a Docker secret from text.
         /// </summary>
         /// <param name="name">The secret name.</param>
@@ -1213,6 +1292,30 @@ namespace Xunit
                 {
                     throw new Exception($"Cannot remove secret [{name}]: {result.ErrorText}");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Removes all swarm secrets.
+        /// </summary>
+        /// <param name="removeSystem">Optionally remove system secrets as well.</param>
+        /// <remarks>
+        /// By default, this method will not remove neonCLUSTER system secrets
+        /// whose names begin with <b>neon-</b>.  You can remove these too by
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// </remarks>
+        public void ClearSecrets(bool removeSystem = false)
+        {
+            var names = new List<string>();
+
+            foreach (var secret in ListSecrets(removeSystem))
+            {
+                names.Add(secret.Name);
+            }
+
+            if (names.Count > 0)
+            {
+                DockerExecute("secret", "rm", names.ToArray());
             }
         }
 
@@ -1353,6 +1456,30 @@ namespace Xunit
         }
 
         /// <summary>
+        /// Removes all swarm configs.
+        /// </summary>
+        /// <param name="removeSystem">Optionally remove system configs as well.</param>
+        /// <remarks>
+        /// By default, this method will not remove neonCLUSTER system configs
+        /// whose names begin with <b>neon-</b>.  You can remove these too by
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// </remarks>
+        public void ClearConfigs(bool removeSystem = false)
+        {
+            var names = new List<string>();
+
+            foreach (var config in ListConfigs(removeSystem))
+            {
+                names.Add(config.Name);
+            }
+
+            if (names.Count > 0)
+            {
+                DockerExecute("config", "rm", names.ToArray());
+            }
+        }
+
+        /// <summary>
         /// Creates a Docker network.
         /// </summary>
         /// <param name="name">The network name.</param>
@@ -1468,6 +1595,30 @@ namespace Xunit
                 {
                     throw new Exception($"Cannot remove network [{name}]: {result.ErrorText}");
                 }
+            }
+        }
+
+        /// <summary>
+        /// Removes all swarm networks.
+        /// </summary>
+        /// <param name="removeSystem">Optionally remove system networks as well.</param>
+        /// <remarks>
+        /// By default, this method will not remove neonCLUSTER system networks
+        /// whose names begin with <b>neon-</b>.  You can remove these too by
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// </remarks>
+        public void ClearNetworks(bool removeSystem = false)
+        {
+            var names = new List<string>();
+
+            foreach (var network in ListNetworks(removeSystem))
+            {
+                names.Add(network.Name);
+            }
+
+            if (names.Count > 0)
+            {
+                DockerExecute("network", "rm", names.ToArray());
             }
         }
     }

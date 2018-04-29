@@ -102,6 +102,7 @@ namespace Xunit
     /// <item>
     ///     <term><b>Services</b></term>
     ///     <description>
+    ///     <see cref="DockerFixture.ClearServices(bool)"/>
     ///     <see cref="DockerFixture.CreateService(string, string, string[], string[], string[])"/><br/>
     ///     <see cref="DockerFixture.ListServices(bool)"/><br/>
     ///     <see cref="DockerFixture.RemoveService(string)"/>
@@ -114,15 +115,17 @@ namespace Xunit
     ///     <b>Container functionality is not currently implemented by the fixture.</b>
     ///     </para>
     ///     <para>
-    ///     <see cref="RunContainer(string, string, string[], string[], string[])"/><br/>
-    ///     <see cref="ListContainers(bool)"/><br/>
-    ///     <see cref="RemoveContainer(string)"/>
+    ///     <see cref="DockerFixture.ClearContainers(bool)"/><br/>
+    ///     <see cref="DockerFixture.ListContainers(bool)"/><br/>
+    ///     <see cref="DockerFixture.RemoveContainer(string)"/><br/>
+    ///     <see cref="DockerFixture.RunContainer(string, string, string[], string[], string[])"/><br/>
     ///     </para>
     ///     </description>
     /// </item>
     /// <item>
     ///     <term><b>Stacks</b></term>
     ///     <description>
+    ///     <see cref="DockerFixture.ClearStacks(bool)"/><br/>
     ///     <see cref="DockerFixture.DeployStack(string, string, string[], TimeSpan, TimeSpan)"/><br/>
     ///     <see cref="DockerFixture.ListStacks(bool)"/><br/>
     ///     <see cref="DockerFixture.RemoveStack(string)"/>
@@ -131,6 +134,7 @@ namespace Xunit
     /// <item>
     ///     <term><b>Secrets</b></term>
     ///     <description>
+    ///     <see cref="DockerFixture.ClearSecrets(bool)"/><br/>
     ///     <see cref="DockerFixture.CreateSecret(string, byte[], string[])"/><br/>
     ///     <see cref="DockerFixture.CreateSecret(string, string, string[])"/><br/>
     ///     <see cref="DockerFixture.ListSecrets(bool)"/><br/>
@@ -140,6 +144,7 @@ namespace Xunit
     /// <item>
     ///     <term><b>Configs</b></term>
     ///     <description>
+    ///     <see cref="DockerFixture.ClearSecrets(bool)"/><br/>
     ///     <see cref="DockerFixture.CreateConfig(string, byte[], string[])"/><br/>
     ///     <see cref="DockerFixture.CreateConfig(string, string, string[])"/><br/>
     ///     <see cref="DockerFixture.ListConfigs(bool)"/><br/>
@@ -149,6 +154,7 @@ namespace Xunit
     /// <item>
     ///     <term><b>Networks</b></term>
     ///     <description>
+    ///     <see cref="DockerFixture.ClearNetworks(bool)"/><br/>
     ///     <see cref="DockerFixture.CreateNetwork(string, string[])"/><br/>
     ///     <see cref="DockerFixture.ListNetworks(bool)"/><br/>
     ///     <see cref="DockerFixture.RemoveNetwork(string)"/>
@@ -157,8 +163,9 @@ namespace Xunit
     /// <item>
     ///     <term><b>Proxy Routes</b></term>
     ///     <description>
-    ///     <see cref="PutProxyRoute(string, ProxyRoute)"/><br/>
+    ///     <see cref="ClearProxyRoutes(bool)"/><br/>
     ///     <see cref="ListProxyRoutes(string)"/><br/>
+    ///     <see cref="PutProxyRoute(string, ProxyRoute)"/><br/>
     ///     <see cref="RemoveProxyRoute(string, string)"/><br/>
     ///     <see cref="RestartProxies()"/><br/>
     ///     <see cref="RestartPublicProxies()"/><br/>
@@ -582,103 +589,15 @@ namespace Xunit
 
             // Reset the basic Swarm state.
 
-            var serviceNames = new List<string>();
+            ClearServices();
+            ClearStacks();
 
-            foreach (var service in ListServices())
-            {
-                serviceNames.Add(service.Name);
-            }
+            // We're clearing these after the services and stacks so
+            // we won't see any reference conflicts.
 
-            if (serviceNames.Count > 0)
-            {
-                DockerExecute("service", "rm", serviceNames.ToArray());
-            }
-
-            var stackNames = new List<string>();
-
-            foreach (var stack in ListStacks())
-            {
-                stackNames.Add(stack.Name);
-            }
-
-            if (stackNames.Count > 0)
-            {
-                DockerExecute("stack", "rm", serviceNames.ToArray());
-            }
-
-            // $todo(jeff.lill):
-            //
-            // The items below can probably be deleted in parallel
-            // as a performance improvement.
-
-            var secretNames = new List<string>();
-
-            foreach (var secret in ListSecrets())
-            {
-                secretNames.Add(secret.Name);
-            }
-
-            if (secretNames.Count > 0)
-            {
-                DockerExecute("secret", "rm", secretNames.ToArray());
-            }
-
-            var configNames = new List<string>();
-
-            foreach (var config in ListConfigs())
-            {
-                configNames.Add(config.Name);
-            }
-
-            if (configNames.Count > 0)
-            {
-                DockerExecute("config", "rm", configNames.ToArray());
-            }
-
-            var networkNames = new List<string>();
-
-            foreach (var network in ListNetworks())
-            {
-                networkNames.Add(network.Name);
-            }
-
-            if (networkNames.Count > 0)
-            {
-                DockerExecute("network", "rm", networkNames.ToArray());
-            }
-
-            // Remove any user proxy routes.  We're going to assume that routes
-            // with names that start with "neon-" are built-in neonCLUSTER routes
-            // and we'll leave these alone.
-
-            var deletedRoutes = false;
-
-            foreach (var route in ListProxyRoutes("public"))
-            {
-                if (!route.Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    if (cluster.PublicProxy.RemoveRoute(route.Name))
-                    {
-                        deletedRoutes = true;
-                    }
-                }
-            }
-
-            foreach (var route in ListProxyRoutes("private"))
-            {
-                if (!route.Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    if (cluster.PrivateProxy.RemoveRoute(route.Name))
-                    {
-                        deletedRoutes = true;
-                    }
-                }
-            }
-        
-            if (deletedRoutes)
-            {
-                RestartProxies();
-            }
+            ClearConfigs();
+            ClearSecrets();
+            ClearProxyRoutes();
         }
 
         /// <summary>
@@ -725,6 +644,21 @@ namespace Xunit
             base.CheckDisposed();
             this.CheckCluster();
 
+            throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not support this method.");
+        }
+
+        /// <summary>
+        /// <b>DO NOTE USE:</b> This inherited method from <see cref="DockerFixture"/> doesn't
+        /// make sense for a multi-node cluster.
+        /// </summary>
+        /// <param name="removeSystemToo">Optionally remove system services as well.</param>
+        /// <remarks>
+        /// By default, this method will not remove neonCLUSTER system containers
+        /// whose names begin with <b>neon-</b>.  You can remove these too by
+        /// passing <paramref name="removeSystemToo"/><c>=true</c>.
+        /// </remarks>
+        public new void ClearContainers(bool removeSystemToo = false)
+        {
             throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not support this method.");
         }
 
@@ -782,7 +716,38 @@ namespace Xunit
         }
 
         /// <summary>
-        /// Restarts cluster proxies to ensure that they's picked up any
+        /// Removes all proxy routes.
+        /// </summary>
+        /// <param name="removeSystem">Optionally remove system routes as well.</param>
+        /// <remarks>
+        /// By default, this method will not remove neonCLUSTER system routes
+        /// whose names begin with <b>neon-</b>.  You can remove these too by
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// </remarks>
+        public void ClearProxyRoutes(bool removeSystem = false)
+        {
+            var deleted = false;
+
+            foreach (var proxy in new string[] { "public", "private" })
+            {
+                foreach (var route in ListProxyRoutes(proxy))
+                {
+                    if (removeSystem || !route.Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        RemoveProxyRoute(proxy, route.Name);
+                        deleted = true;
+                    }
+                }
+            }
+
+            if (deleted)
+            {
+                RestartProxies();
+            }
+        }
+
+        /// <summary>
+        /// Restarts cluster proxies to ensure that they pick up any
         /// proxy definition changes.
         /// </summary>
         public void RestartProxies()
