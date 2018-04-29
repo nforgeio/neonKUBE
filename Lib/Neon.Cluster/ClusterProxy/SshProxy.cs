@@ -2714,14 +2714,14 @@ echo $? > {cmdFolder}/exit
 
             // Verify that the private key looks reasonable.
 
-            if (!certificate.Key.StartsWith("-----BEGIN PRIVATE KEY-----"))
+            if (!certificate.KeyPem.StartsWith("-----BEGIN PRIVATE KEY-----"))
             {
                 throw new FormatException($"The [{name}] certificate's private key is not PEM encoded.");
             }
 
             // Verify the certificate.
 
-            if (!certificate.Cert.StartsWith("-----BEGIN CERTIFICATE-----"))
+            if (!certificate.CertPem.StartsWith("-----BEGIN CERTIFICATE-----"))
             {
                 throw new ArgumentException($"The [{name}] certificate is not PEM encoded.");
             }
@@ -2733,17 +2733,17 @@ echo $? > {cmdFolder}/exit
             // Then we're going to upload these to [/tmp/cert.crt] and [/tmp/cert.ca]
             // and then use the [openssl] command to verify it.
 
-            var pos = certificate.Cert.IndexOf("-----END CERTIFICATE-----");
+            var pos = certificate.CertPem.IndexOf("-----END CERTIFICATE-----");
 
             if (pos == -1)
             {
                 throw new ArgumentNullException($"The [{name}] certificate is not formatted properly.");
             }
 
-            pos = certificate.Cert.IndexOf("-----BEGIN CERTIFICATE-----", pos);
+            pos = certificate.CertPem.IndexOf("-----BEGIN CERTIFICATE-----", pos);
 
-            var issuedCert = certificate.Cert.Substring(0, pos);
-            var caBundle   = certificate.Cert.Substring(pos);
+            var issuedCert = certificate.CertPem.Substring(0, pos);
+            var caBundle   = certificate.CertPem.Substring(pos);
 
             try
             {

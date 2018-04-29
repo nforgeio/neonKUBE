@@ -186,7 +186,7 @@ certificates, and then finally the private key.
 
                         certificate = vault.ReadJsonAsync<TlsCertificate>(NeonClusterHelper.GetVaultCertificateKey(certName)).Result;
 
-                        Console.WriteLine(certificate.Combine());
+                        Console.WriteLine(certificate.CombinedPem);
                     }
                     break;
 
@@ -200,7 +200,7 @@ certificates, and then finally the private key.
 
                     certificate = TlsCertificate.Load(commandLine.Arguments[0], commandLine.Arguments[1]);
 
-                    File.WriteAllText(commandLine.Arguments[2], certificate.Combine());
+                    File.WriteAllText(commandLine.Arguments[2], certificate.CombinedPem);
                     break;
 
                 case "list":
@@ -349,8 +349,8 @@ certificates, and then finally the private key.
 
                     certificate = TlsCertificate.Load(commandLine.Arguments[0]);
 
-                    File.WriteAllText(commandLine.Arguments[1], certificate.Cert);
-                    File.WriteAllText(commandLine.Arguments[2], certificate.Key);
+                    File.WriteAllText(commandLine.Arguments[1], certificate.CertPem);
+                    File.WriteAllText(commandLine.Arguments[2], certificate.KeyPem);
                     break;
 
                 case "verify":
@@ -454,17 +454,17 @@ certificates, and then finally the private key.
 
             try
             {
-                var pos = certificate.Cert.IndexOf("-----END CERTIFICATE-----");
+                var pos = certificate.CertPem.IndexOf("-----END CERTIFICATE-----");
 
                 if (pos == -1)
                 {
                     throw new ArgumentNullException("The certificate is not formatted properly.");
                 }
 
-                pos = certificate.Cert.IndexOf("-----BEGIN CERTIFICATE-----", pos);
+                pos = certificate.CertPem.IndexOf("-----BEGIN CERTIFICATE-----", pos);
 
-                var issuedCert = certificate.Cert.Substring(0, pos);
-                var caBundle   = certificate.Cert.Substring(pos);
+                var issuedCert = certificate.CertPem.Substring(0, pos);
+                var caBundle   = certificate.CertPem.Substring(pos);
 
                 File.WriteAllText(tempCertPath, issuedCert);
                 File.WriteAllText(tempCaPath, caBundle);

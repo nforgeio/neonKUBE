@@ -71,12 +71,13 @@ namespace Xunit
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>Services</b></term>
+    ///     <term><b>Configs</b></term>
     ///     <description>
-    ///     <see cref="ClearServices(bool)"/><br/>
-    ///     <see cref="CreateService(string, string, string[], string[], string[])"/><br/>
-    ///     <see cref="ListServices(bool)"/><br/>
-    ///     <see cref="RemoveService(string)"/>
+    ///     <see cref="ClearConfigs(bool)"/><br/>
+    ///     <see cref="CreateConfig(string, byte[], string[])"/><br/>
+    ///     <see cref="CreateConfig(string, string, string[])"/><br/>
+    ///     <see cref="ListConfigs(bool)"/><br/>
+    ///     <see cref="RemoveConfig(string)"/>
     ///     </description>
     /// </item>
     /// <item>
@@ -89,12 +90,12 @@ namespace Xunit
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>Stacks</b></term>
+    ///     <term><b>Networks</b></term>
     ///     <description>
-    ///     <see cref="ClearStacks(bool)"/><br/>
-    ///     <see cref="DeployStack(string, string, string[], TimeSpan, TimeSpan)"/><br/>
-    ///     <see cref="ListStacks(bool)"/><br/>
-    ///     <see cref="RemoveStack(string)"/>
+    ///     <see cref="ClearNetworks(bool)"/><br/>
+    ///     <see cref="CreateNetwork(string, string[])"/><br/>
+    ///     <see cref="ListNetworks(bool)"/><br/>
+    ///     <see cref="RemoveNetwork(string)"/>
     ///     </description>
     /// </item>
     /// <item>
@@ -108,22 +109,21 @@ namespace Xunit
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>Configs</b></term>
+    ///     <term><b>Services</b></term>
     ///     <description>
-    ///     <see cref="ClearConfigs(bool)"/><br/>
-    ///     <see cref="CreateConfig(string, byte[], string[])"/><br/>
-    ///     <see cref="CreateConfig(string, string, string[])"/><br/>
-    ///     <see cref="ListConfigs(bool)"/><br/>
-    ///     <see cref="RemoveConfig(string)"/>
+    ///     <see cref="ClearServices(bool)"/><br/>
+    ///     <see cref="CreateService(string, string, string[], string[], string[])"/><br/>
+    ///     <see cref="ListServices(bool)"/><br/>
+    ///     <see cref="RemoveService(string)"/>
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>Networks</b></term>
+    ///     <term><b>Stacks</b></term>
     ///     <description>
-    ///     <see cref="ClearNetworks(bool)"/><br/>
-    ///     <see cref="CreateNetwork(string, string[])"/><br/>
-    ///     <see cref="ListNetworks(bool)"/><br/>
-    ///     <see cref="RemoveNetwork(string)"/>
+    ///     <see cref="ClearStacks(bool)"/><br/>
+    ///     <see cref="DeployStack(string, string, string[], TimeSpan, TimeSpan)"/><br/>
+    ///     <see cref="ListStacks(bool)"/><br/>
+    ///     <see cref="RemoveStack(string)"/>
     ///     </description>
     /// </item>
     /// </list>
@@ -668,6 +668,9 @@ namespace Xunit
             }
         }
 
+        //---------------------------------------------------------------------
+        // Services
+
         /// <summary>
         /// Creates a Docker service.
         /// </summary>
@@ -814,6 +817,9 @@ namespace Xunit
             }
         }
 
+        //---------------------------------------------------------------------
+        // Containers
+
         /// <summary>
         /// Creates a Docker container.
         /// </summary>
@@ -959,8 +965,10 @@ namespace Xunit
             {
                 DockerExecute("container", "rm", ids.ToArray());
             }
-
         }
+
+        //---------------------------------------------------------------------
+        // Stacks
 
         /// <summary>
         /// Deploys a Docker stack.
@@ -1159,6 +1167,9 @@ namespace Xunit
             }
         }
 
+        //---------------------------------------------------------------------
+        // Secrets
+
         /// <summary>
         /// Creates a Docker secret from text.
         /// </summary>
@@ -1319,6 +1330,9 @@ namespace Xunit
             }
         }
 
+        //---------------------------------------------------------------------
+        // Configs
+
         /// <summary>
         /// Creates a Docker config from text.
         /// </summary>
@@ -1478,6 +1492,9 @@ namespace Xunit
                 DockerExecute("config", "rm", names.ToArray());
             }
         }
+
+        //---------------------------------------------------------------------
+        // Networks
 
         /// <summary>
         /// Creates a Docker network.

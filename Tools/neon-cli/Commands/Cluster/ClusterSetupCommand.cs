@@ -814,10 +814,10 @@ OPTIONS:
 
                     if (!node.Metadata.IsPet)
                     {
-                        node.UploadText($"/usr/local/share/ca-certificates/{NeonHosts.Vault}.crt", clusterLogin.VaultCertificate.Cert);
+                        node.UploadText($"/usr/local/share/ca-certificates/{NeonHosts.Vault}.crt", clusterLogin.VaultCertificate.CertPem);
                         node.SudoCommand("mkdir -p /etc/vault");
-                        node.UploadText($"/etc/vault/vault.crt", clusterLogin.VaultCertificate.Cert);
-                        node.UploadText($"/etc/vault/vault.key", clusterLogin.VaultCertificate.Key);
+                        node.UploadText($"/etc/vault/vault.crt", clusterLogin.VaultCertificate.CertPem);
+                        node.UploadText($"/etc/vault/vault.key", clusterLogin.VaultCertificate.KeyPem);
                         node.SudoCommand("chmod 600 /etc/vault/*");
 
                         // $todo(jeff.lill): Install the Consul certificate once we support Consul TLS.

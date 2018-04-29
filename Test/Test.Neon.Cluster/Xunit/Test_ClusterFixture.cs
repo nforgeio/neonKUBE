@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Cluster;
+using Neon.Cryptography;
 
 using Xunit;
 using Xunit.Neon;
@@ -72,6 +73,7 @@ services:
             privateRoute.Backends.Add(new ProxyTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
             cluster.PutProxyRoute("private", privateRoute);
+            cluster.PutCertificate("test-certificate", TestCertificate.CombinedPem);
         }
 
         [Fact]
@@ -102,6 +104,9 @@ services:
             Assert.Single(cluster.ListProxyRoutes("private"));
             Assert.Single(cluster.ListProxyRoutes("private").Where(item => item.Name == "test-route"));
 
+            Assert.Single(cluster.ListCertificates());
+            Assert.Single(cluster.ListCertificates().Where(item => item == "test-certificate"));
+
             // Now reset the cluster and verify that all state was cleared.
 
             cluster.Reset();
@@ -113,6 +118,15 @@ services:
             Assert.Empty(cluster.ListNetworks());
             Assert.Empty(cluster.ListProxyRoutes("public"));
             Assert.Empty(cluster.ListProxyRoutes("private"));
+            Assert.Empty(cluster.ListCertificates());
+        }
+
+        /// <summary>
+        /// Returns a self-signed PEM encoded certificate and private key for testing purposes.
+        /// </summary>
+        private TlsCertificate TestCertificate
+        {
+            get { return TlsCertificate.CreateSelfSigned("test.com", 2048); }
         }
     }
 }

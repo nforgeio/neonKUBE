@@ -17,6 +17,7 @@ using YamlDotNet.RepresentationModel;
 
 using Neon.Cluster;
 using Neon.Common;
+using Neon.Cryptography;
 
 namespace Xunit
 {
@@ -91,7 +92,6 @@ namespace Xunit
     /// <item>
     ///     <term><b>Misc</b></term>
     ///     <description>
-    ///     <see cref="ClearCertificates(bool)"/>
     ///     <see cref="ClearConsul(bool)"/>
     ///     <see cref="ClearVault(bool)"/>
     ///     <see cref="Cluster"/><br/>
@@ -103,12 +103,22 @@ namespace Xunit
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>Services</b></term>
+    ///     <term><b>Certificates</b></term>
     ///     <description>
-    ///     <see cref="DockerFixture.ClearServices(bool)"/>
-    ///     <see cref="DockerFixture.CreateService(string, string, string[], string[], string[])"/><br/>
-    ///     <see cref="DockerFixture.ListServices(bool)"/><br/>
-    ///     <see cref="DockerFixture.RemoveService(string)"/>
+    ///     <see cref="ClearCertificates(bool)"/><br/>
+    ///     <see cref="ListCertificates(bool)"/><br/>
+    ///     <see cref="PutCertificate(string, string)"/><br/>
+    ///     <see cref="RemoveCertificate(string)"/><br/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Configs</b></term>
+    ///     <description>
+    ///     <see cref="DockerFixture.ClearSecrets(bool)"/><br/>
+    ///     <see cref="DockerFixture.CreateConfig(string, byte[], string[])"/><br/>
+    ///     <see cref="DockerFixture.CreateConfig(string, string, string[])"/><br/>
+    ///     <see cref="DockerFixture.ListConfigs(bool)"/><br/>
+    ///     <see cref="DockerFixture.RemoveConfig(string)"/>
     ///     </description>
     /// </item>
     /// <item>
@@ -126,12 +136,24 @@ namespace Xunit
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>Stacks</b></term>
+    ///     <term><b>Networks</b></term>
     ///     <description>
-    ///     <see cref="DockerFixture.ClearStacks(bool)"/><br/>
-    ///     <see cref="DockerFixture.DeployStack(string, string, string[], TimeSpan, TimeSpan)"/><br/>
-    ///     <see cref="DockerFixture.ListStacks(bool)"/><br/>
-    ///     <see cref="DockerFixture.RemoveStack(string)"/>
+    ///     <see cref="DockerFixture.ClearNetworks(bool)"/><br/>
+    ///     <see cref="DockerFixture.CreateNetwork(string, string[])"/><br/>
+    ///     <see cref="DockerFixture.ListNetworks(bool)"/><br/>
+    ///     <see cref="DockerFixture.RemoveNetwork(string)"/>
+    ///     </description>
+    /// </item>
+    /// <item>
+    ///     <term><b>Proxy Routes</b></term>
+    ///     <description>
+    ///     <see cref="ClearProxyRoutes(bool)"/><br/>
+    ///     <see cref="ListProxyRoutes(string, bool)"/><br/>
+    ///     <see cref="PutProxyRoute(string, ProxyRoute)"/><br/>
+    ///     <see cref="RemoveProxyRoute(string, string)"/><br/>
+    ///     <see cref="RestartProxies()"/><br/>
+    ///     <see cref="RestartPrivateProxies()"/><br/>
+    ///     <see cref="RestartPublicProxies()"/>
     ///     </description>
     /// </item>
     /// <item>
@@ -145,34 +167,21 @@ namespace Xunit
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>Configs</b></term>
+    ///     <term><b>Services</b></term>
     ///     <description>
-    ///     <see cref="DockerFixture.ClearSecrets(bool)"/><br/>
-    ///     <see cref="DockerFixture.CreateConfig(string, byte[], string[])"/><br/>
-    ///     <see cref="DockerFixture.CreateConfig(string, string, string[])"/><br/>
-    ///     <see cref="DockerFixture.ListConfigs(bool)"/><br/>
-    ///     <see cref="DockerFixture.RemoveConfig(string)"/>
+    ///     <see cref="DockerFixture.ClearServices(bool)"/>
+    ///     <see cref="DockerFixture.CreateService(string, string, string[], string[], string[])"/><br/>
+    ///     <see cref="DockerFixture.ListServices(bool)"/><br/>
+    ///     <see cref="DockerFixture.RemoveService(string)"/>
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>Networks</b></term>
+    ///     <term><b>Stacks</b></term>
     ///     <description>
-    ///     <see cref="DockerFixture.ClearNetworks(bool)"/><br/>
-    ///     <see cref="DockerFixture.CreateNetwork(string, string[])"/><br/>
-    ///     <see cref="DockerFixture.ListNetworks(bool)"/><br/>
-    ///     <see cref="DockerFixture.RemoveNetwork(string)"/>
-    ///     </description>
-    /// </item>
-    /// <item>
-    ///     <term><b>Proxy Routes</b></term>
-    ///     <description>
-    ///     <see cref="ClearProxyRoutes(bool)"/><br/>
-    ///     <see cref="ListProxyRoutes(string)"/><br/>
-    ///     <see cref="PutProxyRoute(string, ProxyRoute)"/><br/>
-    ///     <see cref="RemoveProxyRoute(string, string)"/><br/>
-    ///     <see cref="RestartProxies()"/><br/>
-    ///     <see cref="RestartPrivateProxies()"/><br/>
-    ///     <see cref="RestartPublicProxies()"/>
+    ///     <see cref="DockerFixture.ClearStacks(bool)"/><br/>
+    ///     <see cref="DockerFixture.DeployStack(string, string, string[], TimeSpan, TimeSpan)"/><br/>
+    ///     <see cref="DockerFixture.ListStacks(bool)"/><br/>
+    ///     <see cref="DockerFixture.RemoveStack(string)"/>
     ///     </description>
     /// </item>
     /// </list>
@@ -598,12 +607,16 @@ namespace Xunit
             // We're clearing these after the services and stacks so
             // we won't see any reference conflicts.
 
+            ClearCertificates();
             ClearConfigs();
             //ClearContainers();    // Not implemented yet.
             ClearNetworks();
             ClearProxyRoutes();
             ClearSecrets();
         }
+
+        //---------------------------------------------------------------------
+        // Containers
 
         /// <summary>
         /// <b>DO NOTE USE:</b> This inherited method from <see cref="DockerFixture"/> doesn't
@@ -666,6 +679,9 @@ namespace Xunit
         {
             throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not support this method.");
         }
+
+        //---------------------------------------------------------------------
+        // Proxy routes
 
         /// <summary>
         /// Persists a proxy route object to the cluster.
@@ -817,6 +833,78 @@ namespace Xunit
             // of the pets as well.
 
             DockerExecute("service", "update", "--force", "--update-parallelism", "0", "neon-proxy-private");
+        }
+
+        //---------------------------------------------------------------------
+        // Certificates
+
+        /// <summary>
+        /// Persists a certificate to the cluster.
+        /// </summary>
+        /// <param name="name">The certificate name.</param>
+        /// <param name="certPem">The PEM encoded certificate and private key.</param>
+        public void PutCertificate(string name, string certPem)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(certPem));
+
+            base.CheckDisposed();
+            this.CheckCluster();
+
+            cluster.Certificate.Put(name, TlsCertificate.Parse(certPem));
+        }
+
+        /// <summary>
+        /// Lists the names of the cluster certificates.
+        /// </summary>
+        /// <param name="includeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
+        /// <returns>The certificate names.</returns>
+        public List<string> ListCertificates(bool includeSystem = false)
+        {
+            base.CheckDisposed();
+            this.CheckCluster();
+
+            var certificates = cluster.Certificate.List();
+
+            if (includeSystem)
+            {
+                return certificates.ToList();
+            }
+            else
+            {
+                return certificates.Where(name => !name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase)).ToList();
+            }
+        }
+
+        /// <summary>
+        /// Removes a certificate.
+        /// </summary>
+        /// <param name="name">The certificate name.</param>
+        public void RemoveCertificate(string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            base.CheckDisposed();
+            this.CheckCluster();
+
+            cluster.Certificate.Remove(name);
+        }
+
+        /// <summary>
+        /// Removes all certificates.
+        /// </summary>
+        /// <param name="removeSystem">Optionally remove system routes as well.</param>
+        /// <remarks>
+        /// By default, this method will not remove neonCLUSTER system certificates
+        /// whose names begin with <b>neon-</b>.  You can remove these too by
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// </remarks>
+        public void ClearCertificates(bool removeSystem = false)
+        {
+            foreach (var certificate in ListCertificates(removeSystem))
+            {
+                RemoveCertificate(certificate);
+            }
         }
     }
 }

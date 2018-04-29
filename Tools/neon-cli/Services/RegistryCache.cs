@@ -75,8 +75,8 @@ namespace NeonCli
 
                     try
                     {
-                        cluster.ClusterLogin.RegistryCerts.Add(manager.Name, certificate.Cert);
-                        cluster.ClusterLogin.RegistryKeys.Add(manager.Name, certificate.Key);
+                        cluster.ClusterLogin.RegistryCerts.Add(manager.Name, certificate.CertPem);
+                        cluster.ClusterLogin.RegistryKeys.Add(manager.Name, certificate.KeyPem);
                     }
                     catch (Exception e)
                     {

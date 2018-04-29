@@ -166,15 +166,15 @@ pu/xO28QOG8=
         {
             var cert = new TlsCertificate(TestCertPart + TestKeyPart);
 
-            Assert.Equal(TlsCertificate.NormalizePem(TestCertPart), cert.Cert);
-            Assert.Equal(TlsCertificate.NormalizePem(TestKeyPart), cert.Key);
+            Assert.Equal(TlsCertificate.NormalizePem(TestCertPart), cert.CertPem);
+            Assert.Equal(TlsCertificate.NormalizePem(TestKeyPart), cert.KeyPem);
 
             cert = new TlsCertificate(TestCertPart, TestKeyPart);
 
-            Assert.Equal(TlsCertificate.NormalizePem(TestCertPart), cert.Cert);
-            Assert.Equal(TlsCertificate.NormalizePem(TestKeyPart), cert.Key);
+            Assert.Equal(TlsCertificate.NormalizePem(TestCertPart), cert.CertPem);
+            Assert.Equal(TlsCertificate.NormalizePem(TestKeyPart), cert.KeyPem);
 
-            Assert.Equal(TlsCertificate.NormalizePem(TestCertPart) + TlsCertificate.NormalizePem(TestKeyPart), cert.Combine());
+            Assert.Equal(TlsCertificate.NormalizePem(TestCertPart) + TlsCertificate.NormalizePem(TestKeyPart), cert.CombinedPem);
         }
 
         [Fact]
@@ -204,8 +204,8 @@ pu/xO28QOG8=
 
                 var cert = TlsCertificate.Load(path1, path2);
 
-                Assert.Equal(TlsCertificate.NormalizePem(TestCertPart), cert.Cert);
-                Assert.Equal(TlsCertificate.NormalizePem(TestKeyPart), cert.Key);
+                Assert.Equal(TlsCertificate.NormalizePem(TestCertPart), cert.CertPem);
+                Assert.Equal(TlsCertificate.NormalizePem(TestKeyPart), cert.KeyPem);
 
                 // Separate files with LF line endings.
 
@@ -214,8 +214,8 @@ pu/xO28QOG8=
 
                 cert = TlsCertificate.Load(path1, path2);
 
-                Assert.Equal(TlsCertificate.NormalizePem(TestCertPart), cert.Cert);
-                Assert.Equal(TlsCertificate.NormalizePem(TestKeyPart), cert.Key);
+                Assert.Equal(TlsCertificate.NormalizePem(TestCertPart), cert.CertPem);
+                Assert.Equal(TlsCertificate.NormalizePem(TestKeyPart), cert.KeyPem);
 
                 // Combined file with CRLF line endings.
 

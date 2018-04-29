@@ -75,6 +75,16 @@ namespace Neon.Cryptography
         }
 
         /// <summary>
+        /// Parses a certificate and private key from PEM encoded text.
+        /// </summary>
+        /// <param name="pemCombined">The PEM encoded certificate and private key.</param>
+        /// <returns>The parsed <see cref="TlsCertificate"/>.</returns>
+        public static TlsCertificate Parse(string pemCombined)
+        {
+            return new TlsCertificate(pemCombined);
+        }
+
+        /// <summary>
         /// Normalizes PEM encoded text to have Linux style (LF) line endings.
         /// </summary>
         /// <param name="input">The input text.</param>
@@ -155,9 +165,8 @@ namespace Neon.Cryptography
                     throw new Exception($"Certificate Error: {result.ErrorText}");
                 }
 
-                File.WriteAllText(combinedPath, File.ReadAllText(certPath) + File.ReadAllText(keyPath));
-
-                var certificate = TlsCertificate.Load(combinedPath);
+                var certPem     = File.ReadAllText(certPath) + File.ReadAllText(keyPath);
+                var certificate = TlsCertificate.Parse(certPem);
 
                 certificate.Parse();
 
@@ -195,17 +204,17 @@ namespace Neon.Cryptography
 
             try
             {
-                var pos = certificate.Cert.IndexOf("-----END CERTIFICATE-----");
+                var pos = certificate.CertPem.IndexOf("-----END CERTIFICATE-----");
 
                 if (pos == -1)
                 {
                     throw new ArgumentNullException("The certificate is not formatted properly.");
                 }
 
-                pos = certificate.Cert.IndexOf("-----BEGIN CERTIFICATE-----", pos);
+                pos = certificate.CertPem.IndexOf("-----BEGIN CERTIFICATE-----", pos);
 
-                var issuedCert = certificate.Cert.Substring(0, pos);
-                var caBundle   = certificate.Cert.Substring(pos);
+                var issuedCert = certificate.CertPem.Substring(0, pos);
+                var caBundle   = certificate.CertPem.Substring(pos);
 
                 File.WriteAllText(tempCertPath, issuedCert);
                 File.WriteAllText(tempCaPath, caBundle);
@@ -298,8 +307,8 @@ namespace Neon.Cryptography
                 throw new ArgumentException($"[{nameof(pemCombined)}] is improperly formatted: There is extra text before the certificate.");
             }
 
-            Cert = NormalizePem(pemCombined.Substring(0, keyPos));
-            Key  = NormalizePem(pemCombined.Substring(keyPos));
+            CertPem = NormalizePem(pemCombined.Substring(0, keyPos));
+            KeyPem  = NormalizePem(pemCombined.Substring(keyPos));
         }
 
         /// <summary>
@@ -323,21 +332,40 @@ namespace Neon.Cryptography
                 throw new ArgumentException($"[{nameof(keyPem)}] is improperly formatted.");
             }
 
-            Cert = NormalizePem(certPem);
-            Key  = NormalizePem(keyPem);
+            CertPem = NormalizePem(certPem);
+            KeyPem  = NormalizePem(keyPem);
         }
 
         /// <summary>
         /// The public certificate as PEM encoded text.
         /// </summary>
-        [JsonProperty(PropertyName = "Cert", Required = Required.Always | Required.DisallowNull)]
-        public string Cert { get; set; }
+        [JsonProperty(PropertyName = "CertPem", Required = Required.Always | Required.DisallowNull)]
+        public string CertPem { get; set; }
 
         /// <summary>
         /// The private key as PEM encoded text.
         /// </summary>
-        [JsonProperty(PropertyName = "Key", Required = Required.Always | Required.DisallowNull)]
-        public string Key { get; set; }
+        [JsonProperty(PropertyName = "KeyPem", Required = Required.Always | Required.DisallowNull)]
+        public string KeyPem { get; set; }
+
+        /// <summary>
+        /// Returns the combined certificate and private key as PEM encoded text.
+        /// </summary>
+        [JsonIgnore]
+        public string CombinedPem
+        {
+            get { return CertPem + KeyPem; }
+        }
+
+        /// <summary>
+        /// Returns the combined certificate and private key as PEM encoded text normalized
+        /// with Linux-style line endings for HAProxy compatability.
+        /// </summary>
+        /// <returns>The combined PEM coded certificate.</returns>
+        public string CombinedNormalizedPem
+        {
+            get { return NormalizePem(CertPem + KeyPem); }
+        }
 
         /// <summary>
         /// The date when the certificate becomes valid (or <c>null</c>).
@@ -372,8 +400,8 @@ namespace Neon.Cryptography
             var clone =
                 new TlsCertificate()
                 {
-                    Cert       = this.Cert,
-                    Key        = this.Key,
+                    CertPem       = this.CertPem,
+                    KeyPem        = this.KeyPem,
                     ValidFrom  = this.ValidFrom,
                     ValidUntil = this.ValidUntil
                 };
@@ -403,16 +431,6 @@ namespace Neon.Cryptography
 
                 return sb.ToString();
             }
-        }
-
-        /// <summary>
-        /// Combines the public certificate and private key into a PEM encoded certificate
-        /// compatible with HAProxy.
-        /// </summary>
-        /// <returns>The combined PEM coded certificiate.</returns>
-        public string Combine()
-        {
-            return NormalizePem(Cert) + NormalizePem(Key);
         }
 
         /// <summary>
@@ -753,7 +771,7 @@ namespace Neon.Cryptography
 
             try
             {
-                File.WriteAllText(tempCertPath, this.Combine());
+                File.WriteAllText(tempCertPath, this.CombinedNormalizedPem);
 
                 var sbArgs = new StringBuilder();
 
