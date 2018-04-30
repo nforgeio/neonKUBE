@@ -606,6 +606,7 @@ namespace Xunit
                 new Action[] {
                     () => ClearServices(),
                     () => ClearStacks(),
+                    () => ClearLoadbalancers(),
                     // () => ClearContainers()      // Not implemented yet
                 });
 
