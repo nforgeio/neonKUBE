@@ -13,6 +13,7 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Consul;
 using YamlDotNet.RepresentationModel;
 
 using Neon.Cluster;
@@ -92,8 +93,8 @@ namespace Xunit
     /// <item>
     ///     <term><b>Misc</b></term>
     ///     <description>
-    ///     <see cref="ClearConsul(bool)"/>
-    ///     <see cref="ClearVault(bool)"/>
+    ///     <see cref="ClearConsul()"/>
+    ///     <see cref="ClearVault()"/>
     ///     <see cref="Cluster"/><br/>
     ///     <see cref="DockerExecute(string)"/><br/>
     ///     <see cref="DockerExecute(object[])"/>
@@ -603,16 +604,17 @@ namespace Xunit
 
             ClearServices();
             ClearStacks();
+            //ClearContainers();    // Not implemented yet.
 
             // We're clearing these after the services and stacks so
             // we won't see any reference conflicts.
 
             ClearCertificates();
             ClearConfigs();
-            //ClearContainers();    // Not implemented yet.
             ClearNetworks();
             ClearLoadbalancers();
             ClearSecrets();
+            ClearConsul();
         }
 
         //---------------------------------------------------------------------
@@ -904,6 +906,47 @@ namespace Xunit
             foreach (var certificate in ListCertificates(removeSystem))
             {
                 RemoveCertificate(certificate);
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Consul
+
+        /// <summary>
+        /// <para>
+        /// Returns a client that can be used to access the cluster's key/value store.
+        /// </para>
+        /// <note>
+        /// <para>
+        /// You'll need to add the following <c>using</c> statement to your test source
+        /// code to gain access to the Neon related Consul extensions.
+        /// </para>
+        /// <code language="csharp">
+        /// using Consul;
+        /// </code>
+        /// </note>
+        /// </summary>
+        public ConsulClient Consul
+        {
+            get { return NeonClusterHelper.Consul; }
+        }
+
+        /// <summary>
+        /// Removes all non-system related keys from Consul.  System keys are
+        /// located under the <b>neon*</b> and <b>vault*</b> prefixes.
+        /// </summary>
+        public void ClearConsul()
+        {
+            // We can delete all of the non-system keys in parallel for
+            // better performance.
+
+            foreach (var key in Consul.KV.ListKeys().Result)
+            {
+                if (!key.StartsWith("neon", StringComparison.InvariantCultureIgnoreCase) &&
+                    !key.StartsWith("vault", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    Consul.KV.DeleteTree(key).Wait();
+                }
             }
         }
     }

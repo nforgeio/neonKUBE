@@ -10,6 +10,8 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Consul;
+
 using Neon.Common;
 using Neon.Cluster;
 using Neon.Cryptography;
@@ -73,6 +75,11 @@ services:
 
             cluster.PutLoadBalancerRule("private", privateRule);
             cluster.PutCertificate("test-certificate", TestCertificate.CombinedPem);
+
+            cluster.Consul.KV.PutString("test/value1", "one").Wait();
+            cluster.Consul.KV.PutString("test/value2", "two").Wait();
+            cluster.Consul.KV.PutString("test/folder/value3", "three").Wait();
+            cluster.Consul.KV.PutString("test/folder/value4", "four").Wait();
         }
 
         [Fact]
@@ -106,6 +113,11 @@ services:
             Assert.Single(cluster.ListCertificates());
             Assert.Single(cluster.ListCertificates().Where(item => item == "test-certificate"));
 
+            Assert.Equal("one", cluster.Consul.KV.GetString("test/value1").Result);
+            Assert.Equal("two", cluster.Consul.KV.GetString("test/value2").Result);
+            Assert.Equal("three", cluster.Consul.KV.GetString("test/folder/value3").Result);
+            Assert.Equal("four", cluster.Consul.KV.GetString("test/folder/value4").Result);
+
             // Now reset the cluster and verify that all state was cleared.
 
             cluster.Reset();
@@ -118,6 +130,11 @@ services:
             Assert.Empty(cluster.ListLoagBalancerRules("public"));
             Assert.Empty(cluster.ListLoagBalancerRules("private"));
             Assert.Empty(cluster.ListCertificates());
+
+            Assert.False(cluster.Consul.KV.Exists("test/value1").Result);
+            Assert.False(cluster.Consul.KV.Exists("test/value2").Result);
+            Assert.False(cluster.Consul.KV.Exists("test/folder/value3").Result);
+            Assert.False(cluster.Consul.KV.Exists("test/folder/value4").Result);
         }
 
         /// <summary>

@@ -544,6 +544,79 @@ namespace Consul
         }
 
         /// <summary>
+        /// Lists the items beneath a path prefix and returns a list of the item keys.
+        /// </summary>
+        /// <param name="kv">The key/value endpoint.</param>
+        /// <param name="keyPrefix">The path prefix or <c>null</c> list the root keys.</param>
+        /// <param name="recurse">Optionally recurse to enumerate subkeys as well (defaults to <c>false</c>).</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The items or an empty list if the prefix does not exist.</returns>
+        public static async Task<IEnumerable<string>> ListKeys(this IKVEndpoint kv, string keyPrefix = null, bool recurse = false, CancellationToken cancellationToken = default)
+        {
+            keyPrefix = keyPrefix ?? string.Empty;
+
+            var response = (await kv.List(keyPrefix, cancellationToken)).Response;
+
+            if (response == null)
+            {
+                return new string[0];
+            }
+
+            if (recurse)
+            {
+                var items = new List<string>(response.Length);
+
+                foreach (var item in response)
+                {
+                    items.Add(item.Key);
+                }
+
+                return items;
+            }
+            else
+            {
+                var items              = new HashSet<string>();
+                var prefixWithoutSlash = keyPrefix;
+
+                if (prefixWithoutSlash.EndsWith("/"))
+                {
+                    prefixWithoutSlash = prefixWithoutSlash.Substring(0, prefixWithoutSlash.Length - 1);
+                }
+
+                foreach (var item in response)
+                {
+                    // Trim off any portion of the listed key below the 
+                    // prefix, including any forward slash.
+
+                    var key = item.Key;
+
+                    if (key.Length < prefixWithoutSlash.Length)
+                    {
+                        continue;   // Don't think we'll ever see this, but we'll ignore this to be safe.
+                    }
+
+                    if (key.Length > prefixWithoutSlash.Length)
+                    {
+                        var slashPos = key.IndexOf('/', keyPrefix.Length == 0 ? 0 : prefixWithoutSlash.Length + 1);
+
+                        key = key.Substring(0, slashPos);
+
+                        // We may see multiple subkeys beneath a key at this level,
+                        // so we'll use the HashSet to verify that we're returning
+                        // any given key just once.
+
+                        if (!items.Contains(key))
+                        {
+                            items.Add(key);
+                        }
+                    }
+                }
+
+                return items;
+            }
+        }
+
+        /// <summary>
         /// Lists the items beneath a path prefix and deserializes them as JSON objects, throwing
         /// an exception if the key doesn't exist.
         /// </summary>
