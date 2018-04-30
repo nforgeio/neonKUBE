@@ -47,6 +47,13 @@ namespace Xunit
     /// members of a multi-node cluster as a safety measure to help avoid the
     /// possiblity of accidentially wiping out a production cluster.
     /// </note>
+    /// <note>
+    /// The fixture <see cref="Reset"/> method does not purge images from the target
+    /// test node for performance reasons.  This can be a problem if you're testing
+    /// container and you need to ensure that the latest image is downloaded from
+    /// the registry first.  You can call <see cref="ResetImages"/> to accomplish
+    /// this or <see cref="PullImage(String)"/> to pull a specific image from the registry.
+    /// </note>
     /// <para>
     /// This fixture is pretty easy to use.  Simply have your test class inherit
     /// from <see cref="IClassFixture{DockerFixture}"/> and add a public constructor
@@ -558,6 +565,11 @@ namespace Xunit
         /// </summary>
         /// <remarks>
         /// <note>
+        /// This method does not reset the Docker images on the test node for
+        /// performance reasons.  You can call <see cref="ResetImages"/> from
+        /// your tests if required.
+        /// </note>
+        /// <note>
         /// As a safety measure, this method ensures that the local Docker instance
         /// <b>IS NOT</b> a member of a multi-node swarm to avoid wiping out production
         /// clusters by accident.
@@ -635,7 +647,7 @@ namespace Xunit
                 }
 
                 // We also need to remove any running containers except for
-                // any containers belonging to sub-ContainerFixtures.
+                // any containers belonging to child ContainerFixtures.
 
                 var subContainerFixtureIds = new HashSet<string>();
 
@@ -666,6 +678,30 @@ namespace Xunit
                 DockerExecute("volume", "prune", "--force");
                 DockerExecute("network", "prune", "--force");
             }
+        }
+
+        /// <summary>
+        /// Removes all unused images from the target test node.  <see cref="Reset"/>
+        /// does not do this for performance reasonse but tests may use this method
+        /// if necessary.
+        /// </summary>
+        public void ResetImages()
+        {
+            lock (base.SyncRoot)
+            {
+                base.CheckDisposed();
+
+                DockerExecute("image", "prune", "--all", "--force");
+            }
+        }
+
+        /// <summary>
+        /// Pulls a specific image to the target test node.
+        /// </summary>
+        /// <param name="image">The image name.</param>
+        public void PullImage(string image)
+        {
+            DockerExecute("pull", image);
         }
 
         //---------------------------------------------------------------------
