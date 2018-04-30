@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyTcpFrontend.cs
+// FILE:	    LoadBalancerTcpFrontend.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -24,24 +24,24 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes a TCP proxy frontend.
+    /// Describes a TCP load balancer frontend.
     /// </summary>
-    public class ProxyTcpFrontend
+    public class LoadBalancerTcpFrontend
     {
         /// <summary>
-        /// The TCP HAProxy frontend port for this route.
+        /// The TCP HAProxy frontend port for this rule.
         /// </summary>
         [JsonProperty(PropertyName = "ProxyPort", Required = Required.Always)]
         public int ProxyPort { get; set; }
 
         /// <summary>
         /// <para>
-        /// The network port to be exposed for this route on the clusters public Internet facing load balancer.
-        /// This defaults to <b>0</b> for TCP routes.  Only routes with positive public ports will be exposed
+        /// The network port to be exposed for this rule on the clusters public Internet facing load balancer.
+        /// This defaults to <b>0</b> for TCP rules.  Only rules with positive public ports will be exposed
         /// to to the public Internet via the load balancer.
         /// </para>
         /// <note>
-        /// This is honored only for <b>public</b> proxy routes.  Public ports for <b>private</b> proxies will be ignored.
+        /// This is honored only for <b>public</b> load balancer rules.  Public ports for <b>private</b> proxies will be ignored.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "PublicPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -52,17 +52,17 @@ namespace Neon.Cluster
         /// Validates the frontend.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        /// <param name="route">The parent route.</param>
-        public void Validate(ProxyValidationContext context, ProxyTcpRoute route)
+        /// <param name="rule">The parent rule.</param>
+        public void Validate(LoadBalancerValidationContext context, LoadBalancerTcpRule rule)
         {
             if (ProxyPort < context.Settings.FirstTcpPort || context.Settings.LastPort < ProxyPort)
             {
-                context.Error($"Route [{route.Name}] assigns [{nameof(ProxyPort)}={ProxyPort}] which is outside the range of valid frontend TCP ports for this proxy [{context.Settings.FirstTcpPort}...{context.Settings.LastPort}].");
+                context.Error($"Rule [{rule.Name}] assigns [{nameof(ProxyPort)}={ProxyPort}] which is outside the range of valid frontend TCP ports for this load balancer [{context.Settings.FirstTcpPort}...{context.Settings.LastPort}].");
             }
 
             if (PublicPort > 0 && !NetHelper.IsValidPort(PublicPort))
             {
-                context.Error($"Proxy [{nameof(PublicPort)}={PublicPort}] is not a valid network port.");
+                context.Error($"Load balancer [{nameof(PublicPort)}={PublicPort}] is not a valid network port.");
             }
         }
     }

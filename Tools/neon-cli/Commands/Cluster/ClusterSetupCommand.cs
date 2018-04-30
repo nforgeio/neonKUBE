@@ -3535,7 +3535,7 @@ systemctl restart sshd
 
                         cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDashboardsKey}/{cephDashboard.Name}", cephDashboard, Formatting.Indented).Wait();
 
-                        var route = new ProxyHttpRoute()
+                        var rule = new LoadBalancerHttpRule()
                         {
                             Name     = "neon-ceph-dashboard",
                             System   = true,
@@ -3556,27 +3556,27 @@ systemctl restart sshd
                         //
                         //      https://github.com/jefflill/NeonForge/issues/222
 
-                        route.CheckExpect = @"rstatus ^2\d\d";
+                        rule.CheckExpect = @"rstatus ^2\d\d";
 
                         // Initialize the frontends and backends.
 
-                        route.Frontends.Add(
-                            new ProxyHttpFrontend()
+                        rule.Frontends.Add(
+                            new LoadBalancerHttpFrontend()
                             {
                                 ProxyPort = NeonHostPorts.ProxyPrivateHttpCephDashboard
                             });
 
                         foreach (var monNode in cluster.Nodes.Where(n => n.Metadata.Labels.CephMON))
                         {
-                            route.Backends.Add(
-                                new ProxyHttpBackend()
+                            rule.Backends.Add(
+                                new LoadBalancerHttpBackend()
                                 {
                                     Server = monNode.Metadata.PrivateAddress.ToString(),
                                     Port   = NetworkPorts.CephDashboard,
                                 });
                         }
 
-                        cluster.PrivateProxy.PutRoute(route);
+                        cluster.PrivateLoadBalancer.PutRule(rule);
                         firstManager.Status = string.Empty;
                     }
 

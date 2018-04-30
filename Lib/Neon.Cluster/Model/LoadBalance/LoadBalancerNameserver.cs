@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyNameserver.cs
+// FILE:	    LoadBalancerNameserver.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -24,9 +24,9 @@ using Neon.Common;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes a proxy DNS resolver nameserver.
+    /// Describes a load balancer DNS resolver nameserver.
     /// </summary>
-    public class ProxyNameserver
+    public class LoadBalancerNameserver
     {
         /// <summary>
         /// Unique label for the nameserver.
@@ -44,11 +44,11 @@ namespace Neon.Cluster
         /// Validates the instance.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public void Validate(ProxyValidationContext context)
+        public void Validate(LoadBalancerValidationContext context)
         {
             if (string.IsNullOrWhiteSpace(Name))
             {
-                context.Error("Proxy nameserver name cannot be null or empty.");
+                context.Error("Load balancer nameserver name cannot be null or empty.");
             }
 
             var isValid = false;
@@ -69,7 +69,7 @@ namespace Neon.Cluster
 
                 if (!isValid)
                 {
-                    context.Error($"[{nameof(ProxyNameserver)}.{nameof(Name)}={Endpoint}] is not valid.");
+                    context.Error($"[{nameof(LoadBalancerNameserver)}.{nameof(Name)}={Endpoint}] is not valid.");
                 }
             }
         }

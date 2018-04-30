@@ -291,7 +291,7 @@ $@"
 
             // Configure a private cluster proxy route to the Elasticsearch nodes.
 
-            var route = new ProxyHttpRoute()
+            var rule = new LoadBalancerHttpRule()
             {
                 Name     = "neon-log-esdata",
                 System   = true,
@@ -299,23 +299,23 @@ $@"
                 Resolver = null
             };
 
-            route.Frontends.Add(
-                new ProxyHttpFrontend()
+            rule.Frontends.Add(
+                new LoadBalancerHttpFrontend()
                 {
                      ProxyPort = NeonHostPorts.ProxyPrivateHttpLogEsData
                 });
 
             foreach (var esNode in esNodes)
             {
-                route.Backends.Add(
-                    new ProxyHttpBackend()
+                rule.Backends.Add(
+                    new LoadBalancerHttpBackend()
                     {
                         Server = esNode.Metadata.PrivateAddress.ToString(),
                         Port   = NeonHostPorts.LogEsDataHttp
                     });
             }
 
-            cluster.PrivateProxy.PutRoute(route);
+            cluster.PrivateLoadBalancer.PutRule(rule);
         }
 
         /// <summary>
@@ -372,27 +372,27 @@ $@"
             // Configure a private cluster proxy TCP route so the [neon-log-host] containers
             // will be able to reach the collectors.
 
-            var route = new ProxyTcpRoute()
+            var rule = new LoadBalancerTcpRule()
             {
                 Name   = "neon-log-collector",
                 System = true,
                 Log    = false    // This is important: we don't want to SPAM the log database with its own traffic.
             };
 
-            route.Frontends.Add(
-                new ProxyTcpFrontend()
+            rule.Frontends.Add(
+                new LoadBalancerTcpFrontend()
                 {
                     ProxyPort = NeonHostPorts.ProxyPrivateTcpLogCollector
                 });
 
-            route.Backends.Add(
-                new ProxyTcpBackend()
+            rule.Backends.Add(
+                new LoadBalancerTcpBackend()
                 {
                     Server = "neon-log-collector",
                     Port   = NetworkPorts.TDAgentForward
                 });
 
-            cluster.PrivateProxy.PutRoute(route);
+            cluster.PrivateLoadBalancer.PutRule(rule);
         }
 
         /// <summary>

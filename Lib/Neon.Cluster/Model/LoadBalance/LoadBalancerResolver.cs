@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyResolver.cs
+// FILE:	    LoadBalancerResolver.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -23,9 +23,9 @@ using Neon.Common;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes a proxy DNS resolver.
+    /// Describes a load balancer DNS resolver.
     /// </summary>
-    public class ProxyResolver
+    public class LoadBalancerResolver
     {
         /// <summary>
         /// The unique name for the resolver.
@@ -37,7 +37,7 @@ namespace Neon.Cluster
         /// The resolver's name servers.
         /// </summary>
         [JsonProperty(PropertyName = "NameServers", Required = Required.Always)]
-        public List<ProxyNameserver> NameServers { get; set; } = new List<ProxyNameserver>();
+        public List<LoadBalancerNameserver> NameServers { get; set; } = new List<LoadBalancerNameserver>();
 
         /// <summary>
         /// The number of times to retry a failed resolution (defaults to <b>3</b>).
@@ -64,31 +64,31 @@ namespace Neon.Cluster
         /// Validates the instance.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public void Validate(ProxyValidationContext context)
+        public void Validate(LoadBalancerValidationContext context)
         {
             if (string.IsNullOrWhiteSpace(Name))
             {
-                context.Error($"Proxy resolver [{nameof(Name)}] cannot be null or empty.");
+                context.Error($"Load balancer resolver [{nameof(Name)}] cannot be null or empty.");
             }
 
             if (NameServers == null || NameServers.Count == 0)
             {
-                context.Error($"Proxy resolver [{nameof(NameServers)}] at least one name server must be specified.");
+                context.Error($"Load balancer resolver [{nameof(NameServers)}] at least one name server must be specified.");
             }
 
             if (ResolveRetries < 0)
             {
-                context.Error($"Proxy resolver [{nameof(ResolveRetries)}={ResolveRetries}] is not valid.");
+                context.Error($"Load balancer resolver [{nameof(ResolveRetries)}={ResolveRetries}] is not valid.");
             }
 
             if (RetrySeconds <= 0.0)
             {
-                context.Error($"Proxy resolver [{nameof(RetrySeconds)}={RetrySeconds}] is not valid.");
+                context.Error($"Load balancer resolver [{nameof(RetrySeconds)}={RetrySeconds}] is not valid.");
             }
 
             if (HoldSeconds < 0.0)
             {
-                context.Error($"Proxy resolver [{nameof(HoldSeconds)}={HoldSeconds}] is not valid.");
+                context.Error($"Load balancer resolver [{nameof(HoldSeconds)}={HoldSeconds}] is not valid.");
             }
         }
     }

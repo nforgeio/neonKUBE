@@ -139,14 +139,14 @@ namespace Neon.Cluster
                     };
             }
 
-            this.Definition        = clusterDefinition;
-            this.ClusterLogin      = new ClusterLogin();
-            this.defaultRunOptions = defaultRunOptions;
-            this.nodeProxyCreator  = nodeProxyCreator;
-            this.DockerSecret      = new DockerSecretsManager(this);
-            this.Certificate       = new CertiticateManager(this);
-            this.PublicProxy       = new ProxyManager(this, "public");
-            this.PrivateProxy      = new ProxyManager(this, "private");
+            this.Definition          = clusterDefinition;
+            this.ClusterLogin        = new ClusterLogin();
+            this.defaultRunOptions   = defaultRunOptions;
+            this.nodeProxyCreator    = nodeProxyCreator;
+            this.DockerSecret        = new DockerSecretsManager(this);
+            this.Certificate         = new CertiticateManager(this);
+            this.PublicLoadBalancer  = new LoadBalanceManager(this, "public");
+            this.PrivateLoadBalancer = new LoadBalanceManager(this, "private");
 
             CreateNodes();
         }
@@ -247,20 +247,20 @@ namespace Neon.Cluster
         public CertiticateManager Certificate { get; private set; }
 
         /// <summary>
-        /// Manages the cluster's public proxy.
+        /// Manages the cluster's public load balancer.
         /// </summary>
-        public ProxyManager PublicProxy { get; private set; }
+        public LoadBalanceManager PublicLoadBalancer { get; private set; }
 
         /// <summary>
-        /// Manages the cluster's private proxy.
+        /// Manages the cluster's private load balancer.
         /// </summary>
-        public ProxyManager PrivateProxy { get; private set; }
+        public LoadBalanceManager PrivateLoadBalancer { get; private set; }
 
         /// <summary>
-        /// Returns the named proxy manager.
+        /// Returns the named load balancer manager.
         /// </summary>
-        /// <param name="name">The proxy manager name (one of <b>public</b> or <b>private</b>).</param>
-        public ProxyManager GetProxyManager(string name)
+        /// <param name="name">The load balancer name (one of <b>public</b> or <b>private</b>).</param>
+        public LoadBalanceManager GetLoadBalancerManager(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
@@ -268,11 +268,11 @@ namespace Neon.Cluster
             {
                 case "public":
 
-                    return PublicProxy;
+                    return PublicLoadBalancer;
 
                 case "private":
 
-                    return PrivateProxy;
+                    return PrivateLoadBalancer;
 
                 default:
 

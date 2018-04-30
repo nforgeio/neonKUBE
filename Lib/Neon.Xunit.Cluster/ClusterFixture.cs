@@ -64,7 +64,7 @@ namespace Xunit
     /// you can call it's <see cref="LoginAndInitialize(string, Action)"/> method within
     /// the constructor passing the cluster login name as well as an <see cref="Action"/>.
     /// You may also use the fixture to initialize cluster services, networks, secrets,
-    /// routes, etc. within your custom action.
+    /// load balancers, etc. within your custom action.
     /// </para>
     /// <note>
     /// Do not call the base <see cref="TestFixture.Initialize(Action)"/> method
@@ -145,15 +145,15 @@ namespace Xunit
     ///     </description>
     /// </item>
     /// <item>
-    ///     <term><b>Proxy Routes</b></term>
+    ///     <term><b>Load Balancer Rules</b></term>
     ///     <description>
-    ///     <see cref="ClearProxyRoutes(bool)"/><br/>
-    ///     <see cref="ListProxyRoutes(string, bool)"/><br/>
-    ///     <see cref="PutProxyRoute(string, ProxyRoute)"/><br/>
-    ///     <see cref="RemoveProxyRoute(string, string)"/><br/>
-    ///     <see cref="RestartProxies()"/><br/>
-    ///     <see cref="RestartPrivateProxies()"/><br/>
-    ///     <see cref="RestartPublicProxies()"/>
+    ///     <see cref="ClearLoadbalancers(bool)"/><br/>
+    ///     <see cref="ListLoagBalancerRules(string, bool)"/><br/>
+    ///     <see cref="PutLoadBalancerRule(string, LoadBalancerRule)"/><br/>
+    ///     <see cref="RemoveLoadBalancerRule(string, string)"/><br/>
+    ///     <see cref="RestartLoadBalancers()"/><br/>
+    ///     <see cref="RestartPrivateLoadbalancers()"/><br/>
+    ///     <see cref="RestartPublicLoadBalancers()"/>
     ///     </description>
     /// </item>
     /// <item>
@@ -611,7 +611,7 @@ namespace Xunit
             ClearConfigs();
             //ClearContainers();    // Not implemented yet.
             ClearNetworks();
-            ClearProxyRoutes();
+            ClearLoadbalancers();
             ClearSecrets();
         }
 
@@ -681,137 +681,137 @@ namespace Xunit
         }
 
         //---------------------------------------------------------------------
-        // Proxy routes
+        // Load balancers/rules
 
         /// <summary>
-        /// Persists a proxy route object to the cluster.
+        /// Persists a load balancer rule object to the cluster.
         /// </summary>
-        /// <param name="proxy">The proxy name (<b>public</b> or <b>private</b>).</param>
-        /// <param name="route">The route.</param>
-        public void PutProxyRoute(string proxy, ProxyRoute route)
+        /// <param name="loadBalancerName">The load balancer name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="rule">The rule.</param>
+        public void PutLoadBalancerRule(string loadBalancerName, LoadBalancerRule rule)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(proxy));
-            Covenant.Requires<ArgumentNullException>(route != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(loadBalancerName));
+            Covenant.Requires<ArgumentNullException>(rule != null);
 
             base.CheckDisposed();
             this.CheckCluster();
 
-            var proxyManager = cluster.GetProxyManager(proxy);
+            var loadBalancer = cluster.GetLoadBalancerManager(loadBalancerName);
 
-            proxyManager.PutRoute(route);
+            loadBalancer.PutRule(rule);
         }
 
         /// <summary>
-        /// Persists a proxy route described as JSON or YAML text to the cluster.
+        /// Persists a load balancer rule described as JSON or YAML text to the cluster.
         /// </summary>
-        /// <param name="proxy">The proxy name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="loadBalancer">The load balancer name (<b>public</b> or <b>private</b>).</param>
         /// <param name="jsonOrYaml">The route JSON or YAML description.</param>
-        public void PutProxyRoute(string proxy, string jsonOrYaml)
+        public void PutLoadBalancerRule(string loadBalancer, string jsonOrYaml)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(proxy));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(loadBalancer));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
 
             base.CheckDisposed();
             this.CheckCluster();
 
-            var proxyManager = cluster.GetProxyManager(proxy);
-            var route        = ProxyRoute.Parse(jsonOrYaml);
+            var loadbalancer = cluster.GetLoadBalancerManager(loadBalancer);
+            var rule         = LoadBalancerRule.Parse(jsonOrYaml);
 
-            proxyManager.PutRoute(route);
+            loadbalancer.PutRule(rule);
         }
 
         /// <summary>
-        /// Lists the cluster proxy routes.
+        /// Lists load balancer rules.
         /// </summary>
-        /// <param name="proxy">The proxy name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="loadBalancerName">The load balancer name (<b>public</b> or <b>private</b>).</param>
         /// <param name="includeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
-        /// <returns>The routes for the named proxy.</returns>
-        public List<ProxyRoute> ListProxyRoutes(string proxy, bool includeSystem = false)
+        /// <returns>The rules for the named load balancer.</returns>
+        public List<LoadBalancerRule> ListLoagBalancerRules(string loadBalancerName, bool includeSystem = false)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(proxy));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(loadBalancerName));
 
             base.CheckDisposed();
             this.CheckCluster();
 
-            var proxyManager = cluster.GetProxyManager(proxy);
-            var routes       = proxyManager.ListRoutes();
+            var loadbalancer = cluster.GetLoadBalancerManager(loadBalancerName);
+            var rules        = loadbalancer.ListRules();
 
             if (includeSystem)
             {
-                return routes.ToList();
+                return rules.ToList();
             }
             else
             {
-                return routes.Where(r => !r.Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase)).ToList();
+                return rules.Where(r => !r.Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase)).ToList();
             }
         }
 
         /// <summary>
-        /// Removes a proxy route.
+        /// Removes a load balancer rule.
         /// </summary>
-        /// <param name="proxy">The proxy name (<b>public</b> or <b>private</b>).</param>
-        /// <param name="name">The route name.</param>
-        public void RemoveProxyRoute(string proxy, string name)
+        /// <param name="loadBalancerName">The load balancer name (<b>public</b> or <b>private</b>).</param>
+        /// <param name="name">The rule name.</param>
+        public void RemoveLoadBalancerRule(string loadBalancerName, string name)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(proxy));
+            Covenant.Requires<ArgumentNullException>((bool)!string.IsNullOrEmpty(loadBalancerName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
             base.CheckDisposed();
             this.CheckCluster();
 
-            var proxyManager = cluster.GetProxyManager(proxy);
+            var loadBalancer = cluster.GetLoadBalancerManager(loadBalancerName);
 
-            proxyManager.RemoveRoute(name);
+            loadBalancer.RemoveRule(name);
         }
 
         /// <summary>
-        /// Removes all proxy routes.
+        /// Removes all load balancer rules.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove system routes as well.</param>
+        /// <param name="removeSystem">Optionally remove system rules as well.</param>
         /// <remarks>
-        /// By default, this method will not remove neonCLUSTER system routes
+        /// By default, this method will not remove neonCLUSTER system rules
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
-        public void ClearProxyRoutes(bool removeSystem = false)
+        public void ClearLoadbalancers(bool removeSystem = false)
         {
             var deleted = false;
 
-            foreach (var proxy in new string[] { "public", "private" })
+            foreach (var loadBalancer in new string[] { "public", "private" })
             {
-                foreach (var route in ListProxyRoutes(proxy, removeSystem))
+                foreach (var route in ListLoagBalancerRules(loadBalancer, removeSystem))
                 {
-                    RemoveProxyRoute(proxy, route.Name);
+                    RemoveLoadBalancerRule(loadBalancer, route.Name);
                     deleted = true;
                 }
             }
 
             if (deleted)
             {
-                RestartProxies();
+                RestartLoadBalancers();
             }
         }
 
         /// <summary>
-        /// Restarts cluster proxies to ensure that they pick up any
-        /// proxy definition changes.
+        /// Restarts cluster load balancers to ensure that they pick up any
+        /// load balancer definition changes.
         /// </summary>
-        public void RestartProxies()
+        public void RestartLoadBalancers()
         {
             // We'll restart these in parallel for better performance.
 
             var tasks = NeonHelper.WaitAllAsync(
-                Task.Run(() => RestartPublicProxies()),
-                Task.Run(() => RestartPrivateProxies()));
+                Task.Run(() => RestartPublicLoadBalancers()),
+                Task.Run(() => RestartPrivateLoadbalancers()));
 
             tasks.Wait();
         }
 
         /// <summary>
-        /// Restarts the <b>public</b> p[roxies to ensure that they's picked up any
-        /// proxy definition changes.
+        /// Restarts the <b>public</b> p[roxies to ensure that they picked up any
+        /// load balancer definition changes.
         /// </summary>
-        public void RestartPublicProxies()
+        public void RestartPublicLoadBalancers()
         {
             // $todo(jeff.lill):
             //
@@ -822,10 +822,10 @@ namespace Xunit
         }
 
         /// <summary>
-        /// Restarts the <b>private</b> p[roxies to ensure that they's picked up any
-        /// proxy definition changes.
+        /// Restarts the <b>private</b> load balancers to ensure that they picked up any
+        /// load balancer definition changes.
         /// </summary>
-        public void RestartPrivateProxies()
+        public void RestartPrivateLoadbalancers()
         {
             // $todo(jeff.lill):
             //
@@ -893,7 +893,7 @@ namespace Xunit
         /// <summary>
         /// Removes all certificates.
         /// </summary>
-        /// <param name="removeSystem">Optionally remove system routes as well.</param>
+        /// <param name="removeSystem">Optionally remove system rules as well.</param>
         /// <remarks>
         /// By default, this method will not remove neonCLUSTER system certificates
         /// whose names begin with <b>neon-</b>.  You can remove these too by

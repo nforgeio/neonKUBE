@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyTcpRoute.cs
+// FILE:	    LoadBalancerTcpRule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -23,37 +23,37 @@ using Neon.Common;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes a route that forwards TCP traffic from TCP frontends
+    /// Describes a rule that forwards TCP traffic from TCP frontends
     /// to TCP backends.
     /// </summary>
-    public class ProxyTcpRoute : ProxyRoute
+    public class LoadBalancerTcpRule : LoadBalancerRule
     {
-        private List<ProxyTcpBackend> selectedBackends;     // Used to cache selected backends
+        private List<LoadBalancerTcpBackend> selectedBackends;     // Used to cache selected backends
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ProxyTcpRoute()
+        public LoadBalancerTcpRule()
         {
-            Mode = ProxyMode.Tcp;
+            Mode = LoadBalancerMode.Tcp;
         }
 
         /// <summary>
-        /// The proxy frontend definitions.
+        /// The load balancer frontend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Frontends", Required = Required.Always)]
-        public List<ProxyTcpFrontend> Frontends { get; set; } = new List<ProxyTcpFrontend>();
+        public List<LoadBalancerTcpFrontend> Frontends { get; set; } = new List<LoadBalancerTcpFrontend>();
 
         /// <summary>
-        /// The proxy backend definitions.
+        /// The load balancer backend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Backends", Required = Required.Always)]
-        public List<ProxyTcpBackend> Backends { get; set; } = new List<ProxyTcpBackend>();
+        public List<LoadBalancerTcpBackend> Backends { get; set; } = new List<LoadBalancerTcpBackend>();
 
         /// <summary>
         /// The maximum overall number of connections to be allowed for this
-        /// route or zero if the number of connections will be limited
-        /// to the overall pool of connections specified by <see cref="ProxySettings.MaxConnections"/>.
+        /// rule or zero if the number of connections will be limited
+        /// to the overall pool of connections specified by <see cref="LoadBalancerSettings.MaxConnections"/>.
         /// This defaults to <b>0</b>.
         /// </summary>
         [JsonProperty(PropertyName = "MaxConnections", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -61,11 +61,11 @@ namespace Neon.Cluster
         public int MaxConnections { get; set; } = 0;
 
         /// <summary>
-        /// Validates the route.
+        /// Validates the rule.
         /// </summary>
         /// <param name="context">The validation context.</param>
         /// <param name="addImplicitFrontends">Optionally add any implicit frontends (e.g. for HTTPS redirect).</param>
-        public override void Validate(ProxyValidationContext context, bool addImplicitFrontends = false)
+        public override void Validate(LoadBalancerValidationContext context, bool addImplicitFrontends = false)
         {
             base.Validate(context, addImplicitFrontends);
 
@@ -89,7 +89,7 @@ namespace Neon.Cluster
 
                 if (frontendMap.Contains(key))
                 {
-                    context.Error($"TCP route [{Name}] includes two or more frontends that map to port [{key}].");
+                    context.Error($"TCP rule [{Name}] includes two or more frontends that map to port [{key}].");
                 }
 
                 frontendMap.Add(key);
@@ -97,13 +97,13 @@ namespace Neon.Cluster
 
             if (MaxConnections < 0 || MaxConnections > ushort.MaxValue)
             {
-                context.Error($"Route [{Name}] specifies invalid [{nameof(MaxConnections)}={MaxConnections}].");
+                context.Error($"Rule [{Name}] specifies invalid [{nameof(MaxConnections)}={MaxConnections}].");
             }
         }
 
         /// <summary>
         /// Returns the list of backends selected to be targeted by processing any
-        /// backends with <see cref="ProxyBackend.Group"/> and <see cref="ProxyBackend.GroupLimit"/>
+        /// backends with <see cref="LoadBalancerBackend.Group"/> and <see cref="LoadBalancerBackend.GroupLimit"/>
         /// properties configured to dynamically select backend target nodes.
         /// </summary>
         /// <param name="hostGroups">
@@ -121,7 +121,7 @@ namespace Neon.Cluster
         /// instance and then return the same selected backends thereafter.
         /// </note>
         /// </remarks>
-        public List<ProxyTcpBackend> SelectBackends(Dictionary<string, List<NodeDefinition>> hostGroups)
+        public List<LoadBalancerTcpBackend> SelectBackends(Dictionary<string, List<NodeDefinition>> hostGroups)
         {
             Covenant.Requires<ArgumentNullException>(hostGroups != null);
 
@@ -156,7 +156,7 @@ namespace Neon.Cluster
 
             var processedGroups = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-            selectedBackends = new List<ProxyTcpBackend>();
+            selectedBackends = new List<LoadBalancerTcpBackend>();
 
             foreach (var backend in Backends)
             {

@@ -325,10 +325,10 @@ MODULES:
     neon_couchbase_query    - Executes a Couchbase query
     neon_dashboard          - Manages cluster dashboards
     neon_dns                - Manages cluster DNS
-    neon_docker_service     - Manages cluster Docker services
-    neon_route              - Manages proxy routes
-    neon_proxy              - Manager cluster proxy routes
-    
+    neon_docker_config      - Manages Docker configs
+    neon_docker_secret      - Manages Docker secrets
+    neon_docker_service     - Manages Docker services
+    neon_load_balancer      - Manager cluster load balancers  
 ";
 
         private const string sshClientPrivateKeyPath = "/dev/shm/ansible/ssh-client.key";   // Path to the SSH private client key (on a container RAM drive)

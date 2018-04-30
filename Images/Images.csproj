@@ -87,7 +87,7 @@
     <None Include="neon-cli\modules\neon_docker_secret.sh" />
     <None Include="neon-cli\modules\neon_docker_config.sh" />
     <None Include="neon-cli\modules\neon_docker_service.sh" />
-    <None Include="neon-cli\modules\neon_proxy_route.sh" />
+    <None Include="neon-cli\modules\neon_load_balancer.sh" />
     <None Include="neon-cluster-manager\build.ps1" />
     <None Include="neon-cluster-manager\docker-entrypoint.sh" />
     <None Include="neon-cluster-manager\Dockerfile">

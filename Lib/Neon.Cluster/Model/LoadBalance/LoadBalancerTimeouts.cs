@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyTimeouts.cs
+// FILE:	    LoadBalancerTimeouts.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -24,9 +24,9 @@ using Neon.Common;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes proxy timeouts.
+    /// Describes load balancer timeouts.
     /// </summary>
-    public class ProxyTimeouts
+    public class LoadBalancerTimeouts
     {
         /// <summary>
         /// The maximum time to wait for a connection attempt to a server.
@@ -58,26 +58,26 @@ namespace Neon.Cluster
         /// Validates the instance.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public void Validate(ProxyValidationContext context)
+        public void Validate(LoadBalancerValidationContext context)
         {
             if (ConnectSeconds <= 0.0)
             {
-                context.Error($"Proxy timeout [{nameof(ConnectSeconds)}={ConnectSeconds}] is not positive.");
+                context.Error($"Load balancer timeout [{nameof(ConnectSeconds)}={ConnectSeconds}] is not positive.");
             }
 
             if (ClientSeconds <= 0.0)
             {
-                context.Error($"Proxy timeout [{nameof(ClientSeconds)}={ClientSeconds}] is not positive.");
+                context.Error($"Load balancer timeout [{nameof(ClientSeconds)}={ClientSeconds}] is not positive.");
             }
 
             if (ServerSeconds <= 0.0)
             {
-                context.Error($"Proxy timeout [{nameof(ServerSeconds)}={ServerSeconds}] is not positive.");
+                context.Error($"Load balancer timeout [{nameof(ServerSeconds)}={ServerSeconds}] is not positive.");
             }
 
             if (CheckSeconds <= 0.0)
             {
-                context.Error($"Proxy timeout [{nameof(CheckSeconds)}={CheckSeconds}] is not positive.");
+                context.Error($"Load balancer timeout [{nameof(CheckSeconds)}={CheckSeconds}] is not positive.");
             }
         }
     }

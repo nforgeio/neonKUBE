@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyTcpBackend.cs
+// FILE:	    LoadBalancerBackend.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -25,13 +25,13 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Base class for proxy backends.
+    /// Base class for load balancer backends.
     /// </summary>
-    public class ProxyBackend
+    public class LoadBalancerBackend
     {
         /// <summary>
         /// The optional server backend server name.  The <b>neon-proxy-manager</b> will
-        /// generate a unique name within the route if this isn't specified.
+        /// generate a unique name within the rule if this isn't specified.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -72,24 +72,24 @@ namespace Neon.Cluster
         /// Validates the backend.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        /// <param name="routeName">The parent route name.</param>
-        public virtual void Validate(ProxyValidationContext context, string routeName)
+        /// <param name="ruleName">The parent rule name.</param>
+        public virtual void Validate(LoadBalancerValidationContext context, string ruleName)
         {
             if (!string.IsNullOrEmpty(Name) && !ClusterDefinition.IsValidName(Name))
             {
-                context.Error($"Route [{routeName}] has backend server with invalid [{nameof(Name)}={Name}].");
+                context.Error($"Rule [{ruleName}] has backend server with invalid [{nameof(Name)}={Name}].");
             }
 
             if (!string.IsNullOrEmpty(Group))
             {
                 if (!ClusterDefinition.IsValidName(Group))
                 {
-                    context.Error($"Route [{routeName}] has backend with [{nameof(Group)}={Group}] which is not a valid group name.");
+                    context.Error($"Rule [{ruleName}] has backend with [{nameof(Group)}={Group}] which is not a valid group name.");
                 }
 
                 if (GroupLimit < 0)
                 {
-                    context.Error($"Route [{routeName}] has backend with [{nameof(GroupLimit)}={GroupLimit}] which may not be less than zero.");
+                    context.Error($"Rule [{ruleName}] has backend with [{nameof(GroupLimit)}={GroupLimit}] which may not be less than zero.");
                 }
             }
             else
@@ -97,13 +97,13 @@ namespace Neon.Cluster
                 if (string.IsNullOrEmpty(Server) ||
                     (!IPAddress.TryParse(Server, out var address) && !ClusterDefinition.DnsHostRegex.IsMatch(Server)))
                 {
-                    context.Error($"Route [{routeName}] has backend server [{Server}] which is not valid.  A DNS name or IP address was expected.");
+                    context.Error($"Rule [{ruleName}] has backend server [{Server}] which is not valid.  A DNS name or IP address was expected.");
                 }
             }
 
             if (!NetHelper.IsValidPort(Port))
             {
-                context.Error($"Route [{routeName}] has backend server with invalid [{nameof(Port)}={Port}] which is outside the range of valid TCP ports.");
+                context.Error($"Rule [{ruleName}] has backend server with invalid [{nameof(Port)}={Port}] which is outside the range of valid TCP ports.");
             }
         }
 
@@ -124,7 +124,7 @@ namespace Neon.Cluster
 
             if (string.IsNullOrEmpty(Group))
             {
-                throw new InvalidOperationException($"[{nameof(ProxyBackend)}.{nameof(Group)}()] works only for route backends that target a group.");
+                throw new InvalidOperationException($"[{nameof(LoadBalancerBackend)}.{nameof(Group)}()] works only for rule backends that target a group.");
             }
 
             if (!hostGroups.TryGetValue(Group, out var groupNodes))

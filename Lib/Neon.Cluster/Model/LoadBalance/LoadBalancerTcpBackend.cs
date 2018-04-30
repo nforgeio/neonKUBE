@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyHttpBackend.cs
+// FILE:	    LoadBalancerTcpBackend.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -25,25 +25,18 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes an HTTP/HTTPS proxy backend.
+    /// Describes a TCP load balancer backend.
     /// </summary>
-    public class ProxyHttpBackend : ProxyBackend
+    public class LoadBalancerTcpBackend : LoadBalancerBackend
     {
-        /// <summary>
-        /// Forward the request to this backend using TLS (defaults to <c>false</c>).
-        /// </summary>
-        [JsonProperty(PropertyName = "Tls", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(false)]
-        public bool Tls { get; set; } = false;
-
         /// <summary>
         /// Validates the backend.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        /// <param name="route">The parent route.</param>
-        public void Validate(ProxyValidationContext context, ProxyHttpRoute route)
+        /// <param name="rule">The parent rule.</param>
+        public void Validate(LoadBalancerValidationContext context, LoadBalancerTcpRule rule)
         {
-            base.Validate(context, route.Name);
+            base.Validate(context, rule.Name);
         }
     }
 }

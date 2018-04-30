@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxySettings.cs
+// FILE:	    LoadBalancerySettings.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -25,9 +25,9 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes the global settings for a neonCLUSTER proxy.
+    /// Describes the global settings for a neonCLUSTER load balancer.
     /// </summary>
-    public class ProxySettings
+    public class LoadBalancerSettings
     {
         //---------------------------------------------------------------------
         // Static members
@@ -35,13 +35,13 @@ namespace Neon.Cluster
         private const int defaultMaxConnections = 32000;
 
         /// <summary>
-        /// Parses a <see cref="ProxySettings"/> from a JSON or YAML string,
+        /// Parses a <see cref="LoadBalancerSettings"/> from a JSON or YAML string,
         /// automatically detecting the input format.
         /// </summary>
         /// <param name="jsonOrYaml">The JSON or YAML input.</param>
         /// <param name="strict">Optionally require that all input properties map to settings properties.</param>
-        /// <returns>The parsed <see cref="ProxySettings"/>.</returns>
-        public static ProxySettings Parse(string jsonOrYaml, bool strict = false)
+        /// <returns>The parsed <see cref="LoadBalancerSettings"/>.</returns>
+        public static LoadBalancerSettings Parse(string jsonOrYaml, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
 
@@ -56,42 +56,42 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Parses a <see cref="ProxyRoute"/> from a JSON string.
+        /// Parses a <see cref="LoadBalancerRule"/> from a JSON string.
         /// </summary>
         /// <param name="jsonText">The input string.</param>
         /// <param name="strict">Optionally require that all input properties map to settings properties.</param>
-        /// <returns>The parsed <see cref="ProxySettings"/>.</returns>
-        public static ProxySettings ParseJson(string jsonText, bool strict = false)
+        /// <returns>The parsed <see cref="LoadBalancerSettings"/>.</returns>
+        public static LoadBalancerSettings ParseJson(string jsonText, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonText));
 
-            return NeonHelper.JsonDeserialize<ProxySettings>(jsonText, strict);
+            return NeonHelper.JsonDeserialize<LoadBalancerSettings>(jsonText, strict);
         }
 
         /// <summary>
-        /// Parses a <see cref="ProxyRoute"/> from a YAML string.
+        /// Parses a <see cref="LoadBalancerRule"/> from a YAML string.
         /// </summary>
         /// <param name="yamlText">The input string.</param>
         /// <param name="strict">Optionally require that all input properties map to settings properties.</param>
-        /// <returns>The parsed <see cref="ProxySettings"/>.</returns>
-        public static ProxySettings ParseYaml(string yamlText, bool strict = false)
+        /// <returns>The parsed <see cref="LoadBalancerSettings"/>.</returns>
+        public static LoadBalancerSettings ParseYaml(string yamlText, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(yamlText));
 
-            return NeonHelper.YamlDeserialize<ProxySettings>(yamlText, strict);
+            return NeonHelper.YamlDeserialize<LoadBalancerSettings>(yamlText, strict);
         }
 
         //---------------------------------------------------------------------
         // Instance members
 
         /// <summary>
-        /// First reserved port on the Docker ingress network in the block allocated to this proxy.
+        /// First reserved port on the Docker ingress network in the block allocated to this load balancer.
         /// </summary>
         [JsonProperty(PropertyName = "FirstPort", Required = Required.Always)]
         public int FirstPort { get; set; } = 0;
 
         /// <summary>
-        /// Last reserved port on the Docker ingress network in the block allocated to this proxy.
+        /// Last reserved port on the Docker ingress network in the block allocated to this load balancer.
         /// </summary>
         [JsonProperty(PropertyName = "LastPort", Required = Required.Always)]
         public int LastPort { get; set; } = 0;
@@ -125,7 +125,7 @@ namespace Neon.Cluster
 
         /// <summary>
         /// The maximum overall number of simultaneous inbound connections 
-        /// to be allowed for the proxy.  (Defaults to <b>32000</b>).
+        /// to be allowed for the load balancer.  (Defaults to <b>32000</b>).
         /// </summary>
         [JsonProperty(PropertyName = "MaxConnections", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultMaxConnections)]
@@ -136,11 +136,11 @@ namespace Neon.Cluster
         /// </summary>
         [JsonProperty(PropertyName = "Timeouts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public ProxyTimeouts Timeouts { get; set; } = new ProxyTimeouts();
+        public LoadBalancerTimeouts Timeouts { get; set; } = new LoadBalancerTimeouts();
 
         /// <summary>
         /// <para>
-        /// The DNS resolvers available for use by the proxy's routes.
+        /// The DNS resolvers available for use by the load balancer's rules.
         /// </para>
         /// <note>
         /// This includes the standard <b>docker</b> resolver by default, which 
@@ -148,7 +148,7 @@ namespace Neon.Cluster
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Resolvers")]
-        public List<ProxyResolver> Resolvers { get; set; } = new List<ProxyResolver>();
+        public List<LoadBalancerResolver> Resolvers { get; set; } = new List<LoadBalancerResolver>();
 
         /// <summary>
         /// <para>
@@ -166,14 +166,14 @@ namespace Neon.Cluster
 
         /// <summary>
         /// Specifies the desired number of Swarm nodes to be designated as bridge
-        /// proxy targets.  This can be overridden by explicity designating target
+        /// load balancer targets.  This can be overridden by explicity designating target
         /// node IP addresses in <see cref="BridgeTargetAddresses"/>.  This
         /// defaults to <b>5</b>.
         /// </summary>
         /// <remarks>
         /// <para>
         /// If the number of active workers equals this count then all of them will
-        /// be designated as bridge proxy targets.  If there are more workers, then
+        /// be designated as bridge load balancer targets.  If there are more workers, then
         /// <see cref="BridgeTargetCount"/> workers will be randomly selected as
         /// targets.  If there are fewer workers, then all active Swarm nodes 
         /// (including managers) will be targeted.
@@ -216,21 +216,21 @@ namespace Neon.Cluster
         /// Validates the instance.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        public void Validate(ProxyValidationContext context)
+        public void Validate(LoadBalancerValidationContext context)
         {
-            Timeouts              = Timeouts ?? new ProxyTimeouts();
-            Resolvers             = Resolvers ?? new List<ProxyResolver>();
+            Timeouts              = Timeouts ?? new LoadBalancerTimeouts();
+            Resolvers             = Resolvers ?? new List<LoadBalancerResolver>();
             BridgeTargetAddresses = BridgeTargetAddresses ?? new List<IPAddress>();
 
             if (!Resolvers.Exists(r => r.Name == "docker"))
             {
                 Resolvers.Add(
-                    new ProxyResolver()
+                    new LoadBalancerResolver()
                     {
                         Name = "docker",
-                        NameServers = new List<ProxyNameserver>()
+                        NameServers = new List<LoadBalancerNameserver>()
                         {
-                            new ProxyNameserver()
+                            new LoadBalancerNameserver()
                             {
                                 Name     = "docker0",
                                 Endpoint = NeonClusterConst.DockerDnsEndpoint
@@ -243,19 +243,19 @@ namespace Neon.Cluster
                 !NetHelper.IsValidPort(LastPort) ||
                 LastPort <= FirstPort + 1)
             {
-                context.Error($"Proxy port block [{FirstPort}-{LastPort}] range is not valid.");
+                context.Error($"Load balancer port block [{FirstPort}-{LastPort}] range is not valid.");
             }
 
             if (MaxConnections <= 0)
             {
-                context.Error($"Proxy settings [{nameof(MaxConnections)}={MaxConnections}] is not positive.");
+                context.Error($"Load balancer settings [{nameof(MaxConnections)}={MaxConnections}] is not positive.");
             }
 
             Timeouts.Validate(context);
 
             if (!Resolvers.Exists(r => r.Name == "docker"))
             {
-                context.Error($"Proxy settings [{nameof(Resolvers)}] must include a [docker] definition.");
+                context.Error($"Load balancer settings [{nameof(Resolvers)}] must include a [docker] definition.");
             }
 
             foreach (var resolver in Resolvers)
@@ -265,11 +265,12 @@ namespace Neon.Cluster
 
             if (BridgeTargetCount < 0)
             {
-                context.Error($"Proxy settings [{nameof(BridgeTargetCount)}={BridgeTargetCount}] cannot be negative.");
+                context.Error($"Load balancer settings [{nameof(BridgeTargetCount)}={BridgeTargetCount}] cannot be negative.");
             }
 
             if (BridgeTargetCount == 0 && BridgeTargetAddresses.Count == 0)
             {
+                context.Error($"Load balancer settings no bridge targets are specified.");
             }
         }
     }

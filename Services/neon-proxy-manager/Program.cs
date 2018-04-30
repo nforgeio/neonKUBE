@@ -36,7 +36,7 @@ namespace NeonProxyManager
     /// <summary>
     /// Implements the <b>neon-proxy-manager</b> service which is responsible for dynamically generating the HAProxy 
     /// configurations for the <c>neon-proxy-public</c>, <c>neon-proxy-private</c>, <c>neon-proxy-public-bridge</c>,
-    /// and <c>neon-proxy-private-bridge</c> services from the proxy routes persisted in Consul and the TLS certificates
+    /// and <c>neon-proxy-private-bridge</c> services from the load balancer rules persisted in Consul and the TLS certificates
     /// persisted in Vault.  See <a href="https://hub.docker.com/r/neoncluster/neon-proxy-manager/">neoncluster/neon-proxy-manager</a>  
     /// and <a href="https://hub.docker.com/r/neoncluster/neon-proxy/">neoncluster/neon-proxy</a> for more information.
     /// </summary>
@@ -214,9 +214,9 @@ namespace NeonProxyManager
             // the [neon/service/neon-proxy-manager/conf/] prefix for changes 
             // with the timeout set to [pollTime].  The watch will fire 
             // whenever [neon-cli] modifies a cluster certificate or any of
-            // the routes or settings for a proxy.
+            // the rules or settings for a load balancer.
             //
-            // Whenever the watch fires, the code will rebuild the proxy
+            // Whenever the watch fires, the code will rebuild the load balancer
             // configurations and also update the deployment's public load balancer
             // and network security as required.
 
@@ -246,7 +246,7 @@ namespace NeonProxyManager
                     }
                 });
 
-            // Monitor Consul for configuration changes and update the proxy configs.
+            // Monitor Consul for configuration changes and update the load balancer configs.
 
             monitorTask = Task.Run(
                 async () =>
@@ -279,7 +279,7 @@ namespace NeonProxyManager
                                     }
                                     else
                                     {
-                                        log.LogInfo("Potential proxy or certificate change detected.");
+                                        log.LogInfo("Potential load balancer rule or certificate change detected.");
                                     }
 
                                     // Load and check the cluster certificates.
@@ -311,7 +311,7 @@ namespace NeonProxyManager
                                     catch (Exception e)
                                     {
                                         log.LogError("Unable to load certificates from Vault.", e);
-                                        log.LogError("Aborting proxy configuration.");
+                                        log.LogError("Aborting load balancer configuration.");
                                         return;
                                     }
 
@@ -335,22 +335,22 @@ namespace NeonProxyManager
                                     // cluster pet nodes.
 
                                     var publicBuildStatus = await BuildProxyConfigAsync("public", clusterCerts, ct);
-                                    var publicProxyStatus = new ProxyStatus() { Status = publicBuildStatus.Status };
+                                    var publicProxyStatus = new LoadBalancerStatus() { Status = publicBuildStatus.Status };
 
                                     await consul.KV.PutString($"{proxyStatus}/public", NeonHelper.JsonSerialize(publicProxyStatus), ct);
 
                                     var privateBuildStatus = await BuildProxyConfigAsync("private", clusterCerts, ct);
-                                    var privateProxyStatus = new ProxyStatus() { Status = privateBuildStatus.Status };
+                                    var privateProxyStatus = new LoadBalancerStatus() { Status = privateBuildStatus.Status };
 
                                     await consul.KV.PutString($"{proxyStatus}/private", NeonHelper.JsonSerialize(privateProxyStatus), ct);
 
                                     // We need to ensure that the deployment's load balancer and security
-                                    // rules are updated to match changes to the public proxy routes.
-                                    // Note that we're going to call this even if the PUBLIC proxy
+                                    // rules are updated to match changes to the public load balancer rules.
+                                    // Note that we're going to call this even if the PUBLIC load balancer
                                     // hasn't changed to ensure that the load balancer doesn't get
                                     // out of sync.
 
-                                    await UpdateClusterNetwork(publicBuildStatus.Routes, cts.Token);
+                                    await UpdateClusterNetwork(publicBuildStatus.Rules, cts.Token);
                                 },
                                 timeout: pollInterval,
                                 cancellationToken: terminator.CancellationToken);
@@ -400,49 +400,49 @@ namespace NeonProxyManager
         }
 
         /// <summary>
-        /// Rebuilds the configurations for a public or private proxy and persists them
-        /// to Consul if they differ from the previous version.
+        /// Rebuilds the configurations for a public or private load balancers and 
+        /// persists them to Consul if they differ from the previous version.
         /// </summary>
-        /// <param name="proxyName">The proxy name: <b>public</b> or <b>private</b>.</param>
+        /// <param name="loadBalancerName">The load balancer name: <b>public</b> or <b>private</b>.</param>
         /// <param name="clusterCerts">The cluster certificate information.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>
-        /// A tuple including the proxy's route dictionary and publication status details.
+        /// A tuple including the load balancer's rule dictionary and publication status details.
         /// </returns>
-        private static async Task<(Dictionary<string, ProxyRoute> Routes, string Status)> 
-            BuildProxyConfigAsync(string proxyName, ClusterCerts clusterCerts, CancellationToken cancellationToken)
+        private static async Task<(Dictionary<string, LoadBalancerRule> Rules, string Status)> 
+            BuildProxyConfigAsync(string loadBalancerName, ClusterCerts clusterCerts, CancellationToken cancellationToken)
         {
-            var proxyDisplayName       = proxyName.ToUpperInvariant();
-            var proxyBridgeName        = $"{proxyName}-bridge";
+            var proxyDisplayName       = loadBalancerName.ToUpperInvariant();
+            var proxyBridgeName        = $"{loadBalancerName}-bridge";
             var proxyBridgeDisplayName = proxyBridgeName.ToUpperInvariant();
             var configError            = false;
             var log                    = new LogRecorder(Program.log);
 
-            log.LogInfo(() => $"Rebuilding proxy [{proxyDisplayName}].");
+            log.LogInfo(() => $"Rebuilding load balancer [{proxyDisplayName}].");
 
-            // We need to track which certificates are actually referenced by proxy routes.
+            // We need to track which certificates are actually referenced by load balancer rules.
 
             clusterCerts.ClearReferences();
 
-            // Load the proxy's settings and routes.
+            // Load the load balancer's settings and rules.
 
-            string          proxyPrefix = $"{proxyConf}/{proxyName}";
-            var             routes      = new Dictionary<string, ProxyRoute>();
-            var             hostGroups  = clusterDefinition.GetNodeGroups(excludeAllGroup: false);
-            ProxySettings   settings;
+            string                  proxyPrefix = $"{proxyConf}/{loadBalancerName}";
+            var                     rules       = new Dictionary<string, LoadBalancerRule>();
+            var                     hostGroups  = clusterDefinition.GetNodeGroups(excludeAllGroup: false);
+            LoadBalancerSettings    settings;
 
             try
             {
-                settings = await consul.KV.GetObjectOrDefault<ProxySettings>($"{proxyPrefix}/settings", cancellationToken);
+                settings = await consul.KV.GetObjectOrDefault<LoadBalancerSettings>($"{proxyPrefix}/settings", cancellationToken);
 
                 if (settings == null)
                 {
-                    // Initialize default settings for the proxy if they aren't written to Consul yet.
+                    // Initialize default settings for the load balancer if they aren't written to Consul yet.
 
                     int firstProxyPort;
                     int lastProxyPort;
 
-                    switch (proxyName)
+                    switch (loadBalancerName)
                     {
                         case "public":
 
@@ -461,7 +461,7 @@ namespace NeonProxyManager
                             throw new NotImplementedException();
                     }
 
-                    settings = new ProxySettings()
+                    settings = new LoadBalancerSettings()
                     {
                         FirstPort = firstProxyPort,
                         LastPort  = lastProxyPort
@@ -471,17 +471,17 @@ namespace NeonProxyManager
                     await consul.KV.PutString($"{proxyPrefix}/settings", NeonHelper.JsonSerialize(settings, Formatting.None), cancellationToken);
                 }
 
-                log.LogInfo(() => $"Reading [{proxyDisplayName}] routes.");
+                log.LogInfo(() => $"Reading [{proxyDisplayName}] rules.");
 
-                var result = await consul.KV.List($"{proxyPrefix}/routes/", cancellationToken);
+                var result = await consul.KV.List($"{proxyPrefix}/rules/", cancellationToken);
 
                 if (result.Response != null)
                 {
-                    foreach (var routeKey in result.Response)
+                    foreach (var ruleKey in result.Response)
                     {
-                        var route = ProxyRoute.ParseJson(Encoding.UTF8.GetString(routeKey.Value));
+                        var rule = LoadBalancerRule.ParseJson(Encoding.UTF8.GetString(ruleKey.Value));
 
-                        routes.Add(route.Name, route);
+                        rules.Add(rule.Name, rule);
                     }
                 }
             }
@@ -489,36 +489,36 @@ namespace NeonProxyManager
             {
                 // Warn and exit for (presumably transient) Consul errors.
 
-                log.LogWarn($"Consul request failure for proxy [{proxyDisplayName}].", e);
-                return (Routes: routes, Status: log.ToString());
+                log.LogWarn($"Consul request failure for load balancer [{proxyDisplayName}].", e);
+                return (Rules: rules, Status: log.ToString());
             }
 
             log.Record();
 
-            // Record some details about the routes.
+            // Record some details about the rules.
 
-            var httpRouteCount = routes.Values.Count(r => r.Mode == ProxyMode.Http);
-            var tcpRouteCount  = routes.Values.Count(r => r.Mode == ProxyMode.Tcp);
+            var httpRuleCount = rules.Values.Count(r => r.Mode == LoadBalancerMode.Http);
+            var tcpRuleCount  = rules.Values.Count(r => r.Mode == LoadBalancerMode.Tcp);
 
-            // Record HTTP route summaries.
+            // Record HTTP rule summaries.
 
-            if (httpRouteCount == 0 && tcpRouteCount == 0)
+            if (httpRuleCount == 0 && tcpRuleCount == 0)
             {
-                log.Record("*** No proxy routes defined.");
+                log.Record("*** No load balancer rules defined.");
             }
 
-            if (httpRouteCount > 0)
+            if (httpRuleCount > 0)
             {
-                log.Record($"HTTP Routes [count={httpRouteCount}]");
+                log.Record($"HTTP Rules [count={httpRuleCount}]");
                 log.Record("------------------------------");
 
-                foreach (ProxyHttpRoute route in routes.Values
-                    .Where(r => r.Mode == ProxyMode.Http)
+                foreach (LoadBalancerHttpRule rule in rules.Values
+                    .Where(r => r.Mode == LoadBalancerMode.Http)
                     .OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase))
                 {
-                    log.Record($"{route.Name}:");
+                    log.Record($"{rule.Name}:");
 
-                    foreach (var frontend in route.Frontends)
+                    foreach (var frontend in rule.Frontends)
                     {
                         log.Record($"    frontend:");
 
@@ -533,7 +533,7 @@ namespace NeonProxyManager
                         log.Record($"        proxy-port:  {frontend.ProxyPort}");
                     }
 
-                    foreach (var backend in route.SelectBackends(hostGroups))
+                    foreach (var backend in rule.SelectBackends(hostGroups))
                     {
                         log.Record($"    backend:         {backend.Server}:{backend.Port}");
                     }
@@ -544,29 +544,29 @@ namespace NeonProxyManager
 
             log.Record();
 
-            // Record TCP route summaries.
+            // Record TCP rule summaries.
 
-            if (tcpRouteCount > 0)
+            if (tcpRuleCount > 0)
             {
-                log.Record($"TCP Routes [count={tcpRouteCount}]");
+                log.Record($"TCP Rules [count={tcpRuleCount}]");
                 log.Record("------------------------------");
 
-                foreach (ProxyTcpRoute route in routes.Values
-                    .Where(r => r.Mode == ProxyMode.Tcp)
+                foreach (LoadBalancerTcpRule rule in rules.Values
+                    .Where(r => r.Mode == LoadBalancerMode.Tcp)
                     .OrderBy(r => r.Name, StringComparer.OrdinalIgnoreCase))
                 {
-                    var maxconn = route.MaxConnections == 0 ? "unlimited" : route.MaxConnections.ToString();
+                    var maxconn = rule.MaxConnections == 0 ? "unlimited" : rule.MaxConnections.ToString();
 
-                    log.Record($"{route.Name}:");
+                    log.Record($"{rule.Name}:");
 
-                    foreach (var frontend in route.Frontends)
+                    foreach (var frontend in rule.Frontends)
                     {
                         log.Record($"    frontend:");
                         log.Record($"        public-port: {frontend.PublicPort}");
                         log.Record($"        proxy-port:  {frontend.ProxyPort}");
                     }
 
-                    foreach (var backend in route.SelectBackends(hostGroups))
+                    foreach (var backend in rule.SelectBackends(hostGroups))
                     {
                         log.Record($"    backend:         {backend.Server}:{backend.Port}");
                     }
@@ -579,19 +579,19 @@ namespace NeonProxyManager
 
             // Verify the configuration.
 
-            var proxyDefinition = new ProxyDefinition()
+            var loadBalancerDefinition = new LoadBalancerDefinition()
             {
-                Name     = proxyName,
+                Name     = loadBalancerName,
                 Settings = settings,
-                Routes   = routes
+                Rules    = rules
             };
 
-            var validationContext = proxyDefinition.Validate(clusterCerts.ToTlsCertificateDictionary(), addImplicitFrontends: true);
+            var validationContext = loadBalancerDefinition.Validate(clusterCerts.ToTlsCertificateDictionary(), addImplicitFrontends: true);
 
             if (validationContext.HasErrors)
             {
                 log.LogError(validationContext.GetErrors());
-                return (Routes: routes, log.ToString());
+                return (Rules: rules, log.ToString());
             }
 
             // Generate the contents of the [haproxy.cfg] file.
@@ -684,93 +684,93 @@ backend haproxy_stats
     stats               refresh 5s
 ");
             //-----------------------------------------------------------------
-            // Verify that the routes don't conflict.
+            // Verify that the rules don't conflict.
 
-            // Verify that TCP routes don't have conflicting publically facing ports.
+            // Verify that TCP rules don't have conflicting publically facing ports.
 
-            var publicTcpPortToRoute = new Dictionary<int, ProxyRoute>();
+            var publicTcpPortToRule = new Dictionary<int, LoadBalancerRule>();
 
-            foreach (ProxyTcpRoute route in routes.Values
-                .Where(r => r.Mode == ProxyMode.Tcp))
+            foreach (LoadBalancerTcpRule rule in rules.Values
+                .Where(r => r.Mode == LoadBalancerMode.Tcp))
             {
-                foreach (var frontend in route.Frontends)
+                foreach (var frontend in rule.Frontends)
                 {
                     if (frontend.PublicPort <= 0)
                     {
                         continue;
                     }
 
-                    if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out ProxyRoute conflictRoute))
+                    if (publicTcpPortToRule.TryGetValue(frontend.PublicPort, out LoadBalancerRule conflictRule))
                     {
-                        log.LogError(() => $"TCP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"TCP rule [{rule.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP rule [{conflictRule.Name}].");
                         configError = true;
                     }
                     else
                     {
-                        publicTcpPortToRoute.Add(frontend.PublicPort, route);
+                        publicTcpPortToRule.Add(frontend.PublicPort, rule);
                     }
                 }
             }
 
-            // Verify that HTTP routes don't have conflicting publically facing ports and path
+            // Verify that HTTP rules don't have conflicting publically facing ports and path
             // prefix combinations.  To pass, an HTTP frontend public port can't already be assigned
-            // to a TCP route and the hostname/port/path combination can't already be assigned to
+            // to a TCP rule and the hostname/port/path combination can't already be assigned to
             // another frontend.
             //
-            // The wrinkle here is that we need ensure that routes with a path prefix don't conflict
-            // with routes that don't.
+            // The wrinkle here is that we need ensure that rules with a path prefix don't conflict
+            // with rules that don't.
 
-            var publicHttpHostPortPathToRoute = new Dictionary<string, ProxyRoute>();
+            var publicHttpHostPortPathToRules = new Dictionary<string, LoadBalancerRule>();
 
-            // Check routes without path prefixes first.
+            // Check rules without path prefixes first.
 
-            foreach (ProxyHttpRoute route in routes.Values
-                .Where(r => r.Mode == ProxyMode.Http))
+            foreach (LoadBalancerHttpRule rule in rules.Values
+                .Where(r => r.Mode == LoadBalancerMode.Http))
             {
-                foreach (var frontend in route.Frontends)
+                foreach (var frontend in rule.Frontends)
                 {
                     if (frontend.PublicPort <= 0 || !string.IsNullOrEmpty(frontend.PathPrefix))
                     {
                         continue;
                     }
 
-                    if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out ProxyRoute conflictRoute))
+                    if (publicTcpPortToRule.TryGetValue(frontend.PublicPort, out LoadBalancerRule conflictRule))
                     {
-                        log.LogError(() => $"HTTP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP rule [{conflictRule.Name}].");
                         configError = true;
                         continue;
                     }
 
                     var hostPort = $"{frontend.Host}:{frontend.ProxyPort}";
 
-                    if (publicHttpHostPortPathToRoute.TryGetValue(hostPort, out conflictRoute))
+                    if (publicHttpHostPortPathToRules.TryGetValue(hostPort, out conflictRule))
                     {
-                        log.LogError(() => $"HTTP route [{route.Name}] has a public Internet facing hostname/port [{hostPort}] conflict with HTTP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing hostname/port [{hostPort}] conflict with HTTP rule [{conflictRule.Name}].");
                         configError = true;
                         continue;
                     }
                     else
                     {
-                        publicHttpHostPortPathToRoute.Add($"{hostPort}:{allPrefix}", route);
+                        publicHttpHostPortPathToRules.Add($"{hostPort}:{allPrefix}", rule);
                     }
                 }
             }
 
-            // Now check the routes with path prefixes.
+            // Now check the rules with path prefixes.
 
-            foreach (ProxyHttpRoute route in routes.Values
-                .Where(r => r.Mode == ProxyMode.Http))
+            foreach (LoadBalancerHttpRule rule in rules.Values
+                .Where(r => r.Mode == LoadBalancerMode.Http))
             {
-                foreach (var frontend in route.Frontends)
+                foreach (var frontend in rule.Frontends)
                 {
                     if (frontend.PublicPort <= 0 || string.IsNullOrEmpty(frontend.PathPrefix))
                     {
                         continue;
                     }
 
-                    if (publicTcpPortToRoute.TryGetValue(frontend.PublicPort, out ProxyRoute conflictRoute))
+                    if (publicTcpPortToRule.TryGetValue(frontend.PublicPort, out LoadBalancerRule conflictRule))
                     {
-                        log.LogError(() => $"HTTP route [{route.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing port [{frontend.PublicPort}] conflict with TCP rule [{conflictRule.Name}].");
                         configError = true;
                         continue;
                     }
@@ -778,64 +778,64 @@ backend haproxy_stats
                     var pathPrefix   = NormalizePathPrefix(frontend.PathPrefix);
                     var hostPortPath = $"{frontend.Host}:{frontend.ProxyPort}:{pathPrefix}";
 
-                    if (publicHttpHostPortPathToRoute.TryGetValue($"{frontend.Host}:{frontend.ProxyPort}:{allPrefix}", out conflictRoute) ||
-                        publicHttpHostPortPathToRoute.TryGetValue(hostPortPath, out conflictRoute))
+                    if (publicHttpHostPortPathToRules.TryGetValue($"{frontend.Host}:{frontend.ProxyPort}:{allPrefix}", out conflictRule) ||
+                        publicHttpHostPortPathToRules.TryGetValue(hostPortPath, out conflictRule))
                     {
-                        log.LogError(() => $"HTTP route [{route.Name}] has a public Internet facing hostname/port/path [{hostPortPath}] conflict with HTTP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has a public Internet facing hostname/port/path [{hostPortPath}] conflict with HTTP rule [{conflictRule.Name}].");
                         configError = true;
                         continue;
                     }
                     else
                     {
-                        publicHttpHostPortPathToRoute.Add(hostPortPath, route);
+                        publicHttpHostPortPathToRules.Add(hostPortPath, rule);
                     }
                 }
             }
 
-            // Verify that TCP routes don't have conflicting HAProxy frontends.  For
+            // Verify that TCP rules don't have conflicting HAProxy frontends.  For
             // TCP, this means that a port can have only one assigned frontend.
 
-            var haTcpProxyPortToRoute = new Dictionary<int, ProxyRoute>();
+            var haTcpProxyPortToRule = new Dictionary<int, LoadBalancerRule>();
 
-            foreach (ProxyTcpRoute route in routes.Values
-                .Where(r => r.Mode == ProxyMode.Tcp))
+            foreach (LoadBalancerTcpRule rule in rules.Values
+                .Where(r => r.Mode == LoadBalancerMode.Tcp))
             {
-                foreach (var frontend in route.Frontends)
+                foreach (var frontend in rule.Frontends)
                 {
-                    if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out ProxyRoute conflictRoute))
+                    if (haTcpProxyPortToRule.TryGetValue(frontend.PublicPort, out LoadBalancerRule conflictRule))
                     {
-                        log.LogError(() => $"TCP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"TCP rule [{rule.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP rule [{conflictRule.Name}].");
                         configError = true;
                     }
                     else
                     {
-                        haTcpProxyPortToRoute.Add(frontend.ProxyPort, route);
+                        haTcpProxyPortToRule.Add(frontend.ProxyPort, rule);
                     }
                 }
             }
 
-            // Verify that HTTP routes don't have conflicting HAProxy frontend ports.  For
+            // Verify that HTTP rules don't have conflicting HAProxy frontend ports.  For
             // HTTP, we need to make sure that there isn't already a TCP frontend on the
             // port and then ensure that only one HTTP frontend maps to a hostname/port/path
             // combination.
 
-            var haHttpProxyHostPortPathToRoute = new Dictionary<string, ProxyRoute>(StringComparer.OrdinalIgnoreCase);
+            var haHttpProxyHostPortPathToRule = new Dictionary<string, LoadBalancerRule>(StringComparer.OrdinalIgnoreCase);
 
-            // Check routes without path prefixes first.
+            // Check rules without path prefixes first.
 
-            foreach (ProxyHttpRoute route in routes.Values
-                .Where(r => r.Mode == ProxyMode.Http))
+            foreach (LoadBalancerHttpRule rule in rules.Values
+                .Where(r => r.Mode == LoadBalancerMode.Http))
             {
-                foreach (var frontend in route.Frontends)
+                foreach (var frontend in rule.Frontends)
                 {
                     if (!string.IsNullOrEmpty(frontend.PathPrefix))
                     {
                         continue;
                     }
 
-                    if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out ProxyRoute conflictRoute))
+                    if (haTcpProxyPortToRule.TryGetValue(frontend.PublicPort, out LoadBalancerRule conflictRule))
                     {
-                        log.LogError(() => $"HTTP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP rule [{conflictRule.Name}].");
                         configError = true;
                         continue;
                     }
@@ -843,33 +843,33 @@ backend haproxy_stats
                     var pathPrefix   = allPrefix;
                     var hostPortPath = $"{frontend.Host}:{frontend.ProxyPort}:{pathPrefix}";
 
-                    if (haHttpProxyHostPortPathToRoute.TryGetValue(hostPortPath, out conflictRoute))
+                    if (haHttpProxyHostPortPathToRule.TryGetValue(hostPortPath, out conflictRule))
                     {
-                        log.LogError(() => $"HTTP route [{route.Name}] has an HAProxy frontend hostname/port/path [{hostPortPath}] conflict with HTTP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has an HAProxy frontend hostname/port/path [{hostPortPath}] conflict with HTTP rule [{conflictRule.Name}].");
                         configError = true;
                     }
                     else
                     {
-                        haHttpProxyHostPortPathToRoute.Add(hostPortPath, route);
+                        haHttpProxyHostPortPathToRule.Add(hostPortPath, rule);
                     }
                 }
             }
 
-            // Now check the routes with path prefixes.
+            // Now check the rules with path prefixes.
 
-            foreach (ProxyHttpRoute route in routes.Values
-                .Where(r => r.Mode == ProxyMode.Http))
+            foreach (LoadBalancerHttpRule rule in rules.Values
+                .Where(r => r.Mode == LoadBalancerMode.Http))
             {
-                foreach (var frontend in route.Frontends)
+                foreach (var frontend in rule.Frontends)
                 {
                     if (string.IsNullOrEmpty(frontend.PathPrefix))
                     {
                         continue;
                     }
 
-                    if (haTcpProxyPortToRoute.TryGetValue(frontend.PublicPort, out ProxyRoute conflictRoute))
+                    if (haTcpProxyPortToRule.TryGetValue(frontend.PublicPort, out LoadBalancerRule conflictRule))
                     {
-                        log.LogError(() => $"HTTP route [{route.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has an HAProxy frontend port [{frontend.ProxyPort}] conflict with TCP rule [{conflictRule.Name}].");
                         configError = true;
                         continue;
                     }
@@ -877,36 +877,36 @@ backend haproxy_stats
                     var pathPrefix   = frontend.PathPrefix;
                     var hostPortPath = $"{frontend.Host}:{frontend.ProxyPort}:{pathPrefix}";
 
-                    if (haHttpProxyHostPortPathToRoute.TryGetValue($"{frontend.Host}:{frontend.ProxyPort}:{allPrefix}", out conflictRoute) ||
-                        haHttpProxyHostPortPathToRoute.TryGetValue(hostPortPath, out conflictRoute))
+                    if (haHttpProxyHostPortPathToRule.TryGetValue($"{frontend.Host}:{frontend.ProxyPort}:{allPrefix}", out conflictRule) ||
+                        haHttpProxyHostPortPathToRule.TryGetValue(hostPortPath, out conflictRule))
                     {
-                        log.LogError(() => $"HTTP route [{route.Name}] has an HAProxy frontend hostname/port/path [{hostPortPath}] conflict with HTTP route [{conflictRoute.Name}].");
+                        log.LogError(() => $"HTTP rule [{rule.Name}] has an HAProxy frontend hostname/port/path [{hostPortPath}] conflict with HTTP rule [{conflictRule.Name}].");
                         configError = true;
                     }
                     else
                     {
-                        haHttpProxyHostPortPathToRoute.Add(hostPortPath, route);
+                        haHttpProxyHostPortPathToRule.Add(hostPortPath, rule);
                     }
                 }
             }
 
             //-----------------------------------------------------------------
-            // Generate the TCP routes.
+            // Generate the TCP rules.
 
-            var hasTcpRoutes = false;
+            var hasTcpRules = false;
 
-            if (routes.Values
-                .Where(r => r.Mode == ProxyMode.Tcp)
+            if (rules.Values
+                .Where(r => r.Mode == LoadBalancerMode.Tcp)
                 .Count() > 0)
             {
-                hasTcpRoutes = true;
+                hasTcpRules = true;
 
                 sbHaProxy.AppendLine("#------------------------------------------------------------------------------");
-                sbHaProxy.AppendLine("# TCP Routes");
+                sbHaProxy.AppendLine("# TCP Rules");
             }
 
-            foreach (ProxyTcpRoute tcpRoute in routes.Values
-                .Where(r => r.Mode == ProxyMode.Tcp))
+            foreach (LoadBalancerTcpRule tcpRule in rules.Values
+                .Where(r => r.Mode == LoadBalancerMode.Tcp))
             {
                 // Generate the resolvers argument to be used to locate the
                 // backend servers.
@@ -914,43 +914,43 @@ backend haproxy_stats
                 var initAddrArg  = " init-addr none";
                 var resolversArg = string.Empty;
 
-                if (!string.IsNullOrEmpty(tcpRoute.Resolver))
+                if (!string.IsNullOrEmpty(tcpRule.Resolver))
                 {
-                    resolversArg = $" resolvers {tcpRoute.Resolver}";
+                    resolversArg = $" resolvers {tcpRule.Resolver}";
                 }
 
                 // Generate the frontend with integrated backend servers.
 
-                foreach (var frontend in tcpRoute.Frontends)
+                foreach (var frontend in tcpRule.Frontends)
                 {
                     sbHaProxy.Append(
 $@"
-listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
+listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
     mode                tcp
     bind                *:{frontend.ProxyPort}
 ");
 
-                    if (tcpRoute.MaxConnections > 0)
+                    if (tcpRule.MaxConnections > 0)
                     {
-                        sbHaProxy.AppendLine($"    maxconn             {tcpRoute.MaxConnections}");
+                        sbHaProxy.AppendLine($"    maxconn             {tcpRule.MaxConnections}");
                     }
 
-                    if (tcpRoute.Log)
+                    if (tcpRule.Log)
                     {
                         sbHaProxy.AppendLine($"    log                 global");
-                        sbHaProxy.AppendLine($"    log-format          {NeonClusterHelper.GetProxyLogFormat("neon-proxy-" + proxyName, tcp: true)}");
+                        sbHaProxy.AppendLine($"    log-format          {NeonClusterHelper.GetProxyLogFormat("neon-proxy-" + loadBalancerName, tcp: true)}");
                     }
 
-                    if (tcpRoute.LogChecks)
+                    if (tcpRule.LogChecks)
                     {
                         sbHaProxy.AppendLine($"    option              log-health-checks");
                     }
                 }
 
-                var checkArg    = tcpRoute.Check ? " check" : string.Empty;
+                var checkArg    = tcpRule.Check ? " check" : string.Empty;
                 var serverIndex = 0;
 
-                foreach (var backend in tcpRoute.SelectBackends(hostGroups))
+                foreach (var backend in tcpRule.SelectBackends(hostGroups))
                 {
                     var backendName = $"server-{serverIndex++}";
 
@@ -964,7 +964,7 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
             }
 
             //-----------------------------------------------------------------
-            // HTTP routes are tricker:
+            // HTTP rules are tricker:
             //
             //      1. We need to generate an HAProxy frontend for each IP/port combination 
             //         and then use HOST header or SNI rules in addition to an optional path
@@ -979,27 +979,27 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
 
             var haProxyFrontends = new Dictionary<int, HAProxyHttpFrontend>();
 
-            if (routes.Values
-                .Where(r => r.Mode == ProxyMode.Http)
+            if (rules.Values
+                .Where(r => r.Mode == LoadBalancerMode.Http)
                 .Count() > 0)
             {
-                if (hasTcpRoutes)
+                if (hasTcpRules)
                 {
                     sbHaProxy.AppendLine();
                 }
 
                 sbHaProxy.AppendLine("#------------------------------------------------------------------------------");
-                sbHaProxy.AppendLine("# HTTP Routes");
+                sbHaProxy.AppendLine("# HTTP Rules");
 
-                // Enumerate all of the routes and build a dictionary with information about
+                // Enumerate all of the rules and build a dictionary with information about
                 // the HAProxy frontends we'll need to generate.  This dictionary will be
                 // keyed by the host/path.
 
-                foreach (ProxyHttpRoute httpRoute in routes.Values
-                    .Where(r => r.Mode == ProxyMode.Http)
+                foreach (LoadBalancerHttpRule httpRule in rules.Values
+                    .Where(r => r.Mode == LoadBalancerMode.Http)
                     .OrderBy(r => r.Name))
                 {
-                    foreach (var frontend in httpRoute.Frontends)
+                    foreach (var frontend in httpRule.Frontends)
                     {
                         if (!haProxyFrontends.TryGetValue(frontend.ProxyPort, out HAProxyHttpFrontend haProxyFrontend))
                         {
@@ -1016,7 +1016,7 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
 
                         if (haProxyFrontend.HostPathMappings.ContainsKey(hostPath))
                         {
-                            // It's possible to incorrectly define multiple HTTP routes with the same 
+                            // It's possible to incorrectly define multiple HTTP rules with the same 
                             // host/path mapping to the same HAProxy frontend port.  This code will
                             // simply choose a winner with a warning.
 
@@ -1024,31 +1024,31 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
                             //
                             // I'm not entirely sure that this check is really necessary.
 
-                            ProxyHttpRoute conflictRoute = null;
+                            LoadBalancerHttpRule conflictRule = null;
 
-                            foreach (ProxyHttpRoute checkRoute in routes.Values
-                                .Where(r => r.Mode == ProxyMode.Http && r != httpRoute))
+                            foreach (LoadBalancerHttpRule checkRule in rules.Values
+                                .Where(r => r.Mode == LoadBalancerMode.Http && r != httpRule))
                             {
-                                if (checkRoute.Frontends.Count(fe => fe.ProxyPort == frontend.ProxyPort && fe.Host.Equals(frontend.Host, StringComparison.CurrentCultureIgnoreCase)) > 0)
+                                if (checkRule.Frontends.Count(fe => fe.ProxyPort == frontend.ProxyPort && fe.Host.Equals(frontend.Host, StringComparison.CurrentCultureIgnoreCase)) > 0)
                                 {
-                                    conflictRoute = checkRoute;
+                                    conflictRule = checkRule;
                                 }
                             }
 
-                            if (conflictRoute != null)
+                            if (conflictRule != null)
                             {
-                                log.LogWarn(() => $"HTTP route [{httpRoute.Name}] defines a frontend for host/port [{frontend.Host}/{frontend.ProxyPort}] which conflicts with route [{conflictRoute.Name}].  This frontend will be ignored.");
+                                log.LogWarn(() => $"HTTP rule [{httpRule.Name}] defines a frontend for host/port [{frontend.Host}/{frontend.ProxyPort}] which conflicts with rule [{conflictRule.Name}].  This frontend will be ignored.");
                             }
                         }
                         else
                         {
-                            haProxyFrontend.HostPathMappings[hostPath] = $"http:{httpRoute.Name}";
+                            haProxyFrontend.HostPathMappings[hostPath] = $"http:{httpRule.Name}";
                         }
 
-                        if (httpRoute.Log)
+                        if (httpRule.Log)
                         {
-                            // If any of the routes on this port require logging we'll have to
-                            // enable logging for all of the routes, since they'll end up sharing
+                            // If any of the rules on this port require logging we'll have to
+                            // enable logging for all of the rules, since they'll end up sharing
                             // the same proxy frontend.
 
                             haProxyFrontend.Log = true;
@@ -1058,14 +1058,14 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
                         {
                             if (!clusterCerts.TryGetValue(frontend.CertName, out CertInfo certInfo))
                             {
-                                log.LogError(() => $"Route [{httpRoute.Name}] references [{frontend.CertName}] which does not exist.");
+                                log.LogError(() => $"Rule [{httpRule.Name}] references certificate [{frontend.CertName}] which does not exist.");
                                 configError = true;
                                 continue;
                             }
 
                             if (!certInfo.Certificate.IsValidHost(frontend.Host))
                             {
-                                log.LogError(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] does not cover host [{frontend.Host}] for a route [{httpRoute.Name}] frontend.");
+                                log.LogError(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] does not cover host [{frontend.Host}] for a rule [{httpRule.Name}] frontend.");
                             }
 
                             certInfo.WasReferenced = true;
@@ -1076,12 +1076,12 @@ listen tcp:{tcpRoute.Name}-port-{frontend.ProxyPort}
                         {
                             if (frontend.Tls)
                             {
-                                log.LogError(() => $"Route [{httpRoute.Name}] specifies a TLS frontend on port [{frontend.ProxyPort}] that conflict with non-TLS frontends on the same port.");
+                                log.LogError(() => $"Rule [{httpRule.Name}] specifies a TLS frontend on port [{frontend.ProxyPort}] that conflict with non-TLS frontends on the same port.");
                                 configError = true;
                             }
                             else
                             {
-                                log.LogError(() => $"Route [{httpRoute.Name}] specifies a non-TLS frontend on port [{frontend.ProxyPort}] that conflict with TLS frontends on the same port.");
+                                log.LogError(() => $"Rule [{httpRule.Name}] specifies a non-TLS frontend on port [{frontend.ProxyPort}] that conflict with TLS frontends on the same port.");
                                 configError = true;
                             }
                         }
@@ -1118,7 +1118,7 @@ frontend {haProxyFrontend.Name}
                         sbHaProxy.AppendLine($"    capture             request header Host len 255");
                         sbHaProxy.AppendLine($"    capture             request header User-Agent len 2048");
                         sbHaProxy.AppendLine($"    log                 global");
-                        sbHaProxy.AppendLine($"    log-format          {NeonClusterHelper.GetProxyLogFormat("neon-proxy-" + proxyName, tcp: false)}");
+                        sbHaProxy.AppendLine($"    log-format          {NeonClusterHelper.GetProxyLogFormat("neon-proxy-" + loadBalancerName, tcp: false)}");
                     }
 
                     // Generate the backend mappings for frontends without path prefixes first.
@@ -1195,8 +1195,8 @@ frontend {haProxyFrontend.Name}
 
                 // Generate the HTTP backends
 
-                foreach (ProxyHttpRoute httpRoute in routes.Values
-                    .Where(r => r.Mode == ProxyMode.Http)
+                foreach (LoadBalancerHttpRule httpRule in rules.Values
+                    .Where(r => r.Mode == LoadBalancerMode.Http)
                     .OrderBy(r => r.Name))
                 {
                     // Generate the resolvers argument to be used to locate the
@@ -1204,58 +1204,58 @@ frontend {haProxyFrontend.Name}
 
                     var resolversArg    = string.Empty;
 
-                    if (!string.IsNullOrEmpty(httpRoute.Resolver))
+                    if (!string.IsNullOrEmpty(httpRule.Resolver))
                     {
-                        resolversArg = $" resolvers {httpRoute.Resolver}";
+                        resolversArg = $" resolvers {httpRule.Resolver}";
                     }
 
-                    var checkArg        = httpRoute.Check ? " check" : string.Empty;
+                    var checkArg        = httpRule.Check ? " check" : string.Empty;
                     var initAddrArg     = " init-addr none";
                     var checkVersionArg = string.Empty;
 
-                    if (!string.IsNullOrEmpty(httpRoute.CheckHost))
+                    if (!string.IsNullOrEmpty(httpRule.CheckHost))
                     {
-                        checkVersionArg = $"\"HTTP/{httpRoute.CheckVersion}\\r\\nHost: {httpRoute.CheckHost}\"";
+                        checkVersionArg = $"\"HTTP/{httpRule.CheckVersion}\\r\\nHost: {httpRule.CheckHost}\"";
                     }
                     else
                     {
-                        checkVersionArg = $"HTTP/{httpRoute.CheckVersion}";
+                        checkVersionArg = $"HTTP/{httpRule.CheckVersion}";
                     }
 
                     sbHaProxy.Append(
 $@"
-backend http:{httpRoute.Name}
+backend http:{httpRule.Name}
     mode                http
 ");
 
-                    if (httpRoute.HttpsRedirect)
+                    if (httpRule.HttpsRedirect)
                     {
                         sbHaProxy.AppendLine($"    redirect            scheme https if !{{ ssl_fc }}");
                     }
 
-                    if (httpRoute.Check && !string.IsNullOrEmpty(httpRoute.CheckExpect))
+                    if (httpRule.Check && !string.IsNullOrEmpty(httpRule.CheckExpect))
                     {
-                        sbHaProxy.AppendLine($"    http-check          expect {httpRoute.CheckExpect.Trim()}");
+                        sbHaProxy.AppendLine($"    http-check          expect {httpRule.CheckExpect.Trim()}");
                     }
 
-                    if (httpRoute.Check && !string.IsNullOrEmpty(httpRoute.CheckUri))
+                    if (httpRule.Check && !string.IsNullOrEmpty(httpRule.CheckUri))
                     {
-                        sbHaProxy.AppendLine($"    option              httpchk {httpRoute.CheckMethod.ToUpper()} {httpRoute.CheckUri} {checkVersionArg}");
+                        sbHaProxy.AppendLine($"    option              httpchk {httpRule.CheckMethod.ToUpper()} {httpRule.CheckUri} {checkVersionArg}");
                     }
 
-                    if (httpRoute.Check && httpRoute.LogChecks)
+                    if (httpRule.Check && httpRule.LogChecks)
                     {
                         sbHaProxy.AppendLine($"    option              log-health-checks");
                     }
 
-                    if (httpRoute.Log)
+                    if (httpRule.Log)
                     {
                         sbHaProxy.AppendLine($"    log                 global");
                     }
 
                     var serverIndex = 0;
 
-                    foreach (var backend in httpRoute.SelectBackends(hostGroups))
+                    foreach (var backend in httpRule.SelectBackends(hostGroups))
                     {
                         var serverName = $"server-{serverIndex++}";
 
@@ -1279,7 +1279,7 @@ backend http:{httpRoute.Name}
             if (configError)
             {
                 log.LogError("Proxy configuration aborted due to one or more errors.");
-                return (Routes: routes, log.ToString());
+                return (Rules: rules, log.ToString());
             }
 
             // Generate the contents of the [.certs] file.
@@ -1347,25 +1347,25 @@ backend http:{httpRoute.Name}
             }
 
             // Compare the combined hash against what's already published to Consul
-            // for the proxy and update these keys if the hashes differ.
+            // for the load balancer and update these keys if the hashes differ.
 
             var publish = false;
 
             try
             {
-                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{proxyName}/hash", cancellationToken) || 
-                    !await consul.KV.Exists($"{consulPrefix}/proxies/{proxyName}/conf", cancellationToken))
+                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{loadBalancerName}/hash", cancellationToken) || 
+                    !await consul.KV.Exists($"{consulPrefix}/proxies/{loadBalancerName}/conf", cancellationToken))
                 {
                     publish = true; // Nothing published yet.
                 }
                 else
                 {
-                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{proxyName}/hash", cancellationToken);
+                    publish = combinedHash != await consul.KV.GetString($"{consulPrefix}/proxies/{loadBalancerName}/hash", cancellationToken);
                 }
 
                 if (publish)
                 {
-                    log.LogInfo(() => $"Updating proxy [{proxyDisplayName}] configuration: [routes={routes.Count}] [hash={combinedHash}]");
+                    log.LogInfo(() => $"Updating load balancer [{proxyDisplayName}] configuration: [rules={rules.Count}] [hash={combinedHash}]");
 
                     // Write the hash and configuration out as a transaction so we'll 
                     // be sure they match (don't get out of sync).  We don't need to
@@ -1378,15 +1378,15 @@ backend http:{httpRoute.Name}
 
                     var operations = new List<KVTxnOp>()
                     {
-                        new KVTxnOp($"{consulPrefix}/proxies/{proxyName}/hash", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(combinedHash) },
-                        new KVTxnOp($"{consulPrefix}/proxies/{proxyName}/conf", KVTxnVerb.Set) { Value = zipBytes }
+                        new KVTxnOp($"{consulPrefix}/proxies/{loadBalancerName}/hash", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(combinedHash) },
+                        new KVTxnOp($"{consulPrefix}/proxies/{loadBalancerName}/conf", KVTxnVerb.Set) { Value = zipBytes }
                     };
 
                     await consul.KV.Txn(operations, cancellationToken);
                 }
                 else
                 {
-                    log.LogInfo(() => $"No changes detected for proxy [{proxyDisplayName}].");
+                    log.LogInfo(() => $"No changes detected for load balancer [{proxyDisplayName}].");
                 }
             }
             catch (Exception e)
@@ -1394,7 +1394,7 @@ backend http:{httpRoute.Name}
                 // Warn and exit for Consul errors.
 
                 log.LogWarn("Consul request failure.", e);
-                return (Routes: routes, log.ToString());
+                return (Rules: rules, log.ToString());
             }
 
             //-----------------------------------------------------------------
@@ -1405,7 +1405,7 @@ backend http:{httpRoute.Name}
             //
             // The bridge proxy is typically deployed as a standalone Docker container on cluster
             // pet nodes and will expose internal cluster services on the pets using the same
-            // ports where they are deployed on the internal Swarm nodes.  This means that containers
+            // ports where they are deployed on the internal Swarm nodes.  This means that containersl
             // running on pet nodes can consume cluster services the same way as they do on the manager
             // and worker nodes.
             //
@@ -1413,7 +1413,7 @@ backend http:{httpRoute.Name}
             // [neon-log-host] containers to the [neon-log-collector] service to handle
             // upstream log processing and persistance to the Elasticsearch cluster but
             // the bridges could also be used in the future to access any cluster service
-            // with a public or private proxy route defined.
+            // with a public or private load balancer rule defined.
             //
             // The code below generally assumes that the bridge target proxy is exposed 
             // on all Swarm manager or worker nodes (via the Docker ingress/mesh network 
@@ -1569,17 +1569,17 @@ backend haproxy_stats
     stats               uri {NeonClusterConst.HaProxyStatsUri}
     stats               refresh 5s
 ");
-            // Generate the TCP bridge routes.
+            // Generate the TCP bridge rules.
 
             sbHaProxy.AppendLine("#------------------------------------------------------------------------------");
-            sbHaProxy.AppendLine("# TCP Routes");
+            sbHaProxy.AppendLine("# TCP Rules");
 
             var bridgePorts = new HashSet<int>();
 
-            foreach (ProxyTcpRoute tcpRoute in routes.Values
-                .Where(r => r.Mode == ProxyMode.Tcp))
+            foreach (LoadBalancerTcpRule tcpRule in rules.Values
+                .Where(r => r.Mode == LoadBalancerMode.Tcp))
             {
-                foreach (var frontEnd in tcpRoute.Frontends)
+                foreach (var frontEnd in tcpRule.Frontends)
                 {
                     if (!bridgePorts.Contains(frontEnd.ProxyPort))
                     {
@@ -1588,10 +1588,10 @@ backend haproxy_stats
                 }
             }
 
-            foreach (ProxyHttpRoute httpRoute in routes.Values
-                .Where(r => r.Mode == ProxyMode.Http))
+            foreach (LoadBalancerHttpRule httpRule in rules.Values
+                .Where(r => r.Mode == LoadBalancerMode.Http))
             {
-                foreach (var frontEnd in httpRoute.Frontends)
+                foreach (var frontEnd in httpRule.Frontends)
                 {
                     if (!bridgePorts.Contains(frontEnd.ProxyPort))
                     {
@@ -1678,7 +1678,7 @@ listen tcp:port-{port}
 
                 if (publish)
                 {
-                    log.LogInfo(() => $"Updating proxy [{proxyBridgeDisplayName}] configuration: [routes={bridgePorts.Count}] [hash={combinedHash}]");
+                    log.LogInfo(() => $"Updating proxy [{proxyBridgeDisplayName}] configuration: [rules={bridgePorts.Count}] [hash={combinedHash}]");
 
                     // Write the hash and configuration out as a transaction so we'll 
                     // be sure they match (don't get out of sync).  We don't need to
@@ -1707,23 +1707,23 @@ listen tcp:port-{port}
                 // Warn and exit for Consul/Docker errors.
 
                 log.LogWarn("Consul or Docker request failure.", e);
-                return (Routes: routes, log.ToString());
+                return (Rules: rules, log.ToString());
             }
             
             //-----------------------------------------------------------------
             // We're done
 
-            return (Routes: routes, Status: log.ToString());
+            return (Rules: rules, Status: log.ToString());
         }
 
         /// <summary>
         /// Updates the cluster's public load balancer and network security rules so they
-        /// are consistent with the public proxy routes passed.
+        /// are consistent with the public load balancer rules passed.
         /// </summary>
-        /// <param name="publicRoutes">The public proxy routes.</param>
+        /// <param name="publicRules">The public proxy rules.</param>
         /// <param name="cancellationToken">The cancellation token.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task UpdateClusterNetwork(Dictionary<string, ProxyRoute> publicRoutes, CancellationToken cancellationToken)
+        private static async Task UpdateClusterNetwork(Dictionary<string, LoadBalancerRule> publicRules, CancellationToken cancellationToken)
         {
             try
             {
@@ -1737,7 +1737,7 @@ listen tcp:port-{port}
                 var cluster = new ClusterProxy(cloneClusterDefinition);
 
                 // Retrieve the current public load balancer rules and then compare
-                // these with the public routes defined for the cluster to determine
+                // these with the public rules defined for the cluster to determine
                 // whether we need to update the load balancer and network security
                 // rules.
 
@@ -1747,7 +1747,7 @@ listen tcp:port-{port}
                 // to be out of sync if the operator modifies the security rules
                 // manually (e.g. via the cloud portal).  This code won't detect
                 // this situation and the security rules won't be brought back
-                // int sync until the public routes changes enough to actually 
+                // int sync until the public rules changes enough to actually 
                 // change the external load balanced port set.
                 //
                 // This could be considered a feature.  For example, this allows
@@ -1764,12 +1764,12 @@ listen tcp:port-{port}
                 var latestEndpoints = new List<HostedEndpoint>();
 
                 // Build a dictionary mapping the load balancer frontend ports to 
-                // internal HAProxy frontend ports for the latest routes.
+                // internal HAProxy frontend ports for the latest rules.
 
-                foreach (ProxyTcpRoute route in publicRoutes.Values
-                    .Where(r => r.Mode == ProxyMode.Tcp))
+                foreach (LoadBalancerTcpRule rule in publicRules.Values
+                    .Where(r => r.Mode == LoadBalancerMode.Tcp))
                 {
-                    foreach (var frontend in route.Frontends)
+                    foreach (var frontend in rule.Frontends)
                     {
                         if (frontend.PublicPort > 0)
                         {
@@ -1778,10 +1778,10 @@ listen tcp:port-{port}
                     }
                 }
 
-                foreach (ProxyHttpRoute route in publicRoutes.Values
-                    .Where(r => r.Mode == ProxyMode.Http))
+                foreach (LoadBalancerHttpRule rule in publicRules.Values
+                    .Where(r => r.Mode == LoadBalancerMode.Http))
                 {
-                    foreach (var frontend in route.Frontends)
+                    foreach (var frontend in rule.Frontends)
                     {
                         if (frontend.PublicPort > 0)
                         {
@@ -1790,7 +1790,7 @@ listen tcp:port-{port}
                     }
                 }
 
-                // Determine if the latest route port mappings differ from the current
+                // Determine if the latest rule port mappings differ from the current
                 // cluster load balancer rules.
 
                 var changed = false;
@@ -1819,7 +1819,7 @@ listen tcp:port-{port}
 
                 if (!changed)
                 {
-                    log.LogInfo(() => $"Public cluster load balancer configuration matches current routes. [endpoint-count={publicEndpoints.Count}]");
+                    log.LogInfo(() => $"Public cluster load balancer configuration matches current rules. [endpoint-count={publicEndpoints.Count}]");
                     return;
                 }
 

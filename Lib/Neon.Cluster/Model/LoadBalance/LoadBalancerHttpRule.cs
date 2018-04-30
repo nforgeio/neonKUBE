@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyHttpRoute.cs
+// FILE:	    LoadBalancerHttpRule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -16,19 +16,19 @@ using System.Text.RegularExpressions;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes a route that forwards traffic from HTTP and/or HTTPS frontends
-    /// to HTTP backend servers.
+    /// Describes a load balancer rule that forwards traffic from 
+    /// HTTP and/or HTTPS frontends to HTTP backend servers.
     /// </summary>
-    public class ProxyHttpRoute : ProxyRoute
+    public class LoadBalancerHttpRule : LoadBalancerRule
     {
-        private List<ProxyHttpBackend> selectedBackends;    // Used to cache selected backends
+        private List<LoadBalancerHttpBackend> selectedBackends;    // Used to cache selected backends
 
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public ProxyHttpRoute()
+        public LoadBalancerHttpRule()
         {
-            Mode = ProxyMode.Http;
+            Mode = LoadBalancerMode.Http;
         }
 
         /// <summary>
@@ -43,12 +43,12 @@ namespace Neon.Cluster
         /// <remarks>
         /// <para>
         /// This property works by implicitly adding an HTTP frontend for every defined
-        /// HTTPS frontend (ones that specify a <see cref="ProxyHttpFrontend.CertName"/>).
+        /// HTTPS frontend (ones that specify a <see cref="LoadBalancerHttpFrontend.CertName"/>).
         /// and then having each of the HTTP frontends emit a <b>302 temporary redirect</b>,
         /// redirecting to the same URL with the <b>https://</b> scheme.
         /// </para>
         /// <note>
-        /// This only works for routes added to the <b>public</b> proxy on the <b>neon-public</b>
+        /// This only works for rules added to the <b>public</b> load balancer on the <b>neon-public</b>
         /// network and it also works only for HTTPS frontends with the port set to <b>0/5101</b>
         /// and HTTP frontends with the port set to <b>0/5100</b>.
         /// </note>
@@ -59,12 +59,12 @@ namespace Neon.Cluster
 
         /// <summary>
         /// <para>
-        /// The relative URI the proxy will use to verify the backend server health when <see cref="ProxyRoute.Check"/> is <c>true</c> .  
+        /// The relative URI the load balancer will use to verify the backend server health when <see cref="LoadBalancerRule.Check"/> is <c>true</c> .  
         /// The health check must return a <b>2xx</b> or <b>3xx</b> HTTP  status code to be considered healthy.  This defaults to the
         /// relative path <b>/</b>.  You can also set this to <c>null</c> or the empty string to disable HTTP based checks.
         /// </para>
         /// <para>
-        /// You can also set this to <c>null</c> to enable simple TCP connect checks will be performed if <see cref="ProxyRoute.Check"/> 
+        /// You can also set this to <c>null</c> to enable simple TCP connect checks will be performed if <see cref="LoadBalancerRule.Check"/> 
         /// is enabled.
         /// </para>
         /// </summary>
@@ -113,20 +113,20 @@ namespace Neon.Cluster
         public string CheckExpect { get; set; } = null;
 
         /// <summary>
-        /// The proxy frontend definitions.
+        /// The load balancer frontend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Frontends", Required = Required.Always)]
-        public List<ProxyHttpFrontend> Frontends { get; set; } = new List<ProxyHttpFrontend>();
+        public List<LoadBalancerHttpFrontend> Frontends { get; set; } = new List<LoadBalancerHttpFrontend>();
 
         /// <summary>
-        /// The proxy backend definitions.
+        /// The load balancer backend definitions.
         /// </summary>
         [JsonProperty(PropertyName = "Backends", Required = Required.Always)]
-        public List<ProxyHttpBackend> Backends { get; set; } = new List<ProxyHttpBackend>();
+        public List<LoadBalancerHttpBackend> Backends { get; set; } = new List<LoadBalancerHttpBackend>();
 
         /// <summary>
         /// Returns the list of backends selected to be targeted by processing any
-        /// backends with <see cref="ProxyBackend.Group"/> and <see cref="ProxyBackend.GroupLimit"/>
+        /// backends with <see cref="LoadBalancerBackend.Group"/> and <see cref="LoadBalancerBackend.GroupLimit"/>
         /// properties configured to dynamically select backend target nodes.
         /// </summary>
         /// <param name="hostGroups">
@@ -144,7 +144,7 @@ namespace Neon.Cluster
         /// instance and then return the same selected backends thereafter.
         /// </note>
         /// </remarks>
-        public List<ProxyHttpBackend> SelectBackends(Dictionary<string, List<NodeDefinition>> hostGroups)
+        public List<LoadBalancerHttpBackend> SelectBackends(Dictionary<string, List<NodeDefinition>> hostGroups)
         {
             Covenant.Requires<ArgumentNullException>(hostGroups != null);
 
@@ -179,7 +179,7 @@ namespace Neon.Cluster
 
             var processedGroups = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-            selectedBackends = new List<ProxyHttpBackend>();
+            selectedBackends = new List<LoadBalancerHttpBackend>();
 
             foreach (var backend in Backends)
             {
@@ -207,31 +207,31 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Validates the route.
+        /// Validates the rule.
         /// </summary>
         /// <param name="context">The validation context.</param>
         /// <param name="addImplicitFrontends">Optionally add any implicit frontends (e.g. for HTTPS redirect).</param>
-        public override void Validate(ProxyValidationContext context, bool addImplicitFrontends = false)
+        public override void Validate(LoadBalancerValidationContext context, bool addImplicitFrontends = false)
         {
             base.Validate(context, addImplicitFrontends);
 
-            Frontends = Frontends ?? new List<ProxyHttpFrontend>();
-            Backends  = Backends ?? new List<ProxyHttpBackend>();
+            Frontends = Frontends ?? new List<LoadBalancerHttpFrontend>();
+            Backends  = Backends ?? new List<LoadBalancerHttpBackend>();
 
             if (HttpsRedirect)
             {
-                if (!context.ProxyName.Equals("public", StringComparison.InvariantCultureIgnoreCase))
+                if (!context.LoadBalancerName.Equals("public", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    context.Error($"Route [{Name}] has [{nameof(HttpsRedirect)}={HttpsRedirect}] defined for [{context.ProxyName}] proxy.  This is supported only for the [public] proxy.");
+                    context.Error($"Rule [{Name}] has [{nameof(HttpsRedirect)}={HttpsRedirect}] defined for [{context.LoadBalancerName}] load balancer.  This is supported only for the [public] load balancer.");
                 }
 
                 if (addImplicitFrontends)
                 {
                     //-------------------------------------------------------------
-                    // This is where we implicitly add an HTTP route for each HTTPS route
+                    // This is where we implicitly add an HTTP rule for each HTTPS rule
                     // that redirects from the [http://] scheme to [https://].  We're 
                     // going to clone each HTTPS frontend that targets the default port
-                    // [0/5100], and set [CertName=null] and then add this to the route
+                    // [0/5100], and set [CertName=null] and then add this to the rule
                     // as the HTTP frontend, if it doesn't already exist.
 
                     // Create a set of the hosts for the HTTP frontends explicitly specified 
@@ -241,7 +241,7 @@ namespace Neon.Cluster
 
                     var explicitHttpFrontends = new HashSet<string>();
 
-                    foreach (ProxyHttpFrontend httpFrontend in Frontends.Where(fe => !fe.Tls))
+                    foreach (LoadBalancerHttpFrontend httpFrontend in Frontends.Where(fe => !fe.Tls))
                     {
                         var hostAndPath = httpFrontend.HostAndPath;
 
@@ -257,7 +257,7 @@ namespace Neon.Cluster
                     // Add an implicit HTTP frontend for each HTTPS frontend if an explicit
                     // HTTP frontend matching the [host/path] doesn't already exist.
 
-                    var newHttpFrontends = new List<ProxyHttpFrontend>();
+                    var newHttpFrontends = new List<LoadBalancerHttpFrontend>();
 
                     foreach (var httpsFrontend in Frontends.Where(fe => fe.Tls))
                     {
@@ -270,7 +270,7 @@ namespace Neon.Cluster
                         {
                             var clone = NeonHelper.JsonClone(httpsFrontend);
 
-                            clone.CertName = null;
+                            clone.CertName  = null;
                             clone.ProxyPort = 0;
 
                             newHttpFrontends.Add(clone);
@@ -288,13 +288,13 @@ namespace Neon.Cluster
             {
                 if (!Uri.TryCreate(CheckUri, UriKind.Relative, out var uri))
                 {
-                    context.Error($"Route [{Name}] has invalid [{nameof(CheckUri)}={CheckUri}].");
+                    context.Error($"Rule [{Name}] has invalid [{nameof(CheckUri)}={CheckUri}].");
                 }
             }
 
             if (string.IsNullOrEmpty(CheckMethod) || CheckMethod.IndexOfAny(new char[] { ' ', '\r', '\n', '\t' }) != -1)
             {
-                context.Error($"Route [{Name}] has invalid [{nameof(CheckMethod)}={CheckMethod}].");
+                context.Error($"Rule [{Name}] has invalid [{nameof(CheckMethod)}={CheckMethod}].");
             }
 
             if (string.IsNullOrEmpty(CheckVersion))
@@ -306,17 +306,17 @@ namespace Neon.Cluster
 
             if (!regex.Match(CheckVersion).Success)
             {
-                context.Error($"Route [{Name}] has invalid [{nameof(CheckVersion)}={CheckVersion}].");
+                context.Error($"Rule [{Name}] has invalid [{nameof(CheckVersion)}={CheckVersion}].");
             }
 
             if (!string.IsNullOrEmpty(CheckHost) && !ClusterDefinition.DnsHostRegex.Match(CheckHost).Success)
             {
-                context.Error($"Route [{Name}] has invalid [{nameof(CheckHost)}={CheckHost}].");
+                context.Error($"Rule [{Name}] has invalid [{nameof(CheckHost)}={CheckHost}].");
             }
 
             if (!string.IsNullOrEmpty(CheckExpect))
             {
-                var error = $"Route [{Name}] has invalid [{nameof(CheckExpect)}={CheckExpect}].";
+                var error = $"Rule [{Name}] has invalid [{nameof(CheckExpect)}={CheckExpect}].";
                 var value = CheckExpect.Trim();
 
                 if (value.StartsWith("! "))
@@ -390,7 +390,7 @@ namespace Neon.Cluster
 
                     if (frontendMap.Contains(key))
                     {
-                        context.Error($"HTTP route [{Name}] includes two or more frontends that map to [{key}].");
+                        context.Error($"HTTP rule [{Name}] includes two or more frontends that map to [{key}].");
                     }
 
                     frontendMap.Add(key);
@@ -406,7 +406,7 @@ namespace Neon.Cluster
                     if (frontendMap.Contains($"{frontend.Host}:{frontend.ProxyPort}") ||    // Ensure there's no *all* path frontend
                         frontendMap.Contains(key))
                     {
-                        context.Error($"HTTP route [{Name}] includes two or more frontends that map to [{key}].");
+                        context.Error($"HTTP rule [{Name}] includes two or more frontends that map to [{key}].");
                     }
 
                     frontendMap.Add(key);

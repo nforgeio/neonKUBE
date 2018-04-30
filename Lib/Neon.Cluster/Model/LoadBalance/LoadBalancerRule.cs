@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyRoute.cs
+// FILE:	    LoadBalancerRule.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -24,9 +24,9 @@ using Neon.Common;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// The base class for proxy routes.
+    /// The base class for load balancer rules.
     /// </summary>
-    public class ProxyRoute
+    public class LoadBalancerRule
     {
         //---------------------------------------------------------------------
         // Static members
@@ -37,13 +37,13 @@ namespace Neon.Cluster
         private const string defaultResolverName = "docker";
 
         /// <summary>
-        /// Parses a <see cref="ProxyRoute"/> from a JSON or YAML string,
+        /// Parses a <see cref="LoadBalancerRule"/> from a JSON or YAML string,
         /// automatically detecting the input format.
         /// </summary>
         /// <param name="jsonOrYaml">The JSON or YAML input.</param>
-        /// <param name="strict">Optionally require that all input properties map to route properties.</param>
-        /// <returns>The parsed object instance derived from <see cref="ProxyRoute"/>.</returns>
-        public static ProxyRoute Parse(string jsonOrYaml, bool strict = false)
+        /// <param name="strict">Optionally require that all input properties map to rule properties.</param>
+        /// <returns>The parsed object instance derived from <see cref="LoadBalancerRule"/>.</returns>
+        public static LoadBalancerRule Parse(string jsonOrYaml, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonOrYaml));
 
@@ -58,68 +58,68 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Parses a <see cref="ProxyRoute"/> from a JSON string.
+        /// Parses a <see cref="LoadBalancerRule"/> from a JSON string.
         /// </summary>
         /// <param name="jsonText">The input string.</param>
-        /// <param name="strict">Optionally require that all input properties map to route properties.</param>
-        /// <returns>The parsed object instance derived from <see cref="ProxyRoute"/>.</returns>
-        public static ProxyRoute ParseJson(string jsonText, bool strict = false)
+        /// <param name="strict">Optionally require that all input properties map to rule properties.</param>
+        /// <returns>The parsed object instance derived from <see cref="LoadBalancerRule"/>.</returns>
+        public static LoadBalancerRule ParseJson(string jsonText, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(jsonText));
 
             // We're going to ignore unmatched properties here because we
-            // we're reading the base route class first.
+            // we're reading the base rule class first.
 
-            var baseRoute = NeonHelper.JsonDeserialize<ProxyRoute>(jsonText);
+            var baseRule = NeonHelper.JsonDeserialize<LoadBalancerRule>(jsonText);
 
-            // Now that we know the route mode, we can deserialize the full route.
+            // Now that we know the rule mode, we can deserialize the full rule.
 
-            switch (baseRoute.Mode)
+            switch (baseRule.Mode)
             {
-                case ProxyMode.Http:
+                case LoadBalancerMode.Http:
 
-                    return NeonHelper.JsonDeserialize<ProxyHttpRoute>(jsonText, strict);
+                    return NeonHelper.JsonDeserialize<LoadBalancerHttpRule>(jsonText, strict);
 
-                case ProxyMode.Tcp:
+                case LoadBalancerMode.Tcp:
 
-                    return NeonHelper.JsonDeserialize<ProxyTcpRoute>(jsonText, strict);
+                    return NeonHelper.JsonDeserialize<LoadBalancerTcpRule>(jsonText, strict);
 
                 default:
 
-                    throw new NotImplementedException($"Unsupported [{nameof(ProxyRoute)}.{nameof(Mode)}={baseRoute.Mode}].");
+                    throw new NotImplementedException($"Unsupported [{nameof(LoadBalancerRule)}.{nameof(Mode)}={baseRule.Mode}].");
             }
         }
 
         /// <summary>
-        /// Parses a <see cref="ProxyRoute"/> from a YAML string.
+        /// Parses a <see cref="LoadBalancerRule"/> from a YAML string.
         /// </summary>
         /// <param name="yamlText">The input string.</param>
-        /// <param name="strict">Optionally require that all input properties map to route properties.</param>
-        /// <returns>The parsed object instance derived from <see cref="ProxyRoute"/>.</returns>
-        public static ProxyRoute ParseYaml(string yamlText, bool strict = false)
+        /// <param name="strict">Optionally require that all input properties map to rule properties.</param>
+        /// <returns>The parsed object instance derived from <see cref="LoadBalancerRule"/>.</returns>
+        public static LoadBalancerRule ParseYaml(string yamlText, bool strict = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(yamlText));
 
             // We're going to ignore unmatched properties here because we
-            // we're reading the base route class first.
+            // we're reading the base rule class first.
 
-            var baseRoute = NeonHelper.YamlDeserialize<ProxyRoute>(yamlText, strict: false);
+            var baseRule = NeonHelper.YamlDeserialize<LoadBalancerRule>(yamlText, strict: false);
 
-            // Now that we know the route mode, we can deserialize the full route.
+            // Now that we know the rule mode, we can deserialize the full rule.
 
-            switch (baseRoute.Mode)
+            switch (baseRule.Mode)
             {
-                case ProxyMode.Http:
+                case LoadBalancerMode.Http:
 
-                    return NeonHelper.YamlDeserialize<ProxyHttpRoute>(yamlText, strict);
+                    return NeonHelper.YamlDeserialize<LoadBalancerHttpRule>(yamlText, strict);
 
-                case ProxyMode.Tcp:
+                case LoadBalancerMode.Tcp:
 
-                    return NeonHelper.YamlDeserialize<ProxyTcpRoute>(yamlText, strict);
+                    return NeonHelper.YamlDeserialize<LoadBalancerTcpRule>(yamlText, strict);
 
                 default:
 
-                    throw new NotImplementedException($"Unsupported [{nameof(ProxyRoute)}.{nameof(Mode)}={baseRoute.Mode}].");
+                    throw new NotImplementedException($"Unsupported [{nameof(LoadBalancerRule)}.{nameof(Mode)}={baseRule.Mode}].");
             }
         }
 
@@ -127,18 +127,18 @@ namespace Neon.Cluster
         // Instance members
 
         /// <summary>
-        /// The route name.
+        /// The rule name.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
         public string Name { get; set; } = null;
 
         /// <summary>
-        /// Indicates whether HTTP or TCP traffic is to be handled (defaults to <see cref="ProxyMode.Http"/>).
+        /// Indicates whether HTTP or TCP traffic is to be handled (defaults to <see cref="LoadBalancerMode.Http"/>).
         /// </summary>
         [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(ProxyMode.Http)]
-        public ProxyMode Mode { get; set; } = ProxyMode.Http;
+        [DefaultValue(LoadBalancerMode.Http)]
+        public LoadBalancerMode Mode { get; set; } = LoadBalancerMode.Http;
 
         /// <summary>
         /// <para>
@@ -148,8 +148,8 @@ namespace Neon.Cluster
         /// <note>
         /// <b>IMPORTANT:</b> This must be explicitly set to <c>null</c> or specify a non-Docker 
         /// resolver for containers or other services that are not attached to a Docker network.
-        /// We defaulted this to <b>docker</b> because we expect the most proxy routes will be
-        /// deployed for Docker services.
+        /// We defaulted this to <b>docker</b> because we expect the most load balancer rules
+        /// will be deployed for Docker services.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Resolver", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -161,7 +161,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <remarks>
         /// <note>
-        /// HTTP routes that share the same port will be logged if <b>any</b> of the routes
+        /// HTTP rules that share the same port will be logged if <b>any</b> of the rules
         /// on the port have logging enabled.
         /// </note>
         /// </remarks>
@@ -182,11 +182,11 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "LogChecks", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(true)]
         public bool LogChecks { get; set; } = true;
-    
+
         /// <summary>
-        /// Optionally indicates that this is to be considered to be a <b>system</b> route
+        /// Optionally indicates that this is to be considered to be a <b>system</b> rule
         /// used to support the underlying neonCLUSTER as opposed to a regular user defined
-        /// route.  This has no impact other than the fact that system routes are hidden
+        /// rule.  This has no impact other than the fact that system rules are hidden
         /// by <b>neon-cli</b> commands by default.
         /// </summary>
         [JsonProperty(PropertyName = "System", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -198,28 +198,28 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="context">The validation context.</param>
         /// <param name="addImplicitFrontends">Optionally add any implicit frontends (e.g. for HTTPS redirect).</param>
-        public virtual void Validate(ProxyValidationContext context, bool addImplicitFrontends = false)
+        public virtual void Validate(LoadBalancerValidationContext context, bool addImplicitFrontends = false)
         {
             if (string.IsNullOrEmpty(Name))
             {
-                context.Error($"Proxy route name is required.");
+                context.Error($"Load balancer rule name is required.");
             }
 
             if (!ClusterDefinition.NameRegex.IsMatch(Name))
             {
-                context.Error($"Proxy route name [{nameof(Name)}={Name}] is not valid.");
+                context.Error($"Load balancer rule name [{nameof(Name)}={Name}] is not valid.");
             }
 
             if (!string.IsNullOrWhiteSpace(Resolver) && 
                 context.Settings != null &&
                 context.Settings.Resolvers.Count(r => string.Equals(Resolver, r.Name, StringComparison.OrdinalIgnoreCase)) == 0)
             {
-                context.Error($"Proxy resolver [{nameof(Resolver)}={Resolver}] does not exist.");
+                context.Error($"Load balancer resolver [{nameof(Resolver)}={Resolver}] does not exist.");
             }
         }
 
         /// <summary>
-        /// Renders the route as JSON.
+        /// Renders the rule as JSON.
         /// </summary>
         /// <returns>JSON text.</returns>
         public string ToJson()
@@ -228,7 +228,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Renders the route as YAML.
+        /// Renders the rule as YAML.
         /// </summary>
         /// <returns>YAML text.</returns>
         public string ToYaml()

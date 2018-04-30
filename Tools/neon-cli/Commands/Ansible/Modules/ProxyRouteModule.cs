@@ -32,12 +32,12 @@ using Neon.Net;
 namespace NeonCli.Ansible
 {
     //---------------------------------------------------------------------
-    // neon_proxy_route:
+    // neon_load_balancer:
     //
     // Synopsis:
     // ---------
     //
-    // Manages neonCLUSTER proxy routes.
+    // Manages neonCLUSTER load balancer rules.
     //
     // Requirements:
     // -------------
@@ -51,19 +51,19 @@ namespace NeonCli.Ansible
     // parameter    required    default     choices     comments
     // --------------------------------------------------------------------
     //
-    // name         yes                                 neonCLUSTER route name
+    // name         yes                                 neonCLUSTER rule name
     //
-    // proxy        yes                     private     identifies the target proxy
+    // load_balancer yes                    private     identifies the target load balancer
     //                                      public
     //
-    // route        see comment                         proxy route description
+    // rule         see comment                         load balancer rule description
     //                                                  required when [state=present]
     //
-    // state        no          present     absent      indicates whether the route should
+    // state        no          present     absent      indicates whether the rule should
     //                                      present     be created or removed
     //
     // force        no          false                   forces proxy rebuild when [state=present]
-    //                                                  even if the route is unchanged
+    //                                                  even if the rule is unchanged
     //
     // Check Mode:
     // -----------
@@ -75,19 +75,19 @@ namespace NeonCli.Ansible
     // Examples:
     // ---------
     //
-    // This example creates a public HTTP route listening that forwards
+    // This example creates a public HTTP rule listening that forwards
     // HTTP traffic for [http://test.com and http://www.test.com] 
     // to the TEST Docker service port 80.
     //
     //  - name: test
     //    hosts: localhost
     //    tasks:
-    //      - name: route task
-    //        neon_route:
+    //      - name: load balancer task
+    //        neon_load_balancer:
     //          name: test
     //          proxy: public
     //          state: present
-    //          route:
+    //          rule:
     //            mode: http
     //            checkuri: /_health/check.php
     //            checkmethod: GET
@@ -98,23 +98,23 @@ namespace NeonCli.Ansible
     //              - server: TEST
     //                port: 80
     //
-    // This example creates a public HTTP route listening that terminates
+    // This example creates a public HTTP rule listening that terminates
     // HTTPS traffic for [https://test.com and https://www.test.com] using
     // the certificate saved to the Ansible TEST_COM_CERT variable and then
-    // forwards the unencrypted traffic onto the TEST service.  The route
+    // forwards the unencrypted traffic onto the TEST service.  The rule
     // is also configured have the client redirect any HTTP traffic to 
     // to HTTPS.
     //
     //  - name: test
     //    hosts: localhost
     //    tasks:
-    //      - name: route task
-    //        neon_route:
+    //      - name: load balancer task
+    //        neon_lopad_balancer:
     //          name: test
     //          proxy: public
     //          state: present
     //          httpsredirect: yes
-    //          route:
+    //          rule:
     //            mode: http
     //            checkuri: /_health/check.php
     //            checkmethod: GET
@@ -127,19 +127,19 @@ namespace NeonCli.Ansible
     //              - server: TEST
     //                port: 80
     //
-    // This example adds a public TCP route that forwards traffic
+    // This example adds a public TCP rule that forwards traffic
     // sent to port 5120 to each of the host nodes in the [DATABASE]
     // cluster host group on port 8080.
     //
     //  - name: test
     //    hosts: localhost
     //    tasks:
-    //      - name: route task
-    //        neon_route:
+    //      - name: load balancer task
+    //        neon_load_balancer:
     //          name: test
     //          proxy: public
     //          state: present
-    //          route:
+    //          rule:
     //            mode: tcp
     //            frontends:
     //              - port: 5120
@@ -147,26 +147,26 @@ namespace NeonCli.Ansible
     //              - group: DATABASE
     //                port: 8080
     //
-    // This example removes any existing route named TEST.
+    // This example removes any existing rule named TEST.
     //
     //  - name: test
     //    hosts: localhost
     //    tasks:
-    //      - name: route task
-    //        neon_route:
+    //      - name: load balancer task
+    //        neon_load_balancer:
     //          name: test
     //          proxy: public
     //          state: absent
 
     /// <summary>
-    /// Implements the <b>neon_route</b> Ansible module.
+    /// Implements the <b>neon_load_balancer</b> Ansible module.
     /// </summary>
-    public class ProxyRouteModule : IAnsibleModule
+    public class LoadBalancerModule : IAnsibleModule
     {
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            ProxyManager    proxyManager;
+            LoadBalanceManager  loadBalancer;
 
             // Obtain common arguments.
 
@@ -179,7 +179,7 @@ namespace NeonCli.Ansible
 
             if (!ClusterDefinition.IsValidName(name))
             {
-                throw new ArgumentException($"[name={name}] is not a valid proxy route name.");
+                throw new ArgumentException($"[name={name}] is not a valid load balancer rule name.");
             }
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [proxy]");
@@ -193,12 +193,12 @@ namespace NeonCli.Ansible
             {
                 case "private":
 
-                    proxyManager = NeonClusterHelper.Cluster.PrivateProxy;
+                    loadBalancer = NeonClusterHelper.Cluster.PrivateLoadBalancer;
                     break;
 
                 case "public":
 
-                    proxyManager = NeonClusterHelper.Cluster.PublicProxy;
+                    loadBalancer = NeonClusterHelper.Cluster.PublicLoadBalancer;
                     break;
 
                 default:
@@ -233,74 +233,73 @@ namespace NeonCli.Ansible
             {
                 case "absent":
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Check if route [{name}] exists.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Check if rule [{name}] exists.");
 
-                    if (proxyManager.GetRoute(name) != null)
+                    if (loadBalancer.GetRule(name) != null)
                     {
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Route [{name}] does exist.");
-                        context.WriteLine(AnsibleVerbosity.Info, $"Deleting route [{name}].");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{name}] does exist.");
+                        context.WriteLine(AnsibleVerbosity.Info, $"Deleting rule [{name}].");
 
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Route [{name}] will be deleted when CHECK-MODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Rule [{name}] will be deleted when CHECK-MODE is disabled.");
                         }
                         else
                         {
-                            proxyManager.RemoveRoute(name);
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Route [{name}] deleted.");
+                            loadBalancer.RemoveRule(name);
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{name}] deleted.");
                         }
 
                         context.Changed = !context.CheckMode;
                     }
                     else
                     {
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Route [{name}] does not exist.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{name}] does not exist.");
                     }
                     break;
 
                 case "present":
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [route]");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [rule]");
 
-                    if (!context.Arguments.TryGetValue<JObject>("route", out var routeObject))
+                    if (!context.Arguments.TryGetValue<JObject>("rule", out var routeObject))
                     {
-                        throw new ArgumentException($"[route] module argument is required when [state={state}].");
+                        throw new ArgumentException($"[rule] module argument is required when [state={state}].");
                     }
 
-                    var routeText = routeObject.ToString();
+                    var ruleText = routeObject.ToString();
 
-                    context.WriteLine(AnsibleVerbosity.Trace, "Parsing route");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Parsing rule");
 
-                    var newRoute = ProxyRoute.Parse(routeText, strict: true);
+                    var newRule = LoadBalancerRule.Parse(ruleText, strict: true);
 
-                    context.WriteLine(AnsibleVerbosity.Trace, "Route parsed successfully");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Rule parsed successfully");
 
-                    // Use the route name argument if the deserialized route doesn't
+                    // Use the name argument if the deserialized rule doesn't
                     // have a name.  This will make it easier on operators because 
                     // they won't need to specify the name twice.
 
-                    if (string.IsNullOrWhiteSpace(newRoute.Name))
+                    if (string.IsNullOrWhiteSpace(newRule.Name))
                     {
-                        newRoute.Name = name;
+                        newRule.Name = name;
                     }
 
-                    // Ensure that the route name passed as an argument and the
-                    // name within the route definition match.
+                    // Ensure that the name passed as an argument and the
+                    // name within the rule definition match.
 
-                    if (!string.Equals(name, newRoute.Name, StringComparison.InvariantCultureIgnoreCase))
+                    if (!string.Equals(name, newRule.Name, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        throw new ArgumentException($"The [name={name}] argument and the route's [{nameof(ProxyRoute.Name)}={newRoute.Name}] property are not the same.");
+                        throw new ArgumentException($"The [name={name}] argument and the rule's [{nameof(LoadBalancerRule.Name)}={newRule.Name}] property are not the same.");
                     }
 
-                    context.WriteLine(AnsibleVerbosity.Trace, "Route name matched.");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Rule name matched.");
 
-                    // Validate the route.
+                    // Validate the rule.
 
-                    context.WriteLine(AnsibleVerbosity.Trace, "Validating route.");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Validating rule.");
 
-                    var proxySettings = proxyManager.GetSettings();
-
-                    var validationContext = new ProxyValidationContext(proxy, proxySettings);
+                    var proxySettings     = loadBalancer.GetSettings();
+                    var validationContext = new LoadBalancerValidationContext(proxy, proxySettings);
 
                     // $hack(jeff.lill):
                     //
@@ -351,9 +350,9 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"[{validationContext.Certificates.Count}] cluster certificates downloaded.");
 
-                    // Actually perform the route validation.
+                    // Actually perform the rule validation.
 
-                    newRoute.Validate(validationContext);
+                    newRule.Validate(validationContext);
 
                     if (validationContext.HasErrors)
                     {
@@ -369,56 +368,56 @@ namespace NeonCli.Ansible
                         return;
                     }
 
-                    context.WriteLine(AnsibleVerbosity.Trace, "Route is valid.");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Rule is valid.");
 
-                    // Try reading any existing route with this name and then determine
-                    // whether the two versions of the route are actually different. 
+                    // Try reading any existing rule with this name and then determine
+                    // whether the two versions of the rule are actually different. 
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Looking for existing route [{name}]");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Looking for existing rule [{name}]");
 
-                    var existingRoute = proxyManager.GetRoute(name);
-                    var changed       = false;
+                    var existingRule = loadBalancer.GetRule(name);
+                    var changed      = false;
 
-                    if (existingRoute != null)
+                    if (existingRule != null)
                     {
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Route exists: checking for differences.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Rule exists: checking for differences.");
 
-                        changed = !NeonHelper.JsonEquals(newRoute, existingRoute);
+                        changed = !NeonHelper.JsonEquals(newRule, existingRule);
 
                         if (changed)
                         {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Routes are different.");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Rules are different.");
                         }
                         else
                         {
                             if (force)
                             {
                                 changed = true;
-                                context.WriteLine(AnsibleVerbosity.Trace, $"Routes are the same but since [force=true] we're going to update anyway.");
+                                context.WriteLine(AnsibleVerbosity.Trace, $"Rules are the same but since [force=true] we're going to update anyway.");
                             }
                             else
                             {
-                                context.WriteLine(AnsibleVerbosity.Info, $"Routes are the same.  No need to update.");
+                                context.WriteLine(AnsibleVerbosity.Info, $"Rules are the same.  No need to update.");
                             }
                         }
                     }
                     else
                     {
                         changed = true;
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Route [name={name}] does not exist.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Rule [name={name}] does not exist.");
                     }
                      
                     if (changed)
                     {
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Route [{name}] will be updated when CHECK-MODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Rule [{name}] will be updated when CHECK-MODE is disabled.");
                         }
                         else
                         {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating route [{name}].");
-                            proxyManager.PutRoute(newRoute);
-                            context.WriteLine(AnsibleVerbosity.Info, $"Route updated.");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating rule [{name}].");
+                            loadBalancer.PutRule(newRule);
+                            context.WriteLine(AnsibleVerbosity.Info, $"Rule updated.");
                             context.Changed = !context.CheckMode;
                        }
                     }

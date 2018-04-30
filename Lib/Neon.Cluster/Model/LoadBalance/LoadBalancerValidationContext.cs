@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyValidationContext.cs
+// FILE:	    LoadBalancerValidationContext.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -25,35 +25,36 @@ using Neon.Cryptography;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Holds global proxy definition state that may be accessed while
-    /// validating a tree of proxy definition related objects.
+    /// Holds global load balancer definition state that may be 
+    /// accessed while validating a tree of load balancer settings
+    /// and rules.
     /// </summary>
-    public class ProxyValidationContext
+    public class LoadBalancerValidationContext
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="proxyName">The proxy name.</param>
-        /// <param name="settings">The proxy settings.</param>
+        /// <param name="loadBalancerName">The load balancer name.</param>
+        /// <param name="settings">The load balancer settings.</param>
         /// <param name="certificates">The optional certificates as name/value tuples.</param>
-        public ProxyValidationContext(string proxyName, ProxySettings settings, Dictionary<string, TlsCertificate> certificates = null)
+        public LoadBalancerValidationContext(string loadBalancerName, LoadBalancerSettings settings, Dictionary<string, TlsCertificate> certificates = null)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(proxyName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(loadBalancerName));
 
-            this.ProxyName    = proxyName;
-            this.Settings     = settings;
-            this.Certificates = certificates ?? new Dictionary<string, TlsCertificate>();
+            this.LoadBalancerName = loadBalancerName;
+            this.Settings         = settings;
+            this.Certificates     = certificates ?? new Dictionary<string, TlsCertificate>();
         }
 
         /// <summary>
-        /// Returns the proxy name.
+        /// Returns the load balancer name.
         /// </summary>
-        public string ProxyName { get; private set; }
+        public string LoadBalancerName { get; private set; }
 
         /// <summary>
-        /// Returns the proxy settings.
+        /// Returns the load balancer settings.
         /// </summary>
-        public ProxySettings Settings { get; private set; }
+        public LoadBalancerSettings Settings { get; private set; }
 
         /// <summary>
         /// Returns a dictionary that maps case sensitive certificate names to the

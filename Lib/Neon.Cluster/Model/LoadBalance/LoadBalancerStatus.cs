@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyStatus.cs
+// FILE:	    LoadBalancerStatus.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -24,26 +24,26 @@ using Neon.Common;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes the route status for a proxy.
+    /// Describes the route status for a load balancer.
     /// </summary>
-    public class ProxyStatus
+    public class LoadBalancerStatus
     {
         /// <summary>
         /// Constructor.
         /// </summary>
-        public ProxyStatus()
+        public LoadBalancerStatus()
         {
             this.TimestampUtc = DateTime.UtcNow;
         }
 
         /// <summary>
-        /// The last time the <b>neon-proxy-manager</b> finished processing routes for the proxy.
+        /// The last time the <b>neon-proxy-manager</b> finished processing rules for the load balancer.
         /// </summary>
         [JsonProperty(PropertyName = "TimestampUtc", Required = Required.Always)]
         public DateTime TimestampUtc { get; set; }
 
         /// <summary>
-        /// Logs generated when the routes were processed.
+        /// Logs generated when the rules were processed.
         /// </summary>
         [JsonProperty(PropertyName = "Status", Required = Required.Always)]
         public string Status { get; set; }

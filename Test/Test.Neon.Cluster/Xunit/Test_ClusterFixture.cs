@@ -58,21 +58,21 @@ services:
 ";
             cluster.DeployStack("test-stack", composeText);
 
-            var publicRoute = new ProxyTcpRoute();
+            var publicRule = new LoadBalancerTcpRule();
 
-            publicRoute.Name = "test-route";
-            publicRoute.Frontends.Add(new ProxyTcpFrontend() { ProxyPort = NeonHostPorts.ProxyPublicFirstUserPort });
-            publicRoute.Backends.Add(new ProxyTcpBackend() { Server = "127.0.0.1", Port = 10000 });
+            publicRule.Name = "test-rule";
+            publicRule.Frontends.Add(new LoadBalancerTcpFrontend() { ProxyPort = NeonHostPorts.ProxyPublicFirstUserPort });
+            publicRule.Backends.Add(new LoadBalancerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
-            cluster.PutProxyRoute("public", publicRoute);
+            cluster.PutLoadBalancerRule("public", publicRule);
 
-            var privateRoute = new ProxyTcpRoute();
+            var privateRule = new LoadBalancerTcpRule();
 
-            privateRoute.Name = "test-route";
-            privateRoute.Frontends.Add(new ProxyTcpFrontend() { ProxyPort = NeonHostPorts.ProxyPrivateFirstUserPort });
-            privateRoute.Backends.Add(new ProxyTcpBackend() { Server = "127.0.0.1", Port = 10000 });
+            privateRule.Name = "test-rule";
+            privateRule.Frontends.Add(new LoadBalancerTcpFrontend() { ProxyPort = NeonHostPorts.ProxyPrivateFirstUserPort });
+            privateRule.Backends.Add(new LoadBalancerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
-            cluster.PutProxyRoute("private", privateRoute);
+            cluster.PutLoadBalancerRule("private", privateRule);
             cluster.PutCertificate("test-certificate", TestCertificate.CombinedPem);
         }
 
@@ -98,11 +98,11 @@ services:
             Assert.Equal(1, stack.ServiceCount);
             Assert.Single(cluster.ListServices().Where(item => item.Name.Equals("test-stack_sleeper")));
 
-            Assert.Single(cluster.ListProxyRoutes("public"));
-            Assert.Single(cluster.ListProxyRoutes("public").Where(item => item.Name == "test-route"));
+            Assert.Single(cluster.ListLoagBalancerRules("public"));
+            Assert.Single(cluster.ListLoagBalancerRules("public").Where(item => item.Name == "test-rule"));
 
-            Assert.Single(cluster.ListProxyRoutes("private"));
-            Assert.Single(cluster.ListProxyRoutes("private").Where(item => item.Name == "test-route"));
+            Assert.Single(cluster.ListLoagBalancerRules("private"));
+            Assert.Single(cluster.ListLoagBalancerRules("private").Where(item => item.Name == "test-rule"));
 
             Assert.Single(cluster.ListCertificates());
             Assert.Single(cluster.ListCertificates().Where(item => item == "test-certificate"));
@@ -116,8 +116,8 @@ services:
             Assert.Empty(cluster.ListSecrets());
             Assert.Empty(cluster.ListConfigs());
             Assert.Empty(cluster.ListNetworks());
-            Assert.Empty(cluster.ListProxyRoutes("public"));
-            Assert.Empty(cluster.ListProxyRoutes("private"));
+            Assert.Empty(cluster.ListLoagBalancerRules("public"));
+            Assert.Empty(cluster.ListLoagBalancerRules("private"));
             Assert.Empty(cluster.ListCertificates());
         }
 

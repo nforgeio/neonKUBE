@@ -79,6 +79,7 @@ COMMAND SUMMARY:
     neon exec               BASH-CMD
     neon file               create|decrypt|edit|encrypt|view PATH PASSWORD-NAME
     neon folder             FOLDER
+    neon load-balancer|lb   CMD...
     neon login              [--no-vpn] USER@CLUSTER
     neon login export       USER@CLUSTER
     neon login import       PATH
@@ -87,7 +88,6 @@ COMMAND SUMMARY:
     neon login remove       USER@CLUSTER
     neon login rm           USER@CLUSTER
     neon login status
-    neon proxy              CMD...
     neon reboot             NODE...
     neon run                -- CMD...
     neon scp                [NODE]
@@ -238,13 +238,13 @@ Note that the tool may require admin privileges for [--noshim] mode.
                     new FileCommand(),
                     new FolderCommand(),
                     new LoginCommand(),
+                    new LoadBalancerCommand(),
                     new LoginExportCommand(),
                     new LoginImportCommand(),
                     new LoginListCommand(),
                     new LoginRemoveCommand(),
                     new LoginStatusCommand(),
                     new LogoutCommand(),
-                    new ProxyCommand(),
                     new RebootCommand(),
                     new RunCommand(),
                     new ScpCommand(),

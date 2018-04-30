@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyTcpBackend.cs
+// FILE:	    LoadBalancerMode.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -8,8 +8,8 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
-using System.Net;
 using System.Linq;
+using System.Runtime.Serialization;
 using System.Text;
 using System.Text.RegularExpressions;
 using System.Threading;
@@ -20,23 +20,30 @@ using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
-using Neon.Net;
 
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes a TCP proxy backend.
+    /// Indicates whether TCP or HTTP connections should be load balanced.
     /// </summary>
-    public class ProxyTcpBackend : ProxyBackend
+    public enum LoadBalancerMode
     {
         /// <summary>
-        /// Validates the backend.
+        /// Load balancer mode is undefined.
         /// </summary>
-        /// <param name="context">The validation context.</param>
-        /// <param name="route">The parent route.</param>
-        public void Validate(ProxyValidationContext context, ProxyTcpRoute route)
-        {
-            base.Validate(context, route.Name);
-        }
+        [EnumMember(Value = "unknown")]
+        Unknown = 0,
+
+        /// <summary>
+        /// Load balance HTTP connections.
+        /// </summary>
+        [EnumMember(Value = "http")]
+        Http,
+
+        /// <summary>
+        /// Load balance TCP connections.
+        /// </summary>
+        [EnumMember(Value = "tcp")]
+        Tcp
     }
 }

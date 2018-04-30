@@ -180,15 +180,15 @@ namespace NeonCli
 
                     // Initialize the public and private proxies.
 
-                    cluster.PublicProxy.UpdateSettings(
-                        new ProxySettings()
+                    cluster.PublicLoadBalancer.UpdateSettings(
+                        new LoadBalancerSettings()
                         {
                             FirstPort = NeonHostPorts.ProxyPublicFirst,
                             LastPort  = NeonHostPorts.ProxyPublicLast
                         });
 
-                    cluster.PrivateProxy.UpdateSettings(
-                        new ProxySettings()
+                    cluster.PrivateLoadBalancer.UpdateSettings(
+                        new LoadBalancerSettings()
                         {
                             FirstPort = NeonHostPorts.ProxyPrivateFirst,
                             LastPort  = NeonHostPorts.ProxyPrivateLast

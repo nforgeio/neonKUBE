@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyHttpFrontend.cs
+// FILE:	    LoadBalancerHttpFrontend.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -25,17 +25,17 @@ using Neon.Net;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes an HTTP/HTTPS proxy frontend.
+    /// Describes an HTTP/HTTPS load balancer frontend.
     /// </summary>
-    public class ProxyHttpFrontend
+    public class LoadBalancerHttpFrontend
     {
         /// <summary>
         /// <para>
         /// The host name to be matched for this frontend.
         /// </para>
         /// <note>
-        /// This is required for routes targeting the proxy's default HTTP/S 
-        /// ports or if the route specifies more than one frontend.
+        /// This is required for rules targeting the load balancer's default HTTP/S 
+        /// ports or if the rule specifies more than one frontend.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Host", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -98,7 +98,7 @@ namespace Neon.Cluster
         /// are allowed.
         /// </para>
         /// <note>
-        /// The proxy will match longer prefixes before shorter ones.
+        /// The load balancer will match longer prefixes before shorter ones.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "PathPrefix", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -113,7 +113,7 @@ namespace Neon.Cluster
         public string CertName { get; set; } = null;
 
         /// <summary>
-        /// The optional HAProxy frontend port number.  This defaults to the proxy's default HTTPS port when a certificate name
+        /// The optional HAProxy frontend port number.  This defaults to the load balancer's default HTTPS port when a certificate name
         /// is specified or the default HTTP port otherwise.
         /// </summary>
         [JsonProperty(PropertyName = "ProxyPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -122,16 +122,16 @@ namespace Neon.Cluster
 
         /// <summary>
         /// <para>
-        /// The network port to be exposed for this route on the clusters public Internet facing load balancer.
-        /// This defaults to <b>80</b> for HTTP routes or <b>443</b> for HTTPS routes.
+        /// The network port to be exposed for this rule on the clusters public Internet facing load balancer.
+        /// This defaults to <b>80</b> for HTTP rules or <b>443</b> for HTTPS rules.
         /// </para>
         /// <note>
-        /// This is honored only for <b>public</b> proxy routes.  Public ports for <b>private</b> proxies will be ignored.
+        /// This is honored only for <b>public</b> load balancer rules.  Public ports for <b>private</b> proxies will be ignored.
         /// </note>
         /// </summary>
         /// <remarks>
         /// <para>
-        /// This property's default value of <b>-1</b> is designed so that HTTP/HTTPS routes will <i>just work</i>, 
+        /// This property's default value of <b>-1</b> is designed so that HTTP/HTTPS rules will <i>just work</i>, 
         /// by defaulting to their standard ports: <b>80</b> and <b>443</b>.  You can explicitly disable public 
         /// access for HTTP/HTTPS by setting this property to <b>0</b>.
         /// </para>
@@ -176,10 +176,10 @@ namespace Neon.Cluster
         /// Validates the frontend.
         /// </summary>
         /// <param name="context">The validation context.</param>
-        /// <param name="route">The parent route.</param>
-        public void Validate(ProxyValidationContext context, ProxyHttpRoute route)
+        /// <param name="rule">The parent rule.</param>
+        public void Validate(LoadBalancerValidationContext context, LoadBalancerHttpRule rule)
         {
-            if (route.Frontends.Count > 1 ||
+            if (rule.Frontends.Count > 1 ||
                 !string.IsNullOrEmpty(CertName) ||
                 ProxyPort == 0 ||
                 ProxyPort == NeonHostPorts.ProxyPublicHttp || ProxyPort == NeonHostPorts.ProxyPublicHttps ||
@@ -189,11 +189,11 @@ namespace Neon.Cluster
 
                 if (string.IsNullOrEmpty(Host))
                 {
-                    context.Error($"Route [{route.Name}] has a frontend without a [{nameof(Host)}] specified.  HTTP routes targeting the default proxy HTTP/S ports, with more than one frontend, or secured by TLS requires frontend hostnames.");
+                    context.Error($"Rule [{rule.Name}] has a frontend without a [{nameof(Host)}] specified.  HTTP rules targeting the default load balancer HTTP/S ports, with more than one frontend, or secured by TLS requires frontend hostnames.");
                 }
                 else if (!ClusterDefinition.DnsHostRegex.IsMatch(Host))
                 {
-                    context.Error($"Route [{route.Name}] defines the invalid hostname [{Host}].");
+                    context.Error($"Rule [{rule.Name}] defines the invalid hostname [{Host}].");
                 }
             }
             else
@@ -202,7 +202,7 @@ namespace Neon.Cluster
 
                 if (!string.IsNullOrEmpty(Host) && !ClusterDefinition.DnsHostRegex.IsMatch(Host))
                 {
-                    context.Error($"Route [{route.Name}] defines the invalid hostname [{Host}].");
+                    context.Error($"Rule [{rule.Name}] defines the invalid hostname [{Host}].");
                 }
             }
 
@@ -210,7 +210,7 @@ namespace Neon.Cluster
             {
                 if (!PathPrefix.StartsWith("/"))
                 {
-                    context.Error($"Route [{route.Name}] references has [{nameof(PathPrefix)}={PathPrefix}] that does not begin with a forward slash.");
+                    context.Error($"Rule [{rule.Name}] references has [{nameof(PathPrefix)}={PathPrefix}] that does not begin with a forward slash.");
                 }
                 else
                 {
@@ -221,7 +221,7 @@ namespace Neon.Cluster
 
                     if (!Uri.TryCreate(PathPrefix, UriKind.Relative, out Uri uri))
                     {
-                        context.Error($"Route [{route.Name}] references has [{nameof(PathPrefix)}={PathPrefix}] that is not a valid relative URI.");
+                        context.Error($"Rule [{rule.Name}] references has [{nameof(PathPrefix)}={PathPrefix}] that is not a valid relative URI.");
                     }
                 }
             }
@@ -232,18 +232,18 @@ namespace Neon.Cluster
 
                 if (!context.Certificates.TryGetValue(CertName, out certificate))
                 {
-                    context.Error($"Route [{route.Name}] references certificate [{CertName}] that does not exist.");
+                    context.Error($"Rule [{rule.Name}] references certificate [{CertName}] that does not exist.");
                 }
                 else
                 {
                     if (!certificate.IsValidHost(Host))
                     {
-                        context.Error($"Route [{route.Name}] references certificate [{CertName}] which does not cover host [{Host}].");
+                        context.Error($"Rule [{rule.Name}] references certificate [{CertName}] which does not cover host [{Host}].");
                     }
 
                     if (!certificate.IsValidDate(DateTime.UtcNow))
                     {
-                        context.Error($"Route [{route.Name}] references certificate [{CertName}] which expired on [{certificate.ValidUntil}].");
+                        context.Error($"Rule [{rule.Name}] references certificate [{CertName}] which expired on [{certificate.ValidUntil}].");
                     }
                 }
             }
@@ -252,7 +252,7 @@ namespace Neon.Cluster
             {
                 if (ProxyPort < context.Settings.FirstPort || context.Settings.LastPort < ProxyPort)
                 {
-                    context.Error($"Route [{route.Name}] assigns [{nameof(ProxyPort)}={ProxyPort}] which is outside the range of valid frontend ports for this proxy [{context.Settings.FirstPort}...{context.Settings.LastPort}].");
+                    context.Error($"Rule [{rule.Name}] assigns [{nameof(ProxyPort)}={ProxyPort}] which is outside the range of valid frontend ports for this load balancer [{context.Settings.FirstPort}...{context.Settings.LastPort}].");
                 }
             }
             else
@@ -281,7 +281,7 @@ namespace Neon.Cluster
 
             if (PublicPort > 0 && !NetHelper.IsValidPort(PublicPort))
             {
-                context.Error($"Proxy [{nameof(PublicPort)}={PublicPort}] is not a valid network port.");
+                context.Error($"Load balancer [{nameof(PublicPort)}={PublicPort}] is not a valid network port.");
             }
         }
     }

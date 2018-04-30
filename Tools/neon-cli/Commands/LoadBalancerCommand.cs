@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ProxyCommand.cs
+// FILE:	    LoadBalancerCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -26,9 +26,9 @@ using Neon.Cryptography;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>proxy</b> command.
+    /// Implements the <b>load-balancer|lb</b> command.
     /// </summary>
-    public class ProxyCommand : CommandBase
+    public class LoadBalancerCommand : CommandBase
     {
         private const string proxyManagerPrefix = "neon/service/neon-proxy-manager";
         private const string vaultCertPrefix    = "neon-secret/cert";
@@ -38,80 +38,82 @@ Manages the cluster's public and private proxies.
 
 USAGE:
 
-    neon proxy help
-    neon proxy NAME build
-    neon proxy NAME get [--yaml] ROUTE
-    neon proxy NAME inspect
-    neon proxy NAME [--all] [--sys] list|ls
-    neon proxy NAME remove|rm ROUTE
-    neon proxy NAME set FILE
-    neon proxy NAME set -
-    neon proxy NAME settings FILE
-    neon proxy NAME settings -
-    neon proxy NAME status
+    neon load-balancer|lb help
+    neon load-balancer|lb NAME build
+    neon load-balancer|lb NAME get [--yaml] RULE
+    neon load-balancer|lb NAME inspect
+    neon load-balancer|lb NAME [--all] [--sys] list|ls
+    neon load-balancer|lb NAME remove|rm RULE
+    neon load-balancer|lb NAME set FILE
+    neon load-balancer|lb NAME set -
+    neon load-balancer|lb NAME settings FILE
+    neon load-balancer|lb NAME settings -
+    neon load-balancer|lb NAME status
 
 ARGUMENTS:
 
-    NAME    - Proxy name: [public] or [private].
-    ROUTE   - Route name.
+    NAME    - Load balancer name: [public] or [private].
+    RULE    - Rule name.
     FILE    - Path to a JSON file.
     -       - Indicates that JSON/YAML is read from standard input.
 
 COMMANDS:
 
-    help            - Prints proxy route details.
-    build           - Forces the proxy manager to build the 
-                      proxy configuration.
-    get             - Output a specific route as JSON by default.
+    help            - Prints load balacer rule details.
+    build           - Forces the [neon-proxy-manager] to rebuild
+                      the load balancer configuration.
+    get             - Output a specific rule as JSON by default.
                       Use [--yaml] to return as YAML.
     haproxy         - Outputs the HAProxy configuration.
-    inspect         - Displays JSON details for all proxy routes
-                      and settings.
-    list|ls         - Lists the route names.
-    remove|rm       - Removes a named route.
-    set             - Adds or updates a route from a file or by
+    inspect         - Displays JSON details for all load balancer
+                      rules and settings.
+    list|ls         - Lists the rule names.
+    remove|rm       - Removes a named rule.
+    set             - Adds or updates a rule from a file or by
                       reading standard input.  JSON or YAML
                       input is supported.
-    settings        - Updates the proxy global settings from a
-                      JSON file or by reading standard input.
-    status          - Displays the current status for a proxy.
+    settings        - Updates the global load balancer settings from
+                      a JSON file or by reading standard input.
+    status          - Displays the current status for a load balancer.
 
 OPTIONS:
 
-    --all           - List all proxy routes (normally system
-                      routes are excluded)
-    --sys           - List only system routes
+    --all           - List all load balancer rules 
+                      (system rules are excluded by default)
+    --sys           - List only system rules
 ";
 
-        private const string routeHelp =
+        private const string ruleHelp =
 @"
-neonCLUSTER proxies support two types of routes: HTTP/S and TCP.
-Each route defines one or more frontend and backends.
+neonCLUSTER proxies support two types of load balancer rules: HTTP/S and TCP.
+Each rule defines one or more frontend and backends.
 
 HTTP/S frontends handle requests for a hostname for one or more hostname
 and port combinations.  HTTPS is enabled by specifying the name of a
 certificate loaded into the cluster.  The port defaults to 80 for HTTP
 and 443 for HTTPS.   The [https_redirect] option indicates that clients
 making HTTP requests should be redirected with the HTTPS scheme.  HTTP/S
-routes for the PUBLIC proxy are exposed on the Internet facing load balancer
-by default on the standard ports 80/443.  It is possible to change
-these public ports or disable exposure of individual routes.
+rules for the PUBLIC load balancer are exposed on the hosting environment's
+Internet facing  load balancer by default on the standard ports 80/443. 
+It is possible  to change these public ports or disable exposure of
+individual rules.
 
-TCP frontends simply specify one of the TCP ports assigned to the proxy
-(note that the first two ports are reserved for HTTP and HTTPS).  TCP
-routes for the PUBLIC proxy may also be exposed on the Internet facing
-load balancer by setting the public port property.
+TCP frontends simply specify one of the TCP ports assigned to the load
+balancer (note that the first two ports are reserved for HTTP and HTTPS). 
+TCP rules for the PUBLIC proxy may also be exposed on the hosting 
+environment'sInternet facing load balancer by setting the public 
+port property.
 
 Backends specify one or more target servers by IP address or DNS name
 and port number.
 
-Routes are specified using JSON or YAML.  Here's an example HTTP/S route that
+Rules are specified using JSON or YAML.  Here's an example HTTP/S rule that
 accepts HTTP traffic for [foo.com] and [www.foo.com] and redirects it to
 HTTPS and then also accepts HTTPS traffic using the [foo.com] certificate.
 Traffic is routed to the Swarm [foo_service] on port 80.
 
     {
-        ""Name"": ""my-http-route"",
+        ""Name"": ""my-http-rule"",
         ""Mode"": ""http"",
         ""HttpsRedirect"": true,
         ""Frontends"": [
@@ -123,13 +125,13 @@ Traffic is routed to the Swarm [foo_service] on port 80.
         ]
     }
 
-Here's an example public TCP route that forwards TCP connections to
+Here's an example public TCP rule that forwards TCP connections to
 port 1000 on the cluster's Internet-facing load balancer to the internal
 HAProxy server listening on Docker ingress port 5305 port which then
 load balances the traffic to the backend servers listening on port 1000:
 
     {
-        ""Name"": ""my-tcp-route"",
+        ""Name"": ""my-tcp-rule"",
         ""Mode"": ""tcp"",
         ""Frontends"": [
             { ""PublicPort"": 1000, ""ProxyPort"": 5305 }
@@ -141,9 +143,9 @@ load balances the traffic to the backend servers listening on port 1000:
         ]
     }
 
-Here's how this route looks as YAML:
+Here's how this rule looks as YAML:
 
-    Name: my-tcp-route
+    Name: my-tcp-rule
     Mode: tcp
     Frontends:
     - PublicPort: 1000
@@ -156,12 +158,17 @@ Here's how this route looks as YAML:
     - Server: 10.0.1.42
       Port:1000
 
-See the documentation for more proxy route and setting details.
+See the documentation for more load balancer rule and setting details.
 ";
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "proxy" }; }
+            get { return new string[] { "load-balancer" }; }
+        }
+
+        public override string[] AltWords
+        {
+            get { return new string[] { "lb" }; }
         }
 
         /// <inheritdoc/>
@@ -189,34 +196,34 @@ See the documentation for more proxy route and setting details.
 
             // Process the command arguments.
 
-            var proxyManager = (ProxyManager)null;
+            var loadBalancer = (LoadBalanceManager)null;
             var yaml         = commandLine.HasOption("--yaml");
 
-            var proxyName = commandLine.Arguments.FirstOrDefault();
+            var loadBalancerName = commandLine.Arguments.FirstOrDefault();
 
-            switch (proxyName)
+            switch (loadBalancerName)
             {
                 case "help":
 
-                    // $hack: This isn't really a proxy name.
+                    // $hack: This isn't really a load balancer name.
 
-                    Console.WriteLine(routeHelp);
+                    Console.WriteLine(ruleHelp);
                     Program.Exit(0);
                     break;
 
                 case "public":
 
-                    proxyManager = NeonClusterHelper.Cluster.PublicProxy;
+                    loadBalancer = NeonClusterHelper.Cluster.PublicLoadBalancer;
                     break;
 
                 case "private":
 
-                    proxyManager = NeonClusterHelper.Cluster.PrivateProxy;
+                    loadBalancer = NeonClusterHelper.Cluster.PrivateLoadBalancer;
                     break;
 
                 default:
 
-                    Console.Error.WriteLine($"*** ERROR: Proxy name must be one of [public] or [private] ([{proxyName}] is not valid).");
+                    Console.Error.WriteLine($"*** ERROR: Load balancer name must be one of [public] or [private] ([{loadBalancerName}] is not valid).");
                     Program.Exit(1);
                     break;
             }
@@ -233,47 +240,47 @@ See the documentation for more proxy route and setting details.
 
             commandLine = commandLine.Shift(1);
 
-            string routeName;
+            string ruleName;
 
             switch (command)
             {
                 case "get":
 
-                    routeName = commandLine.Arguments.FirstOrDefault();
+                    ruleName = commandLine.Arguments.FirstOrDefault();
 
-                    if (string.IsNullOrEmpty(routeName))
+                    if (string.IsNullOrEmpty(ruleName))
                     {
-                        Console.Error.WriteLine("*** ERROR: [ROUTE] argument expected.");
+                        Console.Error.WriteLine("*** ERROR: [RULE] argument expected.");
                         Program.Exit(1);
                     }
 
-                    if (!ClusterDefinition.IsValidName(routeName))
+                    if (!ClusterDefinition.IsValidName(ruleName))
                     {
-                        Console.Error.WriteLine($"*** ERROR: [{routeName}] is not a valid route name.");
+                        Console.Error.WriteLine($"*** ERROR: [{ruleName}] is not a valid rule name.");
                         Program.Exit(1);
                     }
 
-                    // Fetch a specific proxy route and output it.
+                    // Fetch a specific load balancer rule and output it.
 
-                    var route = proxyManager.GetRoute(routeName);
+                    var rule = loadBalancer.GetRule(ruleName);
 
-                    if (route == null)
+                    if (rule == null)
                     {
-                        Console.Error.WriteLine($"*** ERROR: Proxy [{proxyName}] route [{routeName}] does not exist.");
+                        Console.Error.WriteLine($"*** ERROR: Load balancer [{loadBalancerName}] rule [{ruleName}] does not exist.");
                         Program.Exit(1);
                     }
 
-                    Console.WriteLine(yaml ? route.ToYaml() : route.ToJson());
+                    Console.WriteLine(yaml ? rule.ToYaml() : rule.ToJson());
                     break;
 
                 case "haproxy":
 
-                    // We're going to download the proxy's ZIP archive containing the [haproxy.cfg]
-                    // file, extract the file, and write it to the console.
+                    // We're going to download the load balancer's ZIP archive containing 
+                    // the [haproxy.cfg] file, extract and write it to the console.
 
                     using (var consul = NeonClusterHelper.OpenConsul())
                     {
-                        var confKey      = $"neon/service/neon-proxy-manager/proxies/{proxyName}/conf";
+                        var confKey      = $"neon/service/neon-proxy-manager/proxies/{loadBalancerName}/conf";
                         var confZipBytes = consul.KV.GetBytesOrDefault(confKey).Result;
 
                         if (confZipBytes == null)
@@ -311,7 +318,7 @@ See the documentation for more proxy route and setting details.
 
                 case "inspect":
 
-                    Console.WriteLine(NeonHelper.JsonSerialize(proxyManager.GetDefinition(), Formatting.Indented));
+                    Console.WriteLine(NeonHelper.JsonSerialize(loadBalancer.GetDefinition(), Formatting.Indented));
                     break;
 
                 case "list":
@@ -319,8 +326,8 @@ See the documentation for more proxy route and setting details.
 
                     var showAll = commandLine.HasOption("--all");
                     var showSys = commandLine.HasOption("--sys");
-                    var routes  = proxyManager.ListRoutes(
-                        proxy =>
+                    var rules   = loadBalancer.ListRules(
+                        r =>
                         {
                             if (showAll)
                             {
@@ -328,19 +335,19 @@ See the documentation for more proxy route and setting details.
                             }
                             else if (showSys)
                             {
-                                return proxy.System;
+                                return r.System;
                             }
                             else
                             {
-                                return !proxy.System;
+                                return !r.System;
                             }
                         });
 
                     Console.WriteLine();
-                    Console.WriteLine($"[{routes.Count()}] {proxyManager.Name} routes");
+                    Console.WriteLine($"[{rules.Count()}] {loadBalancer.Name} rules");
                     Console.WriteLine();
 
-                    foreach (var item in routes)
+                    foreach (var item in rules)
                     {
                         Console.WriteLine(item.Name);
                     }
@@ -350,33 +357,33 @@ See the documentation for more proxy route and setting details.
 
                 case "build":
 
-                    proxyManager.Build();
+                    loadBalancer.Build();
                     break;
 
                 case "remove":
                 case "rm":
 
-                    routeName = commandLine.Arguments.FirstOrDefault();
+                    ruleName = commandLine.Arguments.FirstOrDefault();
 
-                    if (string.IsNullOrEmpty(routeName))
+                    if (string.IsNullOrEmpty(ruleName))
                     {
-                        Console.Error.WriteLine("*** ERROR: [ROUTE] argument expected.");
+                        Console.Error.WriteLine("*** ERROR: [RULE] argument expected.");
                         Program.Exit(1);
                     }
 
-                    if (!ClusterDefinition.IsValidName(routeName))
+                    if (!ClusterDefinition.IsValidName(ruleName))
                     {
-                        Console.Error.WriteLine($"*** ERROR: [{routeName}] is not a valid route name.");
+                        Console.Error.WriteLine($"*** ERROR: [{ruleName}] is not a valid rule name.");
                         Program.Exit(1);
                     }
 
-                    if (proxyManager.RemoveRoute(routeName))
+                    if (loadBalancer.RemoveRule(ruleName))
                     {
-                        Console.Error.WriteLine($"Deleted proxy [{proxyName}] route [{routeName}].");
+                        Console.Error.WriteLine($"Deleted load balancer [{loadBalancerName}] rule [{ruleName}].");
                     }
                     else
                     {
-                        Console.Error.WriteLine($"*** ERROR: Proxy [{proxyName}] route [{routeName}] does not exist.");
+                        Console.Error.WriteLine($"*** ERROR: Load balancer [{loadBalancerName}] rule [{ruleName}] does not exist.");
                         Program.Exit(1);
                     }
                     break;
@@ -385,8 +392,8 @@ See the documentation for more proxy route and setting details.
 
                     // $todo(jeff.lill):
                     //
-                    // It would be really nice to download the existing routes and verify that
-                    // adding the new route won't cause conflicts.  Currently errors will be
+                    // It would be really nice to download the existing rules and verify that
+                    // adding the new rule won't cause conflicts.  Currently errors will be
                     // detected only by the [neon-proxy-manager] which will log them and cease
                     // updating the cluster until the errors are corrected.
                     //
@@ -394,7 +401,7 @@ See the documentation for more proxy route and setting details.
                     // cluster to do this for us or perhaps having [neon-proxy-manager] generate
                     // a summary of all of the certificates (names, covered hostnames, and 
                     // expiration dates) and save this to Consul so it would be easy to
-                    // download.  Perhaps do the same for the routes?
+                    // download.  Perhaps do the same for the rules?
 
                     if (commandLine.Arguments.Length != 1)
                     {
@@ -402,52 +409,52 @@ See the documentation for more proxy route and setting details.
                         Program.Exit(1);
                     }
 
-                    // Load the route.  Note that we support reading routes as JSON or
+                    // Load the rule.  Note that we support reading rules as JSON or
                     // YAML, automatcially detecting the format.  We always persist
-                    // routes as JSON though.
+                    // rules as JSON though.
 
-                    var routeFile = commandLine.Arguments[0];
+                    var ruleFile = commandLine.Arguments[0];
 
-                    string routeText;
+                    string ruleText;
 
-                    if (routeFile == "-")
+                    if (ruleFile == "-")
                     {
                         using (var input = Console.OpenStandardInput())
                         {
                             using (var reader = new StreamReader(input, detectEncodingFromByteOrderMarks: true))
                             {
-                                routeText = reader.ReadToEnd();
+                                ruleText = reader.ReadToEnd();
                             }
                         }
                     }
                     else
                     {
-                        routeText = File.ReadAllText(routeFile);
+                        ruleText = File.ReadAllText(ruleFile);
                     }
 
-                    var proxyRoute = ProxyRoute.Parse(routeText, strict: true);
+                    var loadbalancerRule = LoadBalancerRule.Parse(ruleText, strict: true);
 
-                    routeName = proxyRoute.Name;
+                    ruleName = loadbalancerRule.Name;
 
-                    if (!ClusterDefinition.IsValidName(routeName))
+                    if (!ClusterDefinition.IsValidName(ruleName))
                     {
-                        Console.Error.WriteLine($"*** ERROR: [{routeName}] is not a valid route name.");
+                        Console.Error.WriteLine($"*** ERROR: [{ruleName}] is not a valid rule name.");
                         Program.Exit(1);
                     }
 
-                    // Validate a clone of the route with any implicit frontends.
+                    // Validate a clone of the rule with any implicit frontends.
 
-                    var clonedRoute = NeonHelper.JsonClone(proxyRoute);
-                    var context     = new ProxyValidationContext(proxyName, null)
+                    var clonedRule = NeonHelper.JsonClone(loadbalancerRule);
+                    var context    = new LoadBalancerValidationContext(loadBalancerName, null)
                     {
                         ValidateCertificates = false    // Disable this because we didn't download the certs (see note above)
                     };
 
-                    clonedRoute.Validate(context, addImplicitFrontends: true);
+                    clonedRule.Validate(context, addImplicitFrontends: true);
 
                     if (context.HasErrors)
                     {
-                        Console.Error.WriteLine("*** ERROR: One or more route errors:");
+                        Console.Error.WriteLine("*** ERROR: One or more rule errors:");
                         Console.Error.WriteLine();
 
                         foreach (var error in context.Errors)
@@ -458,13 +465,13 @@ See the documentation for more proxy route and setting details.
                         Program.Exit(1);
                     }
                     
-                    if (proxyManager.PutRoute(proxyRoute))
+                    if (loadBalancer.PutRule(loadbalancerRule))
                     {
-                        Console.WriteLine($"Proxy [{proxyName}] route [{routeName}] has been updated.");
+                        Console.WriteLine($"Load balancer [{loadBalancerName}] rule [{ruleName}] has been updated.");
                     }
                     else
                     {
-                        Console.WriteLine($"Proxy [{proxyName}] route [{routeName}] has been added.");
+                        Console.WriteLine($"Load balancer [{loadBalancerName}] rule [{ruleName}] has been added.");
                     }
                     break;
 
@@ -489,31 +496,31 @@ See the documentation for more proxy route and setting details.
                         settingsText = File.ReadAllText(settingsFile);
                     }
 
-                    var proxySettings = ProxySettings.Parse(settingsText, strict: true);
+                    var loadbalancerSettings = LoadBalancerSettings.Parse(settingsText, strict: true);
 
-                    proxyManager.UpdateSettings(proxySettings);
-                    Console.WriteLine($"Proxy [{proxyName}] settings have been updated.");
+                    loadBalancer.UpdateSettings(loadbalancerSettings);
+                    Console.WriteLine($"Load balancer [{loadBalancerName}] settings have been updated.");
                     break;
 
                 case "status":
 
                     using (var consul = NeonClusterHelper.OpenConsul())
                     {
-                        var statusJson  = consul.KV.GetStringOrDefault($"neon/service/neon-proxy-manager/status/{proxyName}").Result;
+                        var statusJson  = consul.KV.GetStringOrDefault($"neon/service/neon-proxy-manager/status/{loadBalancerName}").Result;
 
                         if (statusJson == null)
                         {
-                            Console.Error.WriteLine($"*** ERROR: Status for proxy [{proxyName}] is not currently available.");
+                            Console.Error.WriteLine($"*** ERROR: Status for load balancer [{loadBalancerName}] is not currently available.");
                             Program.Exit(1);
                         }
 
-                        var proxyStatus = NeonHelper.JsonDeserialize<ProxyStatus>(statusJson);
+                        var loadBalancerStatus = NeonHelper.JsonDeserialize<LoadBalancerStatus>(statusJson);
 
                         Console.WriteLine();
-                        Console.WriteLine($"Snapshot Time: {proxyStatus.TimestampUtc} (UTC)");
+                        Console.WriteLine($"Snapshot Time: {loadBalancerStatus.TimestampUtc} (UTC)");
                         Console.WriteLine();
 
-                        using (var reader = new StringReader(proxyStatus.Status))
+                        using (var reader = new StringReader(loadBalancerStatus.Status))
                         {
                             foreach (var line in reader.Lines())
                             {

@@ -131,9 +131,9 @@ namespace NeonCli
                         new DockerServiceModule().Run(context);
                         break;
 
-                    case "neon_proxy_route":
+                    case "neon_load_balancer":
 
-                        new ProxyRouteModule().Run(context);
+                        new LoadBalancerModule().Run(context);
                         break;
 
                     default:
