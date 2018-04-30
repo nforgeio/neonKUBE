@@ -475,11 +475,11 @@ namespace TestCommon
             // We're not actually verifying that the tasks actually
             // ran in parallel.
 
-            var inTask0  = false;
-            var inTask1  = false;
-            var inTask2  = false;
-            var inTask3  = false;
-            var delay    = TimeSpan.FromSeconds(1);
+            var didTask0 = false;
+            var didTask1 = false;
+            var didTask2 = false;
+            var didTask3 = false;
+            var delay    = TimeSpan.FromSeconds(2);
 
             NeonHelper.WaitParallel(
                 new Action[]
@@ -487,29 +487,29 @@ namespace TestCommon
                     async () => {
 
                         await Task.Delay(delay);
-                        inTask0 = true;
+                        didTask0 = true;
                     },
                     async () => {
 
                         await Task.Delay(delay);
-                        inTask1 = true;
+                        didTask1 = true;
                     },
                     async () => {
 
                         await Task.Delay(delay);
-                        inTask2 = true;
+                        didTask2 = true;
                     },
                     () => {
 
                         Thread.Sleep(delay);
-                        inTask3 = true;
+                        didTask3 = true;
                     }
                 });
 
-            Assert.True(inTask0);
-            Assert.True(inTask1);
-            Assert.True(inTask2);
-            Assert.True(inTask3);
+            Assert.True(didTask0);
+            Assert.True(didTask1);
+            Assert.True(didTask2);
+            Assert.True(didTask3);
         }
     }
 }

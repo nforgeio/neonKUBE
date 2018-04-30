@@ -600,21 +600,28 @@ namespace Xunit
             // containers on all nodes.  One thing to think about is whether
             // this should apply to pet nodes as well.
 
-            // Reset the basic Swarm state.
+            // Reset the basic Swarm state in parallel.
 
-            ClearServices();
-            ClearStacks();
-            //ClearContainers();    // Not implemented yet.
+            NeonHelper.WaitParallel(
+                new Action[] {
+                    () => ClearServices(),
+                    () => ClearStacks(),
+                    // () => ClearContainers()      // Not implemented yet
+                });
 
             // We're clearing these after the services and stacks so
-            // we won't see any reference conflicts.
+            // we won't see any reference conflicts.  We can do these
+            // in parallel too.
 
-            ClearCertificates();
-            ClearConfigs();
-            ClearNetworks();
-            ClearLoadbalancers();
-            ClearSecrets();
-            ClearConsul();
+            NeonHelper.WaitParallel(
+                new Action[] {
+                    () => ClearCertificates(),
+                    () => ClearConfigs(),
+                    () => ClearNetworks(),
+                    () => ClearLoadbalancers(),
+                    () => ClearSecrets(),
+                    () => ClearConsul()
+                });
         }
 
         //---------------------------------------------------------------------
