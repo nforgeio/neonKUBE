@@ -3,7 +3,7 @@
   <PropertyGroup>
     <TargetFramework>netstandard2.0</TargetFramework>
     <RootNamespace>Neon.Stack</RootNamespace>
-    <Version>6.3.14.0</Version>
+    <Version>6.3.15.0</Version>
     <Company>neonFORGE, LLC</Company>
     <Authors>Jeff Lill</Authors>
     <Description>neonFORGE common library.</Description>
