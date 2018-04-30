@@ -621,7 +621,8 @@ namespace Xunit
                     () => ClearNetworks(),
                     () => ClearLoadbalancers(),
                     () => ClearSecrets(),
-                    () => ClearConsul()
+                    () => ClearConsul(),
+                    () => ClearVault()
                 });
         }
 
@@ -956,6 +957,22 @@ namespace Xunit
                     Consul.KV.DeleteTree(key).Wait();
                 }
             }
+        }
+
+        //---------------------------------------------------------------------
+        // Vault
+
+        /// <summary>
+        /// Removes all non-system related data from Vault.  System keys are
+        /// located under the <b>neon*</b> and <b>vault*</b> prefixes.
+        /// </summary>
+        public void ClearVault()
+        {
+            // $todo(jeff.lill):
+            //
+            // This isn't implemented yet.  Here's the tracking issue:
+            //
+            //      https://github.com/jefflill/NeonForge/issues/235
         }
     }
 }
