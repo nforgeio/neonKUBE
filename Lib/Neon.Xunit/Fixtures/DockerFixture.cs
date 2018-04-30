@@ -325,13 +325,13 @@ namespace Xunit
                 //      services:
                 //
                 //        service1:
-                //          image: alpine
+                //          image: neoncluster/test
                 //          command: sleep 100000
                 //          deploy:
                 //            replicas: 1
                 //
                 //        service2:
-                //          image: alpine
+                //          image: neoncluster/test
                 //          command: sleep 100000
                 //          deploy:
                 //            replicas: 2

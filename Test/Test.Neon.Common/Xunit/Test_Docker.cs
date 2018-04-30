@@ -34,20 +34,19 @@ namespace TestCommon
                     docker.CreateConfig("config_text", "hello");
                     docker.CreateConfig("config_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
 
-                    docker.CreateService("test-service", "alpine", serviceArgs: new string[] { "sleep", "1000000" });
+                    docker.CreateService("test-service", "neoncluster/test");
 
                     var composeText =
 @"version: '3'
 
 services:
   sleeper:
-    image: alpine
-    command: sleep 1000000
+    image: neoncluster/test
     deploy:
       replicas: 2
 ";
                     docker.DeployStack("test-stack", composeText);
-                    docker.RunContainer("test-container", "alpine", containerArgs: new string[] { "sleep", "1000000" });
+                    docker.RunContainer("test-container", "neoncluster/test");
                     docker.CreateNetwork("test-network");
                 });
         }

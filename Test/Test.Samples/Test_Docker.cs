@@ -81,7 +81,7 @@ namespace TestSamples
 
             // Spin up a sleeping container and verify that it's running.
 
-            docker.RunContainer("sleeping-container", "alpine", containerArgs: new string[] { "sleep", "10000000" });
+            docker.RunContainer("sleeping-container", "neoncluster/test");
             Assert.Single(docker.ListContainers().Where(s => s.Name == "sleeping-container"));
         }
 
@@ -95,7 +95,7 @@ namespace TestSamples
 
             // Spin up a sleeping service and verify that it's running.
 
-            docker.CreateService("sleeping-service", "alpine", serviceArgs: new string[] { "sleep", "10000000" });
+            docker.CreateService("sleeping-service", "neoncluster/test");
             Assert.Single(docker.ListServices().Where(s => s.Name == "sleeping-service"));
         }
 

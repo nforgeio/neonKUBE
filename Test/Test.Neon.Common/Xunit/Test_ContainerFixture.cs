@@ -31,14 +31,13 @@ namespace TestCommon
             fixture.Initialize(
                 () =>
                 {
-                    // Have the Docker container fixture launch an Alpine image and
-                    // sleep for a (long) time.
+                    // Have the Docker container fixture launch a test image that
+                    // sleeps for a (long) time.
 
                     fixture.RunContainer(
                         name: "couchbase",
-                        image: "alpine",
-                        dockerArgs: new string[] { "--detach" },
-                        containerArgs: new string[] { "sleep", "10000000" });
+                        image: "neoncluster/test",
+                        dockerArgs: new string[] { "--detach" });
                 });
         }
 

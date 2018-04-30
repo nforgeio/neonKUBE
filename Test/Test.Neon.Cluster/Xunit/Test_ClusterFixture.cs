@@ -44,15 +44,14 @@ namespace TestNeonCluster
 
             cluster.CreateNetwork("test-network");
 
-            cluster.CreateService("test-service", "alpine", serviceArgs: new string[] { "sleep", "1000000" });
+            cluster.CreateService("test-service", "neoncluster/test");
 
             var composeText =
 @"version: '3'
 
 services:
   sleeper:
-    image: alpine
-    command: sleep 1000000
+    image: neoncluster/test
     deploy:
       replicas: 2
 ";
