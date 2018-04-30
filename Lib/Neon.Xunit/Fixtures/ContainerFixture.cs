@@ -98,7 +98,7 @@ namespace Xunit
                     return;
                 }
 
-                // Handle the special case where an earlier run of this contaainer was
+                // Handle the special case where an earlier run of this container was
                 // not stopped because the developer was debugging and interrupted the
                 // the unit tests before the fixture was disposed or a container with
                 // the same name is already running for some other reason.

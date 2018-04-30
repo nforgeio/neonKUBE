@@ -265,7 +265,7 @@ namespace NeonCli.Ansible
                         for (int i = 0; i < count; i++)
                         {
                             var document = results[i];
-                            var isLast = i == count - 1;
+                            var isLast   = i == count - 1;
 
                             writer.WriteDocument(document, isLast);
                         }
