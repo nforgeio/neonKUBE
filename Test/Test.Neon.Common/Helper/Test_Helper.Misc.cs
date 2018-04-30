@@ -10,6 +10,7 @@ using System.Linq;
 using System.Net;
 using System.Runtime.Serialization;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Newtonsoft.Json;
@@ -461,6 +462,54 @@ namespace TestCommon
             Assert.False(NeonHelper.ParseBool("FALSE"));
 
             Assert.Throws<FormatException>(() => NeonHelper.ParseBool("invalid input"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
+        public void WaitParallel()
+        {
+            // Run a few tasks to completion in parallel.
+
+            // $todo(jeff.lill):
+            //
+            // We're not actually verifying that the tasks actually
+            // ran in parallel.
+
+            var inTask0  = false;
+            var inTask1  = false;
+            var inTask2  = false;
+            var inTask3  = false;
+            var delay    = TimeSpan.FromSeconds(1);
+
+            NeonHelper.WaitParallel(
+                new Action[]
+                {
+                    async () => {
+
+                        await Task.Delay(delay);
+                        inTask0 = true;
+                    },
+                    async () => {
+
+                        await Task.Delay(delay);
+                        inTask1 = true;
+                    },
+                    async () => {
+
+                        await Task.Delay(delay);
+                        inTask2 = true;
+                    },
+                    () => {
+
+                        Thread.Sleep(delay);
+                        inTask3 = true;
+                    }
+                });
+
+            Assert.True(inTask0);
+            Assert.True(inTask1);
+            Assert.True(inTask2);
+            Assert.True(inTask3);
         }
     }
 }
