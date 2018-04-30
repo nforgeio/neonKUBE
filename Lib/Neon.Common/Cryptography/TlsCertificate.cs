@@ -133,13 +133,13 @@ namespace Neon.Cryptography
         /// Generates a self-signed certificate for a host name.
         /// </summary>
         /// <param name="hostName">The host name.</param>
-        /// <param name="bitCount">The certificate key size in bits: one of <b>1024</b>, <b>2048</b>, or <b>4096</b>.</param>
+        /// <param name="bitCount">The certificate key size in bits: one of <b>1024</b>, <b>2048</b>, or <b>4096</b> (defaults to <b>2048</b>).</param>
         /// <param name="validDays">
         /// The number of days the certificate will be valid.  This defaults to 365,000 days
         /// or about 1,000 years.
         /// </param>
         /// <returns>The <see cref="TlsCertificate"/>.</returns>
-        public static TlsCertificate CreateSelfSigned(string hostName, int bitCount, int validDays = 365000)
+        public static TlsCertificate CreateSelfSigned(string hostName, int bitCount = 2048, int validDays = 365000)
         {
             Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(hostName));
             Covenant.Requires<ArgumentException>(bitCount == 1024 || bitCount == 2048 || bitCount == 4096);
