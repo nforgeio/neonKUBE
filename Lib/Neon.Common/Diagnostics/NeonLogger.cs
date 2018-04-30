@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Net;
 using System.Net.Http;
 using System.Text;
@@ -28,6 +29,7 @@ namespace Neon.Diagnostics
         private string      sourceModule;
         private bool        infoAsDebug;
         private long        emitCount;
+        private TextWriter  writer;
 
         /// <inheritdoc/>
         public bool IsDebugEnabled => logManager.LogLevel >= LogLevel.Debug;
@@ -85,6 +87,16 @@ namespace Neon.Diagnostics
             // prefixed by: [Microsoft.AspNetCore]
 
             this.infoAsDebug = !noisyAspNet && sourceModule != null && sourceModule.StartsWith("Microsoft.AspNetCore.");
+
+            // We're going to write logs to STDERR to avoid conflicting with
+            // standard application output.
+
+            // $todo(jeff.lill):
+            //
+            // We might want to allow specification of the writer in user code in the
+            // future (perhaps in ILogManager?)
+
+            writer = Console.Error;
         }
 
         /// <inheritdoc/>
@@ -202,11 +214,11 @@ namespace Neon.Diagnostics
                 {
                     var timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff+00:00");
 
-                    Console.WriteLine($"[{timestamp}] [{level}]{activity}{module}{index} {message}");
+                    writer.WriteLine($"[{timestamp}] [{level}]{activity}{module}{index} {message}");
                 }
                 else
                 {
-                    Console.WriteLine($"[{level}]{activity}{module}{index} {message}");
+                    writer.WriteLine($"[{level}]{activity}{module}{index} {message}");
                 }
             }
         }
