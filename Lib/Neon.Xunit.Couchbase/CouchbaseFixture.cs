@@ -245,39 +245,7 @@ namespace Xunit
 
             // Create the primary index if requested.
 
-            if (!string.IsNullOrEmpty(primaryIndex))
-            {
-                // We're going to retry this for approximately 30 seconds due to
-                // sporatic index creation errors.
-
-                for (int attempt = 0; attempt < 30; attempt++)
-                {
-                    try
-                    {
-                        Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
-                    }
-                    catch (AggregateException e)
-                    {
-                        // Sometimes we see [CouchbaseQueryResponseException] with error
-                        // 
-                        //      5000: GSI CreatePrimaryIndex() - cause: Encounter errors during create index.  Error=Indexer In Recovery
-                        //
-                        // We'll pause for a second for these and retry.
-
-                        var queryException = e.InnerException as CouchbaseQueryResponseException;
-
-                        if (queryException != null && queryException.Errors.Count > 0)
-                        {
-                            if (queryException.Errors.First().Code != 5000)
-                            {
-                                throw;
-                            }
-
-                            Thread.Sleep(TimeSpan.FromSeconds(1));
-                        }
-                    }
-                }
-            }
+            Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
         }
 
         /// <summary>

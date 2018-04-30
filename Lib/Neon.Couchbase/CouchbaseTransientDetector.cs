@@ -5,12 +5,14 @@
 
 using System;
 using System.Diagnostics.Contracts;
+using System.Linq;
 
 using Couchbase;
 using Couchbase.Authentication;
 using Couchbase.Configuration.Client;
 using Couchbase.Core;
 using Couchbase.IO;
+using Couchbase.N1QL;
 
 using Neon.Common;
 using Neon.Data;
@@ -48,6 +50,35 @@ namespace Couchbase
                     case ResponseStatus.TemporaryFailure:
 
                         return true;
+                }
+            }
+
+            var cbQueryResponseException = e.Find<CouchbaseQueryResponseException>();
+
+            if (cbQueryResponseException != null)
+            {
+                // Sometimes we see [CouchbaseQueryResponseException] with error
+                // when we drop and then immediately recreate an index.  These
+                // have an error with:
+                // 
+                //      CODE:    5000
+                //      MESSAGE: GSI CreatePrimaryIndex() - cause: Encounter errors during create index.  Error=Indexer In Recovery
+                //
+                // We're going to consider these to be transient.
+
+                // $heck(jeff.lill):
+                //
+                // Note that CODE=5000 looks like a generic code, so we need to key off of the
+                // message text too.  This will be fragile.
+
+                if (cbQueryResponseException != null && cbQueryResponseException.Errors.Count == 1)
+                {
+                    var error = cbQueryResponseException.Errors.First();
+
+                    if (error.Code == 5000 && error.Message.IndexOf("Error=Indexer In Recovery", StringComparison.InvariantCultureIgnoreCase) != -1)
+                    {
+                        return true;
+                    }
                 }
             }
 
