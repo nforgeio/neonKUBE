@@ -685,6 +685,21 @@ namespace Xunit
         /// does not do this for performance reasonse but tests may use this method
         /// if necessary.
         /// </summary>
+        /// <remarks>
+        /// <note>
+        /// <para>
+        /// Using this may result in very slow test performance, especially since
+        /// it will purge a local copy of <b>neon-cli</b> if present.  This means
+        /// this and any other test images (like Couchbase) will need to be
+        /// downloaded again after every reset.
+        /// </para>
+        /// <para>
+        /// We highly recommend that you use <see cref="PullImage(string)"/> to
+        /// ensure that the desired images are up-to-date rather than using
+        /// <see cref="ResetImages"/>.
+        /// </para>
+        /// </note>
+        /// </remarks>
         public void ResetImages()
         {
             lock (base.SyncRoot)
