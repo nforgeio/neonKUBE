@@ -126,7 +126,7 @@ services:
         /// </summary>
         private TlsCertificate TestCertificate
         {
-            get { return TlsCertificate.CreateSelfSigned("test.com", 2048); }
+            get { return TlsCertificate.CreateSelfSigned("test.com"); }
         }
     }
 }

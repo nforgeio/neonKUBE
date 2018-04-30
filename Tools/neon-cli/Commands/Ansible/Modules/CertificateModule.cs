@@ -52,12 +52,12 @@ namespace NeonCli.Ansible
     //
     // name         yes                                 neonCLUSTER certificate name
     //
+    // state        no          present     present     indicates whether the certificate should
+    //                                      absent      be created or removed
+    //
     // value        see comment                         public certificate, any intermediate
     //                                                  certificates and the private key in PEM 
     //                                                  format.  Required when [state=present]
-    //
-    // state        no          present     present     indicates whether the certificate should
-    //                                      absent      be created or removed
     //
     // force        no          false                   resaves the certificate when [state=present]
     //                                                  even if the certificate is the same

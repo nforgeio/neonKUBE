@@ -30,7 +30,7 @@ namespace Xunit
 
             RawResults = rawResults;
 
-            if (rawResults.ExitCode == 1)
+            if (rawResults.ExitCode != 0 && rawResults.ExitCode != 2)
             {
                 // Must be a command line argument or playbook syntax error
                 // as opposed to a valid playbook that had one or more failed
