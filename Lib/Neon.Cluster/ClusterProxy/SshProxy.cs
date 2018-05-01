@@ -1788,7 +1788,7 @@ mono {scriptPath}.mono $@
 
             var shmFolder = "/dev/shm/neon/cmd";
 
-            SafeSshOperation("purge old folders", () => sshClient.RunCommand($@"find {shmFolder}. ! -name . -type d -mtime +1 -exec rm -rf {{}} \; -prune"));
+            SafeSshOperation("purge old folders", () => sshClient.RunCommand($@"find {shmFolder}. ! -name . -type d -mtime +0 -exec rm -rf {{}} \; -prune"));
 
             // Create the command folder.
 
