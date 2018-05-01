@@ -569,7 +569,7 @@ namespace Xunit
         /// clusters by accident.
         /// </note>
         /// </remarks>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         /// <exception cref="InvalidOperationException">Thrown if the local Docker instance is a member of a multi-node swarm.</exception>
         public override void Reset()
         {
@@ -718,7 +718,7 @@ namespace Xunit
         /// <param name="dockerArgs">Optional arguments to be passed to the <b>docker service create ...</b> command.</param>
         /// <param name="serviceArgs">Optional arguments to be passed to the service.</param>
         /// <param name="env">Optional environment variables to be passed to the service, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void CreateService(string name, string image, string[] dockerArgs = null, string[] serviceArgs = null, string[] env = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
@@ -756,7 +756,7 @@ namespace Xunit
         /// </summary>
         /// <param name="includeSystem">Optionally include built-in neonCLUSTER services whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ServiceInfo"/>.</returns>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<ServiceInfo> ListServices(bool includeSystem = false)
         {
             base.CheckDisposed();
@@ -800,7 +800,7 @@ namespace Xunit
         /// Removes a Docker service.
         /// </summary>
         /// <param name="name">The service name.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void RemoveService(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -858,7 +858,7 @@ namespace Xunit
         /// <param name="dockerArgs">Optional arguments to be passed to the <b>docker service create ...</b> command.</param>
         /// <param name="containerArgs">Optional arguments to be passed to the service.</param>
         /// <param name="env">Optional environment variables to be passed to the container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void RunContainer(string name, string image, string[] dockerArgs = null, string[] containerArgs = null, string[] env = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
@@ -898,7 +898,7 @@ namespace Xunit
         /// </summary>
         /// <param name="includeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ContainerInfo"/>.</returns>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<ContainerInfo> ListContainers(bool includeSystem = false)
         {
             base.CheckDisposed();
@@ -939,7 +939,7 @@ namespace Xunit
         /// Removes a Docker container.
         /// </summary>
         /// <param name="name">The container name.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void RemoveContainer(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -1004,7 +1004,7 @@ namespace Xunit
         /// to <b>5 seconds</b> which is the same time that Docker waits
         /// for Swarm services to converge.
         /// </param>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         /// <exception cref="TimeoutException">Thrown if the stack tasks were not deployed after waiting <paramref name="timeout"/>.</exception>
         public void DeployStack(string name, string composeYaml, string[] dockerArgs = null, TimeSpan timeout = default(TimeSpan), TimeSpan convergeTime = default(TimeSpan))
         {
@@ -1092,7 +1092,7 @@ namespace Xunit
         /// </summary>
         /// <param name="includeSystem">Optionally include built-in neonCLUSTER secrets whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="StackInfo"/>.</returns>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<StackInfo> ListStacks(bool includeSystem = false)
         {
             base.CheckDisposed();
@@ -1188,7 +1188,7 @@ namespace Xunit
         /// <param name="name">The secret name.</param>
         /// <param name="secretText">The secret text.</param>
         /// <param name="dockerArgs">Optional arguments to be passed to the <b>docker secret create ...</b> command.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void CreateSecret(string name, string secretText, string[] dockerArgs = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -1218,7 +1218,7 @@ namespace Xunit
         /// <param name="name">The secret name.</param>
         /// <param name="secretBytes">The secret bytes.</param>
         /// <param name="dockerArgs">Optional arguments to be passed to the <b>docker secret create ...</b> command.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void CreateSecret(string name, byte[] secretBytes, string[] dockerArgs = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -1247,7 +1247,7 @@ namespace Xunit
         /// </summary>
         /// <param name="includeSystem">Optionally include built-in neonCLUSTER secrets whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="SecretInfo"/>.</returns>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<SecretInfo> ListSecrets(bool includeSystem = false)
         {
             base.CheckDisposed();
@@ -1288,7 +1288,7 @@ namespace Xunit
         /// Removes a Docker secret.
         /// </summary>
         /// <param name="name">The secret name.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void RemoveSecret(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -1339,7 +1339,7 @@ namespace Xunit
         /// <param name="name">The secret name.</param>
         /// <param name="configText">The secret text.</param>
         /// <param name="dockerArgs">Optional arguments to be passed to the <b>docker config create ...</b> command.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void CreateConfig(string name, string configText, string[] dockerArgs = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -1369,7 +1369,7 @@ namespace Xunit
         /// <param name="name">The secret name.</param>
         /// <param name="configBytes">The secret bytes.</param>
         /// <param name="dockerArgs">Optional arguments to be passed to the <b>docker config create ...</b> command.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void CreateConfig(string name, byte[] configBytes, string[] dockerArgs = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -1398,7 +1398,7 @@ namespace Xunit
         /// </summary>
         /// <param name="includeSystem">Optionally include built-in neonCLUSTER configs whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="ConfigInfo"/>.</returns>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<ConfigInfo> ListConfigs(bool includeSystem = false)
         {
             base.CheckDisposed();
@@ -1439,7 +1439,7 @@ namespace Xunit
         /// Removes a Docker config.
         /// </summary>
         /// <param name="name">The config name.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void RemoveConfig(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -1489,7 +1489,7 @@ namespace Xunit
         /// </summary>
         /// <param name="name">The network name.</param>
         /// <param name="dockerArgs">Optional arguments to be passed to the <b>docker network create ...</b> command.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public void CreateNetwork(string name, string[] dockerArgs = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
@@ -1510,7 +1510,7 @@ namespace Xunit
         /// </summary>
         /// <param name="includeSystem">Optionally include built-in neonCLUSTER secrets whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="NetworkInfo"/>.</returns>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         /// <remarks>
         /// <note>
         /// This method <b>DOES NOT</b> include built-in Docker networks such as
@@ -1563,7 +1563,7 @@ namespace Xunit
         /// Removes a Docker network.
         /// </summary>
         /// <param name="name">The network name.</param>
-        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         /// <exception cref="NotSupportedException">Thrown for built-in Docker networks.</exception>
         /// <remarks>
         /// <note>

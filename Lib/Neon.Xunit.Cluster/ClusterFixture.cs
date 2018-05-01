@@ -438,6 +438,10 @@ namespace Xunit
         /// collection to obtain <see cref="SshProxy{NodeDefinition}"/> proxies that can be used
         /// to submit SSH commands to cluster nodes.
         /// </para>
+        /// <note>
+        /// <b>IMPORTANT:</b> The <see cref="SshProxy{NodeDefinition}"/> class <b>is not thread-safe</b>,
+        /// so you'll need to take care to run only one command at a time on each node.
+        /// </note>
         /// </remarks>
         public ClusterProxy Cluster
         {
