@@ -520,7 +520,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
 
                         try
                         {
-                            process = Process.Start("docker", $"run {options} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} {sbEnvOptions} --network host neoncluster/neon-cli:{imageTag}");
+                            process = Process.Start("docker", $"run {options} --name neon-{Guid.NewGuid().ToString("D")} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} {sbEnvOptions} --network host neoncluster/neon-cli:{imageTag}");
                         }
                         catch (Win32Exception)
                         {
