@@ -34,14 +34,18 @@ using Renci.SshNet.Common;
 namespace Neon.Cluster
 {
     /// <summary>
+    /// <para>
     /// Uses an SSH/SCP connection to provide access to Linux machines to access
     /// files, run commands, etc., typically for setup purposes.
+    /// </para>
+    /// <note>
+    /// This class <b>is not thread-safe.</b>
+    /// </note>
     /// </summary>
     /// <typeparam name="TMetadata">
     /// Defines the metadata type the application wishes to associate with the server.
     /// You may specify <c>object</c> when no additional metadata is required.
     /// </typeparam>
-    /// <threadsafety instance="false"/>
     /// <remarks>
     /// <para>
     /// Construct an instance to connect to a specific cluster node.  You may specify
@@ -56,6 +60,7 @@ namespace Neon.Cluster
     /// <para>
     /// Call <see cref="Dispose()"/> or <see cref="Disconnect()"/> to close the connection.
     /// </para>
+    /// <threadsafety instance="false"/>
     /// </remarks>
     public class SshProxy<TMetadata> : IDisposable
         where TMetadata : class
@@ -1783,7 +1788,7 @@ mono {scriptPath}.mono $@
 
             var shmFolder = "/dev/shm/neon/cmd";
 
-            SafeSshOperation("purge old folders", () => sshClient.RunCommand($@"find {shmFolder}. ! -name . -type d -mtime +0 -exec rm -rf {{}} \; -prune"));
+            SafeSshOperation("purge old folders", () => sshClient.RunCommand($@"find {shmFolder}. ! -name . -type d -mtime +1 -exec rm -rf {{}} \; -prune"));
 
             // Create the command folder.
 
