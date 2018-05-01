@@ -39,7 +39,7 @@ namespace Xunit
     /// <see cref="TestFixture"/> is created by the test runner for every test class.
     /// </para>
     /// </remarks>
-    /// <threadsafety instance="false"/>
+    /// <threadsafety instance="true"/>
     public abstract class TestFixture : ITestFixture
     {
         //---------------------------------------------------------------------
@@ -135,7 +135,6 @@ namespace Xunit
                 EnsureReset();
             }
 
-            this.SyncRoot      = new object();
             this.IsDisposed    = false;
             this.InAction      = false;
             this.IsInitialized = false;
@@ -148,11 +147,6 @@ namespace Xunit
         {
             Dispose(false);
         }
-
-        /// <summary>
-        /// Returns the object to be used for thread synchronization.
-        /// </summary>
-        protected object SyncRoot { get; set; }
 
         /// <summary>
         /// Returns <c>true</c> if the instance has been disposed.

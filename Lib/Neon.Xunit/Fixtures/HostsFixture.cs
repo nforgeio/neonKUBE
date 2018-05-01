@@ -34,7 +34,7 @@ namespace Xunit
     /// </code>
     /// </note>
     /// </remarks>
-    /// <threadsafety instance="false"/>
+    /// <threadsafety instance="true"/>
     public class HostsFixture : TestFixture
     {
         // Implementation Note:
@@ -67,6 +67,8 @@ namespace Xunit
 
         //---------------------------------------------------------------------
         // Static members
+
+        private static object syncLock = new object();
 
         /// <summary>
         /// Path to the local DNS resolver's [hosts] file.
@@ -187,23 +189,20 @@ namespace Xunit
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(address));
 
-            lock (base.SyncRoot)
+            foreach (var record in records)
             {
-                foreach (var record in records)
+                if (record.Item1.Equals(hostname, StringComparison.InvariantCultureIgnoreCase) &&
+                    record.Item2.Equals(address, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    if (record.Item1.Equals(hostname, StringComparison.InvariantCultureIgnoreCase) &&
-                        record.Item2.Equals(address, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        return;     // Don't add a duplicate record.
-                    }
+                    return;     // Don't add a duplicate record.
                 }
+            }
 
-                records.Add(new Tuple<string, string>(hostname, address));
+            records.Add(new Tuple<string, string>(hostname, address));
 
-                if (!deferCommit)
-                {
-                    Commit();
-                }
+            if (!deferCommit)
+            {
+                Commit();
             }
         }
 
@@ -212,7 +211,10 @@ namespace Xunit
         /// </summary>
         public void Commit()
         {
-            lock (base.SyncRoot)
+            // Use a static lock to ensure that only once fixture instance
+            // at a time is munging the [hosts] file.
+
+            lock (syncLock)
             {
                 // Remove any existing section for this instance.
 

@@ -33,7 +33,7 @@ namespace Xunit
     /// </code>
     /// </note>
     /// </remarks>
-    /// <threadsafety instance="false"/>
+    /// <threadsafety instance="true"/>
     public class ContainerFixture : TestFixture
     {
         /// <summary>
@@ -91,66 +91,63 @@ namespace Xunit
 
             base.CheckWithinAction();
 
-            lock (base.SyncRoot)
+            if (IsInitialized)
             {
-                if (IsInitialized)
+                return;
+            }
+
+            // Handle the special case where an earlier run of this container was
+            // not stopped because the developer was debugging and interrupted the
+            // the unit tests before the fixture was disposed or a container with
+            // the same name is already running for some other reason.
+            //
+            // We're going to look for a existing container with the same name
+            // and remove it if its ID doesn't match the current container.
+
+            var args   = new string[] { "ps", "-a", "--filter", $"name={name}", "--format", "{{.ID}}" };
+            var result = NeonHelper.ExecuteCaptureStreams($"docker", args);
+
+            if (result.ExitCode == 0)
+            {
+                var existingId = result.OutputText.Trim();
+
+                if (!string.IsNullOrEmpty(existingId))
                 {
-                    return;
+                    NeonHelper.Execute("docker", new object[] { "rm", "--force", existingId });
                 }
+            }
 
-                // Handle the special case where an earlier run of this container was
-                // not stopped because the developer was debugging and interrupted the
-                // the unit tests before the fixture was disposed or a container with
-                // the same name is already running for some other reason.
-                //
-                // We're going to look for a existing container with the same name
-                // and remove it if its ID doesn't match the current container.
+            // Start the container.
 
-                var args   = new string[] { "ps", "-a", "--filter", $"name={name}", "--format", "{{.ID}}" };
-                var result = NeonHelper.ExecuteCaptureStreams($"docker", args);
+            var extraArgs = new List<string>();
 
-                if (result.ExitCode == 0)
+            if (!string.IsNullOrEmpty(name))
+            {
+                extraArgs.Add("--name");
+                extraArgs.Add(name);
+            }
+
+            if (env != null)
+            {
+                foreach (var variable in env)
                 {
-                    var existingId = result.OutputText.Trim();
-
-                    if (!string.IsNullOrEmpty(existingId))
-                    {
-                        NeonHelper.Execute("docker", new object[] { "rm", "--force", existingId });
-                    }
+                    extraArgs.Add("--env");
+                    extraArgs.Add(variable);
                 }
+            }
 
-                // Start the container.
+            var argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, extraArgs.ToArray(), image, containerArgs);
 
-                var extraArgs = new List<string>();
+            result = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
 
-                if (!string.IsNullOrEmpty(name))
-                {
-                    extraArgs.Add("--name");
-                    extraArgs.Add(name);
-                }
-
-                if (env != null)
-                {
-                    foreach (var variable in env)
-                    {
-                        extraArgs.Add("--env");
-                        extraArgs.Add(variable);
-                    }
-                }
-
-                var argsString = NeonHelper.NormalizeExecArgs("run", dockerArgs, extraArgs.ToArray(), image, containerArgs);
-
-                result = NeonHelper.ExecuteCaptureStreams($"docker", argsString);
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot launch container [{image}]: {result.ErrorText}");
-                }
-                else
-                {
-                    ContainerName = name;
-                    ContainerId   = result.OutputText.Trim().Substring(0, 12);
-                }
+            if (result.ExitCode != 0)
+            {
+                throw new Exception($"Cannot launch container [{image}]: {result.ErrorText}");
+            }
+            else
+            {
+                ContainerName = name;
+                ContainerId   = result.OutputText.Trim().Substring(0, 12);
             }
         }
 

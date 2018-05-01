@@ -172,7 +172,7 @@ namespace Xunit
     /// </item>
     /// </list>
     /// </remarks>
-    /// <threadsafety instance="false"/>
+    /// <threadsafety instance="true"/>
     public class DockerFixture : TestFixtureSet
     {
         //---------------------------------------------------------------------
@@ -523,12 +523,9 @@ namespace Xunit
         /// </remarks>
         public virtual ExecuteResult DockerExecute(params object[] args)
         {
-            lock (base.SyncRoot)
-            {
-                base.CheckDisposed();
+            base.CheckDisposed();
 
-                return NeonHelper.ExecuteCaptureStreams("docker", args);
-            }
+            return NeonHelper.ExecuteCaptureStreams("docker", args);
         }
 
         /// <summary>
@@ -551,12 +548,9 @@ namespace Xunit
         /// </remarks>
         public virtual ExecuteResult DockerExecute(string argString)
         {
-            lock (base.SyncRoot)
-            {
-                base.CheckDisposed();
+            base.CheckDisposed();
 
-                return NeonHelper.ExecuteCaptureStreams("docker", argString);
-            }
+            return NeonHelper.ExecuteCaptureStreams("docker", argString);
         }
 
         /// <summary>
@@ -593,91 +587,88 @@ namespace Xunit
             // idea because it will cause images to be downloaded for every
             // test class run and will also purge the image build cache.
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            var result = DockerExecute(new object[] { "info" });
+
+            if (result.ExitCode != 0)
             {
-                base.CheckDisposed();
+                throw new Exception(result.ErrorText);
+            }
 
-                var result = DockerExecute(new object[] { "info" });
+            if (result.OutputText.Contains("Swarm: active"))
+            {
+                // Ensure that this is a single node cluster.
 
-                if (result.ExitCode != 0)
+                var isSingleNode = false;
+
+                using (var reader = new StringReader(result.OutputText))
                 {
-                    throw new Exception(result.ErrorText);
-                }
-
-                if (result.OutputText.Contains("Swarm: active"))
-                {
-                    // Ensure that this is a single node cluster.
-
-                    var isSingleNode = false;
-
-                    using (var reader = new StringReader(result.OutputText))
+                    foreach (var line in reader.Lines())
                     {
-                        foreach (var line in reader.Lines())
+                        if (line.Trim().Equals("Nodes: 1", StringComparison.InvariantCultureIgnoreCase))
                         {
-                            if (line.Trim().Equals("Nodes: 1", StringComparison.InvariantCultureIgnoreCase))
-                            {
-                                isSingleNode = true;
-                                break;
-                            }
+                            isSingleNode = true;
+                            break;
                         }
                     }
-
-                    if (!isSingleNode)
-                    {
-                        throw new InvalidOperationException("Cannot reset the cluster because it has more than one node.  Testing on multi-node clusters is not allowed as a safety measure to avoid accidentially wiping out a production cluster.");
-                    }
-
-                    // Leave the swarm, effectively reseting all swarm state.
-
-                    result = DockerExecute(new object[] { "swarm", "leave", "--force" });
-
-                    if (result.ExitCode != 0)
-                    {
-                        throw new Exception(result.ErrorText);
-                    }
                 }
 
-                // Initialize swarm mode.
+                if (!isSingleNode)
+                {
+                    throw new InvalidOperationException("Cannot reset the cluster because it has more than one node.  Testing on multi-node clusters is not allowed as a safety measure to avoid accidentially wiping out a production cluster.");
+                }
 
-                result = DockerExecute(new object[] { "swarm", "init" });
+                // Leave the swarm, effectively reseting all swarm state.
+
+                result = DockerExecute(new object[] { "swarm", "leave", "--force" });
 
                 if (result.ExitCode != 0)
                 {
                     throw new Exception(result.ErrorText);
                 }
-
-                // We also need to remove any running containers except for
-                // any containers belonging to child ContainerFixtures.
-
-                var subContainerFixtureIds = new HashSet<string>();
-
-                foreach (ContainerFixture fixture in base.Children.Where(f => f is ContainerFixture))
-                {
-                    subContainerFixtureIds.Add(fixture.ContainerId);
-                }
-
-                var containerIds = new List<string>();
-
-                foreach (var container in ListContainers())
-                {
-                    if (!subContainerFixtureIds.Contains(container.Id))
-                    {
-                        containerIds.Add(container.Id);
-                    }
-                }
-
-                if (containerIds.Count > 0)
-                {
-                    DockerExecute("rm", "--force", containerIds.ToArray());
-                }
-
-                // Finally, prune the volumes and networks.  Note that since 
-                // we've already removed all services and containers, this will 
-                // effectively remove all of these.
-
-                DockerExecute("volume", "prune", "--force");
-                DockerExecute("network", "prune", "--force");
             }
+
+            // Initialize swarm mode.
+
+            result = DockerExecute(new object[] { "swarm", "init" });
+
+            if (result.ExitCode != 0)
+            {
+                throw new Exception(result.ErrorText);
+            }
+
+            // We also need to remove any running containers except for
+            // any containers belonging to child ContainerFixtures.
+
+            var subContainerFixtureIds = new HashSet<string>();
+
+            foreach (ContainerFixture fixture in base.Children.Where(f => f is ContainerFixture))
+            {
+                subContainerFixtureIds.Add(fixture.ContainerId);
+            }
+
+            var containerIds = new List<string>();
+
+            foreach (var container in ListContainers())
+            {
+                if (!subContainerFixtureIds.Contains(container.Id))
+                {
+                    containerIds.Add(container.Id);
+                }
+            }
+
+            if (containerIds.Count > 0)
+            {
+                DockerExecute("rm", "--force", containerIds.ToArray());
+            }
+
+            // Finally, prune the volumes and networks.  Note that since 
+            // we've already removed all services and containers, this will 
+            // effectively remove all of these.
+
+            DockerExecute("volume", "prune", "--force");
+            DockerExecute("network", "prune", "--force");
         }
 
         /// <summary>
@@ -702,12 +693,9 @@ namespace Xunit
         /// </remarks>
         public void ResetImages()
         {
-            lock (base.SyncRoot)
-            {
-                base.CheckDisposed();
+            base.CheckDisposed();
 
-                DockerExecute("image", "prune", "--all", "--force");
-            }
+            DockerExecute("image", "prune", "--all", "--force");
         }
 
         /// <summary>
@@ -736,33 +724,30 @@ namespace Xunit
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            // Start the service.
+
+            var extraArgs = new List<string>();
+
+            extraArgs.Add("--name");
+            extraArgs.Add(name);
+
+            if (env != null)
             {
-                base.CheckDisposed();
-
-                // Start the service.
-
-                var extraArgs = new List<string>();
-
-                extraArgs.Add("--name");
-                extraArgs.Add(name);
-
-                if (env != null)
+                foreach (var variable in env)
                 {
-                    foreach (var variable in env)
-                    {
-                        extraArgs.Add("--env");
-                        extraArgs.Add(variable);
-                    }
+                    extraArgs.Add("--env");
+                    extraArgs.Add(variable);
                 }
+            }
 
-                var argsString = NeonHelper.NormalizeExecArgs("service", "create", extraArgs.ToArray(), dockerArgs, image, serviceArgs);
-                var result     = DockerExecute(argsString);
+            var argsString = NeonHelper.NormalizeExecArgs("service", "create", extraArgs.ToArray(), dockerArgs, image, serviceArgs);
+            var result     = DockerExecute(argsString);
 
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot launch service [{image}]: {result.ErrorText}");
-                }
+            if (result.ExitCode != 0)
+            {
+                throw new Exception($"Cannot launch service [{image}]: {result.ErrorText}");
             }
         }
 
@@ -774,44 +759,41 @@ namespace Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
         public List<ServiceInfo> ListServices(bool includeSystem = false)
         {
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            var result = DockerExecute("service", "ls", "--format", "{{.ID}}~{{.Name}}~{{.Replicas}}");
+
+            if (result.ExitCode != 0)
             {
-                base.CheckDisposed();
-
-                var result = DockerExecute("service", "ls", "--format", "{{.ID}}~{{.Name}}~{{.Replicas}}");
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot list Docker services: {result.ErrorText}");
-                }
-
-                var services = new List<ServiceInfo>();
-
-                using (var reader = new StringReader(result.OutputText))
-                {
-                    foreach (var line in reader.Lines(ignoreBlank: true))
-                    {
-                        var fields   = line.Split('~');
-                        var replicas = fields[2].Split('/');
-
-                        if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            continue;   // Ignore built-in neonCLUSTER secrets.
-                        }
-
-                        services.Add(
-                            new ServiceInfo()
-                            {
-                                Id               = fields[0],
-                                Name             = fields[1],
-                                ReplicasDesired  = int.Parse(replicas[0]),
-                                ReplicasDeployed = int.Parse(replicas[1])
-                            });
-                    }
-                }
-
-                return services;
+                throw new Exception($"Cannot list Docker services: {result.ErrorText}");
             }
+
+            var services = new List<ServiceInfo>();
+
+            using (var reader = new StringReader(result.OutputText))
+            {
+                foreach (var line in reader.Lines(ignoreBlank: true))
+                {
+                    var fields   = line.Split('~');
+                    var replicas = fields[2].Split('/');
+
+                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;   // Ignore built-in neonCLUSTER secrets.
+                    }
+
+                    services.Add(
+                        new ServiceInfo()
+                        {
+                            Id               = fields[0],
+                            Name             = fields[1],
+                            ReplicasDesired  = int.Parse(replicas[0]),
+                            ReplicasDeployed = int.Parse(replicas[1])
+                        });
+                }
+            }
+
+            return services;
         }
 
         /// <summary>
@@ -823,24 +805,21 @@ namespace Xunit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            // Remove the service.
+
+            var extraArgs = new List<string>();
+
+            extraArgs.Add("--name");
+            extraArgs.Add(name);
+
+            var argsString = NeonHelper.NormalizeExecArgs("service", "rm", extraArgs.ToArray());
+            var result     = DockerExecute(argsString);
+
+            if (result.ExitCode != 0)
             {
-                base.CheckDisposed();
-
-                // Remove the service.
-
-                var extraArgs = new List<string>();
-
-                extraArgs.Add("--name");
-                extraArgs.Add(name);
-
-                var argsString = NeonHelper.NormalizeExecArgs("service", "rm", extraArgs.ToArray());
-                var result     = DockerExecute(argsString);
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot remove service [{name}]: {result.ErrorText}");
-                }
+                throw new Exception($"Cannot remove service [{name}]: {result.ErrorText}");
             }
         }
 
@@ -885,35 +864,32 @@ namespace Xunit
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            // Start the container.
+
+            var extraArgs = new List<string>();
+
+            extraArgs.Add("--name");
+            extraArgs.Add(name);
+
+            extraArgs.Add("--detach");
+
+            if (env != null)
             {
-                base.CheckDisposed();
-
-                // Start the container.
-
-                var extraArgs = new List<string>();
-
-                extraArgs.Add("--name");
-                extraArgs.Add(name);
-
-                extraArgs.Add("--detach");
-
-                if (env != null)
+                foreach (var variable in env)
                 {
-                    foreach (var variable in env)
-                    {
-                        extraArgs.Add("--env");
-                        extraArgs.Add(variable);
-                    }
+                    extraArgs.Add("--env");
+                    extraArgs.Add(variable);
                 }
+            }
 
-                var argsString = NeonHelper.NormalizeExecArgs("run", extraArgs.ToArray(), dockerArgs, image, containerArgs);
-                var result     = DockerExecute(argsString);
+            var argsString = NeonHelper.NormalizeExecArgs("run", extraArgs.ToArray(), dockerArgs, image, containerArgs);
+            var result     = DockerExecute(argsString);
 
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot launch container [{image}]: {result.ErrorText}");
-                }
+            if (result.ExitCode != 0)
+            {
+                throw new Exception($"Cannot launch container [{image}]: {result.ErrorText}");
             }
         }
 
@@ -925,41 +901,38 @@ namespace Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
         public List<ContainerInfo> ListContainers(bool includeSystem = false)
         {
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            var result = DockerExecute("ps", "--format", "{{.ID}}~{{.Names}}");
+
+            if (result.ExitCode != 0)
             {
-                base.CheckDisposed();
-
-                var result = DockerExecute("ps", "--format", "{{.ID}}~{{.Names}}");
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot list Docker containers: {result.ErrorText}");
-                }
-
-                var containers = new List<ContainerInfo>();
-
-                using (var reader = new StringReader(result.OutputText))
-                {
-                    foreach (var line in reader.Lines(ignoreBlank: true))
-                    {
-                        var fields = line.Split('~');
-
-                        if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            continue;   // Ignore built-in neonCLUSTER containers.
-                        }
-
-                        containers.Add(
-                            new ContainerInfo()
-                            {
-                                Id   = fields[0],
-                                Name = fields[1]
-                            });
-                    }
-                }
-
-                return containers;
+                throw new Exception($"Cannot list Docker containers: {result.ErrorText}");
             }
+
+            var containers = new List<ContainerInfo>();
+
+            using (var reader = new StringReader(result.OutputText))
+            {
+                foreach (var line in reader.Lines(ignoreBlank: true))
+                {
+                    var fields = line.Split('~');
+
+                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;   // Ignore built-in neonCLUSTER containers.
+                    }
+
+                    containers.Add(
+                        new ContainerInfo()
+                        {
+                            Id   = fields[0],
+                            Name = fields[1]
+                        });
+                }
+            }
+
+            return containers;
         }
 
         /// <summary>
@@ -971,26 +944,23 @@ namespace Xunit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            // Remove the container.
+
+            var extraArgs = new List<string>();
+
+            extraArgs.Add("--name");
+            extraArgs.Add(name);
+
+            extraArgs.Add("--force");
+
+            var argsString = NeonHelper.NormalizeExecArgs("rm", extraArgs.ToArray());
+            var result     = DockerExecute(argsString);
+
+            if (result.ExitCode != 0)
             {
-                base.CheckDisposed();
-
-                // Remove the container.
-
-                var extraArgs = new List<string>();
-
-                extraArgs.Add("--name");
-                extraArgs.Add(name);
-
-                extraArgs.Add("--force");
-
-                var argsString = NeonHelper.NormalizeExecArgs("rm", extraArgs.ToArray());
-                var result     = DockerExecute(argsString);
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot remove container [{name}]: {result.ErrorText}");
-                }
+                throw new Exception($"Cannot remove container [{name}]: {result.ErrorText}");
             }
         }
 
@@ -1053,71 +1023,68 @@ namespace Xunit
 
             var stackDefinition = new StackDefinition(name, composeYaml);
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            using (var tempFolder = new TempFolder())
             {
-                base.CheckDisposed();
+                var path = Path.Combine(tempFolder.Path, "docker-compose.yaml");
 
-                using (var tempFolder = new TempFolder())
+                File.WriteAllText(path, composeYaml);
+
+                var argsString = NeonHelper.NormalizeExecArgs("stack", "deploy", dockerArgs, "--compose-file", path, name);
+                var result     = DockerExecute(argsString);
+
+                if (result.ExitCode != 0)
                 {
-                    var path = Path.Combine(tempFolder.Path, "docker-compose.yaml");
-
-                    File.WriteAllText(path, composeYaml);
-
-                    var argsString = NeonHelper.NormalizeExecArgs("stack", "deploy", dockerArgs, "--compose-file", path, name);
-                    var result     = DockerExecute(argsString);
-
-                    if (result.ExitCode != 0)
-                    {
-                        throw new Exception($"Cannot deploy Docker stack [{name}]: {result.ErrorText}");
-                    }
+                    throw new Exception($"Cannot deploy Docker stack [{name}]: {result.ErrorText}");
                 }
-
-                // Docker should be starting the composed services.  We're going to wait 
-                // for up to [timeout] for the service tasks to start.  They might not
-                // start within this limit if there's been trouble loading the service
-                // images and perhaps for other reasons.
-                //
-                // We'll need to parse the compose YAML to determine which services
-                // will be started and how many relicas for each there should be.
-                // We'll then loop until we see the correct number of tasks running.
-
-                var stopwatch = new Stopwatch();
-
-                while (true)
-                {
-                    var services = ListServices(includeSystem: true);
-
-                    foreach (var stackService in stackDefinition.Services)
-                    {
-                        var serviceName = stackDefinition.GetServiceName(stackService);
-                        var service     = services.SingleOrDefault(s => s.Name.Equals(serviceName, StringComparison.InvariantCultureIgnoreCase));
-
-                        if (service != null && service.ReplicasDesired < service.ReplicasDeployed)
-                        {
-                            goto notReady;
-                        }
-                    }
-
-                    // All service tasks are ready if we get here.
-
-                    break;
-
-                    // Check for timeout.
-
-                notReady:
-
-                    if (stopwatch.Elapsed >= timeout)
-                    {
-                        throw new TimeoutException($"Stack [{name}] tasks are not running after waiting [{timeout}].");
-                    }
-
-                    Thread.Sleep(TimeSpan.FromSeconds(1));
-                }
-
-                // Wait for the services to converge.
-
-                Thread.Sleep(convergeTime);
             }
+
+            // Docker should be starting the composed services.  We're going to wait 
+            // for up to [timeout] for the service tasks to start.  They might not
+            // start within this limit if there's been trouble loading the service
+            // images and perhaps for other reasons.
+            //
+            // We'll need to parse the compose YAML to determine which services
+            // will be started and how many relicas for each there should be.
+            // We'll then loop until we see the correct number of tasks running.
+
+            var stopwatch = new Stopwatch();
+
+            while (true)
+            {
+                var services = ListServices(includeSystem: true);
+
+                foreach (var stackService in stackDefinition.Services)
+                {
+                    var serviceName = stackDefinition.GetServiceName(stackService);
+                    var service     = services.SingleOrDefault(s => s.Name.Equals(serviceName, StringComparison.InvariantCultureIgnoreCase));
+
+                    if (service != null && service.ReplicasDesired < service.ReplicasDeployed)
+                    {
+                        goto notReady;
+                    }
+                }
+
+                // All service tasks are ready if we get here.
+
+                break;
+
+                // Check for timeout.
+
+            notReady:
+
+                if (stopwatch.Elapsed >= timeout)
+                {
+                    throw new TimeoutException($"Stack [{name}] tasks are not running after waiting [{timeout}].");
+                }
+
+                Thread.Sleep(TimeSpan.FromSeconds(1));
+            }
+
+            // Wait for the services to converge.
+
+            Thread.Sleep(convergeTime);
         }
 
         /// <summary>
@@ -1128,41 +1095,38 @@ namespace Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
         public List<StackInfo> ListStacks(bool includeSystem = false)
         {
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            var result = DockerExecute("stack", "ls", "--format", "{{.Name}}~{{.Services}}");
+
+            if (result.ExitCode != 0)
             {
-                base.CheckDisposed();
-
-                var result = DockerExecute("stack", "ls", "--format", "{{.Name}}~{{.Services}}");
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot list Docker stacks: {result.ErrorText}");
-                }
-
-                var stacks = new List<StackInfo>();
-
-                using (var reader = new StringReader(result.OutputText))
-                {
-                    foreach (var line in reader.Lines(ignoreBlank: true))
-                    {
-                        var fields = line.Split('~');
-
-                        if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            continue;   // Ignore built-in neonCLUSTER secrets.
-                        }
-
-                        stacks.Add(
-                            new StackInfo()
-                            {
-                                Name         = fields[0],
-                                ServiceCount = int.Parse(fields[1])
-                            });
-                    }
-                }
-
-                return stacks;
+                throw new Exception($"Cannot list Docker stacks: {result.ErrorText}");
             }
+
+            var stacks = new List<StackInfo>();
+
+            using (var reader = new StringReader(result.OutputText))
+            {
+                foreach (var line in reader.Lines(ignoreBlank: true))
+                {
+                    var fields = line.Split('~');
+
+                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;   // Ignore built-in neonCLUSTER secrets.
+                    }
+
+                    stacks.Add(
+                        new StackInfo()
+                        {
+                            Name         = fields[0],
+                            ServiceCount = int.Parse(fields[1])
+                        });
+                }
+            }
+
+            return stacks;
         }
 
         /// <summary>
@@ -1174,23 +1138,20 @@ namespace Xunit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            // Remove the service.
+
+            var extraArgs = new List<string>();
+
+            extraArgs.Add(name);
+
+            var argsString = NeonHelper.NormalizeExecArgs("stack", "rm", extraArgs.ToArray());
+            var result     = DockerExecute(argsString);
+
+            if (result.ExitCode != 0)
             {
-                base.CheckDisposed();
-
-                // Remove the service.
-
-                var extraArgs = new List<string>();
-
-                extraArgs.Add(name);
-
-                var argsString = NeonHelper.NormalizeExecArgs("stack", "rm", extraArgs.ToArray());
-                var result     = DockerExecute(argsString);
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot remove stack [{name}]: {result.ErrorText}");
-                }
+                throw new Exception($"Cannot remove stack [{name}]: {result.ErrorText}");
             }
         }
 
@@ -1233,23 +1194,20 @@ namespace Xunit
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentNullException>(secretText != null);
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            using (var tempFolder = new TempFolder())
             {
-                base.CheckDisposed();
+                var path = Path.Combine(tempFolder.Path, "secret.txt");
 
-                using (var tempFolder = new TempFolder())
+                File.WriteAllText(path, secretText);
+
+                var argsString = NeonHelper.NormalizeExecArgs("secret", "create", dockerArgs, name, path);
+                var result     = DockerExecute(argsString);
+
+                if (result.ExitCode != 0)
                 {
-                    var path = Path.Combine(tempFolder.Path, "secret.txt");
-
-                    File.WriteAllText(path, secretText);
-
-                    var argsString = NeonHelper.NormalizeExecArgs("secret", "create", dockerArgs, name, path);
-                    var result     = DockerExecute(argsString);
-
-                    if (result.ExitCode != 0)
-                    {
-                        throw new Exception($"Cannot create Docker secret [{name}]: {result.ErrorText}");
-                    }
+                    throw new Exception($"Cannot create Docker secret [{name}]: {result.ErrorText}");
                 }
             }
         }
@@ -1266,23 +1224,20 @@ namespace Xunit
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentNullException>(secretBytes != null);
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            using (var tempFolder = new TempFolder())
             {
-                base.CheckDisposed();
+                var path = Path.Combine(tempFolder.Path, "secret.dat");
 
-                using (var tempFolder = new TempFolder())
+                File.WriteAllBytes(path, secretBytes);
+
+                var argsString = NeonHelper.NormalizeExecArgs("secret", "create", dockerArgs, name, path);
+                var result     = DockerExecute(argsString);
+
+                if (result.ExitCode != 0)
                 {
-                    var path = Path.Combine(tempFolder.Path, "secret.dat");
-
-                    File.WriteAllBytes(path, secretBytes);
-
-                    var argsString = NeonHelper.NormalizeExecArgs("secret", "create", dockerArgs, name, path);
-                    var result     = DockerExecute(argsString);
-
-                    if (result.ExitCode != 0)
-                    {
-                        throw new Exception($"Cannot create Docker secret [{name}]: {result.ErrorText}");
-                    }
+                    throw new Exception($"Cannot create Docker secret [{name}]: {result.ErrorText}");
                 }
             }
         }
@@ -1295,41 +1250,38 @@ namespace Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
         public List<SecretInfo> ListSecrets(bool includeSystem = false)
         {
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            var result = DockerExecute("secret", "ls", "--format", "{{.ID}}~{{.Name}}");
+
+            if (result.ExitCode != 0)
             {
-                base.CheckDisposed();
-
-                var result = DockerExecute("secret", "ls", "--format", "{{.ID}}~{{.Name}}");
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot list Docker secrets: {result.ErrorText}");
-                }
-
-                var secrets = new List<SecretInfo>();
-
-                using (var reader = new StringReader(result.OutputText))
-                {
-                    foreach (var line in reader.Lines(ignoreBlank: true))
-                    {
-                        var fields = line.Split('~');
-
-                        if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            continue;   // Ignore built-in neonCLUSTER secrets.
-                        }
-
-                        secrets.Add(
-                            new SecretInfo()
-                            {
-                                Id   = fields[0],
-                                Name = fields[1]
-                            });
-                    }
-                }
-
-                return secrets;
+                throw new Exception($"Cannot list Docker secrets: {result.ErrorText}");
             }
+
+            var secrets = new List<SecretInfo>();
+
+            using (var reader = new StringReader(result.OutputText))
+            {
+                foreach (var line in reader.Lines(ignoreBlank: true))
+                {
+                    var fields = line.Split('~');
+
+                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;   // Ignore built-in neonCLUSTER secrets.
+                    }
+
+                    secrets.Add(
+                        new SecretInfo()
+                        {
+                            Id   = fields[0],
+                            Name = fields[1]
+                        });
+                }
+            }
+
+            return secrets;
         }
 
         /// <summary>
@@ -1341,19 +1293,16 @@ namespace Xunit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            // Remove the secret.
+
+            var argsString = NeonHelper.NormalizeExecArgs("secret", "rm", name);
+            var result     = DockerExecute(argsString);
+
+            if (result.ExitCode != 0)
             {
-                base.CheckDisposed();
-
-                // Remove the secret.
-
-                var argsString = NeonHelper.NormalizeExecArgs("secret", "rm", name);
-                var result     = DockerExecute(argsString);
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot remove secret [{name}]: {result.ErrorText}");
-                }
+                throw new Exception($"Cannot remove secret [{name}]: {result.ErrorText}");
             }
         }
 
@@ -1396,23 +1345,20 @@ namespace Xunit
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentNullException>(configText != null);
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            using (var tempFolder = new TempFolder())
             {
-                base.CheckDisposed();
+                var path = Path.Combine(tempFolder.Path, "config.txt");
 
-                using (var tempFolder = new TempFolder())
+                File.WriteAllText(path, configText);
+
+                var argsString = NeonHelper.NormalizeExecArgs("config", "create", dockerArgs, name, path);
+                var result     = DockerExecute(argsString);
+
+                if (result.ExitCode != 0)
                 {
-                    var path = Path.Combine(tempFolder.Path, "config.txt");
-
-                    File.WriteAllText(path, configText);
-
-                    var argsString = NeonHelper.NormalizeExecArgs("config", "create", dockerArgs, name, path);
-                    var result     = DockerExecute(argsString);
-
-                    if (result.ExitCode != 0)
-                    {
-                        throw new Exception($"Cannot create Docker config [{name}]: {result.ErrorText}");
-                    }
+                    throw new Exception($"Cannot create Docker config [{name}]: {result.ErrorText}");
                 }
             }
         }
@@ -1429,23 +1375,20 @@ namespace Xunit
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentNullException>(configBytes != null);
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            using (var tempFolder = new TempFolder())
             {
-                base.CheckDisposed();
+                var path = Path.Combine(tempFolder.Path, "config.dat");
 
-                using (var tempFolder = new TempFolder())
+                File.WriteAllBytes(path, configBytes);
+
+                var argsString = NeonHelper.NormalizeExecArgs("config", "create", dockerArgs, name, path);
+                var result     = DockerExecute(argsString);
+
+                if (result.ExitCode != 0)
                 {
-                    var path = Path.Combine(tempFolder.Path, "config.dat");
-
-                    File.WriteAllBytes(path, configBytes);
-
-                    var argsString = NeonHelper.NormalizeExecArgs("config", "create", dockerArgs, name, path);
-                    var result     = DockerExecute(argsString);
-
-                    if (result.ExitCode != 0)
-                    {
-                        throw new Exception($"Cannot create Docker config [{name}]: {result.ErrorText}");
-                    }
+                    throw new Exception($"Cannot create Docker config [{name}]: {result.ErrorText}");
                 }
             }
         }
@@ -1458,41 +1401,38 @@ namespace Xunit
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed. </exception>
         public List<ConfigInfo> ListConfigs(bool includeSystem = false)
         {
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            var result = DockerExecute("config", "ls", "--format", "{{.ID}}~{{.Name}}");
+
+            if (result.ExitCode != 0)
             {
-                base.CheckDisposed();
-
-                var result = DockerExecute("config", "ls", "--format", "{{.ID}}~{{.Name}}");
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot list Docker configs: {result.ErrorText}");
-                }
-
-                var configs = new List<ConfigInfo>();
-
-                using (var reader = new StringReader(result.OutputText))
-                {
-                    foreach (var line in reader.Lines(ignoreBlank: true))
-                    {
-                        var fields = line.Split('~');
-
-                        if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            continue;   // Ignore built-in neonCLUSTER configs.
-                        }
-
-                        configs.Add(
-                            new ConfigInfo()
-                            {
-                                Id   = fields[0],
-                                Name = fields[1]
-                            });
-                    }
-                }
-
-                return configs;
+                throw new Exception($"Cannot list Docker configs: {result.ErrorText}");
             }
+
+            var configs = new List<ConfigInfo>();
+
+            using (var reader = new StringReader(result.OutputText))
+            {
+                foreach (var line in reader.Lines(ignoreBlank: true))
+                {
+                    var fields = line.Split('~');
+
+                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;   // Ignore built-in neonCLUSTER configs.
+                    }
+
+                    configs.Add(
+                        new ConfigInfo()
+                        {
+                            Id   = fields[0],
+                            Name = fields[1]
+                        });
+                }
+            }
+
+            return configs;
         }
 
         /// <summary>
@@ -1504,19 +1444,16 @@ namespace Xunit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            // Remove the secret.
+
+            var argsString = NeonHelper.NormalizeExecArgs("config", "rm", name);
+            var result     = DockerExecute(argsString);
+
+            if (result.ExitCode != 0)
             {
-                base.CheckDisposed();
-
-                // Remove the secret.
-
-                var argsString = NeonHelper.NormalizeExecArgs("config", "rm", name);
-                var result     = DockerExecute(argsString);
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot remove config [{name}]: {result.ErrorText}");
-                }
+                throw new Exception($"Cannot remove config [{name}]: {result.ErrorText}");
             }
         }
 
@@ -1557,17 +1494,14 @@ namespace Xunit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            var argsString = NeonHelper.NormalizeExecArgs("network", "create", dockerArgs, name);
+            var result     = DockerExecute(argsString);
+
+            if (result.ExitCode != 0)
             {
-                base.CheckDisposed();
-
-                var argsString = NeonHelper.NormalizeExecArgs("network", "create", dockerArgs, name);
-                var result     = DockerExecute(argsString);
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot create Docker network [{name}]: {result.ErrorText}");
-                }
+                throw new Exception($"Cannot create Docker network [{name}]: {result.ErrorText}");
             }
         }
 
@@ -1586,46 +1520,43 @@ namespace Xunit
         /// </remarks>
         public List<NetworkInfo> ListNetworks(bool includeSystem = false)
         {
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            var result = DockerExecute("network", "ls", "--format", "{{.ID}}~{{.Name}}");
+
+            if (result.ExitCode != 0)
             {
-                base.CheckDisposed();
-
-                var result = DockerExecute("network", "ls", "--format", "{{.ID}}~{{.Name}}");
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot list Docker networks: {result.ErrorText}");
-                }
-
-                var networks = new List<NetworkInfo>();
-
-                using (var reader = new StringReader(result.OutputText))
-                {
-                    foreach (var line in reader.Lines(ignoreBlank: true))
-                    {
-                        var fields = line.Split('~');
-
-                        if (DockerNetworks.Contains(fields[1]))
-                        {
-                            continue;   // Ignore built-in Docker networks.
-                        }
-
-                        if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
-                        {
-                            continue;   // Ignore built-in neonCLUSTER networks.
-                        }
-
-                        networks.Add(
-                            new NetworkInfo()
-                            {
-                                Id   = fields[0],
-                                Name = fields[1]
-                            });
-                    }
-                }
-
-                return networks;
+                throw new Exception($"Cannot list Docker networks: {result.ErrorText}");
             }
+
+            var networks = new List<NetworkInfo>();
+
+            using (var reader = new StringReader(result.OutputText))
+            {
+                foreach (var line in reader.Lines(ignoreBlank: true))
+                {
+                    var fields = line.Split('~');
+
+                    if (DockerNetworks.Contains(fields[1]))
+                    {
+                        continue;   // Ignore built-in Docker networks.
+                    }
+
+                    if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;   // Ignore built-in neonCLUSTER networks.
+                    }
+
+                    networks.Add(
+                        new NetworkInfo()
+                        {
+                            Id   = fields[0],
+                            Name = fields[1]
+                        });
+                }
+            }
+
+            return networks;
         }
 
         /// <summary>
@@ -1650,19 +1581,16 @@ namespace Xunit
                 throw new NotSupportedException($"Cannot remove the built-in Docker network [{name}].");
             }
 
-            lock (base.SyncRoot)
+            base.CheckDisposed();
+
+            // Remove the secret.
+
+            var argsString = NeonHelper.NormalizeExecArgs("network", "rm", name);
+            var result     = DockerExecute(argsString);
+
+            if (result.ExitCode != 0)
             {
-                base.CheckDisposed();
-
-                // Remove the secret.
-
-                var argsString = NeonHelper.NormalizeExecArgs("network", "rm", name);
-                var result     = DockerExecute(argsString);
-
-                if (result.ExitCode != 0)
-                {
-                    throw new Exception($"Cannot remove network [{name}]: {result.ErrorText}");
-                }
+                throw new Exception($"Cannot remove network [{name}]: {result.ErrorText}");
             }
         }
 

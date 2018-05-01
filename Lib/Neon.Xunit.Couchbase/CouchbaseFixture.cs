@@ -40,6 +40,7 @@ namespace Xunit
     /// fixture is started.
     /// </para>
     /// </remarks>
+    /// <threadsafety instance="true"/>
     public sealed class CouchbaseFixture : ContainerFixture
     {
         private string primaryIndex;
@@ -133,76 +134,73 @@ namespace Xunit
 
             base.CheckWithinAction();
 
-            lock (base.SyncRoot)
+            if (IsInitialized)
             {
-                if (IsInitialized)
-                {
-                    return;
-                }
-
-                RunContainer(name, image, new string[] { "--detach", "-p", "8091-8094:8091-8094", "-p", "11210:11210" }, env: env);
-
-                settings = settings ?? new CouchbaseSettings();
-
-                settings.Servers.Clear();
-                settings.Servers.Add(new Uri("http://localhost:8091"));
-
-                if (settings.Bucket == null)
-                {
-                    settings.Bucket = "test";
-                }
-
-                Bucket   = settings.OpenBucket(username, password);
-                Settings = settings;
-
-                // It appears that it may take a bit of time for the Couchbase query
-                // service to start in new container we started above.  We're going to
-                // retry creating the primary index (or a dummy index) until it works.
-
-                var timeout = TimeSpan.FromMinutes(2);
-                var retry   = new LinearRetryPolicy(TransientDetector.Always, maxAttempts: (int)timeout.TotalSeconds, retryInterval: TimeSpan.FromSeconds(1));
-
-                retry.InvokeAsync(
-                    async () =>
-                    {
-                        if (Bucket == null)
-                        {
-                            Bucket = settings.OpenBucket(username, password);
-                        }
-
-                        try
-                        {
-                            if (!string.IsNullOrEmpty(primaryIndex))
-                            {
-                                await Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)} using gsi");
-                            }
-                            else
-                            {
-                                // Create a dummy index to ensure that the query service is ready
-                                // and then remove it.
-
-                                var dummyName = "idx_couchbase_test_fixture";
-
-                                await Bucket.QuerySafeAsync<dynamic>($"create index {CbHelper.LiteralName(dummyName)} on {CbHelper.LiteralName(Bucket.Name)} ({CbHelper.LiteralName("Field")}) using gsi");
-                                await Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(Bucket.Name)}.{CbHelper.LiteralName(dummyName)} using gsi");
-                            }
-                        }
-                        catch
-                        {
-                            // It looks like we need to open a new bucket if the query service wasn't
-                            // ready.  We'll dispose the old bucket and set it to NULL here and then
-                            // open a fresh bucket above when the retry policy tries again.
-
-                            Bucket.Dispose();
-                            Bucket = null;
-
-                            throw;
-                        }
-
-                    }).Wait();
-
-                this.primaryIndex = primaryIndex;
+                return;
             }
+
+            RunContainer(name, image, new string[] { "--detach", "-p", "8091-8094:8091-8094", "-p", "11210:11210" }, env: env);
+
+            settings = settings ?? new CouchbaseSettings();
+
+            settings.Servers.Clear();
+            settings.Servers.Add(new Uri("http://localhost:8091"));
+
+            if (settings.Bucket == null)
+            {
+                settings.Bucket = "test";
+            }
+
+            Bucket   = settings.OpenBucket(username, password);
+            Settings = settings;
+
+            // It appears that it may take a bit of time for the Couchbase query
+            // service to start in new container we started above.  We're going to
+            // retry creating the primary index (or a dummy index) until it works.
+
+            var timeout = TimeSpan.FromMinutes(2);
+            var retry   = new LinearRetryPolicy(TransientDetector.Always, maxAttempts: (int)timeout.TotalSeconds, retryInterval: TimeSpan.FromSeconds(1));
+
+            retry.InvokeAsync(
+                async () =>
+                {
+                    if (Bucket == null)
+                    {
+                        Bucket = settings.OpenBucket(username, password);
+                    }
+
+                    try
+                    {
+                        if (!string.IsNullOrEmpty(primaryIndex))
+                        {
+                            await Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)} using gsi");
+                        }
+                        else
+                        {
+                            // Create a dummy index to ensure that the query service is ready
+                            // and then remove it.
+
+                            var dummyName = "idx_couchbase_test_fixture";
+
+                            await Bucket.QuerySafeAsync<dynamic>($"create index {CbHelper.LiteralName(dummyName)} on {CbHelper.LiteralName(Bucket.Name)} ({CbHelper.LiteralName("Field")}) using gsi");
+                            await Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(Bucket.Name)}.{CbHelper.LiteralName(dummyName)} using gsi");
+                        }
+                    }
+                    catch
+                    {
+                        // It looks like we need to open a new bucket if the query service wasn't
+                        // ready.  We'll dispose the old bucket and set it to NULL here and then
+                        // open a fresh bucket above when the retry policy tries again.
+
+                        Bucket.Dispose();
+                        Bucket = null;
+
+                        throw;
+                    }
+
+                }).Wait();
+
+            this.primaryIndex = primaryIndex;
         }
 
         /// <summary>
