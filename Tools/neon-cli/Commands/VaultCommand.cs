@@ -186,7 +186,7 @@ NOTE: The following Vault commands are not supported:
                             {
                                 Console.WriteLine($"[{node.Name}] sealing...");
 
-                                response = node.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && vault-direct seal", cluster.SecureRunOptions | RunOptions.FaultOnError);
+                                response = node.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && vault-direct seal", RunOptions.None);
 
                                 if (response.ExitCode == 0)
                                 {
@@ -246,7 +246,7 @@ NOTE: The following Vault commands are not supported:
                                 {
                                     Console.WriteLine($"[{manager.Name}] sealing...");
 
-                                    response = manager.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && vault-direct seal", cluster.SecureRunOptions | RunOptions.FaultOnError);
+                                    response = manager.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && vault-direct seal", RunOptions.None);
 
                                     if (response.ExitCode == 0)
                                     {
@@ -357,7 +357,7 @@ NOTE: The following Vault commands are not supported:
 
                         foreach (var key in vaultCredentials.UnsealKeys)
                         {
-                            response = node.SudoCommand($"vault-direct unseal {key}", cluster.SecureRunOptions | RunOptions.FaultOnError);
+                            response = node.SudoCommand($"vault-direct unseal {key}", RunOptions.None);
 
                             if (response.ExitCode != 0)
                             {
@@ -410,7 +410,7 @@ NOTE: The following Vault commands are not supported:
 
                             foreach (var key in vaultCredentials.UnsealKeys)
                             {
-                                response = manager.SudoCommand($"vault-direct unseal {key}", cluster.SecureRunOptions | RunOptions.FaultOnError);
+                                response = manager.SudoCommand($"vault-direct unseal {key}", RunOptions.None);
 
                                 if (response.ExitCode != 0)
                                 {
