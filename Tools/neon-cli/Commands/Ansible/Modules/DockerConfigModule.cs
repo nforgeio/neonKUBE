@@ -270,7 +270,7 @@ namespace NeonCli.Ansible
                                 bundle.AddFile("config-file", configText);
                             }
 
-                            response = manager.SudoCommand(bundle, RunOptions.Redact);
+                            response = manager.SudoCommand(bundle);
 
                             if (response.ExitCode == 0)
                             {
