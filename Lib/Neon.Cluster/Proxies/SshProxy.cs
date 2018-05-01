@@ -2126,7 +2126,7 @@ echo $? > {cmdFolder}/exit
         }
 
         /// <summary>
-        /// Runs a <see cref="CommandBundle"/> with user permissioins on the remote machine.
+        /// Runs a <see cref="CommandBundle"/> with user permissions on the remote machine.
         /// </summary>
         /// <param name="bundle">The bundle.</param>
         /// <param name="runOptions">The execution options (defaults to <see cref="RunOptions.Defaults"/>).</param>
