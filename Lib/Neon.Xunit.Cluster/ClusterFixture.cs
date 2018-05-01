@@ -237,7 +237,6 @@ namespace Neon.Xunit.Cluster
         //---------------------------------------------------------------------
         // Instance members
 
-        private object                                      syncLock = new object();
         private ClusterProxy                                cluster;
         private bool                                        resetOnInitialize;
         private bool                                        disableChecks;
@@ -365,7 +364,7 @@ namespace Neon.Xunit.Cluster
 
                 if (result.ExitCode != 0)
                 {
-                    throw new NeonClusterException($"[neon login {login}] command failed: {result.ErrorText}");
+                    throw new NeonClusterException($"[neon login {login}] command failed: {result.AllText}");
                 }
             }
             finally
@@ -477,6 +476,21 @@ namespace Neon.Xunit.Cluster
         }
 
         /// <summary>
+        /// Handles error reporting for executed Docker commands.
+        /// </summary>
+        /// <param name="response">The command response.</param>
+        /// <returns>The <paramref name="response"/> value.</returns>
+        private ExecuteResult DockerExecutionReport(ExecuteResult response)
+        {
+            if (response.ExitCode != 0)
+            {
+                Console.Error.WriteLine($"[docker exitcode={response.ExitCode}]: {response.AllText}");
+            }
+
+            return response;
+        }
+
+        /// <summary>
         /// Executes an arbitrary <b>docker</b> CLI command on a cluster manager, 
         /// passing unformatted arguments and returns the results.
         /// </summary>
@@ -491,23 +505,20 @@ namespace Neon.Xunit.Cluster
         /// </remarks>
         public override ExecuteResult DockerExecute(params object[] args)
         {
-            lock (syncLock)
+            base.CheckDisposed();
+            this.CheckCluster();
+
+            var neonArgs = new List<object>();
+
+            neonArgs.Add("docker");
+            neonArgs.Add("--");
+
+            foreach (var item in args)
             {
-                base.CheckDisposed();
-                this.CheckCluster();
-
-                var neonArgs = new List<object>();
-
-                neonArgs.Add("docker");
-                neonArgs.Add("--");
-
-                foreach (var item in args)
-                {
-                    neonArgs.Add(item);
-                }
-
-                return NeonHelper.ExecuteCaptureStreams("neon", neonArgs.ToArray());
+                neonArgs.Add(item);
             }
+
+            return NeonExecutionReport(NeonHelper.ExecuteCaptureStreams("neon", neonArgs.ToArray()));
         }
 
         /// <summary>
@@ -524,15 +535,27 @@ namespace Neon.Xunit.Cluster
         /// </remarks>
         public override ExecuteResult DockerExecute(string argString)
         {
-            lock (syncLock)
+            base.CheckDisposed();
+            this.CheckCluster();
+
+            var neonArgs = "docker -- " + argString;
+
+            return DockerExecutionReport(NeonHelper.ExecuteCaptureStreams("neon", neonArgs));
+        }
+
+        /// <summary>
+        /// Handles error reporting for executed Neon commands.
+        /// </summary>
+        /// <param name="response">The command response.</param>
+        /// <returns>The <paramref name="response"/> value.</returns>
+        private ExecuteResult NeonExecutionReport(ExecuteResult response)
+        {
+            if (response.ExitCode != 0)
             {
-                base.CheckDisposed();
-                this.CheckCluster();
-
-                var neonArgs = "docker -- " + argString;
-
-                return NeonHelper.ExecuteCaptureStreams("neon", neonArgs);
+                Console.Error.WriteLine($"[neon exitcode={response.ExitCode}]: {response.AllText}");
             }
+
+            return response;
         }
 
         /// <summary>
@@ -550,13 +573,10 @@ namespace Neon.Xunit.Cluster
         /// </remarks>
         public virtual ExecuteResult NeonExecute(params object[] args)
         {
-            lock (syncLock)
-            {
-                base.CheckDisposed();
-                this.CheckCluster();
+            base.CheckDisposed();
+            this.CheckCluster();
 
-                return NeonHelper.ExecuteCaptureStreams("neon", args);
-            }
+            return DockerExecutionReport(NeonHelper.ExecuteCaptureStreams("neon", args));
         }
 
         /// <summary>
@@ -573,13 +593,10 @@ namespace Neon.Xunit.Cluster
         /// </remarks>
         public virtual ExecuteResult NeonExecute(string argString)
         {
-            lock (syncLock)
-            {
-                base.CheckDisposed();
-                this.CheckCluster();
+            base.CheckDisposed();
+            this.CheckCluster();
 
-                return NeonHelper.ExecuteCaptureStreams("neon", argString);
-            }
+            return NeonHelper.ExecuteCaptureStreams("neon", argString);
         }
 
         /// <summary>
@@ -611,10 +628,16 @@ namespace Neon.Xunit.Cluster
 
             NeonHelper.WaitParallel(
                 new Action[] {
-                    () => ClearServices(),
-                    () => ClearStacks(),
+                    () =>
+                    {
+                        // We're doing these together because stacks,
+                        // services, and containers are all related.
+
+                        ClearStacks();
+                        ClearServices();
+                     // () => ClearContainers()     // Not implemented yet
+                    },
                     () => ClearLoadbalancers(),
-                    // () => ClearContainers()      // Not implemented yet
                 });
 
             // We're clearing these after the services and stacks so
@@ -624,11 +647,10 @@ namespace Neon.Xunit.Cluster
             NeonHelper.WaitParallel(
                 new Action[] {
                     () => ClearCertificates(),
+                    () => ClearConsul(),
                     () => ClearConfigs(),
                     () => ClearNetworks(),
-                    () => ClearLoadbalancers(),
                     () => ClearSecrets(),
-                    () => ClearConsul(),
                     () => ClearVault()
                 });
         }

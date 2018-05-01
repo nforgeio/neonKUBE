@@ -595,7 +595,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception(result.ErrorText);
+                throw new Exception(result.AllText);
             }
 
             if (result.OutputText.Contains("Swarm: active"))
@@ -627,7 +627,7 @@ namespace Neon.Xunit
 
                 if (result.ExitCode != 0)
                 {
-                    throw new Exception(result.ErrorText);
+                    throw new Exception(result.AllText);
                 }
             }
 
@@ -637,7 +637,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception(result.ErrorText);
+                throw new Exception(result.AllText);
             }
 
             // We also need to remove any running containers except for
@@ -749,7 +749,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot launch service [{image}]: {result.ErrorText}");
+                throw new Exception($"Cannot launch service [{image}]: {result.AllText}");
             }
         }
 
@@ -767,7 +767,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot list Docker services: {result.ErrorText}");
+                throw new Exception($"Cannot list Docker services: {result.AllText}");
             }
 
             var services = new List<ServiceInfo>();
@@ -821,7 +821,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot remove service [{name}]: {result.ErrorText}");
+                throw new Exception($"Cannot remove service [{name}]: {result.AllText}");
             }
         }
 
@@ -891,7 +891,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot launch container [{image}]: {result.ErrorText}");
+                throw new Exception($"Cannot launch container [{image}]: {result.AllText}");
             }
         }
 
@@ -909,7 +909,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot list Docker containers: {result.ErrorText}");
+                throw new Exception($"Cannot list Docker containers: {result.AllText}");
             }
 
             var containers = new List<ContainerInfo>();
@@ -962,7 +962,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot remove container [{name}]: {result.ErrorText}");
+                throw new Exception($"Cannot remove container [{name}]: {result.AllText}");
             }
         }
 
@@ -1038,7 +1038,7 @@ namespace Neon.Xunit
 
                 if (result.ExitCode != 0)
                 {
-                    throw new Exception($"Cannot deploy Docker stack [{name}]: {result.ErrorText}");
+                    throw new Exception($"Cannot deploy Docker stack [{name}]: {result.AllText}");
                 }
             }
 
@@ -1103,7 +1103,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot list Docker stacks: {result.ErrorText}");
+                throw new Exception($"Cannot list Docker stacks: {result.AllText}");
             }
 
             var stacks = new List<StackInfo>();
@@ -1153,7 +1153,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot remove stack [{name}]: {result.ErrorText}");
+                throw new Exception($"Cannot remove stack [{name}]: {result.AllText}");
             }
         }
 
@@ -1209,7 +1209,7 @@ namespace Neon.Xunit
 
                 if (result.ExitCode != 0)
                 {
-                    throw new Exception($"Cannot create Docker secret [{name}]: {result.ErrorText}");
+                    throw new Exception($"Cannot create Docker secret [{name}]: {result.AllText}");
                 }
             }
         }
@@ -1239,7 +1239,7 @@ namespace Neon.Xunit
 
                 if (result.ExitCode != 0)
                 {
-                    throw new Exception($"Cannot create Docker secret [{name}]: {result.ErrorText}");
+                    throw new Exception($"Cannot create Docker secret [{name}]: {result.AllText}");
                 }
             }
         }
@@ -1258,7 +1258,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot list Docker secrets: {result.ErrorText}");
+                throw new Exception($"Cannot list Docker secrets: {result.AllText}");
             }
 
             var secrets = new List<SecretInfo>();
@@ -1304,7 +1304,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot remove secret [{name}]: {result.ErrorText}");
+                throw new Exception($"Cannot remove secret [{name}]: {result.AllText}");
             }
         }
 
@@ -1360,7 +1360,7 @@ namespace Neon.Xunit
 
                 if (result.ExitCode != 0)
                 {
-                    throw new Exception($"Cannot create Docker config [{name}]: {result.ErrorText}");
+                    throw new Exception($"Cannot create Docker config [{name}]: {result.AllText}");
                 }
             }
         }
@@ -1390,7 +1390,7 @@ namespace Neon.Xunit
 
                 if (result.ExitCode != 0)
                 {
-                    throw new Exception($"Cannot create Docker config [{name}]: {result.ErrorText}");
+                    throw new Exception($"Cannot create Docker config [{name}]: {result.AllText}");
                 }
             }
         }
@@ -1409,7 +1409,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot list Docker configs: {result.ErrorText}");
+                throw new Exception($"Cannot list Docker configs: {result.AllText}");
             }
 
             var configs = new List<ConfigInfo>();
@@ -1455,7 +1455,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot remove config [{name}]: {result.ErrorText}");
+                throw new Exception($"Cannot remove config [{name}]: {result.AllText}");
             }
         }
 
@@ -1503,7 +1503,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot create Docker network [{name}]: {result.ErrorText}");
+                throw new Exception($"Cannot create Docker network [{name}]: {result.AllText}");
             }
         }
 
@@ -1528,7 +1528,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot list Docker networks: {result.ErrorText}");
+                throw new Exception($"Cannot list Docker networks: {result.AllText}");
             }
 
             var networks = new List<NetworkInfo>();
@@ -1592,7 +1592,7 @@ namespace Neon.Xunit
 
             if (result.ExitCode != 0)
             {
-                throw new Exception($"Cannot remove network [{name}]: {result.ErrorText}");
+                throw new Exception($"Cannot remove network [{name}]: {result.AllText}");
             }
         }
 
