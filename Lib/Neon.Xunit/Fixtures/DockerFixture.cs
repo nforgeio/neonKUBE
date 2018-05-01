@@ -16,6 +16,7 @@ using YamlDotNet.RepresentationModel;
 using Xunit;
 
 using Neon.Common;
+using Neon.IO;
 
 namespace Neon.Xunit
 {

@@ -7,7 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.IO;
 
-namespace Neon.Xunit
+namespace Neon.IO
 {
     /// <summary>
     /// Manages a temporary file system folder to be used for the duration of a unit test.

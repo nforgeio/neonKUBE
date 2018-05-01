@@ -9,6 +9,7 @@ using System.Diagnostics.Contracts;
 using System.IO;
 
 using Neon.Common;
+using Neon.IO;
 
 namespace Neon.Xunit
 {
