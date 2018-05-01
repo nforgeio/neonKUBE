@@ -8,13 +8,13 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Description
 
-This service dynamically generates HAProxy configurations from routes and certificates persisted to Consul and Vault for neonCLUSTER proxies based on the [neon-proxy](https://hub.docker.com/r/neoncluster/neon-proxy/) image.
+This service dynamically generates HAProxy configurations from load balancer rules and certificates persisted to Consul and Vault for neonCLUSTER proxies based on the [neon-proxy](https://hub.docker.com/r/neoncluster/neon-proxy/) image.
 
 neonCLUSTERs deploy two general purpose reverse HTTP/TCP proxy services:
 
-* **neon-proxy-public** which is responsible for routing external network traffic (e.g. from an Internet facing load balancer or router) to cluster services.
+* **neon-proxy-public** which implements the public load balancer and is responsible for routing external network traffic (e.g. from an Internet facing load balancer or router) to cluster services.
 
-* **neon-proxy-private** which is used for internal routing for the scenarios the Docker overlay ingress network doesn't address out-of-the-box (e.g. load balancing and fail-over for groups of stateful containers that cannot be deployed as Docker swarm mode services).
+* **neon-proxy-private** which implements the private load balancer is used for internal routing for the scenarios the Docker overlay ingress network doesn't address out-of-the-box (e.g. load balancing and fail-over for groups of stateful containers that cannot be deployed as Docker swarm mode services).
 
 These proxy services are based on the [neon-proxy](https://hub.docker.com/r/neoncluster/neon-proxy/) image which deploys [HAProxy](http://haproxy.org) that actually handles the routing, along with some scripts that can dynamically download the proxy configuration from HashiCorp Consul and TLS certificates from HashiCorp Vault.
 
@@ -57,8 +57,8 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`cert-warn-days: 30`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`status:`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`public: <ProxyStatus json>`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`private: <ProxyStatus json>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`public: <LoadBalancer json>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`private: <LoadBalancer json>`
         
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`proxies:`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`public:`
@@ -73,16 +73,16 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`cert-update`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`public:`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`settings: <ProxySettings json>`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`routes:`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`name1: <ProxyRoute json>`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`name2: <ProxyRoute json>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`settings: <LoadBalancerSettings json>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rules:`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`name1: <LoadBalancerRule json>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`name2: <LoadBalancerRule json>`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`...`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`private:`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`settings: <ProxySettings json>`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`routes:`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`name1: <ProxyRoute json>`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`name2: <ProxyRoute json>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`settings: <LoadBalancerSettings json>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`rules:`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`name1: <LoadBalancerRule json>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`name2: <LoadBalancerRule json>`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`...`
 
 * **poll-seconds** (*double*) - how often the proxy manager should scan TLS certificates persisted in Vault for expiration checks and updates and also poll the individual proxy definitions for changes.
@@ -91,9 +91,9 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 
 * **proxies/.../conf** - public or private proxy's generated HAProxy configuration as a ZIP archive.
 
-* **proxies/.../hash** - MD5 hash of the public or private proxy's conf archive combined with the hash of all of the referenced certificates.  This is used by **neon-proxy** instances to detect when the proxy configuration has changed.
+* **proxies/.../hash** - MD5 hash of the public or private load balancer's conf archive combined with the hash of all of the referenced certificates.  This is used by **neon-proxy** instances to detect when the proxy configuration has changed.
 
-* **status/...** (*json*) - proxy route status at the time the **neon-proxy-manager** last processed cluster routes for the named proxy.
+* **status/...** (*json*) - proxy rule status at the time the **neon-proxy-manager** last processed cluster rules for the named load balancer.
 
 * **conf** - root key for proxy settings that need to be monitored for changes.
 
@@ -101,9 +101,9 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 
 * **cert-update** - touched by the **neon-cli** whenever certificates are modified.  **neon-proxy-manager** monitors this and republishes immediately on a change.
 
-* **settings** - global (per proxy) settings for a proxy formatted as JSON.
+* **settings** - global (per proxy) settings for a load balancer formatted as JSON.
 
-* **routes** - named (per proxy) routes formatted as JSON.
+* **rules** - named load balancer rules formatted as JSON.
 
 # Vault
 
