@@ -16,9 +16,11 @@ using Couchbase;
 
 using Neon.Common;
 using Neon.Retry;
+using Neon.Xunit;
+using Neon.Xunit.Cluster;
+using Neon.Xunit.Couchbase;
 
 using Xunit;
-using Xunit.Neon;
 
 namespace TestSamples
 {

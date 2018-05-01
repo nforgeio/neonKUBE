@@ -9,7 +9,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace Xunit.Neon
+namespace Neon.Xunit
 {
     /// <summary>
     /// Defines constants used to help categorize unit tests and avoid

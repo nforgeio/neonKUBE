@@ -13,7 +13,7 @@ using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 
-namespace Xunit
+namespace Neon.Xunit
 {
     /// <summary>
     /// Holds the results for a specific task executed in an Ansible playbook.

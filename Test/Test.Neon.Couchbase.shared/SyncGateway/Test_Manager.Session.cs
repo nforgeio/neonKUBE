@@ -15,9 +15,9 @@ using Couchbase;
 using Neon.Common;
 using Neon.Couchbase.SyncGateway;
 using Neon.Net;
+using Neon.Xunit;
 
 using Xunit;
-using Xunit.Neon;
 
 namespace TestSyncGateway
 {

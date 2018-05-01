@@ -17,9 +17,9 @@ using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
+using Neon.Xunit;
 
 using Xunit;
-using Xunit.Neon;
 
 namespace TestCommon
 {

@@ -5,12 +5,12 @@
 
 using System;
 using System.Collections.Generic;
-
-using Xunit;
-using Xunit.Neon;
 using YamlDotNet.Core;
 
 using Neon.Common;
+using Neon.Xunit;
+
+using Xunit;
 
 namespace TestCommon
 {

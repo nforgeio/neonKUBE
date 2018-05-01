@@ -6,7 +6,7 @@
 using System;
 using System.Collections.Generic;
 
-namespace Xunit
+namespace Neon.Xunit
 {
     /// <summary>
     /// Compares two collections for strict equality by ensuring they

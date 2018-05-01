@@ -13,14 +13,17 @@ using System.Threading.Tasks;
 using Couchbase;
 using Couchbase.Core;
 using Newtonsoft.Json.Linq;
-using Xunit;
-using Xunit.Neon;
 
 using Neon.Common;
+using Neon.Xunit;
+using Neon.Xunit.Cluster;
+using Neon.Xunit.Couchbase;
+
+using Xunit;
 
 namespace TestSamples
 {
-    // This example the <see cref="CouchbaseFixture"/> directly to run some read-only
+    // This example uses the [CouchbaseFixture] directly to run some read-only 
     // tests against the database.  This test class's constructor initializes
     // the database once and so that the tests will share the database state.
     //

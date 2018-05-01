@@ -13,14 +13,17 @@ using System.Threading.Tasks;
 using Couchbase;
 using Couchbase.Core;
 using Newtonsoft.Json.Linq;
-using Xunit;
-using Xunit.Neon;
 
 using Neon.Common;
+using Neon.Xunit;
+using Neon.Xunit.Cluster;
+using Neon.Xunit.Couchbase;
+
+using Xunit;
 
 namespace TestSamples
 {
-    // This example the <see cref="CouchbaseFixture"/> directly to run general
+    // This example uses the [CouchbaseFixture] directly to run general
     // tests against the database.  This test methods call the Flush() explicitly
     // reset the database state rather than doing this globally in the constructor.
 

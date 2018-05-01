@@ -13,10 +13,11 @@ using System.Text;
 using System.Threading;
 
 using YamlDotNet.RepresentationModel;
+using Xunit;
 
 using Neon.Common;
 
-namespace Xunit
+namespace Neon.Xunit
 {
     /// <summary>
     /// An Xunit test fixture used to manage a local Docker daemon within unit tests.

@@ -9,7 +9,7 @@ using System.Diagnostics.Contracts;
 
 using Neon.Common;
 
-namespace Xunit
+namespace Neon.Xunit
 {
     /// <summary>
     /// Used to run a Docker container on the current machine as a test 

@@ -12,10 +12,12 @@ using System.Threading.Tasks;
 
 using Couchbase;
 using Newtonsoft.Json.Linq;
-using Xunit;
-using Xunit.Neon;
 
 using Neon.Common;
+using Neon.Xunit;
+using Neon.Xunit.Couchbase;
+
+using Xunit;
 
 namespace TestCouchbase
 {

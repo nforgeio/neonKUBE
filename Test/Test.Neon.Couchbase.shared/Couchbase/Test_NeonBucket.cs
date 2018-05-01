@@ -14,9 +14,10 @@ using Couchbase;
 using Couchbase.Core;
 
 using Neon.Common;
+using Neon.Xunit;
+using Neon.Xunit.Couchbase;
 
 using Xunit;
-using Xunit.Neon;
 
 namespace TestCouchbase
 {

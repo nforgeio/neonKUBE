@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Microsoft.Extensions.DependencyInjection;
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -19,10 +20,9 @@ using Neon.Common;
 using Neon.Collections;
 using Neon.Net;
 using Neon.Retry;
+using Neon.Xunit;
 
 using Xunit;
-using Xunit.Neon;
-using Microsoft.Extensions.DependencyInjection;
 
 namespace TestCommon
 {

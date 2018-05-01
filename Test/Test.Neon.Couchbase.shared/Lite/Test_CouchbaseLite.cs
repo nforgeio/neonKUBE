@@ -23,11 +23,11 @@ using Couchbase.Lite.Auth;
 using Neon.Common;
 using Neon.DynamicData;
 using Neon.DynamicData.Internal;
-
-using TestEntity = Test.Neon.Models.TestEntity;
+using Neon.Xunit;
 
 using Xunit;
-using Xunit.Neon;
+
+using TestEntity = Test.Neon.Models.TestEntity;
 
 namespace TestLiteExtensions
 {

@@ -11,9 +11,9 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Xunit;
 
 using Xunit;
-using Xunit.Neon;
 
 // $todo(jeff.lill):
 //

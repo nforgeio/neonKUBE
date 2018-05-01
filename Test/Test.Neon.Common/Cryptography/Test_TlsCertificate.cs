@@ -12,9 +12,9 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Xunit;
 
 using Xunit;
-using Xunit.Neon;
 
 namespace TestCommon
 {

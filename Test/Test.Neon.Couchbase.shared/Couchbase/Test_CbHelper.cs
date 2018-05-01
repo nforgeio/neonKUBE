@@ -13,9 +13,10 @@ using System.Threading.Tasks;
 using Couchbase;
 
 using Neon.Common;
+using Neon.Xunit;
+using Neon.Xunit.Couchbase;
 
 using Xunit;
-using Xunit.Neon;
 
 namespace TestCouchbase
 {

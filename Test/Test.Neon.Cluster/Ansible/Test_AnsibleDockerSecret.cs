@@ -11,9 +11,10 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Neon.Common;
+using Neon.Xunit;
+using Neon.Xunit.Cluster;
 
 using Xunit;
-using Xunit.Neon;
 
 namespace TestNeonCluster
 {

@@ -12,7 +12,7 @@ using System.Text;
 
 using Neon.Common;
 
-namespace Xunit
+namespace Neon.Xunit
 {
     /// <summary>
     /// Holds the results from an <see cref="AnsiblePlayer"/> play operation.

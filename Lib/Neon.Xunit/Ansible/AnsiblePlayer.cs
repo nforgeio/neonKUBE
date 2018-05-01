@@ -10,7 +10,7 @@ using System.IO;
 
 using Neon.Common;
 
-namespace Xunit
+namespace Neon.Xunit
 {
     /// <summary>
     /// Used for running Ansible playbooks within unit tests.

@@ -14,7 +14,7 @@ using Microsoft.Net.Http.Server;
 
 using Neon.Common;
 
-namespace Xunit
+namespace Neon.Xunit
 {
     /// <summary>
     /// <para>

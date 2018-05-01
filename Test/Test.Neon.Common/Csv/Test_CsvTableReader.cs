@@ -9,9 +9,9 @@ using System.IO;
 using System.Text;
 
 using Neon.Csv;
+using Neon.Xunit;
 
 using Xunit;
-using Xunit.Neon;
 
 namespace TestCommon
 {

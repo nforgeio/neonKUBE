@@ -11,7 +11,7 @@ using System.Reflection;
 
 using Neon.Common;
 
-namespace Xunit
+namespace Neon.Xunit
 {
     /// <summary>
     /// Abstract test fixture base class.

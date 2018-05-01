@@ -13,12 +13,13 @@ using System.Threading;
 using Couchbase;
 using Couchbase.N1QL;
 using Newtonsoft.Json.Linq;
+using Xunit;
 
 using Neon.Common;
 using Neon.Data;
 using Neon.Retry;
 
-namespace Xunit
+namespace Neon.Xunit.Couchbase
 {
     /// <summary>
     /// Used to run a Docker container on the current machine as a test 

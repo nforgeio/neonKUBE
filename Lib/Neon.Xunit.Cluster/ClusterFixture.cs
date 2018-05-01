@@ -15,12 +15,14 @@ using System.Threading.Tasks;
 
 using Consul;
 using YamlDotNet.RepresentationModel;
+using Xunit;
 
 using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Xunit;
 
-namespace Xunit
+namespace Neon.Xunit.Cluster
 {
     /// <summary>
     /// An Xunit test fixture used to run unit tests on a neonCLUSTER.

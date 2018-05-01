@@ -5,11 +5,12 @@
 
 using System;
 
-using Neon.Common;
-
 using Newtonsoft.Json;
+
+using Neon.Common;
+using Neon.Xunit;
+
 using Xunit;
-using Xunit.Neon;
 
 namespace TestCommon
 {

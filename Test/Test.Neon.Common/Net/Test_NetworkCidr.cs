@@ -13,9 +13,9 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Net;
+using Neon.Xunit;
 
 using Xunit;
-using Xunit.Neon;
 
 namespace TestCommon
 {

@@ -23,11 +23,12 @@ using Couchbase.Lite.Auth;
 using Neon.Common;
 using Neon.DynamicData;
 using Neon.DynamicData.Internal;
+using Neon.Xunit;
+
+using Xunit;
 
 using Test.Neon.Models;
 
-using Xunit;
-using Xunit.Neon;
 namespace TestLiteExtensions
 {
     public class Test_Attachments

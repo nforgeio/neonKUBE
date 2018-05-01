@@ -11,7 +11,7 @@ using System.Linq;
 
 using Neon.Common;
 
-namespace Xunit
+namespace Neon.Xunit
 {
     /// <summary>
     /// Implements an <see cref="ITestFixture"/> that is a list of other test

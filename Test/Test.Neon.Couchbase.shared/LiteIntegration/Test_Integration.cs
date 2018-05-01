@@ -17,11 +17,11 @@ using Couchbase.Lite.Auth;
 
 using Neon.Common;
 using Neon.Couchbase.SyncGateway;
-
-using Test.Neon.Models;
+using Neon.Xunit;
 
 using Xunit;
-using Xunit.Neon;
+
+using Test.Neon.Models;
 
 #if !MANUAL
 

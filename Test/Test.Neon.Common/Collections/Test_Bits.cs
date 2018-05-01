@@ -19,9 +19,9 @@ using Neon.Common;
 using Neon.Collections;
 using Neon.Net;
 using Neon.Retry;
+using Neon.Xunit;
 
 using Xunit;
-using Xunit.Neon;
 
 namespace TestCommon
 {

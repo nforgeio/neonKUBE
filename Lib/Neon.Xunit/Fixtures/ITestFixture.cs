@@ -7,9 +7,11 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 
+using Xunit;
+
 using Neon.Common;
 
-namespace Xunit
+namespace Neon.Xunit
 {
     /// <summary>
     /// <para>

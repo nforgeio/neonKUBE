@@ -12,7 +12,7 @@ using System.Text;
 
 using Neon.Common;
 
-namespace Xunit
+namespace Neon.Xunit
 {
     /// <summary>
     /// Used to manage the local DNS resolver<b>hosts</b>. file.

@@ -15,9 +15,10 @@ using Consul;
 using Neon.Common;
 using Neon.Cluster;
 using Neon.Cryptography;
+using Neon.Xunit;
+using Neon.Xunit.Cluster;
 
 using Xunit;
-using Xunit.Neon;
 
 namespace TestNeonCluster
 {

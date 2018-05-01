@@ -13,7 +13,6 @@ using System.Threading.Tasks;
 
 using Neon.Common;
 using Neon.Xunit;
-using Neon.Xunit.Cluster;
 
 using Xunit;
 
