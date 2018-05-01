@@ -235,6 +235,7 @@ namespace Xunit
         //---------------------------------------------------------------------
         // Instance members
 
+        private object                                      syncLock = new object();
         private ClusterProxy                                cluster;
         private bool                                        resetOnInitialize;
         private bool                                        disableChecks;
@@ -488,20 +489,23 @@ namespace Xunit
         /// </remarks>
         public override ExecuteResult DockerExecute(params object[] args)
         {
-            base.CheckDisposed();
-            this.CheckCluster();
-
-            var neonArgs = new List<object>();
-
-            neonArgs.Add("docker");
-            neonArgs.Add("--");
-
-            foreach (var item in args)
+            lock (syncLock)
             {
-                neonArgs.Add(item);
-            }
+                base.CheckDisposed();
+                this.CheckCluster();
 
-            return NeonHelper.ExecuteCaptureStreams("neon", neonArgs.ToArray());
+                var neonArgs = new List<object>();
+
+                neonArgs.Add("docker");
+                neonArgs.Add("--");
+
+                foreach (var item in args)
+                {
+                    neonArgs.Add(item);
+                }
+
+                return NeonHelper.ExecuteCaptureStreams("neon", neonArgs.ToArray());
+            }
         }
 
         /// <summary>
@@ -518,12 +522,15 @@ namespace Xunit
         /// </remarks>
         public override ExecuteResult DockerExecute(string argString)
         {
-            base.CheckDisposed();
-            this.CheckCluster();
+            lock (syncLock)
+            {
+                base.CheckDisposed();
+                this.CheckCluster();
 
-            var neonArgs = "docker -- " + argString;
+                var neonArgs = "docker -- " + argString;
 
-            return NeonHelper.ExecuteCaptureStreams("neon", neonArgs);
+                return NeonHelper.ExecuteCaptureStreams("neon", neonArgs);
+            }
         }
 
         /// <summary>
@@ -541,10 +548,13 @@ namespace Xunit
         /// </remarks>
         public virtual ExecuteResult NeonExecute(params object[] args)
         {
-            base.CheckDisposed();
-            this.CheckCluster();
+            lock (syncLock)
+            {
+                base.CheckDisposed();
+                this.CheckCluster();
 
-            return NeonHelper.ExecuteCaptureStreams("neon", args);
+                return NeonHelper.ExecuteCaptureStreams("neon", args);
+            }
         }
 
         /// <summary>
@@ -561,10 +571,13 @@ namespace Xunit
         /// </remarks>
         public virtual ExecuteResult NeonExecute(string argString)
         {
-            base.CheckDisposed();
-            this.CheckCluster();
+            lock (syncLock)
+            {
+                base.CheckDisposed();
+                this.CheckCluster();
 
-            return NeonHelper.ExecuteCaptureStreams("neon", argString);
+                return NeonHelper.ExecuteCaptureStreams("neon", argString);
+            }
         }
 
         /// <summary>
