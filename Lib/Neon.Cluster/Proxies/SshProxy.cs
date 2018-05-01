@@ -1133,7 +1133,7 @@ namespace Neon.Cluster
             {
                 EnsureUploadFolder();
 
-                var uploadPath = $"{UploadFolderPath}/{LinuxPath.GetFileName(path)}";
+                var uploadPath = $"{UploadFolderPath}/{LinuxPath.GetFileName(path)}-{Guid.NewGuid().ToString("D")}";
 
                 SafeUpload(input, uploadPath);
 
@@ -1556,7 +1556,7 @@ mono {scriptPath}.mono $@
 
                 // Upload the ZIP file to a temporary folder.
 
-                var bundleFolder = $"{NodeHostFolders.Exec}/{DateTime.UtcNow.ToString("yyyy-MM-dd-HH-mm-ss.fff")}";
+                var bundleFolder = $"{NodeHostFolders.Exec}/{Guid.NewGuid().ToString("D")}";
                 var zipPath      = LinuxPath.Combine(bundleFolder, "__bundle.zip");
 
                 SudoCommand($"mkdir -p", RunOptions.LogOnErrorOnly, bundleFolder);
@@ -2188,18 +2188,24 @@ echo $? > {cmdFolder}/exit
             // Upload and extract the bundle and then run the "__run.sh" script.
 
             var bundleFolder = UploadBundle(bundle, runOptions, userPermissions: true);
-            var response     = RunCommand($"cd {bundleFolder} && ./__run.sh", runOptions | RunOptions.LogBundle);
 
-            response.BashCommand = bundle.ToBash();
+            try
+            {
+                var response = RunCommand($"cd {bundleFolder} && ./__run.sh", runOptions | RunOptions.LogBundle);
 
-            LogLine($"END-BUNDLE");
-            LogLine("----------------------------------------");
+                response.BashCommand = bundle.ToBash();
 
-            // Remove the bundle files.
+                LogLine($"END-BUNDLE");
+                LogLine("----------------------------------------");
 
-            RunCommand($"rm -rf {bundleFolder}", RunOptions.RunWhenFaulted, RunOptions.LogOnErrorOnly);
+                return response;
+            }
+            finally
+            {
+                // Remove the bundle files.
 
-            return response;
+                RunCommand($"rm -rf {bundleFolder}", RunOptions.RunWhenFaulted, RunOptions.LogOnErrorOnly);
+            }
         }
 
         /// <summary>
@@ -2450,18 +2456,24 @@ echo $? > {cmdFolder}/exit
             // Upload and extract the bundle and then run the "__run.sh" script.
 
             var bundleFolder = UploadBundle(bundle, runOptions, userPermissions: false);
-            var response     = SudoCommand($"cd {bundleFolder} && /bin/bash ./__run.sh", runOptions | RunOptions.LogBundle);
 
-            response.BashCommand = bundle.ToBash();
+            try
+            {
+                var response = SudoCommand($"cd {bundleFolder} && /bin/bash ./__run.sh", runOptions | RunOptions.LogBundle);
 
-            LogLine($"END-BUNDLE");
-            LogLine("----------------------------------------");
+                response.BashCommand = bundle.ToBash();
 
-            // Remove the bundle files.
+                LogLine($"END-BUNDLE");
+                LogLine("----------------------------------------");
 
-            SudoCommand($"rm -rf {bundleFolder}", runOptions);
+                return response;
+            }
+            finally
+            {
+                // Remove the bundle files.
 
-            return response;
+                SudoCommand($"rm -rf {bundleFolder}", runOptions);
+            }
         }
 
         /// <summary>
