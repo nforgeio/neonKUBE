@@ -1780,18 +1780,12 @@ mono {scriptPath}.mono $@
             //
             //      6. Delete the [$] folder.
             //
-            // In addition, the code deletes any directories like [/dev/shm/neon/cmd/*]
-            // that are older than one day to help ensure that we don't fill up the
-            // [/dev/shm] file system.
-
-            // This bit of magic removes folders older than a day.
-
-            var shmFolder = "/dev/shm/neon/cmd";
-
-            SafeSshOperation("purge old folders", () => sshClient.RunCommand($@"find {shmFolder}. ! -name . -type d -mtime +0 -exec rm -rf {{}} \; -prune"));
+            // In addition, the [neon-cleaner] service deployed to the host nodes will
+            // periodically purge orphaned temporary command folders older than one day.
 
             // Create the command folder.
 
+            var shmFolder = "/dev/shm/neon/cmd";
             var cmdFolder = LinuxPath.Combine(shmFolder, Guid.NewGuid().ToString("D"));
 
             SafeSshOperation("create folder", () => sshClient.RunCommand($"mkdir -p {cmdFolder} && chmod 770 {cmdFolder}"));

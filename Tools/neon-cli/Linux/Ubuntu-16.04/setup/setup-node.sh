@@ -513,19 +513,36 @@ MaxRetentionSec=86400
 EOF
 
 #------------------------------------------------------------------------------
-# Install a simple service script that periodically shreds and deletes the 
-# the root account's [.bash-history] file as a security measure.
+# Install a simple service script that periodically cleans accumulated files
+# on the host node.
 
-cat <<EOF > /usr/local/bin/neon-security-cleaner
+# $todo(jeff.lill):
+#
+# The [SshProxy] cleaner assumes that nobody is going to have SshProxy commands
+# that run for more than one day (which is pretty likely).  A better approach
+# would be to look for temporary command folders THAT HAVE COMPLETED (e.g. HAVE
+# an [exit] code file) and are older than one day (or perhaps even older than an
+# hour or two) and then purge those.  Not a high priority.
+
+cat <<EOF > /usr/local/bin/neon-cleaner
 #!/bin/bash
 #------------------------------------------------------------------------------
-# FILE:         neon-security-cleaner
+# FILE:         neon-cleaner
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# This script runs as a systemd service to periodically shred and remove the
-# root account's [.bash_history] file as a security measure.  This will help 
-# prevent bad guys from looking for secrets used in Bash by a system operator.
+# This is a simple service script that periodically cleans accumulated files
+# on the host node including:
+#
+#   1. Shred and delete the root account's [.bash-history] file 
+#      as a security measure.  These commands could include
+#      sensitive information such as credentials, etc.
+#
+#   2. Purge temporary Neon command files uploaded by SshProxy.  These
+#      are located within folder beneath [/dev/shm/neon/cmd].  Although
+#      SshProxy removes these files after commands finish executing, it
+#      is possible to see these accumulate if the session was interrupted.
+#      We'll purge folders and files older than one day.
 
 history_path1=${HOME}/.bash_history
 history_path2=/root/.bash_history
@@ -535,6 +552,8 @@ echo "[INFO] Starting: [sleep_time=\${sleep_seconds} seconds]"
 
 while true
 do
+    # Clean [.bash-history]
+
     if [ -f \${history_path1} ] ; then
         echo "[INFO] Shredding [\${history_path1}]"
         result=\$(shred -uz \${history_path1})
@@ -551,26 +570,33 @@ do
         fi
     fi
 
+    # Clean the SshProxy temporary command files.
+
+    echo "[INFO] Cleaning [/dev/shm/neon/cmd]"
+    find /dev/shm/neon/cmd ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
+
+    # Sleep for a while before trying again.
+
     sleep \${sleep_seconds}
 done
 EOF
 
-chmod 700 /usr/local/bin/neon-security-cleaner
+chmod 700 /usr/local/bin/neon-cleaner
 
-# Generate the [neon-security-cleaner] systemd unit.
+# Generate the [neon-cleaner] systemd unit.
 
-cat <<EOF > /lib/systemd/system/neon-security-cleaner.service
+cat <<EOF > /lib/systemd/system/neon-cleaner.service
 # A service that periodically shreds the root's Bash history
 # as a security measure.
 
 [Unit]
-Description=neon-security-cleaner
+Description=neon-cleaner
 Documentation=
 After=local-fs.target
 Requires=local-fs.target
 
 [Service]
-ExecStart=/usr/local/bin/neon-security-cleaner
+ExecStart=/usr/local/bin/neon-cleaner
 ExecReload=/bin/kill -s HUP \$MAINPID
 Restart=always
 
@@ -578,9 +604,9 @@ Restart=always
 WantedBy=multi-user.target
 EOF
 
-systemctl enable neon-security-cleaner
+systemctl enable neon-cleaner
 systemctl daemon-reload
-systemctl restart neon-security-cleaner
+systemctl restart neon-cleaner
 
 #------------------------------------------------------------------------------
 # Configure the PowerDNS Recursor.
