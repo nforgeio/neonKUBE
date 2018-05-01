@@ -33,22 +33,22 @@ namespace TestNeonCluster
             // by the NEON_TEST_CLUSTER environment variable.  This needs to be 
             // initialized with the login for a deployed cluster.
 
-            if (!this.cluster.LoginAndInitialize())
+            if (this.cluster.LoginAndInitialize())
             {
                 cluster.Reset();
-            }
 
-            cluster.CreateSecret("secret_text", "hello");
-            cluster.CreateSecret("secret_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
-
-            cluster.CreateConfig("config_text", "hello");
-            cluster.CreateConfig("config_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 });
-
-            cluster.CreateNetwork("test-network");
-
-            cluster.CreateService("test-service", "neoncluster/test");
-
-            var composeText =
+                NeonHelper.WaitParallel(
+                    new Action[]
+                    {
+                        () => cluster.CreateSecret("secret_text", "hello"),
+                        () => cluster.CreateSecret("secret_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }),
+                        () => cluster.CreateConfig("config_text", "hello"),
+                        () => cluster.CreateConfig("config_data", new byte[] { 0, 1, 2, 3, 4, 5, 6, 7, 8, 9 }),
+                        () => cluster.CreateNetwork("test-network"),
+                        () => cluster.CreateService("test-service", "neoncluster/test"),
+                        () =>
+                        {
+                            var composeText =
 @"version: '3'
 
 services:
@@ -57,29 +57,35 @@ services:
     deploy:
       replicas: 2
 ";
-            cluster.DeployStack("test-stack", composeText);
+                            cluster.DeployStack("test-stack", composeText);
+                        },
+                        () =>
+                        {
+                            var publicRule = new LoadBalancerTcpRule();
 
-            var publicRule = new LoadBalancerTcpRule();
+                            publicRule.Name = "test-rule";
+                            publicRule.Frontends.Add(new LoadBalancerTcpFrontend() { ProxyPort = NeonHostPorts.ProxyPublicFirstUserPort });
+                            publicRule.Backends.Add(new LoadBalancerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
-            publicRule.Name = "test-rule";
-            publicRule.Frontends.Add(new LoadBalancerTcpFrontend() { ProxyPort = NeonHostPorts.ProxyPublicFirstUserPort });
-            publicRule.Backends.Add(new LoadBalancerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
+                            cluster.PutLoadBalancerRule("public", publicRule);
+                        },
+                        () =>
+                        {
+                            var privateRule = new LoadBalancerTcpRule();
 
-            cluster.PutLoadBalancerRule("public", publicRule);
+                            privateRule.Name = "test-rule";
+                            privateRule.Frontends.Add(new LoadBalancerTcpFrontend() { ProxyPort = NeonHostPorts.ProxyPrivateFirstUserPort });
+                            privateRule.Backends.Add(new LoadBalancerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
 
-            var privateRule = new LoadBalancerTcpRule();
-
-            privateRule.Name = "test-rule";
-            privateRule.Frontends.Add(new LoadBalancerTcpFrontend() { ProxyPort = NeonHostPorts.ProxyPrivateFirstUserPort });
-            privateRule.Backends.Add(new LoadBalancerTcpBackend() { Server = "127.0.0.1", Port = 10000 });
-
-            cluster.PutLoadBalancerRule("private", privateRule);
-            cluster.PutCertificate("test-certificate", TestCertificate.CombinedPem);
-
-            cluster.Consul.KV.PutString("test/value1", "one").Wait();
-            cluster.Consul.KV.PutString("test/value2", "two").Wait();
-            cluster.Consul.KV.PutString("test/folder/value3", "three").Wait();
-            cluster.Consul.KV.PutString("test/folder/value4", "four").Wait();
+                            cluster.PutLoadBalancerRule("private", privateRule);
+                            cluster.PutCertificate("test-certificate", TestCertificate.CombinedPem);
+                        },
+                        async () => await cluster.Consul.KV.PutString("test/value1", "one"),
+                        async () => await cluster.Consul.KV.PutString("test/value2", "two"),
+                        async () => await cluster.Consul.KV.PutString("test/folder/value3", "three"),
+                        async () => await cluster.Consul.KV.PutString("test/folder/value4", "four")
+                    });
+            }
         }
 
         [Fact]
