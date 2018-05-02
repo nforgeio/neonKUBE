@@ -91,10 +91,10 @@ namespace NeonCli.Ansible
     // constraint               no                                  array of placement constraints like
     //                                                              LABEL==VALUE or LABEL!=VALUE
     //
-    // container-label          no                                  array of container labels like
+    // container_label          no                                  array of container labels like
     //                                                              LABEL=VALUE
     //
-    // credential-spec          no                                  array of Windows credential specifications
+    // credential_spec          no                                  array of Windows credential specifications
     //
     // detach                   no          false       true        specifies whether the service command should
     //                                                  false       exit immediately or wait for the service changes
@@ -102,12 +102,12 @@ namespace NeonCli.Ansible
     //
     // dns                      no                                  array of DNS nameserver IP addresses
     //
-    // dns-option               no                                  array of DNS options like OPTION=VALUE
+    // dns_option               no                                  array of DNS options like OPTION=VALUE
     //
-    // dns-search               no                                  array of  DNS domains to be searched for 
+    // dns_search               no                                  array of  DNS domains to be searched for 
     //                                                              non-fully qualified hostnames
     //
-    // endpoint-mode            no          vip         vip         service endpoint mode
+    // endpoint_mode            no          vip         vip         service endpoint mode
     //                                                  dnsrr
     //
     // entrypoint               no                                  array of strings overriding the image entrypoint
@@ -115,28 +115,29 @@ namespace NeonCli.Ansible
     //
     // env                      no                                  array specifying environment variables to be
     //                                                              passed to the container like VARIABLE=VALUE
-    //                                                              or just VARIABLE
+    //                                                              or just VARIABLE to import the variable from
+    //                                                              the Docker host
     //
-    // env-file                 no                                  array of host environment variable specification
+    // env_file                 no                                  array of host environment variable specification
     //                                                              file paths to be passed to the service containers
     //
-    // generic-resource         no                                  array of generic resource requirements for
+    // generic_resource         no                                  array of generic resource requirements for
     //                                                              service placement.
     //
     // group                    no                                  array of service container supplementary user groups 
     //
-    // health-cmd               no                                  array of the service container health check command
+    // health_cmd               no                                  array of the service container health check command
     //                                                              and arguments
     //
-    // health-interval          no                                  interval between service container health checks
+    // health_interval          no                                  interval between service container health checks
     //
-    // health-retries           no                                  number of consecutive health check failures before
+    // health_retries           no                                  number of consecutive health check failures before
     //                                                              a service container is consider unhealthy
     //
-    // health-start-period      no                                  delay after service container start before health
+    // health_start_period      no                                  delay after service container start before health
     //                                                              checks are enforced
     //
-    // health-timeout           no                                  maximum time to wait for a healh check command
+    // health_timeout           no                                  maximum time to wait for a healh check command
     //                                                          
     // host                     no                                  array of hostname to IP address mappings to be
     //                                                              resolved automatically within service containers,
@@ -148,7 +149,7 @@ namespace NeonCli.Ansible
     //
     // image                    yes                                 specifies the Docker image 
     //
-    // image-update             no          false       true        specifies that the service [Image] should not be repulled
+    // image_update             no          false       true        specifies that the service [Image] should not be repulled
     //                                                  false       and updated if the image and tag are unchanged, ignoring 
     //                                                              the image SHA-256.  This is ignored for initial service
     //                                                              creation and also if the [Image] explicitly specifies
@@ -161,15 +162,15 @@ namespace NeonCli.Ansible
     //
     // label                    no                                  array of service labels like LABEL=VALUE
     //
-    // limit-cpu                no                                  specifies how many CPUs the service containers requires.
+    // limit_cpu                no                                  specifies how many CPUs the service containers requires.
     //                                                              This can be a floating point number (e.g. 1.5)
     //
-    // limit-memory             no                                  specifies the maximum service container RAM as size 
+    // limit_memory             no                                  specifies the maximum service container RAM as size 
     //                                                              and units (b|k|m|g)
     //
-    // log-driver               no                                  specifies the logging driver
+    // log_driver               no                                  specifies the logging driver
     //
-    // log-opt                  no                                  specifies the logging options as an array of OPTION=VALUE strings.
+    // log_opt                  no                                  specifies the logging options as an array of OPTION=VALUE strings.
     //
     // mode                     no          replicated  replicated  specifies the service mode
     //                                                  global
@@ -181,29 +182,29 @@ namespace NeonCli.Ansible
     //                                                                  target: PATH
     //                                                                  readonly: true/false        default: false      (true|false)
     //                                                                  consistency: default        default: default    (default|consistent|cached|delegated)
-    //                                                                  bind-propagation: rprivate  default: rprivate   (shared|slave|private|rshared,
+    //                                                                  bind_propagation: rprivate  default: rprivate   (shared|slave|private|rshared,
     //                                                                                                                   rslave|rprivate)
     //                                                                  options for: type=volume
     //                                                                  ------------------------
-    //                                                                  volume-driver: local        default: local
-    //                                                                  volume-label: [ ... ]       array of NAME=VALUE volume label strings
-    //                                                                  volume-nocopy: true         default: true       (true|false)
-    //                                                                  volume-opt: [ ... ]         array of OPTION=VALUE volume options
+    //                                                                  volume_driver: local        default: local
+    //                                                                  volume_label: [ ... ]       array of NAME=VALUE volume label strings
+    //                                                                  volume_nocopy: true         default: true       (true|false)
+    //                                                                  volume_opt: [ ... ]         array of OPTION=VALUE volume options
     //
     //                                                                  options for: type=tmpfs
     //                                                                  -----------------------
-    //                                                                  tmpfs-size: 1000000         default: unlimited
-    //                                                                  tmpfs-mode: 1777            default: 1777
+    //                                                                  tmpfs_size: 1000000         default: unlimited
+    //                                                                  tmpfs_mode: 1777            default: 1777
     //
     // network                  no                                  array of networks to be attached
     //
-    // no-health-check          no          false       true        disable service container health checks
+    // no_health_check          no          false       true        disable service container health checks
     //                                                  false
     //
-    // no-resolve-image         no          false       true        disable registry query to resolve image digest 
+    // no_resolve_image         no          false       true        disable registry query to resolve image digest 
     //                                                  false       and supported platforms
     //
-    // placement-pref           no                                  array of placement preferences
+    // placement_pref           no                                  array of placement preferences
     //
     // publish                  no                                  array of network port publication specifications like:
     //                                      
@@ -212,42 +213,42 @@ namespace NeonCli.Ansible
     //                                                                  mode: ingress       (optional: ingress|host}
     //                                                                  protcol: tcp        (optional: tcp|udp|sctp)
     //
-    // read-only                no          false       true        mount container root filesystem as read-only
+    // read_only                no          false       true        mount container root filesystem as read-only
     //                                                  false
     //
     // replicas                 no          1                       number of service tasks
     //
-    // reserve-cpu              no                                  CPUs to be reserved for each service container.
+    // reserve_cpu              no                                  CPUs to be reserved for each service container.
     //                                                              This is a floating point number.
     //
-    // reserve-memory           no                                  RAM to be reserved for each service container as size 
+    // reserve_memory           no                                  RAM to be reserved for each service container as size 
     //                                                              and units (b|k|m|g)
     //
-    // restart-condition        no          any         any         specifies restart condition
+    // restart_condition        no          any         any         specifies restart condition
     //                                                  none
     //                                                  on-failure
     //
-    // restart-delay            no          5s          any         Delay between service container restart attempts
+    // restart_delay            no          5s          any         Delay between service container restart attempts
     //                                                              (ns|us|ms|s|m|h)
     //
-    // restart-max-attempts     no          unlimited               maximum number of container restarts to be attempted
+    // restart_max_attempts     no          unlimited               maximum number of container restarts to be attempted
     //
-    // restart-window           no                                  time window used to evaluate restart policy (ns|us|ms|s|m|h)
+    // restart_window           no                                  time window used to evaluate restart policy (ns|us|ms|s|m|h)
     //
-    // rollback-delay           no          0s                      delay between task rollbacks (ns|us|ms|s|m|h)
+    // rollback_delay           no          0s                      delay between task rollbacks (ns|us|ms|s|m|h)
     //
-    // rollback-failure-action  no          pause       pause       action to take on service container rollback failure
+    // rollback_failure_action  no          pause       pause       action to take on service container rollback failure
     //                                                  continue
     //
-    // rollback-max-failure-ratio no        0                       failure rate to tolerate during a rollback.
+    // rollback_max_failure_ratio no        0                       failure rate to tolerate during a rollback.
     //
-    // rollback-monitor         no          5s                      time to monitor rolled back service containers for
+    // rollback_monitor         no          5s                      time to monitor rolled back service containers for
     //                                                              failure (ns|us|ms|s|m|h)
     //
-    // rollback-order           no          stop-first  stop-first  service container rollback order (stop-first|start-first)
+    // rollback_order           no          stop-first  stop-first  service container rollback order (stop-first|start-first)
     //                                                  start-first
     //
-    // rollback-parallelism     no          1                       maximum number of service tasks to be rolled back
+    // rollback_parallelism     no          1                       maximum number of service tasks to be rolled back
     //                                                              simultaneously (0 to roll back all at once)
     //
     // secret                   no                                  array of secrets to be be exposed to the service.
@@ -259,25 +260,25 @@ namespace NeonCli.Ansible
     //                                                                  gid         - group ID (optional)
     //                                                                  mode        - Linux file mode (optional/octal)
     //
-    // stop-grace-period        no          10s                     maximum time to wait for a service container to 
+    // stop_grace_period        no          10s                     maximum time to wait for a service container to 
     //                                                              terminate gracefully (ns|us|ms|s|m|h)
     //
-    // stop-signal              no          SIGTERM                 signal to be used to stop service containers
+    // stop_signal              no          SIGTERM                 signal to be used to stop service containers
     //
     // tty                      no          false                   allocate a TTY for service containers
     //
-    // update-delay             no          0s                      delay between task updates (ns|us|ms|s|m|h)
+    // update_delay             no          0s                      delay between task updates (ns|us|ms|s|m|h)
     //
-    // update-failure-action    no          pause       pause       action to take on service container update failure
+    // update_failure_action    no          pause       pause       action to take on service container update failure
     //                                                  continue
     //                                                  rollback
     //
-    // update-max-failure-ratio no          0                       failure rate to tolerate during an update.
+    // update_max_failure_ratio no          0                       failure rate to tolerate during an update.
     //
-    // update-monitor           no          5s                      time to monitor updated service containers for
+    // update_monitor           no          5s                      time to monitor updated service containers for
     //                                                              failure (ns|us|ms|s|m|h)
     //
-    // update-order             no          stop-first  stop-first  service container update order
+    // update_order             no          stop-first  stop-first  service container update order
     //                                                  start-first
     //
     // update-parallelism       no          1                       maximum number of service tasks to be updated
@@ -285,7 +286,7 @@ namespace NeonCli.Ansible
     //
     // user                     no                                  container username/group: <name|uid>[:<group|gid>]
     //
-    // with-registry-auth       no          false                   send registry authentication details to Swarm nodes
+    // with_registry_auth       no          false                   send registry authentication details to Swarm nodes
     //
     // workdir                  no                                  command working directory within containers
     //
@@ -350,64 +351,64 @@ namespace NeonCli.Ansible
             service.Args                    = context.ParseStringArray("args");
             service.Config                  = ParseConfigArray(context, "config");
             service.Constraint              = context.ParseStringArray("constraint");
-            service.ContainerLabel          = context.ParseStringArray("container-label");
-            service.CredentialSpec          = context.ParseStringArray("credential-spec");
+            service.ContainerLabel          = context.ParseStringArray("container_label");
+            service.CredentialSpec          = context.ParseStringArray("credential_spec");
             service.Detach                  = context.ParseBool("detach");
             service.Dns                     = context.ParseIPAddressArray("dns");
             service.Command                 = context.ParseStringArray("entrypoint");
             service.Env                     = context.ParseStringArray("env");
-            service.EnvFile                 = context.ParseStringArray("env-file");
-            service.GenericResource         = context.ParseStringArray("generic-resource");
+            service.EnvFile                 = context.ParseStringArray("env_file");
+            service.GenericResource         = context.ParseStringArray("generic_resource");
             service.Group                   = context.ParseStringArray("group");
-            service.HealthCmd               = context.ParseStringArray("health-cmd");
-            service.HealthInterval          = context.ParseDockerInterval("health-interval");
-            service.HealthRetries           = context.ParseLong("health-retries", v => v >= 0);
-            service.HealthStartPeriod       = context.ParseDockerInterval("health-start-period");
-            service.HealthTimeout           = context.ParseDockerInterval("health-timeout");
+            service.HealthCmd               = context.ParseStringArray("health_cmd");
+            service.HealthInterval          = context.ParseDockerInterval("health_interval");
+            service.HealthRetries           = context.ParseLong("health_retries", v => v >= 0);
+            service.HealthStartPeriod       = context.ParseDockerInterval("health_start_period");
+            service.HealthTimeout           = context.ParseDockerInterval("health_timeout");
             service.Host                    = context.ParseStringArray("host");
             service.Hostname                = context.ParseString("hostname");
             service.Image                   = context.ParseString("image");
-            service.ImageUpdate             = context.ParseBool("image-update");
+            service.ImageUpdate             = context.ParseBool("image_update");
             service.Isolation               = context.ParseEnum<IsolationMode>("isolation");
             service.Label                   = context.ParseStringArray("label");
-            service.LimitCpu                = context.ParseDouble("limit-cpu", v => v > 0);
-            service.LimitMemory             = context.ParseDockerMemorySize("limit-memory");
-            service.LogDriver               = context.ParseString("log-driver");
-            service.LogOpt                  = context.ParseStringArray("log-opt");
+            service.LimitCpu                = context.ParseDouble("limit_cpu", v => v > 0);
+            service.LimitMemory             = context.ParseDockerMemorySize("limit_memory");
+            service.LogDriver               = context.ParseString("log_driver");
+            service.LogOpt                  = context.ParseStringArray("log_opt");
             service.Mode                    = context.ParseEnum<ServiceMode>("mode");
             service.Mount                   = ParseMounts(context, "mount");
             service.Network                 = context.ParseStringArray("network");
-            service.NoHealthCheck           = context.ParseBool("no-health-check");
-            service.NoResolveImage          = context.ParseBool("no-resolve-image");
-            service.PlacementPref           = context.ParseStringArray("placement-pref");
+            service.NoHealthCheck           = context.ParseBool("no_health_check");
+            service.NoResolveImage          = context.ParseBool("no_resolve_image");
+            service.PlacementPref           = context.ParseStringArray("placement_pref");
             service.Publish                 = ParsePublishPorts(context, "publish");
-            service.ReadOnly                = context.ParseBool("read-only");
+            service.ReadOnly                = context.ParseBool("read_only");
             service.Replicas                = context.ParseLong("replicas", v => v >= 0);
-            service.ReserveCpu              = context.ParseDouble("reserve-cpu", v => v > 0);
-            service.ReserveMemory           = context.ParseDockerMemorySize("reserve-memory");
-            service.RestartCondition        = context.ParseEnum<RestartCondition>("restart-condition");
-            service.RestartDelay            = context.ParseDockerInterval("restart-delay");
-            service.RestartMaxAttempts      = context.ParseLong("restart-max-attempts", v => v >= 0);
-            service.RestartWindow           = context.ParseDockerInterval("restart-window");
-            service.RollbackDelay           = context.ParseDockerInterval("rollback-delay");
-            service.RollbackFailureAction   = context.ParseEnum<RollbackFailureAction>("rollback-failure-action");
-            service.RollbackMaxFailureRatio = context.ParseDouble("rollback-max-failure-ratio", v => v >= 0);
-            service.RollbackMonitor         = context.ParseDockerInterval("rollback-monitor");
-            service.RollbackOrder           = context.ParseEnum<RollbackOrder>("rollback-order");
-            service.RollbackParallism       = context.ParseInt("rollback-parallelism", v => v > 0);
+            service.ReserveCpu              = context.ParseDouble("reserve_cpu", v => v > 0);
+            service.ReserveMemory           = context.ParseDockerMemorySize("reserve_memory");
+            service.RestartCondition        = context.ParseEnum<RestartCondition>("restart_condition");
+            service.RestartDelay            = context.ParseDockerInterval("restart_delay");
+            service.RestartMaxAttempts      = context.ParseLong("restart_max_attempts", v => v >= 0);
+            service.RestartWindow           = context.ParseDockerInterval("restart_window");
+            service.RollbackDelay           = context.ParseDockerInterval("rollback_delay");
+            service.RollbackFailureAction   = context.ParseEnum<RollbackFailureAction>("rollback_failure_action");
+            service.RollbackMaxFailureRatio = context.ParseDouble("rollback_max_failure_ratio", v => v >= 0);
+            service.RollbackMonitor         = context.ParseDockerInterval("rollback_monitor");
+            service.RollbackOrder           = context.ParseEnum<RollbackOrder>("rollback_order");
+            service.RollbackParallism       = context.ParseInt("rollback_parallelism", v => v > 0);
             service.Secret                  = ParseSecretArray(context, "secret");
-            service.StopGracePeriod         = context.ParseDockerInterval("stop-grace-period");
-            service.StopSignal              = context.ParseString("stop-signal");
-            service.ReadOnly                = context.ParseBool("read-only");
+            service.StopGracePeriod         = context.ParseDockerInterval("stop_grace_period");
+            service.StopSignal              = context.ParseString("stop_signal");
+            service.ReadOnly                = context.ParseBool("read_only");
             service.Tty                     = context.ParseBool("tty");
-            service.UpdateDelay             = context.ParseDockerInterval("update-delay");
-            service.UpdateFailureAction     = context.ParseEnum<UpdateFailureAction>("update-failure-action");
-            service.UpdateMaxFailureRatio   = context.ParseDouble("update-max-failure-ratio", v => v >= 0);
-            service.UpdateMonitor           = context.ParseDockerInterval("update-monitor");
-            service.UpdateOrder             = context.ParseEnum<UpdateOrder>("update-order");
-            service.UpdateParallism         = context.ParseInt("update-parallelism", v => v > 0);
+            service.UpdateDelay             = context.ParseDockerInterval("update_delay");
+            service.UpdateFailureAction     = context.ParseEnum<UpdateFailureAction>("update_failure_action");
+            service.UpdateMaxFailureRatio   = context.ParseDouble("update_max_failure_ratio", v => v >= 0);
+            service.UpdateMonitor           = context.ParseDockerInterval("update_monitor");
+            service.UpdateOrder             = context.ParseEnum<UpdateOrder>("update_order");
+            service.UpdateParallism         = context.ParseInt("update_parallelism", v => v > 0);
             service.User                    = context.ParseString("user");
-            service.WithRegistryAuth        = context.ParseBool("with-registry-auth");
+            service.WithRegistryAuth        = context.ParseBool("with_registry_auth");
             service.WorkDir                 = context.ParseString("workdir");
 
             // Abort the operation if any errors were reported during parsing.
@@ -617,20 +618,20 @@ namespace NeonCli.Ansible
                     mount.Consistency = context.ParseEnumValue<MountConsistency>(value, $"Invalid [mount.consistency={value}] value.");
                 }
 
-                // Parse [bind-propagation]
+                // Parse [bind_propagation]
 
-                if (jObject.TryGetValue<string>("bind-propagation", out value))
+                if (jObject.TryGetValue<string>("bind_propagation", out value))
                 {
-                    mount.BindPropagation = context.ParseEnumValue<MountBindPropagation>(value, $"Invalid [mount.bind-propagation={value}] value.");
+                    mount.BindPropagation = context.ParseEnumValue<MountBindPropagation>(value, $"Invalid [mount.bind_propagation={value}] value.");
                 }
 
                 // Parse the [volume] related options.
 
                 if (mount.Type == MountType.Volume)
                 {
-                    // Parse [volume-driver]
+                    // Parse [volume_driver]
 
-                    if (jObject.TryGetValue<string>("volume-driver", out value))
+                    if (jObject.TryGetValue<string>("volume_driver", out value))
                     {
                         mount.VolumeDriver = value;
                     }
@@ -639,15 +640,15 @@ namespace NeonCli.Ansible
                         mount.VolumeDriver = "local";
                     }
 
-                    // Parse [volume-label]
+                    // Parse [volume_label]
 
-                    if (jObject.TryGetValue<JToken>("volume-label", out jToken))
+                    if (jObject.TryGetValue<JToken>("volume_label", out jToken))
                     {
                         jArray = jToken as JArray;
 
                         if (jArray == null)
                         {
-                            context.WriteErrorLine("Expected [mount.volume-label] to be an array of [LABEL=VALUE] strings.");
+                            context.WriteErrorLine("Expected [mount.volume_label] to be an array of [LABEL=VALUE] strings.");
                         }
                         else
                         {
@@ -658,22 +659,22 @@ namespace NeonCli.Ansible
                         }
                     }
 
-                    // Parse [volume-nocopy]
+                    // Parse [volume_nocopy]
 
-                    if (jObject.TryGetValue<string>("volume-nocopy", out value))
+                    if (jObject.TryGetValue<string>("volume_nocopy", out value))
                     {
-                        mount.VolumeNoCopy = context.ParseBoolValue(value, $"Invalid [mount.volume-nocopy={value}] value.");
+                        mount.VolumeNoCopy = context.ParseBoolValue(value, $"Invalid [mount.volume_nocopy={value}] value.");
                     }
 
-                    // Parse [volume-opt]
+                    // Parse [volume_opt]
 
-                    if (jObject.TryGetValue<JToken>("volume-opt", out jToken))
+                    if (jObject.TryGetValue<JToken>("volume_opt", out jToken))
                     {
                         jArray = jToken as JArray;
 
                         if (jArray == null)
                         {
-                            context.WriteErrorLine("Expected [mount.volume-opt] to be an array of [OPTION=VALUE] strings.");
+                            context.WriteErrorLine("Expected [mount.volume_opt] to be an array of [OPTION=VALUE] strings.");
                         }
                         else
                         {
@@ -686,12 +687,12 @@ namespace NeonCli.Ansible
                 }
                 else
                 {
-                    if (jObject.ContainsKey("volume-driver") ||
-                        jObject.ContainsKey("volume-label") ||
-                        jObject.ContainsKey("volume-nocopy") ||
-                        jObject.ContainsKey("volume-opt"))
+                    if (jObject.ContainsKey("volume_driver") ||
+                        jObject.ContainsKey("volume_label") ||
+                        jObject.ContainsKey("volume_nocopy") ||
+                        jObject.ContainsKey("volume_opt"))
                     {
-                        context.WriteErrorLine($"[mount.volume-*] options are not allowed for [mount.type={mount.Type}].");
+                        context.WriteErrorLine($"[mount.volume_*] options are not allowed for [mount.type={mount.Type}].");
                     }
                 }
 
@@ -699,11 +700,11 @@ namespace NeonCli.Ansible
 
                 if (mount.Type == MountType.Tmpfs)
                 {
-                    // Parse [tmpfs-size]
+                    // Parse [tmpfs_size]
 
-                    if (jObject.TryGetValue<string>("tmpfs-size", out value))
+                    if (jObject.TryGetValue<string>("tmpfs_size", out value))
                     {
-                        mount.TmpfsSize = context.ParseLongValue(value, $"Invalid [mount.tmpfs-size={value}] value.");
+                        mount.TmpfsSize = context.ParseLongValue(value, $"Invalid [mount.tmpfs_size={value}] value.");
                     }
 
                     if (mount.TmpfsSize == 0)
@@ -713,22 +714,22 @@ namespace NeonCli.Ansible
                     else if (mount.TmpfsSize < 0)
                     {
                         mount.TmpfsSize = null;
-                        context.WriteErrorLine($"Invalid [mount.tmpfs-size={value}] because negative sizes are not allowed.");
+                        context.WriteErrorLine($"Invalid [mount.tmpfs_size={value}] because negative sizes are not allowed.");
                     }
 
-                    // Parse [tmpfs-mode]: We're going to allow 3 or 4 octal digits.
+                    // Parse [tmpfs_mode]: We're going to allow 3 or 4 octal digits.
 
-                    if (jObject.TryGetValue<string>("tmpfs-mode", out value))
+                    if (jObject.TryGetValue<string>("tmpfs_mode", out value))
                     {
-                        mount.TmpfsMode = ParseFileMode(context, value, $"[mount.tmpfs-mode={value}] is not a valid Linux file mode.");
+                        mount.TmpfsMode = ParseFileMode(context, value, $"[mount.tmpfs_mode={value}] is not a valid Linux file mode.");
                     }
                 }
                 else
                 {
-                    if (jObject.ContainsKey("tmpfs-size") ||
-                        jObject.ContainsKey("tmpfs-mode"))
+                    if (jObject.ContainsKey("tmpfs_size") ||
+                        jObject.ContainsKey("tmpfs_mode"))
                     {
-                        context.WriteErrorLine($"[mount.tmpfs-*] options are not allowed for [mount.type={mount.Type}].");
+                        context.WriteErrorLine($"[mount.tmpfs_*] options are not allowed for [mount.type={mount.Type}].");
                     }
                 }
 
