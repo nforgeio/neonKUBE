@@ -1135,8 +1135,8 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
 
             var proxy = new SshProxy<TMetadata>(name, publicAddress, privateAddress, sshCredentials, logWriter);
 
-            proxy.RemotePath += $":{NodeHostFolders.Setup}";
-            proxy.RemotePath += $":{NodeHostFolders.Tools}";
+            proxy.RemotePath += $":{NeonHostFolders.Setup}";
+            proxy.RemotePath += $":{NeonHostFolders.Tools}";
 
             return proxy;
         }

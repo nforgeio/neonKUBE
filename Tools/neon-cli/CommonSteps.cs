@@ -236,9 +236,9 @@ TCPKeepAlive yes
                     {
                         if (line.StartsWith("PATH="))
                         {
-                            if (!line.Contains(NodeHostFolders.Tools))
+                            if (!line.Contains(NeonHostFolders.Tools))
                             {
-                                sb.AppendLine(line + $":{NodeHostFolders.Tools}");
+                                sb.AppendLine(line + $":{NeonHostFolders.Tools}");
                             }
                             else
                             {
@@ -339,7 +339,7 @@ TCPKeepAlive yes
         {
             var waitedForPackageManager = false;
 
-            if (node.FileExists($"{NodeHostFolders.State}/finished-prepared"))
+            if (node.FileExists($"{NeonHostFolders.State}/finished-prepared"))
             {
                 return waitedForPackageManager; // Already prepared
             }
@@ -417,7 +417,7 @@ TCPKeepAlive yes
 
             // Indicate that the node has been fully prepared.
 
-            node.SudoCommand($"touch {NodeHostFolders.State}/finished-prepared");
+            node.SudoCommand($"touch {NeonHostFolders.State}/finished-prepared");
 
             // Shutdown the node if requested.
 

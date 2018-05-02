@@ -937,7 +937,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
 ");
             }
 
-            node.UploadText($"{NodeHostFolders.Config}/env-host", sbEnvHost.ToString(), 4, Encoding.UTF8);
+            node.UploadText($"{NeonHostFolders.Config}/env-host", sbEnvHost.ToString(), 4, Encoding.UTF8);
         }
 
         /// <summary>
@@ -2838,7 +2838,7 @@ systemctl start neon-volume-plugin
                         Program.ResolveDockerImage(cluster.Definition.ProxyVaultImage));
 
                     steps.Add(command);
-                    steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
+                    steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NeonHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
 
                     cluster.Configure(steps);
                 });
@@ -2871,7 +2871,7 @@ systemctl start neon-volume-plugin
                                     Program.ResolveDockerImage(cluster.Definition.ProxyVaultImage));
 
                                 steps.Add(command);
-                                steps.Add(cluster.GetFileUploadSteps(new[] { pet }, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
+                                steps.Add(cluster.GetFileUploadSteps(new[] { pet }, LinuxPath.Combine(NeonHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
 
                                 cluster.Configure(steps);
                             });

@@ -79,7 +79,7 @@ namespace NeonCli
                         {
                             foreach (var manager in cluster.Managers)
                             {
-                                manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-dns.sh"), response.BashCommand);
+                                manager.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-dns.sh"), response.BashCommand);
                             }
                         },
                         "docker service create",
@@ -108,7 +108,7 @@ namespace NeonCli
                         {
                             foreach (var manager in cluster.Managers)
                             {
-                                manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-dns-mon.sh"), response.BashCommand);
+                                manager.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-dns-mon.sh"), response.BashCommand);
                             }
                         },
                         "docker service create",
@@ -149,7 +149,7 @@ namespace NeonCli
                         {
                             foreach (var manager in cluster.Managers)
                             {
-                                manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-cluster-manager.sh"), response.BashCommand);
+                                manager.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-cluster-manager.sh"), response.BashCommand);
                             }
                         },
                         cluster.SecureRunOptions | RunOptions.FaultOnError,
@@ -203,7 +203,7 @@ namespace NeonCli
                         {
                             foreach (var manager in cluster.Managers)
                             {
-                                manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-manager.sh"), response.BashCommand);
+                                manager.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-proxy-manager.sh"), response.BashCommand);
                             }
                         },
                         "docker service create",
@@ -285,7 +285,7 @@ namespace NeonCli
                         {
                             foreach (var manager in cluster.Managers)
                             {
-                                manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-public.sh"), response.BashCommand);
+                                manager.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-proxy-public.sh"), response.BashCommand);
                             }
                         },
                         "docker service create",
@@ -314,7 +314,7 @@ namespace NeonCli
                         {
                             foreach (var manager in cluster.Managers)
                             {
-                                manager.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-private.sh"), response.BashCommand);
+                                manager.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-proxy-private.sh"), response.BashCommand);
                             }
                         },
                         "docker service create",
@@ -369,7 +369,7 @@ namespace NeonCli
                         "--restart", "always",
                         Program.ResolveDockerImage(cluster.Definition.ProxyImage));
 
-                    node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-public-bridge.sh"), response.BashCommand);
+                    node.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-proxy-public-bridge.sh"), response.BashCommand);
                     node.Status = string.Empty;
                 });
 
@@ -388,7 +388,7 @@ namespace NeonCli
                         "--restart", "always",
                         Program.ResolveDockerImage(cluster.Definition.ProxyImage));
 
-                    node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-proxy-private-bridge.sh"), response.BashCommand);
+                    node.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-proxy-private-bridge.sh"), response.BashCommand);
                     node.Status = string.Empty;
                 });
         }

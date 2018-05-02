@@ -410,23 +410,23 @@ namespace NeonCli
 
             // Set the variables.
 
-            preprocessReader.Set("load-cluster-config", NodeHostFolders.Config + "/cluster.conf.sh --echo-summary");
-            preprocessReader.Set("load-cluster-config-quiet", NodeHostFolders.Config + "/cluster.conf.sh");
+            preprocessReader.Set("load-cluster-config", NeonHostFolders.Config + "/cluster.conf.sh --echo-summary");
+            preprocessReader.Set("load-cluster-config-quiet", NeonHostFolders.Config + "/cluster.conf.sh");
 
             SetBashVariable(preprocessReader, "cluster.provisioner", clusterDefinition.Provisioner);
             SetBashVariable(preprocessReader, "cluster.rootuser", Program.MachineUsername);
 
             SetBashVariable(preprocessReader, "node.driveprefix", clusterDefinition.DrivePrefix);
 
-            SetBashVariable(preprocessReader, "neon.folders.config", NodeHostFolders.Config);
-            SetBashVariable(preprocessReader, "neon.folders.secrets", NodeHostFolders.Secrets);
-            SetBashVariable(preprocessReader, "neon.folders.setup", NodeHostFolders.Setup);
-            SetBashVariable(preprocessReader, "neon.folders.tools", NodeHostFolders.Tools);
-            SetBashVariable(preprocessReader, "neon.folders.state", NodeHostFolders.State);
-            SetBashVariable(preprocessReader, "neon.folders.secrets", NodeHostFolders.Secrets);
-            SetBashVariable(preprocessReader, "neon.folders.scripts", NodeHostFolders.Scripts);
-            SetBashVariable(preprocessReader, "neon.folders.archive", NodeHostFolders.Archive);
-            SetBashVariable(preprocessReader, "neon.folders.exec", NodeHostFolders.Exec);
+            SetBashVariable(preprocessReader, "neon.folders.config", NeonHostFolders.Config);
+            SetBashVariable(preprocessReader, "neon.folders.secrets", NeonHostFolders.Secrets);
+            SetBashVariable(preprocessReader, "neon.folders.setup", NeonHostFolders.Setup);
+            SetBashVariable(preprocessReader, "neon.folders.tools", NeonHostFolders.Tools);
+            SetBashVariable(preprocessReader, "neon.folders.state", NeonHostFolders.State);
+            SetBashVariable(preprocessReader, "neon.folders.secrets", NeonHostFolders.Secrets);
+            SetBashVariable(preprocessReader, "neon.folders.scripts", NeonHostFolders.Scripts);
+            SetBashVariable(preprocessReader, "neon.folders.archive", NeonHostFolders.Archive);
+            SetBashVariable(preprocessReader, "neon.folders.exec", NeonHostFolders.Exec);
 
             preprocessReader.Set("neon.hosts.neon-log-es-data", NeonHosts.LogEsData);
 
@@ -566,8 +566,8 @@ namespace NeonCli
 
             // Clear the contents of the configuration folder.
 
-            node.Status = $"clear: {NodeHostFolders.Config}";
-            node.SudoCommand($"rm -rf {NodeHostFolders.Config}/*.*");
+            node.Status = $"clear: {NeonHostFolders.Config}";
+            node.SudoCommand($"rm -rf {NeonHostFolders.Config}/*.*");
 
             // Upload the files.
 
@@ -575,13 +575,13 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("conf").Files())
             {
-                node.UploadFile(clusterDefinition, file, $"{NodeHostFolders.Config}/{file.Name}");
+                node.UploadFile(clusterDefinition, file, $"{NeonHostFolders.Config}/{file.Name}");
             }
 
             // Secure the files and make the scripts executable.
 
-            node.SudoCommand($"chmod 600 {NodeHostFolders.Config}/*.*");
-            node.SudoCommand($"chmod 700 {NodeHostFolders.Config}/*.sh");
+            node.SudoCommand($"chmod 600 {NeonHostFolders.Config}/*.*");
+            node.SudoCommand($"chmod 700 {NeonHostFolders.Config}/*.sh");
 
             node.Status = "copied";
         }
@@ -600,8 +600,8 @@ namespace NeonCli
             //-----------------------------------------------------------------
             // Clear the contents of the setup scripts folder.
 
-            server.Status = $"clear: {NodeHostFolders.Setup}";
-            server.SudoCommand($"rm -rf {NodeHostFolders.Setup}/*.*");
+            server.Status = $"clear: {NeonHostFolders.Setup}";
+            server.SudoCommand($"rm -rf {NeonHostFolders.Setup}/*.*");
 
             // Upload the setup files.
 
@@ -609,18 +609,18 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("setup").Files())
             {
-                server.UploadFile(clusterDefinition, file, $"{NodeHostFolders.Setup}/{file.Name}");
+                server.UploadFile(clusterDefinition, file, $"{NeonHostFolders.Setup}/{file.Name}");
             }
 
             // Make the scripts executable.
 
-            server.SudoCommand($"chmod 700 {NodeHostFolders.Setup}/*");
+            server.SudoCommand($"chmod 700 {NeonHostFolders.Setup}/*");
 
             //-----------------------------------------------------------------
             // Clear the contents of the tools folder.
 
-            server.Status = $"clear: {NodeHostFolders.Tools}";
-            server.SudoCommand($"rm -rf {NodeHostFolders.Tools}/*.*");
+            server.Status = $"clear: {NeonHostFolders.Tools}";
+            server.SudoCommand($"rm -rf {NeonHostFolders.Tools}/*.*");
 
             // Upload the tool files.  Note that we're going to strip out the [.sh] 
             // file type to make these easier to run.
@@ -629,12 +629,12 @@ namespace NeonCli
 
             foreach (var file in Program.LinuxFolder.GetFolder("tools").Files())
             {
-                server.UploadFile(clusterDefinition, file, $"{NodeHostFolders.Tools}/{file.Name.Replace(".sh", string.Empty)}");
+                server.UploadFile(clusterDefinition, file, $"{NeonHostFolders.Tools}/{file.Name.Replace(".sh", string.Empty)}");
             }
 
             // Make the scripts executable.
 
-            server.SudoCommand($"chmod 700 {NodeHostFolders.Tools}/*");
+            server.SudoCommand($"chmod 700 {NeonHostFolders.Tools}/*");
         }
     }
 }

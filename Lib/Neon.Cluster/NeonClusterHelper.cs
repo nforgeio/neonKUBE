@@ -610,8 +610,8 @@ namespace Neon.Cluster
                     {
                         var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, ClusterLogin.GetSshCredentials(), null);
 
-                        proxy.RemotePath += $":{NodeHostFolders.Setup}";
-                        proxy.RemotePath += $":{NodeHostFolders.Tools}";
+                        proxy.RemotePath += $":{NeonHostFolders.Setup}";
+                        proxy.RemotePath += $":{NeonHostFolders.Tools}";
 
                         return proxy;
                     }));
@@ -652,8 +652,8 @@ namespace Neon.Cluster
                     {
                         var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, ClusterLogin.GetSshCredentials(), null);
 
-                        proxy.RemotePath += $":{NodeHostFolders.Setup}";
-                        proxy.RemotePath += $":{NodeHostFolders.Tools}";
+                        proxy.RemotePath += $":{NeonHostFolders.Setup}";
+                        proxy.RemotePath += $":{NeonHostFolders.Tools}";
 
                         return proxy;
                     }));
@@ -868,7 +868,7 @@ namespace Neon.Cluster
         /// </remarks>
         public static string GetSecret(string name)
         {
-            var secretPath = Path.Combine(NodeHostFolders.DockerSecrets, name);
+            var secretPath = Path.Combine(NeonHostFolders.DockerSecrets, name);
 
             try
             {

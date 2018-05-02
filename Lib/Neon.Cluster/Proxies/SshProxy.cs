@@ -73,7 +73,7 @@ namespace Neon.Cluster
 
         // Path to the transient file on the Linux box whose presence indicates
         // that the server is still rebooting.
-        private const string RebootStatusPath = "/dev/shm/neon/rebooting";
+        private readonly string RebootStatusPath = $"{NeonHostFolders.ClusterTmpfs}/rebooting";
 
         private object          syncLock   = new object();
         private bool            isDisposed = false;
@@ -533,19 +533,19 @@ namespace Neon.Cluster
             //
             // To ensure against this, I'm going to do the following:
             //
-            //      1. Create a transient file at [/dev/shm/neon/rebooting]. 
+            //      1. Create a transient file at [/dev/shm/neoncluster/rebooting]. 
             //         Since [/dev/shm] is a TMPFS, this file will no longer
             //         exist after a reboot.
             //
             //      2. Command the server to reboot.
             //
             //      3. Loop and attempt to reconnect.  After reconnecting,
-            //         verify that the [/dev/shm/neon/rebooting] file is no
+            //         verify that the [/dev/shm/neoncluster/rebooting] file is no
             //         longer present.  Reboot is complete if it's gone,
             //         otherwise, we need to continue trying.
             //
             //         We're also going to submit a new reboot command every 
-            //         10 seconds when [/dev/shm/neon/rebooting] is still present
+            //         10 seconds when [/dev/shm/neoncluster/rebooting] is still present
             //         in case the original reboot command was somehow missed
             //         because the reboot command is not retried automatically.
             //  
@@ -759,7 +759,7 @@ namespace Neon.Cluster
 
                         sshClient.Connect();
 
-                        // We need to verify that the [/dev/shm/neon/rebooting] file is not present
+                        // We need to verify that the [/dev/shm/neoncluster/rebooting] file is not present
                         // to ensure that the machine has actually restarted (see [Reboot()]
                         // for more information.
 
@@ -767,7 +767,7 @@ namespace Neon.Cluster
 
                         if (response.ExitStatus != 0)
                         {
-                            // [/dev/shm/neon/rebooting] file is not present, so we're done.
+                            // [/dev/shm/neoncluster/rebooting] file is not present, so we're done.
 
                             break;
                         }
@@ -983,29 +983,29 @@ namespace Neon.Cluster
         {
             Status = "prepare: folders";
 
-            SudoCommand($"mkdir -p {NodeHostFolders.Config}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {NodeHostFolders.Config}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {NeonHostFolders.Config}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 600 {NeonHostFolders.Config}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {NodeHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {NodeHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {NeonHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 600 {NeonHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {NodeHostFolders.State}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {NodeHostFolders.State}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {NeonHostFolders.State}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 600 {NeonHostFolders.State}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {NodeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {NodeHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {NeonHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 600 {NeonHostFolders.Setup}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {NodeHostFolders.Tools}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {NodeHostFolders.Tools}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {NeonHostFolders.Tools}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 600 {NeonHostFolders.Tools}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {NodeHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {NodeHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {NeonHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 600 {NeonHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {NodeHostFolders.Archive}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {NodeHostFolders.Archive}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"mkdir -p {NeonHostFolders.Archive}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 600 {NeonHostFolders.Archive}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {NodeHostFolders.Exec}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 777 {NodeHostFolders.Exec}", RunOptions.LogOnErrorOnly);   // Allow non-[sudo] access.
+            SudoCommand($"mkdir -p {NeonHostFolders.Exec}", RunOptions.LogOnErrorOnly);
+            SudoCommand($"chmod 777 {NeonHostFolders.Exec}", RunOptions.LogOnErrorOnly);   // Allow non-[sudo] access.
         }
 
         /// <summary>
@@ -1556,7 +1556,7 @@ mono {scriptPath}.mono $@
 
                 // Upload the ZIP file to a temporary folder.
 
-                var bundleFolder = $"{NodeHostFolders.Exec}/{Guid.NewGuid().ToString("D")}";
+                var bundleFolder = $"{NeonHostFolders.Exec}/{Guid.NewGuid().ToString("D")}";
                 var zipPath      = LinuxPath.Combine(bundleFolder, "__bundle.zip");
 
                 SudoCommand($"mkdir -p", RunOptions.LogOnErrorOnly, bundleFolder);
@@ -1758,7 +1758,7 @@ mono {scriptPath}.mono $@
             //
             //      1. Generating a GUID for the operation.
             //
-            //      2. Creating a folder named [/dev/shm/neon/cmd/GUID] for the 
+            //      2. Creating a folder named [/dev/shm/neoncluster/cmd/GUID] for the 
             //         operation.  This folder will be referred to as [$] below.
             //
             //      3. Generating a script called [$/cmd.sh] that 
@@ -1785,7 +1785,7 @@ mono {scriptPath}.mono $@
 
             // Create the command folder.
 
-            var shmFolder = "/dev/shm/neon/cmd";
+            var shmFolder = $"{NeonHostFolders.ClusterTmpfs}/cmd";
             var cmdFolder = LinuxPath.Combine(shmFolder, Guid.NewGuid().ToString("D"));
 
             SafeSshOperation("create folder", () => sshClient.RunCommand($"mkdir -p {cmdFolder} && chmod 770 {cmdFolder}"));
@@ -2656,7 +2656,7 @@ echo $? > {cmdFolder}/exit
         /// </para>
         /// <para>
         /// This method tracks successful action completion by creating a file
-        /// on the node at <see cref="NodeHostFolders.State"/><b>/finished-NAME</b>.
+        /// on the node at <see cref="NeonHostFolders.State"/><b>/finished-NAME</b>.
         /// To ensure idempotency, this method first checks for the existance of
         /// this file and returns immediately without invoking the action if it is 
         /// present.
@@ -2675,11 +2675,11 @@ echo $? > {cmdFolder}/exit
                 }
             }
 
-            var statePath = LinuxPath.Combine(NodeHostFolders.State, $"finished-{actionId}");
+            var statePath = LinuxPath.Combine(NeonHostFolders.State, $"finished-{actionId}");
 
             if (!hasStateFolder)
             {
-                SudoCommand($"mkdir -p {NodeHostFolders.State}");
+                SudoCommand($"mkdir -p {NeonHostFolders.State}");
                 hasStateFolder = true;
             }
 

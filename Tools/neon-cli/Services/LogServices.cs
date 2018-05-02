@@ -286,7 +286,7 @@ $@"
 
 {command.ToBash()}
 ";
-                steps.Add(UploadStep.Text(esNode.Name, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-esdata.sh"), scriptText));
+                steps.Add(UploadStep.Text(esNode.Name, LinuxPath.Combine(NeonHostFolders.Scripts, "neon-log-esdata.sh"), scriptText));
             }
 
             // Configure a private cluster proxy route to the Elasticsearch nodes.
@@ -343,7 +343,7 @@ $@"
                 Program.ResolveDockerImage(cluster.Definition.Log.KibanaImage));
 
             steps.Add(command);
-            steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-kibana.sh"), command.ToBash()));
+            steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NeonHostFolders.Scripts, "neon-log-kibana.sh"), command.ToBash()));
         }
 
         /// <summary>
@@ -367,7 +367,7 @@ $@"
                 Program.ResolveDockerImage(cluster.Definition.Log.CollectorImage));
 
             steps.Add(command);
-            steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-collector.sh"), command.ToBash()));
+            steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NeonHostFolders.Scripts, "neon-log-collector.sh"), command.ToBash()));
 
             // Configure a private cluster proxy TCP route so the [neon-log-host] containers
             // will be able to reach the collectors.
@@ -420,7 +420,7 @@ $@"
                         "--log-driver", "json-file",        // Ensure that we don't log to the pipeline to avoid cascading events.
                         Program.ResolveDockerImage(cluster.Definition.Log.HostImage));
 
-                    node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-host.sh"), response.BashCommand);
+                    node.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-log-host.sh"), response.BashCommand);
                 });
 
             node.InvokeIdempotentAction("setup-metricbeat",
@@ -440,7 +440,7 @@ $@"
                         "--log-driver", "json-file",
                         Program.ResolveDockerImage(cluster.Definition.Log.MetricbeatImage));
 
-                    node.UploadText(LinuxPath.Combine(NodeHostFolders.Scripts, "neon-log-metricbeat.sh"), response.BashCommand);
+                    node.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-log-metricbeat.sh"), response.BashCommand);
                 });
         }
     }
