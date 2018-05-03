@@ -16,6 +16,8 @@ using System.Text;
 using System.Threading.Tasks;
 
 using Microsoft.Net.Http.Client;
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.Net;
@@ -31,6 +33,32 @@ namespace Neon.Docker
     /// </summary>
     public partial class DockerClient : IDisposable
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Parses a <see cref="JObject"/> value into an instance of the specified
+        /// type by converting it to JSON and then parsing that.
+        /// </summary>
+        /// <typeparam name="T">The desired output type.</typeparam>
+        /// <param name="value">The input dynamic.</param>
+        /// <returns>The parsed value.</returns>
+        public static T ParseObject<T>(JObject value)
+            where T : class, new()
+        {
+            if (value == null)
+            {
+                return null;
+            }
+
+            var json = value.ToString();
+
+            return NeonHelper.JsonDeserialize<T>(json);
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private HttpMessageHandler  handler;
         private Uri                 baseUri;
 

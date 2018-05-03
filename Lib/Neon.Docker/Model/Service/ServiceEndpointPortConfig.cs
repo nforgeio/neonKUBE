@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ServicePublishPort.cs
+// FILE:	    ServiceEndpointPortConfig.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -17,7 +17,7 @@ namespace Neon.Docker
     /// <summary>
     /// Service port publication specification.
     /// </summary>
-    public class ServicePublishPort : INormalizable
+    public class ServiceEndpointPortConfig : INormalizable
     {
         /// <summary>
         /// The port name.

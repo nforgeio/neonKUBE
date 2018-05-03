@@ -10,6 +10,9 @@ using System.Net;
 using System.Text;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
+
 using Neon.Common;
 using Neon.Net;
 
@@ -31,7 +34,7 @@ namespace Neon.Docker
 
             foreach (var service in this.Inner)
             {
-                this.Services.Add(new DockerService(service));
+                this.Services.Add(DockerClient.ParseObject<ServiceSpec>((JObject)service));
             }
         }
 
@@ -45,6 +48,6 @@ namespace Neon.Docker
         /// <summary>
         /// Returns the list of volumes returned by the Docker engine.
         /// </summary>
-        public List<DockerService> Services { get; private set; } = new List<DockerService>();
+        public List<ServiceSpec> Services { get; private set; } = new List<ServiceSpec>();
     }
 }
