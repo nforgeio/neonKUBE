@@ -50,7 +50,7 @@ function Build
 $noImagePush = $nopush
 
 # The image is tiny so we're going to always Build
-# all versions which are all the same anyway.
+# all versions which will all be the same anyway.
 
 Build 0
 Build 1
