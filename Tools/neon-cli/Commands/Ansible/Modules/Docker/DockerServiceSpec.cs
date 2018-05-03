@@ -36,7 +36,7 @@ namespace NeonCli.Ansible.Docker
     // NOTE: The types below are accurate as of Docker API version 1.35.
 
     /// <summary>
-    /// Service endpoint mode.
+    /// Enumerates the service endpoint modes.
     /// </summary>
     public enum EndpointMode
     {
@@ -48,7 +48,7 @@ namespace NeonCli.Ansible.Docker
     }
 
     /// <summary>
-    /// Service isolation mode (Windows only).
+    /// Enumerates the service isolation modes (Windows only).
     /// </summary>
     public enum IsolationMode
     {
@@ -63,7 +63,7 @@ namespace NeonCli.Ansible.Docker
     }
 
     /// <summary>
-    /// Service mode.
+    /// Enumerates the service modes.
     /// </summary>
     public enum ServiceMode
     {
@@ -75,7 +75,7 @@ namespace NeonCli.Ansible.Docker
     }
 
     /// <summary>
-    /// Service restart condition.
+    /// Enumerates the service restart conditions.
     /// </summary>
     public enum RestartCondition
     {
@@ -90,7 +90,7 @@ namespace NeonCli.Ansible.Docker
     }
 
     /// <summary>
-    /// Service update rollback order.
+    /// Enumerates the service taek update rollback order options.
     /// </summary>
     public enum UpdateOrder
     {
@@ -102,7 +102,7 @@ namespace NeonCli.Ansible.Docker
     }
 
     /// <summary>
-    /// Service task rollback order.
+    /// Enumerates the service task rollback order options.
     /// </summary>
     public enum RollbackOrder
     {
@@ -114,7 +114,7 @@ namespace NeonCli.Ansible.Docker
     }
 
     /// <summary>
-    /// Service update failure action.
+    /// Enumerates the service update failure actions.
     /// </summary>
     public enum UpdateFailureAction
     {
@@ -129,7 +129,7 @@ namespace NeonCli.Ansible.Docker
     }
 
     /// <summary>
-    /// Service rollback failure action.
+    /// Enumerates the service rollback failure actions.
     /// </summary>
     public enum RollbackFailureAction
     {
@@ -141,7 +141,7 @@ namespace NeonCli.Ansible.Docker
     }
 
     /// <summary>
-    /// Service port mode.
+    /// Enumerates the service port modes.
     /// </summary>
     public enum PortMode
     {
@@ -153,7 +153,7 @@ namespace NeonCli.Ansible.Docker
     }
 
     /// <summary>
-    /// Service port protocol.
+    /// Enumerates the service port protocols.
     /// </summary>
     public enum PortProtocol
     {
@@ -239,7 +239,7 @@ namespace NeonCli.Ansible.Docker
     }
 
     /// <summary>
-    /// Service mount type.
+    /// Enumerates the service mount types.
     /// </summary>
     public enum MountType
     {
@@ -254,7 +254,7 @@ namespace NeonCli.Ansible.Docker
     }
 
     /// <summary>
-    /// Service mount consistency.
+    /// Enumerates the service mount consistency options
     /// </summary>
     public enum MountConsistency
     {
@@ -272,7 +272,7 @@ namespace NeonCli.Ansible.Docker
     }
 
     /// <summary>
-    /// Service mount propagation.
+    /// Enumerates the mount propagation options.
     /// </summary>
     public enum MountBindPropagation
     {

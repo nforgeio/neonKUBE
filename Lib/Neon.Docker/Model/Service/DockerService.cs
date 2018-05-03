@@ -16,7 +16,7 @@ using Neon.Common;
 namespace Neon.Docker
 {
     /// <summary>
-    /// Describes a Docker volume.
+    /// Describes a Docker service.
     /// </summary>
     public class DockerService
     {
