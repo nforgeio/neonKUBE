@@ -132,16 +132,24 @@ namespace Neon.Cryptography
         /// <summary>
         /// Generates a self-signed certificate for a host name.
         /// </summary>
-        /// <param name="hostName">The host name.</param>
+        /// <param name="hostname">
+        /// <para>
+        /// The host name.
+        /// </para>
+        /// <note>
+        /// You can use include a <b>"*"</b> to specify a wildcard
+        /// certificate like: <b>*.test.com</b>.
+        /// </note>
+        /// </param>
         /// <param name="bitCount">The certificate key size in bits: one of <b>1024</b>, <b>2048</b>, or <b>4096</b> (defaults to <b>2048</b>).</param>
         /// <param name="validDays">
         /// The number of days the certificate will be valid.  This defaults to 365,000 days
         /// or about 1,000 years.
         /// </param>
         /// <returns>The <see cref="TlsCertificate"/>.</returns>
-        public static TlsCertificate CreateSelfSigned(string hostName, int bitCount = 2048, int validDays = 365000)
+        public static TlsCertificate CreateSelfSigned(string hostname, int bitCount = 2048, int validDays = 365000)
         {
-            Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(hostName));
+            Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(hostname));
             Covenant.Requires<ArgumentException>(bitCount == 1024 || bitCount == 2048 || bitCount == 4096);
             Covenant.Requires<ArgumentException>(validDays > 1);
 
@@ -156,7 +164,7 @@ namespace Neon.Cryptography
             {
                 var result = NeonHelper.ExecuteCaptureStreams("openssl",
                     $"req -newkey rsa:{bitCount} -nodes -sha256 -x509 -days {validDays} " +
-                    $"-subj \"/C=--/ST=./L=./O=./CN={hostName}\" " +
+                    $"-subj \"/C=--/ST=./L=./O=./CN={hostname}\" " +
                     $"-keyout \"{keyPath}\" " +
                     $"-out \"{certPath}\"");
 
@@ -456,12 +464,12 @@ namespace Neon.Cryptography
         /// <summary>
         /// Determines whether the certificate is valid for a hostname.
         /// </summary>
-        /// <param name="hostName">The hostname to validate.</param>
+        /// <param name="hostname">The hostname to validate.</param>
         /// <returns><c>true</c> if the certificate is valid for the hostname.</returns>
         /// <exception cref="InvalidOperationException"> Thrown if <see cref="Hosts"/> is <c>null</c> or empty.</exception>
-        public bool IsValidHost(string hostName)
+        public bool IsValidHost(string hostname)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
 
             if (ValidFrom == null || ValidUntil == null)
             {
@@ -483,21 +491,21 @@ namespace Neon.Cryptography
                     // test hostname up to the first dot and then compare what's left.
 
                     var certHostDotPos = certHost.IndexOf('.');
-                    var hostDotPos     = hostName.IndexOf('.');
+                    var hostDotPos     = hostname.IndexOf('.');
 
                     if (certHostDotPos == -1 || hostDotPos == -1)
                     {
                         throw new FormatException("Misformatted hostname or certificate host.");
                     }
 
-                    if (string.Equals(certHost.Substring(certHostDotPos), hostName.Substring(hostDotPos), StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(certHost.Substring(certHostDotPos), hostname.Substring(hostDotPos), StringComparison.OrdinalIgnoreCase))
                     {
                         return true;    // We have a match
                     }
                 }
                 else
                 {
-                    if (string.Equals(certHost, hostName, StringComparison.OrdinalIgnoreCase))
+                    if (string.Equals(certHost, hostname, StringComparison.OrdinalIgnoreCase))
                     {
                         return true;    // Wen have a match
                     }

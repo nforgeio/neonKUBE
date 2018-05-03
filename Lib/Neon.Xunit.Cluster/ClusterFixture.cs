@@ -111,6 +111,7 @@ namespace Neon.Xunit.Cluster
     ///     <see cref="ClearCertificates(bool)"/><br/>
     ///     <see cref="ListCertificates(bool)"/><br/>
     ///     <see cref="PutCertificate(string, string)"/><br/>
+    ///     <see cref="PutSelfSignedCertificate(string, string)"/><br/>
     ///     <see cref="RemoveCertificate(string)"/><br/>
     ///     </description>
     /// </item>
@@ -892,6 +893,38 @@ namespace Neon.Xunit.Cluster
             this.CheckCluster();
 
             cluster.Certificate.Put(name, TlsCertificate.Parse(certPem));
+        }
+
+        /// <summary>
+        /// Creates and persists a self-signed certificate to the cluster.
+        /// </summary>
+        /// <param name="name">The certificate name.</param>
+        /// <param name="hostname">
+        /// <para>
+        /// Specifies the hostname to be protected by the certificate
+        /// like <b>test.com</b>.
+        /// </para>
+        /// <note>
+        /// You can specify wildcard certifictes like: <b>*.test.com</b>.
+        /// </note>
+        /// </param>
+        /// <remarks>
+        /// This method is handy for verifying SSL functionality without
+        /// having to worry about purchasing and/or manually generating
+        /// a certificate.  The only real downside is that most HTTP
+        /// clients will fail to process requests to endpoints with
+        /// self-signed certificates.  You'll need to disable these
+        /// checks in your test code.
+        /// </remarks>
+        public void PutSelfSignedCertificate(string name, string hostname)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
+
+            base.CheckDisposed();
+            this.CheckCluster();
+
+            cluster.Certificate.Put(name, TlsCertificate.CreateSelfSigned(hostname));
         }
 
         /// <summary>
