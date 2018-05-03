@@ -34,7 +34,7 @@ namespace Neon.Docker
 
             foreach (var service in this.Inner)
             {
-                this.Services.Add(DockerClient.ParseObject<ServiceSpec>((JObject)service));
+                this.Services.Add(DockerClient.ParseObject<ServiceDetails>((JObject)service));
             }
         }
 
@@ -46,8 +46,8 @@ namespace Neon.Docker
         public dynamic Inner { get; private set; }
 
         /// <summary>
-        /// Returns the list of volumes returned by the Docker engine.
+        /// Returns the list of service details returned by the Docker engine.
         /// </summary>
-        public List<ServiceSpec> Services { get; private set; } = new List<ServiceSpec>();
+        public List<ServiceDetails> Services { get; private set; } = new List<ServiceDetails>();
     }
 }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ServiceInspection.cs
+// FILE:	    ServiceDetails.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -16,9 +16,9 @@ namespace Neon.Docker
 {
     /// <summary>
     /// Holds the details describing a running Docker swarm service
-    /// from the inspect service REST API.
+    /// from the service list or inspection REST APIs.
     /// </summary>
-    public class ServiceInspection : INormalizable
+    public class ServiceDetails : INormalizable
     {
         /// <summary>
         /// The service ID.
@@ -56,6 +56,15 @@ namespace Neon.Docker
         public ServiceSpec Spec { get; set; }
 
         /// <summary>
+        /// Optionally describes the service's state before the last update.
+        /// This is the state the service will revert to when it's rolled
+        /// back.
+        /// </summary>
+        [JsonProperty(PropertyName = "PreviousSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
+        public ServiceSpec PreviousSpec { get; set; }
+
+        /// <summary>
         /// Describes the service's current endpoint state.
         /// </summary>
         [JsonProperty(PropertyName = "Endpoint", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -79,6 +88,7 @@ namespace Neon.Docker
 
             Version?.Normalize();
             Spec?.Normalize();
+            PreviousSpec?.Normalize();
             Endpoint?.Normalize();
             UpdateStatus?.Normalize();
         }

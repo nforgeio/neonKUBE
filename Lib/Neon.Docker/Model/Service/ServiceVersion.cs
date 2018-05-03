@@ -21,7 +21,7 @@ namespace Neon.Docker
     public class ServiceVersion : INormalizable
     {
         /// <summary>
-        /// Update index for the service when the <see cref="ServiceInspection"/> snapshot was taken.
+        /// Update index for the service when the <see cref="ServiceDetails"/> snapshot was taken.
         /// </summary>
         [JsonProperty(PropertyName = "Index", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(0)]

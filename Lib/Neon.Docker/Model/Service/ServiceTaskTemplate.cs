@@ -84,10 +84,10 @@ namespace Neon.Docker
             Placement     = Placement ?? new ServicePlacement();
             Networks      = Networks ?? new List<ServiceNetwork>();
 
-            ContainerSpec.Normalize();
-            Resources.Normalize();
-            RestartPolicy.Normalize();
-            Placement.Normalize();
+            ContainerSpec?.Normalize();
+            Resources?.Normalize();
+            RestartPolicy?.Normalize();
+            Placement?.Normalize();
             LogDriver?.Normalize();
 
             foreach (var item in Networks)
