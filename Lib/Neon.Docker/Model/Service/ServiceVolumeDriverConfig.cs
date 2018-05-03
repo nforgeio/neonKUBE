@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ServiceLogDriver.cs
+// FILE:	    ServiceVolumeDriverConfig.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -15,19 +15,19 @@ using Newtonsoft.Json.Serialization;
 namespace Neon.Docker
 {
     /// <summary>
-    /// Specifies a custom service logging driver.
+    /// Volume driver configuration options.
     /// </summary>
-    public class ServiceLogDriver : INormalizable
+    public class ServiceVolumeDriverConfig : INormalizable
     {
         /// <summary>
-        /// Specifies the driver name.
+        /// Name of the volume driver.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
         public string Name { get; set; }
 
         /// <summary>
-        /// Specifies the driver options.
+        /// Volume driver options.
         /// </summary>
         [JsonProperty(PropertyName = "Options", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]

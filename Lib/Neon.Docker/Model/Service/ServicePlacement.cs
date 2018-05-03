@@ -20,11 +20,18 @@ namespace Neon.Docker
     public class ServicePlacement : INormalizable
     {
         /// <summary>
-        /// Service constraints formatted as <b>NAME==VALUE</b> or <b>NAME!=VALUE</b>.
+        /// Service constraints formatted as <b>CONSTRAINT==VALUE</b> or <b>CONSTRAINT!=VALUE</b>.
         /// </summary>
         [JsonProperty(PropertyName = "Constraints", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
         public List<string> Constraints { get; set; }
+
+        /// <summary>
+        /// Service placement preferences.
+        /// </summary>
+        [JsonProperty(PropertyName = "Preferences", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
+        public ServicePlacementPreferences Preferences { get; set; }
 
         /// <summary>
         /// Specifies the platforms where the service containers may be deployed or empty
@@ -38,6 +45,7 @@ namespace Neon.Docker
         public void Normalize()
         {
             Constraints = Constraints ?? new List<string>();
+            Preferences = Preferences ?? new ServicePlacementPreferences();
             Platforms   = Platforms ?? new List<ServicePlatform>();
 
             foreach (var item in Platforms)

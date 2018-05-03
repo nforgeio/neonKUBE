@@ -36,8 +36,8 @@ namespace Neon.Docker
         /// <inheritdoc/>
         public void Normalize()
         {
-            // The presence or absence of these properties is important
-            // so we're not normalizing them.
+            Replicated?.Normalize();
+            Global?.Normalize();
         }
     }
 }

@@ -27,11 +27,11 @@ namespace Neon.Docker
         public string Name { get; set; }
 
         /// <summary>
-        /// Service labels formatted as <b>LABEL=VALUE</b>.
+        /// Service labels.
         /// </summary>
         [JsonProperty(PropertyName = "Labels", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
-        public List<string> Labels { get; set; }
+        public Dictionary<string, string> Labels { get; set; }
 
         /// <summary>
         /// User modifiable service task configuration.
@@ -78,7 +78,7 @@ namespace Neon.Docker
         /// <inheritdoc/>
         public void Normalize()
         {
-            Labels         = Labels ?? new List<string>();
+            Labels         = Labels ?? new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             TaskTemplate   = TaskTemplate ?? new ServiceTaskTemplate();
             Mode           = Mode ?? new ServiceSchedulingMode();
             UpdateConfig   = UpdateConfig ?? new ServiceUpdateConfig();

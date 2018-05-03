@@ -33,10 +33,19 @@ namespace Neon.Docker
         [DefaultValue(null)]
         public List<ServiceEndpointPortConfig> Ports { get; set; }
 
+        /// <summary>
+        /// Lists the virtual IP addresses assigned to this service on the 
+        /// attached networks.
+        /// </summary>
+        [JsonProperty(PropertyName = "VirtualIPs", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
+        public List<ServiceVirtualIP> VirtualIPs { get; set; }
+
         /// <inheritdoc/>
         public void Normalize()
         {
-            Ports = Ports ?? new List<ServiceEndpointPortConfig>();
+            Ports      = Ports ?? new List<ServiceEndpointPortConfig>();
+            VirtualIPs = VirtualIPs ?? new List<ServiceVirtualIP>();
 
             foreach (var item in Ports)
             {

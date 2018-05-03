@@ -42,7 +42,7 @@ namespace Neon.Docker
         public string GID { get; set; }
 
         /// <summary>
-        /// The Linux file mode for the file.
+        /// The Linux file mode for the file encoded as an integer.
         /// </summary>
         [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(0)]

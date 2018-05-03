@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ServiceDetails.cs
+// FILE:	    ServiceInspection.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -15,9 +15,10 @@ using Newtonsoft.Json.Serialization;
 namespace Neon.Docker
 {
     /// <summary>
-    /// Holds the details describing a running Docker swarm service.
+    /// Holds the details describing a running Docker swarm service
+    /// from the inspect service REST API.
     /// </summary>
-    public class ServiceDetails : INormalizable
+    public class ServiceInspection : INormalizable
     {
         /// <summary>
         /// The service ID.
@@ -59,10 +60,10 @@ namespace Neon.Docker
         /// </summary>
         [JsonProperty(PropertyName = "Endpoint", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
-        public ServiceEndpoint Endpoint { get; set; }
+        public ServiceEndpointSpec Endpoint { get; set; }
 
         /// <summary>
-        /// Describes the service's current update status.
+        /// Describes the service update status.
         /// </summary>
         [JsonProperty(PropertyName = "UpdateStatus", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
@@ -73,7 +74,7 @@ namespace Neon.Docker
         {
             Version      = Version ?? new ServiceVersion();
             ServiceSpec  = ServiceSpec ?? new ServiceSpec();
-            Endpoint     = Endpoint ?? new ServiceEndpoint();
+            Endpoint     = Endpoint ?? new ServiceEndpointSpec();
             UpdateStatus = UpdateStatus ?? new ServiceUpdateStatus();
 
             Version?.Normalize();

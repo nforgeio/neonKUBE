@@ -26,12 +26,18 @@ namespace Neon.Docker
         [DefaultValue(null)]
         public ServiceCredentialSpec CredentialSpec { get; set; }
 
+        /// <summary>
+        /// SELinux labels for the container.
+        /// </summary>
+        [JsonProperty(PropertyName = "SELinuxContext", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
+        public ServiceSELinuxContext SELinuxContext { get; set; }
+
         /// <inheritdoc/>
         public void Normalize()
         {
-            CredentialSpec = CredentialSpec ?? new ServiceCredentialSpec();
-
-            CredentialSpec?.Normalize();
+            // The presence or absence of these properties is significant so
+            // we're not going to normalize them.
         }
     }
 }

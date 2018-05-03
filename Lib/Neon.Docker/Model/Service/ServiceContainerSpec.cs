@@ -31,7 +31,7 @@ namespace Neon.Docker
         /// </summary>
         [JsonProperty(PropertyName = "Labels", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
-        public List<string> Labels { get; set; }
+        public Dictionary<string, string> Labels { get; set; }
 
         /// <summary>
         /// The command to be run in the image.
@@ -94,15 +94,22 @@ namespace Neon.Docker
         /// Optionally create a pseudo TTY.
         /// </summary>
         [JsonProperty(PropertyName = "TTY", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(null)]
+        [DefaultValue(false)]
         public bool TTY { get; set; }
 
         /// <summary>
         /// Open STDIN.
         /// </summary>
         [JsonProperty(PropertyName = "OpenStdin", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(null)]
+        [DefaultValue(false)]
         public bool OpenStdin { get; set; }
+
+        /// <summary>
+        /// Optionally mount the service container file system as read-only.
+        /// </summary>
+        [JsonProperty(PropertyName = "ReadOnly", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(false)]
+        public bool ReadOnly { get; set; }
 
         /// <summary>
         /// Specifies file system mounts to be added to the service containers.
@@ -117,6 +124,34 @@ namespace Neon.Docker
         [JsonProperty(PropertyName = "StopSignal", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
         public string StopSignal { get; set; }
+
+        /// <summary>
+        /// Time to wait for a service container to stop gracefully before killing it
+        /// forcefully (in nanoseconds).
+        /// </summary>
+        [JsonProperty(PropertyName = "StopGracePeriod", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(0)]
+        public long StopGracePeriod { get; set; }
+
+        /// <summary>
+        /// Specifies how service container health check are to be performed.
+        /// </summary>
+        [JsonProperty(PropertyName = "HealthCheck", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
+        public ServiceHealthCheck HealthCheck { get; set; }
+
+        /// <summary>
+        /// <para>
+        /// Lists the hostname/IP address mappings to add to the service container
+        /// [/etc/hosts] file.  Each entry is formatted like:
+        /// </para>
+        /// <example>
+        /// IP_address canonical_hostname [aliases...]
+        /// </example>
+        /// </summary>
+        [JsonProperty(PropertyName = "StopGracePeriod", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(0)]
+        public List<string> Hosts { get; set; }
 
         /// <summary>
         /// DNS resolver configuration.
@@ -150,14 +185,17 @@ namespace Neon.Docker
         /// <inheritdoc/>
         public void Normalize()
         {
-            Labels  = Labels ?? new List<string>();
-            Command = Command ?? new List<string>();
-            Args    = Args ?? new List<string>();
-            Groups  = Groups ?? new List<string>();
-            Secrets = Secrets ?? new List<ServiceSecret>();
-            Configs = Configs ?? new List<ServiceConfig>();
+            Labels      = Labels ?? new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            Command     = Command ?? new List<string>();
+            Args        = Args ?? new List<string>();
+            Groups      = Groups ?? new List<string>();
+            Secrets     = Secrets ?? new List<ServiceSecret>();
+            Configs     = Configs ?? new List<ServiceConfig>();
+            HealthCheck = HealthCheck ?? new ServiceHealthCheck();
+            Hosts       = Hosts ?? new List<string>();
 
             Privileges?.Normalize();
+            HealthCheck?.Normalize();
             DNSConfig?.Normalize();
         }
     }

@@ -27,34 +27,34 @@ namespace Neon.Docker
         public string Name { get; set; }
 
         /// <summary>
-        /// Specifies the port where the service receives traffic on the
-        /// external network.
-        /// </summary>
-        [JsonProperty(PropertyName = "Published", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(null)]
-        public int Published { get; set; }
-
-        /// <summary>
-        /// Specifies the internal port where external traffic
-        /// will be forwarded within the service containers.
-        /// </summary>
-        [JsonProperty(PropertyName = "Target", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(null)]
-        public int Target { get; set; }
-
-        /// <summary>
-        /// Specifies the port mode.
-        /// </summary>
-        [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(default(ServicePortMode))]
-        public ServicePortMode Mode { get; set; }
-
-        /// <summary>
         /// Specifies the port protocol.
         /// </summary>
         [JsonProperty(PropertyName = "Protocol", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(default(ServicePortProtocol))]
         public ServicePortProtocol Protocol { get; set; }
+
+        /// <summary>
+        /// Specifies the internal port where external traffic
+        /// will be forwarded within the service containers.
+        /// </summary>
+        [JsonProperty(PropertyName = "TargetPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
+        public int TargetPort { get; set; }
+
+        /// <summary>
+        /// Specifies the port where the service receives traffic on the
+        /// external network.
+        /// </summary>
+        [JsonProperty(PropertyName = "PublishedPort", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
+        public int PublishedPort { get; set; }
+
+        /// <summary>
+        /// Specifies the port mode.
+        /// </summary>
+        [JsonProperty(PropertyName = "PublishMode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(default(ServicePortMode))]
+        public ServicePortMode PublishMode { get; set; }
 
         /// <inheritdoc/>
         public void Normalize()

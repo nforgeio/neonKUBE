@@ -52,7 +52,14 @@ namespace Neon.Docker
         /// </summary>
         [JsonProperty(PropertyName = "ForceUpdate", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(0)]
-        public int ForceUpdate { get; set; }
+        public long ForceUpdate { get; set; }
+
+        /// <summary>
+        /// Specifies the runtime for the service task executor.
+        /// </summary>
+        [JsonProperty(PropertyName = "Runtime", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
+        public string Runtime { get; set; }
 
         /// <summary>
         /// Specifies the networks to be attached to the service containers.

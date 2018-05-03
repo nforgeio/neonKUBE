@@ -38,6 +38,8 @@ namespace Neon.Docker
         /// <inheritdoc/>
         public void Normalize()
         {
+            // The presence or abence of these properties is important so we're
+            // not going to normalize them.
         }
     }
 }

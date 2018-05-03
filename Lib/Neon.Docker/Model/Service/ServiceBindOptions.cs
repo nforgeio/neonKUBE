@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ServiceVersion.cs
+// FILE:	    ServiceBindOptions.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -15,17 +15,16 @@ using Newtonsoft.Json.Serialization;
 namespace Neon.Docker
 {
     /// <summary>
-    /// <b>Windows-only:</b> Specifies how Windows credentials are to be
-    /// loaded for the container.
+    /// Mounted directory bind options.
     /// </summary>
-    public class ServiceVersion : INormalizable
+    public class ServiceBindOptions : INormalizable
     {
         /// <summary>
-        /// Update index for the service when the <see cref="ServiceInspection"/> snapshot was taken.
+        /// Named setting for a resource.
         /// </summary>
-        [JsonProperty(PropertyName = "Index", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
-        public long Index { get; set; }
+        [JsonProperty(PropertyName = "Propagation", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(default(ServiceMountBindPropagation))]
+        public ServiceMountBindPropagation Propagation { get; set; }
 
         /// <inheritdoc/>
         public void Normalize()
