@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServiceLogDriver : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceLogDriver()
-        {
-        }
-
-        /// <summary>
         /// Specifies the driver name.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]

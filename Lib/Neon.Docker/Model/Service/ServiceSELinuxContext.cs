@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServiceSELinuxContext : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceSELinuxContext()
-        {
-        }
-
-        /// <summary>
         /// Disable SELinux.
         /// </summary>
         [JsonProperty(PropertyName = "Disable", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]

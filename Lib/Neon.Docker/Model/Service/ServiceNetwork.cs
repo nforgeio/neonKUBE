@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServiceNetwork : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceNetwork()
-        {
-        }
-
-        /// <summary>
         /// Target network name.
         /// </summary>
         [JsonProperty(PropertyName = "Target", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]

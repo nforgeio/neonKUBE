@@ -16,6 +16,12 @@ namespace Neon.Docker
     public enum ServiceUpdateState
     {
         /// <summary>
+        /// Service update has completed.
+        /// </summary>
+        [EnumMember(Value = "completed")]
+        Completed = 0,
+
+        /// <summary>
         /// Service is actively being updated.
         /// </summary>
         [EnumMember(Value = "updating")]
@@ -25,12 +31,6 @@ namespace Neon.Docker
         /// Service update is paused.
         /// </summary>
         [EnumMember(Value = "paused")]
-        Paused,
-
-        /// <summary>
-        /// Service update has completed.
-        /// </summary>
-        [EnumMember(Value = "completed")]
-        Completed
+        Paused
     }
 }

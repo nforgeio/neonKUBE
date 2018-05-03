@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServiceResourceSettings : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceResourceSettings()
-        {
-        }
-
-        /// <summary>
         /// CPU utilization expressed as billionths of a CPU.
         /// </summary>
         [JsonProperty(PropertyName = "NanoCPUs", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -54,7 +47,7 @@ namespace Neon.Docker
 
             foreach (var item in GenericResources)
             {
-                item.Normalize();
+                item?.Normalize();
             }
         }
     }

@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServicePlacementSpreadSettings : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServicePlacementSpreadSettings()
-        {
-        }
-
-        /// <summary>
         /// Label descriptor, such as: engine.labels.az
         /// </summary>
         [JsonProperty(PropertyName = "SpreadDescriptor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]

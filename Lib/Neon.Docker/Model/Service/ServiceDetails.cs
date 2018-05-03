@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServiceDetails : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceDetails()
-        {
-        }
-
-        /// <summary>
         /// The service ID.
         /// </summary>
         [JsonProperty(PropertyName = "ID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]

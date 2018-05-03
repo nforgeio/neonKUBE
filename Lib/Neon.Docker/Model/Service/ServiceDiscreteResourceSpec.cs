@@ -20,22 +20,17 @@ namespace Neon.Docker
     public class ServiceDiscreteResourceSpec : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceDiscreteResourceSpec()
-        {
-        }
-
-        /// <summary>
         /// Identifies the setting.
         /// </summary>
-        [JsonProperty(PropertyName = "Kind", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Kind", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public string Kind { get; set; }
 
         /// <summary>
         /// The setting value <c>long</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "Value", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Value", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public long Value { get; set; }
 
         /// <inheritdoc/>

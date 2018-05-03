@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServiceEndpoint : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceEndpoint()
-        {
-        }
-
-        /// <summary>
         /// Service endpoint specification.
         /// </summary>
         [JsonProperty(PropertyName = "Spec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -50,8 +43,11 @@ namespace Neon.Docker
         /// <inheritdoc/>
         public void Normalize()
         {
+            Spec       = Spec ?? new ServiceEndpointSpec();
             Ports      = Ports ?? new List<ServiceEndpointPortConfig>();
             VirtualIPs = VirtualIPs ?? new List<ServiceVirtualIP>();
+
+            Spec?.Normalize();
 
             foreach (var item in Ports)
             {

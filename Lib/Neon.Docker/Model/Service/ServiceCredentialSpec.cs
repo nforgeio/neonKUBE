@@ -21,13 +21,6 @@ namespace Neon.Docker
     public class ServiceCredentialSpec : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceCredentialSpec()
-        {
-        }
-
-        /// <summary>
         /// Specifies the file on the Docker host with the credentials.
         /// </summary>
         [JsonProperty(PropertyName = "File", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]

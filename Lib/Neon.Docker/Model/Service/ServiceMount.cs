@@ -23,19 +23,21 @@ namespace Neon.Docker
         /// The mount type.
         /// </summary>
         [JsonProperty(PropertyName = "Type", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(ServiceMountType.Volume)]
-        public ServiceMountType Type { get; set; } = ServiceMountType.Volume;
+        [DefaultValue(default(ServiceMountType))]
+        public ServiceMountType Type { get; set; }
 
         /// <summary>
         /// Specifies the external mount source
         /// </summary>
-        [JsonProperty(PropertyName = "Source", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Source", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public string Source { get; set; }
 
         /// <summary>
         /// Specifies where the mount will appear within the service containers. 
         /// </summary>
-        [JsonProperty(PropertyName = "Source", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Target", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public string Target { get; set; }
 
         /// <summary>
@@ -43,21 +45,21 @@ namespace Neon.Docker
         /// </summary>
         [JsonProperty(PropertyName = "ReadOnly", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(false)]
-        public bool ReadOnly { get; set; } = false;
+        public bool ReadOnly { get; set; }
 
         /// <summary>
         /// Specifies the mount consistency.
         /// </summary>
         [JsonProperty(PropertyName = "Consistency", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(ServiceMountConsistency.Consistent)]
-        public ServiceMountConsistency Consistency { get; set; } = ServiceMountConsistency.Consistent;
+        public ServiceMountConsistency Consistency { get; set; }
 
         /// <summary>
         /// Specifies the bind propagation mode.
         /// </summary>
         [JsonProperty(PropertyName = "BindPropagation", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(ServiceMountBindPropagation.RPrivate)]
-        public ServiceMountBindPropagation BindPropagation { get; set; } = ServiceMountBindPropagation.RPrivate;
+        public ServiceMountBindPropagation BindPropagation { get; set; }
 
         /// <summary>
         /// Specifies the volume driver.
@@ -69,7 +71,7 @@ namespace Neon.Docker
         /// <summary>
         /// Specifies volume labels as <b>LABEL=VALUE</b> items.
         /// </summary>
-        [JsonProperty(PropertyName = "VolumeDriver", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "VolumeLabel", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
         public List<string> VolumeLabel { get; private set; }
 
@@ -99,7 +101,7 @@ namespace Neon.Docker
         /// </summary>
         [JsonProperty(PropertyName = "TmpfsMode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue("1777")]
-        public string TmpfsMode { get; set; } = "1777";
+        public string TmpfsMode { get; set; }
 
         /// <inheritdoc/>
         public void Normalize()

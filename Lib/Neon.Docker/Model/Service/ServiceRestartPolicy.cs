@@ -20,18 +20,11 @@ namespace Neon.Docker
     public class ServiceRestartPolicy : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceRestartPolicy()
-        {
-        }
-
-        /// <summary>
         /// Specifies the condition under which a service container should be restarted.
         /// </summary>
         [JsonProperty(PropertyName = "Condition", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(ServiceRestartCondition.OnFailure)]
-        public ServiceRestartCondition Condition { get; set; } = ServiceRestartCondition.OnFailure;
+        [DefaultValue(default(ServiceRestartCondition))]
+        public ServiceRestartCondition Condition { get; set; }
 
         /// <summary>
         /// Deplay between restart attempts (nanoseconds).

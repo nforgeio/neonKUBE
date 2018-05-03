@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServiceGenericResources : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceGenericResources()
-        {
-        }
-
-        /// <summary>
         /// Named setting for a resource.
         /// </summary>
         [JsonProperty(PropertyName = "NamedResourceSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -43,6 +36,8 @@ namespace Neon.Docker
         /// <inheritdoc/>
         public void Normalize()
         {
+            // The presence or absence of the instance properties is
+            // important, so we're not going to normalize them.
         }
     }
 }

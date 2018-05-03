@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServicePlacementPreferences : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServicePlacementPreferences()
-        {
-        }
-
-        /// <summary>
         /// Spread swarm orchestrator options.
         /// </summary>
         [JsonProperty(PropertyName = "Spread", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -37,6 +30,11 @@ namespace Neon.Docker
         public void Normalize()
         {
             Spread = Spread ?? new List<ServicePlacementSpreadSettings>();
+
+            foreach (var item in Spread)
+            {
+                item?.Normalize();
+            }
         }
     }
 }

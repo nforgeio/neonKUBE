@@ -21,13 +21,6 @@ namespace Neon.Docker
     public class ServiceUpdateStatus : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceUpdateStatus()
-        {
-        }
-
-        /// <summary>
         /// Indicates the saervice updating state.
         /// </summary>
         [JsonProperty(PropertyName = "State", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -58,6 +51,9 @@ namespace Neon.Docker
         /// <inheritdoc/>
         public void Normalize()
         {
+            State = State ?? new ServiceUpdateStatus();
+
+            State?.Normalize();
         }
     }
 }

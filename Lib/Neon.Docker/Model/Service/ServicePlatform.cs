@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServicePlatform : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServicePlatform()
-        {
-        }
-
-        /// <summary>
         /// Specifies the hardware architecture (like: <b>x86_64</b>).
         /// </summary>
         [JsonProperty(PropertyName = "Architecture", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]

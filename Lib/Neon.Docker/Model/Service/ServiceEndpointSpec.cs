@@ -20,18 +20,11 @@ namespace Neon.Docker
     public class ServiceEndpointSpec : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceEndpointSpec()
-        {
-        }
-
-        /// <summary>
         /// Specifies how the Docker swarm will load balance traffic to the service tasks.
         /// </summary>
         [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(ServiceEndpointMode.Vip)]
-        public ServiceEndpointMode Mode { get; set; } = ServiceEndpointMode.Vip;
+        [DefaultValue(default(ServiceEndpointMode))]
+        public ServiceEndpointMode Mode { get; set; }
 
         /// <summary>
         /// Details the network ports exposed by the service tasks.

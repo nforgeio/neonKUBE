@@ -20,23 +20,16 @@ namespace Neon.Docker
     public class ServiceRollbackConfig : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceRollbackConfig()
-        {
-        }
-
-        /// <summary>
         /// Maximum number of tasks to be rolled back in parallel during an rollback interation.
         /// </summary>
-        [JsonProperty(PropertyName = "Parallism", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "Parallelism", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(0)]
-        public long Parallism { get; set; }
+        public long Parallelism { get; set; }
 
         /// <summary>
         /// Time between rollback iterations (in nanoseconds).
         /// </summary>
-        [JsonProperty(PropertyName = "Parallism", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "Delay", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(0)]
         public long Delay { get; set; }
 
@@ -44,7 +37,7 @@ namespace Neon.Docker
         /// Action to take if an rolled back task fails to run or stops running during the rollback.
         /// </summary>
         [JsonProperty(PropertyName = "FailureAction", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
+        [DefaultValue(default(ServiceRollbackFailureAction))]
         public ServiceRollbackFailureAction FailureAction { get; set; }
 
         /// <summary>
@@ -66,7 +59,7 @@ namespace Neon.Docker
         /// Specifies the order in which the running task is stopped and the rolledback task is started.
         /// </summary>
         [JsonProperty(PropertyName = "Order", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
+        [DefaultValue(default(ServiceRollbackOrder))]
         public ServiceRollbackOrder Order { get; set; }
 
         /// <inheritdoc/>

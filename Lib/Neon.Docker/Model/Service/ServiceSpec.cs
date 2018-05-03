@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServiceSpec : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceSpec()
-        {
-        }
-
-        /// <summary>
         /// The service Name.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -43,7 +36,7 @@ namespace Neon.Docker
         /// <summary>
         /// User modifiable service task configuration.
         /// </summary>
-        [JsonProperty(PropertyName = "Labels", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "TaskTemplate", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
         public ServiceTaskTemplate TaskTemplate { get; set; }
 

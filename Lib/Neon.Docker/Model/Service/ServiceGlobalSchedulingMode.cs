@@ -19,13 +19,6 @@ namespace Neon.Docker
     /// </summary>
     public class ServiceGlobalSchedulingMode : INormalizable
     {
-        /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceGlobalSchedulingMode()
-        {
-        }
-
         /// <inheritdoc/>
         public void Normalize()
         {

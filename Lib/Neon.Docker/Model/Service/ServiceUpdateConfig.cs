@@ -20,18 +20,11 @@ namespace Neon.Docker
     public class ServiceUpdateConfig : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceUpdateConfig()
-        {
-        }
-
-        /// <summary>
         /// Maximum number of tasks to be updated in parallel during an update interation.
         /// </summary>
-        [JsonProperty(PropertyName = "Parallism", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "Parallelism", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(0)]
-        public long Parallism { get; set; }
+        public long Parallelism { get; set; }
 
         /// <summary>
         /// Time between update interations (in nanoseconds).
@@ -44,7 +37,7 @@ namespace Neon.Docker
         /// Action to take if an updated task fails to run or stops running during the update.
         /// </summary>
         [JsonProperty(PropertyName = "FailureAction", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
+        [DefaultValue(default(ServiceUpdateFailureAction))]
         public ServiceUpdateFailureAction FailureAction { get; set; }
 
         /// <summary>
@@ -66,7 +59,7 @@ namespace Neon.Docker
         /// Specifies the order in which the running task is stopped and the new task is started.
         /// </summary>
         [JsonProperty(PropertyName = "Order", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
+        [DefaultValue(default(ServiceUpdateOrder))]
         public ServiceUpdateOrder Order { get; set; }
 
         /// <inheritdoc/>

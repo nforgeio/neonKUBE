@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServiceDnsConfig : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceDnsConfig()
-        {
-        }
-
-        /// <summary>
         /// IP addresses of the nameservers.
         /// </summary>
         [JsonProperty(PropertyName = "Nameservers", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]

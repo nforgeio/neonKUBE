@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServicePlacement : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServicePlacement()
-        {
-        }
-
-        /// <summary>
         /// Service constraints formatted as <b>NAME==VALUE</b> or <b>NAME!=VALUE</b>.
         /// </summary>
         [JsonProperty(PropertyName = "Constraints", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -49,7 +42,7 @@ namespace Neon.Docker
 
             foreach (var item in Platforms)
             {
-                item.Normalize();
+                item?.Normalize();
             }
         }
     }

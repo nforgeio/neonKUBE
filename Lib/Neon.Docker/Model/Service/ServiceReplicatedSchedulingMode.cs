@@ -20,18 +20,11 @@ namespace Neon.Docker
     public class ServiceReplicatedSchedulingMode : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceReplicatedSchedulingMode()
-        {
-        }
-
-        /// <summary>
         /// The number of service replicas (tasks/containers).
         /// </summary>
         [JsonProperty(PropertyName = "Replicas", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(null)]
-        public string Replicas { get; set; }
+        [DefaultValue(0)]
+        public int Replicas { get; set; }
 
         /// <inheritdoc/>
         public void Normalize()

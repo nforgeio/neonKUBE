@@ -21,13 +21,6 @@ namespace Neon.Docker
     public class ServiceVersion : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceVersion()
-        {
-        }
-
-        /// <summary>
         /// Version number for the service when the <see cref="ServiceDetails"/> snapshot was taken.
         /// </summary>
         [JsonProperty(PropertyName = "Index", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]

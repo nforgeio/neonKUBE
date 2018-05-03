@@ -25,12 +25,6 @@ namespace Neon.Docker
         /// UDP
         /// </summary>
         [EnumMember(Value = "udp")]
-        Udp,
-
-        /// <summary>
-        /// SCTP
-        /// </summary>
-        [EnumMember(Value = "sctp")]
-        Sctp
+        Udp
     }
 }

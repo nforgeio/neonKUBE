@@ -22,24 +22,29 @@ namespace Neon.Docker
         /// <summary>
         /// The Docker secret ID.
         /// </summary>
-        [JsonProperty(PropertyName = "SecretID", Required = Required.Always)]
-        public string SecretId { get; set; }
+        [JsonProperty(PropertyName = "SecretID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
+        public string SecretID { get; set; }
 
         /// <summary>
         /// The secret name.
         /// </summary>
-        [JsonProperty(PropertyName = "SecretName", Required = Required.Always)]
+        [JsonProperty(PropertyName = "SecretName", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public string SecretName { get; set; }
 
         /// <summary>
         /// Secret file information.
         /// </summary>
-        [JsonProperty(PropertyName = "File", Required = Required.Always)]
+        [JsonProperty(PropertyName = "SecretFile", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public ServiceFile File { get; set; }
 
         /// <inheritdoc/>
         public void Normalize()
         {
+            File = File ?? new ServiceFile();
+
             File?.Normalize();
         }
     }

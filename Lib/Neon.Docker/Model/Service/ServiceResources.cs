@@ -14,15 +14,11 @@ using Newtonsoft.Json.Serialization;
 
 namespace Neon.Docker
 {
+    /// <summary>
+    /// Specifies the service resource requirements and limits.
+    /// </summary>
     public class ServiceResources : INormalizable
     {
-        /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceResources()
-        {
-        }
-
         /// <summary>
         /// Specifies resource limits for service containers.
         /// </summary>
@@ -42,6 +38,9 @@ namespace Neon.Docker
         {
             Limits      = Limits ?? new ServiceResourceSettings();
             Reservation = Reservation ?? new ServiceResourceSettings();
+
+            Limits?.Normalize();
+            Reservation?.Normalize();
         }
     }
 }

@@ -23,25 +23,29 @@ namespace Neon.Docker
         /// <summary>
         /// Path to the target file within the container.
         /// </summary>
-        [JsonProperty(PropertyName = "Name", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public string Name { get; set; }
 
         /// <summary>
         /// Identifies the user that owns the file.
         /// </summary>
-        [JsonProperty(PropertyName = "UID", Required = Required.Always)]
+        [JsonProperty(PropertyName = "UID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public string UID { get; set; }
 
         /// <summary>
         /// Identifies the group that owns the file.
         /// </summary>
-        [JsonProperty(PropertyName = "GID", Required = Required.Always)]
+        [JsonProperty(PropertyName = "GID", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public string GID { get; set; }
 
         /// <summary>
         /// The Linux file mode for the file.
         /// </summary>
-        [JsonProperty(PropertyName = "Mode", Required = Required.Always)]
+        [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(0)]
         public int Mode { get; set; }
 
         /// <inheritdoc/>

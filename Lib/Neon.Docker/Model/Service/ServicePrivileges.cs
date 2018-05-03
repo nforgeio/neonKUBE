@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServicePrivileges : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServicePrivileges()
-        {
-        }
-
-        /// <summary>
         /// <b>Windows Only:</b> Windows container credential specification.
         /// </summary>
         [JsonProperty(PropertyName = "CredentialSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -36,6 +29,8 @@ namespace Neon.Docker
         /// <inheritdoc/>
         public void Normalize()
         {
+            CredentialSpec = CredentialSpec ?? new ServiceCredentialSpec();
+
             CredentialSpec?.Normalize();
         }
     }

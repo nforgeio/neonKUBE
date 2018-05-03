@@ -20,102 +20,131 @@ namespace Neon.Docker
     public class ServiceContainerSpec : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceContainerSpec()
-        {
-        }
-
-        /// <summary>
         /// The image to use for the container.
         /// </summary>
+        [JsonProperty(PropertyName = "Image", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public string Image { get; set; }
 
         /// <summary>
         /// The container labels formatted as <b>LABEL=VALUE</b>.
         /// </summary>
+        [JsonProperty(PropertyName = "Labels", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public List<string> Labels { get; set; }
 
         /// <summary>
         /// The command to be run in the image.
         /// </summary>
+        [JsonProperty(PropertyName = "Command", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public List<string> Command { get; set; }
 
         /// <summary>
         /// Arguments to the command.
         /// </summary>
+        [JsonProperty(PropertyName = "Args", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public List<string> Args { get; set; }
 
         /// <summary>
         /// Hostname for the container.
         /// </summary>
+        [JsonProperty(PropertyName = "Hostname", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public string Hostname { get; set; }
 
         /// <summary>
         /// Environment variables of the form <b>VARIABLE=VALUE</b> or <b>VARIABLE</b>
         /// to pass environment variables from the Docker host.
         /// </summary>
+        [JsonProperty(PropertyName = "Env", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public List<string> Env { get; set; }
 
         /// <summary>
         /// The container working directory where commands will run.
         /// </summary>
+        [JsonProperty(PropertyName = "Dir", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public string Dir { get; set; }
 
         /// <summary>
         /// The user within the container.
         /// </summary>
+        [JsonProperty(PropertyName = "User", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public string User { get; set; }
 
         /// <summary>
         /// The list of additional groups that the command will run as.
         /// </summary>
+        [JsonProperty(PropertyName = "Groups", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public List<string> Groups { get; set; }
 
         /// <summary>
         /// Security options for the container.
         /// </summary>
+        [JsonProperty(PropertyName = "Privileges", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public ServicePrivileges Privileges { get; set;}
 
         /// <summary>
         /// Optionally create a pseudo TTY.
         /// </summary>
+        [JsonProperty(PropertyName = "TTY", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public bool TTY { get; set; }
 
         /// <summary>
         /// Open STDIN.
         /// </summary>
-        public bool OpenStdIn { get; set; }
+        [JsonProperty(PropertyName = "OpenStdin", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
+        public bool OpenStdin { get; set; }
 
         /// <summary>
         /// Specifies file system mounts to be added to the service containers.
         /// </summary>
+        [JsonProperty(PropertyName = "Mounts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public List<ServiceMount> Mounts { get; set; }
 
         /// <summary>
         /// Signal to be used to gracefully stop the service containers.
         /// </summary>
+        [JsonProperty(PropertyName = "StopSignal", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public string StopSignal { get; set; }
 
         /// <summary>
         /// DNS resolver configuration.
         /// </summary>
-        public ServiceDnsConfig DnsConfig { get; set; }
+        [JsonProperty(PropertyName = "DNSConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
+        public ServiceDnsConfig DNSConfig { get; set; }
 
         /// <summary>
         /// Specifies the secrets to be exposed to the service containers.
         /// </summary>
+        [JsonProperty(PropertyName = "Secrets", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public List<ServiceSecret> Secrets { get; set; }
 
         /// <summary>
         /// Specifies the configs to be exposed to the service containers.
         /// </summary>
+        [JsonProperty(PropertyName = "Configs", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public List<ServiceConfig> Configs { get; set; }
 
         /// <summary>
         /// <b>Windows Only:</b> Specifies the isolation technology to be used
         /// for the service containers.
         /// </summary>
+        [JsonProperty(PropertyName = "Isolation", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(default(ServiceIsolationMode))]
         public ServiceIsolationMode Isolation { get; set; }
 
         /// <inheritdoc/>
@@ -129,7 +158,7 @@ namespace Neon.Docker
             Configs = Configs ?? new List<ServiceConfig>();
 
             Privileges?.Normalize();
-            DnsConfig?.Normalize();
+            DNSConfig?.Normalize();
         }
     }
 }

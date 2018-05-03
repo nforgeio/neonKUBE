@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServiceSchedulingMode : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceSchedulingMode()
-        {
-        }
-
-        /// <summary>
         /// Replicated scheduling mode options.
         /// </summary>
         [JsonProperty(PropertyName = "Replicated", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -43,6 +36,8 @@ namespace Neon.Docker
         /// <inheritdoc/>
         public void Normalize()
         {
+            // The presence or absence of these properties is important
+            // so we're not normalizing them.
         }
     }
 }

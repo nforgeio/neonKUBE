@@ -20,13 +20,6 @@ namespace Neon.Docker
     public class ServiceTaskTemplate : INormalizable
     {
         /// <summary>
-        /// Default constructor.
-        /// </summary>
-        public ServiceTaskTemplate()
-        {
-        }
-
-        /// <summary>
         /// Service container settings.
         /// </summary>
         [JsonProperty(PropertyName = "ContainerSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
@@ -57,7 +50,7 @@ namespace Neon.Docker
         /// <summary>
         /// Counter that triggers an update even if no relevant service properties have changed.
         /// </summary>
-        [JsonProperty(PropertyName = "Placement", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "ForceUpdate", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(0)]
         public int ForceUpdate { get; set; }
 
@@ -65,14 +58,14 @@ namespace Neon.Docker
         /// Specifies the networks to be attached to the service containers.
         /// </summary>
         [JsonProperty(PropertyName = "Networks", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
+        [DefaultValue(null)]
         public List<ServiceNetwork> Networks { get; set; }
 
         /// <summary>
         /// Optionally specifies the log driver to use for the service containers.
         /// </summary>
-        [JsonProperty(PropertyName = "Networks", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
+        [JsonProperty(PropertyName = "LogDriver", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public ServiceLogDriver LogDriver { get; set; }
 
         /// <inheritdoc/>
