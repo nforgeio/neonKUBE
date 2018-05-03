@@ -62,14 +62,14 @@ namespace Neon.Docker
         public ServiceBindOptions BindOptions { get; set; }
 
         /// <summary>
-        /// Specifies volume mount configuration options.
+        /// Optionally specifies volume mount configuration options.
         /// </summary>
         [JsonProperty(PropertyName = "VolumeOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
         public ServiceVolumeOptions VolumeOptions { get; set; }
 
         /// <summary>
-        /// Specifies Tempfs mount configuration options.
+        /// Optionally specifies Tempfs mount configuration options.
         /// </summary>
         [JsonProperty(PropertyName = "TempfsOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]

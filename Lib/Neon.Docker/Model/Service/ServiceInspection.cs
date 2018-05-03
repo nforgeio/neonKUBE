@@ -51,9 +51,9 @@ namespace Neon.Docker
         /// <summary>
         /// The service specification.
         /// </summary>
-        [JsonProperty(PropertyName = "ServiceSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "Spec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
-        public ServiceSpec ServiceSpec { get; set; }
+        public ServiceSpec Spec { get; set; }
 
         /// <summary>
         /// Describes the service's current endpoint state.
@@ -73,12 +73,12 @@ namespace Neon.Docker
         public void Normalize()
         {
             Version      = Version ?? new ServiceVersion();
-            ServiceSpec  = ServiceSpec ?? new ServiceSpec();
+            Spec         = Spec ?? new ServiceSpec();
             Endpoint     = Endpoint ?? new ServiceEndpointSpec();
             UpdateStatus = UpdateStatus ?? new ServiceUpdateStatus();
 
             Version?.Normalize();
-            ServiceSpec?.Normalize();
+            Spec?.Normalize();
             Endpoint?.Normalize();
             UpdateStatus?.Normalize();
         }

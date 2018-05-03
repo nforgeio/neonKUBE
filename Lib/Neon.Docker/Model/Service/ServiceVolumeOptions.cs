@@ -33,10 +33,17 @@ namespace Neon.Docker
         [DefaultValue(null)]
         public Dictionary<string, string> Labels { get; set; }
 
+        /// <summary>
+        /// Optionally specifies volume driver and options.
+        /// </summary>
+        [JsonProperty(PropertyName = "DriverConfig", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
+        public ServiceVolumeDriverConfig DriverConfig { get; set; }
+
         /// <inheritdoc/>
         public void Normalize()
         {
-            Labels = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            Labels = Labels ?? new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
         }
     }
 }
