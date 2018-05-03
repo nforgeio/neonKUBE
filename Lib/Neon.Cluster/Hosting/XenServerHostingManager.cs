@@ -166,13 +166,13 @@ namespace Neon.Cluster
             foreach (var host in cluster.Definition.Hosting.VmHosts)
             {
                 var hostAddress  = host.Address;
-                var hostName     = host.Name;
+                var hostname     = host.Name;
                 var hostUsername = host.Username ?? cluster.Definition.Hosting.VmHostUsername;
                 var hostPassword = host.Password ?? cluster.Definition.Hosting.VmHostPassword;
 
-                if (string.IsNullOrEmpty(hostName))
+                if (string.IsNullOrEmpty(hostname))
                 {
-                    hostName = host.Address;
+                    hostname = host.Address;
                 }
 
                 var xenHost = new XenClient(hostAddress, hostUsername, hostPassword, name: host.Name, logFolder: logFolder);

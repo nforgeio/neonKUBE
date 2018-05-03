@@ -2701,13 +2701,13 @@ echo $? > {cmdFolder}/exit
         /// </summary>
         /// <param name="name">The certificate name (included in errors).</param>
         /// <param name="certificate">The certificate being tested or <c>null</c>.</param>
-        /// <param name="hostName">The host name to be secured by the certificate.</param>
+        /// <param name="hostname">The host name to be secured by the certificate.</param>
         /// <returns>The command response.</returns>
         /// <remarks>
         /// You may pass <paramref name="certificate"/> as <c>null</c> to indicate that no 
         /// checking is to be performed as a convienence.
         /// </remarks>
-        public CommandResponse VerifyCertificate(string name, TlsCertificate certificate, string hostName)
+        public CommandResponse VerifyCertificate(string name, TlsCertificate certificate, string hostname)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
@@ -2718,7 +2718,7 @@ echo $? > {cmdFolder}/exit
 
             Status = $"verifying: [{name}] certificate";
 
-            if (string.IsNullOrEmpty(hostName))
+            if (string.IsNullOrEmpty(hostname))
             {
                 throw new ArgumentException($"No host name is specified for the [{name}] certificate test.");
             }
@@ -2764,7 +2764,7 @@ echo $? > {cmdFolder}/exit
                 return SudoCommand(
                     "openssl verify",
                     RunOptions.FaultOnError,
-                    "-verify_hostname", hostName,
+                    "-verify_hostname", hostname,
                     "-purpose", "sslserver",
                     "-CAfile", "/tmp/cert.ca",
                     "/tmp/cert.crt");
