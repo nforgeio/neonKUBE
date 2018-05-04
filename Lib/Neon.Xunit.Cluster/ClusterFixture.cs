@@ -152,7 +152,7 @@ namespace Neon.Xunit.Cluster
     ///     <term><b>Load Balancer Rules</b></term>
     ///     <description>
     ///     <see cref="ClearLoadbalancers(bool)"/><br/>
-    ///     <see cref="ListLoagBalancerRules(string, bool)"/><br/>
+    ///     <see cref="ListLoadBalancerRules(string, bool)"/><br/>
     ///     <see cref="PutLoadBalancerRule(string, LoadBalancerRule)"/><br/>
     ///     <see cref="RemoveLoadBalancerRule(string, string)"/><br/>
     ///     <see cref="RestartLoadBalancers()"/><br/>
@@ -767,7 +767,7 @@ namespace Neon.Xunit.Cluster
         /// <param name="loadBalancerName">The load balancer name (<b>public</b> or <b>private</b>).</param>
         /// <param name="includeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
         /// <returns>The rules for the named load balancer.</returns>
-        public List<LoadBalancerRule> ListLoagBalancerRules(string loadBalancerName, bool includeSystem = false)
+        public List<LoadBalancerRule> ListLoadBalancerRules(string loadBalancerName, bool includeSystem = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(loadBalancerName));
 
@@ -820,7 +820,7 @@ namespace Neon.Xunit.Cluster
 
             foreach (var loadBalancer in new string[] { "public", "private" })
             {
-                foreach (var route in ListLoagBalancerRules(loadBalancer, removeSystem))
+                foreach (var route in ListLoadBalancerRules(loadBalancer, removeSystem))
                 {
                     RemoveLoadBalancerRule(loadBalancer, route.Name);
                     deleted = true;
