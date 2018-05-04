@@ -80,6 +80,7 @@ services:
 
                             cluster.PutLoadBalancerRule("private", privateRule);
                             cluster.PutCertificate("test-certificate", TestCertificate.CombinedPem);
+                            cluster.PutSelfSignedCertificate("test-certificate2", "*.foo.com");
                         },
                         async () => await cluster.Consul.KV.PutString("test/value1", "one"),
                         async () => await cluster.Consul.KV.PutString("test/value2", "two"),
@@ -111,14 +112,15 @@ services:
             Assert.Equal(1, stack.ServiceCount);
             Assert.Single(cluster.ListServices().Where(item => item.Name.Equals("test-stack_sleeper")));
 
-            Assert.Single(cluster.ListLoagBalancerRules("public"));
-            Assert.Single(cluster.ListLoagBalancerRules("public").Where(item => item.Name == "test-rule"));
+            Assert.Single(cluster.ListLoadBalancerRules("public"));
+            Assert.Single(cluster.ListLoadBalancerRules("public").Where(item => item.Name == "test-rule"));
 
-            Assert.Single(cluster.ListLoagBalancerRules("private"));
-            Assert.Single(cluster.ListLoagBalancerRules("private").Where(item => item.Name == "test-rule"));
+            Assert.Single(cluster.ListLoadBalancerRules("private"));
+            Assert.Single(cluster.ListLoadBalancerRules("private").Where(item => item.Name == "test-rule"));
 
-            Assert.Single(cluster.ListCertificates());
+            Assert.Equal(2, cluster.ListCertificates().Count);
             Assert.Single(cluster.ListCertificates().Where(item => item == "test-certificate"));
+            Assert.Single(cluster.ListCertificates().Where(item => item == "test-certificate2"));
 
             Assert.Equal("one", cluster.Consul.KV.GetString("test/value1").Result);
             Assert.Equal("two", cluster.Consul.KV.GetString("test/value2").Result);
@@ -134,8 +136,8 @@ services:
             Assert.Empty(cluster.ListSecrets());
             Assert.Empty(cluster.ListConfigs());
             Assert.Empty(cluster.ListNetworks());
-            Assert.Empty(cluster.ListLoagBalancerRules("public"));
-            Assert.Empty(cluster.ListLoagBalancerRules("private"));
+            Assert.Empty(cluster.ListLoadBalancerRules("public"));
+            Assert.Empty(cluster.ListLoadBalancerRules("private"));
             Assert.Empty(cluster.ListCertificates());
 
             Assert.False(cluster.Consul.KV.Exists("test/value1").Result);
