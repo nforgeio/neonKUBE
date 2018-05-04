@@ -77,7 +77,7 @@ ARGUMENTS:
                 var loginJson  = File.ReadAllText(clusterLoginPath);
 
                 File.WriteAllText(outputPath, loginJson);
-                Console.WriteLine($"Login exported to: {outputPath}");
+                Console.Error.WriteLine($"Login exported to: {outputPath}");
             }
             else
             {

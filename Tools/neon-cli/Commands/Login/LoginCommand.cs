@@ -83,7 +83,7 @@ ARGUMENTS:
                 Program.Exit(0);
             }
 
-            Console.WriteLine();
+            Console.Error.WriteLine();
 
             var clusterLogin = Program.ClusterLogin;
             var login        = NeonClusterHelper.SplitLogin(commandLine.Arguments[0]);
@@ -103,7 +103,7 @@ ARGUMENTS:
                 string.Equals(clusterLogin.ClusterName, clusterName, StringComparison.OrdinalIgnoreCase) &&
                 string.Equals(clusterLogin.Username, username, StringComparison.OrdinalIgnoreCase))
             {
-                Console.WriteLine($"*** You are already logged into [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
+                Console.Error.WriteLine($"*** You are already logged into [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
                 Program.Exit(0);
             }
 
@@ -111,7 +111,7 @@ ARGUMENTS:
 
             if (clusterLogin != null)
             {
-                Console.WriteLine($"Logging out of [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
+                Console.Error.WriteLine($"Logging out of [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
                 CurrentClusterLogin.Delete();
             }
 
@@ -156,7 +156,7 @@ ARGUMENTS:
                     else
                     {
                         useVpn = false;
-                        Console.WriteLine("Using the local network (not the VPN)");
+                        Console.Error.WriteLine("Using the local network (not the VPN)");
                     }
                 }
                 else
@@ -174,14 +174,14 @@ ARGUMENTS:
             if (useVpn)
             {
                 NeonClusterHelper.VpnOpen(clusterLogin,
-                    onStatus: message => Console.WriteLine($"{message}"),
+                    onStatus: message => Console.Error.WriteLine($"{message}"),
                     onError: message => Console.Error.WriteLine($"*** ERROR {message}"),
                     show: showVpn);
             }
 
             // Verify the credentials by logging into a manager node.
 
-            Console.WriteLine("Authenticating...");
+            Console.Error.WriteLine("Authenticating...");
 
             clusterProxy = new ClusterProxy(clusterLogin,
                 (nodeName, publicAddress, privateAddress) =>
@@ -204,13 +204,14 @@ ARGUMENTS:
 
                 currentLogin.Save();
 
-                Console.WriteLine($"Logged into [{clusterLogin.LoginName}]{viaVpn}.");
-                Console.WriteLine("");
+                Console.Error.WriteLine($"Logged into [{clusterLogin.LoginName}]{viaVpn}.");
+                Console.Error.WriteLine("");
             }
             catch (Exception e)
             {
                 Console.Error.WriteLine($"*** ERROR: Cluster login failed{viaVpn}: {NeonHelper.ExceptionError(e)}");
                 Console.Error.WriteLine("");
+                Program.Exit(1);
             }
         }
 

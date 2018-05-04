@@ -73,7 +73,7 @@ ARGUMENTS:
             }
 
             File.WriteAllText(clusterLoginPath, newLoginJson);
-            Console.WriteLine($"Imported [{clusterLogin.LoginName}].");
+            Console.Error.WriteLine($"Imported [{clusterLogin.LoginName}].");
         }
 
         /// <inheritdoc/>
