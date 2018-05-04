@@ -15,8 +15,13 @@ using Newtonsoft.Json.Serialization;
 namespace Neon.Docker
 {
     /// <summary>
+    /// <para>
     /// Holds the details describing a running Docker swarm service
     /// from the service list or inspection REST APIs.
+    /// </para>
+    /// <note>
+    /// This type matches the Docker API v1.35.
+    /// </note>
     /// </summary>
     public class ServiceDetails : INormalizable
     {
