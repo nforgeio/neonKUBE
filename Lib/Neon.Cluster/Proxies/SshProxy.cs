@@ -724,11 +724,22 @@ namespace Neon.Cluster
         /// <summary>
         /// Establishes a connection to the server.
         /// </summary>
-        public void Connect()
+        /// <param name="timeout">Maximum amount of time to wait for a connection (defaults to <see cref="ConnectTimeout"/>).</param>
+        public void Connect(TimeSpan timeout = default(TimeSpan))
         {
-            // Wait up to 60 seconds for the connection to be established.
+            if (timeout == default(TimeSpan))
+            {
+                timeout = ConnectTimeout;
+            }
 
-            WaitForBoot(TimeSpan.FromSeconds(60));
+            try
+            {
+                WaitForBoot(timeout);
+            }
+            catch (Exception e)
+            {
+                throw new NeonClusterException($"Unable to connect to the cluster within [{timeout}].", e);
+            }
         }
 
         /// <summary>
