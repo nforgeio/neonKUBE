@@ -28,144 +28,13 @@ using ICSharpCode.SharpZipLib.Zip;
 using Neon.Cluster;
 using Neon.Cryptography;
 using Neon.Common;
+using Neon.Docker;
 using Neon.IO;
 using Neon.Net;
 
 namespace NeonCli.Ansible.Docker
 {
     // NOTE: The types below are accurate as of Docker API version 1.35.
-
-    /// <summary>
-    /// Enumerates the service endpoint modes.
-    /// </summary>
-    public enum EndpointMode
-    {
-        [EnumMember(Value = "vip")]
-        Vip = 0,
-
-        [EnumMember(Value = "dnsrr")]
-        DnsRR
-    }
-
-    /// <summary>
-    /// Enumerates the service isolation modes (Windows only).
-    /// </summary>
-    public enum IsolationMode
-    {
-        [EnumMember(Value = "default")]
-        Default = 0,
-
-        [EnumMember(Value = "process")]
-        Process,
-
-        [EnumMember(Value = "hyperv")]
-        HyperV
-    }
-
-    /// <summary>
-    /// Enumerates the service modes.
-    /// </summary>
-    public enum ServiceMode
-    {
-        [EnumMember(Value = "replicated")]
-        Replicated = 0,
-
-        [EnumMember(Value = "global")]
-        Global
-    }
-
-    /// <summary>
-    /// Enumerates the service restart conditions.
-    /// </summary>
-    public enum RestartCondition
-    {
-        [EnumMember(Value = "any")]
-        Any = 0,
-
-        [EnumMember(Value = "none")]
-        None,
-
-        [EnumMember(Value = "on-failure")]
-        OnFailure
-    }
-
-    /// <summary>
-    /// Enumerates the service taek update rollback order options.
-    /// </summary>
-    public enum UpdateOrder
-    {
-        [EnumMember(Value = "stop-first")]
-        StopFirst = 0,
-
-        [EnumMember(Value = "start-first")]
-        StartFirst
-    }
-
-    /// <summary>
-    /// Enumerates the service task rollback order options.
-    /// </summary>
-    public enum RollbackOrder
-    {
-        [EnumMember(Value = "stop-first")]
-        StopFirst = 0,
-
-        [EnumMember(Value = "start-first")]
-        StartFirst
-    }
-
-    /// <summary>
-    /// Enumerates the service update failure actions.
-    /// </summary>
-    public enum UpdateFailureAction
-    {
-        [EnumMember(Value = "pause")]
-        Pause = 0,
-
-        [EnumMember(Value = "continue")]
-        Continue,
-
-        [EnumMember(Value = "rollback")]
-        Rollback
-    }
-
-    /// <summary>
-    /// Enumerates the service rollback failure actions.
-    /// </summary>
-    public enum RollbackFailureAction
-    {
-        [EnumMember(Value = "pause")]
-        Pause = 0,
-
-        [EnumMember(Value = "continue")]
-        Continue,
-    }
-
-    /// <summary>
-    /// Enumerates the service port modes.
-    /// </summary>
-    public enum PortMode
-    {
-        [EnumMember(Value = "ingress")]
-        Ingress = 0,
-
-        [EnumMember(Value = "host")]
-        Host
-    }
-
-    /// <summary>
-    /// Enumerates the service port protocols.
-    /// </summary>
-    public enum PortProtocol
-    {
-        [EnumMember(Value = "tcp")]
-        Tcp = 0,
-
-        [EnumMember(Value = "udp")]
-        Udp,
-
-        [EnumMember(Value = "sctp")]
-        Sctp
-    }
 
     /// <summary>
     /// Service port publication specification.
@@ -175,8 +44,8 @@ namespace NeonCli.Ansible.Docker
         public string Name { get; set; }
         public int? Published { get; set; }
         public int? Target { get; set; }
-        public PortMode? Mode { get; set; }
-        public PortProtocol? Protocol { get; set; }
+        public ServicePortMode? Mode { get; set; }
+        public ServicePortProtocol? Protocol { get; set; }
 
         public override string ToString()
         {
@@ -239,73 +108,16 @@ namespace NeonCli.Ansible.Docker
     }
 
     /// <summary>
-    /// Enumerates the service mount types.
-    /// </summary>
-    public enum MountType
-    {
-        [EnumMember(Value = "volume")]
-        Volume = 0,
-
-        [EnumMember(Value = "bind")]
-        Bind,
-
-        [EnumMember(Value = "tmpfs")]
-        Tmpfs
-    }
-
-    /// <summary>
-    /// Enumerates the service mount consistency options
-    /// </summary>
-    public enum MountConsistency
-    {
-        [EnumMember(Value = "default")]
-        Default,
-
-        [EnumMember(Value = "consistent")]
-        Consistent,
-
-        [EnumMember(Value = "cached")]
-        Cached,
-
-        [EnumMember(Value = "delegated")]
-        Delegated
-    }
-
-    /// <summary>
-    /// Enumerates the mount propagation options.
-    /// </summary>
-    public enum MountBindPropagation
-    {
-        [EnumMember(Value = "rprivate")]
-        RPrivate = 0,
-
-        [EnumMember(Value = "shared")]
-        Shared,
-
-        [EnumMember(Value = "slave")]
-        Slave,
-
-        [EnumMember(Value = "private")]
-        Private,
-
-        [EnumMember(Value = "rshared")]
-        RShared,
-
-        [EnumMember(Value = "rslave")]
-        RSlave
-    }
-
-    /// <summary>
     /// Service mount specification.
     /// </summary>
     public class Mount
     {
-        public MountType? Type { get; set; }
+        public ServiceMountType? Type { get; set; }
         public string Source { get; set; }
         public string Target { get; set; }
         public bool? ReadOnly { get; set; }
-        public MountConsistency? Consistency { get; set; }
-        public MountBindPropagation? BindPropagation { get; set; }
+        public ServiceMountConsistency? Consistency { get; set; }
+        public ServiceMountBindPropagation? BindPropagation { get; set; }
         public string VolumeDriver { get; set; }
         public List<string> VolumeLabel { get; private set; } = new List<string>();
         public bool? VolumeNoCopy { get; set; }
@@ -363,7 +175,7 @@ namespace NeonCli.Ansible.Docker
                 sb.AppendWithSeparator($"bind-propagation=rprivate", ",");
             }
 
-            if (!Type.HasValue || Type.Value == MountType.Volume)
+            if (!Type.HasValue || Type.Value == ServiceMountType.Volume)
             {
                 if (VolumeDriver != null)
                 {
@@ -434,8 +246,8 @@ namespace NeonCli.Ansible.Docker
     {
         public string Source { get; set; }
         public string Target { get; set; }
-        public string Uid { get; set; }
-        public string Gid { get; set; }
+        public string UID { get; set; }
+        public string GID { get; set; }
         public string Mode { get; set; }
 
         public override string ToString()
@@ -452,14 +264,14 @@ namespace NeonCli.Ansible.Docker
                 sb.AppendWithSeparator($"target={Target}", ",");
             }
 
-            if (Uid != null)
+            if (UID != null)
             {
-                sb.AppendWithSeparator($"uid={Uid}", ",");
+                sb.AppendWithSeparator($"uid={UID}", ",");
             }
 
-            if (Gid != null)
+            if (GID != null)
             {
-                sb.AppendWithSeparator($"gid={Gid}", ",");
+                sb.AppendWithSeparator($"gid={GID}", ",");
             }
 
             if (Mode != null)
@@ -509,8 +321,8 @@ namespace NeonCli.Ansible.Docker
     {
         public string Source { get; set; }
         public string Target { get; set; }
-        public string Uid { get; set; }
-        public string Gid { get; set; }
+        public string UID { get; set; }
+        public string GID { get; set; }
         public string Mode { get; set; }
 
         public override string ToString()
@@ -527,14 +339,14 @@ namespace NeonCli.Ansible.Docker
                 sb.AppendWithSeparator($"target={Target}", ",");
             }
 
-            if (Uid != null)
+            if (UID != null)
             {
-                sb.AppendWithSeparator($"uid={Uid}", ",");
+                sb.AppendWithSeparator($"uid={UID}", ",");
             }
 
-            if (Gid != null)
+            if (GID != null)
             {
-                sb.AppendWithSeparator($"gid={Gid}", ",");
+                sb.AppendWithSeparator($"gid={GID}", ",");
             }
 
             if (Mode != null)
@@ -586,19 +398,19 @@ namespace NeonCli.Ansible.Docker
         // Static members
 
         /// <summary>
-        /// Creates a <see cref="DockerServiceSpec"/> by parsing the JSON responses from a
+        /// Creates a <see cref="DockerServiceSpec"/> by parsing the response from a
         /// <b>docker service inspect SERVICE</b> for a service as well as the table output
         /// from a <b>docker network ls --no-trunc</b> command listing the current networks.
         /// </summary>
         /// <param name="context">The Annsible module context.</param>
-        /// <param name="inspectJson"><b>docker service inspect SERVICE</b> command output for the service.</param>
+        /// <param name="serviceDetails"><b>docker service inspect SERVICE</b> command output for the service.</param>
         /// <param name="networksText"><b>docker network ls --no-trunc</b> command output.</param>
         /// <returns>The parsed <see cref="DockerServiceSpec"/>.</returns>
-        public static DockerServiceSpec FromDockerInspect(ModuleContext context, string inspectJson, string networksText)
+        public static DockerServiceSpec FromDockerInspect(ModuleContext context, ServiceDetails serviceDetails, string networksText)
         {
             var service = new DockerServiceSpec();
 
-            service.Parse(context, inspectJson, networksText);
+            service.Parse(context, serviceDetails, networksText);
 
             return service;
         }
@@ -615,7 +427,7 @@ namespace NeonCli.Ansible.Docker
         /// The <b>docker service update</b> command arguments as a list.  
         /// This does not include the <b>docker service update</b> prefix.
         /// </returns>
-        public static List<string> DockerUpdateCommand(ModuleContext context, DockerServiceSpec current, DockerServiceSpec update)
+        public static List<string> DockerUpdateCommandArgs(ModuleContext context, DockerServiceSpec current, DockerServiceSpec update)
         {
             var outputArgs = new List<string>();
 
@@ -651,14 +463,14 @@ namespace NeonCli.Ansible.Docker
             AppendUpdateListArgs(context, outputArgs, "--dns-option", current.DnsOption, update.DnsOption, SimpleNameExtractor);
             AppendUpdateListArgs(context, outputArgs, "--dns-search", current.DnsSearch, update.DnsSearch);
             AppendUpdateListArgs(context, outputArgs, "--constraint", current.Constraint, update.Constraint, SimpleNameExtractor);
-            AppendUpdateEnumArgs<EndpointMode>(context, outputArgs, "--endpoint-mode", current.EndpointMode, update.EndpointMode);
+            AppendUpdateEnumArgs<ServiceEndpointMode>(context, outputArgs, "--endpoint-mode", current.EndpointMode, update.EndpointMode);
 
             if (!AreIdentical(current.Command, update.Command))
             {
                 // NOTE: I think the Docker design here may be broken because it
                 //       doesn't look like it's possible to remove an entrypoint
-                //       override because that would require passing an empty string
-                //       argument which will end up being ignored.
+                //       override because that would require passing an empty 
+                //       string argument which will end up being ignored.
                 //
                 //       We're going to detect and fail when we see this.
 
@@ -686,7 +498,7 @@ namespace NeonCli.Ansible.Docker
             }
 
             AppendUpdateListArgs(context, outputArgs, "--env", current.Env, update.Env, SimpleNameExtractor);
-            AppendUpdateListArgs(context, outputArgs, "--group", current.Group, update.Group, SimpleNameExtractor);
+            AppendUpdateListArgs(context, outputArgs, "--group", current.Groups, update.Groups, SimpleNameExtractor);
 
             if (!AreIdentical(current.HealthCmd, update.HealthCmd))
             {
@@ -775,7 +587,7 @@ namespace NeonCli.Ansible.Docker
             AppendUpdateListArgs(context, outputArgs, "--secret", current.Secret, update.Secret);
             AppendUpdateDurationArgs(context, outputArgs, "--stop-grace-period", current.StopGracePeriod, update.StopGracePeriod);
             AppendUpdateStringArgs(context, outputArgs, "--stop-signal", current.StopSignal, update.StopSignal);
-            AppendUpdateBoolArgs(context, outputArgs, "--tty", current.Tty, update.Tty);
+            AppendUpdateBoolArgs(context, outputArgs, "--tty", current.TTY, update.TTY);
             AppendUpdateDurationArgs(context, outputArgs, "--update-delay", current.UpdateDelay, update.UpdateDelay);
             AppendUpdateEnumArgs(context, outputArgs, "--update-failure-action", current.UpdateFailureAction, update.UpdateFailureAction);
             AppendUpdateDoubleArgs(context, outputArgs, "--update-max-failure-ratio", current.UpdateMaxFailureRatio, update.UpdateMaxFailureRatio);
@@ -784,13 +596,13 @@ namespace NeonCli.Ansible.Docker
             AppendUpdateLongArgs(context, outputArgs, "--update-parallelism", current.UpdateParallism, update.UpdateParallism);
             AppendUpdateStringArgs(context, outputArgs, "--user", current.User, update.User);
             AppendUpdateBoolArgs(context, outputArgs, "--with-registry-auth", current.WithRegistryAuth, update.WithRegistryAuth);
-            AppendUpdateStringArgs(context, outputArgs, "--workdir", current.WorkDir, update.WorkDir);
-
+            AppendUpdateStringArgs(context, outputArgs, "--workdir", current.Dir, update.Dir);
 #if TODO
             // We're not currently handling these service properties.
 
             AppendUpdateArgs(outputArgs, "--generic-resource", current.GenericResource, update.GenericResource, SimpleNameExtractor);
 #endif
+            outputArgs.Add(current.Name);
 
             return outputArgs;
         }
@@ -1321,7 +1133,7 @@ namespace NeonCli.Ansible.Docker
         /// <summary>
         /// Specifies the endpoint mode.
         /// </summary>
-        public EndpointMode? EndpointMode { get; set; }
+        public ServiceEndpointMode? EndpointMode { get; set; }
 
         /// <summary>
         /// Optionally overrides the image entrypoint command and arguments.
@@ -1336,12 +1148,6 @@ namespace NeonCli.Ansible.Docker
         public List<string> Env { get; set; } = new List<string>();
 
         /// <summary>
-        /// Specifies the host files with environment variable definitions to be
-        /// passed to the service containers.
-        /// </summary>
-        public List<string> EnvFile { get; set; } = new List<string>();
-
-        /// <summary>
         /// Specifies additional service container placement constraints.
         /// </summary>
         public List<string> GenericResource { get; set; } = new List<string>();
@@ -1349,7 +1155,7 @@ namespace NeonCli.Ansible.Docker
         /// <summary>
         /// Specifies supplementary user groups for the service containers.
         /// </summary>
-        public List<string> Group { get; set; } = new List<string>();
+        public List<string> Groups { get; set; } = new List<string>();
 
         /// <summary>
         /// Optionally specifies the command to be executed within the service containers
@@ -1431,7 +1237,7 @@ namespace NeonCli.Ansible.Docker
         /// <summary>
         /// Service container isolation mode (Windows only).
         /// </summary>
-        public IsolationMode? Isolation { get; set; }
+        public ServiceIsolationMode? Isolation { get; set; }
 
         /// <summary>
         /// Optionally specifies service labels.  These are formatted like <b>NAME=VALUE</b>.
@@ -1525,7 +1331,7 @@ namespace NeonCli.Ansible.Docker
         /// Optionally specifies the condition when service containers will
         /// be restarted.
         /// </summary>
-        public RestartCondition? RestartCondition { get; set; }
+        public ServiceRestartCondition? RestartCondition { get; set; }
 
         /// <summary>
         /// Optionally specifies the delay between restart attempts (nanoseconds).
@@ -1550,7 +1356,7 @@ namespace NeonCli.Ansible.Docker
         /// <summary>
         /// The action to take when service rollback fails.
         /// </summary>
-        public RollbackFailureAction? RollbackFailureAction { get; set; }
+        public ServiceRollbackFailureAction? RollbackFailureAction { get; set; }
 
         /// <summary>
         /// Optionally specifies the failure rate to tolerate during a rollback.
@@ -1566,7 +1372,7 @@ namespace NeonCli.Ansible.Docker
         /// <summary>
         /// Optionally specifies the service task rollback order.
         /// </summary>
-        public RollbackOrder? RollbackOrder { get; set; }
+        public ServiceRollbackOrder? RollbackOrder { get; set; }
 
         /// <summary>
         /// Optionally specifies the maximum number of service tasks to be
@@ -1595,7 +1401,7 @@ namespace NeonCli.Ansible.Docker
         /// <summary>
         /// Optionally allocate a TTY for the service containers.
         /// </summary>
-        public bool? Tty { get; set; }
+        public bool? TTY { get; set; }
 
         /// <summary>
         /// Optionally specifies the delay between service container updates (nanoseconds).
@@ -1605,7 +1411,7 @@ namespace NeonCli.Ansible.Docker
         /// <summary>
         /// Optionally specifies the action to take when a service container update fails.
         /// </summary>
-        public UpdateFailureAction? UpdateFailureAction { get; set; }
+        public ServiceUpdateFailureAction? UpdateFailureAction { get; set; }
 
         /// <summary>
         /// Optionally specifies the failure rate to tolerate during an update.
@@ -1621,7 +1427,7 @@ namespace NeonCli.Ansible.Docker
         /// <summary>
         /// Optionally specifies the service task update order.
         /// </summary>
-        public UpdateOrder? UpdateOrder { get; set; }
+        public ServiceUpdateOrder? UpdateOrder { get; set; }
 
         /// <summary>
         /// Optionally specifies the maximum number of service tasks to be
@@ -1645,7 +1451,7 @@ namespace NeonCli.Ansible.Docker
         /// This will be set as the current directory before Docker executes a command
         /// within the container.
         /// </summary>
-        public string WorkDir { get; set; }
+        public string Dir { get; set; }
 
         /// <summary>
         /// Parsing the JSON responses from a <b>docker service inspect SERVICE</b> for a 
@@ -1653,13 +1459,13 @@ namespace NeonCli.Ansible.Docker
         /// command listing the current networks.
         /// </summary>
         /// <param name="context">The Annsible module context.</param>
-        /// <param name="inspectJson"><b>docker service inspect SERVICE</b> command output for the service.</param>
+        /// <param name="serviceDetails"><b>docker service inspect SERVICE</b> command output for the service.</param>
         /// <param name="networksText"><b>docker network ls --no-trunc</b> command output.</param>
         /// <returns>The parsed <see cref="DockerServiceSpec"/>.</returns>
         /// <exception cref="Exception">Various exceptions are thrown for errors.</exception>
-        private void Parse(ModuleContext context, string inspectJson, string networksText)
+        private void Parse(ModuleContext context, ServiceDetails serviceDetails, string networksText)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(inspectJson));
+            Covenant.Requires<ArgumentNullException>(serviceDetails != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(networksText));
 
             //-----------------------------------------------------------------
@@ -1697,33 +1503,21 @@ namespace NeonCli.Ansible.Docker
             // The parsing code below basically follows the order of the properties
             // as defined by the REST specification.
 
-            // We're expecting the inspection JSON to be a single item
-            // array holding the service information.
-
-            var jArray = JArray.Parse(inspectJson);
-
-            if (jArray.Count != 1)
-            {
-                throw new ArgumentException("Invalid service inspection: expected a single element array.");
-            }
-
             //-----------------------------------------------------------------
             // Extract the current service state from the service JSON.
 
-            var spec         = (JObject)jArray[0]["Spec"];
-            var taskTemplate = (JObject)spec["TaskTemplate"];
+            var spec         = serviceDetails.Spec;
+            var taskTemplate = spec.TaskTemplate;
 
             //-----------------------------------------------------------------
             // Spec.Name
 
-            this.Name = GetStringProperty(spec, "Name");
+            this.Name = spec.Name;
 
             //-----------------------------------------------------------------
             // Spec.Labels
 
-            var labels = (JObject)spec.GetValue("Labels");
-
-            foreach (var item in labels)
+            foreach (var item in spec.Labels)
             {
                 this.Label.Add($"{item.Key}={item.Value}");
             }
@@ -1736,104 +1530,100 @@ namespace NeonCli.Ansible.Docker
             //-----------------------------------------------------------------
             // Spec.TaskTemplate.ContainerSpec
 
-            var containerSpec = (JObject)taskTemplate["ContainerSpec"];
+            var containerSpec = taskTemplate.ContainerSpec;
 
-            this.Image = (string)containerSpec["Image"];
+            this.Image = containerSpec.Image;
 
-            foreach (var item in GetObjectProperty(containerSpec, "Labels"))
+            foreach (var item in containerSpec.Labels)
             {
                 this.ContainerLabel.Add($"{item.Key}={item.Value}");
             }
 
-            foreach (string arg in GetArrayProperty(containerSpec, "Command"))
+            foreach (var item in containerSpec.Command)
             {
-                this.Command.Add(arg);
+                this.Command.Add(item);
             }
 
-            foreach (string arg in GetArrayProperty(containerSpec, "Args"))
+            foreach (string item in containerSpec.Args)
             {
-                this.Args.Add(arg);
+                this.Args.Add(item);
             }
 
-            this.Hostname = GetStringProperty(containerSpec, "Hostname");
+            this.Hostname = containerSpec.Hostname;
 
-            foreach (string env in GetArrayProperty(containerSpec, "Env"))
+            foreach (var item in containerSpec.Env)
             {
-                this.Env.Add(env);
+                this.Env.Add(item);
             }
 
-            this.WorkDir = GetStringProperty(containerSpec, "Dir");
-            this.User    = GetStringProperty(containerSpec, "User");
+            this.Dir  = containerSpec.Dir;
+            this.User = containerSpec.User;
 
-            foreach (string group in GetArrayProperty(containerSpec, "Groups"))
+            foreach (var item in containerSpec.Groups)
             {
-                this.Group.Add(group);
+                this.Groups.Add(item);
             }
 
             // $todo(jeff.lill): Ignoring [Spec.TaskTemplate.Privileges] for now.
 
-            this.Tty      = GetBoolProperty(containerSpec, "TTY");
+            this.TTY = containerSpec.TTY;
 
             // $todo(jeff.lill): Ignoring [Spec.TaskTemplate.OpenStdin] for now.
             //
             // I think this corresponds to the [docker run -i] flag for containers 
             // but this doesn't make sense for services, right?
 
-            this.ReadOnly = GetBoolProperty(containerSpec, "ReadOnly");
+            this.ReadOnly = containerSpec.ReadOnly;
 
-            foreach (JObject item in GetArrayProperty(containerSpec, "Mounts"))
+            foreach (var item in containerSpec.Mounts)
             {
                 var mount = new Mount();
 
-                mount.Target          = GetStringProperty(item, "Target");
-                mount.Source          = GetStringProperty(item, "Source");
-                mount.Type            = GetEnumProperty<MountType>(item, "Type").Value;
-                mount.ReadOnly        = GetBoolProperty(item, "ReadOnly");
-                mount.Consistency     = GetEnumProperty<MountConsistency>(item, "Consistency").Value;
+                mount.Target      = item.Target;
+                mount.Source      = item.Source;
+                mount.Type        = item.Type;
+                mount.ReadOnly    = item.ReadOnly;
+                mount.Consistency = item.Consistency;
 
                 switch (mount.Type)
                 {
-                    case MountType.Bind:
+                    case ServiceMountType.Bind:
 
-                        {
-                            var bindOptions = GetObjectProperty(item, "BindOptions");
-
-                            mount.BindPropagation = GetEnumProperty<MountBindPropagation>(bindOptions, "Propagation");
-                        }
+                        mount.BindPropagation = item.BindOptions.Propagation;
                         break;
 
-                    case MountType.Volume:
+                    case ServiceMountType.Volume:
 
+                        var volumeOptions = item.VolumeOptions;
+
+                        mount.VolumeNoCopy = volumeOptions.NoCopy;
+
+                        foreach (var label in volumeOptions.Labels)
                         {
-                            var volumeOptions = GetObjectProperty(item, "VolumeOptions");
+                            mount.VolumeLabel.Add($"{label.Key}={label.Value}");
+                        }
 
-                            mount.VolumeNoCopy = GetBoolProperty(volumeOptions, "NoCopy");
+                        var driverConfig = volumeOptions.DriverConfig;
 
-                            foreach (var label in GetObjectProperty(volumeOptions, "Labels"))
+                        if (driverConfig != null)
+                        {
+                            mount.VolumeDriver = driverConfig.Name;
+
+                            foreach (var option in driverConfig.Options)
                             {
-                                mount.VolumeLabel.Add($"{label.Key}={label.Value}");
-                            }
-
-                            var driverConfig = GetObjectProperty(item, "DriverConfig");
-
-                            mount.VolumeDriver = GetStringProperty(driverConfig, "Name");
-
-                            var sb = new StringBuilder();
-
-                            foreach (var option in GetObjectProperty(volumeOptions, "Options"))
-                            {
-                                sb.AppendWithSeparator($"{option.Key}={option.Value}", ",");
+                                mount.VolumeOpt.Add($"{option.Key}={option.Value}");
                             }
                         }
                         break;
 
-                    case MountType.Tmpfs:
+                    case ServiceMountType.Tmpfs:
 
+                        var tmpfsOptions = item.TempfsOptions;
+
+                        if (tmpfsOptions != null)
                         {
-                            var tmpfsOptions = GetObjectProperty(item, "TempfsOptions");
-
-                            mount.TmpfsSize = GetLongProperty(tmpfsOptions, "SizeBytes");
-                            mount.TmpfsMode = GetFileModeProperty(tmpfsOptions, "Mode");
+                            mount.TmpfsSize = tmpfsOptions.SizeBytes;
+                            mount.TmpfsMode = Convert.ToString(tmpfsOptions.Mode, 8);
                         }
                         break;
                 }
@@ -1841,8 +1631,8 @@ namespace NeonCli.Ansible.Docker
                 this.Mount.Add(mount);
             }
 
-            this.StopSignal      = GetStringProperty(containerSpec, "StopSignal");
-            this.StopGracePeriod = GetLongProperty(containerSpec, "StopGracePeriod");
+            this.StopSignal      = containerSpec.StopSignal;
+            this.StopGracePeriod = containerSpec.StopGracePeriod;
 
             // NOTE:
             //
@@ -1856,19 +1646,19 @@ namespace NeonCli.Ansible.Docker
             //      ["CMD", args...]        - Execute a command
             //      ["CMD-SHELL", command]  - Run a command in the container's shell
 
-            var healthCheck = GetObjectProperty(containerSpec, "HealthCheck");
+            var healthCheck = containerSpec.HealthCheck;
 
-            foreach (string arg in GetArrayProperty(healthCheck, "Test"))
+            foreach (var item in healthCheck.Test)
             {
-                this.HealthCmd.Add(arg);
+                this.HealthCmd.Add(item);
             }
 
-            this.HealthInterval    = GetLongProperty(healthCheck, "Interval");
-            this.HealthTimeout     = GetLongProperty(healthCheck, "Timeout");
-            this.HealthRetries     = GetLongProperty(healthCheck, "Retries");
-            this.HealthStartPeriod = GetLongProperty(healthCheck, "StartPeriod");
+            this.HealthInterval    = healthCheck.Interval;
+            this.HealthTimeout     = healthCheck.Timeout;
+            this.HealthRetries     = healthCheck.Retries;
+            this.HealthStartPeriod = healthCheck.StartPeriod;
 
-            foreach (string host in GetArrayProperty(containerSpec, "Hosts"))
+            foreach (var item in containerSpec.Hosts)
             {
                 // NOTE: 
                 //
@@ -1879,24 +1669,24 @@ namespace NeonCli.Ansible.Docker
                 //
                 //      HOST:IP
 
-                var fields = host.Split(' ', StringSplitOptions.RemoveEmptyEntries);
+                var fields = item.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
                 this.Host.Add($"{fields[0]}:{fields[1]}");
             }
 
-            var dnsConfig = GetObjectProperty(containerSpec, "DNSConfig");
+            var dnsConfig = containerSpec.DNSConfig;
 
-            foreach (string nameserver in GetArrayProperty(dnsConfig, "Nameservers"))
+            foreach (var item in dnsConfig.Nameservers)
             {
-                this.Dns.Add(IPAddress.Parse(nameserver));
+                this.Dns.Add(IPAddress.Parse(item));
             }
 
-            foreach (string domain in GetArrayProperty(dnsConfig, "Search"))
+            foreach (var item in dnsConfig.Search)
             {
-                this.DnsSearch.Add(domain);
+                this.DnsSearch.Add(item);
             }
 
-            foreach (string option in GetArrayProperty(dnsConfig, "Options"))
+            foreach (var item in dnsConfig.Options)
             {
                 // $todo(jeff.lill):
                 //
@@ -1904,42 +1694,36 @@ namespace NeonCli.Ansible.Docker
                 // instead of '=' like the command line.  I'm going to 
                 // convert any colons to equal signs.
 
-                this.DnsOption.Add(option.Replace(':', '='));
+                this.DnsOption.Add(item.Replace(':', '='));
             }
 
-            foreach (JObject secretSpec in GetArrayProperty(containerSpec, "secrets"))
+            foreach (var item in containerSpec.Secrets)
             {
                 var secret = new Secret();
 
-                secret.Source = GetStringProperty(secretSpec, "SecretName");
-
-                var secretFile = GetObjectProperty(secretSpec, "File");
-
-                secret.Target = GetStringProperty(secretFile, "Name");
-                secret.Uid    = GetStringProperty(secretFile, "UID");
-                secret.Gid    = GetStringProperty(secretFile, "GID");
-                secret.Mode   = GetFileModeProperty(secretFile, "Mode");
+                secret.Source = item.SecretName;
+                secret.Target = item.File.Name;
+                secret.UID    = item.File.UID;
+                secret.GID    = item.File.GID;
+                secret.Mode   = Convert.ToString(item.File.Mode, 8);
 
                 this.Secret.Add(secret);
             }
 
-            foreach (JObject configSpec in GetArrayProperty(containerSpec, "Configs"))
+            foreach (var item in containerSpec.Configs)
             {
                 var config = new Config();
 
-                config.Source = GetStringProperty(configSpec, "ConfigName");
-
-                var configFile = GetObjectProperty(configSpec, "File");
-
-                config.Target = GetStringProperty(configFile, "Name");
-                config.Uid    = GetStringProperty(configFile, "UID");
-                config.Gid    = GetStringProperty(configFile, "GID");
-                config.Mode   = GetFileModeProperty(configFile, "Mode");
+                config.Source = item.ConfigName;
+                config.Target = item.File.Name;
+                config.UID    = item.File.UID;
+                config.GID    = item.File.GID;
+                config.Mode    = Convert.ToString(item.File.Mode, 8);
 
                 this.Config.Add(config);
             }
 
-            this.Isolation = GetEnumProperty<IsolationMode>(containerSpec, "Isolation");
+            this.Isolation = containerSpec.Isolation;
 
             //-----------------------------------------------------------------
             // Spec.TaskTemplate.Resources
@@ -1947,43 +1731,30 @@ namespace NeonCli.Ansible.Docker
             // $todo(jeff.lill):
             //
             // I'm ignoring the [Limits.GenericResources] and [Reservation.GenericResources]
-            // properties right now because I suprised that there are two of these.  The command
-            // line appears to support only one global combined [GenericResources] concept.
+            // properties right now.
 
             const long oneBillion = 1000000000L;
 
-            var resources = GetObjectProperty(taskTemplate, "Resources");
-            var limits    = GetObjectProperty(resources, "Limits");
-            
-            var nanoCpus  = GetLongProperty(limits, "NanoCPUs");
+            var resources = taskTemplate.Resources;
+            var limits    = resources.Limits;
 
-            if (nanoCpus.HasValue)
-            {
-                this.LimitCpu = nanoCpus / oneBillion;
-            }
+            this.LimitCpu    = limits.NanoCPUs / oneBillion;
+            this.LimitMemory = limits.MemoryBytes;
 
-            this.LimitMemory = GetLongProperty(limits, "MemoryBytes");
+            var reservation = resources.Reservation;
 
-            var reservation = GetObjectProperty(resources, "Reservation");
-
-            nanoCpus = GetLongProperty(reservation, "NanoCPUs");
-
-            if (nanoCpus.HasValue)
-            {
-                this.ReserveCpu = nanoCpus / oneBillion;
-            }
-
-            this.ReserveMemory = GetLongProperty(reservation, "MemoryBytes");
+            this.ReserveCpu    = reservation.NanoCPUs / oneBillion;
+            this.ReserveMemory = reservation.MemoryBytes;
 
             //-----------------------------------------------------------------
             // Spec.TaskTemplate.RestartPolicy
 
-            var restartPolicy = GetObjectProperty(taskTemplate, "RestartPolicy");
+            var restartPolicy = taskTemplate.RestartPolicy;
 
-            this.RestartCondition   = GetEnumProperty<RestartCondition>(restartPolicy, "Condition");
-            this.RestartDelay       = GetLongProperty(restartPolicy, "Delay");
-            this.RestartMaxAttempts = GetLongProperty(restartPolicy, "MaxAttempts");
-            this.RestartWindow      = GetLongProperty(restartPolicy, "Window");
+            this.RestartCondition   = restartPolicy.Condition;
+            this.RestartDelay       = restartPolicy.Delay;
+            this.RestartMaxAttempts = restartPolicy.MaxAttempts;
+            this.RestartWindow      = restartPolicy.Window;
 
             //-----------------------------------------------------------------
             // Spec.TaskTemplatePlacement
@@ -1992,11 +1763,9 @@ namespace NeonCli.Ansible.Docker
             //
             // We're going to ignore the [Preferences] and [Platforms] fields for now.
 
-            var placement = GetObjectProperty(taskTemplate, "Placement");
-
-            foreach (string constraint in GetArrayProperty(placement, "Constraints"))
+            foreach (var item in taskTemplate.Placement.Constraints)
             {
-                this.Constraint.Add(constraint);
+                this.Constraint.Add(item);
             }
 
             // $todo(jeff.lill): Ignoring the [Runtime] property.
@@ -2006,7 +1775,7 @@ namespace NeonCli.Ansible.Docker
 
             // $todo(jeff.lill):
             //
-            // Inspect reports networks are referenced by UUID, not name.  We'll 
+            // Inspect reports referenced networks by UUID, not name.  We'll 
             // use the network map passed to the method to try to associate the
             // network names.
             //
@@ -2020,96 +1789,90 @@ namespace NeonCli.Ansible.Docker
             // and shouldn't have any adverse impact, so I'm not going to worry
             // about it.
 
-            foreach (JObject network in GetArrayProperty(taskTemplate, "Networks"))
+            foreach (var network in taskTemplate.Networks)
             {
-                if (network.TryGetValue("Target", out var networkIdToken))
+                if (networkIdToName.TryGetValue(network.Target, out var networkName))
                 {
-                    var networkId = (string)networkIdToken;
-
-                    if (networkIdToName.TryGetValue(networkId, out var networkName))
-                    {
-                        this.Network.Add(networkName);
-                    }
+                    this.Network.Add(networkName);
                 }
             }
 
             //-----------------------------------------------------------------
             // Spec.TaskTemplate.LogDriver
 
-            var logDriver = GetObjectProperty(taskTemplate, "LogDriver");
+            var logDriver = taskTemplate.LogDriver;
 
-            this.LogDriver = GetStringProperty(logDriver, "Name");
-
-            var logOptions = GetObjectProperty(logDriver, "Options");
-
-            foreach (var item in logOptions)
+            if (LogDriver != null)
             {
-                this.LogOpt.Add($"{item.Key}={item.Value}");
+                this.LogDriver = logDriver.Name;
+
+                foreach (var item in logDriver.Options)
+                {
+                    this.LogOpt.Add($"{item.Key}={item.Value}");
+                }
             }
 
             //-----------------------------------------------------------------
-            // Spec.TaskTemplate.Mode
+            // Spec.Mode
 
-            var mode       = (JObject)spec["Mode"];
-
-            if (mode.ContainsKey("Global"))
+            if (spec.Mode.Global != null)
             {
                 this.Mode = ServiceMode.Global;
             }
-            else if (mode.ContainsKey("Replicated"))
+            else if (spec.Mode.Replicated != null)
             {
-                var replicated = GetObjectProperty(mode, "Replicated");
-
                 this.Mode     = ServiceMode.Replicated;
-                this.Replicas = GetLongProperty(replicated, "Replicas");
+                this.Replicas = spec.Mode.Replicated.Replicas;
             }
             else
             {
-                throw new NotSupportedException("Unexpected service [Spec.TaskTemplate.Mode].");
+                throw new NotSupportedException("Unexpected service [Spec.Mode].");
             }
 
             //-----------------------------------------------------------------
-            // Spec.TaskTemplate.UpdateConfig
+            // Spec.UpdateConfig
 
-            var updateConfig = (JObject)spec["UpdateConfig"];
+            var updateConfig = spec.UpdateConfig;
 
-            this.UpdateParallism       = GetLongProperty(updateConfig, "Parallelism");
-            this.UpdateDelay           = GetLongProperty(updateConfig, "Delay");
-            this.UpdateFailureAction   = GetEnumProperty<UpdateFailureAction>(updateConfig, "FailureAction");
-            this.UpdateMonitor         = GetLongProperty(updateConfig, "Monitor");
-            this.UpdateMaxFailureRatio = GetDoubleProperty(updateConfig, "MaxFailureRatio");
-            this.UpdateOrder           = GetEnumProperty<UpdateOrder>(updateConfig, "Order");
-
-            //-----------------------------------------------------------------
-            // Spec.TaskTemplate.RollbackConfig
-
-            var rollbackConfig = (JObject)spec["RollbackConfig"];
-
-            this.RollbackParallism       = GetLongProperty(rollbackConfig, "Parallelism");
-            this.RollbackDelay           = GetLongProperty(rollbackConfig, "Delay");
-            this.RollbackFailureAction   = GetEnumProperty<RollbackFailureAction>(rollbackConfig, "FailureAction");
-            this.RollbackMonitor         = GetLongProperty(rollbackConfig, "Monitor");
-            this.RollbackMaxFailureRatio = GetDoubleProperty(rollbackConfig, "MaxFailureRatio");
-            this.RollbackOrder           = GetEnumProperty<RollbackOrder>(rollbackConfig, "Order");
+            this.UpdateParallism       = updateConfig.Parallelism;
+            this.UpdateDelay           = updateConfig.Delay;
+            this.UpdateFailureAction   = updateConfig.FailureAction;
+            this.UpdateMonitor         = updateConfig.Monitor;
+            this.UpdateMaxFailureRatio = updateConfig.MaxFailureRatio;
+            this.UpdateOrder           = updateConfig.Order;
 
             //-----------------------------------------------------------------
-            // Spec.TaskTemplate.EndpointSpec
+            // Spec.RollbackConfig
 
-            var endpointSpec = (JObject)spec["EndpointSpec"];
+            var rollbackConfig = spec.RollbackConfig;
 
-            this.EndpointMode = GetEnumProperty<EndpointMode>(endpointSpec, "Mode");
+            this.RollbackParallism       = rollbackConfig.Parallelism;
+            this.RollbackDelay           = rollbackConfig.Delay;
+            this.RollbackFailureAction   = rollbackConfig.FailureAction;
+            this.RollbackMonitor         = rollbackConfig.Monitor;
+            this.RollbackMaxFailureRatio = rollbackConfig.MaxFailureRatio;
+            this.RollbackOrder           = rollbackConfig.Order;
 
-            foreach (JObject item in GetArrayProperty(endpointSpec, "Ports"))
+            //-----------------------------------------------------------------
+            // Spec.EndpointSpec
+
+            var endpointSpec = spec.EndpointSpec;
+
+            this.EndpointMode = endpointSpec.Mode;
+
+            foreach (var item in endpointSpec.Ports)
             {
                 var port = new PublishPort();
 
-                port.Name      = GetStringProperty(item, "Name");
-                port.Protocol  = GetEnumProperty<PortProtocol>(item, "Protocol");
-                port.Target    = GetIntProperty(item, "TargetPort");
-                port.Published = GetIntProperty(item, "PublishedPort");
-                port.Mode      = GetEnumProperty<PortMode>(item, "PublishMode");
+                port.Name      = item.Name;
+                port.Protocol  = item.Protocol;
+                port.Target    = item.TargetPort;
+                port.Published = item.PublishedPort;
+                port.Mode      = item.PublishMode;
             }
         }
+
+
 
         //---------------------------------------------------------------------
         // JSON helpers:

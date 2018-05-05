@@ -26,6 +26,7 @@ using ICSharpCode.SharpZipLib.Zip;
 using Neon.Cluster;
 using Neon.Cryptography;
 using Neon.Common;
+using Neon.Docker;
 using Neon.IO;
 using Neon.Net;
 
@@ -42,6 +43,11 @@ using NeonCli.Ansible.Docker;
 // REST API's built-in CAS (check-and-set) functionality around the version
 // returned by [docker service inspect].  I don't believe this is important
 // at this point.
+
+// $todo(jeff.lill):
+//
+// The module doesn't currently support renaming a service although that
+// is allowed by Docker.  Perhaps we could add a [new_name] parameter?
 
 namespace NeonCli.Ansible
 {
@@ -73,7 +79,8 @@ namespace NeonCli.Ansible
     // name                     yes                                 docker service name
     //
     // state                    no          present     present     indicates whether the service should
-    //                                                  absent      be created or removed
+    //                                                  absent      be created, removed, or rolled back
+    //                                                  rollback
     //
     // force                    no          false                   forces service update when [state=present]
     //
@@ -117,9 +124,6 @@ namespace NeonCli.Ansible
     //                                                              passed to the container like VARIABLE=VALUE
     //                                                              or just VARIABLE to import the variable from
     //                                                              the Docker host
-    //
-    // env_file                 no                                  array of host environment variable specification
-    //                                                              file paths to be passed to the service containers
     //
     // generic_resource         no                                  array of generic resource requirements for
     //                                                              service placement.
@@ -357,9 +361,8 @@ namespace NeonCli.Ansible
             service.Dns                     = context.ParseIPAddressArray("dns");
             service.Command                 = context.ParseStringArray("entrypoint");
             service.Env                     = context.ParseStringArray("env");
-            service.EnvFile                 = context.ParseStringArray("env_file");
             service.GenericResource         = context.ParseStringArray("generic_resource");
-            service.Group                   = context.ParseStringArray("group");
+            service.Groups                   = context.ParseStringArray("group");
             service.HealthCmd               = context.ParseStringArray("health_cmd");
             service.HealthInterval          = context.ParseDockerInterval("health_interval");
             service.HealthRetries           = context.ParseLong("health_retries", v => v >= 0);
@@ -369,7 +372,7 @@ namespace NeonCli.Ansible
             service.Hostname                = context.ParseString("hostname");
             service.Image                   = context.ParseString("image");
             service.ImageUpdate             = context.ParseBool("image_update");
-            service.Isolation               = context.ParseEnum<IsolationMode>("isolation");
+            service.Isolation               = context.ParseEnum<ServiceIsolationMode>("isolation", ServiceIsolationMode.Default);
             service.Label                   = context.ParseStringArray("label");
             service.LimitCpu                = context.ParseDouble("limit_cpu", v => v > 0);
             service.LimitMemory             = context.ParseDockerMemorySize("limit_memory");
@@ -386,30 +389,30 @@ namespace NeonCli.Ansible
             service.Replicas                = context.ParseLong("replicas", v => v >= 0);
             service.ReserveCpu              = context.ParseDouble("reserve_cpu", v => v > 0);
             service.ReserveMemory           = context.ParseDockerMemorySize("reserve_memory");
-            service.RestartCondition        = context.ParseEnum<RestartCondition>("restart_condition");
+            service.RestartCondition        = context.ParseEnum<ServiceRestartCondition>("restart_condition", default(ServiceRestartCondition));
             service.RestartDelay            = context.ParseDockerInterval("restart_delay");
             service.RestartMaxAttempts      = context.ParseLong("restart_max_attempts", v => v >= 0);
             service.RestartWindow           = context.ParseDockerInterval("restart_window");
             service.RollbackDelay           = context.ParseDockerInterval("rollback_delay");
-            service.RollbackFailureAction   = context.ParseEnum<RollbackFailureAction>("rollback_failure_action");
+            service.RollbackFailureAction   = context.ParseEnum<ServiceRollbackFailureAction>("rollback_failure_action", default(ServiceRollbackFailureAction));
             service.RollbackMaxFailureRatio = context.ParseDouble("rollback_max_failure_ratio", v => v >= 0);
             service.RollbackMonitor         = context.ParseDockerInterval("rollback_monitor");
-            service.RollbackOrder           = context.ParseEnum<RollbackOrder>("rollback_order");
+            service.RollbackOrder           = context.ParseEnum<ServiceRollbackOrder>("rollback_order", default(ServiceRollbackOrder));
             service.RollbackParallism       = context.ParseInt("rollback_parallelism", v => v > 0);
             service.Secret                  = ParseSecretArray(context, "secret");
             service.StopGracePeriod         = context.ParseDockerInterval("stop_grace_period");
             service.StopSignal              = context.ParseString("stop_signal");
             service.ReadOnly                = context.ParseBool("read_only");
-            service.Tty                     = context.ParseBool("tty");
+            service.TTY                     = context.ParseBool("tty");
             service.UpdateDelay             = context.ParseDockerInterval("update_delay");
-            service.UpdateFailureAction     = context.ParseEnum<UpdateFailureAction>("update_failure_action");
+            service.UpdateFailureAction     = context.ParseEnum<ServiceUpdateFailureAction>("update_failure_action", default(ServiceUpdateFailureAction));
             service.UpdateMaxFailureRatio   = context.ParseDouble("update_max_failure_ratio", v => v >= 0);
             service.UpdateMonitor           = context.ParseDockerInterval("update_monitor");
-            service.UpdateOrder             = context.ParseEnum<UpdateOrder>("update_order");
+            service.UpdateOrder             = context.ParseEnum<ServiceUpdateOrder>("update_order", default(ServiceUpdateOrder));
             service.UpdateParallism         = context.ParseInt("update_parallelism", v => v > 0);
             service.User                    = context.ParseString("user");
             service.WithRegistryAuth        = context.ParseBool("with_registry_auth");
-            service.WorkDir                 = context.ParseString("workdir");
+            service.Dir                     = context.ParseString("workdir");
 
             // Abort the operation if any errors were reported during parsing.
 
@@ -425,13 +428,23 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting [{service.Name}] service.");
 
-            var manager      = cluster.GetHealthyManager();
-            var response     = manager.DockerCommand(RunOptions.None, "docker service inspect", service.Name);
-            var serviceState = (string)null;
+            var manager        = cluster.GetHealthyManager();
+            var response       = manager.DockerCommand(RunOptions.None, "docker service inspect", service.Name);
+            var serviceDetails = (ServiceDetails)null;
 
             if (response.ExitCode == 0)
             {
-                serviceState = response.OutputText;
+                try
+                {
+                    serviceDetails = NeonHelper.JsonDeserialize<ServiceDetails>(response.OutputText);
+                    serviceDetails.Normalize();
+                }
+                catch
+                {
+                    context.WriteErrorLine("INTERNAL ERROR: Cannot parse existing service state.");
+                    throw;
+                }
+
                 context.WriteLine(AnsibleVerbosity.Trace, $"{service.Name}] service exists.");
             }
             else
@@ -450,8 +463,9 @@ namespace NeonCli.Ansible
                 else
                 {
                     context.WriteErrorLine(response.ErrorText);
-                    return;
                 }
+
+                return;
             }
 
             if (context.HasErrors)
@@ -463,11 +477,11 @@ namespace NeonCli.Ansible
             {
                 case "absent":
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"[state=absent] so removing [{service.Name}] service if it is running.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"[state=absent] so removing [{service.Name}] service if it exists.");
 
-                    if (serviceState == null)
+                    if (serviceDetails == null)
                     {
-                        context.WriteLine(AnsibleVerbosity.Trace, $"No change required because [{service.Name}] service is not running.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"No change required because [{service.Name}] service doesn't exist.");
                     }
                     else
                     {
@@ -484,14 +498,13 @@ namespace NeonCli.Ansible
                             if (response.ExitCode == 0)
                             {
                                 context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service was removed.");
+                                context.Changed = true;
                             }
                             else
                             {
                                 context.WriteErrorLine(response.AllText);
                             }
                         }
-
-                        context.Changed = !context.CheckMode;
                     }
                     break;
 
@@ -507,7 +520,7 @@ namespace NeonCli.Ansible
                         return;
                     }
 
-                    if (serviceState == null)
+                    if (serviceDetails == null)
                     {
                         if (context.CheckMode)
                         {
@@ -523,15 +536,50 @@ namespace NeonCli.Ansible
                     }
                     else
                     {
-                        // NOTE: UpdateService() handles the CheckMode logic and context logging.
+                        // NOTE: UpdateService() handles the CHECK-MODE logic and context logging.
 
-                        UpdateService(manager, context, force, service, serviceState);
+                        UpdateService(manager, context, force, service, serviceDetails);
+                    }
+                    break;
+
+                case "rollback":
+
+                    if (serviceDetails == null)
+                    {
+                        context.WriteErrorLine($"[{service.Name}] service is not running and cannot be rolled back.");
+                    }
+                    else if (serviceDetails.PreviousSpec == null)
+                    {
+                        context.WriteLine(AnsibleVerbosity.Important, $"[{service.Name}] service cannot be rolled back because it has no previous configuration.");
+                    }
+                    else
+                    {
+                        if (context.CheckMode)
+                        {
+                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service will be rolled back when CHECK-MODE is disabled.");
+                        }
+                        else
+                        {
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Rolling back [{service.Name}] service will be created when CHECK-MODE is disabled.");
+
+                            response = manager.DockerCommand(RunOptions.None, "docker", "service", "rollback", service.Name);
+
+                            if (response.ExitCode == 0)
+                            {
+                                context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service was rolled back.");
+                                context.Changed = true;
+                            }
+                            else
+                            {
+                                context.WriteErrorLine(response.AllText);
+                            }
+                        }
                     }
                     break;
 
                 default:
 
-                    throw new ArgumentException($"[state={state}] is not one of the valid choices: [present] or [absent].");
+                    throw new ArgumentException($"[state={state}] is not one of the valid choices: [present], [absent], or [rollback].");
             }
         }
 
@@ -575,7 +623,7 @@ namespace NeonCli.Ansible
 
                 if (jObject.TryGetValue<string>("type", out value))
                 {
-                    if (Enum.TryParse<MountType>(value, true, out var mountType))
+                    if (Enum.TryParse<ServiceMountType>(value, true, out var mountType))
                     {
                         mount.Type = mountType;
                     }
@@ -587,7 +635,7 @@ namespace NeonCli.Ansible
                 }
                 else
                 {
-                    mount.Type = MountType.Volume;
+                    mount.Type = default(ServiceMountType);
                 }
 
                 // Parse [source]
@@ -615,19 +663,19 @@ namespace NeonCli.Ansible
 
                 if (jObject.TryGetValue<string>("consistency", out value))
                 {
-                    mount.Consistency = context.ParseEnumValue<MountConsistency>(value, $"Invalid [mount.consistency={value}] value.");
+                    mount.Consistency = context.ParseEnumValue<ServiceMountConsistency>(value, default(ServiceMountConsistency), $"Invalid [mount.consistency={value}] value.");
                 }
 
                 // Parse [bind_propagation]
 
                 if (jObject.TryGetValue<string>("bind_propagation", out value))
                 {
-                    mount.BindPropagation = context.ParseEnumValue<MountBindPropagation>(value, $"Invalid [mount.bind_propagation={value}] value.");
+                    mount.BindPropagation = context.ParseEnumValue<ServiceMountBindPropagation>(value, default(ServiceMountBindPropagation), $"Invalid [mount.bind_propagation={value}] value.");
                 }
 
                 // Parse the [volume] related options.
 
-                if (mount.Type == MountType.Volume)
+                if (mount.Type == ServiceMountType.Volume)
                 {
                     // Parse [volume_driver]
 
@@ -698,7 +746,7 @@ namespace NeonCli.Ansible
 
                 // Parse [tmpfs] related options.
 
-                if (mount.Type == MountType.Tmpfs)
+                if (mount.Type == ServiceMountType.Tmpfs)
                 {
                     // Parse [tmpfs_size]
 
@@ -859,7 +907,7 @@ namespace NeonCli.Ansible
 
                 if (jObject.TryGetValue<string>("mode", out value))
                 {
-                    if (Enum.TryParse<PortMode>(value, true, out var portMode))
+                    if (Enum.TryParse<ServicePortMode>(value, true, out var portMode))
                     {
                         port.Mode = portMode;
                     }
@@ -871,14 +919,14 @@ namespace NeonCli.Ansible
                 }
                 else
                 {
-                    port.Mode = PortMode.Ingress;
+                    port.Mode = ServicePortMode.Ingress;
                 }
 
                 // Parse [protocol]
 
                 if (jObject.TryGetValue<string>("protocol", out value))
                 {
-                    if (Enum.TryParse<PortProtocol>(value, true, out var portProtocol))
+                    if (Enum.TryParse<ServicePortProtocol>(value, true, out var portProtocol))
                     {
                         port.Protocol = portProtocol;
                     }
@@ -890,7 +938,7 @@ namespace NeonCli.Ansible
                 }
                 else
                 {
-                    port.Protocol = PortProtocol.Tcp;
+                    port.Protocol = ServicePortProtocol.Tcp;
                 }
 
                 // Add the mount to the list.
@@ -905,8 +953,8 @@ namespace NeonCli.Ansible
         /// Parses the service's configs.
         /// </summary>
         /// <param name="context">The module context.</param>
-        /// <param name="argName">The module argument name.</param>
-        /// /// <returns>The list of <see cref="Config"/> instances.</returns>
+        /// <param name="argName">The argument name.</param>
+        /// <returns>The list of <see cref="Config"/> instances.</returns>
         private List<Config> ParseConfigArray(ModuleContext context, string argName)
         {
             var configs = new List<Config>();
@@ -974,7 +1022,7 @@ namespace NeonCli.Ansible
                 {
                     if (!int.TryParse(value, out var parsed))
                     {
-                        config.Uid = value;
+                        config.UID = value;
                     }
                     else
                     {
@@ -988,7 +1036,7 @@ namespace NeonCli.Ansible
                 {
                     if (!int.TryParse(value, out var parsed))
                     {
-                        config.Gid = value;
+                        config.GID = value;
                     }
                     else
                     {
@@ -1008,8 +1056,8 @@ namespace NeonCli.Ansible
         /// Parses the service's secrets.
         /// </summary>
         /// <param name="context">The module context.</param>
-        /// <param name="argName">The module argument name.</param>
-        /// /// <returns>The list of <see cref="Secret"/> instances.</returns>
+        /// <param name="argName">The argument name.</param>
+        /// <returns>The list of <see cref="Secret"/> instances.</returns>
         private List<Secret> ParseSecretArray(ModuleContext context, string argName)
         {
             var secrets = new List<Secret>();
@@ -1077,7 +1125,7 @@ namespace NeonCli.Ansible
                 {
                     if (!int.TryParse(value, out var parsed))
                     {
-                        secret.Uid = value;
+                        secret.UID = value;
                     }
                     else
                     {
@@ -1091,7 +1139,7 @@ namespace NeonCli.Ansible
                 {
                     if (!int.TryParse(value, out var parsed))
                     {
-                        secret.Gid = value;
+                        secret.GID = value;
                     }
                     else
                     {
@@ -1157,7 +1205,7 @@ namespace NeonCli.Ansible
                 args.Add($"--dns-search={domain}");
             }
 
-            if (service.EndpointMode != EndpointMode.Vip)
+            if (service.EndpointMode != ServiceEndpointMode.Vip)
             {
                 args.Add($"--endpoint-mode={service.EndpointMode}");
             }
@@ -1177,11 +1225,6 @@ namespace NeonCli.Ansible
             foreach (var env in service.Env)
             {
                 args.Add($"--env={env}");
-            }
-
-            foreach (var envFile in service.EnvFile)
-            {
-                args.Add($"--env-file={envFile}");
             }
 
             foreach (var resource in service.GenericResource)
@@ -1448,14 +1491,14 @@ namespace NeonCli.Ansible
                 sb.AppendWithSeparator($"source={secret.Source}", ",");
                 sb.AppendWithSeparator($"target={secret.Target}", ",");
 
-                if (secret.Uid != null)
+                if (secret.UID != null)
                 {
-                    sb.AppendWithSeparator($"uid={secret.Uid}", ",");
+                    sb.AppendWithSeparator($"uid={secret.UID}", ",");
                 }
 
-                if (secret.Gid != null)
+                if (secret.GID != null)
                 {
-                    sb.AppendWithSeparator($"uid={secret.Gid}", ",");
+                    sb.AppendWithSeparator($"uid={secret.GID}", ",");
                 }
 
                 if (secret.Mode != null)
@@ -1474,9 +1517,9 @@ namespace NeonCli.Ansible
                 args.Add($"--stop-signal={service.StopSignal}");
             }
 
-            if (service.Tty.HasValue)
+            if (service.TTY.HasValue)
             {
-                args.Add($"--tty={service.Tty.Value}");
+                args.Add($"--tty={service.TTY.Value}");
             }
 
             if (service.UpdateDelay.HasValue)
@@ -1519,9 +1562,9 @@ namespace NeonCli.Ansible
                 args.Add($"--with-registry-auth={service.WithRegistryAuth.Value}");
             }
 
-            if (!string.IsNullOrEmpty(service.WorkDir))
+            if (!string.IsNullOrEmpty(service.Dir))
             {
-                args.Add($"--workdir={service.WorkDir}");
+                args.Add($"--workdir={service.Dir}");
             }
 
             // The Docker image any service arguments are passed as regular
@@ -1556,10 +1599,86 @@ namespace NeonCli.Ansible
         /// <param name="manager">The manager where the command will be executed.</param>
         /// <param name="context">The Ansible module context.</param>
         /// <param name="force">Optionally specifies that the </param>
-        /// <param name="service">The Service definition.</param>
-        /// <param name="serviceState">The service state from a <b>docker service inspect</b> command formatted as JSON.</param>
-        private void UpdateService(SshProxy<NodeDefinition> manager, ModuleContext context, bool force, DockerServiceSpec service, string serviceState)
+        /// <param name="newServiceSpec">The desired service state.</param>
+        /// <param name="currentState">The service state from a <b>docker service inspect</b> command parsed from JSON.</param>
+        private void UpdateService(SshProxy<NodeDefinition> manager, ModuleContext context, bool force, DockerServiceSpec newServiceSpec, ServiceDetails currentState)
         {
+            var serviceName = currentState.Spec.Name;
+
+            // We need to list the networks so we'll be able to map network
+            // IDs to network names when parsing the service details.
+
+            var networksResponse = manager.DockerCommand(RunOptions.None, "docker", "network", "ls", "--no-trunc");
+
+            if (networksResponse.ExitCode != 0)
+            {
+                context.WriteErrorLine($"Cannot list Docker networks: {networksResponse.AllText}");
+                return;
+            }
+
+            // Convert the current Docker service details into a [DockerServiceSpec] so we'll
+            // be able to compare the current and expected state and generate an update command
+            // if required.
+
+            var currentServiceSpec = DockerServiceSpec.FromDockerInspect(context, currentState, networksResponse.OutputText);
+
+            if (currentServiceSpec.Equals(newServiceSpec))
+            {
+                if (force)
+                {
+                    if (context.CheckMode)
+                    {
+                        context.WriteLine(AnsibleVerbosity.Important, $"[{serviceName}] service is already configured as specified but we'll force an update because [force=true] when CHECK-MODE is disabled.");
+                    }
+                    else
+                    {
+                        context.WriteLine(AnsibleVerbosity.Info, $"[{serviceName}] service is already configured as specified but we'll force an update because [force=true].");
+
+                        var response = manager.DockerCommand(RunOptions.None, "docker", "service", "update", "--force", serviceName);
+
+                        if (response.ExitCode != 0)
+                        {
+                            context.WriteErrorLine($"Cannot update service [{serviceName}]: {response.AllText}");
+                        }
+                        else
+                        {
+                            context.WriteLine(AnsibleVerbosity.Important, $"[{serviceName}] service was updated.");
+                            context.Changed = true;
+                        }
+                    }
+                }
+                else
+                {
+                    context.WriteLine(AnsibleVerbosity.Important, $"[{serviceName}] is already configured as specified.");
+                }
+            }
+            else
+            {
+                var updateCmdArgs = DockerServiceSpec.DockerUpdateCommandArgs(context, currentServiceSpec, newServiceSpec).ToArray();
+
+                context.WriteLine(AnsibleVerbosity.Info, $"Update command: {NeonHelper.NormalizeExecArgs(updateCmdArgs)}");
+
+                if (context.CheckMode)
+                {
+                    context.WriteLine(AnsibleVerbosity.Info, $"[{serviceName}] service will be updated when CHECK-MODE is disabled.");
+                }
+                else
+                {
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Updating [{serviceName}] service.");
+
+                    var response = manager.DockerCommand(RunOptions.None, "docker", "service", "update", updateCmdArgs);
+
+                    if (response.ExitCode != 0)
+                    {
+                        context.WriteErrorLine($"Cannot update service [{serviceName}]: {response.AllText}");
+                    }
+                    else
+                    {
+                        context.WriteLine(AnsibleVerbosity.Important, $"[{serviceName}] service was updated.");
+                        context.Changed = true;
+                    }
+                }
+            }
         }
     }
 }

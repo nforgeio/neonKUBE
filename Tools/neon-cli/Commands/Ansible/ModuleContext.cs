@@ -380,6 +380,35 @@ namespace NeonCli.Ansible
         }
 
         /// <summary>
+        /// Attempts to parse an enumeration value.
+        /// </summary>
+        /// <param name="input">The input string.</param>
+        /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
+        /// <returns>The parsed value or <paramref name="defaultValue"/> if the input was <c>null</c> or invalid.</returns>
+        public TEnum ParseEnumValue<TEnum>(string input, TEnum defaultValue, string errorMessage = null)
+            where TEnum : struct
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return defaultValue;
+            }
+
+            if (!Enum.TryParse<TEnum>(input, true, out var value))
+            {
+                if (errorMessage != null)
+                {
+                    WriteErrorLine(errorMessage);
+                }
+
+                return defaultValue;
+            }
+            else
+            {
+                return value;
+            }
+        }
+
+        /// <summary>
         /// Parses a boolean argument.
         /// </summary>>
         /// <param name="argName">The argument name.</param>
@@ -520,7 +549,8 @@ namespace NeonCli.Ansible
         }
 
         /// <summary>
-        /// Parses an enumeration argument.
+        /// Parses an enumeration argument returning <c>null</c> if the
+        /// property doesn't exist or is invalid.
         /// </summary>
         /// <typeparam name="TEnum">The enumeration type.</typeparam>
         /// <param name="argName">The argument name.</param>
@@ -551,6 +581,46 @@ namespace NeonCli.Ansible
             {
                 WriteErrorLine($"[{argName}] is not a valid [{typeof(TEnum).Name}].");
                 return null;
+            }
+        }
+
+        /// <summary>
+        /// Parses an enumeration argument returning a default value if the
+        /// property doesn't exist or is invalid.
+        /// </summary>
+        /// <typeparam name="TEnum">The enumeration type.</typeparam>
+        /// <param name="argName">The argument name.</param>
+        /// <param name="defaultValue">The default value.</param>
+        /// <returns>
+        /// The parsed enumeration value or <paramref name="defaultValue"/>
+        /// if the property doesn't exist or is invalid.
+        /// </returns>
+        public TEnum ParseEnum<TEnum>(string argName, TEnum defaultValue)
+            where TEnum : struct
+        {
+            if (!Arguments.TryGetValue(argName, out var jToken))
+            {
+                return defaultValue;
+            }
+
+            try
+            {
+                var valueString = (string)jToken;
+
+                try
+                {
+                    return (TEnum)NeonHelper.ParseEnumUsingAttributes<TEnum>(valueString);
+                }
+                catch
+                {
+                    WriteErrorLine($"[{argName}={valueString}] is not a valid [{typeof(TEnum).Name}].");
+                    return defaultValue;
+                }
+            }
+            catch
+            {
+                WriteErrorLine($"[{argName}] is not a valid [{typeof(TEnum).Name}].");
+                return defaultValue;
             }
         }
 
