@@ -12,6 +12,9 @@ STOPSIGNAL  SIGTERM
 
 COPY docker-entrypoint.sh   /
 
-RUN chmod 700 /docker-entrypoint.sh
+RUN chmod 777 /docker-entrypoint.sh \
+    && adduser -S test \
+    && addgroup -S test \
+    && addgroup test test
 
 ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
