@@ -436,7 +436,13 @@ namespace NeonCli.Ansible
             {
                 try
                 {
-                    serviceDetails = NeonHelper.JsonDeserialize<ServiceDetails>(response.OutputText);
+                    // The inspection response is actually an array with a single
+                    // service details element, so we'll need to extract that element
+                    // and then parse it.
+
+                    var jArray = JArray.Parse(response.OutputText);
+
+                    serviceDetails = NeonHelper.JsonDeserialize<ServiceDetails>(jArray[0].ToString());
                     serviceDetails.Normalize();
                 }
                 catch
@@ -1600,10 +1606,10 @@ namespace NeonCli.Ansible
         /// <param name="context">The Ansible module context.</param>
         /// <param name="force">Optionally specifies that the </param>
         /// <param name="newServiceSpec">The desired service state.</param>
-        /// <param name="currentState">The service state from a <b>docker service inspect</b> command parsed from JSON.</param>
-        private void UpdateService(SshProxy<NodeDefinition> manager, ModuleContext context, bool force, DockerServiceSpec newServiceSpec, ServiceDetails currentState)
+        /// <param name="currentDetails">The service state from a <b>docker service inspect</b> command parsed from JSON.</param>
+        private void UpdateService(SshProxy<NodeDefinition> manager, ModuleContext context, bool force, DockerServiceSpec newServiceSpec, ServiceDetails currentDetails)
         {
-            var serviceName = currentState.Spec.Name;
+            var serviceName = currentDetails.Spec.Name;
 
             // We need to list the networks so we'll be able to map network
             // IDs to network names when parsing the service details.
@@ -1620,7 +1626,7 @@ namespace NeonCli.Ansible
             // be able to compare the current and expected state and generate an update command
             // if required.
 
-            var currentServiceSpec = DockerServiceSpec.FromDockerInspect(context, currentState, networksResponse.OutputText);
+            var currentServiceSpec = DockerServiceSpec.FromDockerInspect(context, currentDetails, networksResponse.OutputText);
 
             if (currentServiceSpec.Equals(newServiceSpec))
             {

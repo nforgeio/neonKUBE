@@ -20,11 +20,47 @@ namespace Neon.Docker
     public class ServiceContainerSpec : INormalizable
     {
         /// <summary>
-        /// The image to use for the container.
+        /// <para>
+        /// The image used to provision the service container.
+        /// </para>
+        /// <note>
+        /// This may include the image's <b>@sha256:...</b> appended to the tag.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Image", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
         public string Image { get; set; }
+
+        /// <summary>
+        /// Returns the <see cref="Image"/> without any SHA hash appended to the tag.
+        /// </summary>
+        [JsonIgnore]
+        public string ImageWithoutSHA
+        {
+            get
+            {
+                if (string.IsNullOrEmpty(Image))
+                {
+                    return Image;
+                }
+
+                var pos = Image.IndexOf(':');
+
+                if (pos == -1)
+                {
+                    return Image;
+                }
+
+                pos = Image.IndexOf('@', pos);
+
+                if (pos == -1)
+                {
+                    return Image;
+                }
+
+                return Image.Substring(0, pos);
+            }
+        }
 
         /// <summary>
         /// The container labels formatted as <b>LABEL=VALUE</b>.
@@ -149,8 +185,8 @@ namespace Neon.Docker
         /// IP_address canonical_hostname [aliases...]
         /// </example>
         /// </summary>
-        [JsonProperty(PropertyName = "StopGracePeriod", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
+        [JsonProperty(PropertyName = "Hosts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
         public List<string> Hosts { get; set; }
 
         /// <summary>

@@ -12,10 +12,13 @@ using System.Linq;
 using System.Text;
 using System.Threading;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using YamlDotNet.RepresentationModel;
 using Xunit;
 
 using Neon.Common;
+using Neon.Docker;
 using Neon.IO;
 
 namespace Neon.Xunit
@@ -123,6 +126,7 @@ namespace Neon.Xunit
     ///     <see cref="ClearServices(bool)"/><br/>
     ///     <see cref="CreateService(string, string, string[], string[], string[])"/><br/>
     ///     <see cref="ListServices(bool)"/><br/>
+    ///     <see cref="InspectService(string, bool)"/><br/>
     ///     <see cref="RemoveService(string)"/>
     ///     </description>
     /// </item>
@@ -188,7 +192,7 @@ namespace Neon.Xunit
             /// <summary>
             /// Returns the secret ID.
             /// </summary>
-            public string Id { get; set; }
+            public string ID { get; set; }
 
             /// <summary>
             /// Returns the secret name.
@@ -204,7 +208,7 @@ namespace Neon.Xunit
             /// <summary>
             /// Returns the network ID.
             /// </summary>
-            public string Id { get; set; }
+            public string ID { get; set; }
 
             /// <summary>
             /// Returns the network name.
@@ -220,7 +224,7 @@ namespace Neon.Xunit
             /// <summary>
             /// Returns the config ID.
             /// </summary>
-            public string Id { get; set; }
+            public string ID { get; set; }
 
             /// <summary>
             /// Returns the config name.
@@ -236,7 +240,7 @@ namespace Neon.Xunit
             /// <summary>
             /// Returns the service ID.
             /// </summary>
-            public string Id { get; set; }
+            public string ID { get; set; }
 
             /// <summary>
             /// Returns the service name.
@@ -278,7 +282,7 @@ namespace Neon.Xunit
             /// <summary>
             /// Returns the container ID.
             /// </summary>
-            public string Id { get; set; }
+            public string ID { get; set; }
 
             /// <summary>
             /// Returns the container name.
@@ -654,9 +658,9 @@ namespace Neon.Xunit
 
             foreach (var container in ListContainers())
             {
-                if (!subContainerFixtureIds.Contains(container.Id))
+                if (!subContainerFixtureIds.Contains(container.ID))
                 {
-                    containerIds.Add(container.Id);
+                    containerIds.Add(container.ID);
                 }
             }
 
@@ -787,7 +791,7 @@ namespace Neon.Xunit
                     services.Add(
                         new ServiceInfo()
                         {
-                            Id               = fields[0],
+                            ID               = fields[0],
                             Name             = fields[1],
                             ReplicasDesired  = int.Parse(replicas[0]),
                             ReplicasDeployed = int.Parse(replicas[1])
@@ -796,6 +800,34 @@ namespace Neon.Xunit
             }
 
             return services;
+        }
+
+        /// <summary>
+        /// Inspects a service, returning details about its current state.
+        /// </summary>
+        /// <param name="name">The service name.</param>
+        /// <param name="strict">Optionally specify strict JSON parsing.</param>
+        /// <returns>The <see cref="ServiceDetails"/>.</returns>
+        public ServiceDetails InspectService(string name, bool strict = false)
+        {
+            var response = DockerExecute("service", "inspect", name);
+
+            if (response.ExitCode != 0)
+            {
+                throw new Exception($"Cannot inspect service [{name}]: {response.AllText}");
+            }
+
+            // The inspection response is actually an array with a single
+            // service details element, so we'll need to extract that element
+            // and then parse it.
+
+            var jArray      = JArray.Parse(response.OutputText);
+            var jsonDetails = jArray[0].ToString(Formatting.Indented);
+            var details     = NeonHelper.JsonDeserialize<ServiceDetails>(jsonDetails, strict);
+
+            details.Normalize();
+
+            return details;
         }
 
         /// <summary>
@@ -928,7 +960,7 @@ namespace Neon.Xunit
                     containers.Add(
                         new ContainerInfo()
                         {
-                            Id   = fields[0],
+                            ID   = fields[0],
                             Name = fields[1]
                         });
                 }
@@ -981,7 +1013,7 @@ namespace Neon.Xunit
 
             foreach (var container in ListContainers(removeSystem))
             {
-                ids.Add(container.Id);
+                ids.Add(container.ID);
             }
 
             if (ids.Count > 0)
@@ -1277,7 +1309,7 @@ namespace Neon.Xunit
                     secrets.Add(
                         new SecretInfo()
                         {
-                            Id   = fields[0],
+                            ID   = fields[0],
                             Name = fields[1]
                         });
                 }
@@ -1428,7 +1460,7 @@ namespace Neon.Xunit
                     configs.Add(
                         new ConfigInfo()
                         {
-                            Id   = fields[0],
+                            ID   = fields[0],
                             Name = fields[1]
                         });
                 }
@@ -1552,7 +1584,7 @@ namespace Neon.Xunit
                     networks.Add(
                         new NetworkInfo()
                         {
-                            Id   = fields[0],
+                            ID   = fields[0],
                             Name = fields[1]
                         });
                 }

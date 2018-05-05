@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -40,18 +41,36 @@ namespace Neon.Docker
         public ServiceVersion Version { get; set; }
 
         /// <summary>
-        /// Time when the service was created.
+        /// Time when the service was created (as a string).
         /// </summary>
         [JsonProperty(PropertyName = "CreatedAt", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
         public string CreatedAt { get; set; }
 
         /// <summary>
-        /// Time when the service was last updated.
+        /// Returns the time (UTC) the service was created (as a <see cref="DateTime"/>).
+        /// </summary>
+        [JsonIgnore]
+        public DateTime CreatedAtUtc
+        {
+            get { return DateTime.Parse(CreatedAt, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal); }
+        }
+
+        /// <summary>
+        /// Time when the service was last created or updated (as a string).
         /// </summary>
         [JsonProperty(PropertyName = "UpdatedAt", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
         public string UpdatedAt { get; set; }
+
+        /// <summary>
+        /// Returns the time (UTC) the service was last created or updated (as a <see cref="DateTime"/>).
+        /// </summary>
+        [JsonIgnore]
+        public DateTime UpdatedAtUtc
+        {
+            get { return DateTime.Parse(UpdatedAt, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal); }
+        }
 
         /// <summary>
         /// The service specification.
@@ -74,7 +93,7 @@ namespace Neon.Docker
         /// </summary>
         [JsonProperty(PropertyName = "Endpoint", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
-        public ServiceEndpointSpec Endpoint { get; set; }
+        public ServiceEndpoint Endpoint { get; set; }
 
         /// <summary>
         /// Describes the service update status.
@@ -86,10 +105,9 @@ namespace Neon.Docker
         /// <inheritdoc/>
         public void Normalize()
         {
-            Version      = Version ?? new ServiceVersion();
-            Spec         = Spec ?? new ServiceSpec();
-            Endpoint     = Endpoint ?? new ServiceEndpointSpec();
-            UpdateStatus = UpdateStatus ?? new ServiceUpdateStatus();
+            Version  = Version ?? new ServiceVersion();
+            Spec     = Spec ?? new ServiceSpec();
+            Endpoint = Endpoint ?? new ServiceEndpoint();
 
             Version?.Normalize();
             Spec?.Normalize();

@@ -24,8 +24,8 @@ namespace Neon.Docker
         /// Indicates the saervice updating state.
         /// </summary>
         [JsonProperty(PropertyName = "State", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(default(ServiceUpdateStatus))]
-        public ServiceUpdateStatus State { get; set; }
+        [DefaultValue(default(ServiceUpdateState))]
+        public ServiceUpdateState State { get; set; }
 
         /// <summary>
         /// Indicates when the service update was started.
@@ -51,9 +51,6 @@ namespace Neon.Docker
         /// <inheritdoc/>
         public void Normalize()
         {
-            State = State ?? new ServiceUpdateStatus();
-
-            State?.Normalize();
         }
     }
 }

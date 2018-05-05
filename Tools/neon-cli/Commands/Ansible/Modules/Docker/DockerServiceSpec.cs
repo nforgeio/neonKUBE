@@ -1741,7 +1741,7 @@ namespace NeonCli.Ansible.Docker
             this.LimitCpu    = limits.NanoCPUs / oneBillion;
             this.LimitMemory = limits.MemoryBytes;
 
-            var reservation = resources.Reservation;
+            var reservation = resources.Reservations;
 
             this.ReserveCpu    = reservation.NanoCPUs / oneBillion;
             this.ReserveMemory = reservation.MemoryBytes;

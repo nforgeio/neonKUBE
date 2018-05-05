@@ -29,18 +29,18 @@ namespace Neon.Docker
         /// <summary>
         /// Specifies resource reservations for service containers.
         /// </summary>
-        [JsonProperty(PropertyName = "Reservation", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "Reservations", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
-        public ServiceResourceSettings Reservation { get; set; }
+        public ServiceResourceSettings Reservations { get; set; }
 
         /// <inheritdoc/>
         public void Normalize()
         {
-            Limits      = Limits ?? new ServiceResourceSettings();
-            Reservation = Reservation ?? new ServiceResourceSettings();
+            Limits       = Limits ?? new ServiceResourceSettings();
+            Reservations = Reservations ?? new ServiceResourceSettings();
 
             Limits?.Normalize();
-            Reservation?.Normalize();
+            Reservations?.Normalize();
         }
     }
 }

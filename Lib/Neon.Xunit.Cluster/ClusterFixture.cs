@@ -176,6 +176,7 @@ namespace Neon.Xunit.Cluster
     ///     <see cref="DockerFixture.ClearServices(bool)"/>
     ///     <see cref="DockerFixture.CreateService(string, string, string[], string[], string[])"/><br/>
     ///     <see cref="DockerFixture.ListServices(bool)"/><br/>
+    ///     <see cref="DockerFixture.InspectService(string, bool)"/><br/>
     ///     <see cref="DockerFixture.RemoveService(string)"/>
     ///     </description>
     /// </item>

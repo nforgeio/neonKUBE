@@ -15,7 +15,7 @@ using Newtonsoft.Json.Serialization;
 namespace Neon.Docker
 {
     /// <summary>
-    /// Service endpoint and load balancer settings.
+    /// Service endpoint specification.
     /// </summary>
     public class ServiceEndpointSpec : INormalizable
     {
@@ -33,19 +33,10 @@ namespace Neon.Docker
         [DefaultValue(null)]
         public List<ServiceEndpointPortConfig> Ports { get; set; }
 
-        /// <summary>
-        /// Lists the virtual IP addresses assigned to this service on the 
-        /// attached networks.
-        /// </summary>
-        [JsonProperty(PropertyName = "VirtualIPs", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(null)]
-        public List<ServiceVirtualIP> VirtualIPs { get; set; }
-
         /// <inheritdoc/>
         public void Normalize()
         {
-            Ports      = Ports ?? new List<ServiceEndpointPortConfig>();
-            VirtualIPs = VirtualIPs ?? new List<ServiceVirtualIP>();
+            Ports = Ports ?? new List<ServiceEndpointPortConfig>();
 
             foreach (var item in Ports)
             {
