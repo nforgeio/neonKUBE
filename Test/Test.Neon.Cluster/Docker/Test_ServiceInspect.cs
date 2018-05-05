@@ -76,7 +76,7 @@ namespace TestNeonCluster
 
             docker.CreateService("test", "neoncluster/test");
 
-            var info    = docker.ListServices().Single(s => s.Name == "test");
+            var info = docker.ListServices().Single(s => s.Name == "test");
             var details = docker.InspectService("test", strict);
 
             // ID, Version, and Time fields
@@ -100,6 +100,12 @@ namespace TestNeonCluster
             Assert.Equal("neoncluster/test:latest", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
             Assert.Equal(10000000000L, details.Spec.TaskTemplate.ContainerSpec.StopGracePeriod);
             Assert.Equal(ServiceIsolationMode.Default, details.Spec.TaskTemplate.ContainerSpec.Isolation);
+
+            Assert.Empty(details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Test);
+            Assert.Equal(0L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Interval);
+            Assert.Equal(0L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Timeout);
+            Assert.Equal(0L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Retries);
+            Assert.Equal(0L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.StartPeriod);
 
             // Spec.TaskTemplate.Resources
 
@@ -164,6 +170,137 @@ namespace TestNeonCluster
             // UpdateStatus
 
             Assert.Null(details.UpdateStatus);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        public void ServiceLabels()
+        {
+            // Verify that we can deploy and parse service labels.
+
+            docker.CreateService("test", "neoncluster/test",
+                dockerArgs: 
+                    new string[]
+                    {
+                        "--label", "foo=bar",
+                        "--label", "hello=world"
+                    });
+
+            var info    = docker.ListServices().Single(s => s.Name == "test");
+            var details = docker.InspectService("test", strict);
+
+            Assert.Equal(2, details.Spec.Labels.Count);
+            Assert.Equal("bar", details.Spec.Labels["foo"]);
+            Assert.Equal("world", details.Spec.Labels["hello"]);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        public void ServiceEnv()
+        {
+            // Verify that we can specify environment variables.
+
+            docker.CreateService("test", "neoncluster/test",
+                dockerArgs:
+                    new string[]
+                    {
+                        "--env", "foo=bar",
+                        "--env", "hello=world",
+                        "--env", "MAIL"
+                    });
+
+            var info    = docker.ListServices().Single(s => s.Name == "test");
+            var details = docker.InspectService("test", strict);
+
+            Assert.Equal(3, details.Spec.TaskTemplate.ContainerSpec.Env.Count);
+            Assert.Contains("foo=bar", details.Spec.TaskTemplate.ContainerSpec.Env);
+            Assert.Contains("hello=world", details.Spec.TaskTemplate.ContainerSpec.Env);
+            Assert.Contains("MAIL", details.Spec.TaskTemplate.ContainerSpec.Env);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        public void CommandAndArgs()
+        {
+            // Verify that we can specify the container command and arguments.
+
+            docker.CreateService("test", "neoncluster/test",
+                dockerArgs:
+                    new string[]
+                    {
+                        "--entrypoint", "sleep"
+                    },
+                serviceArgs:
+                    new string[]
+                    {
+                        "50000000"
+                    });
+
+            var info    = docker.ListServices().Single(s => s.Name == "test");
+            var details = docker.InspectService("test", strict);
+
+            Assert.Equal(new string[] { "sleep" }, details.Spec.TaskTemplate.ContainerSpec.Command);
+            Assert.Equal(new string[] { "50000000" }, details.Spec.TaskTemplate.ContainerSpec.Args);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        public void ContainerSpecMisc()
+        {
+            // Verify that we can specify misc container properties.
+
+            docker.CreateService("test", "neoncluster/test",
+                dockerArgs:
+                    new string[]
+                    {
+                        "--hostname", "sleeper",
+                        "--workdir", "/",
+                        "--user", "test",
+                        "--group", "test",
+                        "--tty",
+                        "--read-only",
+                        "--stop-signal", "kill",
+                        "--stop-grace-period", "20000000ns",
+                    });
+
+            var info    = docker.ListServices().Single(s => s.Name == "test");
+            var details = docker.InspectService("test", strict);
+
+            Assert.Equal("sleeper", details.Spec.TaskTemplate.ContainerSpec.Hostname);
+            Assert.Equal("/", details.Spec.TaskTemplate.ContainerSpec.Dir);
+            Assert.Equal("test", details.Spec.TaskTemplate.ContainerSpec.User);
+            Assert.Equal("test", details.Spec.TaskTemplate.ContainerSpec.Groups.Single());
+            Assert.True(details.Spec.TaskTemplate.ContainerSpec.ReadOnly);
+            Assert.True(details.Spec.TaskTemplate.ContainerSpec.ReadOnly);
+            Assert.Equal("kill", details.Spec.TaskTemplate.ContainerSpec.StopSignal);
+            Assert.Equal(20000000L, details.Spec.TaskTemplate.ContainerSpec.StopGracePeriod);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        public void ServiceHealthCheck()
+        {
+            // Verify that we can customize health checks.
+
+            docker.CreateService("test", "neoncluster/test",
+                dockerArgs:
+                    new string[]
+                    {
+                        "--health-cmd", "exit 0",
+                        "--health-interval", "5000000000000ns",
+                        "--health-retries", "5",
+                        "--health-start-period", "1000000000000ns",
+                        "--health-timeout", "2000000000000ns",
+                    });
+
+            var info    = docker.ListServices().Single(s => s.Name == "test");
+            var details = docker.InspectService("test", strict);
+
+            Assert.Equal(new string[] { "echo", "ok" }, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Test);
+            Assert.Equal(5000000000000L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Interval);
+            Assert.Equal(5L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Retries);
+            Assert.Equal(1000000000000L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.StartPeriod);
+            Assert.Equal(2000000000000L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Timeout);
         }
     }
 }
