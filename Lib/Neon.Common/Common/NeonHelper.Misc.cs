@@ -29,7 +29,20 @@ namespace Neon.Common
         // This is used by [ParseEnumUsingAttributes()] to cache reflected
         // [EnumMember] attributes decorating enumeration values.
 
-        private static Dictionary<Type, Dictionary<string, int>> enumToMembers = new Dictionary<Type, Dictionary<string, int>>();
+        private class EnumMemberSerializationInfo
+        {
+            /// <summary>
+            /// Maps serialized enum [EnumMember] strings to their ordinal value.
+            /// </summary>
+            public Dictionary<string, long> EnumToStrings = new Dictionary<string, long>(StringComparer.InvariantCultureIgnoreCase);
+
+            /// <summary>
+            /// Maps enum ordinal values to their [EnumMember] string.
+            /// </summary>
+            public Dictionary<long, string> EnumToOrdinals = new Dictionary<long, string>();
+        }
+
+        private static Dictionary<Type, EnumMemberSerializationInfo> typeToEnumMemberInfo = new Dictionary<Type, EnumMemberSerializationInfo>();
 
         /// <summary>
         /// Determines whether an integer is odd.
@@ -1186,6 +1199,45 @@ namespace Neon.Common
         }
 
         /// <summary>
+        /// Returns the serialization information for an enumeration type,
+        /// ensuring that it exists.
+        /// </summary>
+        /// <typeparam name="TEnum">The enumeration type.</typeparam>
+        private static EnumMemberSerializationInfo GetEnumMembers<TEnum>()
+            where TEnum : struct
+        {
+            lock (typeToEnumMemberInfo)
+            {
+                if (typeToEnumMemberInfo.TryGetValue(typeof(TEnum), out var info))
+                {
+                    return info;
+                }
+
+                // We don't have a cached [EnumMemberSerializationInfo] for this
+                // enumeration type yet, so we're going to build one and try again.
+
+                info = new EnumMemberSerializationInfo();
+
+                foreach (var member in typeof(TEnum).GetFields(BindingFlags.Public | BindingFlags.Static))
+                {
+                    var enumMember = member.GetCustomAttribute<EnumMemberAttribute>();
+
+                    if (enumMember != null)
+                    {
+                        var ordinal = Convert.ToInt64(member.GetRawConstantValue());
+
+                        info.EnumToStrings[enumMember.Value] = ordinal;
+                        info.EnumToOrdinals[ordinal]         = enumMember.Value;
+                    }
+                }
+
+                typeToEnumMemberInfo[typeof(Enum)] = info;
+
+                return info;
+            }
+        }
+
+        /// <summary>
         /// Typesafe <c>enum</c> parser that also honors any <see cref="EnumMemberAttribute"/>
         /// decorating the enumeration values.  This is case insensitive.
         /// </summary>
@@ -1205,57 +1257,42 @@ namespace Neon.Common
                 return value;
             }
 
-            // That didn't work, so we'll see if we have a cached [EnumMember]
-            // map for the type.  Note that we only need to lock [enumToMembers]
-            // because any child dictionaries will be real-only after being added.
+            // That didn't work, so we'll use a cached [EnumMember]
+            // map for the type.
 
-            Dictionary<string, int> members;
+            var info = GetEnumMembers<TEnum>();
 
-            lock (enumToMembers)
+            if (info.EnumToStrings.TryGetValue(input, out var value1))
             {
-                enumToMembers.TryGetValue(typeof(TEnum), out members);
-            }
-
-            if (members != null)
-            {
-                if (members.TryGetValue(input, out var value1))
-                {
-                    return (TEnum)Enum.ToObject(typeof(TEnum), value1);
-                }
-                else
-                {
-                    throw new ArgumentException($"[{input}] is not a valid [{typeof(TEnum).Name}] value.");
-                }
-            }
-
-            // We don't have a cached [EnumMember] dictionary for this
-            // enumeration type yet, so we're going to build one and
-            // try again.
-
-            members = new Dictionary<string, int>(StringComparer.InvariantCultureIgnoreCase);
-
-            foreach (var member in typeof(TEnum).GetFields(BindingFlags.Public | BindingFlags.Static))
-            {
-                var enumMember = member.GetCustomAttribute<EnumMemberAttribute>();
-
-                if (enumMember != null)
-                {
-                    members[enumMember.Value] = (int)member.GetRawConstantValue();
-                }
-            }
-
-            lock (enumToMembers)
-            {
-                enumToMembers[typeof(Enum)] = members;
-            }
-
-            if (members.TryGetValue(input, out var value2))
-            {
-                return (TEnum)Enum.ToObject(typeof(TEnum), value2);
+                return (TEnum)Enum.ToObject(typeof(TEnum), value1);
             }
             else
             {
                 throw new ArgumentException($"[{input}] is not a valid [{typeof(TEnum).Name}] value.");
+            }
+        }
+
+        /// <summary>
+        /// Typesafe <c>enum</c> serializer that also honors any <see cref="EnumMemberAttribute"/>
+        /// decorating the enumeration values.
+        /// </summary>
+        /// <typeparam name="TEnum">The enumeration type.</typeparam>
+        /// <param name="input">The input value.</param>
+        /// <returns>The deserialized value.</returns>
+        public static string SerializeEnumUsingAttributes<TEnum>(TEnum input)
+            where TEnum : struct
+        {
+            var info = GetEnumMembers<TEnum>();
+
+            if (info.EnumToOrdinals.TryGetValue(Convert.ToInt64(input), out var value))
+            {
+                return value;
+            }
+            else
+            {
+                // I don't believe sure we'll ever see this.
+
+                return input.ToString();
             }
         }
 
