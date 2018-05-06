@@ -1045,7 +1045,7 @@ namespace Neon.Xunit.Cluster
         // Cluster nodes
 
         /// <summary>
-        /// Remove containers as well as unreferenced volumesand networks from each cluster node.
+        /// Remove containers as well as unreferenced volumes and networks from each cluster node.
         /// </summary>
         /// <param name="noContainers">Optionally disable container removal.</param>
         /// <param name="noVolumes">Optionally disable volume removal.</param>
@@ -1069,7 +1069,7 @@ namespace Neon.Xunit.Cluster
 
                             if (!noContainers)
                             {
-                                var response = node.SudoCommand("docker ls --format {{.ID}}~{{.Names}}", RunOptions.None);
+                                var response = node.SudoCommand("docker ps --format {{.ID}}~{{.Names}}", RunOptions.None);
 
                                 if (response.ExitCode != 0)
                                 {
@@ -1093,11 +1093,14 @@ namespace Neon.Xunit.Cluster
                                     }
                                 }
 
-                                response = node.SudoCommand($"docker rm --force {sbDeleteIDs}", RunOptions.None);
-
-                                if (response.ExitCode != 0)
+                                if (sbDeleteIDs.Length > 0)
                                 {
-                                    throw new Exception($"Unable to remove node [{node.Name}] containers: {response.AllText}");
+                                    response = node.SudoCommand($"docker rm --force {sbDeleteIDs}", RunOptions.None);
+
+                                    if (response.ExitCode != 0)
+                                    {
+                                        throw new Exception($"Unable to remove node [{node.Name}] containers: {response.AllText}");
+                                    }
                                 }
                             }
 
