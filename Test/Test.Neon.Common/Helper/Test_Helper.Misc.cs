@@ -387,9 +387,9 @@ namespace TestCommon
 
             // Verify enum serialization too.
 
-            Assert.Equal("Value1", NeonHelper.SerializeEnumUsingAttributes(TestEnum.Value1));
-            Assert.Equal("Value2", NeonHelper.SerializeEnumUsingAttributes(TestEnum.Value2));
-            Assert.Equal("foo-bar", NeonHelper.SerializeEnumUsingAttributes(TestEnum.FooBar));
+            Assert.Equal("Value1", NeonHelper.EnumToStringUsingAttributes(TestEnum.Value1));
+            Assert.Equal("Value2", NeonHelper.EnumToStringUsingAttributes(TestEnum.Value2));
+            Assert.Equal("foo-bar", NeonHelper.EnumToStringUsingAttributes(TestEnum.FooBar));
         }
 
         [Fact]

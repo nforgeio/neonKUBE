@@ -26,6 +26,7 @@ namespace Neon.Common
 {
     public static partial class NeonHelper
     {
+        //---------------------------------------------------------------------
         // This is used by [ParseEnumUsingAttributes()] to cache reflected
         // [EnumMember] attributes decorating enumeration values.
 
@@ -43,6 +44,9 @@ namespace Neon.Common
         }
 
         private static Dictionary<Type, EnumMemberSerializationInfo> typeToEnumMemberInfo = new Dictionary<Type, EnumMemberSerializationInfo>();
+
+        //---------------------------------------------------------------------
+        // Implementation
 
         /// <summary>
         /// Determines whether an integer is odd.
@@ -1212,29 +1216,37 @@ namespace Neon.Common
                 {
                     return info;
                 }
-
-                // We don't have a cached [EnumMemberSerializationInfo] for this
-                // enumeration type yet, so we're going to build one and try again.
-
-                info = new EnumMemberSerializationInfo();
-
-                foreach (var member in typeof(TEnum).GetFields(BindingFlags.Public | BindingFlags.Static))
-                {
-                    var enumMember = member.GetCustomAttribute<EnumMemberAttribute>();
-
-                    if (enumMember != null)
-                    {
-                        var ordinal = Convert.ToInt64(member.GetRawConstantValue());
-
-                        info.EnumToStrings[enumMember.Value] = ordinal;
-                        info.EnumToOrdinals[ordinal]         = enumMember.Value;
-                    }
-                }
-
-                typeToEnumMemberInfo[typeof(Enum)] = info;
-
-                return info;
             }
+
+            // We don't have a cached [EnumMemberSerializationInfo] for this
+            // enumeration type yet, so we're going to build one outside
+            // of the lock, add, and then return it.
+            //
+            // There's a slight chance that another call will do the same
+            // thing in parallel once for any given enum type, but we'll
+            // handle this just fine using the indexer assignment below.
+
+            var newInfo = new EnumMemberSerializationInfo();
+
+            foreach (var member in typeof(TEnum).GetFields(BindingFlags.Public | BindingFlags.Static))
+            {
+                var enumMember = member.GetCustomAttribute<EnumMemberAttribute>();
+
+                if (enumMember != null)
+                {
+                    var ordinal = Convert.ToInt64(member.GetRawConstantValue());
+
+                    newInfo.EnumToStrings[enumMember.Value] = ordinal;
+                    newInfo.EnumToOrdinals[ordinal]         = enumMember.Value;
+                }
+            }
+
+            lock (typeToEnumMemberInfo)
+            {
+                typeToEnumMemberInfo[typeof(Enum)] = newInfo;
+            }
+
+            return newInfo;
         }
 
         /// <summary>
@@ -1279,7 +1291,7 @@ namespace Neon.Common
         /// <typeparam name="TEnum">The enumeration type.</typeparam>
         /// <param name="input">The input value.</param>
         /// <returns>The deserialized value.</returns>
-        public static string SerializeEnumUsingAttributes<TEnum>(TEnum input)
+        public static string EnumToStringUsingAttributes<TEnum>(TEnum input)
             where TEnum : struct
         {
             var info = GetEnumMembers<TEnum>();
