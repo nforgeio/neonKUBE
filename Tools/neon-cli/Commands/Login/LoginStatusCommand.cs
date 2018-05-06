@@ -57,8 +57,6 @@ USAGE:
                 Program.Exit(0);
             }
 
-            Console.WriteLine();
-
             var clusterLogin = Program.ClusterLogin;
 
             // Print the current login status if no cluster name was passed.
@@ -68,6 +66,8 @@ USAGE:
                 Console.Error.WriteLine("*** You are not logged in.");
                 Program.Exit(1);
             }
+
+            Console.WriteLine(clusterLogin.LoginName);
 
             // Parse and validate the cluster definition.
 
@@ -81,7 +81,8 @@ USAGE:
 
             var verifyCredentials = true;
 
-            Console.WriteLine($"Checking login [{clusterLogin.LoginName}]...");
+            Console.Error.WriteLine();
+            Console.Error.WriteLine($"Checking login [{clusterLogin.LoginName}]...");
 
             if (clusterLogin.ViaVpn)
             {
@@ -97,12 +98,12 @@ USAGE:
                     {
                         case NeonClusterHelper.VpnState.Connecting:
 
-                            Console.WriteLine("VPN is connecting");
+                            Console.Error.WriteLine("VPN is connecting");
                             break;
 
                         case NeonClusterHelper.VpnState.Healthy:
 
-                            Console.WriteLine("VPN connection is healthy");
+                            Console.Error.WriteLine("VPN connection is healthy");
                             break;
 
                         case NeonClusterHelper.VpnState.Unhealthy:
@@ -116,12 +117,12 @@ USAGE:
 
             if (verifyCredentials)
             {
-                Console.WriteLine("Authenticating...");
+                Console.Error.WriteLine("Authenticating...");
 
                 try
                 {
                     clusterProxy.GetHealthyManager().Connect();
-                    Console.WriteLine("Authenticated");
+                    Console.Error.WriteLine("Authenticated");
                 }
                 catch (Exception e)
                 {
