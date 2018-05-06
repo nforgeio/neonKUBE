@@ -244,7 +244,40 @@ namespace Neon.Xunit.Couchbase
 
             // Create the primary index if requested.
 
-            Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
+            if (!string.IsNullOrEmpty(primaryIndex))
+            {
+                // $hack(jeff.lill):
+                //
+                // The Couchbase index service sometimes gets itself into a bad state
+                // sometime after the indexes are dropped.  I believe the hack below
+                // mitigates this by dropping an apparently partially created bad primary
+                // index and then attempting to recreate it.
+
+                for (int i = 0; i < 10; i++)
+                {
+                    try
+                    {
+                        Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
+                        break;
+                    }
+                    catch (Exception e)
+                    {
+                        if (!CouchbaseTransientDetector.IsTransient(e))
+                        {
+                            throw;
+                        }
+
+                        try
+                        {
+                            Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(primaryIndex)}.{CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
+                        }
+                        catch
+                        {
+                            // Ignoring these.
+                        }
+                    }
+                }
+            }
         }
 
         /// <summary>
