@@ -38,7 +38,7 @@ namespace TestNeonCluster
             {
                 cluster.Reset();
 
-                NeonHelper.WaitParallel(
+                NeonHelper.WaitForParallel(
                     new Action[]
                     {
                         () => cluster.CreateSecret("secret_text", "hello"),

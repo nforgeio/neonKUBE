@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Globalization;
 using System.Runtime.Serialization;
 using System.Text;
 
@@ -35,11 +36,29 @@ namespace Neon.Docker
         public string StartedAt { get; set; }
 
         /// <summary>
+        /// Returns the time (UTC) the service was started (as a <see cref="DateTime"/>).
+        /// </summary>
+        [JsonIgnore]
+        public DateTime StartedAtUtc
+        {
+            get { return DateTime.Parse(StartedAt, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal); }
+        }
+
+        /// <summary>
         /// Indicates when the service update was completed.
         /// </summary>
         [JsonProperty(PropertyName = "CompletedAt", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
         public string CompletedAt { get; set; }
+
+        /// <summary>
+        /// Returns the time (UTC) the service update was completed (as a <see cref="DateTime"/>).
+        /// </summary>
+        [JsonIgnore]
+        public DateTime CompletedAtUtc
+        {
+            get { return DateTime.Parse(CompletedAt, CultureInfo.InvariantCulture, DateTimeStyles.AdjustToUniversal); }
+        }
 
         /// <summary>
         /// A textual message describing the update.

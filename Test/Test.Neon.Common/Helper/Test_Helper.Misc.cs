@@ -482,7 +482,7 @@ namespace TestCommon
             var didTask3 = false;
             var delay    = TimeSpan.FromSeconds(2);
 
-            NeonHelper.WaitParallel(
+            NeonHelper.WaitForParallel(
                 new Action[]
                 {
                     async () => {

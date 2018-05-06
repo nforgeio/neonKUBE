@@ -562,7 +562,7 @@ namespace Neon.Common
         /// <param name="timeout">The optional timeout.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <exception cref="TimeoutException">Thrown if the <paramref name="timeout"/> was exceeded.</exception>
-        public static void WaitParallel(IEnumerable<Action> actions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
+        public static void WaitForParallel(IEnumerable<Action> actions, TimeSpan? timeout = null, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(actions != null);
 

@@ -36,7 +36,7 @@ namespace Neon.Docker
         /// <summary>
         /// Secret file information.
         /// </summary>
-        [JsonProperty(PropertyName = "SecretFile", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "File", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
         public ServiceFile File { get; set; }
 

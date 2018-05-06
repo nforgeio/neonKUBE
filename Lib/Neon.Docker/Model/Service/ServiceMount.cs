@@ -71,9 +71,9 @@ namespace Neon.Docker
         /// <summary>
         /// Optionally specifies Tempfs mount configuration options.
         /// </summary>
-        [JsonProperty(PropertyName = "TempfsOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [JsonProperty(PropertyName = "TmpfsOptions", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
-        public ServiceTmpfsOptions TempfsOptions { get; set; }
+        public ServiceTmpfsOptions TmpfsOptions { get; set; }
 
         /// <inheritdoc/>
         public void Normalize()

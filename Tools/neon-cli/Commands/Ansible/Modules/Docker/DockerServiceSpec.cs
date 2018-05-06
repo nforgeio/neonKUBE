@@ -1618,7 +1618,7 @@ namespace NeonCli.Ansible.Docker
 
                     case ServiceMountType.Tmpfs:
 
-                        var tmpfsOptions = item.TempfsOptions;
+                        var tmpfsOptions = item.TmpfsOptions;
 
                         if (tmpfsOptions != null)
                         {

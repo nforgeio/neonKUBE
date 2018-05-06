@@ -127,7 +127,9 @@ namespace Neon.Xunit
     ///     <see cref="CreateService(string, string, string[], string[], string[])"/><br/>
     ///     <see cref="ListServices(bool)"/><br/>
     ///     <see cref="InspectService(string, bool)"/><br/>
-    ///     <see cref="RemoveService(string)"/>
+    ///     <see cref="RemoveService(string)"/><br/>
+    ///     <see cref="RollbackService(String)"/><br/>
+    ///     <see cref="UpdateService(string, string[])"/>
     ///     </description>
     /// </item>
     /// <item>
@@ -670,8 +672,8 @@ namespace Neon.Xunit
             }
 
             // Finally, prune the volumes and networks.  Note that since 
-            // we've already removed all services and containers, this will 
-            // effectively remove all of these.
+            // we've already removed all services and containers, this 
+            // effectively removes all of these.
 
             DockerExecute("volume", "prune", "--force");
             DockerExecute("network", "prune", "--force");
@@ -854,6 +856,59 @@ namespace Neon.Xunit
             if (result.ExitCode != 0)
             {
                 throw new Exception($"Cannot remove service [{name}]: {result.AllText}");
+            }
+        }
+
+        /// <summary>
+        /// Rolls back a Docker service.
+        /// </summary>
+        /// <param name="name">The service name.</param>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
+        public void RollbackService(string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            base.CheckDisposed();
+
+            // Rollback the service.
+
+            var argsString = NeonHelper.NormalizeExecArgs("service", "rollback", name);
+            var result     = DockerExecute(argsString);
+
+            if (result.ExitCode != 0)
+            {
+                // Docker returns [exitcode=0] even when the rollback was successful.
+                // Seems weird, but we'll try to examine the error text to detect
+                // actual problems.
+
+                if (!result.ErrorText.Contains("rollback completed"))
+                {
+                    throw new Exception($"Cannot rollback service [{name}]: {result.AllText}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Updates a Docker service.
+        /// </summary>
+        /// <param name="name">The service name.</param>
+        /// <param name="dockerArgs">Arguments to be passed to the <b>docker service update ...</b> command.</param>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
+        public void UpdateService(string name, string[] dockerArgs = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(dockerArgs != null);
+
+            base.CheckDisposed();
+
+            // Update the service.
+
+            var argsString = NeonHelper.NormalizeExecArgs("service", "update", dockerArgs, name);
+            var result     = DockerExecute(argsString);
+
+            if (result.ExitCode != 0)
+            {
+                throw new Exception($"Cannot update service [{name}]: {result.AllText}");
             }
         }
 

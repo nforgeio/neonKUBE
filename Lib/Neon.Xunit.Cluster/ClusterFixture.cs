@@ -177,7 +177,9 @@ namespace Neon.Xunit.Cluster
     ///     <see cref="DockerFixture.CreateService(string, string, string[], string[], string[])"/><br/>
     ///     <see cref="DockerFixture.ListServices(bool)"/><br/>
     ///     <see cref="DockerFixture.InspectService(string, bool)"/><br/>
-    ///     <see cref="DockerFixture.RemoveService(string)"/>
+    ///     <see cref="DockerFixture.RemoveService(string)"/><br/>
+    ///     <see cref="DockerFixture.RollbackService(String)"/><br/>
+    ///     <see cref="DockerFixture.UpdateService(string, string[])"/>
     ///     </description>
     /// </item>
     /// <item>
@@ -628,7 +630,7 @@ namespace Neon.Xunit.Cluster
 
             // Reset the basic Swarm state in parallel.
 
-            NeonHelper.WaitParallel(
+            NeonHelper.WaitForParallel(
                 new Action[] {
                     () =>
                     {
@@ -646,14 +648,15 @@ namespace Neon.Xunit.Cluster
             // we won't see any reference conflicts.  We can do these
             // in parallel too.
 
-            NeonHelper.WaitParallel(
+            NeonHelper.WaitForParallel(
                 new Action[] {
                     () => ClearCertificates(),
                     () => ClearConsul(),
                     () => ClearConfigs(),
                     () => ClearNetworks(),
                     () => ClearSecrets(),
-                    () => ClearVault()
+                    () => ClearVault(),
+                    () => ClearNodes()
                 });
         }
 
@@ -682,10 +685,10 @@ namespace Neon.Xunit.Cluster
         /// <b>DO NOTE USE:</b> This inherited method from <see cref="DockerFixture"/> doesn't
         /// make sense for a multi-node cluster.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
+        /// <param name="removeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="DockerFixture.ContainerInfo"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown always.</exception>
-        public new List<ContainerInfo> ListContainers(bool includeSystem = false)
+        public new List<ContainerInfo> ListContainers(bool removeSystem = false)
         {
             base.CheckDisposed();
             this.CheckCluster();
@@ -766,9 +769,9 @@ namespace Neon.Xunit.Cluster
         /// Lists load balancer rules.
         /// </summary>
         /// <param name="loadBalancerName">The load balancer name (<b>public</b> or <b>private</b>).</param>
-        /// <param name="includeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
+        /// <param name="removeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
         /// <returns>The rules for the named load balancer.</returns>
-        public List<LoadBalancerRule> ListLoadBalancerRules(string loadBalancerName, bool includeSystem = false)
+        public List<LoadBalancerRule> ListLoadBalancerRules(string loadBalancerName, bool removeSystem = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(loadBalancerName));
 
@@ -778,7 +781,7 @@ namespace Neon.Xunit.Cluster
             var loadbalancer = cluster.GetLoadBalancerManager(loadBalancerName);
             var rules        = loadbalancer.ListRules();
 
-            if (includeSystem)
+            if (removeSystem)
             {
                 return rules.ToList();
             }
@@ -931,16 +934,16 @@ namespace Neon.Xunit.Cluster
         /// <summary>
         /// Lists the names of the cluster certificates.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
+        /// <param name="removeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
         /// <returns>The certificate names.</returns>
-        public List<string> ListCertificates(bool includeSystem = false)
+        public List<string> ListCertificates(bool removeSystem = false)
         {
             base.CheckDisposed();
             this.CheckCluster();
 
             var certificates = cluster.Certificate.List();
 
-            if (includeSystem)
+            if (removeSystem)
             {
                 return certificates.ToList();
             }
@@ -1036,6 +1039,98 @@ namespace Neon.Xunit.Cluster
             // This isn't implemented yet.  Here's the tracking issue:
             //
             //      https://github.com/jefflill/NeonForge/issues/235
+        }
+
+        //---------------------------------------------------------------------
+        // Cluster nodes
+
+        /// <summary>
+        /// Remove containers as well as unreferenced volumesand networks from each cluster node.
+        /// </summary>
+        /// <param name="noContainers">Optionally disable container removal.</param>
+        /// <param name="noVolumes">Optionally disable volume removal.</param>
+        /// <param name="noNetworks">Optionally disable network removal.</param>
+        /// <param name="removeSystem">Optionally include built-in neonCLUSTER items whose names start with <b>neon-</b>.</param>
+        public void ClearNodes(bool noContainers = false, bool noVolumes = false, bool noNetworks = false, bool removeSystem = false)
+        {
+            var actions = new List<Action>();
+
+            foreach (var node in cluster.Nodes)
+            {
+                actions.Add(
+                    () =>
+                    {
+                        node.Connect();
+
+                        try
+                        {
+                            // List the containers and build up a list of the container
+                            // IDs we're going to remove.
+
+                            if (!noContainers)
+                            {
+                                var response = node.SudoCommand("docker ls --format {{.ID}}~{{.Names}}", RunOptions.None);
+
+                                if (response.ExitCode != 0)
+                                {
+                                    throw new Exception($"Unable to list node [{node.Name}] containers: {response.AllText}");
+                                }
+
+                                var sbDeleteIDs = new StringBuilder();
+
+                                using (var reader = new StringReader(response.OutputText))
+                                {
+                                    foreach (var line in reader.Lines())
+                                    {
+                                        var fields = line.Split('~');
+                                        var id     = fields[0];
+                                        var name   = fields[1];
+
+                                        if (removeSystem || !name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                                        {
+                                            sbDeleteIDs.AppendWithSeparator(id);
+                                        }
+                                    }
+                                }
+
+                                response = node.SudoCommand($"docker rm --force {sbDeleteIDs}", RunOptions.None);
+
+                                if (response.ExitCode != 0)
+                                {
+                                    throw new Exception($"Unable to remove node [{node.Name}] containers: {response.AllText}");
+                                }
+                            }
+
+                            // Purge any unreferenced volumes and networks.
+
+                            if (!noVolumes)
+                            {
+                                var response = node.SudoCommand($"docker volume prune --force", RunOptions.None);
+
+                                if (response.ExitCode != 0)
+                                {
+                                    throw new Exception($"Unable to purge node [{node.Name}] volumes: {response.AllText}");
+                                }
+                            }
+
+                            if (!noNetworks)
+                            {
+                                var response = node.SudoCommand($"docker network prune --force", RunOptions.None);
+
+                                if (response.ExitCode != 0)
+                                {
+                                    throw new Exception($"Unable to purge node [{node.Name}] networks: {response.AllText}");
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            node.Disconnect();
+                        }
+                    });
+            }
+
+            NeonHelper.WaitForParallel(actions);
         }
     }
 }

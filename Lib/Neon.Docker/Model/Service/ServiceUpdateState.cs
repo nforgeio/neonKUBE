@@ -31,6 +31,12 @@ namespace Neon.Docker
         /// Service update is paused.
         /// </summary>
         [EnumMember(Value = "paused")]
-        Paused
+        Paused,
+
+        /// <summary>
+        /// Service update has completed.
+        /// </summary>
+        [EnumMember(Value = "rollback_completed")]
+        RollbackCompleted = 0,
     }
 }
