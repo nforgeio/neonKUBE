@@ -960,7 +960,7 @@ namespace NeonCli.Ansible.Docker
             }
 
             outputArgs.Add($"{option}");
-            outputArgs.Add(update.ToString());
+            outputArgs.Add(NeonHelper.EnumToStringUsingAttributes(update.Value));
         }
 
         /// <summary>

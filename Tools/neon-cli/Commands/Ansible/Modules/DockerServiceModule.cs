@@ -83,6 +83,7 @@ namespace NeonCli.Ansible
     //                                                  rollback
     //
     // force                    no          false                   forces service update when [state=present]
+    //                                                              even when there are no changes
     //
     // args                     no                                  array of service arguments
     //
@@ -228,7 +229,7 @@ namespace NeonCli.Ansible
     // reserve_memory           no                                  RAM to be reserved for each service container as size 
     //                                                              and units (b|k|m|g)
     //
-    // restart_condition        no          any         any         specifies restart condition
+    // restart_condition        no          any         any         service restart condition
     //                                                  none
     //                                                  on-failure
     //
@@ -304,9 +305,16 @@ namespace NeonCli.Ansible
     // Examples:
     // ---------
     //
-    // This example creates or updates a certificate from a variable:
+    // This example creates a basic do-nothing service.
     //
     //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: service
+    //        neon_docker_service:
+    //          name: test
+    //          state: present
+    //          image: neoncluster/test:latest
 
     /// <summary>
     /// Implements the <b>neon_docker_service</b> Ansible module.
@@ -424,7 +432,7 @@ namespace NeonCli.Ansible
             // We have the required arguments, so perform the operation.
             //
             // Detect whether the service is already running by inspecting it
-            // then start when it's not already running or update it if it is.
+            // then start it when it's not already running or update if it is.
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting [{service.Name}] service.");
 
@@ -451,7 +459,7 @@ namespace NeonCli.Ansible
                     throw;
                 }
 
-                context.WriteLine(AnsibleVerbosity.Trace, $"{service.Name}] service exists.");
+                context.WriteLine(AnsibleVerbosity.Trace, $"[{service.Name}] service exists.");
             }
             else
             {
@@ -464,14 +472,13 @@ namespace NeonCli.Ansible
 
                 if (response.ErrorText.StartsWith("Status: Error: no such service:", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    context.WriteLine(AnsibleVerbosity.Trace, $"{service.Name}] service does not exist.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"[{service.Name}] service does not exist.");
                 }
                 else
                 {
                     context.WriteErrorLine(response.ErrorText);
+                    return;
                 }
-
-                return;
             }
 
             if (context.HasErrors)
@@ -534,10 +541,9 @@ namespace NeonCli.Ansible
                         }
                         else
                         {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Creating [{service.Name}] service.");
+                            // NOTE: UpdateService() handles the CHECK-MODE logic and context logging.
+
                             CreateService(manager, context, service);
-                            context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service created.");
-                            context.Changed = !context.CheckMode;
                         }
                     }
                     else
@@ -1167,7 +1173,8 @@ namespace NeonCli.Ansible
         /// <param name="manager">The manager where the command will be executed.</param>
         /// <param name="context">The Ansible module context.</param>
         /// <param name="service">The Service definition.</param>
-        private void CreateService(SshProxy<NodeDefinition> manager, ModuleContext context, DockerServiceSpec service)
+        /// <returns><c>true</c> if the service was created.</returns>
+        private bool CreateService(SshProxy<NodeDefinition> manager, ModuleContext context, DockerServiceSpec service)
         {
             var args = new List<object>();
 
@@ -1252,7 +1259,7 @@ namespace NeonCli.Ansible
 
             if (service.HealthInterval.HasValue)
             {
-                args.Add($"--health-interval={service.HealthInterval}");
+                args.Add($"--health-interval={service.HealthInterval}ns");
             }
 
             if (service.HealthRetries.HasValue)
@@ -1262,12 +1269,12 @@ namespace NeonCli.Ansible
 
             if (service.HealthStartPeriod.HasValue)
             {
-                args.Add($"--health-start-period={service.HealthStartPeriod}");
+                args.Add($"--health-start-period={service.HealthStartPeriod}ns");
             }
 
             if (service.HealthTimeout.HasValue)
             {
-                args.Add($"--health-timeout={service.HealthTimeout}");
+                args.Add($"--health-timeout={service.HealthTimeout}ns");
             }
 
             foreach (var host in service.Host)
@@ -1345,12 +1352,12 @@ namespace NeonCli.Ansible
 
                 if (mount.Consistency.HasValue)
                 {
-                    sb.AppendWithSeparator($"consistency={mount.Consistency.Value}", ",");
+                    sb.AppendWithSeparator($"consistency={NeonHelper.EnumToStringUsingAttributes(mount.Consistency.Value)}", ",");
                 }
 
                 if (mount.BindPropagation.HasValue)
                 {
-                    sb.AppendWithSeparator($"bind-propagation={mount.BindPropagation.Value}", ",");
+                    sb.AppendWithSeparator($"bind-propagation={NeonHelper.EnumToStringUsingAttributes(mount.BindPropagation.Value)}", ",");
                 }
 
                 if (!string.IsNullOrEmpty(mount.VolumeDriver))
@@ -1412,8 +1419,8 @@ namespace NeonCli.Ansible
 
                 sb.AppendWithSeparator($"published={port.Published}", ",");
                 sb.AppendWithSeparator($"target={port.Target}", ",");
-                sb.AppendWithSeparator($"protocol={port.Protocol}", ",");
-                sb.AppendWithSeparator($"mode={port.Mode}", ",");
+                sb.AppendWithSeparator($"protocol={NeonHelper.EnumToStringUsingAttributes(port.Protocol.Value)}", ",");
+                sb.AppendWithSeparator($"mode={NeonHelper.EnumToStringUsingAttributes(port.Mode.Value)}", ",");
 
                 args.Add($"--publish={sb}");
             }
@@ -1442,12 +1449,12 @@ namespace NeonCli.Ansible
 
             if (service.RestartCondition.HasValue)
             {
-                args.Add($"--restart-condition={service.RestartCondition.Value}");
+                args.Add($"--restart-condition={NeonHelper.EnumToStringUsingAttributes(service.RestartCondition.Value)}");
             }
 
             if (service.RestartDelay.HasValue)
             {
-                args.Add($"--restart-delay={service.RestartDelay.Value}");
+                args.Add($"--restart-delay={service.RestartDelay.Value}ns");
             }
 
             if (service.RestartMaxAttempts.HasValue)
@@ -1457,17 +1464,17 @@ namespace NeonCli.Ansible
 
             if (service.RestartWindow.HasValue)
             {
-                args.Add($"--restart-window={service.RestartWindow.Value}");
+                args.Add($"--restart-window={service.RestartWindow.Value}ns");
             }
 
             if (service.RollbackDelay.HasValue)
             {
-                args.Add($"--rollback-delay={service.RollbackDelay.Value}");
+                args.Add($"--rollback-delay={service.RollbackDelay.Value}ns");
             }
 
             if (service.RollbackFailureAction.HasValue)
             {
-                args.Add($"--rollback-failure-action={service.RollbackFailureAction.Value}");
+                args.Add($"--rollback-failure-action={NeonHelper.EnumToStringUsingAttributes(service.RollbackFailureAction.Value)}");
             }
 
             if (service.RollbackMaxFailureRatio.HasValue)
@@ -1477,12 +1484,12 @@ namespace NeonCli.Ansible
 
             if (service.RollbackMonitor.HasValue)
             {
-                args.Add($"--rollback-monitor={service.RollbackMonitor.Value}");
+                args.Add($"--rollback-monitor={service.RollbackMonitor.Value}ns");
             }
 
             if (service.RollbackOrder.HasValue)
             {
-                args.Add($"--rollback-order={service.RollbackOrder.Value}");
+                args.Add($"--rollback-order={NeonHelper.EnumToStringUsingAttributes(service.RollbackOrder.Value)}");
             }
 
             if (service.RollbackParallism.HasValue)
@@ -1515,7 +1522,7 @@ namespace NeonCli.Ansible
 
             if (service.StopGracePeriod.HasValue)
             {
-                args.Add($"--stop-grace-period={service.StopGracePeriod.Value}");
+                args.Add($"--stop-grace-period={service.StopGracePeriod.Value}ns");
             }
 
             if (!string.IsNullOrEmpty(service.StopSignal))
@@ -1530,12 +1537,12 @@ namespace NeonCli.Ansible
 
             if (service.UpdateDelay.HasValue)
             {
-                args.Add($"--update-delay={service.UpdateDelay.Value}");
+                args.Add($"--update-delay={service.UpdateDelay.Value}ns");
             }
 
             if (service.UpdateFailureAction.HasValue)
             {
-                args.Add($"--update-failure-action={service.UpdateFailureAction.Value}");
+                args.Add($"--update-failure-action={NeonHelper.EnumToStringUsingAttributes(service.UpdateFailureAction.Value)}");
             }
 
             if (service.UpdateMaxFailureRatio.HasValue)
@@ -1545,12 +1552,12 @@ namespace NeonCli.Ansible
 
             if (service.UpdateMonitor.HasValue)
             {
-                args.Add($"--update-monitor={service.UpdateMonitor.Value}");
+                args.Add($"--update-monitor={service.UpdateMonitor.Value}ns");
             }
 
             if (service.UpdateOrder.HasValue)
             {
-                args.Add($"--update-order={service.UpdateOrder.Value}");
+                args.Add($"--update-order={NeonHelper.EnumToStringUsingAttributes(service.UpdateOrder.Value)}");
             }
 
             if (service.UpdateParallism.HasValue)
@@ -1585,6 +1592,9 @@ namespace NeonCli.Ansible
 
             // Create the service.
 
+            context.WriteLine(AnsibleVerbosity.Trace, $"Creating [{service.Name}] service.");
+            context.WriteLine(AnsibleVerbosity.Important, $"docker service create {NeonHelper.NormalizeExecArgs(args.ToArray())}");
+
             var response = manager.DockerCommand(RunOptions.None, "docker service create", args.ToArray());
 
             if (response.ExitCode != 0)
@@ -1592,10 +1602,15 @@ namespace NeonCli.Ansible
                 context.WriteErrorLine($"[{service.Name}] service start failed.");
                 context.WriteErrorLine($"[exitcode={response.ExitCode}]: {response.BashCommand}");
                 context.WriteErrorLine(response.AllText);
+
+                return false;
             }
             else
             {
-                context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service started.");
+                context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service created.");
+                context.Changed = !context.CheckMode;
+
+                return true;
             }
         }
 

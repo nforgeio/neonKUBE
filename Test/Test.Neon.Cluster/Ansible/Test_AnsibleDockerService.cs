@@ -51,7 +51,7 @@ namespace TestNeonCluster
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void SimpleDeployAndRemove()
+        public void DeployAndRemove()
         {
             // Verify that we can deploy a basic service.
 
@@ -74,7 +74,7 @@ $@"
             Assert.True(taskResult.Changed);
             Assert.Single(cluster.ListServices().Where(s => s.Name == name));
 
-            // Verify that [state=absent] will remove the service.
+            // Verify that [state=absent] removes the service.
 
             playbook =
 $@"
@@ -124,14 +124,20 @@ $@"
         state: present
         image: neoncluster/test:0
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results    = AnsiblePlayer.NeonPlay(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
             Assert.Single(cluster.ListServices().Where(s => s.Name == name));
 
-            // Verify that [state=absent] will remove the service.
+            var details = cluster.InspectService(name);
+
+            Assert.Equal(name, details.Spec.Name);
+            Assert.Equal("neoncluster/test:0", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
+            Assert.Equal(1, details.Spec.Mode.Replicated.Replicas);
+
+            // Verify that we can update the service.
 
             playbook =
 $@"
@@ -141,25 +147,22 @@ $@"
     - name: manage service
       neon_docker_service:
         name: {name}
-        state: absent
+        state: present
         image: neoncluster/test:1
+        replicas: 2
 ";
             results    = AnsiblePlayer.NeonPlay(playbook);
             taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Empty(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
 
-            // Verify that removing the service again doesn't change anything
-            // because it's already been removed.
+            details = cluster.InspectService(name);
 
-            results    = AnsiblePlayer.NeonPlay(playbook);
-            taskResult = results.GetTaskResult("manage service");
-
-            Assert.True(taskResult.Success);
-            Assert.False(taskResult.Changed);
-            Assert.Empty(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Equal(name, details.Spec.Name);
+            Assert.Equal("neoncluster/test:1", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
+            Assert.Equal(2, details.Spec.Mode.Replicated.Replicas);
         }
     }
 }
