@@ -79,8 +79,10 @@ namespace NeonCli.Ansible
     // name                     yes                                 docker service name
     //
     // state                    no          present     present     indicates whether the service should
-    //                                                  absent      be created, removed, or rolled back
-    //                                                  rollback
+    //                                                  absent      be created, removed, or rolled back.
+    //                                                  rollback    Note that all properties except for
+    //                                                              [name] are ignored for [absent] and
+    //                                                              [rollback].
     //
     // force                    no          false                   forces service update when [state=present]
     //                                                              even when there are no changes
@@ -298,7 +300,7 @@ namespace NeonCli.Ansible
     // Examples:
     // ---------
     //
-    // This example creates a basic do-nothing service.
+    // This example creates a basic do-nothing service:
     //
     //  - name: test
     //    hosts: localhost
@@ -307,7 +309,49 @@ namespace NeonCli.Ansible
     //        neon_docker_service:
     //          name: test
     //          state: present
-    //          image: neoncluster/test:latest
+    //          image: neoncluster/test:0
+    //
+    // This example creates or upgrades a service by updating the
+    // container image, adding a network and publishing a TCP port:
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: service
+    //        neon_docker_service:
+    //          name: test
+    //          state: present
+    //          image: neoncluster/test:1
+    //          network: foo-network
+    //          mount:
+    //            - type: volume
+    //              source: test-volume
+    //              target: /mnt/test
+    //          publish:
+    //            - published: 8080
+    //              target: 80
+    //              mode: ingress
+    //              protocol: tcp
+    //
+    // This example rolls a service back to its previous state:
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: service
+    //        neon_docker_service:
+    //          name: test
+    //          state: rollback
+    //
+    // This example removes a service if it's present:
+    //
+    //  - name: test
+    //    hosts: localhost
+    //    tasks:
+    //      - name: service
+    //        neon_docker_service:
+    //          name: test
+    //          state: absent
 
     /// <summary>
     /// Implements the <b>neon_docker_service</b> Ansible module.
