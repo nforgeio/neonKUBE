@@ -30,23 +30,23 @@ namespace Neon.Docker
         /// Deplay between restart attempts (nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Delay", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
-        public long Delay { get; set; }
+        [DefaultValue(null)]
+        public long? Delay { get; set; }
 
         /// <summary>
         /// Specifies the maximum number of container restart attempts before giving up.
         /// </summary>
         [JsonProperty(PropertyName = "MaxAttempts", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
-        public long MaxAttempts { get; set; }
+        [DefaultValue(null)]
+        public long? MaxAttempts { get; set; }
 
         /// <summary>
         /// Specifies the window of time during which the restart policy will be 
         /// enavluated (nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Window", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
-        public long Window { get; set; }
+        [DefaultValue(null)]
+        public long? Window { get; set; }
 
         /// <inheritdoc/>
         public void Normalize()

@@ -30,31 +30,31 @@ namespace Neon.Docker
         /// Time to wait between health checks (in nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Interval", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
-        public long Interval { get; set; }
+        [DefaultValue(null)]
+        public long? Interval { get; set; }
 
         /// <summary>
         /// Time to wait before considering a health check to have hung (in nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Timeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
-        public long Timeout { get; set; }
+        [DefaultValue(null)]
+        public long? Timeout { get; set; }
 
         /// <summary>
         /// Number of consecutive health check failures required to consider the container
         /// to be unhealhy.
         /// </summary>
         [JsonProperty(PropertyName = "Retries", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
-        public long Retries { get; set; }
+        [DefaultValue(null)]
+        public long? Retries { get; set; }
 
         /// <summary>
         /// Time to wait for the container to start ands initialize before enforcing
         /// health check failures.
         /// </summary>
         [JsonProperty(PropertyName = "StartPeriod", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
-        public long StartPeriod { get; set; }
+        [DefaultValue(null)]
+        public long? StartPeriod { get; set; }
 
         /// <inheritdoc/>
         public void Normalize()

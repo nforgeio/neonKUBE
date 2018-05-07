@@ -23,15 +23,15 @@ namespace Neon.Docker
         /// CPU utilization expressed as billionths of a CPU.
         /// </summary>
         [JsonProperty(PropertyName = "NanoCPUs", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
-        public long NanoCPUs { get; set; }
+        [DefaultValue(null)]
+        public long? NanoCPUs { get; set; }
 
         /// <summary>
         /// Memory utilization as bytes.
         /// </summary>
         [JsonProperty(PropertyName = "MemoryBytes", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
-        public long MemoryBytes { get; set; }
+        [DefaultValue(null)]
+        public long? MemoryBytes { get; set; }
 
         /// <summary>
         /// User-defined generic resource settings.

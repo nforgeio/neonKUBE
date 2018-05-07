@@ -23,15 +23,15 @@ namespace Neon.Docker
         /// Maximum number of tasks to be updated in parallel during an update interation.
         /// </summary>
         [JsonProperty(PropertyName = "Parallelism", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
-        public long Parallelism { get; set; }
+        [DefaultValue(null)]
+        public long? Parallelism { get; set; }
 
         /// <summary>
         /// Time between update interations (in nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Delay", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
-        public long Delay { get; set; }
+        [DefaultValue(null)]
+        public long? Delay { get; set; }
 
         /// <summary>
         /// Action to take if an updated task fails to run or stops running during the update.
@@ -44,16 +44,16 @@ namespace Neon.Docker
         /// Time to monitor updated tasks for failure (in nanoseconds).
         /// </summary>
         [JsonProperty(PropertyName = "Monitor", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
-        public long Monitor { get; set; }
+        [DefaultValue(null)]
+        public long? Monitor { get; set; }
 
         /// <summary>
         /// The fraction of tasks that may fail during an update before the failure ']
         /// action is invoked, specified as a floating point number between 0 and 1.
         /// </summary>
         [JsonProperty(PropertyName = "MaxFailureRatio", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0.0)]
-        public double MaxFailureRatio { get; set; }
+        [DefaultValue(null)]
+        public double? MaxFailureRatio { get; set; }
 
         /// <summary>
         /// Specifies the order in which the running task is stopped and the new task is started.

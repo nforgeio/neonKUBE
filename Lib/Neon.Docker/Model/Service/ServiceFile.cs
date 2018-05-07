@@ -45,7 +45,7 @@ namespace Neon.Docker
         /// The Linux file mode for the file encoded as an integer.
         /// </summary>
         [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(0)]
+        [DefaultValue(1023)]    // 1777 Linux octal file mode converted to decimal
         public int Mode { get; set; }
 
         /// <inheritdoc/>
