@@ -1665,8 +1665,9 @@ context.LogDebug($"update: 0 [new-image={newServiceSpec.Image}");
             // if required.
 
             var currentServiceSpec = DockerServiceSpec.FromDockerInspect(context, currentDetails, networksResponse.OutputText);
+            var updateCmdArgs      = currentServiceSpec.DockerUpdateCommandArgs(context, newServiceSpec).ToArray();
 
-context.LogDebug("update: 1");
+            context.LogDebug("update: 1");
             if (currentServiceSpec.Equals(newServiceSpec))
             {
 context.LogDebug("update: 2");
@@ -1704,8 +1705,6 @@ context.LogDebug("update: 4");
             else
             {
 context.LogDebug("update: 5");
-                var updateCmdArgs = DockerServiceSpec.DockerUpdateCommandArgs(context, currentServiceSpec, newServiceSpec).ToArray();
-
                 context.WriteLine(AnsibleVerbosity.Info, $"COMMAND: docker service update {NeonHelper.NormalizeExecArgs(updateCmdArgs)}");
 context.LogDebug($"docker service update {NeonHelper.NormalizeExecArgs(updateCmdArgs)}");
 
