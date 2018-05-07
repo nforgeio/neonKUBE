@@ -224,9 +224,11 @@ namespace Neon.Docker
             Labels      = Labels ?? new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             Command     = Command ?? new List<string>();
             Args        = Args ?? new List<string>();
+            Env         = Env ?? new List<string>();
             Groups      = Groups ?? new List<string>();
             Secrets     = Secrets ?? new List<ServiceSecret>();
             Configs     = Configs ?? new List<ServiceConfig>();
+            Mounts      = Mounts ?? new List<ServiceMount>();
             HealthCheck = HealthCheck ?? new ServiceHealthCheck();
             Hosts       = Hosts ?? new List<string>();
 

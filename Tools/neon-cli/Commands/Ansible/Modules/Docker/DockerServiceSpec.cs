@@ -431,6 +431,20 @@ namespace NeonCli.Ansible.Docker
         {
             var outputArgs = new List<string>();
 
+            // Append update command options.
+
+            if (current.NoResolveImage ?? false)
+            {
+                outputArgs.Append("--no_resolve_image");
+            }
+
+            if (current.WithRegistryAuth ?? false)
+            {
+                outputArgs.Append("--with-registry-auth");
+            }
+
+            // Append arguments that update the service properties.
+
             if (!AreIdentical(current.Args, update.Args))
             {
                 // The service arguments are specified together in a single
@@ -565,7 +579,6 @@ namespace NeonCli.Ansible.Docker
             AppendUpdateListArgs(context, outputArgs, "--mount", current.Mount, update.Mount, mount => mount.Target);
             AppendUpdateListArgs(context, outputArgs, "--network", current.Network, update.Network);
             AppendUpdateBoolArgs(context, outputArgs, "--no-health-check", current.NoHealthCheck, update.NoHealthCheck);
-            AppendUpdateBoolArgs(context, outputArgs, "--no-resolve-image", current.NoResolveImage, update.NoResolveImage);
 
             // $todo(jeff.lill): Ignoring [--placement-pref].
 
@@ -595,7 +608,6 @@ namespace NeonCli.Ansible.Docker
             AppendUpdateEnumArgs(context, outputArgs, "--update-order", current.UpdateOrder, update.UpdateOrder);
             AppendUpdateLongArgs(context, outputArgs, "--update-parallelism", current.UpdateParallism, update.UpdateParallism);
             AppendUpdateStringArgs(context, outputArgs, "--user", current.User, update.User);
-            AppendUpdateBoolArgs(context, outputArgs, "--with-registry-auth", current.WithRegistryAuth, update.WithRegistryAuth);
             AppendUpdateStringArgs(context, outputArgs, "--workdir", current.Dir, update.Dir);
 #if TODO
             // We're not currently handling these service properties.
@@ -847,11 +859,6 @@ namespace NeonCli.Ansible.Docker
         /// <param name="update">The required updated service state.</param>
         private static void AppendUpdateStringArgs(ModuleContext context, List<string> outputArgs, string option, string current, string update)
         {
-            if (string.IsNullOrEmpty(update))
-            {
-                context.WriteErrorLine($"It is not possible to set an empty [{option}] option.");
-            }
-
             // Return if no change is detected.
 
             if (current == update)
@@ -859,8 +866,15 @@ namespace NeonCli.Ansible.Docker
                 return;
             }
 
+            // ...or if there's no update value.
+
+            if (!string.IsNullOrEmpty(update))
+            {
+                return;
+            }
+
             outputArgs.Add($"{option}");
-            outputArgs.Add(update.ToString());
+            outputArgs.Add(update);
         }
 
         /// <summary>
@@ -885,11 +899,11 @@ namespace NeonCli.Ansible.Docker
                 return;
             }
 
-            // Default [update] to 0.0
+            // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-                update = 0;
+                return;
             }
 
             outputArgs.Add($"{option}");
@@ -918,15 +932,19 @@ namespace NeonCli.Ansible.Docker
                 return;
             }
 
-            // Default [update] to [false].
+            // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-                update = false;
+                return;
             }
 
-            outputArgs.Add($"{option}");
-            outputArgs.Add(update.Value ? "1" : "0");
+            if (update.Value)
+            {
+                // The option is a switch so include it on TRUE.
+                
+                outputArgs.Add($"{option}");
+            }
         }
 
         /// <summary>
@@ -952,11 +970,11 @@ namespace NeonCli.Ansible.Docker
                 return;
             }
 
-            // Default [update] to the default enum value (the one set to zero).
+            // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-                update = default(T);
+                return;
             }
 
             outputArgs.Add($"{option}");
@@ -985,13 +1003,11 @@ namespace NeonCli.Ansible.Docker
                 return;
             }
 
-            // $hack(jeff.lill):
-            //
-            // I'm assuming that I can specify [0ns] to reset to the default value.
+            // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-                update = 0L;
+                return;
             }
 
             outputArgs.Add($"{option}");
@@ -1020,13 +1036,11 @@ namespace NeonCli.Ansible.Docker
                 return;
             }
 
-            // $hack(jeff.lill):
-            //
-            // I'm assuming that I can specify [0] to reset to the default value.
+            // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-                update = 0;
+                return;
             }
 
             outputArgs.Add($"{option}");
@@ -1055,13 +1069,11 @@ namespace NeonCli.Ansible.Docker
                 return;
             }
 
-            // $hack(jeff.lill):
-            //
-            // I'm assuming that I can specify [0] to reset to the default value.
+            // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-                update = 0L;
+                return;
             }
 
             outputArgs.Add($"{option}");
@@ -1210,29 +1222,9 @@ namespace NeonCli.Ansible.Docker
         public string Image { get; set; }
 
         /// <summary>
-        /// Optionally indicates that the service <see cref="Image"/> should not be repulled
-        /// and updated if the image and tag are unchanged, ignoring the image SHA-256.
-        /// See the remarks for more information.  This defaults to <c>false</c>.
+        /// Specifies the Docker image without the SHA.
         /// </summary>
-        /// <remarks>
-        /// <para>
-        /// This property has no effect when creating a service for the first time or
-        /// if <see cref="Image"/> identifies a specific image via a SHA-256.  In these
-        /// cases, the latest identified image will be downloaded and used to launch
-        /// the service.
-        /// </para>
-        /// <para>
-        /// When updating a service with <see cref="ImageUpdate"/>=<c>false</c>, the
-        /// current service image will be compared to <see cref="Image"/>.  If the 
-        /// image and tags match, then no attempt will be made to update the image.
-        /// </para>
-        /// <para>
-        /// When updating a service with <see cref="ImageUpdate"/>=<c>true</c>, the
-        /// registry will be checked for a new image and the service will be restarted
-        /// to use the new image, if any.
-        /// </para>
-        /// </remarks>
-        public bool? ImageUpdate { get; set; }
+        public string ImageWithoutSHA { get; set; }
 
         /// <summary>
         /// Service container isolation mode (Windows only).
@@ -1532,7 +1524,8 @@ namespace NeonCli.Ansible.Docker
 
             var containerSpec = taskTemplate.ContainerSpec;
 
-            this.Image = containerSpec.Image;
+            this.Image           = containerSpec.Image;
+            this.ImageWithoutSHA = containerSpec.ImageWithoutSHA;
 
             foreach (var item in containerSpec.Labels)
             {
@@ -1872,10 +1865,145 @@ namespace NeonCli.Ansible.Docker
             }
         }
 
+        /// <summary>
+        /// Determines whether the <see cref="Image"/> properties of this and
+        /// and another instance are to condidered to be the same for service
+        /// updating purposes.
+        /// </summary>
+        /// <param name="other">The other instance.</param>
+        /// <returns><c>true</c> if the images are the same.</returns>
+        private bool SameImage(DockerServiceSpec other)
+        {
+            // $hack(jeff.lill):
+            //
+            // This code assumes that the [this] instance is the one 
+            // holding the desired new service state and that [other]
+            // holds the current service state.
 
+            var hasImageSHA = this.Image.Contains("@sha");
+
+            if (hasImageSHA)
+            {
+                // Always to a full comparison if the image update 
+                // specification includes a SHA.
+
+                return this.Image == other.Image;
+            }
+
+            if (!(this.NoResolveImage ?? false))
+            {
+                // This indicates that we always want to submit the [--image]
+                // argument to [docker service update] so it will ensure
+                // that the latest image will be deployed.
+
+                return false;
+            }
+            else
+            {
+                // Otherwise, we'll compare the images without SHA.
+
+                return this.ImageWithoutSHA == other.ImageWithoutSHA;
+            }
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            var other = obj as DockerServiceSpec;
+
+            if (object.ReferenceEquals(this, other))
+            {
+                return true;
+            }
+            else if (this == null && other == null)
+            {
+                return true;
+            }
+            else if (this == null && other != null)
+            {
+                return false;
+            }
+            else if (this != null && other == null)
+            {
+                return false;
+            }
+
+            // We need to compare the fields manually.
+
+            if (!AreIdentical(this.Args, other.Args) ||
+                !AreEquivalent(this.CredentialSpec, other.CredentialSpec) ||
+                !AreEquivalent(this.Config, other.Config) ||
+                !AreEquivalent(this.Constraint, other.Constraint) ||
+                !AreEquivalent(this.ContainerLabel, other.ContainerLabel) ||
+                this.Detach != other.Detach ||
+                !AreEquivalent(this.Dns, other.Dns) ||
+                !AreEquivalent(this.DnsOption, other.DnsOption) ||
+                !AreEquivalent(this.DnsSearch, other.DnsSearch) ||
+                this.EndpointMode != other.EndpointMode ||
+                !AreIdentical(this.Command, other.Command) ||
+                !AreEquivalent(this.Env, other.Env) ||
+                !AreEquivalent(this.GenericResource, other.GenericResource) ||
+                !AreIdentical(this.HealthCmd, other.HealthCmd) ||
+                this.HealthInterval != other.HealthInterval ||
+                this.HealthRetries != other.HealthRetries ||
+                this.HealthStartPeriod != other.HealthStartPeriod ||
+                this.HealthTimeout != other.HealthTimeout || 
+                !AreEquivalent(this.Host, other.Host) ||
+                this.Hostname != other.Hostname ||
+                this.SameImage(other) ||
+                this.Isolation != other.Isolation ||
+                !AreEquivalent(this.Label, other.Label) ||
+                this.LimitCpu != other.LimitCpu ||
+                this.LimitMemory != other.LimitMemory ||
+                this.LogDriver != other.LogDriver ||
+                !AreEquivalent(this.LogOpt, other.LogOpt) ||
+                this.Mode != other.Mode ||
+                !AreEquivalent(this.Mount, other.Mount) ||
+                !AreEquivalent(this.Network, other.Network) ||
+                this.NoHealthCheck != other.NoHealthCheck ||
+                !AreEquivalent(this.PlacementPref, other.PlacementPref) ||
+                !AreEquivalent(this.Publish, other.Publish) ||
+                this.ReadOnly != other.ReadOnly ||
+                this.ReadOnly != other.ReadOnly ||
+                this.ReserveCpu != other.ReserveCpu ||
+                this.ReserveMemory != other.ReserveMemory ||
+                this.RestartCondition != other.RestartCondition ||
+                this.RestartDelay != other.RestartDelay ||
+                this.RestartMaxAttempts != other.RestartMaxAttempts ||
+                this.RestartWindow != other.RestartWindow ||
+                this.RollbackDelay != other.RollbackDelay ||
+                this.RollbackFailureAction != other.RollbackFailureAction ||
+                this.RollbackMaxFailureRatio != other.RollbackMaxFailureRatio ||
+                this.RollbackMonitor != other.RollbackMonitor ||
+                this.RollbackOrder != other.RollbackOrder ||
+                this.RollbackParallism != other.RollbackParallism ||
+                !AreEquivalent(this.Secret, other.Secret) ||
+                this.StopGracePeriod != other.StopGracePeriod ||
+                this.StopSignal != other.StopSignal ||
+                this.TTY != other.TTY ||
+                this.UpdateDelay != other.UpdateDelay ||
+                this.UpdateFailureAction != other.UpdateFailureAction ||
+                this.UpdateMaxFailureRatio != other.UpdateMaxFailureRatio ||
+                this.UpdateMonitor != other.UpdateMonitor ||
+                this.UpdateOrder != other.UpdateOrder ||
+                this.UpdateParallism != other.UpdateParallism ||
+                this.User != other.User ||
+                this.Dir != other.Dir)
+            {
+                return false;
+            }
+
+            return true;
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return base.GetHashCode();
+        }
 
         //---------------------------------------------------------------------
-        // JSON helpers:
+        // JSON parsing helpers:
 
         /// <summary>
         /// Looks up a <see cref="JToken"/> property, returning <c>null</c> if the

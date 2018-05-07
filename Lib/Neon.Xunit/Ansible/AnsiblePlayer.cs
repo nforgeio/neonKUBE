@@ -19,6 +19,18 @@ namespace Neon.Xunit
     public static class AnsiblePlayer
     {
         /// <summary>
+        /// <para>
+        /// Optionally configures the working directory to use when running playbooks
+        /// rather than generating a temporary folder.
+        /// </para>
+        /// <note>
+        /// This can be useful when debugging playbooks in unit tests.  We recommend
+        /// that you do not use when actually performing production testing.
+        /// </note>
+        /// </summary>
+        public static string WorkDir { get; set; }
+
+        /// <summary>
         /// Plays the playbook using <b>neon ansible play -- [args] playbook</b>.
         /// </summary>/
         /// <param name="playbook">The playbook text.</param>
@@ -28,22 +40,36 @@ namespace Neon.Xunit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(playbook));
 
-            using (var folder = new TempFolder())
+            if (!string.IsNullOrEmpty(WorkDir))
             {
-                var orgDirectory = Environment.CurrentDirectory;
+                Directory.CreateDirectory(WorkDir);
 
-                try
+                Environment.CurrentDirectory = WorkDir;
+                File.WriteAllText(Path.Combine(WorkDir, "play.yaml"), playbook);
+
+                var response = NeonHelper.ExecuteCaptureStreams("neon", new object[] { "ansible", "play", "--noterminal", "--", args, "-vvvv", "play.yaml" });
+
+                return new AnsiblePlayResults(response);
+            }
+            else
+            {
+                using (var folder = new TempFolder())
                 {
-                    Environment.CurrentDirectory = folder.Path;
-                    File.WriteAllText(Path.Combine(folder.Path, "play.yaml"), playbook);
+                    var orgDirectory = Environment.CurrentDirectory;
 
-                    var response = NeonHelper.ExecuteCaptureStreams("neon", new object[] { "ansible", "play", "--noterminal", "--", args, "-vvvv", "play.yaml" });
+                    try
+                    {
+                        Environment.CurrentDirectory = folder.Path;
+                        File.WriteAllText(Path.Combine(folder.Path, "play.yaml"), playbook);
 
-                    return new AnsiblePlayResults(response);
-                }
-                finally
-                {
-                    Environment.CurrentDirectory = orgDirectory;
+                        var response = NeonHelper.ExecuteCaptureStreams("neon", new object[] { "ansible", "play", "--noterminal", "--", args, "-vvvv", "play.yaml" });
+
+                        return new AnsiblePlayResults(response);
+                    }
+                    finally
+                    {
+                        Environment.CurrentDirectory = orgDirectory;
+                    }
                 }
             }
         }

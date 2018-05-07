@@ -51,7 +51,7 @@ namespace TestNeonCluster
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void DeployAndRemove()
+        public void Create_Remove()
         {
             // Verify that we can deploy a basic service.
 
@@ -107,8 +107,41 @@ $@"
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void BasicUpdate()
+        public void Create_Replicas()
         {
+            // Verify that we can deploy a basic service.
+
+            var name     = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        replicas: 2
+";
+            var results    = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+
+            Assert.Equal(2, details.Spec.Mode.Replicated.Replicas);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Update_ImageReplicas()
+        {
+            AnsiblePlayer.WorkDir = @"c:\temp\ansible";     // $todo(jeff.lill): DELETE THIS!
+
             // Verify that we can deploy a basic service and then update
             // the image and number of replicas.
 
