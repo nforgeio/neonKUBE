@@ -1450,8 +1450,7 @@ namespace NeonCli.Ansible.Docker
 
                 if (remove)
                 {
-                    outputArgs.Add($"{option}-rm");
-                    outputArgs.Add(stateName);
+                    outputArgs.Add($"{option}-rm={stateName}");
 
                     updateRequired = true;
                 }
@@ -1476,8 +1475,7 @@ namespace NeonCli.Ansible.Docker
 
                 if (add)
                 {
-                    outputArgs.Add($"{option}-add");
-                    outputArgs.Add(updateItem.ToString());
+                    outputArgs.Add($"{option}-add={updateItem}");
 
                     updateRequired = true;
                 }
@@ -1518,8 +1516,7 @@ namespace NeonCli.Ansible.Docker
                 return;
             }
 
-            outputArgs.Add($"{option}");
-            outputArgs.Add(update);
+            outputArgs.Add($"{option}={update}");
 
             updateRequired = true;
         }
@@ -1558,8 +1555,7 @@ namespace NeonCli.Ansible.Docker
                 return;
             }
 
-            outputArgs.Add($"{option}");
-            outputArgs.Add(update.Value.ToString("#.#"));
+            outputArgs.Add($"{option}={update.Value.ToString("#.#")}");
 
             updateRequired = true;
         }
@@ -1643,8 +1639,7 @@ namespace NeonCli.Ansible.Docker
                 return;
             }
 
-            outputArgs.Add($"{option}");
-            outputArgs.Add(NeonHelper.EnumToStringUsingAttributes(update.Value));
+            outputArgs.Add($"{option}={NeonHelper.EnumToStringUsingAttributes(update.Value)}");
 
             updateRequired = true;
         }
@@ -1683,8 +1678,7 @@ namespace NeonCli.Ansible.Docker
                 return;
             }
 
-            outputArgs.Add($"{option}");
-            outputArgs.Add($"{update}ns");
+            outputArgs.Add($"{option}={update}ns");
 
             updateRequired = true;
         }
@@ -1723,8 +1717,7 @@ namespace NeonCli.Ansible.Docker
                 return;
             }
 
-            outputArgs.Add($"{option}");
-            outputArgs.Add($"{update}");
+            outputArgs.Add($"{option}={update}");
 
             updateRequired = true;
         }
@@ -1763,8 +1756,7 @@ namespace NeonCli.Ansible.Docker
                 return;
             }
 
-            outputArgs.Add($"{option}");
-            outputArgs.Add($"{update}");
+            outputArgs.Add($"{option}={update}");
 
             updateRequired = true;
         }
@@ -1862,8 +1854,7 @@ namespace NeonCli.Ansible.Docker
                         sb.AppendWithSeparator(item);
                     }
 
-                    outputArgs.Add("--entrypoint");
-                    outputArgs.Add(sb.ToString());
+                    outputArgs.Add($"--entrypoint={sb}");
 
                     updateRequired = true;
                 }
@@ -1899,8 +1890,7 @@ namespace NeonCli.Ansible.Docker
                         sb.AppendWithSeparator(item);
                     }
 
-                    outputArgs.Add("--health-cmd");
-                    outputArgs.Add(sb.ToString());
+                    outputArgs.Add($"--health-cmd={sb}");
 
                     updateRequired = true;
                 }
@@ -1932,8 +1922,7 @@ namespace NeonCli.Ansible.Docker
                     sb.AppendWithSeparator(option, ",");
                 }
 
-                outputArgs.Add("--log-opt");
-                outputArgs.Add(sb.ToString());
+                outputArgs.Add($"--log-opt={sb}");
 
                 updateRequired = true;
             }
@@ -1972,7 +1961,7 @@ namespace NeonCli.Ansible.Docker
             AppendUpdateStringArgs(context, outputArgs, "--user", User, update.User);
             AppendUpdateStringArgs(context, outputArgs, "--workdir", Dir, update.Dir);
 #if TODO
-            // We're not currently handling these service properties.
+            // $todo(jeff.lill): We're not currently handling these service properties.
 
             AppendUpdateArgs(outputArgs, "--generic-resource", current.GenericResource, update.GenericResource, SimpleNameExtractor);
 #endif
@@ -2073,26 +2062,7 @@ namespace NeonCli.Ansible.Docker
 
                     case JTokenType.String:
 
-                        switch (((string)jToken).ToLowerInvariant())
-                        {
-                            case "0":
-                            case "false":
-                            case "off":
-                            case "no":
-
-                                return false;
-
-                            case "1":
-                            case "true":
-                            case "on":
-                            case "yes":
-
-                                return true;
-
-                            default:
-
-                                return false;
-                        }
+                        return NeonHelper.ParseBool((string)jToken);
 
                     case JTokenType.None:
                     case JTokenType.Null:

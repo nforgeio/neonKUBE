@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -1233,6 +1234,83 @@ context.LogDebug("rollback: 0");
         }
 
         /// <summary>
+        /// Appends a command line option for a non-enum value if it's not
+        /// <c>null</c> or set to the default.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="args">The argument list being appended.</param>
+        /// <param name="option">The command line option (with leading dashes).</param>
+        /// <param name="value">The option value.</param>
+        /// <param name="defaultValue">Optionally specifies the default value.</param>
+        /// <param name="units">Optional units to be appended to ther value.</param>
+        private void AppendCreateOption<T>(List<object> args, string option, T? value, T defaultValue = default(T), string units = null)
+            where T : struct
+        {
+            Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(option));
+
+            units = units ?? string.Empty;
+
+            if (value.HasValue && !value.Value.Equals(defaultValue))
+            {
+                if (typeof(T) == typeof(bool))
+                {
+                    // Special-case booleans by normalizing them to lowercase.
+
+                    var boolValue = value as bool?;
+
+                    var output = boolValue.Value ? "true" : "false";
+
+                    args.Add($"{option}={output}{units}");
+                }
+                else
+                {
+                    args.Add($"{option}={value}{units}");
+                }
+            }
+        }
+
+        /// <summary>
+        /// Appends a command line option for a <c>string</c> value if it's not
+        /// <c>null</c> or empty.
+        /// </summary>
+        /// <typeparam name="T">The value type.</typeparam>
+        /// <param name="args">The argument list being appended.</param>
+        /// <param name="option">The command line option (with leading dashes).</param>
+        /// <param name="value">The option value.</param>
+        private void AppendCreateOption(List<object> args, string option, string value)
+        {
+            Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(option));
+
+            if (!string.IsNullOrEmpty(value))
+            {
+                args.Add($"{option}={value}");
+            }
+        }
+        
+        /// <summary>
+        /// Appends a command line option for an <c>enum</c> value if it's not
+        /// <c>null</c> or set to the default.
+        /// </summary>
+        /// <typeparam name="TEnum">The enumeration type.</typeparam>
+        /// <param name="args">The argument list being appended.</param>
+        /// <param name="option">The command line option (with leading dashes).</param>
+        /// <param name="value">The option value.</param>
+        /// <param name="defaultValue">Optionally specifies the default value.</param>
+        private void AppendCreateOptionEnum<TEnum>(List<object> args, string option, TEnum? value, TEnum defaultValue = default(TEnum))
+            where TEnum : struct
+        {
+            Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(option));
+
+            if (value.HasValue && !value.Value.Equals(defaultValue))
+            {
+                args.Add($"{option}={NeonHelper.EnumToStringUsingAttributes(value.Value)}");
+            }
+        }
+
+        /// <summary>
         /// Starts a Docker service from a service definition.
         /// </summary>
         /// <param name="manager">The manager where the command will be executed.</param>
@@ -1243,9 +1321,38 @@ context.LogDebug("rollback: 0");
         {
             var args = new List<object>();
 
+            args.Add($"--name={service.Name}");
+
             foreach (var config in service.Config)
             {
-                args.Add($"--config={config}");
+                var sb = new StringBuilder();
+
+                if (!string.IsNullOrEmpty(config.Source))
+                {
+                    sb.AppendWithSeparator($"source={config.Source}", ",");
+                }
+
+                if (!string.IsNullOrEmpty(config.Target))
+                {
+                    sb.AppendWithSeparator($"target={config.Target}", ",");
+                }
+
+                if (config.UID != null)
+                {
+                    sb.AppendWithSeparator($"uid={config.UID}", ",");
+                }
+
+                if (config.GID != null)
+                {
+                    sb.AppendWithSeparator($"uid={config.GID}", ",");
+                }
+
+                if (config.Mode != null)
+                {
+                    sb.AppendWithSeparator($"mode={config.Mode}", ",");
+                }
+
+                args.Add($"--config={sb}");
             }
 
             foreach (var constraint in service.Constraint)
@@ -1263,10 +1370,7 @@ context.LogDebug("rollback: 0");
                 args.Add($"--credential-spec={credential}");
             }
 
-            if (service.Detach.HasValue)
-            {
-                args.Add($"--detach={service.Detach.ToString().ToLowerInvariant()}");
-            }
+            AppendCreateOption(args, "--detach", service.Detach);
 
             foreach (var nameserver in service.Dns)
             {
@@ -1283,10 +1387,7 @@ context.LogDebug("rollback: 0");
                 args.Add($"--dns-search={domain}");
             }
 
-            if (service.EndpointMode != ServiceEndpointMode.Vip)
-            {
-                args.Add($"--endpoint-mode={service.EndpointMode}");
-            }
+            AppendCreateOptionEnum(args, "--endpoint-mod", service.EndpointMode);
 
             if (service.Command.Count > 0)
             {
@@ -1322,25 +1423,10 @@ context.LogDebug("rollback: 0");
                 args.Add($"--health-cmd={sb}");
             }
 
-            if (service.HealthInterval.HasValue)
-            {
-                args.Add($"--health-interval={service.HealthInterval}ns");
-            }
-
-            if (service.HealthRetries.HasValue)
-            {
-                args.Add($"--health-retries={service.HealthRetries}");
-            }
-
-            if (service.HealthStartPeriod.HasValue)
-            {
-                args.Add($"--health-start-period={service.HealthStartPeriod}ns");
-            }
-
-            if (service.HealthTimeout.HasValue)
-            {
-                args.Add($"--health-timeout={service.HealthTimeout}ns");
-            }
+            AppendCreateOption(args, "--health-interval", service.HealthInterval, units: "ns");
+            AppendCreateOption(args, "--health-retries", service.HealthRetries);
+            AppendCreateOption(args, "--health-start-period", service.HealthStartPeriod, units: "ns");
+            AppendCreateOption(args, "--health-timeout", service.HealthTimeout, units: "ns");
 
             foreach (var host in service.Host)
             {
@@ -1352,30 +1438,16 @@ context.LogDebug("rollback: 0");
                 args.Add($"--hostname={service.Hostname}");
             }
 
-            if (service.Isolation.HasValue)
-            {
-                args.Add($"--isolation={service.Isolation}");
-            }
+            AppendCreateOptionEnum(args, "--isolation", service.Isolation);
 
             foreach (var label in service.Label)
             {
                 args.Add($"--label={label}");
             }
 
-            if (service.LimitCpu.HasValue)
-            {
-                args.Add($"--limit-cpu={service.LimitCpu}");
-            }
-
-            if (service.LimitMemory.HasValue)
-            {
-                args.Add($"--limit-memory={service.LimitMemory}");
-            }
-
-            if (service.LogDriver != null)
-            {
-                args.Add($"--log-driver={service.LogDriver}");
-            }
+            AppendCreateOption(args, "--limit-cpu", service.LimitCpu);
+            AppendCreateOption(args, "--limit-memory", service.LimitMemory);
+            AppendCreateOption(args, "--log-driver", service.LogDriver);
 
             if (service.LogOpt.Count > 0)
             {
@@ -1389,10 +1461,7 @@ context.LogDebug("rollback: 0");
                 args.Add($"--log-opt={sb}");
             }
 
-            if (service.Mode.HasValue)
-            {
-                args.Add($"--mode={service.Mode}");
-            }
+            AppendCreateOptionEnum(args, "--mode", service.Mode);
 
             foreach (var mount in service.Mount)
             {
@@ -1456,22 +1525,13 @@ context.LogDebug("rollback: 0");
                 args.Add($"--mount={sb}");
             }
 
-            args.Add($"--name={service.Name}");
-
             foreach (var network in service.Network)
             {
                 args.Add($"network={network}");
             }
 
-            if (service.NoHealthCheck.HasValue)
-            {
-                args.Add($"--no-healthcheck={service.NoHealthCheck.Value.ToString().ToLowerInvariant()}");
-            }
-
-            if (service.NoResolveImage.HasValue)
-            {
-                args.Add($"--no-resolveimage={service.NoResolveImage.Value.ToString().ToLowerInvariant()}");
-            }
+            AppendCreateOption(args, "--no-healthcheck", service.NoHealthCheck);
+            AppendCreateOption(args, "--no-resolveimage", service.NoResolveImage);
 
             foreach (var preference in service.PlacementPref)
             {
@@ -1484,90 +1544,50 @@ context.LogDebug("rollback: 0");
 
                 sb.AppendWithSeparator($"published={port.Published}", ",");
                 sb.AppendWithSeparator($"target={port.Target}", ",");
-                sb.AppendWithSeparator($"protocol={NeonHelper.EnumToStringUsingAttributes(port.Protocol.Value)}", ",");
-                sb.AppendWithSeparator($"mode={NeonHelper.EnumToStringUsingAttributes(port.Mode.Value)}", ",");
+
+                if (port.Protocol.HasValue)
+                {
+                    sb.AppendWithSeparator($"protocol={NeonHelper.EnumToStringUsingAttributes(port.Protocol.Value)}", ",");
+                }
+
+                if (port.Mode.HasValue)
+                {
+                    sb.AppendWithSeparator($"mode={NeonHelper.EnumToStringUsingAttributes(port.Mode.Value)}", ",");
+                }
 
                 args.Add($"--publish={sb}");
             }
 
             args.Add("--quiet");    // Always suppress progress.
 
-            if (service.ReadOnly.HasValue)
-            {
-                args.Add($"--readonly={service.ReadOnly.Value.ToString().ToLowerInvariant()}");
-            }
-
-            if (service.Replicas.HasValue)
-            {
-                args.Add($"--replicas={service.Replicas.Value}");
-            }
-
-            if (service.ReserveCpu.HasValue)
-            {
-                args.Add($"--reserve-cpu={service.ReserveCpu.Value}");
-            }
-
-            if (service.ReserveMemory.HasValue)
-            {
-                args.Add($"--reserve-memory={service.ReserveMemory.Value}");
-            }
-
-            if (service.RestartCondition.HasValue)
-            {
-                args.Add($"--restart-condition={NeonHelper.EnumToStringUsingAttributes(service.RestartCondition.Value)}");
-            }
-
-            if (service.RestartDelay.HasValue)
-            {
-                args.Add($"--restart-delay={service.RestartDelay.Value}ns");
-            }
-
-            if (service.RestartMaxAttempts.HasValue)
-            {
-                args.Add($"--restart-max-attempts={service.RestartMaxAttempts.Value}");
-            }
-
-            if (service.RestartWindow.HasValue)
-            {
-                args.Add($"--restart-window={service.RestartWindow.Value}ns");
-            }
-
-            if (service.RollbackDelay.HasValue)
-            {
-                args.Add($"--rollback-delay={service.RollbackDelay.Value}ns");
-            }
-
-            if (service.RollbackFailureAction.HasValue)
-            {
-                args.Add($"--rollback-failure-action={NeonHelper.EnumToStringUsingAttributes(service.RollbackFailureAction.Value)}");
-            }
-
-            if (service.RollbackMaxFailureRatio.HasValue)
-            {
-                args.Add($"--rollback-max-failure-ratio={service.RollbackMaxFailureRatio.Value}");
-            }
-
-            if (service.RollbackMonitor.HasValue)
-            {
-                args.Add($"--rollback-monitor={service.RollbackMonitor.Value}ns");
-            }
-
-            if (service.RollbackOrder.HasValue)
-            {
-                args.Add($"--rollback-order={NeonHelper.EnumToStringUsingAttributes(service.RollbackOrder.Value)}");
-            }
-
-            if (service.RollbackParallism.HasValue)
-            {
-                args.Add($"--rollback-parallelism={service.RollbackParallism.Value}");
-            }
+            AppendCreateOption(args, "--readonly", service.ReadOnly);
+            AppendCreateOption(args, "--replicas", service.Replicas);
+            AppendCreateOption(args, "--reserve-cpu", service.ReserveCpu);
+            AppendCreateOption(args, "--reserve-memory", service.ReserveMemory);
+            AppendCreateOptionEnum(args, "--restart-condition", service.RestartCondition);
+            AppendCreateOption(args, "--restart-delay", service.RestartDelay, units: "ns");
+            AppendCreateOption(args, "--restart-max-attempts", service.RestartMaxAttempts, 1);
+            AppendCreateOption(args, "--restart-window", service.RestartWindow, units: "ns");
+            AppendCreateOption(args, "--rollback-delay", service.RollbackDelay, units: "ns");
+            AppendCreateOptionEnum(args, "--rollback-failure-action", service.RollbackFailureAction);
+            AppendCreateOption(args, "--rollback-max-failure-ratio", service.RollbackMaxFailureRatio);
+            AppendCreateOption(args, "--rollback-monitor", service.RollbackMonitor, units: "ns");
+            AppendCreateOptionEnum(args, "--rollback-order", service.RollbackOrder);
+            AppendCreateOption(args, "--rollback-parallelism", service.RollbackParallism, 1);
 
             foreach (var secret in service.Secret)
             {
                 var sb = new StringBuilder();
 
-                sb.AppendWithSeparator($"source={secret.Source}", ",");
-                sb.AppendWithSeparator($"target={secret.Target}", ",");
+                if (!string.IsNullOrEmpty(secret.Source))
+                {
+                    sb.AppendWithSeparator($"source={secret.Source}", ",");
+                }
+
+                if (!string.IsNullOrEmpty(secret.Target))
+                {
+                    sb.AppendWithSeparator($"target={secret.Target}", ",");
+                }
 
                 if (secret.UID != null)
                 {
@@ -1583,67 +1603,22 @@ context.LogDebug("rollback: 0");
                 {
                     sb.AppendWithSeparator($"mode={secret.Mode}", ",");
                 }
+
+                args.Add($"--secret={sb}");
             }
 
-            if (service.StopGracePeriod.HasValue)
-            {
-                args.Add($"--stop-grace-period={service.StopGracePeriod.Value}ns");
-            }
-
-            if (!string.IsNullOrEmpty(service.StopSignal))
-            {
-                args.Add($"--stop-signal={service.StopSignal}");
-            }
-
-            if (service.TTY.HasValue)
-            {
-                args.Add($"--tty={service.TTY.Value}");
-            }
-
-            if (service.UpdateDelay.HasValue)
-            {
-                args.Add($"--update-delay={service.UpdateDelay.Value}ns");
-            }
-
-            if (service.UpdateFailureAction.HasValue)
-            {
-                args.Add($"--update-failure-action={NeonHelper.EnumToStringUsingAttributes(service.UpdateFailureAction.Value)}");
-            }
-
-            if (service.UpdateMaxFailureRatio.HasValue)
-            {
-                args.Add($"--update-max-failure-ratio={service.UpdateMaxFailureRatio.Value}");
-            }
-
-            if (service.UpdateMonitor.HasValue)
-            {
-                args.Add($"--update-monitor={service.UpdateMonitor.Value}ns");
-            }
-
-            if (service.UpdateOrder.HasValue)
-            {
-                args.Add($"--update-order={NeonHelper.EnumToStringUsingAttributes(service.UpdateOrder.Value)}");
-            }
-
-            if (service.UpdateParallism.HasValue)
-            {
-                args.Add($"--update-parallelism={service.UpdateParallism.Value}");
-            }
-
-            if (!string.IsNullOrEmpty(service.User))
-            {
-                args.Add($"--user={service.User}");
-            }
-
-            if (service.WithRegistryAuth.HasValue)
-            {
-                args.Add($"--with-registry-auth={service.WithRegistryAuth.Value}");
-            }
-
-            if (!string.IsNullOrEmpty(service.Dir))
-            {
-                args.Add($"--workdir={service.Dir}");
-            }
+            AppendCreateOption(args, "--stop-grace-period", service.StopGracePeriod, units: "ns");
+            AppendCreateOption(args, "--stop-signal", service.StopSignal);
+            AppendCreateOption(args, "--tty", service.TTY);
+            AppendCreateOption(args, "--update-delay", service.UpdateDelay, units: "ns");
+            AppendCreateOptionEnum(args, "--update-failure-action", service.UpdateFailureAction);
+            AppendCreateOption(args, "--update-max-failure-ratio", service.UpdateMaxFailureRatio);
+            AppendCreateOption(args, "--update-monitor", service.UpdateMonitor, units: "ns");
+            AppendCreateOptionEnum(args, "--update-order", service.UpdateOrder);
+            AppendCreateOption(args, "--update-parallelism", service.UpdateParallism, 1);
+            AppendCreateOption(args, "--user", service.User);
+            AppendCreateOption(args, "--with-registry-auth", service.WithRegistryAuth);
+            AppendCreateOption(args, "--workdir", service.Dir);
 
             // The Docker image any service arguments are passed as regular
             // arguments, not command line options.
