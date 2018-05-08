@@ -42,10 +42,16 @@ namespace Neon.Docker
         public string GID { get; set; }
 
         /// <summary>
-        /// The Linux file mode for the file encoded as an integer.
+        /// <para>
+        /// The Linux file mode for the file.
+        /// </para>
+        /// <note>
+        /// This value is encoded as decimal.  You'll need to convert to octal to
+        /// see what it looks like as standard Linux permissions.
+        /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
-        [DefaultValue(1023)]    // 1777 Linux octal file mode converted to decimal
+        [DefaultValue(1777)]
         public int Mode { get; set; }
 
         /// <inheritdoc/>

@@ -113,7 +113,8 @@ namespace NeonCli.Ansible
     //
     // dns                      no                                  array of DNS nameserver IP addresses
     //
-    // dns_option               no                                  array of DNS options like OPTION=VALUE
+    // dns_option               no                                  array of DNS options.  See:
+    //                                                              http://manpages.ubuntu.com/manpages/precise/man5/resolvconf.conf.5.html
     //
     // dns_search               no                                  array of  DNS domains to be searched for 
     //                                                              non-fully qualified hostnames
@@ -407,6 +408,11 @@ context.LogDebug("module: 1");
             service.CredentialSpec          = context.ParseStringArray("credential_spec");
             service.Detach                  = context.ParseBool("detach");
             service.Dns                     = context.ParseIPAddressArray("dns");
+            service.DnsOption               = context.ParseStringArray("dns_option");
+            service.DnsSearch               = context.ParseStringArray("dns_search");
+            service.EndpointMode            = context.ParseEnum<ServiceEndpointMode>("endpoint_mode");
+context.LogDebug($"endpoint_mode (0) = {context.Arguments["endpoint_mode"]}");
+context.LogDebug($"endpoint_mode (1) = {service.EndpointMode}");
             service.Command                 = context.ParseStringArray("entrypoint");
             service.Env                     = context.ParseStringArray("env");
             service.GenericResource         = context.ParseStringArray("generic_resource");
@@ -876,18 +882,22 @@ context.LogDebug("rollback: 0");
         /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
         private string ParseFileMode(ModuleContext context, string input, string errorMessage = null)
         {
+context.LogDebug($"mode: 0 [{input}]");
             var error = false;
 
-            if (input == null || input.Length != 3 || input.Length != 4)
+            if (input == null || (input.Length != 3 && input.Length != 4))
             {
+context.LogDebug("mode: 1");
                 error = true;
             }
             else
             {
+context.LogDebug("mode: 2");
                 foreach (var ch in input)
                 {
                     if (ch < '0' || '7' < ch)
                     {
+context.LogDebug($"mode: 3 [{ch}]");
                         error = true;
                         break;
                     }
@@ -896,6 +906,7 @@ context.LogDebug("rollback: 0");
 
             if (error)
             {
+context.LogDebug("mode: 4");
                 if (errorMessage != null)
                 {
                     context.WriteErrorLine(errorMessage);
@@ -905,6 +916,14 @@ context.LogDebug("rollback: 0");
             }
             else
             {
+                // We're going to prefix this with "0" to indicate
+                // to Docker that this octal.
+
+                if (!input.StartsWith("0"))
+                {
+                    input = "0" + input;
+                }
+
                 return input;
             }
         }
@@ -1054,9 +1073,9 @@ context.LogDebug("rollback: 0");
             {
                 var jObject = item as JObject;
 
-                if (jObject != null)
+                if (jObject == null)
                 {
-                    context.WriteErrorLine($"One or more of the [{argName}] array elements is not a valid config specification.");
+                    context.WriteErrorLine($"One or more of the [{argName}] array items is not valid.");
                     return configs;
                 }
 
@@ -1098,7 +1117,7 @@ context.LogDebug("rollback: 0");
 
                 if (jObject.TryGetValue<string>("uid", out value))
                 {
-                    if (!int.TryParse(value, out var parsed))
+                    if (int.TryParse(value, out var parsed))
                     {
                         config.UID = value;
                     }
@@ -1112,7 +1131,7 @@ context.LogDebug("rollback: 0");
 
                 if (jObject.TryGetValue<string>("gid", out value))
                 {
-                    if (!int.TryParse(value, out var parsed))
+                    if (int.TryParse(value, out var parsed))
                     {
                         config.GID = value;
                     }
@@ -1157,9 +1176,9 @@ context.LogDebug("rollback: 0");
             {
                 var jObject = item as JObject;
 
-                if (jObject != null)
+                if (jObject == null)
                 {
-                    context.WriteErrorLine($"One or more of the [{argName}] array elements is not a valid secret specification.");
+                    context.WriteErrorLine($"One or more of the [{argName}] array items is not valid.");
                     return secrets;
                 }
 
@@ -1201,7 +1220,7 @@ context.LogDebug("rollback: 0");
 
                 if (jObject.TryGetValue<string>("uid", out value))
                 {
-                    if (!int.TryParse(value, out var parsed))
+                    if (int.TryParse(value, out var parsed))
                     {
                         secret.UID = value;
                     }
@@ -1215,7 +1234,7 @@ context.LogDebug("rollback: 0");
 
                 if (jObject.TryGetValue<string>("gid", out value))
                 {
-                    if (!int.TryParse(value, out var parsed))
+                    if (int.TryParse(value, out var parsed))
                     {
                         secret.GID = value;
                     }
@@ -1344,7 +1363,7 @@ context.LogDebug("rollback: 0");
 
                 if (config.GID != null)
                 {
-                    sb.AppendWithSeparator($"uid={config.GID}", ",");
+                    sb.AppendWithSeparator($"gid={config.GID}", ",");
                 }
 
                 if (config.Mode != null)
@@ -1387,7 +1406,8 @@ context.LogDebug("rollback: 0");
                 args.Add($"--dns-search={domain}");
             }
 
-            AppendCreateOptionEnum(args, "--endpoint-mod", service.EndpointMode);
+context.LogDebug($"endpoint_mode = {service.EndpointMode}");
+            AppendCreateOptionEnum(args, "--endpoint-mode", service.EndpointMode);
 
             if (service.Command.Count > 0)
             {
@@ -1596,7 +1616,7 @@ context.LogDebug("rollback: 0");
 
                 if (secret.GID != null)
                 {
-                    sb.AppendWithSeparator($"uid={secret.GID}", ",");
+                    sb.AppendWithSeparator($"gid={secret.GID}", ",");
                 }
 
                 if (secret.Mode != null)

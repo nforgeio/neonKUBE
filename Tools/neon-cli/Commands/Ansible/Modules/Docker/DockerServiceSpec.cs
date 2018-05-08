@@ -595,9 +595,7 @@ namespace NeonCli.Ansible.Docker
         public List<IPAddress> Dns { get; set; } = new List<IPAddress>();
 
         /// <summary>
-        /// DNS options.  I believe these will be formatted like <b>OPTION=VALUE</b>
-        /// but I'm not going to enforce this because I'm not sure.  The options
-        /// are described here: http://manpages.ubuntu.com/manpages/precise/man5/resolvconf.conf.5.html
+        /// DNS options, as described here: http://manpages.ubuntu.com/manpages/precise/man5/resolvconf.conf.5.html
         /// </summary>
         public List<string> DnsOption { get; set; } = new List<string>();
 
@@ -1145,13 +1143,7 @@ namespace NeonCli.Ansible.Docker
 
             foreach (var item in dnsConfig.Options)
             {
-                // $todo(jeff.lill):
-                //
-                // I'm guessing here that the service inspect JSON uses ':'
-                // instead of '=' like the command line.  I'm going to 
-                // convert any colons to equal signs.
-
-                this.DnsOption.Add(item.Replace(':', '='));
+                this.DnsOption.Add(item);
             }
 
             foreach (var item in containerSpec.Secrets)
@@ -1822,7 +1814,7 @@ namespace NeonCli.Ansible.Docker
             AppendUpdateListArgs(context, outputArgs, "--container-label", ContainerLabel, update.ContainerLabel, SimpleNameExtractor);
             AppendUpdateListArgs(context, outputArgs, "--credential-spec", CredentialSpec, update.CredentialSpec);
             AppendUpdateListArgs(context, outputArgs, "--dns", Dns, update.Dns);
-            AppendUpdateListArgs(context, outputArgs, "--dns-option", DnsOption, update.DnsOption, SimpleNameExtractor);
+            AppendUpdateListArgs(context, outputArgs, "--dns-option", DnsOption, update.DnsOption);
             AppendUpdateListArgs(context, outputArgs, "--dns-search", DnsSearch, update.DnsSearch);
             AppendUpdateListArgs(context, outputArgs, "--constraint", Constraint, update.Constraint, SimpleNameExtractor);
             AppendUpdateEnumArgs<ServiceEndpointMode>(context, outputArgs, "--endpoint-mode", EndpointMode, update.EndpointMode);

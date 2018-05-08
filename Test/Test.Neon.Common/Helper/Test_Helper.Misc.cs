@@ -385,6 +385,16 @@ namespace TestCommon
             Assert.Throws<ArgumentNullException>(() => NeonHelper.ParseEnumUsingAttributes<TestEnum>(null));
             Assert.Throws<ArgumentException>(() => NeonHelper.ParseEnumUsingAttributes<TestEnum>("BAD"));
 
+            TestEnum parsed;
+
+            Assert.True(NeonHelper.TryParseEnumUsingAttributes<TestEnum>("foo-bar", out parsed));
+            Assert.Equal(TestEnum.FooBar, parsed);
+
+            Assert.True(NeonHelper.TryParseEnumUsingAttributes<TestEnum>("FOO-BAR", out parsed));
+            Assert.Equal(TestEnum.FooBar, parsed);
+
+            Assert.False(NeonHelper.TryParseEnumUsingAttributes<TestEnum>("BAD", out parsed));
+
             // Verify enum serialization too.
 
             Assert.Equal("Value1", NeonHelper.EnumToStringUsingAttributes(TestEnum.Value1));

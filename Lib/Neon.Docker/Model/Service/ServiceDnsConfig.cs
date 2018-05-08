@@ -32,9 +32,9 @@ namespace Neon.Docker
         [JsonProperty(PropertyName = "Search", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]
         public List<string> Search { get; set; }
-        
+
         /// <summary>
-        /// Low-level internal resolver options.
+        /// Low-level internal resolver options.  See: http://manpages.ubuntu.com/manpages/precise/man5/resolvconf.conf.5.html
         /// </summary>
         [JsonProperty(PropertyName = "Options", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]

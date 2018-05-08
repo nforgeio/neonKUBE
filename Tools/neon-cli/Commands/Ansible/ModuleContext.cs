@@ -359,13 +359,17 @@ namespace NeonCli.Ansible
         public TEnum? ParseEnumValue<TEnum>(string input, string errorMessage = null)
             where TEnum : struct
         {
+LogDebug($"ParseEnum 0: input = {input}");
             if (string.IsNullOrEmpty(input))
             {
+LogDebug($"ParseEnum 1");
                 return null;
             }
+LogDebug($"ParseEnum 2");
 
-            if (!Enum.TryParse<TEnum>(input, true, out var value))
+            if (!NeonHelper.TryParseEnumUsingAttributes<TEnum>(input, out var value))
             {
+LogDebug($"ParseEnum 3");
                 if (errorMessage != null)
                 {
                     WriteErrorLine(errorMessage);
@@ -375,6 +379,7 @@ namespace NeonCli.Ansible
             }
             else
             {
+LogDebug($"ParseEnum 4");
                 return value;
             }
         }
@@ -385,7 +390,7 @@ namespace NeonCli.Ansible
         /// <param name="input">The input string.</param>
         /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
         /// <returns>The parsed value or <paramref name="defaultValue"/> if the input was <c>null</c> or invalid.</returns>
-        public TEnum ParseEnumValue<TEnum>(string input, TEnum defaultValue, string errorMessage = null)
+        public TEnum? ParseEnumValue<TEnum>(string input, TEnum defaultValue, string errorMessage = null)
             where TEnum : struct
         {
             if (string.IsNullOrEmpty(input))
@@ -393,7 +398,7 @@ namespace NeonCli.Ansible
                 return defaultValue;
             }
 
-            if (!Enum.TryParse<TEnum>(input, true, out var value))
+            if (!NeonHelper.TryParseEnumUsingAttributes<TEnum>(input, out var value))
             {
                 if (errorMessage != null)
                 {
@@ -567,13 +572,12 @@ namespace NeonCli.Ansible
             {
                 var valueString = (string)jToken;
 
-                try
+                if (NeonHelper.TryParseEnumUsingAttributes<TEnum>(valueString, out var value))
                 {
-                    return (TEnum?)NeonHelper.ParseEnumUsingAttributes<TEnum>(valueString);
+                    return value;
                 }
-                catch
+                else
                 {
-                    WriteErrorLine($"[{argName}={valueString}] is not a valid [{typeof(TEnum).Name}].");
                     return null;
                 }
             }

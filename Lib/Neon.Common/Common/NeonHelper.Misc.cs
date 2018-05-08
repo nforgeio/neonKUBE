@@ -1250,7 +1250,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Typesafe <c>enum</c> parser that also honors any <see cref="EnumMemberAttribute"/>
+        /// Type-safe <c>enum</c> parser that also honors any <see cref="EnumMemberAttribute"/>
         /// decorating the enumeration values.  This is case insensitive.
         /// </summary>
         /// <typeparam name="TEnum">The enumeration type.</typeparam>
@@ -1285,7 +1285,42 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Typesafe <c>enum</c> serializer that also honors any <see cref="EnumMemberAttribute"/>
+        /// Type-safe <c>enum</c> parser that also honors any <see cref="EnumMemberAttribute"/>
+        /// decorating the enumeration values.  This is case insensitive.
+        /// </summary>
+        /// <typeparam name="TEnum">The enumeration type.</typeparam>
+        /// <param name="input">The input string.</param>
+        /// <returns>The parsed value.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="input"/> is <c>null</c>.</exception>
+        /// <exception cref="ArgumentException">Thrown if <paramref name="input"/> is not valid.</exception>
+        public static bool TryParseEnumUsingAttributes<TEnum>(string input, out TEnum output)
+            where TEnum : struct
+        {
+            // That didn't work, so we'll use a cached [EnumMember]
+            // map for the type.
+
+            var info = GetEnumMembers<TEnum>();
+
+            if (info.EnumToStrings.TryGetValue(input, out var value1))
+            {
+                output = (TEnum)Enum.ToObject(typeof(TEnum), value1);
+
+                return true;
+            }
+
+            // Try parsing the enumeration using the standard mechanism.
+            // Note that this does not honor any [EnumMember] attributes.
+
+            if (Enum.TryParse<TEnum>(input, true, out output))
+            {
+                return true;
+            }
+
+            return false;
+        }
+
+        /// <summary>
+        /// Type-safe <c>enum</c> serializer that also honors any <see cref="EnumMemberAttribute"/>
         /// decorating the enumeration values.
         /// </summary>
         /// <typeparam name="TEnum">The enumeration type.</typeparam>

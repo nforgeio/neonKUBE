@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_DockerService.cs
+// FILE:	    Test_ServiceInspect.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -354,7 +354,7 @@ namespace TestNeonCluster
                 dockerArgs:
                     new string[]
                     {
-                        "--secret", "source=secret-1,target=secret,uid=5555,gid=6666,mode=0444",
+                        "--secret", $"source=secret-1,target=secret,uid={TestHelper.TestUID},gid={TestHelper.TestGID},mode=0444",
                     });
 
             var info    = docker.ListServices().Single(s => s.Name == "test");
@@ -367,9 +367,9 @@ namespace TestNeonCluster
             Assert.NotEmpty(secret.SecretID);
             Assert.Equal("secret-1", secret.SecretName);
             Assert.Equal("secret", secret.File.Name);
-            Assert.Equal("5555", secret.File.UID);
-            Assert.Equal("6666", secret.File.GID);
-            Assert.Equal(Convert.ToInt32("0444", 8), secret.File.Mode);
+            Assert.Equal(TestHelper.TestUID, secret.File.UID);
+            Assert.Equal(TestHelper.TestGID, secret.File.GID);
+            Assert.Equal(Convert.ToInt32("444", 8), secret.File.Mode);
         }
 
         [Fact]
@@ -382,7 +382,7 @@ namespace TestNeonCluster
                 dockerArgs:
                     new string[]
                     {
-                        "--config", "source=config-1,target=/my-config,uid=5555,gid=6666,mode=0444",
+                        "--config", $"source=config-1,target=/my-config,uid={TestHelper.TestUID},gid={TestHelper.TestGID},mode=0444",
                     });
 
             var info    = docker.ListServices().Single(s => s.Name == "test");
@@ -395,9 +395,9 @@ namespace TestNeonCluster
             Assert.NotEmpty(config.ConfigID);
             Assert.Equal("config-1", config.ConfigName);
             Assert.Equal("/my-config", config.File.Name);
-            Assert.Equal("5555", config.File.UID);
-            Assert.Equal("6666", config.File.GID);
-            Assert.Equal(Convert.ToInt32("0444", 8), config.File.Mode);
+            Assert.Equal(TestHelper.TestUID, config.File.UID);
+            Assert.Equal(TestHelper.TestGID, config.File.GID);
+            Assert.Equal(Convert.ToInt32("444", 8), config.File.Mode);
         }
 
         [Fact]
@@ -602,7 +602,7 @@ namespace TestNeonCluster
                 var tmpfsOptions = mount.TmpfsOptions;
 
                 Assert.Equal(32000000L, tmpfsOptions.SizeBytes);
-                Assert.Equal(Convert.ToInt32("777", 8), tmpfsOptions.Mode);
+                Assert.Equal(777, tmpfsOptions.Mode);
             }
         }
 
