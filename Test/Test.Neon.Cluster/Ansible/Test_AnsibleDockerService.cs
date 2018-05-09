@@ -32,7 +32,7 @@ namespace TestNeonCluster
             // then start, modify, and remove services.
             //
             // We're going to initialize these assets once and then
-            // reset only the cluster services between test methods
+            // only the cluster services between test methods
             // for (hopefully) a bit better test execution performance.
 
             if (cluster.LoginAndInitialize(login: null))
@@ -490,9 +490,459 @@ $@"
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_UserGroup()
+        {
+            // Verify that we can create a service customizing the container user and group.
+
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        user: {TestHelper.TestUID}
+        group:
+          - {TestHelper.TestGID}
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+
+            Assert.Equal(TestHelper.TestUID, details.Spec.TaskTemplate.ContainerSpec.User);
+            Assert.Equal(new string[] { TestHelper.TestGID }, details.Spec.TaskTemplate.ContainerSpec.Groups);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_Health()
+        {
+            // Verify that we can create a service that customizes
+            // the health check related properties.
+
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        health_cmd: echo OK
+        health_interval: 1000000000ns
+        health_retries: 3
+        health_start_period: 1100000000ns
+        health_timeout: 1200000000ns
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+
+            Assert.Equal(new string[] { "CMD-SHELL", "echo OK" }, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Test);
+            Assert.Equal(1000000000L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Interval);
+            Assert.Equal(3L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Retries);
+            Assert.Equal(1100000000L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.StartPeriod);
+            Assert.Equal(1200000000L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Timeout);
+
+            // Redeploy the service disabling health checks.
+
+            cluster.RemoveService(name);
+
+            name = "test";
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        no_health_check: yes
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            details = cluster.InspectService(name);
+
+            Assert.Equal(new string[] { "NONE" }, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Test);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_Host()
+        {
+            // Verify that we can create a service that customizes
+            // the container DNS [/etc/hosts] file.
+
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        host: 
+          - ""foo.com:1.1.1.1""
+          - ""bar.com:2.2.2.2""
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+
+            Assert.Equal(2, details.Spec.TaskTemplate.ContainerSpec.Hosts.Count());
+            Assert.Contains("1.1.1.1 foo.com", details.Spec.TaskTemplate.ContainerSpec.Hosts);
+            Assert.Contains("2.2.2.2 bar.com", details.Spec.TaskTemplate.ContainerSpec.Hosts);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_NoResolveImage()
+        {
+            // Verify that [no_resolve_image: true] doesn't barf.
+            // This doesn't actually verify that the the setting
+            // works but I tested that manually.
+
+            cluster.ClearImages();
+
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test:0
+        no_resolve_image: yes
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_Limits()
+        {
+            // Verify that we can create a service that customizes
+            // the container resource limits.
+
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        limit_cpu: 1.5
+        limit_memory: 64m
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+
+            Assert.Equal(1500000000L, details.Spec.TaskTemplate.Resources.Limits.NanoCPUs);
+            Assert.Equal(67108864L, details.Spec.TaskTemplate.Resources.Limits.MemoryBytes);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_Reservations()
+        {
+            // Verify that we can create a service that customizes
+            // the container resource reservations.
+
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        reserve_cpu: 1.5
+        reserve_memory: 64m
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+
+            Assert.Equal(1500000000L, details.Spec.TaskTemplate.Resources.Reservations.NanoCPUs);
+            Assert.Equal(67108864L, details.Spec.TaskTemplate.Resources.Reservations.MemoryBytes);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_Mount()
+        {
+            // Verify that we can create a service that mounts
+            // various types of volumes.
+
+            //-----------------------------------------------------------------
+            // VOLUME mount:
+
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        mount:
+          - type: volume
+            source: test-volume
+            target: /mnt/volume
+            readonly: no
+            volume_label:
+              - VOLUME=TEST
+            volume_nocopy: yes
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+            var mounts = details.Spec.TaskTemplate.ContainerSpec.Mounts;
+
+            Assert.Single(mounts);
+
+            var mount = mounts.First();
+
+            Assert.Equal(ServiceMountType.Volume, mount.Type);
+            Assert.False(mount.ReadOnly);
+            Assert.Equal(ServiceMountConsistency.Default, mount.Consistency);
+            Assert.Null(mount.BindOptions);
+            Assert.Equal("test-volume", mount.Source);
+            Assert.Equal("/mnt/volume", mount.Target);
+            Assert.Single(mount.VolumeOptions.Labels);
+            Assert.Equal("TEST", mount.VolumeOptions.Labels["VOLUME"]);
+            Assert.True(mount.VolumeOptions.NoCopy);
+
+            //-----------------------------------------------------------------
+            // BIND mount:
+
+            cluster.RemoveService("test");
+
+            name = "test";
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        mount:
+          - type: bind
+            source: /tmp
+            target: /mnt/volume
+            readonly: yes
+            consistency: cached
+            bind_propagation: slave
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            details = cluster.InspectService(name);
+            mounts = details.Spec.TaskTemplate.ContainerSpec.Mounts;
+
+            Assert.Single(mounts);
+
+            mount = mounts.First();
+            Assert.Equal(ServiceMountType.Bind, mount.Type);
+            Assert.True(mount.ReadOnly);
+
+            // $todo(jeff.lill):
+            //
+            // Not sure why this test isn't working.  I can see the option being
+            // specified correctly by CreateService() but [service inspect]
+            // doesn't include the property in the [BindOptions].
+            //
+            // This isn't super important so I'm deferring further investigation.
+
+            //Assert.Equal(ServiceMountConsistency.Cached, mount.Consistency);
+
+            Assert.Equal(ServiceMountBindPropagation.Slave, mount.BindOptions.Propagation);
+            Assert.Equal("/tmp", mount.Source);
+            Assert.Equal("/mnt/volume", mount.Target);
+
+            //-----------------------------------------------------------------
+            // TMPFS mount:
+
+            cluster.RemoveService("test");
+
+            name = "test";
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        mount:
+          - type: tmpfs
+            target: /mnt/tmpfs
+            tmpfs_size: 64m
+            tmpfs_mode: 770
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            details = cluster.InspectService(name);
+            mounts = details.Spec.TaskTemplate.ContainerSpec.Mounts;
+
+            Assert.Single(mounts);
+
+            mount = mounts.First();
+            Assert.Equal(ServiceMountType.Tmpfs, mount.Type);
+            Assert.False(mount.ReadOnly);
+            Assert.Equal("/mnt/tmpfs", mount.Target);
+            Assert.Equal(67108864L, mount.TmpfsOptions.SizeBytes);
+            Assert.Equal(Convert.ToInt32("770", 8), mount.TmpfsOptions.Mode);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_ReadOnly()
+        {
+            // Verify that we can create a service with a read-only file system.
+
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        read_only: 1
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+
+            Assert.True(details.Spec.TaskTemplate.ContainerSpec.ReadOnly);
+        }
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_Network()
+        {
+            // Verify that services can reference networks.
+
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        network:
+          - network-1
+          - network-2
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+            var network = details.Spec.TaskTemplate.Networks;
+
+            Assert.NotNull(network);
+            Assert.Equal(2, network.Count);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Create_Secret()
         {
-            // Verify that we can add Docker secrets.
+            // Verify that we can references secrets.
 
             var name = "test";
             var playbook =

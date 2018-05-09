@@ -140,6 +140,13 @@ namespace Neon.Xunit.Cluster
     ///     </description>
     /// </item>
     /// <item>
+    ///     <term><b>Images</b></term>
+    ///     <description>
+    ///     <see cref="ClearImages()"/><br/>
+    ///     <see cref="PullImage(string)"/><br/>
+    ///     </description>
+    /// </item>
+    /// <item>
     ///     <term><b>Networks</b></term>
     ///     <description>
     ///     <see cref="DockerFixture.ClearNetworks(bool)"/><br/>
@@ -178,6 +185,7 @@ namespace Neon.Xunit.Cluster
     ///     <see cref="DockerFixture.ListServices(bool)"/><br/>
     ///     <see cref="DockerFixture.InspectService(string, bool)"/><br/>
     ///     <see cref="DockerFixture.RemoveService(string)"/><br/>
+    ///     <see cref="DockerFixture.RestartService(string)"/><br/>
     ///     <see cref="DockerFixture.RollbackService(String)"/><br/>
     ///     <see cref="DockerFixture.UpdateService(string, string[])"/>
     ///     </description>
@@ -723,6 +731,86 @@ namespace Neon.Xunit.Cluster
         public new void ClearContainers(bool removeSystem = false)
         {
             throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not support this method.");
+        }
+
+        //---------------------------------------------------------------------
+        // Images
+
+        /// <summary>
+        /// Removes all unreferenced images from all cluster nodes.  <see cref="Reset"/>
+        /// does not do this for performance reasonse but tests may use this method
+        /// if necessary.
+        /// </summary>
+        /// <remarks>
+        /// <note>
+        /// <para>
+        /// Using this may result in very slow test performance, especially since
+        /// it will purge a local copy of <b>neon-cli</b> if present.  This means
+        /// this and any other test images (like Couchbase) will need to be
+        /// downloaded again after every reset.
+        /// </para>
+        /// <para>
+        /// We highly recommend that you use <see cref="PullImage(string)"/> to
+        /// ensure that the desired images are up-to-date rather than using
+        /// <see cref="ClearImages"/>.
+        /// </para>
+        /// </note>
+        /// </remarks>
+        public override void ClearImages()
+        {
+            base.CheckDisposed();
+
+            var actions = new List<Action>();
+
+            foreach (var node in cluster.Nodes)
+            {
+                actions.Add(
+                    () =>
+                    {
+                        try
+                        {
+                            node.Connect();
+                            node.DockerCommand("docker image prune --all --force", RunOptions.None);
+                        }
+                        finally
+                        {
+                            node.Disconnect();
+                        }
+                    });
+            }
+
+            NeonHelper.WaitForParallel(actions);
+        }
+
+        /// <summary>
+        /// Pulls a specific image to all cluster nodes.
+        /// </summary>
+        /// <param name="image">The image name.</param>
+        public override void PullImage(string image)
+        {
+            base.CheckDisposed();
+
+            var actions = new List<Action>();
+
+            foreach (var node in cluster.Nodes)
+            {
+                actions.Add(
+                    () =>
+                    {
+                        try
+                        {
+                            node.Connect();
+                            node.DockerCommand($"docker image pull {image}", RunOptions.None);
+                        }
+                        finally
+                        {
+                            node.Disconnect();
+                        }
+                    });
+            }
+
+            NeonHelper.WaitForParallel(actions);
+
         }
 
         //---------------------------------------------------------------------

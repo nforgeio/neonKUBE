@@ -635,14 +635,7 @@ namespace NeonCli.Ansible.Docker
         /// Optionally specifies the command to be executed within the service containers
         /// to determine the container health status.
         /// </summary>
-        /// <remarks>
-        /// This list is empty to if the default image health command it to be
-        /// used, or else it will start with <b>NONE</b> to disable health checks,
-        /// <b>CMD</b> for a regular command followed by optional arguments or 
-        /// <b>CMD-SHELL</b> followed by a single argument that will be executed 
-        /// in the image's default shell.
-        /// </remarks>
-        public List<string> HealthCmd { get; set; } = new List<string>();
+        public string HealthCmd { get; set; }
 
         /// <summary>
         /// Optionally specifies the interval between health checks (nanoseconds).
@@ -1089,23 +1082,25 @@ namespace NeonCli.Ansible.Docker
             this.StopSignal      = containerSpec.StopSignal;
             this.StopGracePeriod = containerSpec.StopGracePeriod;
 
-            // NOTE:
-            //
-            // [HealthCheck.Test] is either an empty array, indicating that the HEALTHCHECK
-            // specified in the image (if any will be used).  Otherwise the first
-            // element of the the array describes the health check type with the
-            // command itself to follow.  Here's how this looks:
-            //
-            //      []                      - Use image health check
-            //      ["NONE"]                - Disable health checking
-            //      ["CMD", args...]        - Execute a command
-            //      ["CMD-SHELL", command]  - Run a command in the container's shell
-
             var healthCheck = containerSpec.HealthCheck;
 
-            foreach (var item in healthCheck.Test)
+            if (healthCheck.Test.Count > 1)
             {
-                this.HealthCmd.Add(item);
+                // The TEST array is either empty or specifies NONE, CMD,
+                // or CMD-SHELL as the first argument followed by the command.
+
+                var sbCheckCommand = new StringBuilder();
+
+                for (int i = 1; i < healthCheck.Test.Count; i++)
+                {
+                    sbCheckCommand.AppendWithSeparator(healthCheck.Test[i]);
+                }
+
+                this.HealthCmd = sbCheckCommand.ToString();
+            }
+            else
+            {
+                this.HealthCmd = null;
             }
 
             this.HealthInterval    = healthCheck.Interval;
@@ -1854,40 +1849,7 @@ namespace NeonCli.Ansible.Docker
 
             AppendUpdateListArgs(context, outputArgs, "--env", Env, update.Env, SimpleNameExtractor);
             AppendUpdateListArgs(context, outputArgs, "--group", Groups, update.Groups, SimpleNameExtractor);
-
-            if (!AreIdentical(HealthCmd, update.HealthCmd))
-            {
-                // NOTE: I think the Docker design here may be broken because it
-                //       doesn't look like it's possible to remove an health command
-                //       override because that would require passing an empty string
-                //       argument which will end up being ignored.
-                //
-                //       We're going to detect and fail when we see this.
-
-                // $todo(jeff.lill):
-                //
-                // We could potentially address this using the REST API but I
-                // don't want to go there right now.
-
-                if (update.HealthCmd.Count == 0)
-                {
-                    context.WriteErrorLine("It is not possible to remove an existing [--health-cmd] override.");
-                }
-                else
-                {
-                    var sb = new StringBuilder();
-
-                    foreach (var item in update.HealthCmd)
-                    {
-                        sb.AppendWithSeparator(item);
-                    }
-
-                    outputArgs.Add($"--health-cmd={sb}");
-
-                    updateRequired = true;
-                }
-            }
-
+            AppendUpdateStringArgs(context, outputArgs, "--health-cmd", HealthCmd, update.HealthCmd);
             AppendUpdateDurationArgs(context, outputArgs, "--health-interval", HealthInterval, update.HealthInterval);
             AppendUpdateLongArgs(context, outputArgs, "--health-retries", HealthRetries, update.HealthRetries);
             AppendUpdateDurationArgs(context, outputArgs, "--health-startperiod", HealthStartPeriod, update.HealthStartPeriod);

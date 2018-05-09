@@ -56,7 +56,7 @@ namespace Neon.Xunit
     /// The fixture <see cref="Reset"/> method does not purge images from the target
     /// test node for performance reasons.  This can be a problem if you're testing
     /// container and you need to ensure that the latest image is downloaded from
-    /// the registry first.  You can call <see cref="ResetImages"/> to accomplish
+    /// the registry first.  You can call <see cref="ClearImages"/> to accomplish
     /// this or <see cref="PullImage(String)"/> to pull a specific image from the registry.
     /// </note>
     /// <para>
@@ -102,6 +102,13 @@ namespace Neon.Xunit
     ///     </description>
     /// </item>
     /// <item>
+    ///     <term><b>Images</b></term>
+    ///     <description>
+    ///     <see cref="ClearImages()"/><br/>
+    ///     <see cref="PullImage(string)"/><br/>
+    ///     </description>
+    /// </item>
+    /// <item>
     ///     <term><b>Networks</b></term>
     ///     <description>
     ///     <see cref="ClearNetworks(bool)"/><br/>
@@ -128,6 +135,7 @@ namespace Neon.Xunit
     ///     <see cref="ListServices(bool)"/><br/>
     ///     <see cref="InspectService(string, bool)"/><br/>
     ///     <see cref="RemoveService(string)"/><br/>
+    ///     <see cref="RestartService(string)"/><br/>
     ///     <see cref="RollbackService(String)"/><br/>
     ///     <see cref="UpdateService(string, string[])"/>
     ///     </description>
@@ -568,7 +576,7 @@ namespace Neon.Xunit
         /// <remarks>
         /// <note>
         /// This method does not reset the Docker images on the test node for
-        /// performance reasons.  You can call <see cref="ResetImages"/> from
+        /// performance reasons.  You can call <see cref="ClearImages"/> from
         /// your tests if required.
         /// </note>
         /// <note>
@@ -680,7 +688,7 @@ namespace Neon.Xunit
         }
 
         /// <summary>
-        /// Removes all unused images from the target test node.  <see cref="Reset"/>
+        /// Removes all unreferenced images from the target test node.  <see cref="Reset"/>
         /// does not do this for performance reasonse but tests may use this method
         /// if necessary.
         /// </summary>
@@ -695,11 +703,11 @@ namespace Neon.Xunit
         /// <para>
         /// We highly recommend that you use <see cref="PullImage(string)"/> to
         /// ensure that the desired images are up-to-date rather than using
-        /// <see cref="ResetImages"/>.
+        /// <see cref="ClearImages"/>.
         /// </para>
         /// </note>
         /// </remarks>
-        public void ResetImages()
+        public virtual void ClearImages()
         {
             base.CheckDisposed();
 
@@ -710,8 +718,10 @@ namespace Neon.Xunit
         /// Pulls a specific image to the target test node.
         /// </summary>
         /// <param name="image">The image name.</param>
-        public void PullImage(string image)
+        public virtual void PullImage(string image)
         {
+            base.CheckDisposed();
+
             DockerExecute("pull", image);
         }
 
@@ -845,17 +855,34 @@ namespace Neon.Xunit
 
             // Remove the service.
 
-            var extraArgs = new List<string>();
-
-            extraArgs.Add("--name");
-            extraArgs.Add(name);
-
-            var argsString = NeonHelper.NormalizeExecArgs("service", "rm", extraArgs.ToArray());
+            var argsString = NeonHelper.NormalizeExecArgs("service", "rm", name);
             var result     = DockerExecute(argsString);
 
             if (result.ExitCode != 0)
             {
                 throw new Exception($"Cannot remove service [{name}]: {result.AllText}");
+            }
+        }
+
+        /// <summary>
+        /// Restarts a Docker service.
+        /// </summary>
+        /// <param name="name">The service name.</param>
+        /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
+        public void RestartService(string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            base.CheckDisposed();
+
+            // Restart the service by updating it with [--force]..
+
+            var argsString = NeonHelper.NormalizeExecArgs("service", "update", "--force", name);
+            var result     = DockerExecute(argsString);
+
+            if (result.ExitCode != 0)
+            {
+                throw new Exception($"Cannot restart service [{name}]: {result.AllText}");
             }
         }
 
@@ -1585,7 +1612,7 @@ namespace Neon.Xunit
 
             base.CheckDisposed();
 
-            var argsString = NeonHelper.NormalizeExecArgs("network", "create", dockerArgs, name);
+            var argsString = NeonHelper.NormalizeExecArgs("network", "create", "--driver", "overlay", "--opt", "encrypt", dockerArgs, name);
             var result     = DockerExecute(argsString);
 
             if (result.ExitCode != 0)

@@ -135,8 +135,7 @@ namespace NeonCli.Ansible
     //
     // group                    no                                  array of service container supplementary user groups 
     //
-    // health_cmd               no                                  array of the service container health check command
-    //                                                              and arguments
+    // health_cmd               no                                  the service container health check
     //
     // health_interval          no                                  interval between service container health checks
     //
@@ -151,8 +150,9 @@ namespace NeonCli.Ansible
     // host                     no                                  array of hostname to IP address mappings to be
     //                                                              resolved automatically within service containers,
     //                                                              essentially like adding theses to the local 
-    //                                                              [/etc/hosts] file.  These are formatted like
-    //                                                              HOST:IP.
+    //                                                              [/etc/hosts] file.  These are formatted like:
+    //
+    //                                                                  HOST:IP
     //
     // hostname                                                     overrides [Name] as the DNS name for the service.
     //
@@ -184,6 +184,9 @@ namespace NeonCli.Ansible
     //                                                                  target: PATH
     //                                                                  readonly: true/false        default: false      (true|false)
     //                                                                  consistency: default        default: default    (default|consistent|cached|delegated)
+    //
+    //                                                                  options for: type=bind
+    //                                                                  ----------------------
     //                                                                  bind_propagation: rprivate  default: rprivate   (shared|slave|private|rshared,
     //                                                                                                                   rslave|rprivate)
     //                                                                  options for: type=volume
@@ -417,7 +420,7 @@ context.LogDebug($"endpoint_mode (1) = {service.EndpointMode}");
             service.Env                     = context.ParseStringArray("env");
             service.GenericResource         = context.ParseStringArray("generic_resource");
             service.Groups                  = context.ParseStringArray("group");
-            service.HealthCmd               = context.ParseStringArray("health_cmd");
+            service.HealthCmd               = context.ParseString("health_cmd");
             service.HealthInterval          = context.ParseDockerInterval("health_interval");
             service.HealthRetries           = context.ParseLong("health_retries", v => v >= 0);
             service.HealthStartPeriod       = context.ParseDockerInterval("health_start_period");
@@ -428,19 +431,20 @@ context.LogDebug($"endpoint_mode (1) = {service.EndpointMode}");
             service.Isolation               = context.ParseEnum<ServiceIsolationMode>("isolation", ServiceIsolationMode.Default);
             service.Label                   = context.ParseStringArray("label");
             service.LimitCpu                = context.ParseDouble("limit_cpu", v => v > 0);
-            service.LimitMemory             = context.ParseDockerMemorySize("limit_memory");
+            service.LimitMemory             = context.ParseDockerByteSize("limit_memory");
             service.LogDriver               = context.ParseString("log_driver");
             service.LogOpt                  = context.ParseStringArray("log_opt");
             service.Mode                    = context.ParseEnum<ServiceMode>("mode");
             service.Mount                   = ParseMounts(context, "mount");
             service.Network                 = context.ParseStringArray("network");
             service.NoHealthCheck           = context.ParseBool("no_health_check");
+            service.NoResolveImage          = context.ParseBool("no_resolve_image");
             service.PlacementPref           = context.ParseStringArray("placement_pref");
             service.Publish                 = ParsePublishPorts(context, "publish");
             service.ReadOnly                = context.ParseBool("read_only");
             service.Replicas                = context.ParseLong("replicas", v => v >= 0);
             service.ReserveCpu              = context.ParseDouble("reserve_cpu", v => v > 0);
-            service.ReserveMemory           = context.ParseDockerMemorySize("reserve_memory");
+            service.ReserveMemory           = context.ParseDockerByteSize("reserve_memory");
             service.RestartCondition        = context.ParseEnum<ServiceRestartCondition>("restart_condition", default(ServiceRestartCondition));
             service.RestartDelay            = context.ParseDockerInterval("restart_delay");
             service.RestartMaxAttempts      = context.ParseLong("restart_max_attempts", v => v >= 0);
@@ -694,7 +698,7 @@ context.LogDebug("rollback: 0");
             {
                 var jObject = item as JObject;
 
-                if (jObject != null)
+                if (jObject == null)
                 {
                     context.WriteErrorLine($"One or more of the [{argName}] array elements is not a valid bind mount specification.");
                     return mounts;
@@ -832,21 +836,11 @@ context.LogDebug("rollback: 0");
 
                 if (mount.Type == ServiceMountType.Tmpfs)
                 {
-                    // Parse [tmpfs_size]
+                    // Parse [tmpfs_size].
 
                     if (jObject.TryGetValue<string>("tmpfs_size", out value))
                     {
-                        mount.TmpfsSize = context.ParseLongValue(value, $"Invalid [mount.tmpfs_size={value}] value.");
-                    }
-
-                    if (mount.TmpfsSize == 0)
-                    {
-                        mount.TmpfsSize = null; // Treat this as unlimited
-                    }
-                    else if (mount.TmpfsSize < 0)
-                    {
-                        mount.TmpfsSize = null;
-                        context.WriteErrorLine($"Invalid [mount.tmpfs_size={value}] because negative sizes are not allowed.");
+                        mount.TmpfsSize = context.ParseDockerByteSize(value);
                     }
 
                     // Parse [tmpfs_mode]: We're going to allow 3 or 4 octal digits.
@@ -955,7 +949,7 @@ context.LogDebug("mode: 4");
             {
                 var jObject = item as JObject;
 
-                if (jObject != null)
+                if (jObject == null)
                 {
                     context.WriteErrorLine($"One or more of the [{argName}] array elements is not a valid published port specification.");
                     return publishedPorts;
@@ -1431,18 +1425,12 @@ context.LogDebug($"endpoint_mode = {service.EndpointMode}");
                 args.Add($"--generic-resource={resource}");
             }
 
-            if (service.HealthCmd.Count > 0)
+            foreach (var group in service.Groups)
             {
-                var sb = new StringBuilder();
-
-                foreach (var item in service.HealthCmd)
-                {
-                    sb.AppendWithSeparator(item);
-                }
-
-                args.Add($"--health-cmd={sb}");
+                args.Add($"--group={group}");
             }
 
+            AppendCreateOption(args, "--health-cmd", service.HealthCmd);
             AppendCreateOption(args, "--health-interval", service.HealthInterval, units: "ns");
             AppendCreateOption(args, "--health-retries", service.HealthRetries);
             AppendCreateOption(args, "--health-start-period", service.HealthStartPeriod, units: "ns");
@@ -1532,14 +1520,19 @@ context.LogDebug($"endpoint_mode = {service.EndpointMode}");
                     }
                 }
 
+                foreach (var label in mount.VolumeLabel)
+                {
+                    sb.AppendWithSeparator($"volume-label=\"{label}\"", ",");
+                }
+
                 if (mount.TmpfsSize.HasValue)
                 {
-                    sb.AppendWithSeparator($"tmpfs-size={mount.TmpfsSize.Value}", ",");
+                    sb.AppendWithSeparator($"tmpfs-size={mount.TmpfsSize}", ",");
                 }
 
                 if (!string.IsNullOrEmpty(mount.TmpfsMode))
                 {
-                    sb.AppendWithSeparator($"tmpfs-size={mount.TmpfsMode}", ",");
+                    sb.AppendWithSeparator($"tmpfs-mode={mount.TmpfsMode}", ",");
                 }
 
                 args.Add($"--mount={sb}");
@@ -1547,11 +1540,15 @@ context.LogDebug($"endpoint_mode = {service.EndpointMode}");
 
             foreach (var network in service.Network)
             {
-                args.Add($"network={network}");
+                args.Add($"--network={network}");
             }
 
             AppendCreateOption(args, "--no-healthcheck", service.NoHealthCheck);
-            AppendCreateOption(args, "--no-resolveimage", service.NoResolveImage);
+
+            if (service.NoResolveImage ?? false)
+            {
+                args.Add($"--no-resolve-image");
+            }
 
             foreach (var preference in service.PlacementPref)
             {
@@ -1580,7 +1577,7 @@ context.LogDebug($"endpoint_mode = {service.EndpointMode}");
 
             args.Add("--quiet");    // Always suppress progress.
 
-            AppendCreateOption(args, "--readonly", service.ReadOnly);
+            AppendCreateOption(args, "--read-only", service.ReadOnly);
             AppendCreateOption(args, "--replicas", service.Replicas);
             AppendCreateOption(args, "--reserve-cpu", service.ReserveCpu);
             AppendCreateOption(args, "--reserve-memory", service.ReserveMemory);

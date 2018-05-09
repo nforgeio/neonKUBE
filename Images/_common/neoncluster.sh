@@ -178,7 +178,7 @@ export NeonClusterConst_DockerApiInternalEndpoint=tcp://127.0.0.1:${NetworkPorts
 export NeonClusterConst_ClusterPublicNetwork="neon-public"
 
 # Name of the standard cluster private overlay network.
-export NeonClusterConst_ClusterPrivateNetwork="-neon-private"
+export NeonClusterConst_ClusterPrivateNetwork="neon-private"
 
 # IP endpoint of the Docker embedded DNS server.
 export NeonClusterConst_NeonClusterConst_DockerDnsEndpoint="127.0.0.11:53"

@@ -715,7 +715,7 @@ LogDebug($"ParseEnum 4");
         /// </summary>
         /// <param name="argName">The argument name.</param>
         /// <returns>The parsed memory size in bytes.</returns>
-        public long? ParseDockerMemorySize(string argName)
+        public long? ParseDockerByteSize(string argName)
         {
             if (!Arguments.TryGetValue(argName, out var jToken))
             {

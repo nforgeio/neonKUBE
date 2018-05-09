@@ -53,7 +53,7 @@ services:
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void Verify()
+        public void Basics()
         {
             // Verify that the secrets, configs, networks, container, service, and stack were created.
 
@@ -70,6 +70,10 @@ services:
 
             Assert.Single(docker.ListContainers().Where(item => item.Name == "test-container"));
             Assert.Single(docker.ListContainers().Where(item => item.Name.StartsWith("test-stack_sleeper.1.")));
+
+            // Verify that restarting a service doesn't barf.
+
+            docker.RestartService("test-service");
         }
     }
 }
