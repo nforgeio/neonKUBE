@@ -254,7 +254,7 @@ namespace NeonCli.Ansible
     //                                                  start-first
     //
     // rollback_parallelism     no          1                       maximum number of service tasks to be rolled back
-    //                                                              simultaneously (0 to roll back all at once)
+    //                                                              simultaneously (0 to rollback all at once)
     //
     // secret                   no                                  array of secrets to be be exposed to the service.
     //                                                              each secret entry looks like:
@@ -711,15 +711,7 @@ context.LogDebug("rollback: 0");
 
                 if (jObject.TryGetValue<string>("type", out value))
                 {
-                    if (Enum.TryParse<ServiceMountType>(value, true, out var mountType))
-                    {
-                        mount.Type = mountType;
-                    }
-                    else
-                    {
-                        context.WriteErrorLine($"One of the [{argName}] array elements specifies the invalid [type={value}].");
-                        return mounts;
-                    }
+                    mount.Type = context.ParseEnumValue<ServiceMountType>(value, default(ServiceMountType));
                 }
                 else
                 {
@@ -754,11 +746,23 @@ context.LogDebug("rollback: 0");
                     mount.Consistency = context.ParseEnumValue<ServiceMountConsistency>(value, default(ServiceMountConsistency), $"Invalid [mount.consistency={value}] value.");
                 }
 
-                // Parse [bind_propagation]
+                // Parse [bind] related options.
 
-                if (jObject.TryGetValue<string>("bind_propagation", out value))
+                if (mount.Type == ServiceMountType.Bind)
                 {
-                    mount.BindPropagation = context.ParseEnumValue<ServiceMountBindPropagation>(value, default(ServiceMountBindPropagation), $"Invalid [mount.bind_propagation={value}] value.");
+                    // Parse [bind_propagation]
+
+                    if (jObject.TryGetValue<string>("bind_propagation", out value))
+                    {
+                        mount.BindPropagation = context.ParseEnumValue<ServiceMountBindPropagation>(value, default(ServiceMountBindPropagation), $"Invalid [mount.bind_propagation={value}] value.");
+                    }
+                }
+                else
+                {
+                    if (jObject.ContainsKey("bind_propagation"))
+                    {
+                        context.WriteErrorLine($"[mount.bind_*] options are not allowed for [mount.type={mount.Type}].");
+                    }
                 }
 
                 // Parse the [volume] related options.
@@ -836,17 +840,23 @@ context.LogDebug("rollback: 0");
 
                 if (mount.Type == ServiceMountType.Tmpfs)
                 {
+context.LogDebug($"type 0");
                     // Parse [tmpfs_size].
 
                     if (jObject.TryGetValue<string>("tmpfs_size", out value))
                     {
-                        mount.TmpfsSize = context.ParseDockerByteSize(value);
+context.LogDebug($"type 1: size = {value}");
+                        mount.TmpfsSize = context.ParseDockerByteSizeValue(value, $"[mount.tmpfs_size={value}] is not a valid byte size.");
                     }
 
                     // Parse [tmpfs_mode]: We're going to allow 3 or 4 octal digits.
 
                     if (jObject.TryGetValue<string>("tmpfs_mode", out value))
                     {
+                        // Note that unlike the secret/config file mode, the docker cli
+                        // Tmpfs mount option doesn't seem to consider a leading "0"
+                        // to specify octal, so we'll default this to decimal encoding.
+
                         mount.TmpfsMode = ParseFileMode(context, value, $"[mount.tmpfs_mode={value}] is not a valid Linux file mode.");
                     }
                 }
@@ -1324,6 +1334,25 @@ context.LogDebug("mode: 4");
         }
 
         /// <summary>
+        /// Appends a command line option for a <c>double</c> value if it's not
+        /// <c>null</c> or set to the default.
+        /// </summary>
+        /// <param name="args">The argument list being appended.</param>
+        /// <param name="option">The command line option (with leading dashes).</param>
+        /// <param name="value">The option value.</param>
+        /// <param name="defaultValue">Optionally specifies the default value.</param>
+        private void AppendCreateOptionDouble(List<object> args, string option, double? value, double defaultValue = 0.0)
+        {
+            Covenant.Requires<ArgumentNullException>(args != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(option));
+
+            if (value.HasValue && !value.Value.Equals(defaultValue))
+            {
+                args.Add($"{option}={value.Value.ToString("0.#")}");
+            }
+        }
+
+        /// <summary>
         /// Starts a Docker service from a service definition.
         /// </summary>
         /// <param name="manager">The manager where the command will be executed.</param>
@@ -1475,7 +1504,7 @@ context.LogDebug($"endpoint_mode = {service.EndpointMode}");
             {
                 var sb = new StringBuilder();
 
-                sb.AppendWithSeparator($"type={mount.Type}", ",");
+                sb.AppendWithSeparator($"type={NeonHelper.EnumToStringUsingAttributes(mount.Type.Value)}", ",");
 
                 if (!string.IsNullOrEmpty(mount.Source))
                 {
@@ -1587,8 +1616,10 @@ context.LogDebug($"endpoint_mode = {service.EndpointMode}");
             AppendCreateOption(args, "--restart-window", service.RestartWindow, units: "ns");
             AppendCreateOption(args, "--rollback-delay", service.RollbackDelay, units: "ns");
             AppendCreateOptionEnum(args, "--rollback-failure-action", service.RollbackFailureAction);
-            AppendCreateOption(args, "--rollback-max-failure-ratio", service.RollbackMaxFailureRatio);
+            AppendCreateOptionDouble(args, "--rollback-max-failure-ratio", service.RollbackMaxFailureRatio);
             AppendCreateOption(args, "--rollback-monitor", service.RollbackMonitor, units: "ns");
+context.LogDebug($"rollback-order = {service.RollbackOrder}");
+context.LogDebug($"rollback-parallism = {service.RollbackParallism}");
             AppendCreateOptionEnum(args, "--rollback-order", service.RollbackOrder);
             AppendCreateOption(args, "--rollback-parallelism", service.RollbackParallism, 1);
 

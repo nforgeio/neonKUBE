@@ -713,6 +713,80 @@ LogDebug($"ParseEnum 4");
         /// <summary>
         /// Parses a Docker memory size.
         /// </summary>
+        /// <param name="input">The input string.</param>
+        /// <param name="errorMessage">The optional context error message to log when the input is not valid.</param>
+        /// <returns>The parsed value or <c>null</c> if the input was <c>null</c> or invalid.</returns>
+        public long? ParseDockerByteSizeValue(string input, string errorMessage = null)
+        {
+            if (string.IsNullOrEmpty(input))
+            {
+                return null;
+            }
+
+            try
+            {
+                var units = 1L;    // default unit is 1 byte
+
+                if (input.EndsWith("b", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    units = 1L;
+                    input = input.Substring(0, input.Length - 1);
+                }
+                else if (input.EndsWith("k", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    units = (long)NeonHelper.Kilo;
+                    input = input.Substring(0, input.Length - 1);
+                }
+                else if (input.EndsWith("m", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    units = (long)NeonHelper.Mega;
+                    input = input.Substring(0, input.Length - 1);
+                }
+                else if (input.EndsWith("g", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    units = (long)NeonHelper.Giga;
+                    input = input.Substring(0, input.Length - 1);
+                }
+                else if (!char.IsDigit(input.Last()))
+                {
+                    WriteErrorLine($"[{input}] has an unexpected unit.");
+                    return null;
+                }
+
+                if (long.TryParse(input, out var size))
+                {
+                    if (size < 0)
+                    {
+                        WriteErrorLine($"[{input}] cannot be negative.");
+                        return null;
+                    }
+
+                    return size * units;
+                }
+                else
+                {
+                    if (errorMessage != null)
+                    {
+                        WriteErrorLine(errorMessage);
+                    }
+
+                    return null;
+                }
+            }
+            catch
+            {
+                if (errorMessage != null)
+                {
+                    WriteErrorLine(errorMessage);
+                }
+                
+                return null;
+            }
+        }
+
+        /// <summary>
+        /// Parses a Docker memory size.
+        /// </summary>
         /// <param name="argName">The argument name.</param>
         /// <returns>The parsed memory size in bytes.</returns>
         public long? ParseDockerByteSize(string argName)

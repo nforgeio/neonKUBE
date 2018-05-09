@@ -1542,7 +1542,7 @@ namespace NeonCli.Ansible.Docker
                 return;
             }
 
-            outputArgs.Add($"{option}={update.Value.ToString("#.#")}");
+            outputArgs.Add($"{option}={update.Value.ToString("0.#")}");
 
             updateRequired = true;
         }

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_AnsibleDockerService.cs
+// FILE:	    Test_AnsibleDockerService.Create.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -19,7 +19,7 @@ using Xunit;
 
 namespace TestNeonCluster
 {
-    public class Test_AnsibleDockerService : IClassFixture<ClusterFixture>
+    public partial class Test_AnsibleDockerService : IClassFixture<ClusterFixture>
     {
         private ClusterFixture cluster;
 
@@ -32,8 +32,8 @@ namespace TestNeonCluster
             // then start, modify, and remove services.
             //
             // We're going to initialize these assets once and then
-            // only the cluster services between test methods
-            // for (hopefully) a bit better test execution performance.
+            // only the cluster services between test methods for
+            // (hopefully) a bit better test execution performance.
 
             if (cluster.LoginAndInitialize(login: null))
             {
@@ -136,69 +136,6 @@ $@"
 
             Assert.Equal(2, details.Spec.Mode.Replicated.Replicas);
         }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Update_ImageReplicas()
-        {
-            AnsiblePlayer.WorkDir = @"c:\temp\ansible";     // $todo(jeff.lill): DELETE THIS!
-
-            // Verify that we can deploy a basic service and then update
-            // the image and number of replicas.
-
-            var name = "test";
-            var playbook =
-$@"
-- name: test
-  hosts: localhost
-  tasks:
-    - name: manage service
-      neon_docker_service:
-        name: {name}
-        state: present
-        image: neoncluster/test:0
-";
-            var results = AnsiblePlayer.NeonPlay(playbook);
-            var taskResult = results.GetTaskResult("manage service");
-
-            Assert.True(taskResult.Success);
-            Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
-
-            var details = cluster.InspectService(name);
-
-            Assert.Equal(name, details.Spec.Name);
-            Assert.Equal("neoncluster/test:0", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
-            Assert.Equal(1, details.Spec.Mode.Replicated.Replicas);
-
-            // Verify that we can update the service.
-
-            playbook =
-$@"
-- name: test
-  hosts: localhost
-  tasks:
-    - name: manage service
-      neon_docker_service:
-        name: {name}
-        state: present
-        image: neoncluster/test:1
-        replicas: 2
-";
-            results = AnsiblePlayer.NeonPlay(playbook);
-            taskResult = results.GetTaskResult("manage service");
-
-            Assert.True(taskResult.Success);
-            Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
-
-            details = cluster.InspectService(name);
-
-            Assert.Equal(name, details.Spec.Name);
-            Assert.Equal("neoncluster/test:1", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
-            Assert.Equal(2, details.Spec.Mode.Replicated.Replicas);
-        }
-
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Create_Args()
@@ -847,6 +784,8 @@ $@"
         name: {name}
         state: present
         image: neoncluster/test
+        constraint:
+          - node.role==manager
         mount:
           - type: tmpfs
             target: /mnt/tmpfs
@@ -871,6 +810,129 @@ $@"
             Assert.Equal("/mnt/tmpfs", mount.Target);
             Assert.Equal(67108864L, mount.TmpfsOptions.SizeBytes);
             Assert.Equal(Convert.ToInt32("770", 8), mount.TmpfsOptions.Mode);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_Publish()
+        {
+            // Verify that we can create a service with published network ports.
+
+            //-----------------------------------------------------------------
+            // Try with some defaults.
+
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        publish:
+          - published: 8080
+            target: 80
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+
+            Assert.Single(details.Spec.EndpointSpec.Ports);
+
+            var port = details.Spec.EndpointSpec.Ports.First();
+
+            Assert.Equal(8080, port.PublishedPort);
+            Assert.Equal(80, port.TargetPort);
+            Assert.Equal(ServicePortMode.Ingress, port.PublishMode);
+            Assert.Equal(ServicePortProtocol.Tcp, port.Protocol);
+
+            //-----------------------------------------------------------------
+            // ...again, with explicit values.
+
+            cluster.RemoveService("test");
+
+            name = "test";
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        publish:
+          - published: 8080
+            target: 80
+            mode: ingress
+            protocol: tcp
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            details = cluster.InspectService(name);
+
+            Assert.Single(details.Spec.EndpointSpec.Ports);
+
+            port = details.Spec.EndpointSpec.Ports.First();
+
+            Assert.Equal(8080, port.PublishedPort);
+            Assert.Equal(80, port.TargetPort);
+            Assert.Equal(ServicePortMode.Ingress, port.PublishMode);
+            Assert.Equal(ServicePortProtocol.Tcp, port.Protocol);
+
+            //-----------------------------------------------------------------
+            // ...again, with non-default values.
+
+            cluster.RemoveService("test");
+
+            name = "test";
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        publish:
+          - published: 8080
+            target: 80
+            mode: host
+            protocol: udp
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            details = cluster.InspectService(name);
+
+            Assert.Single(details.Spec.EndpointSpec.Ports);
+
+            port = details.Spec.EndpointSpec.Ports.First();
+
+            Assert.Equal(8080, port.PublishedPort);
+            Assert.Equal(80, port.TargetPort);
+            Assert.Equal(ServicePortMode.Host, port.PublishMode);
+            Assert.Equal(ServicePortProtocol.Udp, port.Protocol);
         }
 
         [Fact]
@@ -903,6 +965,95 @@ $@"
 
             Assert.True(details.Spec.TaskTemplate.ContainerSpec.ReadOnly);
         }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_RestartPolicy()
+        {
+            // Verify that we can create a service with a various
+            // restart policy related settings.
+
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        restart_condition: on-failure
+        restart_delay: 2000ms
+        restart_max_attempts: 5
+        restart_window: 3000ms
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+            var policy = details.Spec.TaskTemplate.RestartPolicy;
+
+            Assert.Equal(ServiceRestartCondition.OnFailure, policy.Condition);
+            Assert.Equal(2000000000, policy.Delay);
+            Assert.Equal(5, policy.MaxAttempts);
+            Assert.Equal(3000000000, policy.Window);
+        }
+
+        [Fact(Skip = "docker bug?")]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_RollbackConfig()
+        {
+            // $todo(jeff.lill):
+            //
+            // This test is failing due to an apparent Docker bug:
+            //
+            //      https://github.com/moby/moby/issues/37027
+
+            // Verify that we can create a service with a various
+            // rollback configuration related settings.
+
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        rollback_delay: 2
+        rollback_failure_action: continue
+        rollback_max_failure_ratio: 0.5
+        rollback_monitor: 3000ms
+        rollback_order: start-first
+        rollback_parallism: 2
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+            var config = details.Spec.RollbackConfig;
+
+            Assert.Equal(2000000000, config.Delay);
+            Assert.Equal(ServiceRollbackFailureAction.Continue, config.FailureAction);
+            Assert.Equal(0.5, config.MaxFailureRatio);
+            Assert.Equal(3000000000, config.Monitor);
+            Assert.Equal(ServiceRollbackOrder.StartFirst, config.Order);
+            Assert.Equal(2, config.Parallelism);
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Create_Network()
@@ -978,6 +1129,108 @@ $@"
             Assert.Equal(TestHelper.TestUID, secret.File.UID);
             Assert.Equal(TestHelper.TestGID, secret.File.GID);
             Assert.Equal(Convert.ToInt32("444", 8), secret.File.Mode);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_StopGracePeriod()
+        {
+            // Verify that we can create a service customizing the stop grace period.
+
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        stop_grace_period: 5s
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+
+            Assert.Equal(5000000000L, details.Spec.TaskTemplate.ContainerSpec.StopGracePeriod);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_StopSignal()
+        {
+            // Verify that we can create a service customizing the stop signal.
+
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        stop_signal: SIGTERM
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+
+            Assert.Equal("SIGTERM", details.Spec.TaskTemplate.ContainerSpec.StopSignal);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_UpdateConfig()
+        {
+            var name = "test";
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {name}
+        state: present
+        image: neoncluster/test
+        update_delay: 2
+        update_failure_action: continue
+        update_max_failure_ratio: 0.5
+        update_monitor: 3000ms
+        update_order: start-first
+        update_parallelism: 2
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+
+            var details = cluster.InspectService(name);
+            var config = details.Spec.UpdateConfig;
+
+            Assert.Equal(2000000000, config.Delay);
+            Assert.Equal(ServiceUpdateFailureAction.Continue, config.FailureAction);
+            Assert.Equal(0.5, config.MaxFailureRatio);
+            Assert.Equal(3000000000, config.Monitor);
+            Assert.Equal(ServiceUpdateOrder.StartFirst, config.Order);
+            Assert.Equal(2, config.Parallelism);
         }
     }
 }
