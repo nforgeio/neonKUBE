@@ -1290,7 +1290,8 @@ namespace Neon.Common
         /// </summary>
         /// <typeparam name="TEnum">The enumeration type.</typeparam>
         /// <param name="input">The input string.</param>
-        /// <returns>The parsed value.</returns>
+        /// <param name="output">Returns as the parsed value.</param>
+        /// <returns><c>true</c> if the value was parsed.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="input"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="input"/> is not valid.</exception>
         public static bool TryParseEnumUsingAttributes<TEnum>(string input, out TEnum output)

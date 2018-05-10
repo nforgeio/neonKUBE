@@ -21,6 +21,9 @@ namespace TestNeonCluster
 {
     public partial class Test_AnsibleDockerService : IClassFixture<ClusterFixture>
     {
+        private const string serviceName = "test";
+        private const string serviceImage = "neoncluster/test:0";
+
         private ClusterFixture cluster;
 
         public Test_AnsibleDockerService(ClusterFixture cluster)
@@ -52,67 +55,10 @@ namespace TestNeonCluster
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Create_Remove()
-        {
-            // Verify that we can deploy a basic service.
-
-            var name = "test";
-            var playbook =
-$@"
-- name: test
-  hosts: localhost
-  tasks:
-    - name: manage service
-      neon_docker_service:
-        name: {name}
-        state: present
-        image: neoncluster/test        
-";
-            var results = AnsiblePlayer.NeonPlay(playbook);
-            var taskResult = results.GetTaskResult("manage service");
-
-            Assert.True(taskResult.Success);
-            Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
-
-            // Verify that [state=absent] removes the service.
-
-            playbook =
-$@"
-- name: test
-  hosts: localhost
-  tasks:
-    - name: manage service
-      neon_docker_service:
-        name: {name}
-        state: absent
-        image: neoncluster/test
-";
-            results = AnsiblePlayer.NeonPlay(playbook);
-            taskResult = results.GetTaskResult("manage service");
-
-            Assert.True(taskResult.Success);
-            Assert.True(taskResult.Changed);
-            Assert.Empty(cluster.ListServices().Where(s => s.Name == name));
-
-            // Verify that removing the service again doesn't change anything
-            // because it's already been removed.
-
-            results = AnsiblePlayer.NeonPlay(playbook);
-            taskResult = results.GetTaskResult("manage service");
-
-            Assert.True(taskResult.Success);
-            Assert.False(taskResult.Changed);
-            Assert.Empty(cluster.ListServices().Where(s => s.Name == name));
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Create_Replicas()
         {
             // Verify that we can deploy more than one replica.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -120,9 +66,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         replicas: 2
 ";
             var results = AnsiblePlayer.NeonPlay(playbook);
@@ -130,19 +76,19 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
 
             Assert.Equal(2, details.Spec.Mode.Replicated.Replicas);
         }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Create_Args()
         {
             // Verify that we can specify service arguments.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -150,9 +96,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         args:
           - one
           - two
@@ -162,9 +108,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
 
             Assert.Equal(new string[] { "one", "two" }, details.Spec.TaskTemplate.ContainerSpec.Args);
         }
@@ -175,7 +121,6 @@ $@"
         {
             // Verify that we can add Docker configs.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -183,9 +128,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         config:
           - source: config-1
             target: config
@@ -198,9 +143,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
             var config = details.Spec.TaskTemplate.ContainerSpec.Configs.FirstOrDefault();
 
             Assert.NotNull(config);
@@ -217,7 +162,6 @@ $@"
         {
             // Verify that we can add placement constraints.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -225,9 +169,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         constraint:
           - node.role==manager
           - node.role!=worker
@@ -237,9 +181,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
             var constraints = details.Spec.TaskTemplate.Placement.Constraints;
 
             Assert.NotNull(constraints);
@@ -254,7 +198,6 @@ $@"
         {
             // Verify that we can add container labels.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -262,9 +205,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         container_label:
           - foo=bar
 ";
@@ -273,9 +216,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
             var labels = details.Spec.TaskTemplate.ContainerSpec.Labels;
 
             Assert.Single(labels);
@@ -288,7 +231,6 @@ $@"
         {
             // Verify that we can manage container DNS settings.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -296,9 +238,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         dns:
           - 8.8.8.8
           - 8.8.4.4
@@ -312,9 +254,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
             var dnsConfig = details.Spec.TaskTemplate.ContainerSpec.DNSConfig;
 
             Assert.Equal(2, dnsConfig.Nameservers.Count);
@@ -331,7 +273,6 @@ $@"
         {
             // Verify that we can configure the service endpoint mode.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -339,9 +280,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         endpoint_mode: dnsrr
 ";
             var results = AnsiblePlayer.NeonPlay(playbook);
@@ -349,9 +290,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
 
             Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.EndpointSpec.Mode);
         }
@@ -362,7 +303,6 @@ $@"
         {
             // Verify that we can override the service image entrypoint.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -370,9 +310,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         entrypoint:
           - sleep
           - 7777777
@@ -382,9 +322,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
 
             Assert.Equal(new string[] { "sleep", "7777777" }, details.Spec.TaskTemplate.ContainerSpec.Command);
         }
@@ -395,7 +335,6 @@ $@"
         {
             // Verify that we can add environment variables.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -403,9 +342,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         env:
           - FOO=BAR
           - SUDO_USER
@@ -415,9 +354,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
             var env     = details.Spec.TaskTemplate.ContainerSpec.Env;
 
             Assert.Equal(2, env.Count);
@@ -431,7 +370,6 @@ $@"
         {
             // Verify that we can create a service customizing the container user and group.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -439,9 +377,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         user: {TestHelper.TestUID}
         group:
           - {TestHelper.TestGID}
@@ -451,9 +389,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
 
             Assert.Equal(TestHelper.TestUID, details.Spec.TaskTemplate.ContainerSpec.User);
             Assert.Equal(new string[] { TestHelper.TestGID }, details.Spec.TaskTemplate.ContainerSpec.Groups);
@@ -466,7 +404,6 @@ $@"
             // Verify that we can create a service that customizes
             // the health check related properties.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -474,9 +411,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         health_cmd: echo OK
         health_interval: 1000000000ns
         health_retries: 3
@@ -488,9 +425,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
 
             Assert.Equal(new string[] { "CMD-SHELL", "echo OK" }, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Test);
             Assert.Equal(1000000000L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Interval);
@@ -500,9 +437,8 @@ $@"
 
             // Redeploy the service disabling health checks.
 
-            cluster.RemoveService(name);
+            cluster.RemoveService(serviceName);
 
-            name = "test";
             playbook =
 $@"
 - name: test
@@ -510,9 +446,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         no_health_check: yes
 ";
             results = AnsiblePlayer.NeonPlay(playbook);
@@ -520,9 +456,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            details = cluster.InspectService(name);
+            details = cluster.InspectService(serviceName);
 
             Assert.Equal(new string[] { "NONE" }, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Test);
         }
@@ -534,7 +470,6 @@ $@"
             // Verify that we can create a service that customizes
             // the container DNS [/etc/hosts] file.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -542,9 +477,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         host: 
           - ""foo.com:1.1.1.1""
           - ""bar.com:2.2.2.2""
@@ -554,9 +489,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
 
             Assert.Equal(2, details.Spec.TaskTemplate.ContainerSpec.Hosts.Count());
             Assert.Contains("1.1.1.1 foo.com", details.Spec.TaskTemplate.ContainerSpec.Hosts);
@@ -573,7 +508,6 @@ $@"
 
             cluster.ClearImages();
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -581,9 +515,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test:0
+        image: {serviceImage}
         no_resolve_image: yes
 ";
             var results = AnsiblePlayer.NeonPlay(playbook);
@@ -599,7 +533,6 @@ $@"
             // Verify that we can create a service that customizes
             // the container resource limits.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -607,9 +540,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         limit_cpu: 1.5
         limit_memory: 64m
 ";
@@ -618,9 +551,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
 
             Assert.Equal(1500000000L, details.Spec.TaskTemplate.Resources.Limits.NanoCPUs);
             Assert.Equal(67108864L, details.Spec.TaskTemplate.Resources.Limits.MemoryBytes);
@@ -633,7 +566,6 @@ $@"
             // Verify that we can create a service that customizes
             // the container resource reservations.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -641,9 +573,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         reserve_cpu: 1.5
         reserve_memory: 64m
 ";
@@ -652,9 +584,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
 
             Assert.Equal(1500000000L, details.Spec.TaskTemplate.Resources.Reservations.NanoCPUs);
             Assert.Equal(67108864L, details.Spec.TaskTemplate.Resources.Reservations.MemoryBytes);
@@ -670,7 +602,6 @@ $@"
             //-----------------------------------------------------------------
             // VOLUME mount:
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -678,9 +609,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         mount:
           - type: volume
             source: test-volume
@@ -695,9 +626,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
             var mounts = details.Spec.TaskTemplate.ContainerSpec.Mounts;
 
             Assert.Single(mounts);
@@ -719,7 +650,6 @@ $@"
 
             cluster.RemoveService("test");
 
-            name = "test";
             playbook =
 $@"
 - name: test
@@ -727,9 +657,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         mount:
           - type: bind
             source: /tmp
@@ -743,9 +673,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            details = cluster.InspectService(name);
+            details = cluster.InspectService(serviceName);
             mounts = details.Spec.TaskTemplate.ContainerSpec.Mounts;
 
             Assert.Single(mounts);
@@ -773,7 +703,6 @@ $@"
 
             cluster.RemoveService("test");
 
-            name = "test";
             playbook =
 $@"
 - name: test
@@ -781,9 +710,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         constraint:
           - node.role==manager
         mount:
@@ -797,9 +726,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            details = cluster.InspectService(name);
+            details = cluster.InspectService(serviceName);
             mounts = details.Spec.TaskTemplate.ContainerSpec.Mounts;
 
             Assert.Single(mounts);
@@ -821,7 +750,6 @@ $@"
             //-----------------------------------------------------------------
             // Try with some defaults.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -829,9 +757,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         publish:
           - published: 8080
             target: 80
@@ -841,9 +769,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
 
             Assert.Single(details.Spec.EndpointSpec.Ports);
 
@@ -859,7 +787,6 @@ $@"
 
             cluster.RemoveService("test");
 
-            name = "test";
             playbook =
 $@"
 - name: test
@@ -867,9 +794,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         publish:
           - published: 8080
             target: 80
@@ -881,9 +808,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            details = cluster.InspectService(name);
+            details = cluster.InspectService(serviceName);
 
             Assert.Single(details.Spec.EndpointSpec.Ports);
 
@@ -899,7 +826,6 @@ $@"
 
             cluster.RemoveService("test");
 
-            name = "test";
             playbook =
 $@"
 - name: test
@@ -907,9 +833,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         publish:
           - published: 8080
             target: 80
@@ -921,9 +847,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            details = cluster.InspectService(name);
+            details = cluster.InspectService(serviceName);
 
             Assert.Single(details.Spec.EndpointSpec.Ports);
 
@@ -941,7 +867,6 @@ $@"
         {
             // Verify that we can create a service with a read-only file system.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -949,9 +874,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         read_only: 1
 ";
             var results = AnsiblePlayer.NeonPlay(playbook);
@@ -959,9 +884,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
 
             Assert.True(details.Spec.TaskTemplate.ContainerSpec.ReadOnly);
         }
@@ -973,7 +898,6 @@ $@"
             // Verify that we can create a service with a various
             // restart policy related settings.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -981,9 +905,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         restart_condition: on-failure
         restart_delay: 2000ms
         restart_max_attempts: 5
@@ -994,9 +918,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
             var policy = details.Spec.TaskTemplate.RestartPolicy;
 
             Assert.Equal(ServiceRestartCondition.OnFailure, policy.Condition);
@@ -1018,7 +942,6 @@ $@"
             // Verify that we can create a service with a various
             // rollback configuration related settings.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -1026,9 +949,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         rollback_delay: 2
         rollback_failure_action: continue
         rollback_max_failure_ratio: 0.5
@@ -1041,9 +964,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
             var config = details.Spec.RollbackConfig;
 
             Assert.Equal(2000000000, config.Delay);
@@ -1060,7 +983,6 @@ $@"
         {
             // Verify that services can reference networks.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -1068,9 +990,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         network:
           - network-1
           - network-2
@@ -1080,9 +1002,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
             var network = details.Spec.TaskTemplate.Networks;
 
             Assert.NotNull(network);
@@ -1095,7 +1017,6 @@ $@"
         {
             // Verify that we can references secrets.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -1103,9 +1024,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         secret:
           - source: secret-1
             target: secret
@@ -1118,9 +1039,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
             var secret = details.Spec.TaskTemplate.ContainerSpec.Secrets.FirstOrDefault();
 
             Assert.NotNull(secret);
@@ -1137,7 +1058,6 @@ $@"
         {
             // Verify that we can create a service customizing the stop grace period.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -1145,9 +1065,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         stop_grace_period: 5s
 ";
             var results = AnsiblePlayer.NeonPlay(playbook);
@@ -1155,9 +1075,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
 
             Assert.Equal(5000000000L, details.Spec.TaskTemplate.ContainerSpec.StopGracePeriod);
         }
@@ -1168,7 +1088,6 @@ $@"
         {
             // Verify that we can create a service customizing the stop signal.
 
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -1176,9 +1095,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         stop_signal: SIGTERM
 ";
             var results = AnsiblePlayer.NeonPlay(playbook);
@@ -1186,9 +1105,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
 
             Assert.Equal("SIGTERM", details.Spec.TaskTemplate.ContainerSpec.StopSignal);
         }
@@ -1197,7 +1116,6 @@ $@"
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Create_UpdateConfig()
         {
-            var name = "test";
             var playbook =
 $@"
 - name: test
@@ -1205,9 +1123,9 @@ $@"
   tasks:
     - name: manage service
       neon_docker_service:
-        name: {name}
+        name: {serviceName}
         state: present
-        image: neoncluster/test
+        image: {serviceImage}
         update_delay: 2
         update_failure_action: continue
         update_max_failure_ratio: 0.5
@@ -1220,9 +1138,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == name));
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(name);
+            var details = cluster.InspectService(serviceName);
             var config = details.Spec.UpdateConfig;
 
             Assert.Equal(2000000000, config.Delay);

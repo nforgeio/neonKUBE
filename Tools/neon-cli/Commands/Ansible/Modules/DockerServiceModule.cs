@@ -1731,11 +1731,22 @@ context.LogDebug($"update: 0 [new-image={newServiceSpec.Image}");
             // be able to compare the current and expected state and generate an update command
             // if required.
 
+var networkInfo = networksResponse == null ? "NULL" : "OK";
+context.LogDebug($"update: 1 [network = {networkInfo}]");
             var currentServiceSpec = DockerServiceSpec.FromDockerInspect(context, currentDetails, networksResponse.OutputText);
-            var updateCmdArgs      = currentServiceSpec.DockerUpdateCommandArgs(context, newServiceSpec).ToArray();
+context.LogDebug($"update: 1-b");
+            var updateCmdArgs      = currentServiceSpec.DockerUpdateCommandArgs(context, newServiceSpec);
+if (updateCmdArgs == null)
+{
+    context.LogDebug($"update: 1-c: args = NULL");
+}
+else
+{
+    context.LogDebug($"update: 1-c: args = {NeonHelper.NormalizeExecArgs(updateCmdArgs)}");
+}
 
             context.LogDebug("update: 1");
-            if (currentServiceSpec.Equals(newServiceSpec))
+            if (updateCmdArgs == null)
             {
 context.LogDebug("update: 2");
                 if (force)

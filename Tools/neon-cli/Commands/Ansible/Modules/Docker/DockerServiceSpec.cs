@@ -487,10 +487,14 @@ namespace NeonCli.Ansible.Docker
             var currentSet = new Dictionary<string, bool>();
             var updateSet  = new Dictionary<string, bool>();
 
-            for (int i = 0; i < current.Count; i++)
+            foreach (var item in current)
             {
-                currentSet[current[i].ToString()] = true;
-                updateSet[update[i].ToString()] = true;
+                currentSet[item.ToString()] = true;
+            }
+
+            foreach (var item in update)
+            {
+                updateSet[item.ToString()] = true;
             }
 
             foreach (var item in currentSet.Keys)
@@ -1149,7 +1153,7 @@ namespace NeonCli.Ansible.Docker
                 secret.Target = item.File.Name;
                 secret.UID    = item.File.UID;
                 secret.GID    = item.File.GID;
-                secret.Mode   = Convert.ToString(item.File.Mode, 8);
+                secret.Mode   = "0" + Convert.ToString(item.File.Mode, 8);  // Prepend "0" to indicate octal.
 
                 this.Secret.Add(secret);
             }
@@ -1162,7 +1166,7 @@ namespace NeonCli.Ansible.Docker
                 config.Target = item.File.Name;
                 config.UID    = item.File.UID;
                 config.GID    = item.File.GID;
-                config.Mode    = Convert.ToString(item.File.Mode, 8);
+                config.Mode   = "0" + Convert.ToString(item.File.Mode, 8);  // Prepend "0" to indicate octal.
 
                 this.Config.Add(config);
             }
@@ -1402,20 +1406,31 @@ namespace NeonCli.Ansible.Docker
         /// </remarks>
         private void AppendUpdateListArgs<T>(ModuleContext context, List<string> outputArgs, string option, List<T> current, List<T> update, Func<T, string> nameExtractor = null)
         {
+var cur = new List<string>();
+foreach (var item in current) cur.Add(item.ToString());
+var up = new List<string>();
+foreach (var item in update) up.Add(item.ToString());
+context.LogDebug($"update-list[{option}]: current = {NeonHelper.NormalizeExecArgs(cur.ToArray())}");
+context.LogDebug($"update-list[{option}]: update  = {NeonHelper.NormalizeExecArgs(up.ToArray())}");
             if (AreEquivalent(current, update))
             {
                 return; // No changes detected.
             }
+context.LogDebug($"update-list[{option}]: 1");
 
             // Append options to remove current service state that's not desired for the update.
 
             var currentSet = new Dictionary<string, T>();
-            var updateSet = new Dictionary<string, T>();
+            var updateSet  = new Dictionary<string, T>();
 
-            for (int i = 0; i < current.Count; i++)
+            foreach (var item in current)
             {
-                currentSet[GetStateName(current[i], nameExtractor)] = current[i];
-                updateSet[GetStateName(update[i], nameExtractor)] = update[i];
+                currentSet[GetStateName(item, nameExtractor)] = item;
+            }
+
+            foreach (var item in update)
+            {
+                updateSet[GetStateName(item, nameExtractor)] = item;
             }
 
             // Generate a [*-rm] option to remove state that exists in the current service
@@ -1424,21 +1439,11 @@ namespace NeonCli.Ansible.Docker
             foreach (var currentItem in currentSet.Values)
             {
                 var stateName = GetStateName(currentItem, nameExtractor);
-                var remove = false;
-
-                if (updateSet.TryGetValue(stateName, out var updateItem))
-                {
-                    remove = current.ToString() != updateItem.ToString();
-                }
-                else
-                {
-                    remove = true;
-                }
+                var remove    = !updateSet.TryGetValue(stateName, out var updateItem);
 
                 if (remove)
                 {
                     outputArgs.Add($"{option}-rm={stateName}");
-
                     updateRequired = true;
                 }
             }
@@ -1449,7 +1454,7 @@ namespace NeonCli.Ansible.Docker
             foreach (var updateItem in updateSet.Values)
             {
                 var stateName = GetStateName(updateItem, nameExtractor);
-                var add = false;
+                var add       = false;
 
                 if (currentSet.TryGetValue(stateName, out var currentItem))
                 {
@@ -1491,18 +1496,22 @@ namespace NeonCli.Ansible.Docker
         {
             // Return if no change is detected.
 
+context.LogDebug($"append-update-string[{option}]: current={current} update={update}");
             if (current == update)
             {
+context.LogDebug($"append-update-string-0");
                 return;
             }
 
             // ...or if there's no update value.
 
-            if (!string.IsNullOrEmpty(update))
+            if (string.IsNullOrEmpty(update))
             {
+context.LogDebug($"append-update-string-1");
                 return;
             }
 
+context.LogDebug($"append-update-string-2");
             outputArgs.Add($"{option}={update}");
 
             updateRequired = true;
@@ -1756,11 +1765,11 @@ namespace NeonCli.Ansible.Docker
         /// <param name="context">The module context.</param>
         /// <param name="update">The required new service state.</param>
         /// <returns>
-        /// The <b>docker service update</b> command arguments as a list.  
+        /// The <b>docker service update</b> command arguments as an array.  
         /// This does not include the <b>docker service update</b> prefix
         /// or <c>null</c> if no service update required.
         /// </returns>
-        public List<string> DockerUpdateCommandArgs(ModuleContext context, DockerServiceSpec update)
+        public string[] DockerUpdateCommandArgs(ModuleContext context, DockerServiceSpec update)
         {
             var outputArgs = new List<string>();
 
@@ -1775,6 +1784,10 @@ namespace NeonCli.Ansible.Docker
             {
                 outputArgs.Append("--with-registry-auth");
             }
+
+            // The code and method calls below will set this to TRUE when changes are detected.
+
+            updateRequired = false;
 
             // Append arguments that update the service properties.
 
@@ -1800,9 +1813,9 @@ namespace NeonCli.Ansible.Docker
                 }
 
                 outputArgs.Add(sb.ToString());
-            }
 
-            updateRequired = false;     // The calls below will set this to TRUE when changes are detected.
+                updateRequired = true;
+            }
 
             AppendUpdateListArgs(context, outputArgs, "--config", Config, update.Config, state => state.Source);
             AppendUpdateListArgs(context, outputArgs, "--constraint", Constraint, update.Constraint, SimpleNameExtractor);
@@ -1831,6 +1844,7 @@ namespace NeonCli.Ansible.Docker
                 if (update.Command.Count == 0)
                 {
                     context.WriteErrorLine("It is not possible to remove an existing [--entrypoint] override.");
+                    return null;
                 }
                 else
                 {
@@ -1856,7 +1870,9 @@ namespace NeonCli.Ansible.Docker
             AppendUpdateDurationArgs(context, outputArgs, "--health-timeout", HealthTimeout, update.HealthTimeout);
             AppendUpdateListArgs(context, outputArgs, "--host", Host, update.Host);
             AppendUpdateStringArgs(context, outputArgs, "--hostname", Hostname, update.Hostname);
-            AppendUpdateStringArgs(context, outputArgs, "--image", Image, update.Image);
+context.LogDebug($"update-args: current image = {Image}");
+context.LogDebug($"update-args: update image = {update.Image}");
+            AppendUpdateStringArgs(context, outputArgs, "--image", ImageWithoutSHA, update.Image);
             AppendUpdateEnumArgs(context, outputArgs, "--isolation", Isolation, update.Isolation);
             AppendUpdateListArgs(context, outputArgs, "--label", Label, update.Label);
             AppendUpdateDoubleArgs(context, outputArgs, "--limit-cpu", LimitCpu, update.LimitCpu);
@@ -1902,7 +1918,7 @@ namespace NeonCli.Ansible.Docker
             AppendUpdateDurationArgs(context, outputArgs, "--rollback-monitor", RollbackMonitor, update.RollbackMonitor);
             AppendUpdateEnumArgs(context, outputArgs, "--rollback-order", RollbackOrder, update.RollbackOrder);
             AppendUpdateLongArgs(context, outputArgs, "--rollback-parallelism", RollbackParallism, update.RollbackParallism);
-            AppendUpdateListArgs(context, outputArgs, "--secret", Secret, update.Secret);
+            AppendUpdateListArgs(context, outputArgs, "--secret", Secret, update.Secret, secret => secret.Source);
             AppendUpdateDurationArgs(context, outputArgs, "--stop-grace-period", StopGracePeriod, update.StopGracePeriod);
             AppendUpdateStringArgs(context, outputArgs, "--stop-signal", StopSignal, update.StopSignal);
             AppendUpdateBoolArgs(context, outputArgs, "--tty", TTY, update.TTY);
@@ -1921,7 +1937,7 @@ namespace NeonCli.Ansible.Docker
 #endif
             outputArgs.Add(Name);
 
-            return updateRequired ? outputArgs : null;
+            return updateRequired ? outputArgs.ToArray() : null;
         }
 
         /// <inheritdoc/>
