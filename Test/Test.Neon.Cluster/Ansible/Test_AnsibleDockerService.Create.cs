@@ -17,6 +17,11 @@ using Neon.Xunit.Cluster;
 
 using Xunit;
 
+// $todo(jeff.lill):
+//
+// We could add tests to verify that CHECK-MODE doesn't
+// actually make any changes.
+
 namespace TestNeonCluster
 {
     public partial class Test_AnsibleDockerService : IClassFixture<ClusterFixture>
@@ -449,7 +454,7 @@ $@"
         name: {serviceName}
         state: present
         image: {serviceImage}
-        no_health_check: yes
+        no_healthcheck: yes
 ";
             results = AnsiblePlayer.NeonPlay(playbook);
             taskResult = results.GetTaskResult("manage service");
@@ -492,10 +497,11 @@ $@"
             Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
             var details = cluster.InspectService(serviceName);
+            var hosts = details.Spec.TaskTemplate.ContainerSpec.Hosts;
 
-            Assert.Equal(2, details.Spec.TaskTemplate.ContainerSpec.Hosts.Count());
-            Assert.Contains("1.1.1.1 foo.com", details.Spec.TaskTemplate.ContainerSpec.Hosts);
-            Assert.Contains("2.2.2.2 bar.com", details.Spec.TaskTemplate.ContainerSpec.Hosts);
+            Assert.Equal(2, hosts.Count);
+            Assert.Contains("1.1.1.1 foo.com", hosts);
+            Assert.Contains("2.2.2.2 bar.com", hosts);
         }
 
         [Fact]
@@ -503,10 +509,8 @@ $@"
         public void Create_NoResolveImage()
         {
             // Verify that [no_resolve_image: true] doesn't barf.
-            // This doesn't actually verify that the the setting
-            // works but I tested that manually.
-
-            cluster.ClearImages();
+            // This doesn't actually verify that the setting works
+            // but I tested that manually.
 
             var playbook =
 $@"
@@ -524,6 +528,7 @@ $@"
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);    // This always reports as TRUE
         }
 
         [Fact]
@@ -554,9 +559,10 @@ $@"
             Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
             var details = cluster.InspectService(serviceName);
+            var limits = details.Spec.TaskTemplate.Resources.Limits;
 
-            Assert.Equal(1500000000L, details.Spec.TaskTemplate.Resources.Limits.NanoCPUs);
-            Assert.Equal(67108864L, details.Spec.TaskTemplate.Resources.Limits.MemoryBytes);
+            Assert.Equal(1500000000L, limits.NanoCPUs);
+            Assert.Equal(67108864L, limits.MemoryBytes);
         }
 
         [Fact]
@@ -587,9 +593,10 @@ $@"
             Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
             var details = cluster.InspectService(serviceName);
+            var reservations = details.Spec.TaskTemplate.Resources.Reservations;
 
-            Assert.Equal(1500000000L, details.Spec.TaskTemplate.Resources.Reservations.NanoCPUs);
-            Assert.Equal(67108864L, details.Spec.TaskTemplate.Resources.Reservations.MemoryBytes);
+            Assert.Equal(1500000000L, reservations.NanoCPUs);
+            Assert.Equal(67108864L, reservations.MemoryBytes);
         }
 
         [Fact]
@@ -929,7 +936,7 @@ $@"
             Assert.Equal(3000000000, policy.Window);
         }
 
-        [Fact(Skip = "docker bug?")]
+        [Fact(Skip = "DOCKER BUG: https://github.com/moby/moby/issues/37027")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Create_RollbackConfig()
         {

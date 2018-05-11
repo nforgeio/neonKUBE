@@ -3,34 +3,16 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
+using Neon.Common;
+using Neon.Docker;
+using Newtonsoft.Json.Linq;
 using System;
 using System.Collections.Generic;
-using System.ComponentModel;
-using System.Diagnostics;
 using System.Diagnostics.Contracts;
-using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
-using System.Runtime.Serialization;
-using System.Security.Cryptography;
 using System.Text;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Consul;
-using Newtonsoft;
-using Newtonsoft.Json;
-using Newtonsoft.Json.Linq;
-
-using ICSharpCode.SharpZipLib.Zip;
-
-using Neon.Cluster;
-using Neon.Cryptography;
-using Neon.Common;
-using Neon.Docker;
-using Neon.IO;
-using Neon.Net;
 
 namespace NeonCli.Ansible.Docker
 {
@@ -56,7 +38,7 @@ namespace NeonCli.Ansible.Docker
 
             if (Mode.HasValue)
             {
-                sb.AppendWithSeparator($"mode={Mode.Value}", ",");
+                sb.AppendWithSeparator($"mode={NeonHelper.EnumToStringUsingAttributes(Mode.Value)}", ",");
             }
             else
             {
@@ -65,7 +47,7 @@ namespace NeonCli.Ansible.Docker
 
             if (Protocol.HasValue)
             {
-                sb.AppendWithSeparator($"protocol={Protocol.Value}", ",");
+                sb.AppendWithSeparator($"protocol={NeonHelper.EnumToStringUsingAttributes(Protocol.Value)}", ",");
             }
             else
             {
@@ -131,7 +113,7 @@ namespace NeonCli.Ansible.Docker
 
             if (Type.HasValue)
             {
-                sb.AppendWithSeparator($"type={Type.Value}", ",");
+                sb.AppendWithSeparator($"type={NeonHelper.EnumToStringUsingAttributes(Type.Value)}", ",");
             }
             else
             {
@@ -159,7 +141,7 @@ namespace NeonCli.Ansible.Docker
 
             if (Consistency.HasValue)
             {
-                sb.AppendWithSeparator($"consistency={Consistency.Value}", ",");
+                sb.AppendWithSeparator($"consistency={NeonHelper.EnumToStringUsingAttributes(Consistency.Value)}", ",");
             }
             else
             {
@@ -168,7 +150,7 @@ namespace NeonCli.Ansible.Docker
 
             if (BindPropagation.HasValue)
             {
-                sb.AppendWithSeparator($"bind-propagation={BindPropagation.Value}", ",");
+                sb.AppendWithSeparator($"bind-propagation={NeonHelper.EnumToStringUsingAttributes(BindPropagation.Value)}", ",");
             }
             else
             {
@@ -544,12 +526,6 @@ namespace NeonCli.Ansible.Docker
 
         //---------------------------------------------------------------------
         // Instance members
-
-        /// <summary>
-        /// Set to <c>true</c> when one of the argument append methods detected 
-        /// a change and appended some values.
-        /// </summary>
-        private bool updateRequired = false;
 
         /// <summary>
         /// Constructor.
@@ -1125,7 +1101,7 @@ namespace NeonCli.Ansible.Docker
 
                 var fields = item.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
-                this.Host.Add($"{fields[0]}:{fields[1]}");
+                this.Host.Add($"{fields[1]}:{fields[0]}");
             }
 
             var dnsConfig = containerSpec.DNSConfig;
@@ -1181,7 +1157,7 @@ namespace NeonCli.Ansible.Docker
             // I'm ignoring the [Limits.GenericResources] and [Reservation.GenericResources]
             // properties right now.
 
-            const long oneBillion = 1000000000L;
+            const double oneBillion = 1000000000.0;
 
             var resources = taskTemplate.Resources;
             var limits    = resources.Limits;
@@ -1372,9 +1348,6 @@ namespace NeonCli.Ansible.Docker
         /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
         /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
         /// </para>
-        /// <note>
-        /// This set <see cref="updateRequired"/><c>=true</c> if state change was detected.
-        /// </note>
         /// </summary>
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
@@ -1387,6 +1360,7 @@ namespace NeonCli.Ansible.Docker
         /// the service from the item value.  This deefaults to the entire item value if
         /// no extractor is specified.
         /// </param>
+        /// <returns><c>true</c> if an update is required for these settings.</returns>
         /// <remarks>
         /// <para>
         /// The <c>docker service update</c> commands allows for individual items like
@@ -1404,8 +1378,10 @@ namespace NeonCli.Ansible.Docker
         /// (e.g. the target port for a <b>--publish-rm port</b> option).
         /// </para>
         /// </remarks>
-        private void AppendUpdateListArgs<T>(ModuleContext context, List<string> outputArgs, string option, List<T> current, List<T> update, Func<T, string> nameExtractor = null)
+        private bool AppendUpdateListArgs<T>(ModuleContext context, List<string> outputArgs, string option, List<T> current, List<T> update, Func<T, string> nameExtractor = null)
         {
+            var updated = false;
+
 var cur = new List<string>();
 foreach (var item in current) cur.Add(item.ToString());
 var up = new List<string>();
@@ -1414,11 +1390,11 @@ context.LogDebug($"update-list[{option}]: current = {NeonHelper.NormalizeExecArg
 context.LogDebug($"update-list[{option}]: update  = {NeonHelper.NormalizeExecArgs(up.ToArray())}");
             if (AreEquivalent(current, update))
             {
-                return; // No changes detected.
+                return updated; // No changes detected.
             }
 context.LogDebug($"update-list[{option}]: 1");
 
-            // Append options to remove current service state that's not desired for the update.
+            // Initialize dictionaries with the current and desired state.
 
             var currentSet = new Dictionary<string, T>();
             var updateSet  = new Dictionary<string, T>();
@@ -1444,34 +1420,44 @@ context.LogDebug($"update-list[{option}]: 1");
                 if (remove)
                 {
                     outputArgs.Add($"{option}-rm={stateName}");
-                    updateRequired = true;
+                    updated = true;
                 }
             }
 
-            // Generate a [*-add] option to add state that exists in the updated service
+            // Generate an [*-add] option to add state that exists in the updated service
             // or will change for the updated service.
 
+context.LogDebug($"update-list[{option}]: 2");
             foreach (var updateItem in updateSet.Values)
             {
+context.LogDebug($"update-list[{option}]: 3: updateItem = {updateItem}");
                 var stateName = GetStateName(updateItem, nameExtractor);
                 var add       = false;
 
+context.LogDebug($"update-list[{option}]: 4: stateName = {stateName}");
                 if (currentSet.TryGetValue(stateName, out var currentItem))
                 {
-                    add = current.ToString() != updateItem.ToString();
+context.LogDebug($"update-list[{option}]: 5: current = {currentItem}");
+context.LogDebug($"update-list[{option}]: 6: update  = {updateItem}");
+                    add = currentItem.ToString() != updateItem.ToString();
+context.LogDebug($"update-list[{option}]: 7: add  = {add}");
                 }
                 else
                 {
+context.LogDebug($"update-list[{option}]: 8:");
                     add = true;
                 }
+context.LogDebug($"update-list[{option}]: 9:");
 
                 if (add)
                 {
+context.LogDebug($"update-list[{option}]: 10:");
                     outputArgs.Add($"{option}-add={updateItem}");
-
-                    updateRequired = true;
+                    updated = true;
                 }
             }
+
+            return updated;
         }
 
         /// <summary>
@@ -1482,9 +1468,6 @@ context.LogDebug($"update-list[{option}]: 1");
         /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
         /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
         /// </para>
-        /// <note>
-        /// This set <see cref="updateRequired"/><c>=true</c> if state change was detected.
-        /// </note>
         /// </summary>
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
@@ -1492,7 +1475,8 @@ context.LogDebug($"update-list[{option}]: 1");
         /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
         /// <param name="current">The current service state.</param>
         /// <param name="update">The required updated service state.</param>
-        private void AppendUpdateStringArgs(ModuleContext context, List<string> outputArgs, string option, string current, string update)
+        /// <returns><c>true</c> if an update is required for these settings.</returns>
+        private bool AppendUpdateStringArgs(ModuleContext context, List<string> outputArgs, string option, string current, string update)
         {
             // Return if no change is detected.
 
@@ -1500,7 +1484,7 @@ context.LogDebug($"append-update-string[{option}]: current={current} update={upd
             if (current == update)
             {
 context.LogDebug($"append-update-string-0");
-                return;
+                return false;
             }
 
             // ...or if there's no update value.
@@ -1508,13 +1492,13 @@ context.LogDebug($"append-update-string-0");
             if (string.IsNullOrEmpty(update))
             {
 context.LogDebug($"append-update-string-1");
-                return;
+                return false;
             }
 
 context.LogDebug($"append-update-string-2");
             outputArgs.Add($"{option}={update}");
 
-            updateRequired = true;
+            return true;
         }
 
         /// <summary>
@@ -1525,9 +1509,6 @@ context.LogDebug($"append-update-string-2");
         /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
         /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
         /// </para>
-        /// <note>
-        /// This set <see cref="updateRequired"/><c>=true</c> if state change was detected.
-        /// </note>
         /// </summary>
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
@@ -1535,25 +1516,31 @@ context.LogDebug($"append-update-string-2");
         /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
         /// <param name="current">The current service state.</param>
         /// <param name="update">The required updated service state.</param>
-        private void AppendUpdateDoubleArgs(ModuleContext context, List<string> outputArgs, string option, double? current, double? update)
+        /// <returns><c>true</c> if an update is required for these settings.</returns>
+        private bool AppendUpdateDoubleArgs(ModuleContext context, List<string> outputArgs, string option, double? current, double? update)
         {
+context.LogDebug($"append-update-double[{option}]: current={current} update={update}");
             // Return if no change is detected.
 
             if (NeonHelper.NullableEquals(current, update))
             {
-                return;
+context.LogDebug($"append-update-double[{option}]: 1");
+                return false;
             }
+context.LogDebug($"append-update-double[{option}]: 2");
 
             // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-                return;
+context.LogDebug($"append-update-double[{option}]: 3");
+                return false;
             }
 
+context.LogDebug($"append-update-double[{option}]: 4");
             outputArgs.Add($"{option}={update.Value.ToString("0.#")}");
 
-            updateRequired = true;
+            return true;
         }
 
         /// <summary>
@@ -1564,9 +1551,6 @@ context.LogDebug($"append-update-string-2");
         /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
         /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
         /// </para>
-        /// <note>
-        /// This set <see cref="updateRequired"/><c>=true</c> if state change was detected.
-        /// </note>
         /// </summary>
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
@@ -1574,30 +1558,37 @@ context.LogDebug($"append-update-string-2");
         /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
         /// <param name="current">The current service state.</param>
         /// <param name="update">The required updated service state.</param>
-        private void AppendUpdateBoolArgs(ModuleContext context, List<string> outputArgs, string option, bool? current, bool? update)
+        /// <returns><c>true</c> if an update is required for these settings.</returns>
+        private bool AppendUpdateBoolArgs(ModuleContext context, List<string> outputArgs, string option, bool? current, bool? update)
         {
+context.LogDebug($"append-update-bool[{option}]: current={current} update={update}");
             // Return if no change is detected.
 
             if (NeonHelper.NullableEquals(current, update))
             {
-                return;
+                return false;
             }
+context.LogDebug($"append-update-bool[{option}]: 1");
 
             // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-                return;
+context.LogDebug($"append-update-bool[{option}]: 2");
+                return false;
             }
 
+context.LogDebug($"append-update-bool[{option}]: 3");
             if (update.Value)
             {
+context.LogDebug($"append-update-bool[{option}]: 4");
                 // The option is a switch so include it on TRUE.
 
                 outputArgs.Add($"{option}");
             }
 
-            updateRequired = true;
+context.LogDebug($"append-update-bool[{option}]: 5");
+            return true;
         }
 
         /// <summary>
@@ -1608,9 +1599,6 @@ context.LogDebug($"append-update-string-2");
         /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
         /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
         /// </para>
-        /// <note>
-        /// This set <see cref="updateRequired"/><c>=true</c> if state change was detected.
-        /// </note>
         /// </summary>
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
@@ -1618,26 +1606,27 @@ context.LogDebug($"append-update-string-2");
         /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
         /// <param name="current">The current service state.</param>
         /// <param name="update">The required updated service state.</param>
-        private void AppendUpdateEnumArgs<T>(ModuleContext context, List<string> outputArgs, string option, T? current, T? update)
+        /// <returns><c>true</c> if an update is required for these settings.</returns>
+        private bool AppendUpdateEnumArgs<T>(ModuleContext context, List<string> outputArgs, string option, T? current, T? update)
             where T : struct
         {
             // Return if no change is detected.
 
             if (NeonHelper.NullableEquals(current, update))
             {
-                return;
+                return false;
             }
 
             // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-                return;
+                return false;
             }
 
             outputArgs.Add($"{option}={NeonHelper.EnumToStringUsingAttributes(update.Value)}");
 
-            updateRequired = true;
+            return true;
         }
 
         /// <summary>
@@ -1648,9 +1637,6 @@ context.LogDebug($"append-update-string-2");
         /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
         /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
         /// </para>
-        /// <note>
-        /// This set <see cref="updateRequired"/><c>=true</c> if state change was detected.
-        /// </note>
         /// </summary>
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
@@ -1658,25 +1644,26 @@ context.LogDebug($"append-update-string-2");
         /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
         /// <param name="current">The current service state (nanoseconds).</param>
         /// <param name="update">The required updated service state (nanoseconds).</param>
-        private void AppendUpdateDurationArgs(ModuleContext context, List<string> outputArgs, string option, long? current, long? update)
+        /// <returns><c>true</c> if an update is required for these settings.</returns>
+        private bool AppendUpdateDurationArgs(ModuleContext context, List<string> outputArgs, string option, long? current, long? update)
         {
             // Return if no change is detected.
 
             if (NeonHelper.NullableEquals(current, update))
             {
-                return;
+                return false;
             }
 
             // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-                return;
+                return false;
             }
 
             outputArgs.Add($"{option}={update}ns");
 
-            updateRequired = true;
+            return true;
         }
 
         /// <summary>
@@ -1687,9 +1674,6 @@ context.LogDebug($"append-update-string-2");
         /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
         /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
         /// </para>
-        /// <note>
-        /// This set <see cref="updateRequired"/><c>=true</c> if state change was detected.
-        /// </note>
         /// </summary>
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
@@ -1697,25 +1681,26 @@ context.LogDebug($"append-update-string-2");
         /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
         /// <param name="current">The current service state (nanoseconds).</param>
         /// <param name="update">The required updated service state (nanoseconds).</param>
-        private void AppendIntUpdateArgs(ModuleContext context, List<string> outputArgs, string option, int? current, int? update)
+        /// <returns><c>true</c> if an update is required for these settings.</returns>
+        private bool AppendIntUpdateArgs(ModuleContext context, List<string> outputArgs, string option, int? current, int? update)
         {
             // Return if no change is detected.
 
             if (NeonHelper.NullableEquals(current, update))
             {
-                return;
+                return false;
             }
 
             // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-                return;
+                return false;
             }
 
             outputArgs.Add($"{option}={update}");
 
-            updateRequired = true;
+            return true;
         }
 
         /// <summary>
@@ -1726,9 +1711,6 @@ context.LogDebug($"append-update-string-2");
         /// to transition the parameter from the current to the updated state within a <b>docker service update</b>
         /// command.  Any generated options will be appended to the <paramref name="outputArgs"/> array.
         /// </para>
-        /// <note>
-        /// This set <see cref="updateRequired"/><c>=true</c> if state change was detected.
-        /// </note>
         /// </summary>
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
@@ -1736,25 +1718,31 @@ context.LogDebug($"append-update-string-2");
         /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
         /// <param name="current">The current service state (nanoseconds).</param>
         /// <param name="update">The required updated service state (nanoseconds).</param>
-        private void AppendUpdateLongArgs(ModuleContext context, List<string> outputArgs, string option, long? current, long? update)
+        /// <returns><c>true</c> if an update is required for these settings.</returns>
+        private bool AppendUpdateLongArgs(ModuleContext context, List<string> outputArgs, string option, long? current, long? update)
         {
+context.LogDebug($"append-update-long[{option}]: current={current} update={update}");
             // Return if no change is detected.
 
             if (NeonHelper.NullableEquals(current, update))
             {
-                return;
+context.LogDebug($"append-update-long[{option}]: 1");
+                return false;
             }
+context.LogDebug($"append-update-long[{option}]: 2");
 
             // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-                return;
+context.LogDebug($"append-update-long[{option}]: 3");
+                return false;
             }
+context.LogDebug($"append-update-long[{option}]: 4");
 
             outputArgs.Add($"{option}={update}");
 
-            updateRequired = true;
+            return true;
         }
 
         /// <summary>
@@ -1785,10 +1773,6 @@ context.LogDebug($"append-update-string-2");
                 outputArgs.Append("--with-registry-auth");
             }
 
-            // The code and method calls below will set this to TRUE when changes are detected.
-
-            updateRequired = false;
-
             // Append arguments that update the service properties.
 
             if (!AreIdentical(Args, update.Args))
@@ -1813,18 +1797,15 @@ context.LogDebug($"append-update-string-2");
                 }
 
                 outputArgs.Add(sb.ToString());
-
-                updateRequired = true;
             }
 
             AppendUpdateListArgs(context, outputArgs, "--config", Config, update.Config, state => state.Source);
-            AppendUpdateListArgs(context, outputArgs, "--constraint", Constraint, update.Constraint, SimpleNameExtractor);
+            AppendUpdateListArgs(context, outputArgs, "--constraint", Constraint, update.Constraint);
             AppendUpdateListArgs(context, outputArgs, "--container-label", ContainerLabel, update.ContainerLabel, SimpleNameExtractor);
             AppendUpdateListArgs(context, outputArgs, "--credential-spec", CredentialSpec, update.CredentialSpec);
             AppendUpdateListArgs(context, outputArgs, "--dns", Dns, update.Dns);
             AppendUpdateListArgs(context, outputArgs, "--dns-option", DnsOption, update.DnsOption);
             AppendUpdateListArgs(context, outputArgs, "--dns-search", DnsSearch, update.DnsSearch);
-            AppendUpdateListArgs(context, outputArgs, "--constraint", Constraint, update.Constraint, SimpleNameExtractor);
             AppendUpdateEnumArgs<ServiceEndpointMode>(context, outputArgs, "--endpoint-mode", EndpointMode, update.EndpointMode);
 
             if (!AreIdentical(Command, update.Command))
@@ -1856,8 +1837,6 @@ context.LogDebug($"append-update-string-2");
                     }
 
                     outputArgs.Add($"--entrypoint={sb}");
-
-                    updateRequired = true;
                 }
             }
 
@@ -1866,7 +1845,7 @@ context.LogDebug($"append-update-string-2");
             AppendUpdateStringArgs(context, outputArgs, "--health-cmd", HealthCmd, update.HealthCmd);
             AppendUpdateDurationArgs(context, outputArgs, "--health-interval", HealthInterval, update.HealthInterval);
             AppendUpdateLongArgs(context, outputArgs, "--health-retries", HealthRetries, update.HealthRetries);
-            AppendUpdateDurationArgs(context, outputArgs, "--health-startperiod", HealthStartPeriod, update.HealthStartPeriod);
+            AppendUpdateDurationArgs(context, outputArgs, "--health-start-period", HealthStartPeriod, update.HealthStartPeriod);
             AppendUpdateDurationArgs(context, outputArgs, "--health-timeout", HealthTimeout, update.HealthTimeout);
             AppendUpdateListArgs(context, outputArgs, "--host", Host, update.Host);
             AppendUpdateStringArgs(context, outputArgs, "--hostname", Hostname, update.Hostname);
@@ -1875,8 +1854,37 @@ context.LogDebug($"update-args: update image = {update.Image}");
             AppendUpdateStringArgs(context, outputArgs, "--image", ImageWithoutSHA, update.Image);
             AppendUpdateEnumArgs(context, outputArgs, "--isolation", Isolation, update.Isolation);
             AppendUpdateListArgs(context, outputArgs, "--label", Label, update.Label);
-            AppendUpdateDoubleArgs(context, outputArgs, "--limit-cpu", LimitCpu, update.LimitCpu);
-            AppendUpdateLongArgs(context, outputArgs, "--limit-memory", LimitMemory, update.LimitMemory);
+
+            // The resource limit settings need to be set together 
+            // due to Docker bug:
+            //
+            //      https://github.com/moby/moby/issues/37036
+
+            var limitArgs      = new List<string>();
+            var limitCpuUpdate = AppendUpdateDoubleArgs(context, limitArgs, "--limit-cpu", LimitCpu, update.LimitCpu);
+            var limitMemUpdate = AppendUpdateLongArgs(context, limitArgs, "--limit-memory", LimitMemory, update.LimitMemory);
+
+            if (limitCpuUpdate || limitMemUpdate)
+            {
+                if (limitCpuUpdate)
+                {
+                    outputArgs.Add($"--limit-cpu={(update.LimitCpu ?? 0.0).ToString("0.#")}");
+                }
+                else
+                {
+                    outputArgs.Add($"--limit-cpu={(LimitCpu ?? 0.0).ToString("0.#")}");
+                }
+
+                if (limitMemUpdate)
+                {
+                    outputArgs.Add($"--limit-memory={update.LimitMemory ?? 0}");
+                }
+                else
+                {
+                    outputArgs.Add($"--limit-memory={LimitMemory ?? 0}");
+                }
+            }
+
             AppendUpdateStringArgs(context, outputArgs, "--log-driver", LogDriver, update.LogDriver);
 
             if (!AreIdentical(LogOpt, update.LogOpt))
@@ -1893,21 +1901,52 @@ context.LogDebug($"update-args: update image = {update.Image}");
                 }
 
                 outputArgs.Add($"--log-opt={sb}");
-
-                updateRequired = true;
             }
 
             AppendUpdateListArgs(context, outputArgs, "--mount", Mount, update.Mount, mount => mount.Target);
             AppendUpdateListArgs(context, outputArgs, "--network", Network, update.Network);
-            AppendUpdateBoolArgs(context, outputArgs, "--no-health-check", NoHealthCheck, update.NoHealthCheck);
+            AppendUpdateBoolArgs(context, outputArgs, "--no-healthcheck", NoHealthCheck, update.NoHealthCheck ?? false);
+            AppendUpdateBoolArgs(context, outputArgs, "--no-resolve-image", NoResolveImage, update.NoResolveImage ?? false);
 
             // $todo(jeff.lill): Ignoring [--placement-pref].
 
             AppendUpdateListArgs(context, outputArgs, "--publish", Publish, update.Publish);
             AppendUpdateBoolArgs(context, outputArgs, "--read-only", ReadOnly, update.ReadOnly);
             AppendUpdateLongArgs(context, outputArgs, "--replicas", Replicas, update.Replicas);
+
+            // The resource reservation settings need to be set together 
+            // due to Docker bug:
+            //
+            //      https://github.com/moby/moby/issues/37037
+
+            var reserveArgs      = new List<string>();
+            var reserveCpuUpdate = AppendUpdateDoubleArgs(context, reserveArgs, "--reserve-cpu", ReserveCpu, update.ReserveCpu);
+            var reserveMemUpdate = AppendUpdateLongArgs(context, reserveArgs, "--reserve-memory", ReserveMemory, update.ReserveMemory);
+
+            if (reserveCpuUpdate || reserveMemUpdate)
+            {
+                if (reserveCpuUpdate)
+                {
+                    outputArgs.Add($"--reserve-cpu={(update.ReserveCpu ?? 0.0).ToString("0.#")}");
+                }
+                else
+                {
+                    outputArgs.Add($"--reserve-cpu={(ReserveCpu ?? 0.0).ToString("0.#")}");
+                }
+
+                if (reserveMemUpdate)
+                {
+                    outputArgs.Add($"--reserve-memory={update.ReserveMemory ?? 0}");
+                }
+                else
+                {
+                    outputArgs.Add($"--reserve-memory={ReserveMemory ?? 0}");
+                }
+            }
+
             AppendUpdateDoubleArgs(context, outputArgs, "--reserve-cpu", ReserveCpu, update.ReserveCpu);
             AppendUpdateLongArgs(context, outputArgs, "--reserve-memory", ReserveMemory, update.ReserveMemory);
+
             AppendUpdateEnumArgs(context, outputArgs, "--restart-condition", RestartCondition, update.RestartCondition);
             AppendUpdateDurationArgs(context, outputArgs, "--restart-delay", RestartDelay, update.RestartDelay);
             AppendUpdateLongArgs(context, outputArgs, "--restart-max-attempts", RestartMaxAttempts, update.RestartMaxAttempts);
@@ -1921,7 +1960,7 @@ context.LogDebug($"update-args: update image = {update.Image}");
             AppendUpdateListArgs(context, outputArgs, "--secret", Secret, update.Secret, secret => secret.Source);
             AppendUpdateDurationArgs(context, outputArgs, "--stop-grace-period", StopGracePeriod, update.StopGracePeriod);
             AppendUpdateStringArgs(context, outputArgs, "--stop-signal", StopSignal, update.StopSignal);
-            AppendUpdateBoolArgs(context, outputArgs, "--tty", TTY, update.TTY);
+            AppendUpdateBoolArgs(context, outputArgs, "--tty", TTY, update.TTY ?? false);
             AppendUpdateDurationArgs(context, outputArgs, "--update-delay", UpdateDelay, update.UpdateDelay);
             AppendUpdateEnumArgs(context, outputArgs, "--update-failure-action", UpdateFailureAction, update.UpdateFailureAction);
             AppendUpdateDoubleArgs(context, outputArgs, "--update-max-failure-ratio", UpdateMaxFailureRatio, update.UpdateMaxFailureRatio);
@@ -1935,9 +1974,14 @@ context.LogDebug($"update-args: update image = {update.Image}");
 
             AppendUpdateArgs(outputArgs, "--generic-resource", current.GenericResource, update.GenericResource, SimpleNameExtractor);
 #endif
+            if (outputArgs.Count == 0)
+            {
+                return null;
+            }
+
             outputArgs.Add(Name);
 
-            return updateRequired ? outputArgs.ToArray() : null;
+            return outputArgs.ToArray();
         }
 
         /// <inheritdoc/>

@@ -1203,8 +1203,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Returns the serialization information for an enumeration type,
-        /// ensuring that it exists.
+        /// Returns the serialization information for an enumeration type.
         /// </summary>
         /// <typeparam name="TEnum">The enumeration type.</typeparam>
         private static EnumMemberSerializationInfo GetEnumMembers<TEnum>()
@@ -1297,9 +1296,6 @@ namespace Neon.Common
         public static bool TryParseEnumUsingAttributes<TEnum>(string input, out TEnum output)
             where TEnum : struct
         {
-            // That didn't work, so we'll use a cached [EnumMember]
-            // map for the type.
-
             var info = GetEnumMembers<TEnum>();
 
             if (info.EnumToStrings.TryGetValue(input, out var value1))
@@ -1338,8 +1334,6 @@ namespace Neon.Common
             }
             else
             {
-                // I don't believe sure we'll ever see this.
-
                 return input.ToString();
             }
         }

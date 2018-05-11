@@ -203,7 +203,7 @@ namespace NeonCli.Ansible
     //
     // network                  no                                  array of networks to be attached
     //
-    // no_health_check          no          false       true        disable service container health checks
+    // no_healthcheck           no          false       true        disable service container health checks
     //                                                  false
     //
     // no_resolve_image         no          false       true        disable registry query to resolve image digest 
@@ -286,7 +286,7 @@ namespace NeonCli.Ansible
     // update_order             no          stop-first  stop-first  service container update order
     //                                                  start-first
     //
-    // update-parallelism       no          1                       maximum number of service tasks to be updated
+    // update_parallelism       no          1                       maximum number of service tasks to be updated
     //                                                              simultaneously (0 to update all at once)
     //
     // user                     no                                  container username/group: <name|uid>[:<group|gid>]
@@ -437,7 +437,7 @@ context.LogDebug($"endpoint_mode (1) = {service.EndpointMode}");
             service.Mode                    = context.ParseEnum<ServiceMode>("mode");
             service.Mount                   = ParseMounts(context, "mount");
             service.Network                 = context.ParseStringArray("network");
-            service.NoHealthCheck           = context.ParseBool("no_health_check");
+            service.NoHealthCheck           = context.ParseBool("no_healthcheck");
             service.NoResolveImage          = context.ParseBool("no_resolve_image");
             service.PlacementPref           = context.ParseStringArray("placement_pref");
             service.Publish                 = ParsePublishPorts(context, "publish");
