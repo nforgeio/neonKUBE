@@ -615,6 +615,7 @@ context.LogDebug("present: 2");
 context.LogDebug("present: 3");
                         // NOTE: UpdateService() handles the CHECK-MODE logic and context logging.
 
+// $todo(jeff.lill): Extract UpdateService() from the try..catch
                         try
                         {
 context.LogDebug("present: 4");
@@ -625,6 +626,7 @@ context.LogDebug("present: 5");
                         {
 context.LogDebug("present: 6");
                             context.LogDebug(e.ToString());
+                            throw;
                         }
                     }
                     break;

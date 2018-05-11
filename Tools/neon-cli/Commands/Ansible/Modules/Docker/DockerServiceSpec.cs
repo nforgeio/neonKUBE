@@ -148,15 +148,6 @@ namespace NeonCli.Ansible.Docker
                 sb.AppendWithSeparator($"consistency=default", ",");
             }
 
-            if (BindPropagation.HasValue)
-            {
-                sb.AppendWithSeparator($"bind-propagation={NeonHelper.EnumToStringUsingAttributes(BindPropagation.Value)}", ",");
-            }
-            else
-            {
-                sb.AppendWithSeparator($"bind-propagation=rprivate", ",");
-            }
-
             if (!Type.HasValue || Type.Value == ServiceMountType.Volume)
             {
                 if (VolumeDriver != null)
@@ -177,12 +168,37 @@ namespace NeonCli.Ansible.Docker
 
                 if (VolumeLabel.Count > 0)
                 {
-                    sb.AppendWithSeparator("volume-label=", ",");
+                    var sbLabels = new StringBuilder();
 
                     foreach (var label in VolumeLabel)
                     {
-                        sb.AppendWithSeparator(label, ",");
+                        sbLabels.AppendWithSeparator(label, ",");
                     }
+
+                    sb.AppendWithSeparator($"volume-label={sbLabels}", ",");
+                }
+            }
+            else if (Type.Value == ServiceMountType.Bind)
+            {
+                if (BindPropagation.HasValue)
+                {
+                    sb.AppendWithSeparator($"bind-propagation={NeonHelper.EnumToStringUsingAttributes(BindPropagation.Value)}", ",");
+                }
+                else
+                {
+                    sb.AppendWithSeparator($"bind-propagation=rprivate", ",");
+                }
+            }
+            else if (Type.Value == ServiceMountType.Tmpfs)
+            {
+                if (TmpfsSize.HasValue)
+                {
+                    sb.AppendWithSeparator($"tmpfs-size={TmpfsSize.Value}");
+                }
+
+                if (!string.IsNullOrEmpty(TmpfsMode))
+                {
+                    sb.AppendWithSeparator($"tmpfs-mode={TmpfsMode}");
                 }
             }
 
@@ -1033,10 +1049,10 @@ namespace NeonCli.Ansible.Docker
 
                         var driverConfig = volumeOptions.DriverConfig;
 
-                        if (driverConfig != null)
-                        {
-                            mount.VolumeDriver = driverConfig.Name;
+                        mount.VolumeDriver = driverConfig.Name;
 
+                        if (driverConfig.Options != null)
+                        {
                             foreach (var option in driverConfig.Options)
                             {
                                 mount.VolumeOpt.Add($"{option.Key}={option.Value}");
@@ -1048,11 +1064,8 @@ namespace NeonCli.Ansible.Docker
 
                         var tmpfsOptions = item.TmpfsOptions;
 
-                        if (tmpfsOptions != null)
-                        {
-                            mount.TmpfsSize = tmpfsOptions.SizeBytes;
-                            mount.TmpfsMode = Convert.ToString(tmpfsOptions.Mode, 8);
-                        }
+                        mount.TmpfsSize = tmpfsOptions.SizeBytes;
+                        mount.TmpfsMode = Convert.ToString(tmpfsOptions.Mode, 8);
                         break;
                 }
 
@@ -1855,6 +1868,8 @@ context.LogDebug($"update-args: update image = {update.Image}");
             AppendUpdateEnumArgs(context, outputArgs, "--isolation", Isolation, update.Isolation);
             AppendUpdateListArgs(context, outputArgs, "--label", Label, update.Label);
 
+            // $todo(jeff.lill):
+            //
             // The resource limit settings need to be set together 
             // due to Docker bug:
             //
@@ -1914,6 +1929,8 @@ context.LogDebug($"update-args: update image = {update.Image}");
             AppendUpdateBoolArgs(context, outputArgs, "--read-only", ReadOnly, update.ReadOnly);
             AppendUpdateLongArgs(context, outputArgs, "--replicas", Replicas, update.Replicas);
 
+            // $todo(jeff.lill):
+            //
             // The resource reservation settings need to be set together 
             // due to Docker bug:
             //

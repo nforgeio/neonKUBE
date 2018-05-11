@@ -43,7 +43,10 @@ namespace Neon.Docker
         /// <inheritdoc/>
         public void Normalize()
         {
-            Labels = Labels ?? new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            Labels       = Labels ?? new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
+            DriverConfig = DriverConfig ?? new ServiceVolumeDriverConfig();
+
+            DriverConfig.Normalize();
         }
     }
 }

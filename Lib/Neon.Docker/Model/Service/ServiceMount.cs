@@ -78,6 +78,13 @@ namespace Neon.Docker
         /// <inheritdoc/>
         public void Normalize()
         {
+            BindOptions   = BindOptions ?? new ServiceBindOptions();
+            VolumeOptions = VolumeOptions ?? new ServiceVolumeOptions();
+            TmpfsOptions  = TmpfsOptions ?? new ServiceTmpfsOptions();
+
+            BindOptions.Normalize();
+            VolumeOptions.Normalize();
+            TmpfsOptions.Normalize();
         }
     }
 }

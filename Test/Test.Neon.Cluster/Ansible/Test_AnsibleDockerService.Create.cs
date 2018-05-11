@@ -724,7 +724,7 @@ $@"
           - node.role==manager
         mount:
           - type: tmpfs
-            target: /mnt/tmpfs
+            target: /mnt/volume
             tmpfs_size: 64m
             tmpfs_mode: 770
 ";
@@ -743,7 +743,7 @@ $@"
             mount = mounts.First();
             Assert.Equal(ServiceMountType.Tmpfs, mount.Type);
             Assert.False(mount.ReadOnly);
-            Assert.Equal("/mnt/tmpfs", mount.Target);
+            Assert.Equal("/mnt/volume", mount.Target);
             Assert.Equal(67108864L, mount.TmpfsOptions.SizeBytes);
             Assert.Equal(Convert.ToInt32("770", 8), mount.TmpfsOptions.Mode);
         }
