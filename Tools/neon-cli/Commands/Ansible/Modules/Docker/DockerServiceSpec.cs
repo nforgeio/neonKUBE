@@ -193,12 +193,12 @@ namespace NeonCli.Ansible.Docker
             {
                 if (TmpfsSize.HasValue)
                 {
-                    sb.AppendWithSeparator($"tmpfs-size={TmpfsSize.Value}");
+                    sb.AppendWithSeparator($"tmpfs-size={TmpfsSize.Value}", ",");
                 }
 
                 if (!string.IsNullOrEmpty(TmpfsMode))
                 {
-                    sb.AppendWithSeparator($"tmpfs-mode={TmpfsMode}");
+                    sb.AppendWithSeparator($"tmpfs-mode={TmpfsMode}", ",");
                 }
             }
 
@@ -1051,12 +1051,9 @@ namespace NeonCli.Ansible.Docker
 
                         mount.VolumeDriver = driverConfig.Name;
 
-                        if (driverConfig.Options != null)
+                        foreach (var option in driverConfig.Options)
                         {
-                            foreach (var option in driverConfig.Options)
-                            {
-                                mount.VolumeOpt.Add($"{option.Key}={option.Value}");
-                            }
+                            mount.VolumeOpt.Add($"{option.Key}={option.Value}");
                         }
                         break;
 
@@ -1065,7 +1062,7 @@ namespace NeonCli.Ansible.Docker
                         var tmpfsOptions = item.TmpfsOptions;
 
                         mount.TmpfsSize = tmpfsOptions.SizeBytes;
-                        mount.TmpfsMode = Convert.ToString(tmpfsOptions.Mode, 8);
+                        mount.TmpfsMode = "0" + Convert.ToString(tmpfsOptions.Mode, 8); // Prefix with "0" to indicate octal
                         break;
                 }
 
@@ -1295,6 +1292,7 @@ namespace NeonCli.Ansible.Docker
 
             var endpointSpec = spec.EndpointSpec;
 
+context.LogDebug($"parse: spec = {NeonHelper.JsonSerialize(endpointSpec, Newtonsoft.Json.Formatting.Indented)}");
             this.EndpointMode = endpointSpec.Mode;
 
             foreach (var item in endpointSpec.Ports)
@@ -1306,6 +1304,8 @@ namespace NeonCli.Ansible.Docker
                 port.Target    = item.TargetPort;
                 port.Published = item.PublishedPort;
                 port.Mode      = item.PublishMode;
+
+                this.Publish.Add(port);
             }
         }
 
@@ -1423,13 +1423,13 @@ context.LogDebug($"update-list[{option}]: 1");
             }
 
             // Generate a [*-rm] option to remove state that exists in the current service
-            // state but is not desired or will change for the updated service.
+            // state but is not present in the new state or will change for the updated service.
 
             foreach (var currentItem in currentSet.Values)
             {
                 var stateName = GetStateName(currentItem, nameExtractor);
-                var remove    = !updateSet.TryGetValue(stateName, out var updateItem);
-
+                var remove    = !updateSet.TryGetValue(stateName, out var updateItem) || 
+                                currentItem.ToString() != updateItem.ToString();
                 if (remove)
                 {
                     outputArgs.Add($"{option}-rm={stateName}");
@@ -1925,7 +1925,7 @@ context.LogDebug($"update-args: update image = {update.Image}");
 
             // $todo(jeff.lill): Ignoring [--placement-pref].
 
-            AppendUpdateListArgs(context, outputArgs, "--publish", Publish, update.Publish);
+            AppendUpdateListArgs(context, outputArgs, "--publish", Publish, update.Publish, publish => $"target={publish.Target},protocol={NeonHelper.EnumToStringUsingAttributes(publish.Protocol.Value)},mode={NeonHelper.EnumToStringUsingAttributes(publish.Mode.Value)}");
             AppendUpdateBoolArgs(context, outputArgs, "--read-only", ReadOnly, update.ReadOnly);
             AppendUpdateLongArgs(context, outputArgs, "--replicas", Replicas, update.Replicas);
 

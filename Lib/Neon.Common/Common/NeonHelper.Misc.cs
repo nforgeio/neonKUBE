@@ -1182,7 +1182,7 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Typesafe <c>enum</c> parser.
+        /// Typesafe <c>enum</c> parser that <b>does not</b> honor <see cref="EnumMemberAttribute"/>.
         /// </summary>
         /// <typeparam name="TEnum">The enumeration type.</typeparam>
         /// <param name="input">The input string.</param>

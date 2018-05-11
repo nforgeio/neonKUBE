@@ -942,10 +942,12 @@ context.LogDebug("mode: 4");
         /// /// <returns>The list of <see cref="PublishPort"/> instances.</returns>
         private List<PublishPort> ParsePublishPorts(ModuleContext context, string argName)
         {
+context.LogDebug($"parse-ports: 1: argName = {argName}");
             var publishedPorts = new List<PublishPort>();
 
             if (!context.Arguments.TryGetValue(argName, out var jToken))
             {
+context.LogDebug($"parse-ports: 1-a");
                 return publishedPorts;
             }
 
@@ -953,12 +955,14 @@ context.LogDebug("mode: 4");
 
             if (jArray == null)
             {
+context.LogDebug($"parse-ports: 1-b");
                 context.WriteErrorLine($"Expected [{argName}] to be an array of published port specifications.");
                 return publishedPorts;
             }
 
             foreach (var item in jArray)
             {
+context.LogDebug($"parse-ports: 2: {item}");
                 var jObject = item as JObject;
 
                 if (jObject == null)
@@ -987,6 +991,7 @@ context.LogDebug("mode: 4");
                     context.WriteErrorLine($"[{argName}] array element lacks the required [published] property.");
                     return publishedPorts;
                 }
+context.LogDebug($"parse-ports: 3");
 
                 // Parse [target]
 
@@ -1005,6 +1010,7 @@ context.LogDebug("mode: 4");
                     context.WriteErrorLine($"[{argName}] array element lacks the required [target] property.");
                     return publishedPorts;
                 }
+context.LogDebug($"parse-ports: 4");
 
                 // Parse [mode]
 
@@ -1024,6 +1030,7 @@ context.LogDebug("mode: 4");
                 {
                     port.Mode = ServicePortMode.Ingress;
                 }
+context.LogDebug($"parse-ports: 5");
 
                 // Parse [protocol]
 
@@ -1046,9 +1053,11 @@ context.LogDebug("mode: 4");
 
                 // Add the mount to the list.
 
+context.LogDebug($"parse-ports: 6");
                 publishedPorts.Add(port);
             }
 
+context.LogDebug($"parse-ports: 7: count = {publishedPorts.Count}");
             return publishedPorts;
         }
 

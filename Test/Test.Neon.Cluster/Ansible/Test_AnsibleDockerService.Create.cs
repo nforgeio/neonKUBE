@@ -299,7 +299,7 @@ $@"
 
             var details = cluster.InspectService(serviceName);
 
-            Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.EndpointSpec.Mode);
+            Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.TaskTemplate.EndpointSpec.Mode);
         }
 
         [Fact]
@@ -720,8 +720,6 @@ $@"
         name: {serviceName}
         state: present
         image: {serviceImage}
-        constraint:
-          - node.role==manager
         mount:
           - type: tmpfs
             target: /mnt/volume
@@ -779,10 +777,11 @@ $@"
             Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
             var details = cluster.InspectService(serviceName);
+            var ports = details.Spec.EndpointSpec.Ports;
 
-            Assert.Single(details.Spec.EndpointSpec.Ports);
+            Assert.Single(ports);
 
-            var port = details.Spec.EndpointSpec.Ports.First();
+            var port = ports.First();
 
             Assert.Equal(8080, port.PublishedPort);
             Assert.Equal(80, port.TargetPort);
@@ -818,10 +817,11 @@ $@"
             Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
             details = cluster.InspectService(serviceName);
+            ports = details.Spec.EndpointSpec.Ports;
 
-            Assert.Single(details.Spec.EndpointSpec.Ports);
+            Assert.Single(ports);
 
-            port = details.Spec.EndpointSpec.Ports.First();
+            port = ports.First();
 
             Assert.Equal(8080, port.PublishedPort);
             Assert.Equal(80, port.TargetPort);
@@ -857,10 +857,11 @@ $@"
             Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
             details = cluster.InspectService(serviceName);
+            ports = details.Spec.EndpointSpec.Ports;
 
-            Assert.Single(details.Spec.EndpointSpec.Ports);
+            Assert.Single(ports);
 
-            port = details.Spec.EndpointSpec.Ports.First();
+            port = ports.First();
 
             Assert.Equal(8080, port.PublishedPort);
             Assert.Equal(80, port.TargetPort);

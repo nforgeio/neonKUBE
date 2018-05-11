@@ -75,6 +75,13 @@ namespace Neon.Docker
         [DefaultValue(null)]
         public ServiceLogDriver LogDriver { get; set; }
 
+        /// <summary>
+        /// Optionally specifies the network endpoints for the service containers.
+        /// </summary>
+        [JsonProperty(PropertyName = "EndpointSpec", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
+        [DefaultValue(null)]
+        public ServiceEndpointSpec EndpointSpec { get; set; }
+
         /// <inheritdoc/>
         public void Normalize()
         {
@@ -83,12 +90,14 @@ namespace Neon.Docker
             RestartPolicy = RestartPolicy ?? new ServiceRestartPolicy();
             Placement     = Placement ?? new ServicePlacement();
             Networks      = Networks ?? new List<ServiceNetwork>();
+            EndpointSpec  = EndpointSpec ?? new ServiceEndpointSpec();
 
             ContainerSpec?.Normalize();
             Resources?.Normalize();
             RestartPolicy?.Normalize();
             Placement?.Normalize();
             LogDriver?.Normalize();
+            EndpointSpec?.Normalize();
 
             foreach (var item in Networks)
             {

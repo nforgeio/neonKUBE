@@ -54,6 +54,11 @@ namespace Neon.Docker
             {
                 item?.Normalize();
             }
+
+            foreach (var item in VirtualIPs)
+            {
+                item?.Normalize();
+            }
         }
     }
 }

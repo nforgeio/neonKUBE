@@ -161,7 +161,7 @@ namespace TestNeonCluster
 
             // Spec.EndpointSpec
 
-            Assert.Equal(ServiceEndpointMode.Vip, details.Spec.EndpointSpec.Mode);
+            Assert.Equal(ServiceEndpointMode.Vip, details.Spec.TaskTemplate.EndpointSpec.Mode);
             Assert.Empty(details.Spec.EndpointSpec.Ports);
 
             // Endpoint
@@ -436,7 +436,7 @@ namespace TestNeonCluster
             var info    = docker.ListServices().Single(s => s.Name == "test");
             var details = docker.InspectService("test", strict);
 
-            Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.EndpointSpec.Mode);
+            Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.TaskTemplate.EndpointSpec.Mode);
         }
 
         [Fact]

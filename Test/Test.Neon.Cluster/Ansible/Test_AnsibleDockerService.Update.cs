@@ -547,7 +547,7 @@ $@"
 
             var details = cluster.InspectService(serviceName);
 
-            Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.EndpointSpec.Mode);
+            Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.TaskTemplate.EndpointSpec.Mode);
 
             //-----------------------------------------------------------------
             // Verify that update reports when no change is detected.
@@ -1171,8 +1171,6 @@ $@"
         name: {serviceName}
         state: present
         image: {serviceImage}
-        constraint:
-          - node.role==manager
         mount:
           - type: tmpfs
             target: /mnt/volume
@@ -1216,9 +1214,178 @@ $@"
             mount = mounts.First();
             Assert.Equal(ServiceMountType.Tmpfs, mount.Type);
             Assert.False(mount.ReadOnly);
-            Assert.Equal("/mnt/tmpfs", mount.Target);
+            Assert.Equal("/mnt/volume", mount.Target);
             Assert.Equal(67108864L, mount.TmpfsOptions.SizeBytes);
             Assert.Equal(Convert.ToInt32("770", 8), mount.TmpfsOptions.Mode);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Update_Publish()
+        {
+            DeployTestService();
+
+            //-----------------------------------------------------------------
+            // Create a port with some defaults.
+
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+        publish:
+          - published: 8080
+            target: 80
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            var details = cluster.InspectService(serviceName);
+            var ports = details.Spec.EndpointSpec.Ports;
+
+            Assert.Single(ports);
+
+            var port = ports.First();
+
+            Assert.Equal(8080, port.PublishedPort);
+            Assert.Equal(80, port.TargetPort);
+            Assert.Equal(ServicePortMode.Ingress, port.PublishMode);
+            Assert.Equal(ServicePortProtocol.Tcp, port.Protocol);
+
+            //-----------------------------------------------------------------
+            // ...again, with explicit values.
+
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+        publish:
+          - published: 8080
+            target: 80
+            mode: ingress
+            protocol: udp
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+            ports = details.Spec.EndpointSpec.Ports;
+
+            Assert.Single(ports);
+
+            port = ports.First();
+
+            Assert.Equal(8080, port.PublishedPort);
+            Assert.Equal(80, port.TargetPort);
+            Assert.Equal(ServicePortMode.Ingress, port.PublishMode);
+            Assert.Equal(ServicePortProtocol.Udp, port.Protocol);
+
+            //-----------------------------------------------------------------
+            // ...again, with non-default values.  Note that we're also changing
+            // the port protocol which will verify that the module correctly identifies
+            // published endpoints by both port/protocol.
+
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+        publish:
+          - published: 8080
+            target: 80
+            mode: host
+            protocol: udp
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+            ports = details.Spec.EndpointSpec.Ports;
+
+            Assert.Single(ports);
+
+            port = ports.First();
+
+            Assert.Equal(8080, port.PublishedPort);
+            Assert.Equal(80, port.TargetPort);
+            Assert.Equal(ServicePortMode.Host, port.PublishMode);
+            Assert.Equal(ServicePortProtocol.Udp, port.Protocol);
+
+            //-----------------------------------------------------------------
+            // Verify that we can detect when no changes were made.
+
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+            ports = details.Spec.EndpointSpec.Ports;
+
+            Assert.Single(ports);
+
+            port = ports.First();
+
+            Assert.Equal(8080, port.PublishedPort);
+            Assert.Equal(80, port.TargetPort);
+            Assert.Equal(ServicePortMode.Host, port.PublishMode);
+            Assert.Equal(ServicePortProtocol.Udp, port.Protocol);
+
+            //-----------------------------------------------------------------
+            // Remove the ports.
+
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+            ports = details.Spec.EndpointSpec.Ports;
+
+            Assert.Empty(ports);
         }
 
         [Fact]

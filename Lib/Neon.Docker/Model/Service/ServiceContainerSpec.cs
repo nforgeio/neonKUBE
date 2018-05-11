@@ -235,6 +235,21 @@ namespace Neon.Docker
             Privileges?.Normalize();
             HealthCheck?.Normalize();
             DNSConfig?.Normalize();
+
+            foreach (var item in Secrets)
+            {
+                item?.Normalize();
+            }
+
+            foreach (var item in Configs)
+            {
+                item?.Normalize();
+            }
+
+            foreach (var item in Mounts)
+            {
+                item?.Normalize();
+            }
         }
     }
 }
