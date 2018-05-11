@@ -367,7 +367,7 @@ LogDebug($"ParseEnum 1");
             }
 LogDebug($"ParseEnum 2");
 
-            if (!NeonHelper.TryParseEnumUsingAttributes<TEnum>(input, out var value))
+            if (!NeonHelper.TryParse<TEnum>(input, out var value))
             {
 LogDebug($"ParseEnum 3");
                 if (errorMessage != null)
@@ -398,7 +398,7 @@ LogDebug($"ParseEnum 4");
                 return defaultValue;
             }
 
-            if (!NeonHelper.TryParseEnumUsingAttributes<TEnum>(input, out var value))
+            if (!NeonHelper.TryParse<TEnum>(input, out var value))
             {
                 if (errorMessage != null)
                 {
@@ -572,7 +572,7 @@ LogDebug($"ParseEnum 4");
             {
                 var valueString = (string)jToken;
 
-                if (NeonHelper.TryParseEnumUsingAttributes<TEnum>(valueString, out var value))
+                if (NeonHelper.TryParse<TEnum>(valueString, out var value))
                 {
                     return value;
                 }
@@ -613,7 +613,7 @@ LogDebug($"ParseEnum 4");
 
                 try
                 {
-                    return (TEnum)NeonHelper.ParseEnumUsingAttributes<TEnum>(valueString);
+                    return (TEnum)NeonHelper.ParseEnum<TEnum>(valueString);
                 }
                 catch
                 {

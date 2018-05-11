@@ -1340,7 +1340,7 @@ context.LogDebug($"parse-ports: 7: count = {publishedPorts.Count}");
 
             if (value.HasValue && !value.Value.Equals(defaultValue))
             {
-                args.Add($"{option}={NeonHelper.EnumToStringUsingAttributes(value.Value)}");
+                args.Add($"{option}={NeonHelper.EnumToString(value.Value)}");
             }
         }
 
@@ -1515,7 +1515,7 @@ context.LogDebug($"endpoint_mode = {service.EndpointMode}");
             {
                 var sb = new StringBuilder();
 
-                sb.AppendWithSeparator($"type={NeonHelper.EnumToStringUsingAttributes(mount.Type.Value)}", ",");
+                sb.AppendWithSeparator($"type={NeonHelper.EnumToString(mount.Type.Value)}", ",");
 
                 if (!string.IsNullOrEmpty(mount.Source))
                 {
@@ -1534,12 +1534,12 @@ context.LogDebug($"endpoint_mode = {service.EndpointMode}");
 
                 if (mount.Consistency.HasValue)
                 {
-                    sb.AppendWithSeparator($"consistency={NeonHelper.EnumToStringUsingAttributes(mount.Consistency.Value)}", ",");
+                    sb.AppendWithSeparator($"consistency={NeonHelper.EnumToString(mount.Consistency.Value)}", ",");
                 }
 
                 if (mount.BindPropagation.HasValue)
                 {
-                    sb.AppendWithSeparator($"bind-propagation={NeonHelper.EnumToStringUsingAttributes(mount.BindPropagation.Value)}", ",");
+                    sb.AppendWithSeparator($"bind-propagation={NeonHelper.EnumToString(mount.BindPropagation.Value)}", ",");
                 }
 
                 if (!string.IsNullOrEmpty(mount.VolumeDriver))
@@ -1604,12 +1604,12 @@ context.LogDebug($"endpoint_mode = {service.EndpointMode}");
 
                 if (port.Protocol.HasValue)
                 {
-                    sb.AppendWithSeparator($"protocol={NeonHelper.EnumToStringUsingAttributes(port.Protocol.Value)}", ",");
+                    sb.AppendWithSeparator($"protocol={NeonHelper.EnumToString(port.Protocol.Value)}", ",");
                 }
 
                 if (port.Mode.HasValue)
                 {
-                    sb.AppendWithSeparator($"mode={NeonHelper.EnumToStringUsingAttributes(port.Mode.Value)}", ",");
+                    sb.AppendWithSeparator($"mode={NeonHelper.EnumToString(port.Mode.Value)}", ",");
                 }
 
                 args.Add($"--publish={sb}");

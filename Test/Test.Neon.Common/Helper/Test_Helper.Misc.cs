@@ -365,41 +365,41 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public void EnumMemberUtilities()
+        public void EnumSerialization()
         {
             Assert.Throws<ArgumentNullException>(() => NeonHelper.ParseEnum<TestEnum>(null));
             Assert.Throws<ArgumentException>(() => NeonHelper.ParseEnum<TestEnum>("foo"));
             Assert.Throws<ArgumentException>(() => NeonHelper.ParseEnum<TestEnum>("value1"));
 
-            Assert.Equal(TestEnum.Value1, NeonHelper.ParseEnum<TestEnum>("value1", ignoreCase: true));
-            Assert.Equal(TestEnum.Value2, NeonHelper.ParseEnum<TestEnum>("VALUE2", ignoreCase: true));
+            Assert.Equal(TestEnum.Value1, NeonHelper.ParseEnum<TestEnum>("value1"));
+            Assert.Equal(TestEnum.Value2, NeonHelper.ParseEnum<TestEnum>("VALUE2"));
 
             // This method should honor [EnumMember] attributes too.
 
-            Assert.Equal(TestEnum.Value1, NeonHelper.ParseEnumUsingAttributes<TestEnum>("value1"));
-            Assert.Equal(TestEnum.Value2, NeonHelper.ParseEnumUsingAttributes<TestEnum>("VALUE2"));
-            Assert.Equal(TestEnum.FooBar, NeonHelper.ParseEnumUsingAttributes<TestEnum>("FooBar"));
-            Assert.Equal(TestEnum.FooBar, NeonHelper.ParseEnumUsingAttributes<TestEnum>("foo-bar"));
-            Assert.Equal(TestEnum.FooBar, NeonHelper.ParseEnumUsingAttributes<TestEnum>("FOO-BAR"));
+            Assert.Equal(TestEnum.Value1, NeonHelper.ParseEnum<TestEnum>("value1"));
+            Assert.Equal(TestEnum.Value2, NeonHelper.ParseEnum<TestEnum>("VALUE2"));
+            Assert.Equal(TestEnum.FooBar, NeonHelper.ParseEnum<TestEnum>("FooBar"));
+            Assert.Equal(TestEnum.FooBar, NeonHelper.ParseEnum<TestEnum>("foo-bar"));
+            Assert.Equal(TestEnum.FooBar, NeonHelper.ParseEnum<TestEnum>("FOO-BAR"));
 
-            Assert.Throws<ArgumentNullException>(() => NeonHelper.ParseEnumUsingAttributes<TestEnum>(null));
-            Assert.Throws<ArgumentException>(() => NeonHelper.ParseEnumUsingAttributes<TestEnum>("BAD"));
+            Assert.Throws<ArgumentNullException>(() => NeonHelper.ParseEnum<TestEnum>(null));
+            Assert.Throws<ArgumentException>(() => NeonHelper.ParseEnum<TestEnum>("BAD"));
 
             TestEnum parsed;
 
-            Assert.True(NeonHelper.TryParseEnumUsingAttributes<TestEnum>("foo-bar", out parsed));
+            Assert.True(NeonHelper.TryParse<TestEnum>("foo-bar", out parsed));
             Assert.Equal(TestEnum.FooBar, parsed);
 
-            Assert.True(NeonHelper.TryParseEnumUsingAttributes<TestEnum>("FOO-BAR", out parsed));
+            Assert.True(NeonHelper.TryParse<TestEnum>("FOO-BAR", out parsed));
             Assert.Equal(TestEnum.FooBar, parsed);
 
-            Assert.False(NeonHelper.TryParseEnumUsingAttributes<TestEnum>("BAD", out parsed));
+            Assert.False(NeonHelper.TryParse<TestEnum>("BAD", out parsed));
 
             // Verify enum serialization too.
 
-            Assert.Equal("Value1", NeonHelper.EnumToStringUsingAttributes(TestEnum.Value1));
-            Assert.Equal("Value2", NeonHelper.EnumToStringUsingAttributes(TestEnum.Value2));
-            Assert.Equal("foo-bar", NeonHelper.EnumToStringUsingAttributes(TestEnum.FooBar));
+            Assert.Equal("Value1", NeonHelper.EnumToString(TestEnum.Value1));
+            Assert.Equal("Value2", NeonHelper.EnumToString(TestEnum.Value2));
+            Assert.Equal("foo-bar", NeonHelper.EnumToString(TestEnum.FooBar));
         }
 
         [Fact]

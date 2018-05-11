@@ -1182,27 +1182,6 @@ namespace Neon.Common
         }
 
         /// <summary>
-        /// Typesafe <c>enum</c> parser that <b>does not</b> honor <see cref="EnumMemberAttribute"/>.
-        /// </summary>
-        /// <typeparam name="TEnum">The enumeration type.</typeparam>
-        /// <param name="input">The input string.</param>
-        /// <param name="ignoreCase">Optionally indicates that parsing should be case insensitive.</param>
-        /// <returns>The parsed value.</returns>
-        /// <exception cref="ArgumentNullException">Thrown if <paramref name="input"/> is <c>null</c>.</exception>
-        /// <exception cref="ArgumentException">Thrown if <paramref name="input"/> is not valid.</exception>
-        /// <remarks>
-        /// <note>
-        /// This method <b>does not</b> honor any <see cref="EnumMemberAttribute"/>
-        /// decorating the enumeration.
-        /// </note>
-        /// </remarks>
-        public static TEnum ParseEnum<TEnum>(string input, bool ignoreCase = false)
-            where TEnum : struct
-        {
-            return (TEnum)Enum.Parse(typeof(TEnum), input, ignoreCase);
-        }
-
-        /// <summary>
         /// Returns the serialization information for an enumeration type.
         /// </summary>
         /// <typeparam name="TEnum">The enumeration type.</typeparam>
@@ -1257,7 +1236,7 @@ namespace Neon.Common
         /// <returns>The parsed value.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="input"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="input"/> is not valid.</exception>
-        public static TEnum ParseEnumUsingAttributes<TEnum>(string input)
+        public static TEnum ParseEnum<TEnum>(string input)
             where TEnum : struct
         {
             // Try parsing the enumeration using the standard mechanism.
@@ -1293,7 +1272,7 @@ namespace Neon.Common
         /// <returns><c>true</c> if the value was parsed.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="input"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="input"/> is not valid.</exception>
-        public static bool TryParseEnumUsingAttributes<TEnum>(string input, out TEnum output)
+        public static bool TryParse<TEnum>(string input, out TEnum output)
             where TEnum : struct
         {
             var info = GetEnumMembers<TEnum>();
@@ -1323,7 +1302,7 @@ namespace Neon.Common
         /// <typeparam name="TEnum">The enumeration type.</typeparam>
         /// <param name="input">The input value.</param>
         /// <returns>The deserialized value.</returns>
-        public static string EnumToStringUsingAttributes<TEnum>(TEnum input)
+        public static string EnumToString<TEnum>(TEnum input)
             where TEnum : struct
         {
             var info = GetEnumMembers<TEnum>();

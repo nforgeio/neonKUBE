@@ -38,7 +38,7 @@ namespace NeonCli.Ansible.Docker
 
             if (Mode.HasValue)
             {
-                sb.AppendWithSeparator($"mode={NeonHelper.EnumToStringUsingAttributes(Mode.Value)}", ",");
+                sb.AppendWithSeparator($"mode={NeonHelper.EnumToString(Mode.Value)}", ",");
             }
             else
             {
@@ -47,7 +47,7 @@ namespace NeonCli.Ansible.Docker
 
             if (Protocol.HasValue)
             {
-                sb.AppendWithSeparator($"protocol={NeonHelper.EnumToStringUsingAttributes(Protocol.Value)}", ",");
+                sb.AppendWithSeparator($"protocol={NeonHelper.EnumToString(Protocol.Value)}", ",");
             }
             else
             {
@@ -113,7 +113,7 @@ namespace NeonCli.Ansible.Docker
 
             if (Type.HasValue)
             {
-                sb.AppendWithSeparator($"type={NeonHelper.EnumToStringUsingAttributes(Type.Value)}", ",");
+                sb.AppendWithSeparator($"type={NeonHelper.EnumToString(Type.Value)}", ",");
             }
             else
             {
@@ -141,7 +141,7 @@ namespace NeonCli.Ansible.Docker
 
             if (Consistency.HasValue)
             {
-                sb.AppendWithSeparator($"consistency={NeonHelper.EnumToStringUsingAttributes(Consistency.Value)}", ",");
+                sb.AppendWithSeparator($"consistency={NeonHelper.EnumToString(Consistency.Value)}", ",");
             }
             else
             {
@@ -182,7 +182,7 @@ namespace NeonCli.Ansible.Docker
             {
                 if (BindPropagation.HasValue)
                 {
-                    sb.AppendWithSeparator($"bind-propagation={NeonHelper.EnumToStringUsingAttributes(BindPropagation.Value)}", ",");
+                    sb.AppendWithSeparator($"bind-propagation={NeonHelper.EnumToString(BindPropagation.Value)}", ",");
                 }
                 else
                 {
@@ -1637,7 +1637,7 @@ context.LogDebug($"append-update-bool[{option}]: 5");
                 return false;
             }
 
-            outputArgs.Add($"{option}={NeonHelper.EnumToStringUsingAttributes(update.Value)}");
+            outputArgs.Add($"{option}={NeonHelper.EnumToString(update.Value)}");
 
             return true;
         }
@@ -1925,7 +1925,7 @@ context.LogDebug($"update-args: update image = {update.Image}");
 
             // $todo(jeff.lill): Ignoring [--placement-pref].
 
-            AppendUpdateListArgs(context, outputArgs, "--publish", Publish, update.Publish, publish => $"target={publish.Target},protocol={NeonHelper.EnumToStringUsingAttributes(publish.Protocol.Value)},mode={NeonHelper.EnumToStringUsingAttributes(publish.Mode.Value)}");
+            AppendUpdateListArgs(context, outputArgs, "--publish", Publish, update.Publish, publish => $"target={publish.Target},protocol={NeonHelper.EnumToString(publish.Protocol.Value)},mode={NeonHelper.EnumToString(publish.Mode.Value)}");
             AppendUpdateBoolArgs(context, outputArgs, "--read-only", ReadOnly, update.ReadOnly);
             AppendUpdateLongArgs(context, outputArgs, "--replicas", Replicas, update.Replicas);
 

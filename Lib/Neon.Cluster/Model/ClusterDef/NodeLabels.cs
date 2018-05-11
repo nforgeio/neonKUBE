@@ -752,8 +752,8 @@ namespace Neon.Cluster
 
                         switch (label.Key)
                         {
-                            case LabelAzureVmSize:      ParseCheck(label, () => { node.Azure.VmSize = NeonHelper.ParseEnum<AzureVmSizes>(label.Value, ignoreCase: true); }); break;
-                            case LabelAzureStorageType: ParseCheck(label, () => { node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageTypes>(label.Value, ignoreCase: true); }); break;
+                            case LabelAzureVmSize:      ParseCheck(label, () => { node.Azure.VmSize = NeonHelper.ParseEnum<AzureVmSizes>(label.Value); }); break;
+                            case LabelAzureStorageType: ParseCheck(label, () => { node.Azure.StorageType = NeonHelper.ParseEnum<AzureStorageTypes>(label.Value); }); break;
                             case LabelAzureDriveCount:  ParseCheck(label, () => { node.Azure.HardDriveCount = int.Parse(label.Value); }); break;
                             case LabelAzureDriveSizeGB: ParseCheck(label, () => { node.Azure.HardDriveSizeGB = int.Parse(label.Value); }); break;
                         }
