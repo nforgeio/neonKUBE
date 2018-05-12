@@ -216,7 +216,7 @@ namespace NeonCli.Ansible
     //                                                                  published: 8080     (required)
     //                                                                  target: 80          (retured)
     //                                                                  mode: ingress       (optional: ingress|host}
-    //                                                                  protcol: tcp        (optional: tcp|udp|sctp)
+    //                                                                  protocol: tcp       (optional: tcp|udp|sctp)
     //
     // read_only                no          false       true        mount container root filesystem as read-only
     //                                                  false
@@ -363,11 +363,130 @@ namespace NeonCli.Ansible
     /// </summary>
     public class DockerServiceModule : IAnsibleModule
     {
+        private HashSet<string> topLevelArgs = new HashSet<string>()
+        {
+            "name",
+            "state",
+            "force",
+            "args",
+            "config",
+            "constraint",
+            "container_label",
+            "credential_spec",
+            "detach",
+            "dns",
+            "dns_option",
+            "dns_search",
+            "endpoint_mode",
+            "entrypoint",
+            "env",
+            "generic_resource",
+            "group",
+            "health_cmd",
+            "health_interval",
+            "health_retries",
+            "health_start_period",
+            "health_timeout",
+            "host",
+            "hostname",
+            "image",
+            "isolation",
+            "label",
+            "limit_cpu",
+            "limit_memory",
+            "log_driver",
+            "log_opt",
+            "mode",
+            "mount",
+            "network",
+            "no_healthcheck",
+            "no_resolve_image",
+            "placement_pref",
+            "publish",
+            "read_only",
+            "replicas",
+            "reserve_cpu",
+            "reserve_memory",
+            "restart_condition",
+            "restart_delay",
+            "restart_max_attempts",
+            "restart_window",
+            "rollback_delay",
+            "rollback_failure_action",
+            "rollback_max_failure_ratio",
+            "rollback_monitor",
+            "rollback_order",
+            "rollback_parallelism",
+            "secret",
+            "secret",
+            "stop_signal",
+            "tty",
+            "update_delay",
+            "update_failure_action",
+            "update_max_failure_ratio",
+            "update_monitor",
+            "update_order",
+            "update_parallelism",
+            "user",
+            "with_registry_auth",
+            "workdir"
+        };
+
+        private HashSet<string> configArgs = new HashSet<string>()
+        {
+            "source",
+            "target",
+            "uid",
+            "gid",
+            "mode"
+        };
+
+        private HashSet<string> secretArgs = new HashSet<string>()
+        {
+            "source",
+            "target",
+            "uid",
+            "gid",
+            "mode"
+        };
+
+        private HashSet<string> mountArgs = new HashSet<string>()
+        {
+            "type",
+            "source",
+            "target",
+            "readonly",
+            "consistency",
+            "bind_propagation",
+            "volume_driver",
+            "volume_label",
+            "volume_nocopy",
+            "volume_opt",
+            "tmpfs_size",
+            "tmpfs_mode"
+        };
+
+        private HashSet<string> publishArgs = new HashSet<string>()
+        {
+            "published",
+            "target",
+            "mode",
+            "protocol"
+        };
+
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
 context.LogDebug("module: 0");
             var cluster = NeonClusterHelper.Cluster;
+
+            // Ensure that top-level argument names are valid.
+
+            if (!context.ValidateArguments(context.Arguments, topLevelArgs))
+            {
+                context.Failed = true;
+                return;
+            }
 
             // Obtain common arguments.
 
@@ -405,7 +524,7 @@ context.LogDebug("module: 1");
             service.Name                    = name;
 
             service.Args                    = context.ParseStringArray("args");
-            service.Config                  = ParseConfigArray(context, "config");
+            service.Config                  = ParseConfigs(context, "config");
             service.Constraint              = context.ParseStringArray("constraint");
             service.ContainerLabel          = context.ParseStringArray("container_label");
             service.CredentialSpec          = context.ParseStringArray("credential_spec");
@@ -455,7 +574,7 @@ context.LogDebug($"endpoint_mode (1) = {service.EndpointMode}");
             service.RollbackMonitor         = context.ParseDockerInterval("rollback_monitor");
             service.RollbackOrder           = context.ParseEnum<ServiceRollbackOrder>("rollback_order", default(ServiceRollbackOrder));
             service.RollbackParallism       = context.ParseInt("rollback_parallelism", v => v > 0);
-            service.Secret                  = ParseSecretArray(context, "secret");
+            service.Secret                  = ParseSecrets(context, "secret");
             service.StopGracePeriod         = context.ParseDockerInterval("stop_grace_period");
             service.StopSignal              = context.ParseString("stop_signal");
             service.ReadOnly                = context.ParseBool("read_only");
@@ -703,6 +822,11 @@ context.LogDebug("rollback: 0");
                 if (jObject == null)
                 {
                     context.WriteErrorLine($"One or more of the [{argName}] array elements is not a valid bind mount specification.");
+                    return mounts;
+                }
+
+                if (!context.ValidateArguments(jObject, mountArgs, argName))
+                {
                     return mounts;
                 }
 
@@ -971,6 +1095,11 @@ context.LogDebug($"parse-ports: 2: {item}");
                     return publishedPorts;
                 }
 
+                if (!context.ValidateArguments(jObject, publishArgs, argName))
+                {
+                    return publishedPorts;
+                }
+
                 var port  = new PublishPort();
                 var value = String.Empty;
 
@@ -1067,7 +1196,7 @@ context.LogDebug($"parse-ports: 7: count = {publishedPorts.Count}");
         /// <param name="context">The module context.</param>
         /// <param name="argName">The argument name.</param>
         /// <returns>The list of <see cref="Config"/> instances.</returns>
-        private List<Config> ParseConfigArray(ModuleContext context, string argName)
+        private List<Config> ParseConfigs(ModuleContext context, string argName)
         {
             var configs = new List<Config>();
 
@@ -1091,6 +1220,11 @@ context.LogDebug($"parse-ports: 7: count = {publishedPorts.Count}");
                 if (jObject == null)
                 {
                     context.WriteErrorLine($"One or more of the [{argName}] array items is not valid.");
+                    return configs;
+                }
+
+                if (!context.ValidateArguments(jObject, configArgs, argName))
+                {
                     return configs;
                 }
 
@@ -1170,7 +1304,7 @@ context.LogDebug($"parse-ports: 7: count = {publishedPorts.Count}");
         /// <param name="context">The module context.</param>
         /// <param name="argName">The argument name.</param>
         /// <returns>The list of <see cref="Secret"/> instances.</returns>
-        private List<Secret> ParseSecretArray(ModuleContext context, string argName)
+        private List<Secret> ParseSecrets(ModuleContext context, string argName)
         {
             var secrets = new List<Secret>();
 
@@ -1194,6 +1328,11 @@ context.LogDebug($"parse-ports: 7: count = {publishedPorts.Count}");
                 if (jObject == null)
                 {
                     context.WriteErrorLine($"One or more of the [{argName}] array items is not valid.");
+                    return secrets;
+                }
+
+                if (!context.ValidateArguments(jObject, configArgs, argName))
+                {
                     return secrets;
                 }
 

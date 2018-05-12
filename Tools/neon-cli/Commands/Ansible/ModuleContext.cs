@@ -7,6 +7,7 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -916,6 +917,47 @@ LogDebug($"ParseEnum 4");
             }
 
             return array;
+        }
+
+        /// <summary>
+        /// Verifies that all of a <see cref="JObject"/>'s properties are well-known.
+        /// </summary>
+        /// <param name="jObject">The object being tested.</param>
+        /// <param name="validNames">The set of valid property names.</param>
+        /// <param name="prefix">The optional prefix to be used when reporting invalid properties.</param>
+        /// <returns><c>true</c> if the object property names are all valid.</returns>
+        public bool ValidateArguments(JObject jObject, HashSet<string> validNames, string prefix = null)
+        {
+            Covenant.Requires<ArgumentNullException>(jObject != null);
+            Covenant.Requires<ArgumentNullException>(validNames != null);
+
+            var valid = true;
+
+            foreach (var property in jObject.Properties())
+            {
+                if (property.Name.StartsWith("_"))
+                {
+                    // Ansible built-in arguments begin with "_".  Ignore these.
+
+                    continue;
+                }
+
+                if (!validNames.Contains(property.Name))
+                {
+                    valid = false;
+
+                    if (string.IsNullOrEmpty(prefix))
+                    {
+                        WriteErrorLine($"Unknown module argument: {property.Name}");
+                    }
+                    else
+                    {
+                        WriteErrorLine($"Unknown module argument: {prefix}.{property.Name}");
+                    }
+                }
+            }
+
+            return valid;
         }
     }
 }
