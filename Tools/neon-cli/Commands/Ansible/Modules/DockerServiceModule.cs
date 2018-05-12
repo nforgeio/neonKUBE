@@ -418,7 +418,7 @@ namespace NeonCli.Ansible
             "rollback_order",
             "rollback_parallelism",
             "secret",
-            "secret",
+            "stop_grace_period",
             "stop_signal",
             "tty",
             "update_delay",

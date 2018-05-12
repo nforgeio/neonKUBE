@@ -1373,6 +1373,7 @@ context.LogDebug($"parse: spec = {NeonHelper.JsonSerialize(endpointSpec, Newtons
         /// the service from the item value.  This deefaults to the entire item value if
         /// no extractor is specified.
         /// </param>
+        /// <param name="isVariable">Optionally enable special behavior for NAME=VALUE type settings.</param>
         /// <returns><c>true</c> if an update is required for these settings.</returns>
         /// <remarks>
         /// <para>
@@ -1397,7 +1398,8 @@ context.LogDebug($"parse: spec = {NeonHelper.JsonSerialize(endpointSpec, Newtons
             string          option, 
             List<T>         current, 
             List<T>         update, 
-            Func<T, string> nameExtractor = null)
+            Func<T, string> nameExtractor = null,
+            bool            isVariable = false)
         {
             var updated = false;
 
@@ -1437,16 +1439,17 @@ context.LogDebug($"update-list[{option}]: 1");
                 var remove    = !updateSet.TryGetValue(stateName, out var updateItem) ||
                                 currentItem.ToString() != updateItem.ToString();
 
-                if (option == "--env")
+                if (isVariable)
                 {
                     // $hack(jeff.lill):
                     //
-                    // We need to special case [--env] variables.  We'll generate an
-                    // [--env-rm] option only if the variable is being deleted.
-                    // The problem here is that the default algorithm would generate
-                    // a service update command like:
+                    // We need to special case options like [---container-label], [--env], 
+                    // and [--label].  options.  We need to generate a [--*-rm] option only
+                    // if the variable is being deleted.  The problem here is that the 
+                    // default algorithm to modify a variable would generate a service 
+                    // update command like:
                     //
-                    //      docker service update --env-rm=VAR --env-add=VAR=NET-VALUE test
+                    //      docker service update --env-rm=VAR --env-add=VAR=NEW-VALUE test
                     //
                     // Which seems reasonable: remove any existing VAR variable and
                     // then add it again with the new value.  Unfortunately, Docker 
@@ -1851,7 +1854,7 @@ context.LogDebug($"append-update-long[{option}]: 4");
 
             AppendUpdateListArgs(context, outputArgs, "--config", Config, update.Config, state => state.Source);
             AppendUpdateListArgs(context, outputArgs, "--constraint", Constraint, update.Constraint);
-            AppendUpdateListArgs(context, outputArgs, "--container-label", ContainerLabel, update.ContainerLabel, SimpleNameExtractor);
+            AppendUpdateListArgs(context, outputArgs, "--container-label", ContainerLabel, update.ContainerLabel, SimpleNameExtractor, isVariable: true);
             AppendUpdateListArgs(context, outputArgs, "--credential-spec", CredentialSpec, update.CredentialSpec);
             AppendUpdateListArgs(context, outputArgs, "--dns", Dns, update.Dns);
             AppendUpdateListArgs(context, outputArgs, "--dns-option", DnsOption, update.DnsOption);
@@ -1890,8 +1893,8 @@ context.LogDebug($"append-update-long[{option}]: 4");
                 }
             }
 
-            AppendUpdateListArgs(context, outputArgs, "--env", Env, update.Env, SimpleNameExtractor);
-            AppendUpdateListArgs(context, outputArgs, "--group", Groups, update.Groups, SimpleNameExtractor);
+            AppendUpdateListArgs(context, outputArgs, "--env", Env, update.Env, SimpleNameExtractor, isVariable: true);
+            AppendUpdateListArgs(context, outputArgs, "--group", Groups, update.Groups);
             AppendUpdateStringArgs(context, outputArgs, "--health-cmd", HealthCmd, update.HealthCmd);
             AppendUpdateDurationArgs(context, outputArgs, "--health-interval", HealthInterval, update.HealthInterval);
             AppendUpdateLongArgs(context, outputArgs, "--health-retries", HealthRetries, update.HealthRetries);
