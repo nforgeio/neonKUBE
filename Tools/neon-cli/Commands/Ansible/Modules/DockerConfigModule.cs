@@ -118,10 +118,24 @@ namespace NeonCli.Ansible
         //          name: my-config
         //          state: absent
 
+        private HashSet<string> validModuleArgs = new HashSet<string>()
+        {
+            "state",
+            "name",
+            "bytes",
+            "text"
+        };
+
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
             var cluster = NeonClusterHelper.Cluster;
+
+            if (!context.ValidateArguments(context.Arguments, validModuleArgs))
+            {
+                context.Failed = true;
+                return;
+            }
 
             // Obtain common arguments.
 

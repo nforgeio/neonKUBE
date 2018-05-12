@@ -81,6 +81,35 @@ namespace TestNeonCluster
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void CheckArgs()
+        {
+            //-----------------------------------------------------------------
+            // Verify that the module detects unknown top-level arguments.
+
+            var name        = "cert-" + Guid.NewGuid().ToString("D");
+            var certificate = TlsCertificate.CreateSelfSigned("test.com");
+            var certPem     = GetIndentedPem(certificate);
+            var playbook    =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_certificate:
+        name: {name}
+        value: |
+{certPem}
+        state: present
+        UNKNOWN: argument
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("create cert");
+
+            Assert.False(taskResult.Success);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Create()
         {
             var name        = "cert-" + Guid.NewGuid().ToString("D");

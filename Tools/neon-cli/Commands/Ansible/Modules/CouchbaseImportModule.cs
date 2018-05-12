@@ -146,6 +146,19 @@ namespace NeonCli.Ansible
         //          format: json-lines
         //          key: "#MONO_INCR#"
 
+        private HashSet<string> validModuleArgs = new HashSet<string>()
+        {
+            "servers",
+            "port",
+            "ssl",
+            "bucket",
+            "username",
+            "password",
+            "force",
+            "format",
+            "key"
+        };
+
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
@@ -154,6 +167,12 @@ namespace NeonCli.Ansible
 
             //-----------------------------------------------------------------
             // Parse the module arguments.
+
+            if (!context.ValidateArguments(context.Arguments, validModuleArgs))
+            {
+                context.Failed = true;
+                return;
+            }
 
             var couchbaseArgs = CouchbaseArgs.Parse(context);
 

@@ -102,6 +102,17 @@ namespace NeonCli.Ansible
     /// </summary>
     public class DashboardModule : IAnsibleModule
     {
+        private HashSet<string> validModuleArgs = new HashSet<string>()
+        {
+            "name",
+            "state",
+            "title",
+            "folder",
+            "url",
+            "description",
+            "state"
+        };
+
         /// <summary>
         /// Implements the built-in <b>neon_dashboard</b> module.
         /// </summary>
@@ -110,6 +121,12 @@ namespace NeonCli.Ansible
         {
             var cluster = NeonClusterHelper.Cluster;
             var consul  = NeonClusterHelper.Consul;
+
+            if (!context.ValidateArguments(context.Arguments, validModuleArgs))
+            {
+                context.Failed = true;
+                return;
+            }
 
             // Obtain common arguments.
 

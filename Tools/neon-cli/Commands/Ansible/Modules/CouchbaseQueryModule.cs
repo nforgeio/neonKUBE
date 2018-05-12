@@ -211,6 +211,20 @@ namespace NeonCli.Ansible
         //---------------------------------------------------------------------
         // Implementation
 
+        private HashSet<string> validModuleArgs = new HashSet<string>()
+        {
+            "servers",
+            "port",
+            "ssl",
+            "bucket",
+            "username",
+            "password",
+            "query",
+            "limit",
+            "format",
+            "output"
+        };
+
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
@@ -219,6 +233,12 @@ namespace NeonCli.Ansible
 
             //-----------------------------------------------------------------
             // Parse the module arguments.
+
+            if (!context.ValidateArguments(context.Arguments, validModuleArgs))
+            {
+                context.Failed = true;
+                return;
+            }
 
             var couchbaseArgs = CouchbaseArgs.Parse(context);
 

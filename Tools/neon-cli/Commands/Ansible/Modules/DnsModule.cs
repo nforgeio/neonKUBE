@@ -178,11 +178,24 @@ namespace NeonCli.Ansible
         //            - target: group=swarm
         //              check: yes
 
+        private HashSet<string> validModuleArgs = new HashSet<string>()
+        {
+            "state",
+            "hostname",
+            "endpoints"
+        };
+
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
             var cluster = NeonClusterHelper.Cluster;
             var consul  = NeonClusterHelper.Consul;
+
+            if (!context.ValidateArguments(context.Arguments, validModuleArgs))
+            {
+                context.Failed = true;
+                return;
+            }
 
             // Obtain common arguments.
 

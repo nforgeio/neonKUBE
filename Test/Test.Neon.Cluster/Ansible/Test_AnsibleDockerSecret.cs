@@ -35,6 +35,29 @@ namespace TestNeonCluster
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void CheckArgs()
+        {
+            var name     = "secret-" + Guid.NewGuid().ToString("D");
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: create secret
+      neon_docker_secret:
+        name: {name}
+        state: present
+        text: password
+        UNKNOWN: argument
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("create secret");
+
+            Assert.False(taskResult.Success);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void CreateText()
         {
             var name     = "secret-" + Guid.NewGuid().ToString("D");

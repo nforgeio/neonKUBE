@@ -163,10 +163,25 @@ namespace NeonCli.Ansible
     /// </summary>
     public class LoadBalancerModule : IAnsibleModule
     {
+        private HashSet<string> validModuleArgs = new HashSet<string>()
+        {
+            "name",
+            "load_balancer",
+            "rule",
+            "state",
+            "force"
+        };
+
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
             LoadBalanceManager  loadBalancer;
+
+            if (!context.ValidateArguments(context.Arguments, validModuleArgs))
+            {
+                context.Failed = true;
+                return;
+            }
 
             // Obtain common arguments.
 

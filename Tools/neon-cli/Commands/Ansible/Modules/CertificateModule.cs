@@ -59,8 +59,8 @@ namespace NeonCli.Ansible
     //                                                  certificates and the private key in PEM 
     //                                                  format.  Required when [state=present]
     //
-    // force        no          false                   resaves the certificate when [state=present]
-    //                                                  even if the certificate is the same
+    // force        no          false                   persists the certificate when [state=present]
+    //                                                  even if the certificate is unchanged
     //
     // Check Mode:
     // -----------
@@ -115,9 +115,23 @@ namespace NeonCli.Ansible
     /// </summary>
     public class CertificateModule : IAnsibleModule
     {
+        private HashSet<string> validModuleArgs = new HashSet<string>()
+        {
+            "name",
+            "state",
+            "value",
+            "force"
+        };
+
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
+            if (!context.ValidateArguments(context.Arguments, validModuleArgs))
+            {
+                context.Failed = true;
+                return;
+            }
+
             // Obtain common arguments.
 
             if (!context.Arguments.TryGetValue<string>("name", out var name))
