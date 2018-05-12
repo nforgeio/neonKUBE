@@ -1196,7 +1196,7 @@ namespace Neon.Cluster
                 catch (Exception e)
                 {
                     // This is probably an [HttpRequestException] of [SocketException]
-                    // indicating that we  could not contact the cluster Consul.  We'll 
+                    // indicating that we could not contact the cluster Consul.  We'll 
                     // just returned the cached cluster definition in this situation 
                     // (if we have one).
 
