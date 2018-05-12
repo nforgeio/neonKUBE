@@ -94,7 +94,7 @@ $@"
 - name: test
   hosts: localhost
   tasks:
-    - name: manage service
+    - name: create cert
       neon_certificate:
         name: {name}
         value: |
