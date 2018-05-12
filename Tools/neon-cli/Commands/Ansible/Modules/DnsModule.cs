@@ -185,6 +185,12 @@ namespace NeonCli.Ansible
             "endpoints"
         };
 
+        private HashSet<string> endpointArgs = new HashSet<string>()
+        {
+            "target",
+            "check"
+        };
+
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
@@ -278,6 +284,21 @@ namespace NeonCli.Ansible
 
                     foreach (var item in endpointsArray)
                     {
+                        var endpointJObject = item as JObject;
+
+                        if (endpointJObject == null)
+                        {
+                            context.WriteErrorLine("One or more [endpoints] are invalid.");
+                            context.Failed = true;
+                            return;
+                        }
+
+                        if (!context.ValidateArguments(endpointJObject, endpointArgs, "endpoints"))
+                        {
+                            context.Failed = true;
+                            return;
+                        }
+
                         endpoints.Add(item.ToObject<DnsEndpoint>());
                     }
 
