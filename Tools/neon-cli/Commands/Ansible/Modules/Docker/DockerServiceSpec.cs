@@ -1365,7 +1365,7 @@ context.LogDebug($"parse: spec = {NeonHelper.JsonSerialize(endpointSpec, Newtons
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
         /// <param name="outputArgs">The output command line arguments list.</param>
-        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="option">The base command line option (e.g. <b>--env</b>).</param>
         /// <param name="current">The current service state.</param>
         /// <param name="update">The required updated service state.</param>
         /// <param name="nameExtractor">
@@ -1391,7 +1391,13 @@ context.LogDebug($"parse: spec = {NeonHelper.JsonSerialize(endpointSpec, Newtons
         /// (e.g. the target port for a <b>--publish-rm port</b> option).
         /// </para>
         /// </remarks>
-        private bool AppendUpdateListArgs<T>(ModuleContext context, List<string> outputArgs, string option, List<T> current, List<T> update, Func<T, string> nameExtractor = null)
+        private bool AppendUpdateListArgs<T>(
+            ModuleContext   context, 
+            List<string>    outputArgs, 
+            string          option, 
+            List<T>         current, 
+            List<T>         update, 
+            Func<T, string> nameExtractor = null)
         {
             var updated = false;
 
@@ -1428,12 +1434,43 @@ context.LogDebug($"update-list[{option}]: 1");
             foreach (var currentItem in currentSet.Values)
             {
                 var stateName = GetStateName(currentItem, nameExtractor);
-                var remove    = !updateSet.TryGetValue(stateName, out var updateItem) || 
+                var remove    = !updateSet.TryGetValue(stateName, out var updateItem) ||
                                 currentItem.ToString() != updateItem.ToString();
-                if (remove)
+
+                if (option == "--env")
                 {
-                    outputArgs.Add($"{option}-rm={stateName}");
-                    updated = true;
+                    // $hack(jeff.lill):
+                    //
+                    // We need to special case [--env] variables.  We'll generate an
+                    // [--env-rm] option only if the variable is being deleted.
+                    // The problem here is that the default algorithm would generate
+                    // a service update command like:
+                    //
+                    //      docker service update --env-rm=VAR --env-add=VAR=NET-VALUE test
+                    //
+                    // Which seems reasonable: remove any existing VAR variable and
+                    // then add it again with the new value.  Unfortunately, Docker 
+                    // doesn't do this.  Instead, it simple deletes VAR and doesn't
+                    // set the new value.
+
+                    if (remove)
+                    {
+                        if (updateItem == null)
+                        {
+                            updated = true;
+                            outputArgs.Add($"{option}-rm={stateName}");
+                        }
+                    }
+                }
+                else
+                {
+                    // The default remove code.
+
+                    if (remove)
+                    {
+                        updated = true;
+                        outputArgs.Add($"{option}-rm={stateName}");
+                    }
                 }
             }
 
@@ -1485,7 +1522,7 @@ context.LogDebug($"update-list[{option}]: 10:");
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
         /// <param name="outputArgs">The output command line arguments list.</param>
-        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="option">The base command line option (e.g. <b>--env</b>).</param>
         /// <param name="current">The current service state.</param>
         /// <param name="update">The required updated service state.</param>
         /// <returns><c>true</c> if an update is required for these settings.</returns>
@@ -1526,7 +1563,7 @@ context.LogDebug($"append-update-string-2");
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
         /// <param name="outputArgs">The output command line arguments list.</param>
-        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="option">The base command line option (e.g. <b>--env</b>).</param>
         /// <param name="current">The current service state.</param>
         /// <param name="update">The required updated service state.</param>
         /// <returns><c>true</c> if an update is required for these settings.</returns>
@@ -1568,7 +1605,7 @@ context.LogDebug($"append-update-double[{option}]: 4");
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
         /// <param name="outputArgs">The output command line arguments list.</param>
-        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="option">The base command line option (e.g. <b>--env</b>).</param>
         /// <param name="current">The current service state.</param>
         /// <param name="update">The required updated service state.</param>
         /// <returns><c>true</c> if an update is required for these settings.</returns>
@@ -1616,7 +1653,7 @@ context.LogDebug($"append-update-bool[{option}]: 5");
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
         /// <param name="outputArgs">The output command line arguments list.</param>
-        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="option">The base command line option (e.g. <b>--env</b>).</param>
         /// <param name="current">The current service state.</param>
         /// <param name="update">The required updated service state.</param>
         /// <returns><c>true</c> if an update is required for these settings.</returns>
@@ -1654,7 +1691,7 @@ context.LogDebug($"append-update-bool[{option}]: 5");
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
         /// <param name="outputArgs">The output command line arguments list.</param>
-        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="option">The base command line option (e.g. <b>--env</b>).</param>
         /// <param name="current">The current service state (nanoseconds).</param>
         /// <param name="update">The required updated service state (nanoseconds).</param>
         /// <returns><c>true</c> if an update is required for these settings.</returns>
@@ -1691,7 +1728,7 @@ context.LogDebug($"append-update-bool[{option}]: 5");
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
         /// <param name="outputArgs">The output command line arguments list.</param>
-        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="option">The base command line option (e.g. <b>--env</b>).</param>
         /// <param name="current">The current service state (nanoseconds).</param>
         /// <param name="update">The required updated service state (nanoseconds).</param>
         /// <returns><c>true</c> if an update is required for these settings.</returns>
@@ -1728,7 +1765,7 @@ context.LogDebug($"append-update-bool[{option}]: 5");
         /// <typeparam name="T">The option type.</typeparam>
         /// <param name="context">The module context.</param>
         /// <param name="outputArgs">The output command line arguments list.</param>
-        /// <param name="option">The base command line option (e.g.) <b>--env</b>.</param>
+        /// <param name="option">The base command line option (e.g. <b>--env</b>).</param>
         /// <param name="current">The current service state (nanoseconds).</param>
         /// <param name="update">The required updated service state (nanoseconds).</param>
         /// <returns><c>true</c> if an update is required for these settings.</returns>
@@ -1918,7 +1955,7 @@ context.LogDebug($"update-args: update image = {update.Image}");
                 outputArgs.Add($"--log-opt={sb}");
             }
 
-            AppendUpdateListArgs(context, outputArgs, "--mount", Mount, update.Mount, mount => mount.Target);
+            AppendUpdateListArgs(context, outputArgs, "--mount", Mount, update.Mount, mount => $"target={mount.Target},type={NeonHelper.EnumToString(mount.Type.Value)}");
             AppendUpdateListArgs(context, outputArgs, "--network", Network, update.Network);
             AppendUpdateBoolArgs(context, outputArgs, "--no-healthcheck", NoHealthCheck, update.NoHealthCheck ?? false);
             AppendUpdateBoolArgs(context, outputArgs, "--no-resolve-image", NoResolveImage, update.NoResolveImage ?? false);

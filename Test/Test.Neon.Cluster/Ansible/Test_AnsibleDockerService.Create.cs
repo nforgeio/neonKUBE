@@ -299,7 +299,7 @@ $@"
 
             var details = cluster.InspectService(serviceName);
 
-            Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.TaskTemplate.EndpointSpec.Mode);
+            Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.EndpointSpec.Mode);
         }
 
         [Fact]
@@ -943,7 +943,7 @@ $@"
         {
             // $todo(jeff.lill):
             //
-            // This test is failing due to an apparent Docker bug:
+            // This test is failing due to a Docker bug:
             //
             //      https://github.com/moby/moby/issues/37027
 
@@ -1013,10 +1013,10 @@ $@"
             Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
 
             var details = cluster.InspectService(serviceName);
-            var network = details.Spec.TaskTemplate.Networks;
+            var networks = details.Spec.TaskTemplate.Networks;
 
-            Assert.NotNull(network);
-            Assert.Equal(2, network.Count);
+            Assert.NotNull(networks);
+            Assert.Equal(2, networks.Count);
         }
 
         [Fact]

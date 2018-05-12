@@ -26,29 +26,7 @@ namespace TestNeonCluster
         /// </summary>
         private void DeployTestService()
         {
-            var playbook =
-$@"
-- name: test
-  hosts: localhost
-  tasks:
-    - name: manage service
-      neon_docker_service:
-        name: {serviceName}
-        state: present
-        image: {serviceImage}
-        update_monitor: 1s
-";
-            var results = AnsiblePlayer.NeonPlay(playbook);
-            var taskResult = results.GetTaskResult("manage service");
-
-            Assert.True(taskResult.Success);
-            Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
-
-            var details = cluster.InspectService(serviceName);
-
-            Assert.Equal(serviceName, details.Spec.Name);
-            Assert.Equal(serviceImage, details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
+            cluster.DockerExecute($"service create --name {serviceName} --update-monitor 1s {serviceImage}");
         }
 
         [Fact]
@@ -547,7 +525,7 @@ $@"
 
             var details = cluster.InspectService(serviceName);
 
-            Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.TaskTemplate.EndpointSpec.Mode);
+            Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.EndpointSpec.Mode);
 
             //-----------------------------------------------------------------
             // Verify that update reports when no change is detected.
@@ -645,7 +623,7 @@ $@"
             //
             // There's no way to know from the service inspection whether
             // a variable value was explicitly specified or if it came
-            // from the host, so we have to treat this as change.
+            // from the host, so we have to treat this as a change.
             //
             // This is different from how all the other updated collection
             // items work.
@@ -655,9 +633,17 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+            env = details.Spec.TaskTemplate.ContainerSpec.Env;
+
+            Assert.Equal(2, env.Count);
+            Assert.Contains("FOO=BAR", env);
+            Assert.Contains("SUDO_USER=sysadmin", env);
 
             //-----------------------------------------------------------------
-            // Verify that we can remove environment variables labels.
+            // Verify that we can remove environment variables.
 
             playbook =
 $@"
@@ -1390,6 +1376,230 @@ $@"
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Update_ReadOnly()
+        {
+            DeployTestService();
+
+            // Verify that we can create a service with a read-only file system.
+
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+        read_only: on
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            var details = cluster.InspectService(serviceName);
+
+            Assert.True(details.Spec.TaskTemplate.ContainerSpec.ReadOnly);
+
+            //-----------------------------------------------------------------
+            // Verify that we can detect when no changes were made.
+
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+
+            Assert.True(details.Spec.TaskTemplate.ContainerSpec.ReadOnly);
+        }
+
+        [Fact(Skip = "DOCKER BUG: https://github.com/moby/moby/issues/37027")]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Update_RollbackConfig()
+        {
+            // $todo(jeff.lill):
+            //
+            // This test is failing due to a Docker bug:
+            //
+            //      https://github.com/moby/moby/issues/37027
+
+            DeployTestService();
+
+            // Verify that we can create a service with a various
+            // rollback configuration related settings.
+
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+        rollback_delay: 2
+        rollback_failure_action: continue
+        rollback_max_failure_ratio: 0.5
+        rollback_monitor: 3000ms
+        rollback_order: start-first
+        rollback_parallism: 2
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            var details = cluster.InspectService(serviceName);
+            var config = details.Spec.RollbackConfig;
+
+            Assert.Equal(2000000000, config.Delay);
+            Assert.Equal(ServiceRollbackFailureAction.Continue, config.FailureAction);
+            Assert.Equal(0.5, config.MaxFailureRatio);
+            Assert.Equal(3000000000, config.Monitor);
+            Assert.Equal(ServiceRollbackOrder.StartFirst, config.Order);
+            Assert.Equal(2, config.Parallelism);
+
+            //-----------------------------------------------------------------
+            // Verify that we can detect when no changes were made.
+
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+            config = details.Spec.RollbackConfig;
+
+            Assert.Equal(2000000000, config.Delay);
+            Assert.Equal(ServiceRollbackFailureAction.Continue, config.FailureAction);
+            Assert.Equal(0.5, config.MaxFailureRatio);
+            Assert.Equal(3000000000, config.Monitor);
+            Assert.Equal(ServiceRollbackOrder.StartFirst, config.Order);
+            Assert.Equal(2, config.Parallelism);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Update_Network()
+        {
+            DeployTestService();
+
+            // Verify that services can add networks.
+
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+        network:
+          - network-1
+          - network-2
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            var details = cluster.InspectService(serviceName);
+            var networks = details.Spec.TaskTemplate.Networks;
+
+            Assert.NotNull(networks);
+            Assert.Equal(2, networks.Count);
+
+            //-----------------------------------------------------------------
+            // Verify that we can detect when no changes were made.
+
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+            networks = details.Spec.TaskTemplate.Networks;
+
+            Assert.NotNull(networks);
+            Assert.Equal(2, networks.Count);
+
+            //-----------------------------------------------------------------
+            // Remove one of the networks.
+
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+        network:
+          - network-2
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+            networks = details.Spec.TaskTemplate.Networks;
+
+            Assert.NotNull(networks);
+            Assert.Single(networks);
+
+            //-----------------------------------------------------------------
+            // Remove the remaining networks.
+
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+            networks = details.Spec.TaskTemplate.Networks;
+
+            Assert.NotNull(networks);
+            Assert.Empty(networks);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Update_Secret()
         {
             DeployTestService();
@@ -1482,6 +1692,161 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Update_StopGracePeriod()
+        {
+            DeployTestService();
+
+            // Verify that we can customize the stop grace period.
+
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+        stop_grace_period: 5s
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            var details = cluster.InspectService(serviceName);
+
+            Assert.Equal(5000000000L, details.Spec.TaskTemplate.ContainerSpec.StopGracePeriod);
+
+            //-----------------------------------------------------------------
+            // Verify that update reports when no change is detected.
+
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+
+            Assert.Equal(5000000000L, details.Spec.TaskTemplate.ContainerSpec.StopGracePeriod);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Update_StopSignal()
+        {
+            DeployTestService();
+
+            // Verify that we can customize the stop signal.
+
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+        stop_signal: SIGTERM
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            var details = cluster.InspectService(serviceName);
+
+            Assert.Equal("SIGTERM", details.Spec.TaskTemplate.ContainerSpec.StopSignal);
+
+            //-----------------------------------------------------------------
+            // Verify that update reports when no change is detected.
+
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+
+            Assert.Equal("SIGTERM", details.Spec.TaskTemplate.ContainerSpec.StopSignal);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Update_UpdateConfig()
+        {
+            DeployTestService();
+
+            // Verify that we can customize the service update settings.
+
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+        update_delay: 2
+        update_failure_action: continue
+        update_max_failure_ratio: 0.5
+        update_monitor: 3000ms
+        update_order: start-first
+        update_parallelism: 2
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            var details = cluster.InspectService(serviceName);
+            var config = details.Spec.UpdateConfig;
+
+            Assert.Equal(2000000000, config.Delay);
+            Assert.Equal(ServiceUpdateFailureAction.Continue, config.FailureAction);
+            Assert.Equal(0.5, config.MaxFailureRatio);
+            Assert.Equal(3000000000, config.Monitor);
+            Assert.Equal(ServiceUpdateOrder.StartFirst, config.Order);
+            Assert.Equal(2, config.Parallelism);
+
+            //-----------------------------------------------------------------
+            // Verify that update reports when no change is detected.
+
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+            config = details.Spec.UpdateConfig;
+
+            Assert.Equal(2000000000, config.Delay);
+            Assert.Equal(ServiceUpdateFailureAction.Continue, config.FailureAction);
+            Assert.Equal(0.5, config.MaxFailureRatio);
+            Assert.Equal(3000000000, config.Monitor);
+            Assert.Equal(ServiceUpdateOrder.StartFirst, config.Order);
+            Assert.Equal(2, config.Parallelism);
         }
 
         [Fact]
