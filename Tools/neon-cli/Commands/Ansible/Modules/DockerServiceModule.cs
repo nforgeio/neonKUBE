@@ -363,7 +363,7 @@ namespace NeonCli.Ansible
     /// </summary>
     public class DockerServiceModule : IAnsibleModule
     {
-        private HashSet<string> topLevelArgs = new HashSet<string>()
+        private HashSet<string> validModuleArgs = new HashSet<string>()
         {
             "name",
             "state",
@@ -432,7 +432,7 @@ namespace NeonCli.Ansible
             "workdir"
         };
 
-        private HashSet<string> configArgs = new HashSet<string>()
+        private HashSet<string> validConfigArgs = new HashSet<string>()
         {
             "source",
             "target",
@@ -441,7 +441,7 @@ namespace NeonCli.Ansible
             "mode"
         };
 
-        private HashSet<string> secretArgs = new HashSet<string>()
+        private HashSet<string> validSecretArgs = new HashSet<string>()
         {
             "source",
             "target",
@@ -450,7 +450,7 @@ namespace NeonCli.Ansible
             "mode"
         };
 
-        private HashSet<string> mountArgs = new HashSet<string>()
+        private HashSet<string> validMountArgs = new HashSet<string>()
         {
             "type",
             "source",
@@ -466,7 +466,7 @@ namespace NeonCli.Ansible
             "tmpfs_mode"
         };
 
-        private HashSet<string> publishArgs = new HashSet<string>()
+        private HashSet<string> validPublishArgs = new HashSet<string>()
         {
             "published",
             "target",
@@ -477,12 +477,9 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-context.LogDebug("module: 0");
             var cluster = NeonClusterHelper.Cluster;
 
-            // Ensure that top-level argument names are valid.
-
-            if (!context.ValidateArguments(context.Arguments, topLevelArgs))
+            if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {
                 context.Failed = true;
                 return;
@@ -513,7 +510,6 @@ context.LogDebug("module: 0");
             {
                 force = false;
             }
-context.LogDebug("module: 1");
 
             // Parse the service definition from the context parameters.
 
@@ -533,8 +529,6 @@ context.LogDebug("module: 1");
             service.DnsOption               = context.ParseStringArray("dns_option");
             service.DnsSearch               = context.ParseStringArray("dns_search");
             service.EndpointMode            = context.ParseEnum<ServiceEndpointMode>("endpoint_mode");
-context.LogDebug($"endpoint_mode (0) = {context.Arguments["endpoint_mode"]}");
-context.LogDebug($"endpoint_mode (1) = {service.EndpointMode}");
             service.Command                 = context.ParseStringArray("entrypoint");
             service.Env                     = context.ParseStringArray("env");
             service.GenericResource         = context.ParseStringArray("generic_resource");
@@ -588,7 +582,6 @@ context.LogDebug($"endpoint_mode (1) = {service.EndpointMode}");
             service.User                    = context.ParseString("user");
             service.WithRegistryAuth        = context.ParseBool("with_registry_auth");
             service.Dir                     = context.ParseString("workdir");
-context.LogDebug("module: 2");
 
             // Abort the operation if any errors were reported during parsing.
 
@@ -596,7 +589,6 @@ context.LogDebug("module: 2");
             {
                 return;
             }
-context.LogDebug("module: 3");
 
             // We have the required arguments, so perform the operation.
             //
@@ -608,11 +600,9 @@ context.LogDebug("module: 3");
             var manager        = cluster.GetHealthyManager();
             var response       = manager.DockerCommand(RunOptions.None, "docker service inspect", service.Name);
             var serviceDetails = (ServiceDetails)null;
-context.LogDebug("module: 4");
 
             if (response.ExitCode == 0)
             {
-context.LogDebug("module: 5");
                 try
                 {
                     // The inspection response is actually an array with a single
@@ -623,21 +613,17 @@ context.LogDebug("module: 5");
 
                     serviceDetails = NeonHelper.JsonDeserialize<ServiceDetails>(jArray[0].ToString());
                     serviceDetails.Normalize();
-context.LogDebug("module: 6");
                 }
                 catch
                 {
-context.LogDebug("module: 7");
                     context.WriteErrorLine("INTERNAL ERROR: Cannot parse existing service state.");
                     throw;
                 }
 
                 context.WriteLine(AnsibleVerbosity.Trace, $"[{service.Name}] service exists.");
-context.LogDebug("module: 8");
             }
             else
             {
-context.LogDebug("module: 9");
                 // $todo(jeff.lill): 
                 //
                 // I'm trying to distinguish between a a failure because the service doesn't
@@ -647,29 +633,24 @@ context.LogDebug("module: 9");
 
                 if (response.ErrorText.StartsWith("Status: Error: no such service:", StringComparison.InvariantCultureIgnoreCase))
                 {
-context.LogDebug("module: 10");
                     context.WriteLine(AnsibleVerbosity.Trace, $"[{service.Name}] service does not exist.");
                 }
                 else
                 {
-context.LogDebug("module: 11");
                     context.WriteErrorLine(response.ErrorText);
                     return;
                 }
             }
-context.LogDebug("module: 12");
 
             if (context.HasErrors)
             {
                 return;
             }
-context.LogDebug("module: 13");
 
             switch (state)
             {
                 case "absent":
 
-context.LogDebug("absent: 0");
                     context.WriteLine(AnsibleVerbosity.Trace, $"[state=absent] so removing [{service.Name}] service if it exists.");
 
                     if (serviceDetails == null)
@@ -703,7 +684,6 @@ context.LogDebug("absent: 0");
 
                 case "present":
 
-context.LogDebug("present: 0");
                     // Perform some minimal parameter validation.
 
                     // $todo(jeff.lill): We could try a lot harder to validate the service fields.
@@ -714,10 +694,8 @@ context.LogDebug("present: 0");
                         return;
                     }
 
-context.LogDebug("present: 1");
                     if (serviceDetails == null)
                     {
-context.LogDebug("present: 2");
                         if (context.CheckMode)
                         {
                             context.WriteLine(AnsibleVerbosity.Info, $"[{service.Name}] service will be created when CHECK-MODE is disabled.");
@@ -731,28 +709,14 @@ context.LogDebug("present: 2");
                     }
                     else
                     {
-context.LogDebug("present: 3");
                         // NOTE: UpdateService() handles the CHECK-MODE logic and context logging.
 
-// $todo(jeff.lill): Extract UpdateService() from the try..catch
-                        try
-                        {
-context.LogDebug("present: 4");
-                            UpdateService(manager, context, force, service, serviceDetails);
-context.LogDebug("present: 5");
-                        }
-                        catch (Exception e)
-                        {
-context.LogDebug("present: 6");
-                            context.LogDebug(e.ToString());
-                            throw;
-                        }
+                        UpdateService(manager, context, force, service, serviceDetails);
                     }
                     break;
 
                 case "rollback":
 
-context.LogDebug("rollback: 0");
                     if (serviceDetails == null)
                     {
                         context.WriteErrorLine($"[{service.Name}] service is not running and cannot be rolled back.");
@@ -825,7 +789,7 @@ context.LogDebug("rollback: 0");
                     return mounts;
                 }
 
-                if (!context.ValidateArguments(jObject, mountArgs, argName))
+                if (!context.ValidateArguments(jObject, validMountArgs, argName))
                 {
                     return mounts;
                 }
@@ -966,12 +930,10 @@ context.LogDebug("rollback: 0");
 
                 if (mount.Type == ServiceMountType.Tmpfs)
                 {
-context.LogDebug($"type 0");
                     // Parse [tmpfs_size].
 
                     if (jObject.TryGetValue<string>("tmpfs_size", out value))
                     {
-context.LogDebug($"type 1: size = {value}");
                         mount.TmpfsSize = context.ParseDockerByteSizeValue(value, $"[mount.tmpfs_size={value}] is not a valid byte size.");
                     }
 
@@ -1012,22 +974,18 @@ context.LogDebug($"type 1: size = {value}");
         /// <returns>The parsed value or <c>null</c> if the input was invalid.</returns>
         private string ParseFileMode(ModuleContext context, string input, string errorMessage = null)
         {
-context.LogDebug($"mode: 0 [{input}]");
             var error = false;
 
             if (input == null || (input.Length != 3 && input.Length != 4))
             {
-context.LogDebug("mode: 1");
                 error = true;
             }
             else
             {
-context.LogDebug("mode: 2");
                 foreach (var ch in input)
                 {
                     if (ch < '0' || '7' < ch)
                     {
-context.LogDebug($"mode: 3 [{ch}]");
                         error = true;
                         break;
                     }
@@ -1036,7 +994,6 @@ context.LogDebug($"mode: 3 [{ch}]");
 
             if (error)
             {
-context.LogDebug("mode: 4");
                 if (errorMessage != null)
                 {
                     context.WriteErrorLine(errorMessage);
@@ -1066,12 +1023,10 @@ context.LogDebug("mode: 4");
         /// /// <returns>The list of <see cref="PublishPort"/> instances.</returns>
         private List<PublishPort> ParsePublishPorts(ModuleContext context, string argName)
         {
-context.LogDebug($"parse-ports: 1: argName = {argName}");
             var publishedPorts = new List<PublishPort>();
 
             if (!context.Arguments.TryGetValue(argName, out var jToken))
             {
-context.LogDebug($"parse-ports: 1-a");
                 return publishedPorts;
             }
 
@@ -1079,14 +1034,12 @@ context.LogDebug($"parse-ports: 1-a");
 
             if (jArray == null)
             {
-context.LogDebug($"parse-ports: 1-b");
                 context.WriteErrorLine($"Expected [{argName}] to be an array of published port specifications.");
                 return publishedPorts;
             }
 
             foreach (var item in jArray)
             {
-context.LogDebug($"parse-ports: 2: {item}");
                 var jObject = item as JObject;
 
                 if (jObject == null)
@@ -1095,7 +1048,7 @@ context.LogDebug($"parse-ports: 2: {item}");
                     return publishedPorts;
                 }
 
-                if (!context.ValidateArguments(jObject, publishArgs, argName))
+                if (!context.ValidateArguments(jObject, validPublishArgs, argName))
                 {
                     return publishedPorts;
                 }
@@ -1120,7 +1073,6 @@ context.LogDebug($"parse-ports: 2: {item}");
                     context.WriteErrorLine($"[{argName}] array element lacks the required [published] property.");
                     return publishedPorts;
                 }
-context.LogDebug($"parse-ports: 3");
 
                 // Parse [target]
 
@@ -1139,7 +1091,6 @@ context.LogDebug($"parse-ports: 3");
                     context.WriteErrorLine($"[{argName}] array element lacks the required [target] property.");
                     return publishedPorts;
                 }
-context.LogDebug($"parse-ports: 4");
 
                 // Parse [mode]
 
@@ -1159,7 +1110,6 @@ context.LogDebug($"parse-ports: 4");
                 {
                     port.Mode = ServicePortMode.Ingress;
                 }
-context.LogDebug($"parse-ports: 5");
 
                 // Parse [protocol]
 
@@ -1182,11 +1132,9 @@ context.LogDebug($"parse-ports: 5");
 
                 // Add the mount to the list.
 
-context.LogDebug($"parse-ports: 6");
                 publishedPorts.Add(port);
             }
 
-context.LogDebug($"parse-ports: 7: count = {publishedPorts.Count}");
             return publishedPorts;
         }
 
@@ -1223,7 +1171,7 @@ context.LogDebug($"parse-ports: 7: count = {publishedPorts.Count}");
                     return configs;
                 }
 
-                if (!context.ValidateArguments(jObject, configArgs, argName))
+                if (!context.ValidateArguments(jObject, validConfigArgs, argName))
                 {
                     return configs;
                 }
@@ -1331,7 +1279,7 @@ context.LogDebug($"parse-ports: 7: count = {publishedPorts.Count}");
                     return secrets;
                 }
 
-                if (!context.ValidateArguments(jObject, configArgs, argName))
+                if (!context.ValidateArguments(jObject, validConfigArgs, argName))
                 {
                     return secrets;
                 }
@@ -1579,7 +1527,6 @@ context.LogDebug($"parse-ports: 7: count = {publishedPorts.Count}");
                 args.Add($"--dns-search={domain}");
             }
 
-context.LogDebug($"endpoint_mode = {service.EndpointMode}");
             AppendCreateOptionEnum(args, "--endpoint-mode", service.EndpointMode);
 
             if (service.Command.Count > 0)
@@ -1768,8 +1715,6 @@ context.LogDebug($"endpoint_mode = {service.EndpointMode}");
             AppendCreateOptionEnum(args, "--rollback-failure-action", service.RollbackFailureAction);
             AppendCreateOptionDouble(args, "--rollback-max-failure-ratio", service.RollbackMaxFailureRatio);
             AppendCreateOption(args, "--rollback-monitor", service.RollbackMonitor, units: "ns");
-context.LogDebug($"rollback-order = {service.RollbackOrder}");
-context.LogDebug($"rollback-parallism = {service.RollbackParallism}");
             AppendCreateOptionEnum(args, "--rollback-order", service.RollbackOrder);
             AppendCreateOption(args, "--rollback-parallelism", service.RollbackParallism, 1);
 
@@ -1862,8 +1807,6 @@ context.LogDebug($"rollback-parallism = {service.RollbackParallism}");
         /// <param name="currentDetails">The service state from a <b>docker service inspect</b> command parsed from JSON.</param>
         private void UpdateService(SshProxy<NodeDefinition> manager, ModuleContext context, bool force, DockerServiceSpec newServiceSpec, ServiceDetails currentDetails)
         {
-context.LogDebug($"update: 0 [current-image={currentDetails.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA}");
-context.LogDebug($"update: 0 [new-image={newServiceSpec.Image}");
             var serviceName = currentDetails.Spec.Name;
 
             // We need to list the networks so we'll be able to map network
@@ -1881,27 +1824,13 @@ context.LogDebug($"update: 0 [new-image={newServiceSpec.Image}");
             // be able to compare the current and expected state and generate an update command
             // if required.
 
-var networkInfo = networksResponse == null ? "NULL" : "OK";
-context.LogDebug($"update: 1 [network = {networkInfo}]");
             var currentServiceSpec = DockerServiceSpec.FromDockerInspect(context, currentDetails, networksResponse.OutputText);
-context.LogDebug($"update: 1-b");
             var updateCmdArgs      = currentServiceSpec.DockerUpdateCommandArgs(context, newServiceSpec);
-if (updateCmdArgs == null)
-{
-    context.LogDebug($"update: 1-c: args = NULL");
-}
-else
-{
-    context.LogDebug($"update: 1-c: args = {NeonHelper.NormalizeExecArgs(updateCmdArgs)}");
-}
 
-            context.LogDebug("update: 1");
             if (updateCmdArgs == null)
             {
-context.LogDebug("update: 2");
                 if (force)
                 {
-context.LogDebug("update: 3");
                     if (context.CheckMode)
                     {
                         context.WriteLine(AnsibleVerbosity.Important, $"[{serviceName}] service is already configured as specified but we'll force an update because [force=true] when CHECK-MODE is disabled.");
@@ -1926,15 +1855,12 @@ context.LogDebug("update: 3");
                 }
                 else
                 {
-context.LogDebug("update: 4");
                     context.WriteLine(AnsibleVerbosity.Important, $"[{serviceName}] is already configured as specified.");
                 }
             }
             else
             {
-context.LogDebug("update: 5");
                 context.WriteLine(AnsibleVerbosity.Info, $"COMMAND: docker service update {NeonHelper.NormalizeExecArgs(updateCmdArgs)}");
-context.LogDebug($"docker service update {NeonHelper.NormalizeExecArgs(updateCmdArgs)}");
 
                 if (context.CheckMode)
                 {

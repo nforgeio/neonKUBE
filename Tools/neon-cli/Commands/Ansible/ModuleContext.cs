@@ -360,17 +360,13 @@ namespace NeonCli.Ansible
         public TEnum? ParseEnumValue<TEnum>(string input, string errorMessage = null)
             where TEnum : struct
         {
-LogDebug($"ParseEnum 0: input = {input}");
             if (string.IsNullOrEmpty(input))
             {
-LogDebug($"ParseEnum 1");
                 return null;
             }
-LogDebug($"ParseEnum 2");
 
             if (!NeonHelper.TryParse<TEnum>(input, out var value))
             {
-LogDebug($"ParseEnum 3");
                 if (errorMessage != null)
                 {
                     WriteErrorLine(errorMessage);
@@ -380,7 +376,6 @@ LogDebug($"ParseEnum 3");
             }
             else
             {
-LogDebug($"ParseEnum 4");
                 return value;
             }
         }

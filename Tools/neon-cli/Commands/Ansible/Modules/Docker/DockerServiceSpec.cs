@@ -1292,7 +1292,6 @@ namespace NeonCli.Ansible.Docker
 
             var endpointSpec = spec.EndpointSpec;
 
-context.LogDebug($"parse: spec = {NeonHelper.JsonSerialize(endpointSpec, Newtonsoft.Json.Formatting.Indented)}");
             this.EndpointMode = endpointSpec.Mode;
 
             foreach (var item in endpointSpec.Ports)
@@ -1403,17 +1402,10 @@ context.LogDebug($"parse: spec = {NeonHelper.JsonSerialize(endpointSpec, Newtons
         {
             var updated = false;
 
-var cur = new List<string>();
-foreach (var item in current) cur.Add(item.ToString());
-var up = new List<string>();
-foreach (var item in update) up.Add(item.ToString());
-context.LogDebug($"update-list[{option}]: current = {NeonHelper.NormalizeExecArgs(cur.ToArray())}");
-context.LogDebug($"update-list[{option}]: update  = {NeonHelper.NormalizeExecArgs(up.ToArray())}");
             if (AreEquivalent(current, update))
             {
                 return updated; // No changes detected.
             }
-context.LogDebug($"update-list[{option}]: 1");
 
             // Initialize dictionaries with the current and desired state.
 
@@ -1480,31 +1472,22 @@ context.LogDebug($"update-list[{option}]: 1");
             // Generate an [*-add] option to add state that exists in the updated service
             // or will change for the updated service.
 
-context.LogDebug($"update-list[{option}]: 2");
             foreach (var updateItem in updateSet.Values)
             {
-context.LogDebug($"update-list[{option}]: 3: updateItem = {updateItem}");
                 var stateName = GetStateName(updateItem, nameExtractor);
                 var add       = false;
 
-context.LogDebug($"update-list[{option}]: 4: stateName = {stateName}");
                 if (currentSet.TryGetValue(stateName, out var currentItem))
                 {
-context.LogDebug($"update-list[{option}]: 5: current = {currentItem}");
-context.LogDebug($"update-list[{option}]: 6: update  = {updateItem}");
                     add = currentItem.ToString() != updateItem.ToString();
-context.LogDebug($"update-list[{option}]: 7: add  = {add}");
                 }
                 else
                 {
-context.LogDebug($"update-list[{option}]: 8:");
                     add = true;
                 }
-context.LogDebug($"update-list[{option}]: 9:");
 
                 if (add)
                 {
-context.LogDebug($"update-list[{option}]: 10:");
                     outputArgs.Add($"{option}-add={updateItem}");
                     updated = true;
                 }
@@ -1533,10 +1516,8 @@ context.LogDebug($"update-list[{option}]: 10:");
         {
             // Return if no change is detected.
 
-context.LogDebug($"append-update-string[{option}]: current={current} update={update}");
             if (current == update)
             {
-context.LogDebug($"append-update-string-0");
                 return false;
             }
 
@@ -1544,11 +1525,9 @@ context.LogDebug($"append-update-string-0");
 
             if (string.IsNullOrEmpty(update))
             {
-context.LogDebug($"append-update-string-1");
                 return false;
             }
 
-context.LogDebug($"append-update-string-2");
             outputArgs.Add($"{option}={update}");
 
             return true;
@@ -1572,25 +1551,20 @@ context.LogDebug($"append-update-string-2");
         /// <returns><c>true</c> if an update is required for these settings.</returns>
         private bool AppendUpdateDoubleArgs(ModuleContext context, List<string> outputArgs, string option, double? current, double? update)
         {
-context.LogDebug($"append-update-double[{option}]: current={current} update={update}");
             // Return if no change is detected.
 
             if (NeonHelper.NullableEquals(current, update))
             {
-context.LogDebug($"append-update-double[{option}]: 1");
                 return false;
             }
-context.LogDebug($"append-update-double[{option}]: 2");
 
             // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-context.LogDebug($"append-update-double[{option}]: 3");
                 return false;
             }
 
-context.LogDebug($"append-update-double[{option}]: 4");
             outputArgs.Add($"{option}={update.Value.ToString("0.#")}");
 
             return true;
@@ -1614,33 +1588,27 @@ context.LogDebug($"append-update-double[{option}]: 4");
         /// <returns><c>true</c> if an update is required for these settings.</returns>
         private bool AppendUpdateBoolArgs(ModuleContext context, List<string> outputArgs, string option, bool? current, bool? update)
         {
-context.LogDebug($"append-update-bool[{option}]: current={current} update={update}");
             // Return if no change is detected.
 
             if (NeonHelper.NullableEquals(current, update))
             {
                 return false;
             }
-context.LogDebug($"append-update-bool[{option}]: 1");
 
             // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-context.LogDebug($"append-update-bool[{option}]: 2");
                 return false;
             }
 
-context.LogDebug($"append-update-bool[{option}]: 3");
             if (update.Value)
             {
-context.LogDebug($"append-update-bool[{option}]: 4");
                 // The option is a switch so include it on TRUE.
 
                 outputArgs.Add($"{option}");
             }
 
-context.LogDebug($"append-update-bool[{option}]: 5");
             return true;
         }
 
@@ -1774,24 +1742,19 @@ context.LogDebug($"append-update-bool[{option}]: 5");
         /// <returns><c>true</c> if an update is required for these settings.</returns>
         private bool AppendUpdateLongArgs(ModuleContext context, List<string> outputArgs, string option, long? current, long? update)
         {
-context.LogDebug($"append-update-long[{option}]: current={current} update={update}");
             // Return if no change is detected.
 
             if (NeonHelper.NullableEquals(current, update))
             {
-context.LogDebug($"append-update-long[{option}]: 1");
                 return false;
             }
-context.LogDebug($"append-update-long[{option}]: 2");
 
             // ...or if there's no update value.
 
             if (!update.HasValue)
             {
-context.LogDebug($"append-update-long[{option}]: 3");
                 return false;
             }
-context.LogDebug($"append-update-long[{option}]: 4");
 
             outputArgs.Add($"{option}={update}");
 
@@ -1902,8 +1865,6 @@ context.LogDebug($"append-update-long[{option}]: 4");
             AppendUpdateDurationArgs(context, outputArgs, "--health-timeout", HealthTimeout, update.HealthTimeout);
             AppendUpdateListArgs(context, outputArgs, "--host", Host, update.Host);
             AppendUpdateStringArgs(context, outputArgs, "--hostname", Hostname, update.Hostname);
-context.LogDebug($"update-args: current image = {Image}");
-context.LogDebug($"update-args: update image = {update.Image}");
             AppendUpdateStringArgs(context, outputArgs, "--image", ImageWithoutSHA, update.Image);
             AppendUpdateEnumArgs(context, outputArgs, "--isolation", Isolation, update.Isolation);
             AppendUpdateListArgs(context, outputArgs, "--label", Label, update.Label, SimpleNameExtractor, isVariable: true);
