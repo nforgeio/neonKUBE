@@ -23,7 +23,7 @@ namespace TestNeonCluster
     {
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Create_CheckArgs()
+        public void CheckArgs()
         {
             //-----------------------------------------------------------------
             // Verify that the module detects unknown top-level arguments.
@@ -199,6 +199,106 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
             Assert.Empty(cluster.ListServices().Where(s => s.Name == serviceName));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Rollback()
+        {
+            // Create the initial service.
+
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: neoncluster/test:0
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            var details = cluster.InspectService(serviceName);
+
+            Assert.Equal("neoncluster/test:0", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
+
+            // Verify that rolling back a service with no previous state
+            // changes nothing.
+
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: rollback
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+
+            Assert.Equal("neoncluster/test:0", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
+
+            // Update the service to use a new image.
+
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: neoncluster/test:1
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+
+            Assert.Equal("neoncluster/test:1", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
+
+            // Rollback the service and verify the original image.
+
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: rollback
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+
+            Assert.Equal("neoncluster/test:0", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
         }
     }
 }

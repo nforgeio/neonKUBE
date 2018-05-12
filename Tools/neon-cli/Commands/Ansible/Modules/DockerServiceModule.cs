@@ -216,9 +216,9 @@ namespace NeonCli.Ansible
     //                                                                  published: 8080     (required)
     //                                                                  target: 80          (retured)
     //                                                                  mode: ingress       (optional: ingress|host}
-    //                                                                  protocol: tcp       (optional: tcp|udp|sctp)
+    //                                                                  protocol: tcp       (optional: tcp|udp)
     //
-    // read_only                no          false       true        mount container root filesystem as read-only
+    // read_only                no          false       true        mount container filesystem as read-only
     //                                                  false
     //
     // replicas                 no          1                       number of service tasks
