@@ -533,6 +533,39 @@ $@"
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Create_Label()
+        {
+            // Verify that we can add service labels.
+
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+        label:
+          - foo=bar
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            var details = cluster.InspectService(serviceName);
+            var labels = details.Spec.Labels;
+
+            Assert.Single(labels);
+            Assert.Equal("bar", labels["foo"]);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Create_Limits()
         {
             // Verify that we can create a service that customizes

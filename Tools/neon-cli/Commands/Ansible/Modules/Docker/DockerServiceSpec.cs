@@ -1906,7 +1906,7 @@ context.LogDebug($"update-args: current image = {Image}");
 context.LogDebug($"update-args: update image = {update.Image}");
             AppendUpdateStringArgs(context, outputArgs, "--image", ImageWithoutSHA, update.Image);
             AppendUpdateEnumArgs(context, outputArgs, "--isolation", Isolation, update.Isolation);
-            AppendUpdateListArgs(context, outputArgs, "--label", Label, update.Label);
+            AppendUpdateListArgs(context, outputArgs, "--label", Label, update.Label, SimpleNameExtractor, isVariable: true);
 
             // $todo(jeff.lill):
             //

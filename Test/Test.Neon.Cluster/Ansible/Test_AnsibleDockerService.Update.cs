@@ -943,6 +943,123 @@ $@"
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Update_Label()
+        {
+            DeployTestService();
+
+            //-----------------------------------------------------------------
+            // Verify that we can add service labels.
+
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+        label:
+          - foo=bar
+          - hello=world
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+            var taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            var details = cluster.InspectService(serviceName);
+            var labels = details.Spec.Labels;
+
+            Assert.NotNull(labels);
+            Assert.Equal(2, labels.Count);
+            Assert.Equal("bar", labels["foo"]);
+            Assert.Contains("world", labels["hello"]);
+
+            //-----------------------------------------------------------------
+            // Verify that update reports when no change is detected.
+
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+
+            //-----------------------------------------------------------------
+            // Verify that we can remove container labels.
+
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+        label:
+          - foo=bar
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+            labels = details.Spec.Labels;
+
+            Assert.NotNull(labels);
+            Assert.Single(labels);
+            Assert.Equal("bar", labels["foo"]);
+
+            //-----------------------------------------------------------------
+            // Verify that update reports when no change is detected.
+
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+
+            //-----------------------------------------------------------------
+            // Verify that we can edit a container label.
+
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage service
+      neon_docker_service:
+        name: {serviceName}
+        state: present
+        image: {serviceImage}
+        label:
+          - foo=foobar
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+            taskResult = results.GetTaskResult("manage service");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+
+            details = cluster.InspectService(serviceName);
+            labels = details.Spec.Labels;
+
+            Assert.NotNull(labels);
+            Assert.Single(labels);
+            Assert.Equal("foobar", labels["foo"]);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Update_Limits()
         {
             DeployTestService();

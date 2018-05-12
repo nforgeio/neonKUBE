@@ -177,7 +177,7 @@ namespace NeonCli.Ansible
     // mode                     no          replicated  replicated  specifies the service mode
     //                                                  global
     //
-    // mount                    no                                  array of structures specifying container bind mounts like:
+    // mount                    no                                  array of items specifying container bind mounts like:
     //                                                              
     //                                                                  type: volume                default: volume     (volume|bind|tmpfs)
     //                                                                  source: NAME/PATH
