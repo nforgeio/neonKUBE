@@ -655,6 +655,43 @@ namespace Consul
 
         /// <summary>
         /// Lists the items beneath a path prefix and deserializes them as JSON objects, returning
+        /// an empty list if the key doesn't exist.
+        /// </summary>
+        /// <typeparam name="T">The item type.</typeparam>
+        /// <param name="kv">The key/value endpoint.</param>
+        /// <param name="keyPrefix">The path prefix.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The items.</returns>
+        /// <exception cref="KeyNotFoundException">Thrown if the <paramref name="keyPrefix"/> does not exist.</exception>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
+        public static async Task<IEnumerable<T>> ListOrEmpty<T>(this IKVEndpoint kv, string keyPrefix, CancellationToken cancellationToken = default)
+            where T : new()
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyPrefix));
+
+            var response = (await kv.List(keyPrefix, cancellationToken)).Response;
+
+            if (response == null)
+            {
+                return new List<T>();
+            }
+
+            var items = new List<T>(response.Length);
+
+            foreach (var item in response)
+            {
+                items.Add(NeonHelper.JsonDeserialize<T>(Encoding.UTF8.GetString(item.Value)));
+            }
+
+            return items;
+        }
+
+        /// <summary>
+        /// Lists the items beneath a path prefix and deserializes them as JSON objects, returning
         /// <c>null</c> if the key doesn't exist.
         /// </summary>
         /// <typeparam name="T">The item type.</typeparam>
