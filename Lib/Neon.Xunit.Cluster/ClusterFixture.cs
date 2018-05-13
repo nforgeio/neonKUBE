@@ -1114,7 +1114,22 @@ namespace Neon.Xunit.Cluster
                 }
             }
 
-            // We also need to clear the DNS entries.
+            // Clear any non-system dashboards.
+
+            foreach (var dashboard in Consul.KV.ListOrEmpty<ClusterDashboard>(NeonClusterConst.ConsulDashboardsKey).Result)
+            {
+                if (dashboard.Folder == null)
+                {
+                    continue;
+                }
+
+                if (!dashboard.Folder.Equals(NeonClusterConst.DashboardSystemFolder, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    tasks.Add(Consul.KV.Delete($"{NeonClusterConst.ConsulDashboardsKey}/{dashboard.Name}"));
+                }
+            }
+
+            // Clear the DNS entries.
 
             // $todo(jeff.lill):
             //
