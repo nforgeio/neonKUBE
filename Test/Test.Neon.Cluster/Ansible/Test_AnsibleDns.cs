@@ -10,6 +10,9 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Consul;
+
+using Neon.Cluster;
 using Neon.Common;
 using Neon.Xunit;
 using Neon.Xunit.Cluster;
@@ -20,31 +23,33 @@ namespace TestNeonCluster
 {
     public class Test_AnsibleDns : IClassFixture<ClusterFixture>
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        private static int hostId = 0;
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         private ClusterFixture  cluster;
-        private int             hostId = 0;
 
         /// <summary>
         /// Returns a unique host name for testing.
         /// </summary>
         /// <returns></returns>
-        private string GetUniqueHost()
+        private string GetHostname()
         {
             return $"neon-test-{hostId++}.com";
         }
 
         /// <summary>
-        /// Determines whether the specified hostname has one or more
-        /// DNS entries defined for it.
+        /// Returns a DNS entry for a host name.
         /// </summary>
         /// <param name="host">The hostname.</param>
-        /// <returns><c>true</c> if one or more entries exist.</returns>
-        private bool DnsEntryExists(string host)
+        /// <returns>The <see cref="DnsEntry"/> or <c>null</c>.</returns>
+        private DnsEntry GetDnsEntry(string host)
         {
-            var response = cluster.NeonExecute("dns ls");
-
-            Assert.True(response.ExitCode == 0);
-
-            return response.OutputText.Contains($"{host}");
+            return cluster.Consul.KV.GetObjectOrDefault<DnsEntry>($"{NeonClusterConst.ConsulDnsEntriesKey}/{host}").Result;
         }
 
         public Test_AnsibleDns(ClusterFixture cluster)
@@ -62,7 +67,7 @@ namespace TestNeonCluster
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void CheckArgs()
         {
-            var host = GetUniqueHost();
+            var host = GetHostname();
 
             // Verify that we can detect unknown top-level arguments.
 
@@ -111,11 +116,11 @@ $@"
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Create()
         {
-            var host = GetUniqueHost();
+            var host = GetHostname();
 
             // Should start out without this entry.
 
-            Assert.False(DnsEntryExists(host));
+            Assert.Null(GetDnsEntry(host));
 
             // Create a DNS entry and then verify that it was added
             // and also that it resolves properly on manager, worker 
@@ -143,7 +148,11 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.True(DnsEntryExists(host));
+            
+            var entry = GetDnsEntry(host);
+
+            Assert.NotNull(entry);
+            Assert.Equal("1.1.1.1", entry.Endpoints.Single().Target);
 
             // Run the playbook again but this time nothing should
             // be changed because the DNS record already exists.
@@ -156,18 +165,22 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.True(DnsEntryExists(host));
+
+            entry = GetDnsEntry(host);
+
+            Assert.NotNull(entry);
+            Assert.Equal("1.1.1.1", entry.Endpoints.Single().Target);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Remove()
         {
-            var host = GetUniqueHost();
+            var host = GetHostname();
 
             // Should start out without this entry.
 
-            Assert.False(DnsEntryExists(host));
+            Assert.Null(GetDnsEntry(host));
 
             // Create a DNS entry and then verify that it was added
             // and also that it resolves properly on manager, worker 
@@ -183,7 +196,7 @@ $@"
         state: present
         hostname: {host}
         endpoints:
-          - target: 1.1.1.1
+          - target: 2.2.2.2
             check: no
 ";
 
@@ -195,7 +208,11 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.True(DnsEntryExists(host));
+
+            var entry = GetDnsEntry(host);
+
+            Assert.NotNull(entry);
+            Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
 
             //-----------------------------------------------------------------
             // Run the playbook again but this time nothing should
@@ -209,7 +226,11 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.True(DnsEntryExists(host));
+
+            entry = GetDnsEntry(host);
+
+            Assert.NotNull(entry);
+            Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
 
             //-----------------------------------------------------------------
             // Now delete and verify.
@@ -224,7 +245,7 @@ $@"
         state: absent
         hostname: {host}
         endpoints:
-          - target: 1.1.1.1
+          - target: 2.2.2.2
             check: no
 ";
 
@@ -236,7 +257,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.False(DnsEntryExists(host));
+            Assert.Null(GetDnsEntry(host));
 
             //-----------------------------------------------------------------
             // Run the playbook again but this time nothing should
@@ -250,7 +271,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.False(DnsEntryExists(host));
+            Assert.Null(GetDnsEntry(host));
         }
     }
 }
