@@ -662,9 +662,9 @@ namespace Neon.Xunit.Cluster
                     () => ClearConsul(),
                     () => ClearConfigs(),
                     () => ClearNetworks(),
-                    () => ClearSecrets(),
+                    () => ClearNodes(),
                     () => ClearVault(),
-                    () => ClearNodes()
+                    () => ClearSecrets()
                 });
         }
 
@@ -1103,14 +1103,29 @@ namespace Neon.Xunit.Cluster
             // We can delete all of the non-system keys in parallel for
             // better performance.
 
+            var tasks = new List<Task>();
+
             foreach (var key in Consul.KV.ListKeys().Result)
             {
                 if (!key.StartsWith("neon", StringComparison.InvariantCultureIgnoreCase) &&
                     !key.StartsWith("vault", StringComparison.InvariantCultureIgnoreCase))
                 {
-                    Consul.KV.DeleteTree(key).Wait();
+                    tasks.Add(Consul.KV.DeleteTree(key));
                 }
             }
+
+            // We also need to clear the DNS entries.
+
+            // $todo(jeff.lill):
+            //
+            // Ideally, we'd also wait for the [/etc/powerdns/hosts] file on all
+            // nodes to be updated by [neon-dns/neon-dns-updater] and also for
+            // the TTL for all entries to expire, but I don't want to take the
+            // testing performance hit.  Perhaps there's a better way.
+
+            tasks.Add(Consul.KV.DeleteTree(NeonClusterConst.ConsulDnsEntriesKey));
+
+            NeonHelper.WaitAllAsync(tasks).Wait();
         }
 
         //---------------------------------------------------------------------
