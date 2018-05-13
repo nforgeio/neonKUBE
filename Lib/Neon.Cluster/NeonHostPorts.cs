@@ -67,7 +67,7 @@ namespace Neon.Cluster
         public const int Last = 5499;
 
         //---------------------------------------------------------------------
-        // Cluster dashboard ports.
+        // Cluster reserved ports.
 
         /// <summary>
         /// The local cluster Docker registry port.
