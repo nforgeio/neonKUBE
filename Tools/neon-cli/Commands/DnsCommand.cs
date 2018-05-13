@@ -38,10 +38,10 @@ USAGE:
     neon dns addr|addresses [HOST]          - Lists current host addresses
     neon dns [--yaml] get HOST              - Gets DNS host settings
     neon dns ls|list                        - Lists the DNS host entries
-    neon dns put [--check] HOST ADDRESSES   - Sets DNS host settings
-    neon dns put PATH                       - Sets DNS settings from a file
-    neon dns put -                          - Sets DNS settings from STDIN
     neon dns rm|remove HOST                 - Removes DNS host settings
+    neon dns set [--check] HOST ADDRESSES   - Sets DNS host settings
+    neon dns set PATH                       - Sets DNS settings from a file
+    neon dns set -                          - Sets DNS settings from STDIN
 
 ARGUMENTS:
 
@@ -168,7 +168,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                     ListEntries(commandLine);
                     break;
 
-                case "put":
+                case "set":
 
                     PutEntry(commandLine);
                     break;
