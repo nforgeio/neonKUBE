@@ -689,7 +689,7 @@ namespace Neon.Cluster
 
                 Environment.SetEnvironmentVariable("VAULT_ADDR", $"https://neon-vault.cluster:{NeonHostPorts.ProxyVault}");
                 Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"neon-consul.cluster:{NetworkPorts.Consul}");
-                Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{NeonHosts.Consul}.cluster:{NetworkPorts.Consul}");
+                Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{NeonHosts.Consul}:{NetworkPorts.Consul}");
             }
 
             IsConnected      = true;
