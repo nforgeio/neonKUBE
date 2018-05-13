@@ -20,7 +20,17 @@ namespace TestNeonCluster
 {
     public class Test_AnsibleDns : IClassFixture<ClusterFixture>
     {
-        private ClusterFixture cluster;
+        private ClusterFixture  cluster;
+        private int             hostId = 0;
+
+        /// <summary>
+        /// Returns a unique host name for testing.
+        /// </summary>
+        /// <returns></returns>
+        private string GetUniqueHost()
+        {
+            return $"neon-test-{hostId++}.com";
+        }
 
         /// <summary>
         /// Determines whether the specified hostname has one or more
@@ -52,6 +62,8 @@ namespace TestNeonCluster
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void CheckArgs()
         {
+            var host = GetUniqueHost();
+
             // Verify that we can detect unknown top-level arguments.
 
             var playbook =
@@ -62,7 +74,7 @@ $@"
     - name: manage dns
       neon_dns:
         state: present
-        hostname: test-0.com
+        hostname: {host}
         UNKNOWN: argument
         endpoints:
           target: 10.0.0.1
@@ -83,7 +95,7 @@ $@"
     - name: manage dns
       neon_dns:
         state: present
-        hostname: test-0.com
+        hostname: {host}
         endpoints:
           target: 10.0.0.1
           check: yes
@@ -99,11 +111,11 @@ $@"
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Create()
         {
-            var resolveWait = TimeSpan.FromSeconds(60);
+            var host = GetUniqueHost();
 
             // Should start out without this entry.
 
-            Assert.False(DnsEntryExists("test-1.com"));
+            Assert.False(DnsEntryExists(host));
 
             // Create a DNS entry and then verify that it was added
             // and also that it resolves properly on manager, worker 
@@ -117,7 +129,7 @@ $@"
     - name: manage dns
       neon_dns:
         state: present
-        hostname: test-1.com
+        hostname: {host}
         endpoints:
           - target: 1.1.1.1
             check: no
@@ -131,7 +143,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.True(DnsEntryExists("test-1.com"));
+            Assert.True(DnsEntryExists(host));
 
             // Run the playbook again but this time nothing should
             // be changed because the DNS record already exists.
@@ -144,18 +156,18 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.True(DnsEntryExists("test-1.com"));
+            Assert.True(DnsEntryExists(host));
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void Remove()
         {
-            var resolveWait = TimeSpan.FromSeconds(60);
+            var host = GetUniqueHost();
 
             // Should start out without this entry.
 
-            Assert.False(DnsEntryExists("test-1.com"));
+            Assert.False(DnsEntryExists(host));
 
             // Create a DNS entry and then verify that it was added
             // and also that it resolves properly on manager, worker 
@@ -169,7 +181,7 @@ $@"
     - name: manage dns
       neon_dns:
         state: present
-        hostname: test-1.com
+        hostname: {host}
         endpoints:
           - target: 1.1.1.1
             check: no
@@ -183,7 +195,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.True(DnsEntryExists("test-1.com"));
+            Assert.True(DnsEntryExists(host));
 
             //-----------------------------------------------------------------
             // Run the playbook again but this time nothing should
@@ -197,7 +209,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.True(DnsEntryExists("test-1.com"));
+            Assert.True(DnsEntryExists(host));
 
             //-----------------------------------------------------------------
             // Now delete and verify.
@@ -210,7 +222,7 @@ $@"
     - name: manage dns
       neon_dns:
         state: absent
-        hostname: test-1.com
+        hostname: {host}
         endpoints:
           - target: 1.1.1.1
             check: no
@@ -224,7 +236,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.False(DnsEntryExists("test-1.com"));
+            Assert.False(DnsEntryExists(host));
 
             //-----------------------------------------------------------------
             // Run the playbook again but this time nothing should
@@ -238,7 +250,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.False(DnsEntryExists("test-1.com"));
+            Assert.False(DnsEntryExists(host));
         }
     }
 }
