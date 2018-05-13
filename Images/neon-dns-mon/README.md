@@ -10,6 +10,10 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 The **neon-dns-mon** service integrates with **neon-dns** and PowerDNS installed in a neonCLUSTER to provide dynamic DNS capabilities.
 
+**neon-dns-mon** runs as a single replica, typically on one of the manager nodes.  It is responsible for monitoring the DNS entries located in Consul at **neon/dns/entries**, checking these endpoints for health and then updating the the cluster hosts file at **neon/dns/answers/hosts.txt**.
+
+**neon-dns** is deployed as a global service on all swarm nodes and also as a container on each pet.  Each of these instances monitor **neon/dns/answers/hosts.txt** for changes and updates the local PowerDNS hosts file and then signals the local **neon-dns-loader** service to have PowerDNS reload the hosts.
+
 # Environment Variables
 
 * **NAMESERVERS** (*optional*) - specifies the upstream DNS nameserver IP addresses (comma separated) to be used to resolve hostnames.  This defaults to the Google nameservers [8.8.8.8,4.4.4.4] but should be set to ${NEON_UPSTREAM_DNS} which is configured correctly on every cluster host.
