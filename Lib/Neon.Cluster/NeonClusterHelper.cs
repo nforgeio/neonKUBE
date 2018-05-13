@@ -59,7 +59,7 @@ namespace Neon.Cluster
         private static INeonLogger                  log = LogManager.Default.GetLogger(typeof(NeonClusterHelper));
         private static Dictionary<string, string>   secrets;
         private static Dictionary<string, string>   configs;
-        private static bool                         externalConnection;
+        private static bool                         remoteConnection;
 
         /// <summary>
         /// Explicitly sets the class <see cref="INeonLogger"/> implementation.  This defaults to
@@ -616,7 +616,7 @@ namespace Neon.Cluster
                         return proxy;
                     }));
 
-            NeonClusterHelper.externalConnection = true;
+            NeonClusterHelper.remoteConnection = true;
 
             // Support emulated secrets and configs too.
 
@@ -643,8 +643,8 @@ namespace Neon.Cluster
 
             log.LogInfo(() => $"Connecting to [{login.Username}@{login.ClusterName}].");
 
-            ClusterLogin       = login;
-            externalConnection = true;
+            ClusterLogin     = login;
+            remoteConnection = true;
 
             OpenCluster(
                 new Cluster.ClusterProxy(ClusterLogin,
@@ -692,8 +692,8 @@ namespace Neon.Cluster
                 Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{NeonHosts.Consul}.cluster:{NetworkPorts.Consul}");
             }
 
-            IsConnected        = true;
-            externalConnection = false;
+            IsConnected      = true;
+            remoteConnection = false;
         }
 
         /// <summary>
@@ -828,8 +828,8 @@ namespace Neon.Cluster
                 return;
             }
 
-            IsConnected        = false;
-            externalConnection = false;
+            IsConnected      = false;
+            remoteConnection = false;
 
             log.LogInfo("Emulating cluster close.");
 
@@ -1073,7 +1073,7 @@ namespace Neon.Cluster
 
             DockerSettings  settings; 
 
-            if (externalConnection)
+            if (remoteConnection)
             {
                 settings = new DockerSettings(Cluster.GetHealthyManager().PrivateAddress);
             }
@@ -1120,10 +1120,13 @@ namespace Neon.Cluster
                 return cachedDefinition;
             }
 
-            // Do a quick check to see if we have any healthy manager nodes.  If not,
-            // then we'll return the cached definition (if there is one).
+            // If we're not running inside the cluster, we'll do a quick check to see 
+            // if we have any healthy manager nodes.  If not, then we'll return the 
+            // cached definition (if there is one).
+            //
+            // We'll query Consul directly if we're running in the cluster.
 
-            if (cachedDefinition != null)
+            if (remoteConnection && cachedDefinition != null)
             {
                 var cluster = new ClusterProxy(cachedDefinition);
                 var manager = cluster.GetHealthyManager(ClusterProxy.HealthyManagerMode.ReturnNull);
@@ -1159,8 +1162,8 @@ namespace Neon.Cluster
                     }
                     catch (Exception e)
                     {
-                        // This is probably an [HttpRequestException] of [SocketException]
-                        // indicating that we  could not contact the cluster Consul.  We'll 
+                        // This is probably an [HttpRequestException] or [SocketException]
+                        // indicating that we could not contact the cluster Consul.  We'll 
                         // just returned the cached cluster definition in this situation 
                         // (if we have one).
 
@@ -1195,7 +1198,7 @@ namespace Neon.Cluster
                 }
                 catch (Exception e)
                 {
-                    // This is probably an [HttpRequestException] of [SocketException]
+                    // This is probably an [HttpRequestException] or [SocketException]
                     // indicating that we could not contact the cluster Consul.  We'll 
                     // just returned the cached cluster definition in this situation 
                     // (if we have one).
@@ -1322,7 +1325,7 @@ namespace Neon.Cluster
         /// <remarks>
         /// <para>
         /// The log format consists fields separated by the caret (<b>^</b>) character.  None of the values 
-        /// should include this so quoting or escaping are not required.  The tables below describe the 
+        /// should include this so quoting or escaping are not required.  The tables below describe the
         /// fields and include the HAProxy log format codes.  See the
         /// <a href="http://cbonte.github.io/haproxy-dconv/1.7/configuration.html#8.2.4">HAPoxy Documentation</a> 
         /// for more information.
