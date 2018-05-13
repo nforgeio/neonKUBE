@@ -33,25 +33,6 @@ namespace TestNeonCluster
 
         private ClusterFixture  cluster;
 
-        /// <summary>
-        /// Returns a unique host name for testing.
-        /// </summary>
-        /// <returns></returns>
-        private string GetHostname()
-        {
-            return $"neon-test-{hostId++}.com";
-        }
-
-        /// <summary>
-        /// Returns a DNS entry for a host name.
-        /// </summary>
-        /// <param name="host">The hostname.</param>
-        /// <returns>The <see cref="DnsEntry"/> or <c>null</c>.</returns>
-        private DnsEntry GetDnsEntry(string host)
-        {
-            return cluster.Consul.KV.GetObjectOrDefault<DnsEntry>($"{NeonClusterConst.ConsulDnsEntriesKey}/{host}").Result;
-        }
-
         public Test_AnsibleDns(ClusterFixture cluster)
         {
             this.cluster = cluster;
@@ -63,12 +44,32 @@ namespace TestNeonCluster
             cluster.LoginAndInitialize(login: null);
         }
 
+        /// <summary>
+        /// Returns a unique host name for testing.
+        /// </summary>
+        /// <returns></returns>
+        private string GetHostname()
+        {
+            return $"neon-test-{hostId++}.com";
+        }
+
+        /// <summary>
+        /// Returns the DNS entry for a host name.
+        /// </summary>
+        /// <param name="host">The hostname.</param>
+        /// <returns>The <see cref="DnsEntry"/> or <c>null</c>.</returns>
+        private DnsEntry GetDnsEntry(string host)
+        {
+            return cluster.Consul.KV.GetObjectOrDefault<DnsEntry>($"{NeonClusterConst.ConsulDnsEntriesKey}/{host}").Result;
+        }
+
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void CheckArgs()
         {
             var host = GetHostname();
 
+            //-----------------------------------------------------------------
             // Verify that we can detect unknown top-level arguments.
 
             var playbook =
@@ -90,6 +91,7 @@ $@"
 
             Assert.False(taskResult.Success);
 
+            //-----------------------------------------------------------------
             // Verify that we can detect unknown endpoint arguments too.
 
             playbook =
@@ -122,6 +124,7 @@ $@"
 
             Assert.Null(GetDnsEntry(host));
 
+            //-----------------------------------------------------------------
             // Create a DNS entry and then verify that it was added
             // and also that it resolves properly on manager, worker 
             // and pet nodes.
@@ -139,7 +142,6 @@ $@"
           - target: 1.1.1.1
             check: no
 ";
-
             var results = AnsiblePlayer.NeonPlay(playbook);
 
             Assert.NotNull(results);
@@ -153,7 +155,9 @@ $@"
 
             Assert.NotNull(entry);
             Assert.Equal("1.1.1.1", entry.Endpoints.Single().Target);
+            Assert.False(entry.Endpoints.Single().Check);
 
+            //-----------------------------------------------------------------
             // Run the playbook again but this time nothing should
             // be changed because the DNS record already exists.
 
@@ -170,11 +174,12 @@ $@"
 
             Assert.NotNull(entry);
             Assert.Equal("1.1.1.1", entry.Endpoints.Single().Target);
+            Assert.False(entry.Endpoints.Single().Check);
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Remove()
+        public void Update()
         {
             var host = GetHostname();
 
@@ -196,10 +201,103 @@ $@"
         state: present
         hostname: {host}
         endpoints:
+          - target: 1.1.1.1
+            check: no
+";
+            var results = AnsiblePlayer.NeonPlay(playbook);
+
+            Assert.NotNull(results);
+
+            var taskResult = results.GetTaskResult("manage dns");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+
+            var entry = GetDnsEntry(host);
+
+            Assert.NotNull(entry);
+            Assert.Equal("1.1.1.1", entry.Endpoints.Single().Target);
+            Assert.False(entry.Endpoints.Single().Check);
+
+            //-----------------------------------------------------------------
+            // Update the dashboard and verify.
+
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage dns
+      neon_dns:
+        state: present
+        hostname: {host}
+        endpoints:
+          - target: 2.2.2.2
+            check: yes
+";
+            results = AnsiblePlayer.NeonPlay(playbook);
+
+            Assert.NotNull(results);
+
+            taskResult = results.GetTaskResult("manage dns");
+
+            Assert.True(taskResult.Success);
+            Assert.True(taskResult.Changed);
+
+            entry = GetDnsEntry(host);
+
+            Assert.NotNull(entry);
+            Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
+            Assert.True(entry.Endpoints.Single().Check);
+
+            //-----------------------------------------------------------------
+            // Run the playbook again but this time nothing should
+            // have changed.
+
+            results = AnsiblePlayer.NeonPlay(playbook);
+
+            Assert.NotNull(results);
+
+            taskResult = results.GetTaskResult("manage dns");
+
+            Assert.True(taskResult.Success);
+            Assert.False(taskResult.Changed);
+
+            entry = GetDnsEntry(host);
+
+            Assert.NotNull(entry);
+            Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
+            Assert.True(entry.Endpoints.Single().Check);
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Remove()
+        {
+            var host = GetHostname();
+
+            // Should start out without this entry.
+
+            Assert.Null(GetDnsEntry(host));
+
+            //-----------------------------------------------------------------
+            // Create a DNS entry and then verify that it was added
+            // and also that it resolves properly on manager, worker 
+            // and pet nodes.
+
+            var playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: manage dns
+      neon_dns:
+        state: present
+        hostname: {host}
+        endpoints:
           - target: 2.2.2.2
             check: no
 ";
-
             var results = AnsiblePlayer.NeonPlay(playbook);
 
             Assert.NotNull(results);
@@ -248,7 +346,6 @@ $@"
           - target: 2.2.2.2
             check: no
 ";
-
             results = AnsiblePlayer.NeonPlay(playbook);
 
             Assert.NotNull(results);
