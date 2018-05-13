@@ -67,9 +67,6 @@ namespace NeonCli.Ansible
     //
     // description  no                                  brief dashboard description
     //
-    // state        no          present     absent      indicates whether the dashboard
-    //                                      present     should be created or removed
-    //
     // Examples
     // --------
     //
@@ -151,24 +148,6 @@ namespace NeonCli.Ansible
 
             state = state.ToLowerInvariant();
 
-            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [url]");
-
-            if (!context.Arguments.TryGetValue<string>("url", out var url) && state == "present")
-            {
-                throw new ArgumentException($"[url] module argument is required when [state={state}].");
-            }
-
-            if (!Uri.TryCreate(url, UriKind.Absolute, out var urlParsed))
-            {
-                throw new ArgumentException($"[url={url}] is not valid.");
-            }
-
-            url = urlParsed.ToString();
-
-            context.Arguments.TryGetValue<string>("title", out var title);
-            context.Arguments.TryGetValue<string>("folder", out var folder);
-            context.Arguments.TryGetValue<string>("description", out var description);
-
             if (context.HasErrors)
             {
                 return;
@@ -188,18 +167,17 @@ namespace NeonCli.Ansible
                     {
                         context.WriteLine(AnsibleVerbosity.Trace, $"Dashboard [{name}] does exist.");
 
-                        if (!context.CheckMode)
+                        if (context.CheckMode)
+                        {
+                            context.WriteLine(AnsibleVerbosity.Info, $"Dashboard [{name}] will be deleted when CHECK-MODE is disabled.");
+                        }
+                        else
                         {
                             context.WriteLine(AnsibleVerbosity.Info, $"Deleting dashboard [{name}].");
                             consul.KV.Delete(dashboardKey);
                             context.WriteLine(AnsibleVerbosity.Trace, $"Dashboard [{name}] deleted.");
+                            context.Changed = true;
                         }
-                        else
-                        {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Dashboard [{name}] will be deleted when CHECK-MODE is disabled.");
-                        }
-
-                        context.Changed = !context.CheckMode;
                     }
                     else
                     {
@@ -208,6 +186,31 @@ namespace NeonCli.Ansible
                     break;
 
                 case "present":
+
+                    // Parse the PRESENT arguments.
+
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [url]");
+
+                    if (!context.Arguments.TryGetValue<string>("url", out var url) && state == "present")
+                    {
+                        throw new ArgumentException($"[url] module argument is required when [state={state}].");
+                    }
+
+                    if (!Uri.TryCreate(url, UriKind.Absolute, out var urlParsed))
+                    {
+                        throw new ArgumentException($"[url={url}] is not valid.");
+                    }
+
+                    url = urlParsed.ToString();
+
+                    context.Arguments.TryGetValue<string>("title", out var title);
+                    context.Arguments.TryGetValue<string>("folder", out var folder);
+                    context.Arguments.TryGetValue<string>("description", out var description);
+
+                    if (context.HasErrors)
+                    {
+                        return;
+                    }
 
                     // Build the dashboard definition from the arguments.
 
@@ -280,8 +283,10 @@ namespace NeonCli.Ansible
                         else
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating dashboard.");
-                            consul.KV.PutObject(dashboardKey, newDashboard).Wait();
+                            consul.KV.PutObject(dashboardKey, newDashboard, Formatting.Indented).Wait();
                             context.WriteLine(AnsibleVerbosity.Info, $"Dashboard updated.");
+
+                            context.Changed = true;
                         }
 
                         context.CheckMode = !context.CheckMode;

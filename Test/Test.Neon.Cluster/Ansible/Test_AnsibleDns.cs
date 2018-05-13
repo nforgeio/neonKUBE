@@ -125,9 +125,7 @@ $@"
             Assert.Null(GetDnsEntry(host));
 
             //-----------------------------------------------------------------
-            // Create a DNS entry and then verify that it was added
-            // and also that it resolves properly on manager, worker 
-            // and pet nodes.
+            // Create a DNS entry and then verify that it was added.
 
             var playbook =
 $@"
@@ -187,9 +185,7 @@ $@"
 
             Assert.Null(GetDnsEntry(host));
 
-            // Create a DNS entry and then verify that it was added
-            // and also that it resolves properly on manager, worker 
-            // and pet nodes.
+            // Create a DNS entry and then verify that it was added.
 
             var playbook =
 $@"
@@ -281,9 +277,7 @@ $@"
             Assert.Null(GetDnsEntry(host));
 
             //-----------------------------------------------------------------
-            // Create a DNS entry and then verify that it was added
-            // and also that it resolves properly on manager, worker 
-            // and pet nodes.
+            // Create a DNS entry and then verify that it was added.
 
             var playbook =
 $@"

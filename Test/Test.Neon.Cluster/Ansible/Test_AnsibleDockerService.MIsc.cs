@@ -166,7 +166,6 @@ $@"
       neon_docker_service:
         name: {serviceName}
         state: absent
-        image: {serviceImage}
 ";
             var results = AnsiblePlayer.NeonPlay(playbook);
             var taskResult = results.GetTaskResult("manage service");
