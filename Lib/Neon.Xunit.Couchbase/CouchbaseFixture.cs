@@ -54,7 +54,8 @@ namespace Neon.Xunit.Couchbase
         }
 
         /// <summary>
-        /// Starts a Couchbase container if it's not already running.
+        /// Starts a Couchbase container if it's not already running.  You'll generally want
+        /// to call this in your test class constructor instead of <see cref="ITestFixture.Initialize(Action)"/>.
         /// </summary>
         /// <param name="settings">Optional Couchbase settings.</param>
         /// <param name="image">Optionally specifies the Couchbase container image (defaults to <b>neoncluster/couchbase-test:latest</b>).</param>
@@ -67,10 +68,11 @@ namespace Neon.Xunit.Couchbase
         /// primary index creation by passing <c>null</c>.  This defaults to
         /// <b>idx_primary</b>.
         /// </param>
-        /// <exception cref="InvalidOperationException">
-        /// Thrown if this is not called from  within the <see cref="Action"/> method 
-        /// passed <see cref="ITestFixture.Initialize(Action)"/>
-        /// </exception>
+        /// <returns>
+        /// <c>true</c> if the fixture wasn't previously initialized and
+        /// this method call initialized it or <c>false</c> if the fixture
+        /// was already initialized.
+        /// </returns>
         /// <remarks>
         /// <note>
         /// Some of the <paramref name="settings"/> properties will be ignored including 
@@ -122,7 +124,46 @@ namespace Neon.Xunit.Couchbase
         /// </item>
         /// </list>
         /// </remarks>
-        public void Start(
+        public bool Start(
+            CouchbaseSettings   settings     = null, 
+            string              image        = "neoncluster/couchbase-test:latest",
+            string              name         = "cb-test",
+            string[]            env          = null,
+            string              username     = "Administrator",
+            string              password     = "password",
+            string              primaryIndex = "idx_primary")
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
+
+            return base.Initialize(
+                () =>
+                {
+                    StartInAction(settings, image, name, env, username, password, primaryIndex);
+                });
+        }
+
+        /// <summary>
+        /// Actually starts Couchbase within the initialization <see cref="Action"/>.  You'll
+        /// generally want to use <see cref="Start(CouchbaseSettings, string, string, string[], string, string, string)"/>
+        /// but this method is used internally or for special situations.
+        /// </summary>
+        /// <param name="settings">Optional Couchbase settings.</param>
+        /// <param name="image">Optionally specifies the Couchbase container image (defaults to <b>neoncluster/couchbase-test:latest</b>).</param>
+        /// <param name="name">Optionally specifies the Couchbase container name (defaults to <c>cb-test</c>).</param>
+        /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
+        /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
+        /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
+        /// <param name="primaryIndex">
+        /// Optionally override the name of the bucket's primary index or disable
+        /// primary index creation by passing <c>null</c>.  This defaults to
+        /// <b>idx_primary</b>.
+        /// </param>
+        /// <returns>
+        /// <c>true</c> if the fixture wasn't previously initialized and
+        /// this method call initialized it or <c>false</c> if the fixture
+        /// was already initialized.
+        /// </returns>
+        public void StartInAction(
             CouchbaseSettings   settings     = null, 
             string              image        = "neoncluster/couchbase-test:latest",
             string              name         = "cb-test",
@@ -152,7 +193,7 @@ namespace Neon.Xunit.Couchbase
                 settings.Bucket = "test";
             }
 
-            Bucket   = settings.OpenBucket(username, password);
+            Bucket = settings.OpenBucket(username, password);
             Settings = settings;
             Username = username;
             Password = password;
@@ -162,7 +203,7 @@ namespace Neon.Xunit.Couchbase
             // retry creating the primary index (or a dummy index) until it works.
 
             var timeout = TimeSpan.FromMinutes(2);
-            var retry   = new LinearRetryPolicy(TransientDetector.Always, maxAttempts: (int)timeout.TotalSeconds, retryInterval: TimeSpan.FromSeconds(1));
+            var retry = new LinearRetryPolicy(TransientDetector.Always, maxAttempts: (int)timeout.TotalSeconds, retryInterval: TimeSpan.FromSeconds(1));
 
             retry.InvokeAsync(
                 async () =>

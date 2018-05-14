@@ -26,20 +26,16 @@ namespace TestCouchbase
         private const string username = "Administrator";
         private const string password = "password";
 
-        private CouchbaseFixture    fixture;
+        private CouchbaseFixture    couchbase;
         private NeonBucket          bucket;
 
-        public Test_NeonBucket(CouchbaseFixture fixture)
+        public Test_NeonBucket(CouchbaseFixture couchbase)
         {
-            this.fixture = fixture;
+            this.couchbase = couchbase;
 
-            fixture.Initialize(
-                () =>
-                {
-                   fixture.Start();
-                });
+            couchbase.Start();
 
-            bucket = fixture.Bucket;
+            bucket = couchbase.Bucket;
         }
 
         [Fact]
@@ -91,7 +87,7 @@ namespace TestCouchbase
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCouchbase)]
         public async Task DurabilityOverrides()
         {
-            fixture.Flush();
+            couchbase.Flush();
 
             // Verify that the NeonBucket durability overrides work.  We're going
             // to be modifying the DEV_WORKSTATION environment variable so we
@@ -111,7 +107,7 @@ namespace TestCouchbase
 
                 Environment.SetEnvironmentVariable("DEV_WORKSTATION", null);
 
-                using (var bucket = fixture.Settings.OpenBucket(username, password, ignoreDurability: false))
+                using (var bucket = couchbase.Settings.OpenBucket(username, password, ignoreDurability: false))
                 {
                     // Verify that we can ensure durability to one node.
 
@@ -124,7 +120,7 @@ namespace TestCouchbase
                     await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.UpsertSafeAsync("test", "two", ReplicateTo.One, PersistTo.Two));
                 }
 
-                using (var bucket = fixture.Settings.OpenBucket(username, password, ignoreDurability: true))
+                using (var bucket = couchbase.Settings.OpenBucket(username, password, ignoreDurability: true))
                 {
                     // Verify that durability constraints are being ignored.
 
@@ -138,7 +134,7 @@ namespace TestCouchbase
 
                 Environment.SetEnvironmentVariable("DEV_WORKSTATION", null);
 
-                using (var bucket = fixture.Settings.OpenBucket(username, password))
+                using (var bucket = couchbase.Settings.OpenBucket(username, password))
                 {
                     // Verify that we can ensure durability to one node.
 
@@ -153,7 +149,7 @@ namespace TestCouchbase
 
                 Environment.SetEnvironmentVariable("DEV_WORKSTATION", "1");
 
-                using (var bucket = fixture.Settings.OpenBucket(username, password))
+                using (var bucket = couchbase.Settings.OpenBucket(username, password))
                 {
                     // Verify that durability constraints are being ignored.
 

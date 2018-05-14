@@ -33,26 +33,10 @@ namespace TestSamples
         {
             this.couchbase = couchbase;
 
-            if (couchbase.Initialize(
-                () =>
-                {
-                    // This call starts the Couchbase container.  You can specify
-                    // optional paameters to customize the Couchbase settings, Docker
-                    // image, container name, or primary index.
-
-                    couchbase.Start();
-
-                    // We're going to initialize read-only Couchbase data here
-                    // and since this initialization action is called only once
-                    // by the test runner for this test class, the database
-                    // state will be shared across all of the test method calls.
-
-                    var bucket = couchbase.Bucket;
-                }))
+            if (!couchbase.Start())
             {
-            }
-            else
-            {
+                // Flush the database if we didn't just start it.
+
                 couchbase.Flush();
             }
 

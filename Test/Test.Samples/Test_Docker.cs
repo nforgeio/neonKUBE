@@ -51,7 +51,7 @@ namespace TestSamples
 
                     // Add a Couchbase instance to the test.
 
-                    docker.AddFixture("couchbase", new CouchbaseFixture(), subFixture => subFixture.Start());
+                    docker.AddFixture("couchbase", new CouchbaseFixture(), subFixture => subFixture.StartInAction());
                 });
 
             // Fetch the hosts fixture so it'll be easy to access from

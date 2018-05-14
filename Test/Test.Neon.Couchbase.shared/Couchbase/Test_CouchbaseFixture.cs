@@ -33,11 +33,7 @@ namespace TestCouchbase
         {
             this.couchbase = couchbase;
 
-            couchbase.Initialize(
-                () =>
-                {
-                    couchbase.Start();
-                });
+            couchbase.Start();
 
             bucket = couchbase.Bucket;
         }

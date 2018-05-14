@@ -72,12 +72,20 @@ namespace Neon.Xunit
     /// that does any custom initialization for the test.
     /// </para>
     /// <para>
+    /// The <see cref="Action"/> parameter is generally intended for internal
+    /// use for implementing custom test fixtures.
+    /// </para>
+    /// <para>
     /// Test fixtures are designed to be aware of whether they've been
     /// initialized or not such that only the first call to
     /// <see cref="ITestFixture.Initialize(Action)"/> will perform any
     /// necessary initialization (including calling the custom action)
     /// and any subsequent calls will do nothing.
     /// </para>
+    /// <note>
+    /// Some test fixtures may define a different different initialization
+    /// method.
+    /// </note>
     /// </item>
     /// <item>
     /// The test runner will continue instantiating test class instances
@@ -98,7 +106,14 @@ namespace Neon.Xunit
         /// Invokes a parameterless <see cref="Action"/> when the fixture
         /// is not already initialized.
         /// </summary>
-        /// <param name="action">The optional initialization action.</param>
+        /// <param name="action">
+        /// <para>
+        /// The optional initialization action.
+        /// </para>
+        /// <note>
+        /// This is generally intended for internal use.
+        /// </note>
+        /// </param>
         /// <returns>
         /// <c>true</c> if the fixture wasn't previously initialized and
         /// this method call initialized it or <c>false</c> if the fixture
