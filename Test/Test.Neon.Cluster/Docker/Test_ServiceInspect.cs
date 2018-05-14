@@ -103,19 +103,19 @@ namespace TestNeonCluster
             Assert.Equal(ServiceIsolationMode.Default, details.Spec.TaskTemplate.ContainerSpec.Isolation);
 
             Assert.Empty(details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Test);
-            Assert.Equal(0L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Interval);
-            Assert.Equal(0L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Timeout);
-            Assert.Equal(0L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Retries);
-            Assert.Equal(0L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.StartPeriod);
+            Assert.Null(details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Interval);
+            Assert.Null(details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Timeout);
+            Assert.Null(details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Retries);
+            Assert.Null(details.Spec.TaskTemplate.ContainerSpec.HealthCheck.StartPeriod);
 
             // Spec.TaskTemplate.Resources
 
-            Assert.Equal(0, details.Spec.TaskTemplate.Resources.Limits.NanoCPUs);
-            Assert.Equal(0, details.Spec.TaskTemplate.Resources.Limits.MemoryBytes);
+            Assert.Null(details.Spec.TaskTemplate.Resources.Limits.NanoCPUs);
+            Assert.Null(details.Spec.TaskTemplate.Resources.Limits.MemoryBytes);
             Assert.Empty(details.Spec.TaskTemplate.Resources.Limits.GenericResources);
 
-            Assert.Equal(0, details.Spec.TaskTemplate.Resources.Reservations.NanoCPUs);
-            Assert.Equal(0, details.Spec.TaskTemplate.Resources.Reservations.MemoryBytes);
+            Assert.Null(details.Spec.TaskTemplate.Resources.Reservations.NanoCPUs);
+            Assert.Null(details.Spec.TaskTemplate.Resources.Reservations.MemoryBytes);
             Assert.Empty(details.Spec.TaskTemplate.Resources.Reservations.GenericResources);
 
             // Spec.TaskTemplate.RestartPolicy
@@ -433,10 +433,11 @@ namespace TestNeonCluster
                         "--endpoint-mode", "dnsrr"
                     });
 
-            var info    = docker.ListServices().Single(s => s.Name == "test");
+            Assert.Single(docker.ListServices().Where(s => s.Name == "test"));
+
             var details = docker.InspectService("test", strict);
 
-            Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.TaskTemplate.EndpointSpec.Mode);
+            Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.EndpointSpec.Mode);
         }
 
         [Fact]
@@ -520,7 +521,7 @@ namespace TestNeonCluster
                 Assert.Equal("test-volume-a", mount.Source);
                 Assert.Equal("/mount", mount.Target);
                 Assert.False(mount.ReadOnly);
-                Assert.Null(mount.VolumeOptions);
+                Assert.NotNull(mount.VolumeOptions);
 
                 // Verify: readonly=true
 
@@ -541,7 +542,7 @@ namespace TestNeonCluster
                 Assert.Equal("test-volume-b", mount.Source);
                 Assert.Equal("/mount", mount.Target);
                 Assert.True(mount.ReadOnly);
-                Assert.Null(mount.VolumeOptions);
+                Assert.NotNull(mount.VolumeOptions);
 
                 //-------------------------------------------------------------
                 // Bind mount:
@@ -602,7 +603,7 @@ namespace TestNeonCluster
                 var tmpfsOptions = mount.TmpfsOptions;
 
                 Assert.Equal(32000000L, tmpfsOptions.SizeBytes);
-                Assert.Equal(777, tmpfsOptions.Mode);
+                Assert.Equal(Convert.ToInt32("777", 8), tmpfsOptions.Mode);
             }
         }
 
