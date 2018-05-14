@@ -154,6 +154,8 @@ namespace Neon.Xunit.Couchbase
 
             Bucket   = settings.OpenBucket(username, password);
             Settings = settings;
+            Username = username;
+            Password = password;
 
             // It appears that it may take a bit of time for the Couchbase query
             // service to start in new container we started above.  We're going to
@@ -213,6 +215,16 @@ namespace Neon.Xunit.Couchbase
         /// Returns the <see cref="CouchbaseSettings"/> used to connect to the bucket.
         /// </summary>
         public CouchbaseSettings Settings { get; private set; }
+
+        /// <summary>
+        /// Returns the Couchbase username.
+        /// </summary>
+        public string Username { get; private set; }
+
+        /// <summary>
+        /// Returns the Couchbase password.
+        /// </summary>
+        public string Password { get; private set; }
 
         /// <summary>
         /// Removes all data and indexes from the database bucket and then recreates the
