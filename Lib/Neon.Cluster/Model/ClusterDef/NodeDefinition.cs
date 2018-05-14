@@ -33,19 +33,6 @@ namespace Neon.Cluster
         // Static methods
 
         /// <summary>
-        /// Set of the standard built-in Ansible host groups.
-        /// </summary>
-        private static readonly HashSet<string> standardHostGroups =
-            new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
-            {
-                "all",
-                "managers",
-                "workers",
-                "swarm",
-                "pets"
-            };
-
-        /// <summary>
         /// The Ansible group name regex validator.  Group names must start with a letter
         /// and then can be followed by zero or more letters, digits, or underscores.
         /// </summary>
@@ -539,6 +526,11 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
 
+            if (name == "localhost")
+            {
+                throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid.  [localhost] is reserved.");
+            }
+
             if (Name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
             {
                 throw new ClusterDefinitionException($"The [{nameof(NodeDefinition)}.{nameof(Name)}={Name}] property is not valid because node names starting with [node-] are reserved.");
@@ -578,7 +570,7 @@ namespace Neon.Cluster
                 {
                     throw new ClusterDefinitionException($"Node [{Name}] assigns an empty group in [{nameof(HostGroups)}].");
                 }
-                else if (standardHostGroups.Contains(group))
+                else if (ClusterDefinition.StandardHostGroups.Contains(group))
                 {
                     throw new ClusterDefinitionException($"Node [{Name}] assigns the standard [{group}] in [{nameof(HostGroups)}].  Standard groups cannot be explicitly assigned since [neon-cli] handles them automatically.");
                 }

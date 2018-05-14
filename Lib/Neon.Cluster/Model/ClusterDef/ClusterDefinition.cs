@@ -246,6 +246,24 @@ namespace Neon.Cluster
             return size;
         }
 
+        /// <summary>
+        /// Returns the set of the standard built-in Ansible host groups.
+        /// </summary>
+        public static HashSet<string> StandardHostGroups { get; private set; } =
+            new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
+            {
+                "all",
+                "cluster",
+                "swarm",
+                "managers",
+                "workers",
+                "pets",
+                "ceph",
+                "ceph-mon",
+                "ceph-mds",
+                "ceph-osd"
+            };
+
         //---------------------------------------------------------------------
         // Instance members
 
@@ -1010,20 +1028,7 @@ namespace Neon.Cluster
         /// <returns></returns>
         public Dictionary<string, List<NodeDefinition>> GetNodeGroups(bool excludeAllGroup = false)
         {
-            var groups  = new Dictionary<string, List<NodeDefinition>>(StringComparer.InvariantCultureIgnoreCase);
-            var builtIn = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
-            {
-                "all",
-                "cluster",
-                "swarm",
-                "managers",
-                "workers",
-                "pets",
-                "ceph",
-                "ceph-mon",
-                "ceph-mds",
-                "ceph-osd"
-            };
+            var groups = new Dictionary<string, List<NodeDefinition>>(StringComparer.InvariantCultureIgnoreCase);
 
             // Add explicit group assignments.  Note that we're going to ignore
             // any explicit assignments to built-in groups to avoid having nodes
@@ -1033,7 +1038,7 @@ namespace Neon.Cluster
             {
                 foreach (var group in node.HostGroups)
                 {
-                    if (builtIn.Contains(group))
+                    if (StandardHostGroups.Contains(group))
                     {
                         continue;   // Ignore explicit built-in group assignments.
                     }
