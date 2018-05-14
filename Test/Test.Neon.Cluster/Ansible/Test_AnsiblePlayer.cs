@@ -47,7 +47,7 @@ $@"
         state: present
         text: password
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -75,7 +75,7 @@ $@"
         state: present
         text: password
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -89,7 +89,7 @@ $@"
             // Run the playbook again.  This time it shouldn't 
             // change anything because the secret already exists.
 
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 

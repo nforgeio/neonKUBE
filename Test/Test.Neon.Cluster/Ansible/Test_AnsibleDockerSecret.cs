@@ -50,7 +50,7 @@ $@"
         text: password
         UNKNOWN: argument
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
             var taskResult = results.GetTaskResult("create secret");
 
             Assert.False(taskResult.Success);
@@ -74,7 +74,7 @@ $@"
 ";
             // Create a new secret.
 
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -89,7 +89,7 @@ $@"
             // Run the playbook again but this time nothing should
             // be changed because the secret already exists.
 
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -120,7 +120,7 @@ $@"
 ";
             // Create a new secret.
 
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -135,7 +135,7 @@ $@"
             // Run the playbook again but this time nothing should
             // be changed because the secret already exists.
 
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -166,7 +166,7 @@ $@"
 ";
             // Create a new secret.
 
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -191,7 +191,7 @@ $@"
         state: absent
         bytes: cGFzc3dvcmQ=
 ";
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -205,7 +205,7 @@ $@"
 
             // Remove it again to verify that nothing changes.
 
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -233,7 +233,7 @@ $@"
         name: {name}
         state: present
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -261,7 +261,7 @@ $@"
         state: present
         bytes: cGFzc3dvcmQ=
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 

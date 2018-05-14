@@ -86,7 +86,7 @@ $@"
           target: 10.0.0.1
           check: yes
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
             var taskResult = results.GetTaskResult("manage dns");
 
             Assert.False(taskResult.Success);
@@ -108,7 +108,7 @@ $@"
           check: yes
           UNKNOWN: argument
 ";
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
             taskResult = results.GetTaskResult("manage dns");
 
             Assert.False(taskResult.Success);
@@ -140,7 +140,7 @@ $@"
           - target: 1.1.1.1
             check: no
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -159,7 +159,7 @@ $@"
             // Run the playbook again but this time nothing should
             // be changed because the DNS record already exists.
 
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -200,7 +200,7 @@ $@"
           - target: 1.1.1.1
             check: no
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -231,7 +231,7 @@ $@"
           - target: 2.2.2.2
             check: yes
 ";
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -250,7 +250,7 @@ $@"
             // Run the playbook again but this time nothing should
             // have changed.
 
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -292,7 +292,7 @@ $@"
           - target: 2.2.2.2
             check: no
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -310,7 +310,7 @@ $@"
             // Run the playbook again but this time nothing should
             // be changed because the DNS record already exists.
 
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -340,7 +340,7 @@ $@"
           - target: 2.2.2.2
             check: no
 ";
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -354,7 +354,7 @@ $@"
             // Run the playbook again but this time nothing should
             // be changed because the DNS record already exists.
 
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 

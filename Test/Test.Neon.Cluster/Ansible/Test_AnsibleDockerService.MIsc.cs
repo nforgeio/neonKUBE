@@ -40,7 +40,7 @@ $@"
         image: {serviceImage}
         UNKNOWN: argument
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.False(taskResult.Success);
@@ -66,7 +66,7 @@ $@"
             mode: 440
             UNKNOWN: argument
 ";
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
             taskResult = results.GetTaskResult("manage service");
 
             Assert.False(taskResult.Success);
@@ -92,7 +92,7 @@ $@"
             mode: 440
             UNKNOWN: argument
 ";
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
             taskResult = results.GetTaskResult("manage service");
 
             Assert.False(taskResult.Success);
@@ -120,7 +120,7 @@ $@"
             volume_nocopy: yes
             UNKNOWN: argument
 ";
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
             taskResult = results.GetTaskResult("manage service");
 
             Assert.False(taskResult.Success);
@@ -143,7 +143,7 @@ $@"
             target: 80
             UNKNOWN: argument
 ";
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
             taskResult = results.GetTaskResult("manage service");
 
             Assert.False(taskResult.Success);
@@ -167,7 +167,7 @@ $@"
         name: {serviceName}
         state: absent
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -192,7 +192,7 @@ $@"
         state: absent
         image: neoncluster/test
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -217,7 +217,7 @@ $@"
         state: present
         image: neoncluster/test:0
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -241,7 +241,7 @@ $@"
         name: {serviceName}
         state: rollback
 ";
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
             taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -265,7 +265,7 @@ $@"
         state: present
         image: neoncluster/test:1
 ";
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
             taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -288,7 +288,7 @@ $@"
         name: {serviceName}
         state: rollback
 ";
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
             taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);

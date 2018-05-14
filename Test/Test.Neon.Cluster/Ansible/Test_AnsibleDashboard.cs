@@ -84,7 +84,7 @@ $@"
         description: Search the web
         UNKNOWN: argument
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
             var taskResult = results.GetTaskResult("manage dashboard");
 
             Assert.False(taskResult.Success);
@@ -117,7 +117,7 @@ $@"
         url: https://google.com/
         description: Search the web
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -139,7 +139,7 @@ $@"
             // Run the playbook again but this time nothing should
             // be changed because the dashboard already exists.
 
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -185,7 +185,7 @@ $@"
         url: https://google.com/
         description: Search the web
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -220,7 +220,7 @@ $@"
         url: https://google.com/new
         description: Search the web NEW
 ";
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -242,7 +242,7 @@ $@"
             // Run the playbook again but this time nothing should
             // have changed.
 
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -288,7 +288,7 @@ $@"
         url: https://google.com/
         description: Search the web
 ";
-            var results = AnsiblePlayer.NeonPlay(playbook);
+            var results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -319,7 +319,7 @@ $@"
         state: absent
         name: {name}
 ";
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
@@ -333,7 +333,7 @@ $@"
             // Run the playbook again but this time nothing should
             // be changed because the was already deleted.
 
-            results = AnsiblePlayer.NeonPlay(playbook);
+            results = AnsiblePlayer.Play(playbook);
 
             Assert.NotNull(results);
 
