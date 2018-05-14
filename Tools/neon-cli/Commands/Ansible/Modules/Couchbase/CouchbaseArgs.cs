@@ -80,7 +80,7 @@ namespace NeonCli.Ansible.Couchbase
                 {
                     couchbaseArgs.Settings.Servers.Add(new Uri($"{scheme}://{address}:{port}"));
                 }
-                else if (server.Contains("."))
+                else if (server.Contains(".") || server.Equals("localhost", StringComparison.InvariantCultureIgnoreCase))
                 {
                     // Must be a FQDN.
 

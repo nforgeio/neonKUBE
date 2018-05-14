@@ -154,7 +154,7 @@ namespace NeonCli.Ansible
             "bucket",
             "username",
             "password",
-            "force",
+            "source",
             "format",
             "key"
         };
