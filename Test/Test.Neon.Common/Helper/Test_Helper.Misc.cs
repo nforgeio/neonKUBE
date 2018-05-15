@@ -369,7 +369,6 @@ namespace TestCommon
         {
             Assert.Throws<ArgumentNullException>(() => NeonHelper.ParseEnum<TestEnum>(null));
             Assert.Throws<ArgumentException>(() => NeonHelper.ParseEnum<TestEnum>("foo"));
-            Assert.Throws<ArgumentException>(() => NeonHelper.ParseEnum<TestEnum>("value1"));
 
             Assert.Equal(TestEnum.Value1, NeonHelper.ParseEnum<TestEnum>("value1"));
             Assert.Equal(TestEnum.Value2, NeonHelper.ParseEnum<TestEnum>("VALUE2"));
