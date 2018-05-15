@@ -45,7 +45,7 @@ namespace Neon.Xunit.Couchbase
     /// <threadsafety instance="true"/>
     public sealed class CouchbaseFixture : ContainerFixture
     {
-        private string primaryIndex;
+        private bool createPrimaryIndex;
 
         /// <summary>
         /// Constructs the fixture.
@@ -64,11 +64,7 @@ namespace Neon.Xunit.Couchbase
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
         /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
-        /// <param name="primaryIndex">
-        /// Optionally override the name of the bucket's primary index or disable
-        /// primary index creation by passing <c>null</c>.  This defaults to
-        /// <b>idx_primary</b>.
-        /// </param>
+        /// <param name="noPrimary">Optionally disable creation of a primary bucket index.</param>
         /// <returns>
         /// <c>true</c> if the fixture wasn't previously initialized and
         /// this method call initialized it or <c>false</c> if the fixture
@@ -82,10 +78,10 @@ namespace Neon.Xunit.Couchbase
         /// <b>test</b> bucket by default (unless another is specified).
         /// </note>
         /// <para>
-        /// This method creates a primary index named <b>idx_primary</b> by default because
-        /// its very common for unit test to require a primary index.  You can change the
-        /// name of the index via the <paramref name="primaryIndex"/> parameter or you
-        /// can disable primary index creation by passing <c>null</c>.
+        /// This method creates a primary index by default because
+        /// its very common for unit test to require a primary index.
+        /// You can avoid creating a primary index by passing
+        /// <paramref name="noPrimary"/><c>=true</c>.
         /// </para>
         /// <para>
         /// There are three basic patterns for using this fixture.
@@ -132,20 +128,22 @@ namespace Neon.Xunit.Couchbase
             string[]            env = null,
             string              username = "Administrator",
             string              password = "password",
-            string              primaryIndex = "idx_primary")
+            bool                noPrimary = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
+
+            createPrimaryIndex = !noPrimary;
 
             return base.Initialize(
                 () =>
                 {
-                    StartInAction(settings, image, name, env, username, password, primaryIndex);
+                    StartInAction(settings, image, name, env, username, password, noPrimary);
                 });
         }
 
         /// <summary>
         /// Actually starts Couchbase within the initialization <see cref="Action"/>.  You'll
-        /// generally want to use <see cref="Start(CouchbaseSettings, string, string, string[], string, string, string)"/>
+        /// generally want to use <see cref="Start(CouchbaseSettings, string, string, string[], string, string, bool)"/>
         /// but this method is used internally or for special situations.
         /// </summary>
         /// <param name="settings">Optional Couchbase settings.</param>
@@ -154,11 +152,7 @@ namespace Neon.Xunit.Couchbase
         /// <param name="env">Optional environment variables to be passed to the Couchbase container, formatted as <b>NAME=VALUE</b> or just <b>NAME</b>.</param>
         /// <param name="username">Optional Couchbase username (defaults to <b>Administrator</b>).</param>
         /// <param name="password">Optional Couchbase password (defaults to <b>password</b>).</param>
-        /// <param name="primaryIndex">
-        /// Optionally override the name of the bucket's primary index or disable
-        /// primary index creation by passing <c>null</c>.  This defaults to
-        /// <b>idx_primary</b>.
-        /// </param>
+        /// <param name="noPrimary">Optionally disable creation of a primary bucket index.</param>
         /// <returns>
         /// <c>true</c> if the fixture wasn't previously initialized and
         /// this method call initialized it or <c>false</c> if the fixture
@@ -171,7 +165,7 @@ namespace Neon.Xunit.Couchbase
             string[]            env = null,
             string              username = "Administrator",
             string              password = "password",
-            string              primaryIndex = "idx_primary")
+            bool                noPrimary = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
 
@@ -216,9 +210,9 @@ namespace Neon.Xunit.Couchbase
 
                     try
                     {
-                        if (!string.IsNullOrEmpty(primaryIndex))
+                        if (!noPrimary)
                         {
-                            await Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)} using gsi");
+                            await Bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(Bucket.Name)} using gsi");
                         }
                         else
                         {
@@ -244,8 +238,6 @@ namespace Neon.Xunit.Couchbase
                     }
 
                 }).Wait();
-
-            this.primaryIndex = primaryIndex;
         }
 
         /// <summary>
@@ -298,12 +290,12 @@ namespace Neon.Xunit.Couchbase
 
             // Create the primary index if requested.
 
-            if (!string.IsNullOrEmpty(primaryIndex))
+            if (createPrimaryIndex)
             {
                 // $hack(jeff.lill):
                 //
                 // The Couchbase index service sometimes gets itself into a bad state
-                // sometime after the indexes are dropped.  I believe the hack below
+                // sometime after indexes are dropped.  I believe the hack below
                 // mitigates this by dropping an apparently partially created bad primary
                 // index and then attempting to recreate it.
 
@@ -311,7 +303,7 @@ namespace Neon.Xunit.Couchbase
                 {
                     try
                     {
-                        Bucket.QuerySafeAsync<dynamic>($"create primary index {CbHelper.LiteralName(primaryIndex)} on {CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
+                        Bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
                         break;
                     }
                     catch (Exception e)
@@ -323,7 +315,7 @@ namespace Neon.Xunit.Couchbase
 
                         try
                         {
-                            Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(primaryIndex)}.{CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
+                            Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName("#primary")}.{CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
                         }
                         catch
                         {

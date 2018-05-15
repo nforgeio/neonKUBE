@@ -147,6 +147,7 @@ namespace NeonCli
                 context.Message = NeonHelper.ExceptionError(e);
 
                 context.WriteErrorLine(context.Message);
+                context.WriteErrorLine(e.StackTrace.ToString());
             }
 
             // Handle non-exception based errors.

@@ -88,7 +88,7 @@ namespace NeonCli.Ansible
         //                                      no          recreated when [state=present] when
         //                                                  the index already exists
         //
-        // name         yes                                 the index name
+        // name         yes                                 the index name (ignored for primary indexes)
         //
         // primary      no          no          yes         indicates that this is PRIMARY index
         //                                      no
@@ -210,7 +210,6 @@ namespace NeonCli.Ansible
         //          username: Administrator
         //          password: password
         //          state: present
-        //          name: idx_primary
         //          primary: yes
         //
         // This example creates a local secondary index on two document
@@ -345,8 +344,6 @@ namespace NeonCli.Ansible
                 buildNow = false;
             }
 
-            var name = context.ParseString("name", v => new Regex(@"[a-z][a-z0-0#_]*", RegexOptions.IgnoreCase).IsMatch(v));
-
             var primary = context.ParseBool("primary");
 
             if (!primary.HasValue)
@@ -354,13 +351,18 @@ namespace NeonCli.Ansible
                 primary = false;
             }
 
-            var type = context.ParseEnum<IndexType>("using");
+            string name;
 
-            if (!type.HasValue)
+            if (primary.Value)
             {
-                type = default(IndexType);
+                name = "#primary";
+            }
+            else
+            {
+                name = context.ParseString("name", v => new Regex(@"[a-z][a-z0-0#_]*", RegexOptions.IgnoreCase).IsMatch(v));
             }
 
+            var type        = (context.ParseEnum<IndexType>("using") ?? default(IndexType)).ToString().ToUpperInvariant();
             var namespaceId = context.ParseString("namespace");
 
             if (string.IsNullOrEmpty(namespaceId))
@@ -380,33 +382,36 @@ namespace NeonCli.Ansible
 
             var replicas = context.ParseInt("replicas");
 
-            if (primary.Value)
+            if (state == "present")
             {
-                if (keys.Count > 0)
+                if (primary.Value)
                 {
-                    context.WriteErrorLine("PRIMARY indexes do not allow any [keys].");
-                    return;
+                    if (keys.Count > 0)
+                    {
+                        context.WriteErrorLine("PRIMARY indexes do not allow any [keys].");
+                        return;
+                    }
+
+                    if (!string.IsNullOrEmpty(where))
+                    {
+                        context.WriteErrorLine("PRIMARY indexes do not support the [where] clause.");
+                        return;
+                    }
+                }
+                else
+                {
+                    if (keys.Count == 0)
+                    {
+                        context.WriteErrorLine("Non-PRIMARY indexes must specify at least one [key].");
+                        return;
+                    }
                 }
 
-                if (!string.IsNullOrEmpty(where))
+                if (type == "GSI" && replicas.HasValue && nodes.Count > 0)
                 {
-                    context.WriteErrorLine("PRIMARY indexes do not support the [where] clause.");
+                    context.WriteErrorLine("Only one of [nodes] or [replicas] may be specified for a GSI index.");
                     return;
                 }
-            }
-            else
-            {
-                if (keys.Count == 0)
-                {
-                    context.WriteErrorLine("Non-PRIMARY indexes must specify at least one [key].");
-                    return;
-                }
-            }
-
-            if (type.Value == IndexType.Gsi && replicas.HasValue && nodes.Count > 0)
-            {
-                context.WriteErrorLine("Only one of [nodes] or [replicas] may be specified for a GSI index.");
-                return;
             }
 
             string keyspace;
@@ -429,29 +434,52 @@ namespace NeonCli.Ansible
                     using (var bucket = couchbaseArgs.Settings.OpenBucket(couchbaseArgs.Credentials))
                     {
                         var indexId = $"{bucket.Name}.{name}";
+context.WriteLine(AnsibleVerbosity.Trace, "*** 0");
 
                         // Fetch the index if it already exists.
+var indexes = await ListIndexesAsync(bucket);
+context.WriteLine(AnsibleVerbosity.Trace, $"*** 0: index count = {indexes.Count}");
+foreach (var item in indexes)
+{
+    context.WriteLine(AnsibleVerbosity.Trace, ((JObject)item).ToString(Formatting.Indented));
+}
+context.WriteLine(AnsibleVerbosity.Trace, $"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}");
+var indexes2 = await bucket.QuerySafeAsync<dynamic>(new QueryRequest($"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}"));
+context.WriteLine(AnsibleVerbosity.Trace, $"*** 0: index2 count = {indexes2.Count}");
+foreach (var item in indexes2)
+{
+    context.WriteLine(AnsibleVerbosity.Trace, ((JObject)item).ToString(Formatting.Indented));
+}
 
-                        var existingQuery = $"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)} and namespace_id={CbHelper.Literal(namespaceId)} and name={CbHelper.Literal(name)}";
+                        var existingIndex = await GetIndexAsync(bucket, name);
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Index query: {existingQuery}");
+                        if (existingIndex == null)
+                        {
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Index [{name}] does not exist.");
+                        }
+                        else
+                        {
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Index [{name}] exists.");
+                        }
 
-                        var existingIndex = (await bucket.QuerySafeAsync<JObject>(existingQuery)).FirstOrDefault();
-
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1");
                         switch (state.ToLowerInvariant())
                         {
                             case "present":
 
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-a");
                                 // Generate the index creation query.
 
                                 var sbCreateIndexCommand = new StringBuilder();
 
                                 if (primary.Value)
                                 {
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-b");
                                     sbCreateIndexCommand.Append($"create primary index {CbHelper.LiteralName(name)} on {CbHelper.LiteralName(bucket.Name)}");
                                 }
                                 else
                                 {
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-c");
                                     var sbKeys = new StringBuilder();
 
                                     foreach (var key in keys)
@@ -460,10 +488,12 @@ namespace NeonCli.Ansible
                                     }
 
                                     sbCreateIndexCommand.Append($"create index {CbHelper.LiteralName(name)} on {CbHelper.LiteralName(bucket.Name)} ( {sbKeys} )");
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-d");
                                 }
 
                                 // Append the WHERE clause for non-PRIMARY indexes.
 
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-e");
                                 if (!primary.Value && !string.IsNullOrEmpty(where))
                                 {
                                     // Ensure that the WHERE clause is surrounded by "( ... )".
@@ -482,18 +512,20 @@ namespace NeonCli.Ansible
 
                                     sbCreateIndexCommand.AppendWithSeparator($"where {queryWhere}");
                                 }
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-f");
 
                                 // Append the USING clause.
 
-                                sbCreateIndexCommand.AppendWithSeparator($"using {type.ToString().ToLowerInvariant()}");
+                                sbCreateIndexCommand.AppendWithSeparator($"using {type}");
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-g");
 
                                 // Append the WITH clause for GSI indexes.
 
-                                if (type.Value == IndexType.Gsi)
+                                if (type == "GSI")
                                 {
                                     var sbWithSettings = new StringBuilder();
 
-                                    if (defer.Value && type.Value == IndexType.Gsi)
+                                    if (defer.Value)
                                     {
                                         sbWithSettings.AppendWithSeparator("\"defer_build\":true", ", ");
                                     }
@@ -547,7 +579,7 @@ namespace NeonCli.Ansible
                                         sbWithSettings.Append("]");
                                     }
 
-                                    if (replicas.HasValue && type.Value == IndexType.Gsi)
+                                    if (replicas.HasValue && type == "GSI")
                                     {
                                         sbWithSettings.AppendWithSeparator($"\"num_replica\":{CbHelper.Literal(replicas.Value)}", ", ");
                                     }
@@ -557,18 +589,19 @@ namespace NeonCli.Ansible
                                         sbCreateIndexCommand.AppendWithSeparator($"with {{ {sbWithSettings} }}");
                                     }
                                 }
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-h");
 
                                 // Add or update the index.
 
                                 if (existingIndex != null)
                                 {
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-i");
                                     context.WriteLine(AnsibleVerbosity.Info, $"Index [{indexId}] already exists.");
 
                                     // An index with this name already exists, so we'll compare its
                                     // properties with the module parameters to determine whether we
                                     // need to remove and recreate it.
 
-                                    var index   = (JObject)existingIndex["indexes"];
                                     var changed = false;
 
                                     if (force)
@@ -576,13 +609,12 @@ namespace NeonCli.Ansible
                                         changed = true;
                                         context.WriteLine(AnsibleVerbosity.Info, "Rebuilding index because [force=yes].");
                                     }
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-j");
 
                                     // Determine if the index is being changed to/from a primary index.
 
-                                    if (!index.TryGetValue<bool>("is_primary", out var existingIsPrimary))
-                                    {
-                                        existingIsPrimary = false;
-                                    }
+                                    var existingIsPrimary = (bool)existingIndex.is_primary;
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-k");
 
                                     if (primary.Value != existingIsPrimary)
                                     {
@@ -597,16 +629,18 @@ namespace NeonCli.Ansible
                                             context.WriteLine(AnsibleVerbosity.Info, "Rebuilding index because it is becoming a PRIMARY index.");
                                         }
                                     }
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-l");
 
                                     // Compare the old/new index types.
 
-                                    var orgType = (string)index["using"];
+                                    var orgType = ((string)existingIndex.@using).ToUpperInvariant();
 
-                                    if (!string.Equals(orgType, type.ToString(), StringComparison.InvariantCultureIgnoreCase))
+                                    if (!string.Equals(orgType, type, StringComparison.InvariantCultureIgnoreCase))
                                     {
                                         changed = true;
-                                        context.WriteLine(AnsibleVerbosity.Info, $"Rebuilding index because using changed from [{orgType.ToString().ToUpperInvariant()}] to [{type.ToString().ToUpperInvariant()}].");
+                                        context.WriteLine(AnsibleVerbosity.Info, $"Rebuilding index because using changed from [{orgType}] to [{type}].");
                                     }
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-m");
 
                                     // Compare the old/new index keys.
 
@@ -614,7 +648,8 @@ namespace NeonCli.Ansible
 
                                     if (!primary.Value)
                                     {
-                                        var orgKeys = (JArray)index["index_key"];
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-n");
+                                        var orgKeys = (JArray)existingIndex.index_key;
 
                                         if (orgKeys.Count != keys.Count)
                                         {
@@ -638,6 +673,7 @@ namespace NeonCli.Ansible
                                                 }
                                             }
                                         }
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-o");
 
                                         if (keysChanged)
                                         {
@@ -658,17 +694,20 @@ namespace NeonCli.Ansible
 
                                             context.WriteLine(AnsibleVerbosity.Info, $"Rebuilding index because keys changed from [{sbOrgKeys}] to [{sbNewKeys}].");
                                         }
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-p");
                                     }
 
                                     // Compare the filter condition.
 
-                                    var orgWhere = (string)index["condition"];
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-q");
+                                    var orgWhere = (string)existingIndex.condition;
 
                                     if (orgWhere != where)
                                     {
                                         changed = true;
                                         context.WriteLine(AnsibleVerbosity.Info, $"Rebuilding index because where clause changed from [{orgWhere ?? string.Empty}] to [{where ?? string.Empty}].");
                                     }
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-r");
 
                                     // We need to remove and recreate the index if it differs
                                     // from what was requested.
@@ -682,19 +721,34 @@ namespace NeonCli.Ansible
                                         }
                                         else
                                         {
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-s");
                                             context.Changed = !context.CheckMode;
 
                                             context.WriteLine(AnsibleVerbosity.Trace, $"Removing existing index [{indexId}].");
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-t");
+                                            string dropCommand;
 
-                                            var dropCommand = $"drop index {CbHelper.LiteralName(bucket.Name)}.{CbHelper.LiteralName(name)} using {orgType.ToString().ToUpperInvariant()}";
+                                            if ((bool)existingIndex.Property("is_primary"))
+                                            {
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-u");
+                                                dropCommand = $"drop primary index on {CbHelper.LiteralName(bucket.Name)} using {orgType.ToUpperInvariant()}";
+                                            }
+                                            else
+                                            {
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-v");
+                                                dropCommand = $"drop index {CbHelper.LiteralName(bucket.Name)}.{CbHelper.LiteralName(name)} using {orgType.ToUpperInvariant()}";
+                                            }
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-w");
 
-                                            context.WriteLine(AnsibleVerbosity.Trace, $"Dropping index via: {dropCommand}");
+                                            context.WriteLine(AnsibleVerbosity.Trace, $"DROP COMMAND: {dropCommand}");
                                             await bucket.QuerySafeAsync<dynamic>(dropCommand);
                                             context.WriteLine(AnsibleVerbosity.Trace, $"Dropped index [{indexId}].");
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-x");
 
-                                            context.WriteLine(AnsibleVerbosity.Trace, $"Rebuilding index via: {sbCreateIndexCommand}");
+                                            context.WriteLine(AnsibleVerbosity.Trace, $"CREATE COMMAND: {sbCreateIndexCommand}");
                                             await bucket.QuerySafeAsync<dynamic>(sbCreateIndexCommand.ToString());
                                             context.WriteLine(AnsibleVerbosity.Info, $"Created index [{indexId}].");
+context.WriteLine(AnsibleVerbosity.Trace, "*** 1-y");
                                         }
                                     }
                                     else
@@ -722,6 +776,7 @@ namespace NeonCli.Ansible
 
                             case "absent":
 
+context.WriteLine(AnsibleVerbosity.Trace, "*** 2-a");
                                 if (existingIndex != null)
                                 {
                                     if (context.CheckMode)
@@ -730,10 +785,32 @@ namespace NeonCli.Ansible
                                     }
                                     else
                                     {
+context.WriteLine(AnsibleVerbosity.Trace, "*** 2-b");
                                         context.Changed = true;
                                         context.WriteLine(AnsibleVerbosity.Info, $"Dropping index [{indexId}].");
-                                        await bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(bucket.Name)}.{CbHelper.LiteralName(name)} using {type}");
+context.WriteLine(AnsibleVerbosity.Trace, "*** 2-c");
+
+                                        var orgType = (string)(existingIndex.Property("using")) ?? "gsi";
+context.WriteLine(AnsibleVerbosity.Trace, $"*** 2-d: name = {name}");
+context.WriteLine(AnsibleVerbosity.Trace, $"*** 2-d: orgType = {orgType}");
+                                        string dropCommand;
+
+                                        if ((bool)existingIndex.Property("is_primary"))
+                                        {
+                                            dropCommand = $"drop primary index on {CbHelper.LiteralName(bucket.Name)} using {orgType.ToUpperInvariant()}";
+                                        }
+                                        else
+                                        {
+                                            dropCommand = $"drop index {CbHelper.LiteralName(bucket.Name)}.{CbHelper.LiteralName(name)} using {orgType.ToUpperInvariant()}";
+                                        }
+                                        context.WriteLine(AnsibleVerbosity.Trace, "*** 2-e");
+
+                                        context.WriteLine(AnsibleVerbosity.Trace, $"COMMAND: {dropCommand}");
+context.WriteLine(AnsibleVerbosity.Trace, "*** 2-f");
+                                        await bucket.QuerySafeAsync<dynamic>(dropCommand);
+context.WriteLine(AnsibleVerbosity.Trace, "*** 2-g");
                                         context.WriteLine(AnsibleVerbosity.Trace, $"Index [{indexId}] was dropped.");
+context.WriteLine(AnsibleVerbosity.Trace, "*** 2-h");
                                     }
                                 }
                                 else
@@ -749,6 +826,40 @@ namespace NeonCli.Ansible
                     }
 
                 }).Wait();
+        }
+
+        /// <summary>
+        /// Lists the indexes for the test bucket.
+        /// </summary>
+        /// <param name="bucket">The Couchbase bucket.</param>
+        /// <returns>The list of index information.</returns>
+        private async Task<List<dynamic>> ListIndexesAsync(NeonBucket bucket)
+        {
+            var indexes = await bucket.QuerySafeAsync<dynamic>(new QueryRequest($"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}"));
+            var list    = new List<dynamic>();
+
+            foreach (var index in indexes)
+            {
+                list.Add(index.indexes);    // Get rid of the extra "indexes" level.
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Returns information about a named Couchbase index for the test bucket.
+        /// </summary>
+        /// <param name="bucket">The Couchbase bucket.</param>
+        /// <param name="name">The index name.</param>
+        /// <returns>
+        /// The index information as a <c>dynamic</c> or <c>null</c> 
+        /// if the index doesn't exist.
+        /// </returns>
+        private async Task<dynamic> GetIndexAsync(NeonBucket bucket, string name)
+        {
+            var indexes = await ListIndexesAsync(bucket);
+
+            return indexes.SingleOrDefault(i => (string)i.name == name);
         }
     }
 }
