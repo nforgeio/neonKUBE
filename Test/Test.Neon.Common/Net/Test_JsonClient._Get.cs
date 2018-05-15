@@ -163,7 +163,7 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task GetAsync_Dyanmic()
+        public async Task GetAsync_Dynamic()
         {
             // Ensure that GET returning a dynamic works.
 

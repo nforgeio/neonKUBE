@@ -278,7 +278,7 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PutAsync_Dyanmic()
+        public async Task PutAsync_Dynamic()
         {
             // Ensure that PUT returning a dynamic works.
 

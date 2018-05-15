@@ -159,7 +159,7 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task DeleteUnsafeAsync_Dyanmic()
+        public async Task DeleteUnsafeAsync_Dynamic()
         {
             // Ensure that DELETE returning a dynamic works.
 

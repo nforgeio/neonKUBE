@@ -278,7 +278,7 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostAsync_Dyanmic()
+        public async Task PostAsync_Dynamic()
         {
             // Ensure that POST returning a dynamic works.
 

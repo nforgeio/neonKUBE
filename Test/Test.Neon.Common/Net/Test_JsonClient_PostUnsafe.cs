@@ -205,7 +205,7 @@ namespace TestCommon
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
-        public async Task PostUnsafeAsync_Dyanmic()
+        public async Task PostUnsafeAsync_Dynamic()
         {
             // Ensure that POST returning a dynamic works.
 
