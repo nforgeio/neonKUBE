@@ -46,9 +46,9 @@ USAGE:
     neon couchbase query TARGET @QUERY-FILE
     neon couchbase query TARGET -
 
-    neon couchbase upsert [--key=KEY] TARGET JSON
-    neon couchbase upsert [--key=KEY] TARGET JSON-FILE
-    neon couchbase upsert [--key=KEY] TARGET -
+    neon couchbase upsert [--key=KEY] [--first-key=#] TARGET JSON
+    neon couchbase upsert [--key=KEY] [--first-key=#] TARGET JSON-FILE
+    neon couchbase upsert [--key=KEY] [--first-key=#] TARGET -
 
 ARGUMENTS:
 
@@ -70,6 +70,10 @@ OPTIONS:
 
     --key           - (optional) specifies the key pattern to be
                       used for document upserts.  See note below.
+
+    --firstkey=#    - (optional) specifies the first key to use
+                      for #MONO_INCR# based templates.
+                      Defaults to 1.
     
 COMMANDS:
 
@@ -95,7 +99,8 @@ customize this in two ways:
       build-in key generators:
 
             #UUID#          - inserts a UUID
-            #MONO_INCR#     - inserts an integer counter (starting at 1)
+            #MONO_INCR#     - inserts an integer counter 
+                              starting at [--firstkey], default 1
 
       Note that you'll need to escape any '%' or '#' characters that are
       to be included in the key by using '%%' or '##'.
@@ -109,7 +114,7 @@ customize this in two ways:
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--key" }; }
+            get { return new string[] { "--key", "--first-key" }; }
         }
 
         /// <inheritdoc/>
@@ -234,6 +239,15 @@ customize this in two ways:
                         }
 
                         var keyPattern  = commandLine.GetOption("--key");
+
+                        var firstKeyValue = commandLine.GetOption("--first-key", "1");
+
+                        if (!long.TryParse(firstKeyValue, out var firstKey))
+                        {
+                            Console.Error.WriteLine($"*** ERROR: [--firstkey={firstKeyValue}] is not a valid integer.");
+                            Program.Exit(1);
+                        }
+
                         var upsertError = false;
 
                         using (var reader = new StreamReader(input, Encoding.UTF8))
@@ -244,7 +258,7 @@ customize this in two ways:
                                     upsertError = true;
                                     Console.Error.WriteLine($"*** ERROR: {message}");
                                 }, 
-                                bucket, keyPattern);
+                                bucket, keyPattern, firstKey);
 
                             foreach (var line in reader.Lines())
                             {

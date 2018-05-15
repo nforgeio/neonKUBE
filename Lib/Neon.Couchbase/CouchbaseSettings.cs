@@ -7,9 +7,10 @@ using System;
 using System.Collections.Generic;
 using System.ComponentModel;
 using System.Diagnostics.Contracts;
-
 using Neon.Common;
 
+using Couchbase;
+using Couchbase.N1QL;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
@@ -103,12 +104,13 @@ namespace Neon.Data
         public int MinPoolConnections { get; set; } = 2;
 
         /// <summary>
-        /// Maximum number of seconds to wait for the bucket to become ready 
-        /// after connecting.  (defaults to <b>30</b>).
+        /// Enables the use of the <see cref="ScanConsistency.AtPlus"/> and perhaps the <see cref="ScanConsistency.StatementPlus"/>
+        /// index consistency options.  Both of these options are deprecated as of Couchbase 5.0 so this may no longer
+        /// matter.  This defaults to <c>false</c>.
         /// </summary>
-        [JsonProperty(PropertyName = "BucketReadyTimeout", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(30)]
-        public int BucketReadyTimeout { get; set; } = 30;
+        [JsonProperty(PropertyName = "UseEnhancedDurability", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool UseEnhancedDurability { get; set; } = false;
 
         /// <summary>
         /// Returns <c>true</c> if the settings are valid.

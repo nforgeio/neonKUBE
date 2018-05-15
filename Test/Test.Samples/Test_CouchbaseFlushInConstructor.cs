@@ -12,6 +12,9 @@ using System.Threading.Tasks;
 
 using Couchbase;
 using Couchbase.Core;
+using Couchbase.Linq;
+using Couchbase.Linq.Extensions;
+using Couchbase.N1QL;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
@@ -49,7 +52,7 @@ namespace TestSamples
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
-        public async Task One()
+        public async Task WriteReadOne()
         {
             // Ensure that the database starts out empty (because we flushed it in the constructor).
 
@@ -58,13 +61,13 @@ namespace TestSamples
 
             // Do a simple write/read test.
 
-            bucket.UpsertSafeAsync("one", "1").Wait();
+            await bucket.UpsertSafeAsync("one", "1");
             Assert.Equal("1", await bucket.GetSafeAsync<string>("one"));
         }
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
-        public async Task Two()
+        public async Task WriteReadTwo()
         {
             // Ensure that the database starts out empty (because we flushed it in the constructor).
 
@@ -73,7 +76,7 @@ namespace TestSamples
 
             // Do a simple write/read test.
 
-            bucket.UpsertSafeAsync("two", "2").Wait();
+            await bucket.UpsertSafeAsync("two", "2");
             Assert.Equal("2", await bucket.GetSafeAsync<string>("two"));
         }
     }

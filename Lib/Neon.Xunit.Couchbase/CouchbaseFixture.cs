@@ -18,6 +18,7 @@ using Xunit;
 using Neon.Common;
 using Neon.Data;
 using Neon.Retry;
+using Couchbase.Linq;
 
 namespace Neon.Xunit.Couchbase
 {
@@ -125,12 +126,12 @@ namespace Neon.Xunit.Couchbase
         /// </list>
         /// </remarks>
         public bool Start(
-            CouchbaseSettings   settings     = null, 
-            string              image        = "neoncluster/couchbase-test:latest",
-            string              name         = "cb-test",
-            string[]            env          = null,
-            string              username     = "Administrator",
-            string              password     = "password",
+            CouchbaseSettings   settings = null,
+            string              image = "neoncluster/couchbase-test:latest",
+            string              name = "cb-test",
+            string[]            env = null,
+            string              username = "Administrator",
+            string              password = "password",
             string              primaryIndex = "idx_primary")
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
@@ -164,12 +165,12 @@ namespace Neon.Xunit.Couchbase
         /// was already initialized.
         /// </returns>
         public void StartInAction(
-            CouchbaseSettings   settings     = null, 
-            string              image        = "neoncluster/couchbase-test:latest",
-            string              name         = "cb-test",
-            string[]            env          = null,
-            string              username     = "Administrator",
-            string              password     = "password",
+            CouchbaseSettings   settings = null,
+            string              image = "neoncluster/couchbase-test:latest",
+            string              name = "cb-test",
+            string[]            env = null,
+            string              username = "Administrator",
+            string              password = "password",
             string              primaryIndex = "idx_primary")
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
@@ -193,7 +194,7 @@ namespace Neon.Xunit.Couchbase
                 settings.Bucket = "test";
             }
 
-            Bucket = settings.OpenBucket(username, password);
+            Bucket   = settings.OpenBucket(username, password);
             Settings = settings;
             Username = username;
             Password = password;
@@ -248,7 +249,7 @@ namespace Neon.Xunit.Couchbase
         }
 
         /// <summary>
-        /// Returns the Couchbase bucket to be used to interact with Couchbase.
+        /// Returns the Couchbase <see cref="Bucket"/> to be used to interact with Couchbase.
         /// </summary>
         public NeonBucket Bucket { get; private set; }
 

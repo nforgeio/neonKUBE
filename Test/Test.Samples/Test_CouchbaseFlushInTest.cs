@@ -12,9 +12,13 @@ using System.Threading.Tasks;
 
 using Couchbase;
 using Couchbase.Core;
+using Couchbase.Linq;
+using Couchbase.Linq.Extensions;
+using Couchbase.N1QL;
 using Newtonsoft.Json.Linq;
 
 using Neon.Common;
+using Neon.Data;
 using Neon.Xunit;
 using Neon.Xunit.Cluster;
 using Neon.Xunit.Couchbase;
@@ -29,6 +33,18 @@ namespace TestSamples
 
     public class Test_CouchbaseFlushInTest : IClassFixture<CouchbaseFixture>
     {
+        //---------------------------------------------------------------------
+        // Internal types
+
+        public class TestDoc
+        {
+            public string Name { get; set; }
+            public int Age { get; set; }
+        }
+
+        //---------------------------------------------------------------------
+        // Implementation
+
         private CouchbaseFixture    couchbase;
         private NeonBucket          bucket;
 
@@ -43,7 +59,7 @@ namespace TestSamples
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
-        public async Task One()
+        public async Task WriteReadOne()
         {
             // Ensure that the database starts out empty.
 
@@ -54,7 +70,7 @@ namespace TestSamples
 
             // Do a simple write/read test.
 
-            bucket.UpsertSafeAsync("one", "1").Wait();
+            await bucket.UpsertSafeAsync("one", "1");
             Assert.Equal("1", await bucket.GetSafeAsync<string>("one"));
 
             // Do another flush just for fun.
@@ -67,7 +83,7 @@ namespace TestSamples
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
-        public async Task Two()
+        public async Task WriteReadTwo()
         {
             // Ensure that the database starts out empty.
 
@@ -78,8 +94,88 @@ namespace TestSamples
 
             // Do a simple write/read test.
 
-            bucket.UpsertSafeAsync("two", "2").Wait();
+            await bucket.UpsertSafeAsync("two", "2");
             Assert.Equal("2", await bucket.GetSafeAsync<string>("two"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.Sample)]
+        public async Task Query()
+        {
+            // Ensure that the database starts out empty.
+
+            couchbase.Flush();
+
+            await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("jack"));
+            await Assert.ThrowsAsync<CouchbaseKeyValueResponseException>(async () => await bucket.GetSafeAsync<string>("jill"));
+
+            // Write a couple documents and then query for them.  Note
+            // that we're explicitly using [RequestPlus] consistency
+            // and we're doing a synchronous query.
+
+            await bucket.UpsertSafeAsync("jack", new TestDoc() { Name = "Jack", Age = 11 });
+            await bucket.UpsertSafeAsync("jill", new TestDoc() { Name = "Jill", Age = 12 });
+
+            var context = new BucketContext(bucket);
+
+            // Note that we're explicitly using [RequestPlus] consistency
+            // and we're doing a synchronous query.
+
+            var query = 
+                from doc in context.Query<TestDoc>()
+                    .ScanConsistency(Couchbase.N1QL.ScanConsistency.RequestPlus)
+                select doc;
+
+            var results = query.ToList();
+
+            Assert.Equal(2, results.Count);
+            Assert.Single(results.Where(doc => doc.Name == "Jack"));
+            Assert.Single(results.Where(doc => doc.Name == "Jill"));
+
+            // Use Couchbase [IQueryable<T>.ExecuteAsync()] to execute the query
+            // and enable result streaming from the server.
+
+            query = 
+                from doc in context.Query<TestDoc>()
+                    .ScanConsistency(Couchbase.N1QL.ScanConsistency.RequestPlus)
+                    .UseStreaming(true)
+                select doc;
+
+            await query.ExecuteAsync();
+
+            results = query.ToList();
+
+            Assert.Equal(2, results.Count);
+            Assert.Single(results.Where(doc => doc.Name == "Jack"));
+            Assert.Single(results.Where(doc => doc.Name == "Jill"));
+
+            // Do a string based query using the [QueryAsync()] extension
+            // method which throws an exception on errors.  Note that this doesn't
+            // appear to be compatible with streaming (Rows is NULL).
+
+            var queryRequest = new QueryRequest($"select {bucket.Name}.* from {bucket.Name}")
+                .ScanConsistency(ScanConsistency.RequestPlus);
+
+            var queryResult = await bucket.QueryAsync<TestDoc>(queryRequest);
+
+            var rows = queryResult.Rows;
+
+            Assert.Equal(2, rows.Count);
+            Assert.Single(rows.Where(doc => doc.Name == "Jack"));
+            Assert.Single(rows.Where(doc => doc.Name == "Jill"));
+
+            // Do a string based query using the [QuerySafeAsync()] extension
+            // method which throws an exception on errors.  Note that this doesn't
+            // appear to be compatible with streaming (the result is NULL).
+
+            queryRequest = new QueryRequest($"select {bucket.Name}.* from {bucket.Name}")
+                .ScanConsistency(ScanConsistency.RequestPlus);
+
+            results = await bucket.QuerySafeAsync<TestDoc>(queryRequest);
+
+            Assert.Equal(2, results.Count);
+            Assert.Single(results.Where(doc => doc.Name == "Jack"));
+            Assert.Single(results.Where(doc => doc.Name == "Jill"));
         }
     }
 }

@@ -91,6 +91,11 @@ namespace NeonCli.Ansible
         //
         //                                                  NOTE: You should surround the key
         //                                                        value with double quotes.
+        //
+        // first_key    no          1                       specifies the first integer key
+        //                                                  value to use for #MONO_INCR#.
+        //                                                  This defaults to 1.
+        //
         // Check Mode:
         // -----------
         //
@@ -109,14 +114,15 @@ namespace NeonCli.Ansible
         //
         //      * Include a top-level property named [@@key] in each document.  This will
         //        be removed and then used as the document key when present.  Note that
-        //        [@@key] will be ignored if a specific key pattern is specified. 
+        //        [@@key] will be ignored if a [key] pattern is specified. 
         //
         //      * Specify the [key] module parameter.  This is a string that may include
         //        references to top-level document properties like %PROPERTY% or the
         //        build-in key generators:
         //
         //              #UUID#          - inserts a UUID
-        //              #MONO_INCR#     - inserts an integer counter (starting at 1)
+        //              #MONO_INCR#     - inserts an integer counter.  This starts at
+        //                                [first_key] which defaults to 1.
         //
         //        Note that you'll need to escape any '%' or '#' characters that are
         //        to be included in the key by using '%%' or '##'.
@@ -145,6 +151,28 @@ namespace NeonCli.Ansible
         //          source: data.txt
         //          format: json-lines
         //          key: "#MONO_INCR#"
+        //
+        // This example imports JSON objects generating a key that looks like
+        //
+        //      ID-#
+        //
+        // where [ID-1000] will be the first generated key:
+        // 
+        //  - name: test
+        //    hosts: localhost
+        //    tasks:
+        //      - name: import example
+        //        neon_couchbase_import:
+        //          name: import
+        //          servers:
+        //            - 10.50.0.3
+        //          bucket: test
+        //          username: Administrator
+        //          password: password
+        //          source: data.txt
+        //          format: json-lines
+        //          key: "ID-#MONO_INCR#"
+        //          first_key: 1000
 
         private HashSet<string> validModuleArgs = new HashSet<string>()
         {
@@ -156,7 +184,8 @@ namespace NeonCli.Ansible
             "password",
             "source",
             "format",
-            "key"
+            "key",
+            "first_key"
         };
 
         /// <inheritdoc/>
@@ -203,6 +232,7 @@ namespace NeonCli.Ansible
             }
 
             var keyPattern = context.ParseString("key");
+            var firstKey   = context.ParseLong("first_key") ?? 1;
 
             if (context.HasErrors)
             {
@@ -214,7 +244,7 @@ namespace NeonCli.Ansible
 
             using (var bucket = couchbaseArgs.Settings.OpenBucket(couchbaseArgs.Credentials))
             {
-                var importer = new CouchbaseImporter(message => context.WriteErrorLine(message), bucket, keyPattern, context.CheckMode);
+                var importer = new CouchbaseImporter(message => context.WriteErrorLine(message), bucket, keyPattern, firstKey, context.CheckMode);
 
                 switch (format.Value)
                 {

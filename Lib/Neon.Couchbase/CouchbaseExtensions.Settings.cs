@@ -102,7 +102,8 @@ namespace Couchbase
             config.BucketConfigs.Add(settings.Bucket,
                 new BucketConfiguration()
                 {
-                    BucketName = settings.Bucket,
+                    BucketName            = settings.Bucket,
+                    UseEnhancedDurability = settings.UseEnhancedDurability,
 
                     PoolConfiguration = new PoolConfiguration()
                     {

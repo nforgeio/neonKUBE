@@ -36,17 +36,18 @@ namespace Neon.Data
         /// <param name="errorSink">Action invoked when an error is encountered.</param>
         /// <param name="bucket">The target Couchbase bucket.</param>
         /// <param name="keyPattern">The key pattern (or <c>null</c>).</param>
+        /// <param name="firstKey">Optionally specifies the first #MONO_INCR# key (defaults to <b>1</b>).</param>
         /// <param name="dryRun">
         /// Optionally specify that the class should go through the motions but 
         /// not actually persist anything.
         /// </param>
-        public CouchbaseImporter(Action<string> errorSink, IBucket bucket, string keyPattern, bool dryRun = false)
+        public CouchbaseImporter(Action<string> errorSink, IBucket bucket, string keyPattern, long firstKey = 1, bool dryRun = false)
         {
             this.errorSink  = errorSink;
             this.bucket     = bucket;
             this.keyPattern = keyPattern;
             this.dryRun     = dryRun;
-            this.docNumber  = 1;
+            this.docNumber  = firstKey;
             this.sbKey      = new StringBuilder();
         }
 
