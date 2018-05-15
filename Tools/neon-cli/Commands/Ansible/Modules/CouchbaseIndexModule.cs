@@ -85,9 +85,8 @@ namespace NeonCli.Ansible
         //                                      present     should be created or removed
         //
         // force        no          no          yes         optionally forces an index to be
-        //                                                  recreated when [state=present] and
+        //                                      no          recreated when [state=present] when
         //                                                  the index already exists
-        //                                      no
         //
         // name         yes                                 the index name
         //
@@ -104,7 +103,7 @@ namespace NeonCli.Ansible
         //                                                  functions or array expressions to
         //                                                  be indexed.  This is required for
         //                                                  GSI indexes and must be empty
-        //                                                  for primaries.
+        //                                                  for the primary index.
         //
         // where        no                                  optionally specifies a WHERE clause
         //                                                  to create for a GSI or VIEW index
@@ -131,7 +130,7 @@ namespace NeonCli.Ansible
         // This module is used to manage Couchbase indexes.  Couchbase supports two basic
         // index types: PRIMARY and GSI (global secondary index).  A PRIMARY index must be
         // created to support N1QL queries and also to support GSI indexes.  PRIMARY indexes
-        // may not include [keys] or [where] parameters.
+        // may not include the [keys] or [where] parameters.
         //
         // Non-primary indexes must include at least one [keys] element specifying a document
         // property, scalar aggregate function or array expression.  You may also filter
@@ -145,9 +144,9 @@ namespace NeonCli.Ansible
         //
         // The [nodes] and [replicas] module arguments can be used to control where
         // GSI indexes will be placed.  When neither of these are specified, this module
-        // will host the index on all cluster nodes for fault tolerance.  You can explicitly
-        // also specify the number of index nodes by setting [replicas] to an integer count.
-        // You can also explicitly select the index nodes by setting [nodes].
+        // will distribute the index on all cluster nodes for fault tolerance.  You can
+        // explicitly specify the number of index nodes by setting [replicas] to an integer
+        // count.  You can also explicitly specify the index nodes by setting [nodes].
         //
         // When creating multiple GSI indexes at the same time, you may want to specify
         // [defer_build=yes].  This creates the index but defers actually building it
