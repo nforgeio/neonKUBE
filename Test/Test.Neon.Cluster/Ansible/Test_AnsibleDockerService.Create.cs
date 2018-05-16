@@ -76,7 +76,7 @@ $@"
         image: {serviceImage}
         replicas: 2
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -108,7 +108,7 @@ $@"
           - one
           - two
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -143,7 +143,7 @@ $@"
             gid: {TestHelper.TestGID}
             mode: 440
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -181,7 +181,7 @@ $@"
           - node.role==manager
           - node.role!=worker
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -216,7 +216,7 @@ $@"
         container_label:
           - foo=bar
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -254,7 +254,7 @@ $@"
         dns_search:
           - foo.com
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -290,7 +290,7 @@ $@"
         image: {serviceImage}
         endpoint_mode: dnsrr
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -322,7 +322,7 @@ $@"
           - sleep
           - 7777777
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -354,7 +354,7 @@ $@"
           - FOO=BAR
           - SUDO_USER
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -389,7 +389,7 @@ $@"
         group:
           - {TestHelper.TestGID}
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -425,7 +425,7 @@ $@"
         health_start_period: 1100000000ns
         health_timeout: 1200000000ns
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -456,7 +456,7 @@ $@"
         image: {serviceImage}
         no_healthcheck: yes
 ";
-            results = AnsiblePlayer.Play(playbook);
+            results = AnsiblePlayer.PlayNoGather(playbook);
             taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -489,7 +489,7 @@ $@"
           - ""foo.com:1.1.1.1""
           - ""bar.com:2.2.2.2""
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -524,7 +524,7 @@ $@"
         image: {serviceImage}
         no_resolve_image: yes
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -550,7 +550,7 @@ $@"
         label:
           - foo=bar
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -584,7 +584,7 @@ $@"
         limit_cpu: 1.5
         limit_memory: 64m
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -618,7 +618,7 @@ $@"
         reserve_cpu: 1.5
         reserve_memory: 64m
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -661,7 +661,7 @@ $@"
               - VOLUME=TEST
             volume_nocopy: yes
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -708,7 +708,7 @@ $@"
             consistency: cached
             bind_propagation: slave
 ";
-            results = AnsiblePlayer.Play(playbook);
+            results = AnsiblePlayer.PlayNoGather(playbook);
             taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -759,7 +759,7 @@ $@"
             tmpfs_size: 64m
             tmpfs_mode: 770
 ";
-            results = AnsiblePlayer.Play(playbook);
+            results = AnsiblePlayer.PlayNoGather(playbook);
             taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -802,7 +802,7 @@ $@"
           - published: 8080
             target: 80
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -842,7 +842,7 @@ $@"
             mode: ingress
             protocol: tcp
 ";
-            results = AnsiblePlayer.Play(playbook);
+            results = AnsiblePlayer.PlayNoGather(playbook);
             taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -882,7 +882,7 @@ $@"
             mode: host
             protocol: udp
 ";
-            results = AnsiblePlayer.Play(playbook);
+            results = AnsiblePlayer.PlayNoGather(playbook);
             taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -920,7 +920,7 @@ $@"
         image: {serviceImage}
         read_only: 1
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -954,7 +954,7 @@ $@"
         restart_max_attempts: 5
         restart_window: 3000ms
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -1000,7 +1000,7 @@ $@"
         rollback_order: start-first
         rollback_parallism: 2
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -1038,7 +1038,7 @@ $@"
           - network-1
           - network-2
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -1075,7 +1075,7 @@ $@"
             gid: {TestHelper.TestGID}
             mode: 444
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -1111,7 +1111,7 @@ $@"
         image: {serviceImage}
         stop_grace_period: 5s
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -1141,7 +1141,7 @@ $@"
         image: {serviceImage}
         stop_signal: SIGTERM
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);
@@ -1174,7 +1174,7 @@ $@"
         update_order: start-first
         update_parallelism: 2
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("manage service");
 
             Assert.True(taskResult.Success);

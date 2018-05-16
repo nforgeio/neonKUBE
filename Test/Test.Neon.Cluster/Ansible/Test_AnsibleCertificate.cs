@@ -102,7 +102,7 @@ $@"
         state: present
         UNKNOWN: argument
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("create cert");
 
             Assert.False(taskResult.Success);
@@ -129,7 +129,7 @@ $@"
 ";
             // Create a new certificate.
 
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
 
             Assert.NotNull(results);
 
@@ -155,7 +155,7 @@ $@"
             // be changed because the certificate already exists
             // and is unchanged.
 
-            results = AnsiblePlayer.Play(playbook);
+            results = AnsiblePlayer.PlayNoGather(playbook);
 
             Assert.NotNull(results);
 
@@ -184,7 +184,7 @@ $@"
 {certPem}
         state: present
 ";
-            results = AnsiblePlayer.Play(playbook);
+            results = AnsiblePlayer.PlayNoGather(playbook);
 
             Assert.NotNull(results);
 
@@ -228,7 +228,7 @@ $@"
 ";
             // Create a new cert.
 
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
 
             Assert.NotNull(results);
 
@@ -252,7 +252,7 @@ $@"
         name: {name}
         state: absent
 ";
-            results = AnsiblePlayer.Play(playbook);
+            results = AnsiblePlayer.PlayNoGather(playbook);
 
             Assert.NotNull(results);
 
@@ -266,7 +266,7 @@ $@"
 
             // Remove it again to verify that nothing changes.
 
-            results = AnsiblePlayer.Play(playbook);
+            results = AnsiblePlayer.PlayNoGather(playbook);
 
             Assert.NotNull(results);
 
@@ -299,7 +299,7 @@ $@"
 {certPem}
         state: absent
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
 
             Assert.NotNull(results);
 
@@ -333,7 +333,7 @@ $@"
 {certPem}
         state: absent
 ";
-            var results = AnsiblePlayer.Play(playbook);
+            var results = AnsiblePlayer.PlayNoGather(playbook);
 
             Assert.NotNull(results);
 

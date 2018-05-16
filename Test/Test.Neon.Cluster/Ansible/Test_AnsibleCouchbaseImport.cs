@@ -83,7 +83,7 @@ $@"
         source: {Path.GetFileName(jsonFile)}
         format: json-lines
 ";
-                var results = AnsiblePlayer.PlayInFolder(folder.Path, playbook);
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook);
                 var taskResult = results.GetTaskResult("import");
 
                 Assert.True(taskResult.Success);
@@ -122,7 +122,7 @@ $@"
         source: {Path.GetFileName(jsonFile)}
         format: json-lines
 ";
-                var results = AnsiblePlayer.PlayInFolder(folder.Path, playbook);
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook);
                 var taskResult = results.GetTaskResult("import");
 
                 Assert.True(taskResult.Success);
@@ -184,7 +184,7 @@ $@"
         format: json-lines
         key: ""ID-#UUID#""
 ";
-                var results = AnsiblePlayer.PlayInFolder(folder.Path, playbook);
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook);
                 var taskResult = results.GetTaskResult("import");
 
                 Assert.True(taskResult.Success);
@@ -246,7 +246,7 @@ $@"
         format: json-lines
         key: ""#MONO_INCR#""
 ";
-                var results = AnsiblePlayer.PlayInFolder(folder.Path, playbook);
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook);
                 var taskResult = results.GetTaskResult("import");
 
                 Assert.True(taskResult.Success);
@@ -308,7 +308,7 @@ $@"
         key: ""#MONO_INCR#""
         first_key: 1000
 ";
-                var results = AnsiblePlayer.PlayInFolder(folder.Path, playbook);
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook);
                 var taskResult = results.GetTaskResult("import");
 
                 Assert.True(taskResult.Success);
@@ -368,7 +368,7 @@ $@"
         source: {Path.GetFileName(jsonFile)}
         format: json-lines
 ";
-                var results = AnsiblePlayer.PlayInFolder(folder.Path, playbook);
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook);
                 var taskResult = results.GetTaskResult("import");
 
                 Assert.True(taskResult.Success);
@@ -437,7 +437,7 @@ $@"
         source: {Path.GetFileName(jsonFile)}
         format: json-array
 ";
-                var results = AnsiblePlayer.PlayInFolder(folder.Path, playbook);
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook);
                 var taskResult = results.GetTaskResult("import");
 
                 Assert.True(taskResult.Success);
@@ -478,7 +478,7 @@ $@"
         source: {Path.GetFileName(jsonFile)}
         format: json-array
 ";
-                var results = AnsiblePlayer.PlayInFolder(folder.Path, playbook);
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook);
                 var taskResult = results.GetTaskResult("import");
 
                 Assert.True(taskResult.Success);
@@ -542,7 +542,7 @@ $@"
         format: json-array
         key: ""ID-#UUID#""
 ";
-                var results = AnsiblePlayer.PlayInFolder(folder.Path, playbook);
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook);
                 var taskResult = results.GetTaskResult("import");
 
                 Assert.True(taskResult.Success);
@@ -609,7 +609,7 @@ $@"
         format: json-array
         key: ""##%%-#UUID#""
 ";
-                var results = AnsiblePlayer.PlayInFolder(folder.Path, playbook);
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook);
                 var taskResult = results.GetTaskResult("import");
 
                 Assert.True(taskResult.Success);
@@ -673,7 +673,7 @@ $@"
         format: json-array
         key: ""#MONO_INCR#""
 ";
-                var results = AnsiblePlayer.PlayInFolder(folder.Path, playbook);
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook);
                 var taskResult = results.GetTaskResult("import");
 
                 Assert.True(taskResult.Success);
@@ -738,7 +738,7 @@ $@"
         key: ""#MONO_INCR#""
         first_key: 1000
 ";
-                var results = AnsiblePlayer.PlayInFolder(folder.Path, playbook);
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook);
                 var taskResult = results.GetTaskResult("import");
 
                 Assert.True(taskResult.Success);
@@ -801,7 +801,7 @@ $@"
         source: {Path.GetFileName(jsonFile)}
         format: json-array
 ";
-                var results = AnsiblePlayer.PlayInFolder(folder.Path, playbook);
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook);
                 var taskResult = results.GetTaskResult("import");
 
                 Assert.True(taskResult.Success);
