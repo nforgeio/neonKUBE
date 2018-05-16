@@ -899,8 +899,8 @@ namespace Neon.Common
                 throw new NotSupportedException();
             }
 
-            const string beginMarker = "# BEGIN TEMPORARY SECTION";
-            const string endMarker   = "# END TEMPORARY SECTION";
+            const string beginMarker = "# BEGIN-NEONHELPER-MODIFY";
+            const string endMarker   = "# END-NEONHELPER-MODIFY";
 
             var inputLines  = File.ReadAllLines(hostsPath);
             var lines       = new List<string>();
