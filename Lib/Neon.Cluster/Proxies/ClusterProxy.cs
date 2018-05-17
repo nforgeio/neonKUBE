@@ -827,6 +827,97 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
+        /// Lists the Docker Registry credentials assigned to the cluster.
+        /// </summary>
+        /// <returns>The list of credentials.</returns>
+        public List<RegistryCredentials> ListRegistryCredentials()
+        {
+            var credentials = new List<RegistryCredentials>();
+
+            foreach (var hostname in Vault.ListAsync(NeonClusterConst.VaultRegistryCredentialsKey).Result)
+            {
+                var usernamePassword = Vault.ReadStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{hostname}").Result;
+                var fields           = usernamePassword.Split(new char[] { '/' }, 2);
+
+                if (fields.Length == 2)
+                {
+                    credentials.Add(
+                        new RegistryCredentials()
+                        {
+                            Registry = hostname,
+                            Username = fields[0],
+                            Password = fields[1]
+                        });
+                }
+                else
+                {
+                    throw new NeonClusterException($"Invalid credentials for the [{hostname}] registry.");
+                }
+            }
+
+            return credentials;
+        }
+
+        /// <summary>
+        /// Adds or updates a Docker registry credential in Vault.
+        /// </summary>
+        /// <param name="hostname">The target registry hostname.</param>
+        /// <param name="username">The username.</param>
+        /// <param name="password">The password.</param>
+        public void SetRegistryCredential(string hostname, string username, string password)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
+            Covenant.Requires<ArgumentNullException>(password != null);
+
+            Vault.WriteStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{hostname}", $"{username}/{password}").Wait();
+        }
+
+        /// <summary>
+        /// Returns the credentials for a specific Docker Registry from Vault.
+        /// </summary>
+        /// <param name="hostname">The target registry hostname.</param>
+        /// <returns>The credentials or <c>null</c> if none exists.</returns>
+        public RegistryCredentials GetRegistryCredential(string hostname)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
+
+            var usernamePassword = Vault.ReadStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{hostname}", noException: true).Result;
+
+            if (usernamePassword == null)
+            {
+                return null;
+            }
+
+            var fields = usernamePassword.Split(new char[] { '/' }, 2);
+
+            if (fields.Length == 2)
+            {
+                return new RegistryCredentials()
+                {
+                    Registry = hostname,
+                    Username = fields[0],
+                    Password = fields[1]
+                };
+            }
+            else
+            {
+                throw new NeonClusterException($"Invalid credentials for the [{hostname}] registry.");
+            }
+        }
+
+        /// <summary>
+        /// Removes a Docker registry credential from Vault.
+        /// </summary>
+        /// <param name="hostname">The target registry hostname.</param>
+        public void RemoveRegistryCredential(string hostname)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
+
+            Vault.DeleteAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{hostname}").Wait();
+        }
+
+        /// <summary>
         /// Attempts to retrieve a named cluster setting as a <c>string</c>.
         /// </summary>
         /// <param name="name">The setting name.</param>

@@ -364,7 +364,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Writes a value to a Vault path.
+        /// Writes a <c>dynamic</c> value as JSON to a Vault path.
         /// </summary>
         /// <param name="path">The object path.</param>
         /// <param name="value">The pbject value to be written or <c>null</c>.</param>
@@ -384,7 +384,7 @@ namespace Neon.Cluster
         /// Writes a base-64 encoded byte array to a Vault path.
         /// </summary>
         /// <param name="path">The object path.</param>
-        /// <param name="bytes">The value to be written or <c>null</c>.</param>
+        /// <param name="bytes">The value to be written.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The result as a <c>dynamic</c> object.</returns>
         /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
@@ -398,6 +398,23 @@ namespace Neon.Cluster
             bytesObject.Add("value", Convert.ToBase64String(bytes).Trim());
 
             return await WriteJsonAsync(path, bytesObject, cancellationToken);
+        }
+
+        /// <summary>
+        /// Writes a string to a Vault path.  Note that the string will be UTF-8 encoded
+        /// and then persisted as a base-64 encoded byte array.
+        /// </summary>
+        /// <param name="path">The object path.</param>
+        /// <param name="value">The value to be written.</param>
+        /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
+        /// <returns>The result as a <c>dynamic</c> object.</returns>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
+        public async Task<dynamic> WriteStringAsync(string path, string value, CancellationToken cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(value != null);
+
+            return await WriteBytesAsync(path, Encoding.UTF8.GetBytes(value), cancellationToken);
         }
 
         /// <summary>
@@ -445,6 +462,34 @@ namespace Neon.Cluster
                     throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
                 }
             }
+        }
+
+        /// <summary>
+        /// Reads the Vault string located at the specified path by decoding a base-64 byte array
+        /// and then decoding the bytes as UTF-8.
+        /// </summary>
+        /// <param name="path">The object path.</param>
+        /// <param name="noException">
+        /// Optionally specifies that <c>null</c> should be returned if the object doesn't 
+        /// exist rather than throwning a <see cref="KeyNotFoundException"/>.
+        /// </param>
+        /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
+        /// <returns>The string.</returns>
+        /// <exception cref="KeyNotFoundException">
+        /// Thrown if no object is present at <paramref name="path"/> and 
+        /// <paramref name="noException"/>=<c>false</c>.
+        /// </exception>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
+        public async Task<string> ReadStringAsync(string path, bool noException = false, CancellationToken cancellationToken = default)
+        {
+            var bytes = await ReadBytesAsync(path, noException, cancellationToken);
+
+            if (bytes == null)
+            {
+                return null;
+            }
+
+            return Encoding.UTF8.GetString(bytes);
         }
 
         /// <summary>
