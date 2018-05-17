@@ -82,7 +82,9 @@ namespace NeonCli.Ansible
         // password     yes                                 specifies the Couchbase password
         //
         // state        no          present     absent      indicates whether the bucket index
-        //                                      present     should be created or removed
+        //                                      present     should be created or removed or
+        //                                      build       whether any build deferred indexes
+        //                                                  on the bucket should be built
         //
         // force        no          no          yes         optionally forces an index to be
         //                                      no          recreated when [state=present] when
@@ -91,7 +93,7 @@ namespace NeonCli.Ansible
         // name         yes                                 the index name.  Required for non-primary
         //                                                  indexes and ignored for PRIMARY indexes.
         //
-        // primary      no          no          yes         indicates that this is PRIMARY index
+        // primary      no          no          yes         specifies a PRIMARY index
         //                                      no
         //
         // namespace    no          default                 specifies the index namespace.  This
@@ -113,17 +115,21 @@ namespace NeonCli.Ansible
         // nodes        no                                  optionally identifies the specific
         //                                                  index nodes where the index is to be
         //                                                  hosted.  This is an array of network
-        //                                                  endpoints like "node1:8091" or 
-        //                                                  '10.0.0.200:8091".  Ignored for VIEW
-        //                                                  indexes.
-        //
-        // replicas     no          1                       optionally specifies the number of
-        //                                                  GSI based index replicas to deploy.  
+        //                                                  endpoints like "10.0.0.200:8091".
         //                                                  Ignored for VIEW indexes.
+        //
+        // replicas     no          [all]                   optionally specifies the number of
+        //                                                  GSI based index replicas to deploy.  
+        //                                                  Defaults to the number of Couchbase 
+        //                                                  query nodes.  Ignored for VIEW indexes.
         //                                      
-        // defer_build  no          no          yes         optionally defers creation of a GSI
-        //                                      no          index until a separate [BUILD INDEX...]
-        //                                                  query is submitted.  See remarks.
+        // build_defer  no          no          yes         optionally defers creation of a GSI
+        //                                      no          index until play with [state=build]
+        //                                                  query is submitted.  See the remarks.
+        //
+        // build_wait   no          yes         yes         optionally avoid waiting for deferred
+        //                                      no          indexes to be build by setting this
+        //                                                  to FALSE.
         //
         // Remarks:
         // --------
@@ -149,23 +155,24 @@ namespace NeonCli.Ansible
         // explicitly specify the number of index nodes by setting [replicas] to an integer
         // count.  You can also explicitly specify the index nodes by setting [nodes].
         //
+        // Note that this module does not automatically relocate GSI indexes when the [nodes]
+        // parameter or [replicas] parameter have changed.  You'll need to use [force=yes] 
+        // to delete and recreate the indexes or do this manually.
+        //
         // When creating multiple GSI indexes at the same time, you may want to specify
-        // [defer_build=yes].  This creates the index but defers actually building it
+        // [build_defer=yes].  This creates the index but defers actually building it
         // until a separate [BUILD INDEX ...] query is executed, identifying a set of
         // GSI indexes to be built together.  This can be much more efficient because
         // only a single document scan will be required rather than performing a separate
         // scan for each index.
         //
-        // Use the [neon_couchbase_query] module to submit a BUILD INDEX query to actually
-        // build the pending indexes.
-        //
-        // Note that this module does not automatically relocate GSI indexes when the [nodes]
-        // parameter has changed.  You'll need to use [force=yes] to delete and recreate
-        // the indexes or do this manually.
+        // After creating one or more deferred indexes, you can build them all with
+        // another [neon_couchbase_index] play that sets [state=build].  This builds
+        // all deferred indexes on the bucket and waits for this to complete by default.
+        // Pass [build_wait=no] to kick of the builds without waiting.
         //
         // WHERE CLAUSE WARNING!
         // ---------------------
-        //
         // This module is not currently capable of parsing the [where] expression
         // so that it can converted to the canonical form that can be compared to the 
         // [condition] property returned when listing the index.  This is important 
@@ -196,17 +203,15 @@ namespace NeonCli.Ansible
         //
         // This example creates a LOCAL PRIMARY index.
         //
-        //  Equivalent to: CREATE PRIMARY INDEX idx_primary ON test
+        //  Equivalent to: 
+        //
+        //      CREATE PRIMARY INDEX ON test
         //
         //  - name: test
         //    hosts: localhost
         //    tasks:
         //      - name: primary index
         //        neon_couchbase_index:
-        //          nodes:
-        //            - couchbase-0.mydomain.com
-        //            - couchbase-1.mydomain.com
-        //            - couchbase-2.mydomain.com
         //          bucket: test
         //          username: Administrator
         //          password: password
@@ -216,7 +221,10 @@ namespace NeonCli.Ansible
         // This example creates a local secondary index on two document
         // keys: Name and Age.
         //
-        //  Equivalent to: CREATE INDEX idx_name_age ON test (Name, Age)
+        //  Equivalent to:
+        //
+        //      CREATE INDEX idx_name_age ON test (Name, Age) 
+        //          WITH { "nodes": ["127.0.0.1:8091"] }
         //
         //  - name: test
         //    hosts: localhost
@@ -224,9 +232,9 @@ namespace NeonCli.Ansible
         //      - name: secondary index
         //        neon_couchbase_index:
         //          nodes:
-        //            - couchbase-0.mydomain.com
-        //            - couchbase-1.mydomain.com
-        //            - couchbase-2.mydomain.com
+        //            - 10.0.0.30:8091
+        //            - 10.0.0.31:8091
+        //            - 10.0.0.32:8091
         //          bucket: test
         //          username: Administrator
         //          password: password
@@ -239,17 +247,15 @@ namespace NeonCli.Ansible
         // This example creates a local secondary index with a filtering
         // WHERE clause.
         //
-        //  Equivalent to: CREATE INDEX idx_seniors ON test (Name, Age) where Age >= 65
+        //  Equivalent to: 
+        //
+        //      CREATE INDEX idx_seniors ON test (Name, Age) WHERE Age >= 65
         //
         //  - name: test
         //    hosts: localhost
         //    tasks:
         //      - name: secondary index
         //        neon_couchbase_index:
-        //          nodes:
-        //            - couchbase-0.mydomain.com
-        //            - couchbase-1.mydomain.com
-        //            - couchbase-2.mydomain.com
         //          bucket: test
         //          username: Administrator
         //          password: password
@@ -268,6 +274,37 @@ namespace NeonCli.Ansible
         //
         // The [where] parameter must EXACTLY MATCH what Couchbase is going to
         // set as the condition for index comparisons to work properly.
+        //
+        // This example creates two secondary GSI indexes, deferring the actual
+        // index build and then builds the indexes together:
+        //
+        //  - name: test
+        //    hosts: localhost
+        //    tasks:
+        //      - name: name index
+        //        neon_couchbase_index:
+        //          bucket: test
+        //          username: Administrator
+        //          password: password
+        //          state: present
+        //          name: idx_name
+        //          keys:
+        //            - Name
+        //      - name: age index
+        //        neon_couchbase_index:
+        //          bucket: test
+        //          username: Administrator
+        //          password: password
+        //          state: present
+        //          name: idx_age
+        //          keys:
+        //            - Age
+        //      - name: build indexes
+        //        neon_couchbase_index:
+        //          bucket: test
+        //          username: Administrator
+        //          password: password
+        //          state: build
 
         //---------------------------------------------------------------------
         // Private types
@@ -302,7 +339,8 @@ namespace NeonCli.Ansible
             "where",
             "nodes",
             "replicas",
-            "defer_build"
+            "build_defer",
+            "build_wait"
         };
 
         /// <inheritdoc/>
@@ -359,7 +397,7 @@ namespace NeonCli.Ansible
                 name = context.ParseString("name", v => new Regex(@"[a-z][a-z0-0#_]*", RegexOptions.IgnoreCase).IsMatch(v));
             }
 
-            if (string.IsNullOrEmpty(name))
+            if (string.IsNullOrEmpty(name) && state != "build")
             {
                 context.WriteErrorLine("[name] argument is required.");
             }
@@ -375,12 +413,8 @@ namespace NeonCli.Ansible
             var keys  = context.ParseStringArray("keys");
             var where = context.ParseString("where");
             var nodes = context.ParseStringArray("nodes");
-            var defer = context.ParseBool("defer_build");
-
-            if (!defer.HasValue)
-            {
-                defer = false;
-            }
+            var defer = context.ParseBool("build_defer") ?? false;
+            var wait  = context.ParseBool("build_wait") ?? true;
 
             var replicas = context.ParseInt("replicas");
 
@@ -411,7 +445,7 @@ namespace NeonCli.Ansible
 
                 if (type == "GSI" && replicas.HasValue && nodes.Count > 0)
                 {
-                    context.WriteErrorLine("Only one of [nodes] or [replicas] may be specified for a GSI index.");
+                    context.WriteErrorLine("Only one of [nodes] or [replicas] may be specified for GSI indexes.");
                     return;
                 }
             }
@@ -441,22 +475,8 @@ namespace NeonCli.Ansible
                     using (var bucket = couchbaseArgs.Settings.OpenBucket(couchbaseArgs.Credentials))
                     {
                         var indexId = $"{bucket.Name}.{name}";
-context.WriteLine(AnsibleVerbosity.Trace, "*** 0");
 
                         // Fetch the index if it already exists.
-var indexes = await ListIndexesAsync(bucket);
-context.WriteLine(AnsibleVerbosity.Trace, $"*** 0: index count = {indexes.Count}");
-foreach (var item in indexes)
-{
-    context.WriteLine(AnsibleVerbosity.Trace, ((JObject)item).ToString(Formatting.Indented));
-}
-context.WriteLine(AnsibleVerbosity.Trace, $"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}");
-var indexes2 = await bucket.QuerySafeAsync<dynamic>(new QueryRequest($"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}"));
-context.WriteLine(AnsibleVerbosity.Trace, $"*** 0: index2 count = {indexes2.Count}");
-foreach (var item in indexes2)
-{
-    context.WriteLine(AnsibleVerbosity.Trace, ((JObject)item).ToString(Formatting.Indented));
-}
 
                         var existingIndex = await GetIndexAsync(bucket, name);
 
@@ -476,19 +496,16 @@ foreach (var item in indexes2)
                         {
                             case "present":
 
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-a");
                                 // Generate the index creation query.
 
                                 var sbCreateIndexCommand = new StringBuilder();
 
                                 if (primary)
                                 {
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-b");
                                     sbCreateIndexCommand.Append($"create primary index {CbHelper.LiteralName(name)} on {CbHelper.LiteralName(bucket.Name)}");
                                 }
                                 else
                                 {
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-c");
                                     var sbKeys = new StringBuilder();
 
                                     foreach (var key in keys)
@@ -497,12 +514,10 @@ context.WriteLine(AnsibleVerbosity.Trace, "*** 1-c");
                                     }
 
                                     sbCreateIndexCommand.Append($"create index {CbHelper.LiteralName(name)} on {CbHelper.LiteralName(bucket.Name)} ( {sbKeys} )");
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-d");
                                 }
 
                                 // Append the WHERE clause for non-PRIMARY indexes.
 
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-e");
                                 if (!primary && !string.IsNullOrEmpty(where))
                                 {
                                     // Ensure that the WHERE clause is surrounded by "( ... )".
@@ -521,12 +536,10 @@ context.WriteLine(AnsibleVerbosity.Trace, "*** 1-e");
 
                                     sbCreateIndexCommand.AppendWithSeparator($"where {queryWhere}");
                                 }
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-f");
 
                                 // Append the USING clause.
 
                                 sbCreateIndexCommand.AppendWithSeparator($"using {type}");
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-g");
 
                                 // Append the WITH clause for GSI indexes.
 
@@ -534,7 +547,7 @@ context.WriteLine(AnsibleVerbosity.Trace, "*** 1-g");
                                 {
                                     var sbWithSettings = new StringBuilder();
 
-                                    if (defer.Value)
+                                    if (defer)
                                     {
                                         sbWithSettings.AppendWithSeparator("\"defer_build\":true", ", ");
                                     }
@@ -598,13 +611,11 @@ context.WriteLine(AnsibleVerbosity.Trace, "*** 1-g");
                                         sbCreateIndexCommand.AppendWithSeparator($"with {{ {sbWithSettings} }}");
                                     }
                                 }
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-h");
 
                                 // Add or update the index.
 
                                 if (existingIndex != null)
                                 {
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-i");
                                     context.WriteLine(AnsibleVerbosity.Info, $"Index [{indexId}] already exists.");
 
                                     // An index with this name already exists, so we'll compare its
@@ -618,21 +629,15 @@ context.WriteLine(AnsibleVerbosity.Trace, "*** 1-i");
                                         changed = true;
                                         context.WriteLine(AnsibleVerbosity.Info, "Rebuilding index because [force=yes].");
                                     }
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-j");
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-k");
-
                                     // Compare the old/new index types.
 
                                     var orgType = ((string)existingIndex.@using).ToUpperInvariant();
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-l");
 
                                     if (!string.Equals(orgType, type, StringComparison.InvariantCultureIgnoreCase))
                                     {
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-l1");
                                         changed = true;
                                         context.WriteLine(AnsibleVerbosity.Info, $"Rebuilding index because using changed from [{orgType}] to [{type}].");
                                     }
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-m");
 
                                     // Compare the old/new index keys.
 
@@ -640,7 +645,6 @@ context.WriteLine(AnsibleVerbosity.Trace, "*** 1-m");
 
                                     if (!primary)
                                     {
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-n");
                                         var orgKeys = (JArray)existingIndex.index_key;
 
                                         if (orgKeys.Count != keys.Count)
@@ -666,8 +670,6 @@ context.WriteLine(AnsibleVerbosity.Trace, "*** 1-n");
 
                                             keysChanged = keysSet.Values.Count(k => !k) > 0;
                                         }
-context.WriteLine(AnsibleVerbosity.Trace, $"*** 1-n: keys changed = {keysChanged}");
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-o");
 
                                         if (keysChanged)
                                         {
@@ -688,12 +690,10 @@ context.WriteLine(AnsibleVerbosity.Trace, "*** 1-o");
 
                                             context.WriteLine(AnsibleVerbosity.Info, $"Rebuilding index because keys changed from [{sbOrgKeys}] to [{sbNewKeys}].");
                                         }
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-p");
                                     }
 
                                     // Compare the filter condition.
 
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-q");
                                     var orgWhere = (string)existingIndex.condition;
 
                                     if (orgWhere != where)
@@ -701,7 +701,6 @@ context.WriteLine(AnsibleVerbosity.Trace, "*** 1-q");
                                         changed = true;
                                         context.WriteLine(AnsibleVerbosity.Info, $"Rebuilding index because where clause changed from [{orgWhere ?? string.Empty}] to [{where ?? string.Empty}].");
                                     }
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-r");
 
                                     // We need to remove and recreate the index if it differs
                                     // from what was requested.
@@ -711,38 +710,39 @@ context.WriteLine(AnsibleVerbosity.Trace, "*** 1-r");
                                         if (context.CheckMode)
                                         {
                                             context.WriteLine(AnsibleVerbosity.Important, $"Index [{indexId}] will be rebuilt when CHECK-MODE is disabled.");
-                                            context.WriteLine(AnsibleVerbosity.Trace, $"Create command: {sbCreateIndexCommand}");
                                         }
                                         else
                                         {
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-s");
                                             context.Changed = !context.CheckMode;
 
                                             context.WriteLine(AnsibleVerbosity.Trace, $"Removing existing index [{indexId}].");
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-t");
                                             string dropCommand;
 
                                             if (existingIsPrimary)
                                             {
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-u");
                                                 dropCommand = $"drop primary index on {CbHelper.LiteralName(bucket.Name)} using {orgType.ToUpperInvariant()}";
                                             }
                                             else
                                             {
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-v");
                                                 dropCommand = $"drop index {CbHelper.LiteralName(bucket.Name)}.{CbHelper.LiteralName(name)} using {orgType.ToUpperInvariant()}";
                                             }
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-w");
 
                                             context.WriteLine(AnsibleVerbosity.Trace, $"DROP COMMAND: {dropCommand}");
                                             await bucket.QuerySafeAsync<dynamic>(dropCommand);
                                             context.WriteLine(AnsibleVerbosity.Trace, $"Dropped index [{indexId}].");
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-x");
 
                                             context.WriteLine(AnsibleVerbosity.Trace, $"CREATE COMMAND: {sbCreateIndexCommand}");
                                             await bucket.QuerySafeAsync<dynamic>(sbCreateIndexCommand.ToString());
                                             context.WriteLine(AnsibleVerbosity.Info, $"Created index [{indexId}].");
-context.WriteLine(AnsibleVerbosity.Trace, "*** 1-y");
+
+                                            if (!defer && wait)
+                                            {
+                                                // Wait for the index to come online.
+
+                                                context.WriteLine(AnsibleVerbosity.Info, $"Waiting for index [{name}] to be built.");
+                                                await WaitForIndexStateAsync(bucket, name, "online");
+                                                context.WriteLine(AnsibleVerbosity.Info, $"Completed building index [{name}].");
+                                            }
                                         }
                                     }
                                     else
@@ -761,16 +761,25 @@ context.WriteLine(AnsibleVerbosity.Trace, "*** 1-y");
                                     {
                                         context.Changed = true;
 
-                                        context.WriteLine(AnsibleVerbosity.Trace, $"Creating index via: {sbCreateIndexCommand}");
+                                        context.WriteLine(AnsibleVerbosity.Trace, $"Creating index.");
+                                        context.WriteLine(AnsibleVerbosity.Trace, $"CREATE COMMAND: {sbCreateIndexCommand}");
                                         await bucket.QuerySafeAsync<dynamic>(sbCreateIndexCommand.ToString());
                                         context.WriteLine(AnsibleVerbosity.Info, $"Created index [{indexId}].");
+
+                                        if (!defer && wait)
+                                        {
+                                            // Wait for the index to come online.
+
+                                            context.WriteLine(AnsibleVerbosity.Info, $"Waiting for index [{name}] to be built.");
+                                            await WaitForIndexStateAsync(bucket, name, "online");
+                                            context.WriteLine(AnsibleVerbosity.Info, $"Completed building index [{name}].");
+                                        }
                                     }
                                 }
                                 break;
 
                             case "absent":
 
-context.WriteLine(AnsibleVerbosity.Trace, "*** 2-a");
                                 if (existingIndex != null)
                                 {
                                     if (context.CheckMode)
@@ -779,14 +788,10 @@ context.WriteLine(AnsibleVerbosity.Trace, "*** 2-a");
                                     }
                                     else
                                     {
-context.WriteLine(AnsibleVerbosity.Trace, "*** 2-b");
                                         context.Changed = true;
                                         context.WriteLine(AnsibleVerbosity.Info, $"Dropping index [{indexId}].");
-context.WriteLine(AnsibleVerbosity.Trace, "*** 2-c");
 
-                                        var orgType = (string)(existingIndex.Property("using")) ?? "gsi";
-context.WriteLine(AnsibleVerbosity.Trace, $"*** 2-d: name = {name}");
-context.WriteLine(AnsibleVerbosity.Trace, $"*** 2-d: orgType = {orgType}");
+                                        string orgType = (string)(existingIndex.Property("using")) ?? "gsi";
                                         string dropCommand;
 
                                         if (existingIsPrimary)
@@ -800,11 +805,8 @@ context.WriteLine(AnsibleVerbosity.Trace, $"*** 2-d: orgType = {orgType}");
                                         context.WriteLine(AnsibleVerbosity.Trace, "*** 2-e");
 
                                         context.WriteLine(AnsibleVerbosity.Trace, $"COMMAND: {dropCommand}");
-context.WriteLine(AnsibleVerbosity.Trace, "*** 2-f");
                                         await bucket.QuerySafeAsync<dynamic>(dropCommand);
-context.WriteLine(AnsibleVerbosity.Trace, "*** 2-g");
                                         context.WriteLine(AnsibleVerbosity.Trace, $"Index [{indexId}] was dropped.");
-context.WriteLine(AnsibleVerbosity.Trace, "*** 2-h");
                                     }
                                 }
                                 else
@@ -813,9 +815,65 @@ context.WriteLine(AnsibleVerbosity.Trace, "*** 2-h");
                                 }
                                 break;
 
+                            case "build":
+
+                                // List the names of the deferred GSI indexes.
+
+                                var deferredIndexes = ((await ListIndexesAsync(bucket)).Where(index => (string)index.state == "deferred" && (string)index.@using == "gsi")).ToList();
+
+                                context.WriteLine(AnsibleVerbosity.Info, $"[{deferredIndexes.Count}] deferred GSI indexes exist.");
+
+                                if (deferredIndexes.Count == 0)
+                                {
+                                    context.WriteLine(AnsibleVerbosity.Important, $"All GSI indexes have already been built.");
+                                    context.Changed = false;
+                                    return;
+                                }
+
+                                // Build the indexes (unless we're in CHECK-MODE).
+
+                                var sbIndexList = new StringBuilder();
+
+                                foreach (var deferredIndex in deferredIndexes)
+                                {
+                                    sbIndexList.AppendWithSeparator($"{CbHelper.LiteralName((string)deferredIndex.name)}", ", ");
+                                }
+
+                                if (context.CheckMode)
+                                {
+                                    context.WriteLine(AnsibleVerbosity.Important, $"These GSI indexes will be built when CHECK-MODE is disabled: {sbIndexList}.");
+                                    context.Changed = false;
+                                    return;
+                                }
+
+                                var buildCommand = $"BUILD INDEX ON {CbHelper.LiteralName(bucket.Name)} ({sbIndexList})";
+
+                                context.WriteLine(AnsibleVerbosity.Trace, $"BUILD COMMAND: {buildCommand}");
+                                context.WriteLine(AnsibleVerbosity.Info, $"Building indexes: {sbIndexList}");
+                                await bucket.QuerySafeAsync<dynamic>(buildCommand);
+                                context.WriteLine(AnsibleVerbosity.Info, $"Build command submitted.");
+                                context.Changed = true;
+
+                                // The Couchbase BUILD INDEX command doesn't wait for the index
+                                // building to complete so, we'll just spin until all of the
+                                // indexes we're building are online.
+
+                                if (wait)
+                                {
+                                    context.WriteLine(AnsibleVerbosity.Info, $"Waiting for the indexes to be built.");
+
+                                    foreach (var deferredIndex in deferredIndexes)
+                                    {
+                                        await WaitForIndexStateAsync(bucket, (string)deferredIndex.name, "online");
+                                    }
+                                    
+                                    context.WriteLine(AnsibleVerbosity.Info, $"Completed building [{deferredIndexes.Count}] indexes.");
+                                }
+                                break;
+
                             default:
 
-                                throw new ArgumentException($"[state={state}] is not one of the valid choices: [present] or [absent].");
+                                throw new ArgumentException($"[state={state}] is not one of the valid choices: [present], [absent], or [build].");
                         }
                     }
 
@@ -854,6 +912,30 @@ context.WriteLine(AnsibleVerbosity.Trace, "*** 2-h");
             var indexes = await ListIndexesAsync(bucket);
 
             return indexes.SingleOrDefault(index => ((string)index.name).Equals(name, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        /// <summary>
+        /// Waits for an index to report as a specific state.
+        /// </summary>
+        /// <param name="bucket">The Couchbase bucket.</param>
+        /// <param name="name">The index name.</param>
+        /// <param name="state">The desired index state.</param>
+        private async Task WaitForIndexStateAsync(NeonBucket bucket, string name, string state)
+        {
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    dynamic index = await GetIndexAsync(bucket, name);
+
+                    if (index == null)
+                    {
+                        return true;    // This is actually an error.
+                    }
+
+                    return (string)index.state == state;
+                },
+                timeout: TimeSpan.FromDays(365),
+                pollTime: TimeSpan.FromSeconds(1));
         }
     }
 }

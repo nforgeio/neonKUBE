@@ -26,7 +26,7 @@ using Neon.Xunit.Couchbase;
 using Xunit;
 using Neon.Data;
 
-namespace TestSamples
+namespace TestNeonCluster
 {
     public class Test_AnsibleCouchbaseImport : IClassFixture<CouchbaseFixture>
     {
