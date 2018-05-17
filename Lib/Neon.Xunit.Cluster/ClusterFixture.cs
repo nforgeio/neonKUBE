@@ -158,7 +158,7 @@ namespace Neon.Xunit.Cluster
     /// <item>
     ///     <term><b>Load Balancer Rules</b></term>
     ///     <description>
-    ///     <see cref="ClearLoadbalancers(bool)"/><br/>
+    ///     <see cref="ClearLoadBalancers(bool)"/><br/>
     ///     <see cref="ListLoadBalancerRules(string, bool)"/><br/>
     ///     <see cref="PutLoadBalancerRule(string, LoadBalancerRule)"/><br/>
     ///     <see cref="RemoveLoadBalancerRule(string, string)"/><br/>
@@ -649,7 +649,7 @@ namespace Neon.Xunit.Cluster
                         ClearServices();
                      // () => ClearContainers()     // Not implemented yet
                     },
-                    () => ClearLoadbalancers(),
+                    () => ClearLoadBalancers(),
                 });
 
             // We're clearing these after the services and stacks so
@@ -902,11 +902,17 @@ namespace Neon.Xunit.Cluster
         /// </summary>
         /// <param name="removeSystem">Optionally remove system rules as well.</param>
         /// <remarks>
+        /// <note>
+        /// This does not currently restart the proxy bridges running on 
+        /// cluster pet nodes.  This may change in future releases.
+        /// </note>
+        /// <para>
         /// By default, this method will not remove neonCLUSTER system rules
         /// whose names begin with <b>neon-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// </para>
         /// </remarks>
-        public void ClearLoadbalancers(bool removeSystem = false)
+        public void ClearLoadBalancers(bool removeSystem = false)
         {
             var deleted = false;
 
@@ -929,6 +935,12 @@ namespace Neon.Xunit.Cluster
         /// Restarts cluster load balancers to ensure that they pick up any
         /// load balancer definition changes.
         /// </summary>
+        /// <remarks>
+        /// <note>
+        /// This does not currently restart the proxy bridges running on 
+        /// cluster pet nodes.  This may change in future releases.
+        /// </note>
+        /// </remarks>
         public void RestartLoadBalancers()
         {
             // We'll restart these in parallel for better performance.
@@ -944,6 +956,12 @@ namespace Neon.Xunit.Cluster
         /// Restarts the <b>public</b> p[roxies to ensure that they picked up any
         /// load balancer definition changes.
         /// </summary>
+        /// <remarks>
+        /// <note>
+        /// This does not currently restart the proxy bridges running on 
+        /// cluster pet nodes.  This may change in future releases.
+        /// </note>
+        /// </remarks>
         public void RestartPublicLoadBalancers()
         {
             // $todo(jeff.lill):
@@ -958,6 +976,12 @@ namespace Neon.Xunit.Cluster
         /// Restarts the <b>private</b> load balancers to ensure that they picked up any
         /// load balancer definition changes.
         /// </summary>
+        /// <remarks>
+        /// <note>
+        /// This does not currently restart the proxy bridges running on 
+        /// cluster pet nodes.  This may change in future releases.
+        /// </note>
+        /// </remarks>
         public void RestartPrivateLoadbalancers()
         {
             // $todo(jeff.lill):

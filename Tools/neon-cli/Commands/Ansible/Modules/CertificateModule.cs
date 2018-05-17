@@ -273,10 +273,7 @@ namespace NeonCli.Ansible
         /// </summary>
         private void TouchCertChanged()
         {
-            using (var consul = NeonClusterHelper.OpenConsul())
-            {
-                consul.KV.PutString("neon/service/neon-proxy-manager/conf/cert-update", DateTime.UtcNow).Wait();
-            }
+            NeonClusterHelper.TouchCertificates();
         }
     }
 }

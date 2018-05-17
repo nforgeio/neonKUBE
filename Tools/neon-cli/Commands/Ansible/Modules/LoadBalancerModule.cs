@@ -51,10 +51,10 @@ namespace NeonCli.Ansible
     // parameter    required    default     choices     comments
     // --------------------------------------------------------------------
     //
-    // name         yes                                 neonCLUSTER rule name
-    //
-    // load_balancer yes                    private     identifies the target load balancer
+    // name          yes                    private     identifies the target load balancer
     //                                      public
+    //
+    // rule_name    yes                                 neonCLUSTER rule name
     //
     // rule         see comment                         load balancer rule description
     //                                                  required when [state=present]
@@ -62,8 +62,9 @@ namespace NeonCli.Ansible
     // state        no          present     absent      indicates whether the rule should
     //                                      present     be created or removed
     //
-    // force        no          false                   forces proxy rebuild when [state=present]
-    //                                                  even if the rule is unchanged
+    // force        no          false                   forces load balancer rebuild when 
+    //                                                  [state=present] even if the rule 
+    //                                                  is unchanged
     //
     // Check Mode:
     // -----------
@@ -84,9 +85,9 @@ namespace NeonCli.Ansible
     //    tasks:
     //      - name: load balancer task
     //        neon_load_balancer:
-    //          name: test
-    //          proxy: public
+    //          name: public
     //          state: present
+    //          rule_name: test
     //          rule:
     //            mode: http
     //            checkuri: /_health/check.php
@@ -110,10 +111,10 @@ namespace NeonCli.Ansible
     //    tasks:
     //      - name: load balancer task
     //        neon_lopad_balancer:
-    //          name: test
-    //          proxy: public
+    //          name: public
     //          state: present
     //          httpsredirect: yes
+    //          rule_name: test
     //          rule:
     //            mode: http
     //            checkuri: /_health/check.php
@@ -136,9 +137,9 @@ namespace NeonCli.Ansible
     //    tasks:
     //      - name: load balancer task
     //        neon_load_balancer:
-    //          name: test
-    //          proxy: public
+    //          name: public
     //          state: present
+    //          rule_name: test
     //          rule:
     //            mode: tcp
     //            frontends:
@@ -147,16 +148,16 @@ namespace NeonCli.Ansible
     //              - group: DATABASE
     //                port: 8080
     //
-    // This example removes any existing rule named TEST.
+    // This example removes the rule named [test].
     //
     //  - name: test
     //    hosts: localhost
     //    tasks:
     //      - name: load balancer task
     //        neon_load_balancer:
-    //          name: test
-    //          proxy: public
+    //          name: public
     //          state: absent
+    //          rule_name: test
 
     /// <summary>
     /// Implements the <b>neon_load_balancer</b> Ansible module.
@@ -166,7 +167,7 @@ namespace NeonCli.Ansible
         private HashSet<string> validModuleArgs = new HashSet<string>()
         {
             "name",
-            "load_balancer",
+            "rule_name",
             "rule",
             "state",
             "force"
@@ -192,19 +193,19 @@ namespace NeonCli.Ansible
                 throw new ArgumentException($"[name] module argument is required.");
             }
 
-            if (!ClusterDefinition.IsValidName(name))
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [rule_name]");
+
+            if (!context.Arguments.TryGetValue<string>("rule_name", out var ruleName))
             {
-                throw new ArgumentException($"[name={name}] is not a valid load balancer rule name.");
+                throw new ArgumentException($"[rule_name] module argument is required.");
             }
 
-            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [proxy]");
-
-            if (!context.Arguments.TryGetValue<string>("proxy", out var proxy))
+            if (!ClusterDefinition.IsValidName(ruleName))
             {
-                throw new ArgumentException($"[proxy] module argument is required.");
+                throw new ArgumentException($"[rule_name={ruleName}] is not a valid load balancer rule name.");
             }
 
-            switch (proxy)
+            switch (name)
             {
                 case "private":
 
@@ -218,7 +219,7 @@ namespace NeonCli.Ansible
 
                 default:
 
-                    throw new ArgumentException($"[proxy={proxy}] is not a one of the valid choices: [private] or [public].");
+                    throw new ArgumentException($"[name={name}] is not a one of the valid load balancer names: [private] or [public].");
             }
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [state]");
@@ -248,28 +249,36 @@ namespace NeonCli.Ansible
             {
                 case "absent":
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Check if rule [{name}] exists.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Check if rule [{ruleName}] exists.");
 
-                    if (loadBalancer.GetRule(name) != null)
+                    if (loadBalancer.GetRule(ruleName) != null)
                     {
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{name}] does exist.");
-                        context.WriteLine(AnsibleVerbosity.Info, $"Deleting rule [{name}].");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{ruleName}] does exist.");
+                        context.WriteLine(AnsibleVerbosity.Info, $"Deleting rule [{ruleName}].");
 
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Rule [{name}] will be deleted when CHECK-MODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Rule [{ruleName}] will be deleted when CHECK-MODE is disabled.");
                         }
                         else
                         {
-                            loadBalancer.RemoveRule(name);
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{name}] deleted.");
+                            loadBalancer.RemoveRule(ruleName);
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{ruleName}] deleted.");
+                            context.Changed = true;
                         }
-
-                        context.Changed = !context.CheckMode;
                     }
                     else
                     {
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{name}] does not exist.");
+                        if (force)
+                        {
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{ruleName}] does not exist but since [force=true] we're going to update anyway.");
+                            NeonClusterHelper.TouchCertificates();  // This signals [neon-proxy-manager] to regenerate the proxy config.
+                            context.Changed = true;
+                        }
+                        else
+                        {
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{ruleName}] does not exist.");
+                        }
                     }
                     break;
 
@@ -296,15 +305,15 @@ namespace NeonCli.Ansible
 
                     if (string.IsNullOrWhiteSpace(newRule.Name))
                     {
-                        newRule.Name = name;
+                        newRule.Name = ruleName;
                     }
 
                     // Ensure that the name passed as an argument and the
                     // name within the rule definition match.
 
-                    if (!string.Equals(name, newRule.Name, StringComparison.InvariantCultureIgnoreCase))
+                    if (!string.Equals(ruleName, newRule.Name, StringComparison.InvariantCultureIgnoreCase))
                     {
-                        throw new ArgumentException($"The [name={name}] argument and the rule's [{nameof(LoadBalancerRule.Name)}={newRule.Name}] property are not the same.");
+                        throw new ArgumentException($"The [rule_name={ruleName}] argument and the rule's [{nameof(LoadBalancerRule.Name)}={newRule.Name}] property are not the same.");
                     }
 
                     context.WriteLine(AnsibleVerbosity.Trace, "Rule name matched.");
@@ -314,7 +323,7 @@ namespace NeonCli.Ansible
                     context.WriteLine(AnsibleVerbosity.Trace, "Validating rule.");
 
                     var proxySettings     = loadBalancer.GetSettings();
-                    var validationContext = new LoadBalancerValidationContext(proxy, proxySettings);
+                    var validationContext = new LoadBalancerValidationContext(name, proxySettings);
 
                     // $hack(jeff.lill):
                     //
@@ -388,9 +397,9 @@ namespace NeonCli.Ansible
                     // Try reading any existing rule with this name and then determine
                     // whether the two versions of the rule are actually different. 
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Looking for existing rule [{name}]");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Looking for existing rule [{ruleName}]");
 
-                    var existingRule = loadBalancer.GetRule(name);
+                    var existingRule = loadBalancer.GetRule(ruleName);
                     var changed      = false;
 
                     if (existingRule != null)
@@ -407,8 +416,9 @@ namespace NeonCli.Ansible
                         {
                             if (force)
                             {
-                                changed = true;
                                 context.WriteLine(AnsibleVerbosity.Trace, $"Rules are the same but since [force=true] we're going to update anyway.");
+                                NeonClusterHelper.TouchCertificates();  // This signals [neon-proxy-manager] to regenerate the proxy config.
+                                changed = true;
                             }
                             else
                             {
@@ -419,18 +429,18 @@ namespace NeonCli.Ansible
                     else
                     {
                         changed = true;
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Rule [name={name}] does not exist.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Rule [name={ruleName}] does not exist.");
                     }
                      
                     if (changed)
                     {
                         if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Rule [{name}] will be updated when CHECK-MODE is disabled.");
+                            context.WriteLine(AnsibleVerbosity.Info, $"Rule [{ruleName}] will be updated when CHECK-MODE is disabled.");
                         }
                         else
                         {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating rule [{name}].");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating rule [{ruleName}].");
                             loadBalancer.PutRule(newRule);
                             context.WriteLine(AnsibleVerbosity.Info, $"Rule updated.");
                             context.Changed = !context.CheckMode;

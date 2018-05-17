@@ -298,7 +298,7 @@ certificates, and then finally the private key.
                         }
 
                         vault.DeleteAsync(NeonClusterHelper.GetVaultCertificateKey(certName)).Wait();
-                        TouchCertChanged();
+                        NeonClusterHelper.TouchCertificates();
                         Console.WriteLine($"Certificate [{certName}] was deleted if it existed.");
                     }
                     break;
@@ -333,7 +333,7 @@ certificates, and then finally the private key.
 
                         certificate.Parse();
                         vault.WriteJsonAsync(NeonClusterHelper.GetVaultCertificateKey(commandLine.Arguments[0]), certificate).Wait();
-                        TouchCertChanged();
+                        NeonClusterHelper.TouchCertificates();
 
                         Console.WriteLine($"Certificate [{certName}] was added or updated.");
                     }
@@ -513,18 +513,6 @@ certificates, and then finally the private key.
             {
                 File.Delete(tempCertPath);
                 File.Delete(tempCaPath);
-            }
-        }
-
-        /// <summary>
-        /// Update the <b>neon-proxy-manager</b> Consul key to indicate that changes
-        /// have been made to the cluster certificates.
-        /// </summary>
-        private void TouchCertChanged()
-        {
-            using (var consul = NeonClusterHelper.OpenConsul())
-            {
-                consul.KV.PutString("neon/service/neon-proxy-manager/conf/cert-update", DateTime.UtcNow).Wait();
             }
         }
     }
