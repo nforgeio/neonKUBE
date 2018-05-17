@@ -69,11 +69,21 @@ namespace Neon.Retry
                 return true;
             }
 
-            var httpRequestException = e as HttpRequestException;
+            var httpException = e as HttpException;
 
-            if (httpRequestException != null)
+            if (httpException != null)
             {
-                return true;
+                switch (httpException.StatusCode)
+                {
+                    case HttpStatusCode.GatewayTimeout:
+                    case HttpStatusCode.InternalServerError:
+                    case HttpStatusCode.RequestTimeout:
+                    case HttpStatusCode.ServiceUnavailable:
+                    case (HttpStatusCode)423:   // Locked
+                    case (HttpStatusCode)429:   // Too many requests
+
+                        return true;
+                }
             }
 
             var aggregateException = e as AggregateException;
