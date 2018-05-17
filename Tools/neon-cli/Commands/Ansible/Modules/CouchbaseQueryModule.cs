@@ -94,7 +94,17 @@ namespace NeonCli.Ansible
         // --------
         //
         // This module simply connects to the Couchbase server and submits the query.  Results
-        // will be returned as a JSON array of documents.
+        // will be returned as a lines of JSON objects by default but you can also output
+        // a JSON array of of documents and these are written to the module output by 
+        // default.  You can also specify that this be written to a file and limit the
+        // number of items returned.
+        //
+        // NOTE: This module always returns with [changed=FALSE] even if the query
+        //       may have made changes to the database.  The module does not attempt
+        //       to determine when queries make changes.
+        //
+        // NOTE: The [output] file must be located in the same folder as the playbook
+        //       or within a subfolder.
         //
         // Examples:
         // ---------
@@ -113,7 +123,7 @@ namespace NeonCli.Ansible
         //          bucket: test
         //          username: Administrator
         //          password: password
-        //          query: "select * from test"
+        //          query: "select test.* from test"
         //          output: data.txt
         //          format: json-lines
 
@@ -258,7 +268,7 @@ namespace NeonCli.Ansible
 
             if (!format.HasValue)
             {
-                format = default(CouchbaseFileFormat);
+                format = CouchbaseFileFormat.JsonLines;
             }
 
             var limit = context.ParseLong("limit", v => v >= 0);

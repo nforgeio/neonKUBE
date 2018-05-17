@@ -44,9 +44,6 @@ namespace TestNeonCluster
                 couchbase.Flush();
             }
 
-            // This needs to be assigned outside of the initialization action
-            // so that the bucket will be available for every test.
-
             bucket = couchbase.Bucket;
         }
 
