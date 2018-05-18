@@ -11,6 +11,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
+using Neon.Cluster;
 using Neon.Common;
 using Neon.IO;
 using Neon.Xunit;
@@ -91,5 +92,18 @@ namespace TestNeonCluster
 
             return folder;
         }
+
+        /// <summary>
+        /// Returns the fully qualified path to the encrypted Ansible neonCLUSTER 
+        /// test <b>secrets.yaml</b> file.
+        /// </summary>
+        /// <returns>The file path.</returns>
+        public static string AnsibleSecretsPath => Path.GetFullPath(Path.Combine(Environment.GetEnvironmentVariable("NF_ROOT"), "Test", "secrets.yaml"));
+
+        /// <summary>
+        /// Returns name of the <b>neon-git</b> Ansible password file used
+        /// to encrypt secret files included in the source repository.
+        /// </summary>
+        public const string AnsiblePasswordFile = "neon-git";
     }
 }

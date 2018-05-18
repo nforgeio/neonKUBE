@@ -22,6 +22,11 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Xunit;
 
+// $todo(jeff.lill):
+//
+// I need to think about resetting Docker Registry login state.  We're
+// not currently doing this.
+
 namespace Neon.Xunit.Cluster
 {
     /// <summary>

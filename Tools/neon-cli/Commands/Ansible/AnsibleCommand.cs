@@ -326,6 +326,7 @@ MODULES:
     neon_dashboard          - Manages cluster dashboards
     neon_dns                - Manages cluster DNS
     neon_docker_config      - Manages Docker configs
+    neon_docker_login       - Manages Docker Registry logins
     neon_docker_secret      - Manages Docker secrets
     neon_docker_service     - Manages Docker services
     neon_load_balancer      - Manager cluster load balancers  
