@@ -827,7 +827,7 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
-        /// Lists the Docker Registry credentials assigned to the cluster.
+        /// Lists the Docker registry credentials assigned to the cluster.
         /// </summary>
         /// <returns>The list of credentials.</returns>
         public List<RegistryCredentials> ListRegistryCredentials()
@@ -874,7 +874,7 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
-        /// Returns the credentials for a specific Docker Registry from Vault.
+        /// Returns the credentials for a specific Docker registry from Vault.
         /// </summary>
         /// <param name="hostname">The target registry hostname.</param>
         /// <returns>The credentials or <c>null</c> if none exists.</returns>

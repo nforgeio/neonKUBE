@@ -31,7 +31,7 @@ Manages cluster nodes.
 
 USAGE:
 
-    neon cluster node ls    - lists cluster nodes
+    neon cluster node list|ls   - lists cluster nodes
 ";
         /// <inheritdoc/>
         public override string[] Words

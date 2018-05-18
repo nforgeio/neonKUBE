@@ -42,7 +42,7 @@ namespace NeonCli.Ansible
         // Synopsis:
         // ---------
         //
-        // Manages Docker Registry credentials.
+        // Manages Docker registry credentials.
         //
         // Requirements:
         // -------------
@@ -58,7 +58,7 @@ namespace NeonCli.Ansible
         //
         // state        no          present     present     indicates the cluster should be
         //                                      absent      logged into or out of a Docker
-        // name         yes                                 Registry.
+        // name         yes                                 registry.
         //
         // registry     yes                                 the registry hostname
         //                                                  (e.g. registry-1.docker.io)
@@ -77,7 +77,7 @@ namespace NeonCli.Ansible
         // Remarks:
         // --------
         //
-        // This module is used to have a neonCLUSTER log into or out from a Docker Registry.
+        // This module is used to have a neonCLUSTER log into or out from a Docker registry.
         // All cluster nodes including managers, workers, and pets, will be logged in or out
         // and registry credentials will be persisted to to the cluster Vault so they will
         // be available if new nodes are added to the cluster at a later time.

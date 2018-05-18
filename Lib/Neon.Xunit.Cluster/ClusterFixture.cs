@@ -24,7 +24,7 @@ using Neon.Xunit;
 
 // $todo(jeff.lill):
 //
-// I need to think about resetting Docker Registry login state.  We're
+// I need to think about resetting Docker registry login state.  We're
 // not currently doing this.
 
 namespace Neon.Xunit.Cluster
