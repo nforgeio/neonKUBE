@@ -5,7 +5,7 @@
 #
 # Builds a neonCLUSTER [neon-registry-cache] image with the specified version, subversion
 # and majorversion.  The image built will be a slightly modified version of the 
-# Docker Registry reference.
+# Docker registry reference.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 

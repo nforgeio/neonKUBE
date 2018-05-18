@@ -417,6 +417,14 @@ OPTIONS:
                         VaultProxy();
                         VaultInitialize();
                         ConsulInitialize();
+
+                        // Persist the Docker registry credentials to Vault.
+
+                        foreach (var credential in cluster.Definition.Docker.Registries
+                            .Where(r => !string.IsNullOrEmpty(r.Username)))
+                        {
+                            cluster.SetRegistryCredential(credential.Registry, credential.Username, credential.Password);
+                        }
                     });
 
                 var clusterServices = new ClusterServices(cluster);
@@ -1091,8 +1099,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                     throw new NotImplementedException($"Unsupported storage driver: {Program.OSProperties.StorageDriver}.");
             }
 
-            // Specify any registry caches followed by the authoritative
-            // external registry.
+            // Specify any registry caches followed by the Docker public registry.
 
             var registries = new JArray();
 
@@ -1104,7 +1111,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                 }
             }
 
-            registries.Add(cluster.Definition.Docker.Registry);
+            registries.Add(NeonClusterConst.DockerPublicRegistry);
 
             settings.Add("registry-mirrors", registries);
 
@@ -1325,23 +1332,9 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                     node.SudoCommand("chmod 640 /etc/docker/daemon.json");
                     node.SudoCommand("setup-docker.sh");
 
-                    if (!string.IsNullOrEmpty(cluster.Definition.Docker.RegistryUsername))
-                    {
-                        // We need to log into the registry and/or cache.
+                    // Log into any Docker registries that require credentials.
 
-                        node.Status = "docker login";
-
-                        var loginCommand = new CommandBundle("./docker-login.sh");
-
-                        loginCommand.AddFile("docker-login.sh",
-$@"docker login \
--u ""{cluster.Definition.Docker.RegistryUsername}"" \
--p ""{cluster.Definition.Docker.RegistryPassword}"" \
-{cluster.Definition.Docker.Registry}",
-                            isExecutable: true);
-
-                        node.SudoCommand(loginCommand);
-                    }
+                    RegistryLogin(node);
 
                     // Clean up any cached APT files.
 
@@ -1349,6 +1342,29 @@ $@"docker login \
                     node.SudoCommand("apt-get clean -yq");
                     node.SudoCommand("rm -rf /var/lib/apt/lists");
                 });
+        }
+
+        /// <summary>
+        /// Logs a node into any Docker registries that require credentials.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        private void RegistryLogin(SshProxy<NodeDefinition> node)
+        {
+            foreach (var registry in cluster.Definition.Docker.Registries)
+            {
+                node.Status = "docker login";
+
+                var loginCommand = new CommandBundle("./docker-login.sh");
+
+                loginCommand.AddFile("docker-login.sh",
+$@"docker login \
+-u ""{registry.Username}"" \
+-p ""{registry.Password}"" \
+{registry.Registry}",
+                    isExecutable: true);
+
+                node.SudoCommand(loginCommand, cluster.SecureRunOptions);
+            }
         }
 
         /// <summary>
@@ -1528,23 +1544,11 @@ $@"docker login \
                     node.UploadText("/etc/docker/daemon.json", GetDockerConfig(node));
                     node.SudoCommand("setup-docker.sh");
 
-                    if (!string.IsNullOrEmpty(cluster.Definition.Docker.RegistryUsername))
-                    {
-                        // We need to log into the registry and/or cache.
+                    // Log into any Docker registries that require credentials.
 
-                        node.Status = "docker login";
+                    RegistryLogin(node);
 
-                        var loginCommand = new CommandBundle("./docker-login.sh");
-
-                        loginCommand.AddFile("docker-login.sh",
-$@"docker login \
--u ""{cluster.Definition.Docker.RegistryUsername}"" \
--p ""{cluster.Definition.Docker.RegistryPassword}"" \
-{cluster.Definition.Docker.Registry}", 
-                            isExecutable: true);
-
-                        node.SudoCommand(loginCommand);
-                    }
+                    // Other initialization.
 
                     if (!cluster.Definition.BareDocker)
                     {

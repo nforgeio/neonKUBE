@@ -20,7 +20,7 @@ This image derives from the offical [registry](https://hub.docker.com/_/registry
 
 * **HOSTNAME** (*required*) - host name for this instance.
 
-* **REGISTRY** (*optional*) - URL of the remote registry being cached.  This defaults to the Docker Public Registry at https://registry-1.docker.io.
+* **REGISTRY** (*optional*) - URL of the remote registry being cached.  This defaults to the Docker Public registry at https://registry-1.docker.io.
 
 * **USERNAME** (*optional*) - user ID used to authenticate with the cache and the remote registry.
 
@@ -44,7 +44,7 @@ This configuration makes a NeonCluser self-bootstrapping where even this **neon-
 
 # Deployment
 
-The neonCLUSTER **neon-cli** handles the deployment of Docker pull-thru Registry caches to the cluster manager nodes unless disabled in the cluster definition.  The tool performs the following steps (documented [here](https://docs.docker.com/registry/insecure/):
+The neonCLUSTER **neon-cli** handles the deployment of Docker pull-thru registry caches to the cluster manager nodes unless disabled in the cluster definition.  The tool performs the following steps (documented [here](https://docs.docker.com/registry/insecure/):
 
 1. Generates a self-signed certificate for each cluster manager with the certificate hosts matching **<MANAGER-NAME>.neon-registry-cache.cluster** , where *<MANAGER-NAME>* is the name of the manager node.
 

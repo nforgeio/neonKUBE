@@ -33,7 +33,7 @@ using Neon.Time;
 namespace NeonCli
 {
     /// <summary>
-    /// Handles the provisioning of cluster Docker Registry cache services.
+    /// Handles the provisioning of cluster Docker registry cache services.
     /// </summary>
     /// <remarks>
     /// </remarks>
@@ -137,7 +137,14 @@ namespace NeonCli
                         node.Status = "create: registry cache volume";
                         node.SudoCommand(new CommandBundle("docker-volume-create \"neon-registry-cache\""));
 
-                        // Start the Registry cache.
+                        // Start the registry cache using the required Docker public registry
+                        // credentials, if any.
+
+                        var publicRegistryCredentials = cluster.Definition.Docker.Registries.SingleOrDefault(r => r.Registry == NeonClusterConst.DockerPublicRegistry);
+
+                        publicRegistryCredentials          = publicRegistryCredentials ?? new RegistryCredentials() { Registry = NeonClusterConst.DockerPublicRegistry };
+                        publicRegistryCredentials.Username = publicRegistryCredentials.Username ?? string.Empty;
+                        publicRegistryCredentials.Password = publicRegistryCredentials.Password ?? string.Empty;
 
                         node.Status = "start: neon-registry-cache";
 
@@ -150,9 +157,9 @@ namespace NeonCli
                             "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",
                             "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",
                             "--env", $"HOSTNAME={node.Name}.{NeonHosts.RegistryCache}",
-                            "--env", $"REGISTRY={cluster.Definition.Docker.Registry}",
-                            "--env", $"USERNAME={cluster.Definition.Docker.RegistryUsername}",
-                            "--env", $"PASSWORD={cluster.Definition.Docker.RegistryPassword}",
+                            "--env", $"REGISTRY={publicRegistryCredentials.Registry}",
+                            "--env", $"USERNAME={publicRegistryCredentials.Username}",
+                            "--env", $"PASSWORD={publicRegistryCredentials.Password}",
                             "--env", "LOG_LEVEL=info",
                             Program.ResolveDockerImage(cluster.Definition.Docker.RegistryCacheImage));
 
@@ -205,7 +212,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Returns the host name for a Registry cache instance hosted on a manager node.
+        /// Returns the host name for a registry cache instance hosted on a manager node.
         /// </summary>
         /// <param name="manager">The manager node.</param>
         /// <returns>The hostname.</returns>

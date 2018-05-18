@@ -136,27 +136,13 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns the URL of the Docker registry the cluster will use to download Docker images:
-        /// <b>https://registry-1.docker.io</b>.
+        /// Specifies the Docker Registries and the required credentials that will
+        /// be made available to the cluster.  Note that the Docker public registry
+        /// will always be available to new clusters.
         /// </summary>
-        [JsonIgnore]
-        public string Registry => defaultRegistry;
-
-        /// <summary>
-        /// Optionally specifies the username to be used to authenticate against the global
-        /// Docker registry.
-        /// </summary>
-        [JsonProperty(PropertyName = "RegistryUsername", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Registries", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
-        public string RegistryUsername { get; set; } = null;
-
-        /// <summary>
-        /// Optionally specifies the password to be used to authenticate against the global
-        /// Docker registry.
-        /// </summary>
-        [JsonProperty(PropertyName = "RegistryPassword", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(null)]
-        public string RegistryPassword { get; set; } = null;
+        public List<RegistryCredentials> Registries { get; set; } = new List<RegistryCredentials>();
 
         /// <summary>
         /// Optionally indicates that local pull-thru Docker registry caches are to be deployed
@@ -256,9 +242,8 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
 
-            Version          = Version ?? "latest";
-            RegistryUsername = RegistryUsername ?? string.Empty;
-            RegistryPassword = RegistryPassword ?? string.Empty;
+            Version             = Version ?? "latest";
+            Registries = Registries ?? new List<RegistryCredentials>();
 
             if (RestartDelaySeconds < 0)
             {
@@ -329,11 +314,23 @@ namespace Neon.Cluster
                 }
             }
 #endif
-
-            if (string.IsNullOrEmpty(Registry) || !Uri.TryCreate(Registry, UriKind.Absolute, out uri))
+            foreach (var registry in Registries)
             {
-                throw new ClusterDefinitionException($"[{nameof(DockerOptions)}.{nameof(Registry)}={Registry}] is not a valid registry URI.");
+                var hostname = registry.Registry;
+
+                if (string.IsNullOrEmpty(hostname) || !ClusterDefinition.DnsHostRegex.IsMatch(hostname))
+                {
+                    throw new ClusterDefinitionException($"[{nameof(DockerOptions)}.{nameof(Registries)}] includes a [{nameof(Neon.Cluster.RegistryCredentials.Registry)}={hostname}] is not a valid registry hostname.");
+                }
             }
+        }
+
+        /// <summary>
+        /// Clears any sensitive properties like the Docker registry credentials.
+        /// </summary>
+        public void ClearSecrets()
+        {
+            Registries.Clear();
         }
     }
 }

@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Generates the Docker Registry configuration file [/registry.yml] 
+# Generates the Docker registry configuration file [/registry.yml] 
 # by substituting environment variables.
 
 cat <<EOF > /registry.yml

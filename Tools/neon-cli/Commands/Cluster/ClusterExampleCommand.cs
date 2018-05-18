@@ -292,21 +292,17 @@ USAGE:
 
         ""Version"": ""latest"",
 
-        // Optionally specifies the URL of the Docker registry the cluster will use to
-        // download Docker images.  This defaults to the Public Docker registry: 
-        // [https://registry-1.docker.io].
-        
-        ""Registry"": ""https://registry-1.docker.io"",
+        // Optionally specifies the hostnames and credentials for the Docker registries
+        // that will be available to the cluster.  Note that clusters will access the
+        // Docker public registry without authentication by default.
 
-        // Optionally specifies the user name used to authenticate with the registry
-        // mirror and caches.
-        //
-        ""RegistryUsername"": """",
-
-        // Optionally specifies the password used to authenticate with the registry
-        // mirror and caches.
-        // 
-        // ""RegistryPassword"": """",
+        // ""Registry"": [
+        //   {
+        //     ""HostName"": ""registry-1.docker.io"",
+        //     ""Username"": ""MY-USERNAME"",
+        //     ""Password"": ""MY-PASSWORD""
+        //   }
+        // ],
         
         // Optionally specifies that pull-thru registry caches are to be deployed
         // within the cluster on the manager nodes.  This defaults to [true]. 

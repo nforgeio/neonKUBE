@@ -45,7 +45,7 @@ This file defines the variables described below.  These variables can be referen
 `AZURE_SUBSCRIPTIONID`
 `AZURE_TENANTID`
 
-## Neon Docker Registry secret (used for anti-tampering)
+## Neon Docker registry secret (used for anti-tampering)
 
 `REGISTRY_SECRET`
 

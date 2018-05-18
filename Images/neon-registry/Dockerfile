@@ -7,12 +7,12 @@
 #
 # ARGUMENTS:
 #
-#   VERSION         - The Docker Registry version (e.g. "2.6.0")
+#   VERSION         - The Docker registry version (e.g. "2.6.0")
 #   TINI_VERSION    - The version of the Tini INIT manager to install
 #
 # REMARKS:
 #
-# The external Registry data volume must be mounted at:
+# The external registry data volume must be mounted at:
 #
 #       /var/lib/registry
 

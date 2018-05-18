@@ -63,6 +63,7 @@ COMMAND SUMMARY:
     neon cluster get        VALUE-EXPR
     neon cluster node       ARGS
     neon cluster prepare    [CLUSTER-DEF]
+    neon cluster registry   ARGS
     neon cluster set        SETTING=VALUE
     neon cluster setup      [CLUSTER-DEF]
     neon cluster verify     [CLUSTER-DEF]
@@ -220,6 +221,7 @@ Note that the tool may require admin privileges for [--noshim] mode.
                     new ClusterGetCommand(),
                     new ClusterNodeCommand(),
                     new ClusterPrepareCommand(),
+                    new ClusterRegistryCommand(),
                     new ClusterSetCommand(),
                     new ClusterSetupCommand(),
                     new ClusterVerifyCommand(),

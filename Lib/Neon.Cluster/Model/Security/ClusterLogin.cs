@@ -255,6 +255,10 @@ namespace Neon.Cluster
                 VpnCredentials.CaZipKey = null;
             }
 
+            // Clear the Docker registry credentials.
+
+            Definition.Docker.ClearSecrets();
+
             // Clear the provider specific information because it
             // contains hosting credentials.
 

@@ -46,6 +46,7 @@ CLUSTER IDENTIFIERS:
     username                - root account username
     password                - root account password
     allow-unit-testing      - enable ClusterFixture unit testing (bool)
+    registries              - lists the Docker registries and credentials
     sshkey-client-pem       - client SSH private key (PEM format)
     sshkey-client-ppk       - client SSH private key (PPK format)
     sshkey-fingerprint      - SSH host key fingerprint
@@ -145,6 +146,38 @@ NODE IDENTIFIERS:
                     case "password":
 
                         Console.Write(clusterLogin.SshPassword);
+                        break;
+
+                    case "registries":
+
+                        var registries = cluster.ListRegistryCredentials();
+
+                        // Special-case the Docker public registry if it's not
+                        // set explicitly.
+
+                        if (!registries.Exists(r => r.Registry.Equals(NeonClusterConst.DockerPublicRegistry, StringComparison.InvariantCultureIgnoreCase)))
+                        {
+                            registries.Add(
+                                new RegistryCredentials()
+                                {
+                                    Registry = NeonClusterConst.DockerPublicRegistry
+                                });
+                        }
+
+                        var maxRegistryLength = registries.Max(r => r.Registry.Length);
+
+                        foreach (var registry in registries)
+                        {
+                            var spacer      = new string(' ', maxRegistryLength - registry.Registry.Length);
+                            var credentials = string.Empty;
+
+                            if (!string.IsNullOrEmpty(registry.Username))
+                            {
+                                credentials = $"{registry.Username}/{registry.Password ?? string.Empty}";
+                            }
+
+                            Console.WriteLine($"{registry.Registry}{spacer} - {credentials}");
+                        }
                         break;
 
                     case "sshkey-fingerprint":

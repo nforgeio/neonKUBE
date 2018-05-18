@@ -37,6 +37,13 @@
     //"Version": "latest",
     //"Version": "test",
     //"Version": "experimental",
+    "Registries": [
+      {
+        "Hostname": "registry-1.docker.io",
+        "Username": "stokebot",
+        "Password": "Leather.632"
+      }
+    ],
     "RegistryCache": true,
     "Experimental": false
   },

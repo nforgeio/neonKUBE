@@ -52,17 +52,22 @@ namespace Neon.Cluster
         public const string DockerDnsEndpoint = "127.0.0.11:53";
 
         /// <summary>
+        /// Hostname of the Docker public registry.
+        /// </summary>
+        public const string DockerPublicRegistry = "registry-1.docker.io";
+
+        /// <summary>
         /// The default Vault transit key.
         /// </summary>
         public const string VaultTransitKey = "neon-transit";
 
         /// <summary>
-        /// The root Vault Docker Registry key.
+        /// The root Vault Docker registry key.
         /// </summary>
         public const string VaultRegistryKey = "neon-secret/registry";
 
         /// <summary>
-        /// The Vault Docker Registry credentials key.
+        /// The Vault Docker registry credentials key.
         /// </summary>
         public static readonly string VaultRegistryCredentialsKey = $"{VaultRegistryKey}/credentials";
 

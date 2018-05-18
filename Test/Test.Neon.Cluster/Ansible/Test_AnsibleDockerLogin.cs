@@ -28,6 +28,12 @@ using Neon.Data;
 
 using Xunit;
 
+// $todo(jeff.lill):
+//
+// Complete this implementation.  Note that we also need to update
+// registry cache credentials when we're logging into or out of
+// the Docker public registry.
+
 namespace TestNeonCluster
 {
     public class Test_AnsibleDockerLogin : IClassFixture<ClusterFixture>
@@ -44,7 +50,7 @@ namespace TestNeonCluster
 
             // Ensure that we're not already logged into Docker Hub.
 
-            clusterProxy.RemoveRegistryCredential("registry-1.docker.io");
+            clusterProxy.RemoveRegistryCredential(NeonClusterConst.DockerPublicRegistry);
         }
 
         [Fact]
@@ -83,7 +89,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.NotNull(clusterProxy.GetRegistryCredential("registry-1.docker.io"));
+                Assert.NotNull(clusterProxy.GetRegistryCredential(NeonClusterConst.DockerPublicRegistry));
 
                 //-----------------------------------------------------------------
                 // Run the play again and verify that [changed=false].
@@ -108,7 +114,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.False(taskResult.Changed);
 
-                Assert.NotNull(clusterProxy.GetRegistryCredential("registry-1.docker.io"));
+                Assert.NotNull(clusterProxy.GetRegistryCredential(NeonClusterConst.DockerPublicRegistry));
 
                 //-----------------------------------------------------------------
                 // Verify that we log off the test Docker hub account.
@@ -131,7 +137,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Null(clusterProxy.GetRegistryCredential("registry-1.docker.io"));
+                Assert.Null(clusterProxy.GetRegistryCredential(NeonClusterConst.DockerPublicRegistry));
 
                 //-----------------------------------------------------------------
                 // Run the play again and verify that [changed=false].
@@ -154,7 +160,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.False(taskResult.Changed);
 
-                Assert.Null(clusterProxy.GetRegistryCredential("registry-1.docker.io"));
+                Assert.Null(clusterProxy.GetRegistryCredential(NeonClusterConst.DockerPublicRegistry));
             }
         }
     }
