@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_AnsiblePlayer.cs
+// FILE:	    Test_Registry.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -19,12 +19,12 @@ using Xunit;
 
 namespace TestNeonCluster
 {
-    public class Test_ClusterVault : IClassFixture<ClusterFixture>
+    public class Test_Registry : IClassFixture<ClusterFixture>
     {
         private ClusterFixture  cluster;
         private ClusterProxy    clusterProxy;
 
-        public Test_ClusterVault(ClusterFixture cluster)
+        public Test_Registry(ClusterFixture cluster)
         {
             if (!cluster.LoginAndInitialize())
             {
@@ -120,6 +120,16 @@ namespace TestNeonCluster
 
             clusterProxy.RemoveRegistryCredential("registry2.test.com");
             Assert.Null(clusterProxy.GetRegistryCredential("registry2.test.com"));
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void LocalRegistry()
+        {
+            // Verify that we can use the [neon-registry] image to deploy
+            // a local registry to the cluster.
+
+
         }
     }
 }

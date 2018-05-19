@@ -126,6 +126,11 @@ namespace NeonCli
                         new DockerLoginModule().Run(context);
                         break;
 
+                    case "neon_docker_registry":
+
+                        new DockerRegistryModule().Run(context);
+                        break;
+
                     case "neon_docker_secret":
 
                         new DockerSecretModule().Run(context);
