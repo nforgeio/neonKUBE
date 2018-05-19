@@ -165,6 +165,7 @@ namespace TestNeonCluster
         }
 
         [Fact(Skip = "TODO")]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void RegistryCache()
         {
             // $todo(jeff.lill):
