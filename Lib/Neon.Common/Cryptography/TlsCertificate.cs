@@ -82,7 +82,11 @@ namespace Neon.Cryptography
         /// <exception cref="FormatException">Thrown if the certificate could not be parsed.</exception>
         public static TlsCertificate Parse(string pemCombined)
         {
-            return TlsCertificate.Parse(pemCombined);
+            var certificate = new TlsCertificate(pemCombined);
+
+            certificate.Parse();
+
+            return certificate;
         }
 
         /// <summary>
