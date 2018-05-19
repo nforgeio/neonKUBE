@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
+using System.Diagnostics.Contracts;
 using System.Globalization;
 using System.Runtime.Serialization;
 using System.Text;
@@ -114,6 +115,28 @@ namespace Neon.Docker
             PreviousSpec?.Normalize();
             Endpoint?.Normalize();
             UpdateStatus?.Normalize();
+        }
+
+        /// <summary>
+        /// Returns the value of an environment variable for the current service deployment.
+        /// </summary>
+        /// <param name="variable">The variable name (case insensitive).</param>
+        /// <returns>The value of the variable or <c>null</c> if the variable doesn't exist.</returns>
+        public string GetEnv(string variable)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(variable));
+
+            var pattern = $"{variable}=";
+
+            foreach (var item in Spec.TaskTemplate.ContainerSpec.Env)
+            {
+                if (item.StartsWith(pattern, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return item.Substring(pattern.Length);
+                }
+            }
+
+            return null;
         }
     }
 }
