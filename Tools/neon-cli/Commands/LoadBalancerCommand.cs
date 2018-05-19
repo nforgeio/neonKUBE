@@ -465,7 +465,7 @@ See the documentation for more load balancer rule and setting details.
                         Program.Exit(1);
                     }
                     
-                    if (loadBalancer.PutRule(loadbalancerRule))
+                    if (loadBalancer.SetRule(loadbalancerRule))
                     {
                         Console.WriteLine($"Load balancer [{loadBalancerName}] rule [{ruleName}] has been updated.");
                     }

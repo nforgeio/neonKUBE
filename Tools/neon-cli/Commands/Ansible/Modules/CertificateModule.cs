@@ -216,9 +216,7 @@ namespace NeonCli.Ansible
                             throw new ArgumentException($"[value] module argument is required.");
                         }
 
-                        var certificate = new TlsCertificate(value);    // This validates the certificate/private key
-
-                        certificate.Parse();
+                        var certificate = TlsCertificate.Parse(value);    // This validates the certificate/private key
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Reading [{name}]");
 

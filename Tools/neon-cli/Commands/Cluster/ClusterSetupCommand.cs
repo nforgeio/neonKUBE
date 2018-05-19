@@ -3580,7 +3580,7 @@ systemctl restart sshd
                                 });
                         }
 
-                        cluster.PrivateLoadBalancer.PutRule(rule);
+                        cluster.PrivateLoadBalancer.SetRule(rule);
                         firstManager.Status = string.Empty;
                     }
 

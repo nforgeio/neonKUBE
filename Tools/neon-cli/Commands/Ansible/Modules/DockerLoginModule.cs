@@ -99,7 +99,7 @@ namespace NeonCli.Ansible
         //          username: billy
         //          password: bob
         //
-        // This example log out of the custom registry:
+        // This example logs out of the custom registry:
         //
         //  - name: test
         //    hosts: localhost

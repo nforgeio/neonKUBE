@@ -315,7 +315,7 @@ $@"
                     });
             }
 
-            cluster.PrivateLoadBalancer.PutRule(rule);
+            cluster.PrivateLoadBalancer.SetRule(rule);
         }
 
         /// <summary>
@@ -392,7 +392,7 @@ $@"
                     Port   = NetworkPorts.TDAgentForward
                 });
 
-            cluster.PrivateLoadBalancer.PutRule(rule);
+            cluster.PrivateLoadBalancer.SetRule(rule);
         }
 
         /// <summary>
