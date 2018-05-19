@@ -431,13 +431,13 @@ namespace NeonCli.Ansible
                         volumeRemoveActions.Add(
                             () =>
                             {
-                                response = node.DockerCommand(RunOptions.None, "docker", "volume", "rm", "neon-registry");
+                                var removeResponse = node.DockerCommand(RunOptions.None, "docker", "volume", "rm", "neon-registry");
 
-                                if (response.ExitCode != 0)
+                                if (removeResponse.ExitCode != 0)
                                 {
                                     lock (syncLock)
                                     {
-                                        context.WriteLine(AnsibleVerbosity.Info, $"Error removing [neon-registry] volume from [{node.Name}: {response.ErrorText}");
+                                        context.WriteLine(AnsibleVerbosity.Info, $"Error removing [neon-registry] volume from [{node.Name}: {removeResponse.ErrorText}");
                                     }
                                 }
                             });
@@ -561,7 +561,7 @@ namespace NeonCli.Ansible
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Creating service.");
 
-                        response = manager.DockerCommand(RunOptions.None,
+                        var createResponse = manager.DockerCommand(RunOptions.None,
                             "docker service create",
                             "--name", "neon-registry",
                             "--mode", "global",
@@ -575,9 +575,9 @@ namespace NeonCli.Ansible
                             "--network", "neon-public",
                             "--restart-delay", "10s");
 
-                        if (response.ExitCode != 0)
+                        if (createResponse.ExitCode != 0)
                         {
-                            context.WriteErrorLine($"[neon-registry] service create failed: {response.ErrorText}");
+                            context.WriteErrorLine($"[neon-registry] service create failed: {createResponse.ErrorText}");
                             return;
                         }
 
@@ -631,7 +631,7 @@ namespace NeonCli.Ansible
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Updating service.");
 
-                        response = manager.DockerCommand(RunOptions.None,
+                        var updateResponse = manager.DockerCommand(RunOptions.None,
                             "docker service update",
                             "--mode", "global",
                             "--constraint", "node.role==manager",
@@ -645,9 +645,9 @@ namespace NeonCli.Ansible
                             "--restart-delay", "10s",
                             "neon-registry");
 
-                        if (response.ExitCode != 0)
+                        if (updateResponse.ExitCode != 0)
                         {
-                            context.WriteErrorLine($"[neon-registry] service update failed: {response.ErrorText}");
+                            context.WriteErrorLine($"[neon-registry] service update failed: {updateResponse.ErrorText}");
                             return;
                         }
 
@@ -703,11 +703,11 @@ docker service update --env READ_ONLY=false neon-registry
 
                     context.WriteLine(AnsibleVerbosity.Info, "Registry prune started.");
 
-                    var response = manager.SudoCommand(bundle, RunOptions.None);
+                    var pruneResponse = manager.SudoCommand(bundle, RunOptions.None);
 
-                    if (response.ExitCode != 0)
+                    if (pruneResponse.ExitCode != 0)
                     {
-                        context.WriteErrorLine($"The prune operation failed.  The registry may be running in READ-ONLY mode: {response.ErrorText}");
+                        context.WriteErrorLine($"The prune operation failed.  The registry may be running in READ-ONLY mode: {pruneResponse.ErrorText}");
                         return;
                     }
 
