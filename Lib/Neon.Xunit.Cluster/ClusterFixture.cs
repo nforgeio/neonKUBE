@@ -836,7 +836,7 @@ namespace Neon.Xunit.Cluster
 
             var loadBalancer = cluster.GetLoadBalancerManager(loadBalancerName);
 
-            loadBalancer.PutRule(rule);
+            loadBalancer.SetRule(rule);
         }
 
         /// <summary>
@@ -855,7 +855,7 @@ namespace Neon.Xunit.Cluster
             var loadbalancer = cluster.GetLoadBalancerManager(loadBalancer);
             var rule         = LoadBalancerRule.Parse(jsonOrYaml);
 
-            loadbalancer.PutRule(rule);
+            loadbalancer.SetRule(rule);
         }
 
         /// <summary>
@@ -1013,7 +1013,7 @@ namespace Neon.Xunit.Cluster
             base.CheckDisposed();
             this.CheckCluster();
 
-            cluster.Certificate.Put(name, TlsCertificate.Parse(certPem));
+            cluster.Certificate.Set(name, TlsCertificate.Parse(certPem));
         }
 
         /// <summary>
@@ -1045,7 +1045,7 @@ namespace Neon.Xunit.Cluster
             base.CheckDisposed();
             this.CheckCluster();
 
-            cluster.Certificate.Put(name, TlsCertificate.CreateSelfSigned(hostname));
+            cluster.Certificate.Set(name, TlsCertificate.CreateSelfSigned(hostname));
         }
 
         /// <summary>
