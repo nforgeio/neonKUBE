@@ -56,7 +56,7 @@ namespace Neon.Cluster
         /// Retrieves a cluster certificate.
         /// </summary>
         /// <param name="name">The certificate name.</param>
-        /// <returns>The certificate if present or <c>null</c> otherwise.</returns>
+        /// <returns>The certificate if present or <c>null</c> if it doesn't exist.</returns>
         public TlsCertificate Get(string name)
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
@@ -88,7 +88,7 @@ namespace Neon.Cluster
         /// properties.
         /// </note>
         /// </remarks>
-        public void Put(string name, TlsCertificate certificate)
+        public void Set(string name, TlsCertificate certificate)
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
             Covenant.Requires<ArgumentNullException>(certificate != null);
@@ -113,6 +113,16 @@ namespace Neon.Cluster
             }
 
             return certificates;
+        }
+
+        /// <summary>
+        /// Indicates that the cluster certificates may have been changed.  This has the effect
+        /// of signalling <b>neon-proxy-manager</b> to to regenerate the proxy definitions and
+        /// restart all of the load balancers when changes are detected.
+        /// </summary>
+        public void Touch()
+        {
+            NeonClusterHelper.TouchCertificates();
         }
     }
 }

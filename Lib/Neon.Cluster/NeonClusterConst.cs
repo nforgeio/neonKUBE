@@ -141,12 +141,12 @@ namespace Neon.Cluster
         public const string GitProdBranch = "prod";
 
         /// <summary>
-        /// Consul parent key for the Dynamic DNS service related values.
+        /// Consul root key for the Dynamic DNS service related values.
         /// </summary>
         public static readonly string ConsulDnsRootKey = "neon/dns";
 
         /// <summary>
-        /// Consul parent key for the Dynamic DNS entry definitions.
+        /// Consul root key for the Dynamic DNS entry definitions.
         /// </summary>
         public static readonly string ConsulDnsEntriesKey = $"{ConsulDnsRootKey}/entries";
 
@@ -164,6 +164,11 @@ namespace Neon.Cluster
         /// Consul key where cluster dashboards are registered.
         /// </summary>
         public const string ConsulDashboardsKey = "neon/dashboards";
+
+        /// <summary>
+        /// Consul root key for the <b>neon-registry</b> service.
+        /// </summary>
+        public const string ConsulRegistryRootKey = "neon/services/neon-registry";
 
         /// <summary>
         /// Identifies the dashboard folder where built-in cluster dashboards will reside.

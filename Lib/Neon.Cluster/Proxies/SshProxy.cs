@@ -3020,7 +3020,7 @@ echo $? > {cmdFolder}/exit
             // the same one (if it has been changed since cluster deployment).
 
             var image    = Cluster.Definition.Docker.RegistryCacheImage;   // Default to this if there's no container.
-            var response = SudoCommand("docker", "ps", "-a", "--filter", "name=neon-registry-cache", "--format", "{{.Image}}");
+            var response = DockerCommand(RunOptions.None, "docker", "ps", "-a", "--filter", "name=neon-registry-cache", "--format", "{{.Image}}");
 
             if (response.ExitCode != 0)
             {
@@ -3032,7 +3032,7 @@ echo $? > {cmdFolder}/exit
                 image = response.OutputText.Trim();
             }
 
-            response = SudoCommand("docker", "rm", "--force", "neon-registry-cache");
+            response = DockerCommand(RunOptions.None, "docker", "rm", "--force", "neon-registry-cache");
 
             if (response.ExitCode != 0)
             {

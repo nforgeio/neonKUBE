@@ -171,7 +171,7 @@ namespace Neon.Cluster
         /// if the load balancer rule didn't already exist and was added.
         /// </returns>
         /// <exception cref="ClusterDefinitionException">Thrown if the rule is not valid.</exception>
-        public bool PutRule(LoadBalancerRule rule)
+        public bool SetRule(LoadBalancerRule rule)
         {
             Covenant.Requires<ArgumentNullException>(rule != null);
             Covenant.Requires<ArgumentNullException>(ClusterDefinition.IsValidName(rule.Name));

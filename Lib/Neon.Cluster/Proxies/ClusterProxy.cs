@@ -15,9 +15,12 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 using Consul;
 
 using Neon.Common;
+using Neon.Docker;
 using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
@@ -1309,6 +1312,34 @@ vault policy-write {policy.Name} policy.hcl
             {
                 await Consul.KV.PutString(key, value.Value.ToString());
             }
+        }
+
+        /// <summary>
+        /// Inspects a service, returning details about its current state.
+        /// </summary>
+        /// <param name="name">The service name.</param>
+        /// <param name="strict">Optionally specify strict JSON parsing.</param>
+        /// <returns>The <see cref="ServiceDetails"/>.</returns>
+        public ServiceDetails InspectService(string name, bool strict = false)
+        {
+            var response = GetHealthyManager().DockerCommand(RunOptions.None, "service", "inspect", name);
+
+            if (response.ExitCode != 0)
+            {
+                throw new Exception($"Cannot inspect service [{name}]: {response.AllText}");
+            }
+
+            // The inspection response is actually an array with a single
+            // service details element, so we'll need to extract that element
+            // and then parse it.
+
+            var jArray      = JArray.Parse(response.OutputText);
+            var jsonDetails = jArray[0].ToString(Formatting.Indented);
+            var details     = NeonHelper.JsonDeserialize<ServiceDetails>(jsonDetails, strict);
+
+            details.Normalize();
+
+            return details;
         }
     }
 }
