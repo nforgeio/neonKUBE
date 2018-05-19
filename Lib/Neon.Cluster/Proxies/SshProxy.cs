@@ -2877,5 +2877,214 @@ echo $? > {cmdFolder}/exit
 
             throw new NeonClusterException($"Cannot find network interface for [address={address}].");
         }
+
+        /// <summary>
+        /// Logs the node into a Docker registry.
+        /// </summary>
+        /// <param name="registry">The target registry hostname.</param>
+        /// <param name="username">Optional username.</param>
+        /// <param name="password">Optional password.</param>
+        /// <returns><c>true</c> if the login succeeded.</returns>
+        /// <remarks>
+        /// <note>
+        /// This does nothing but return <c>true</c> if the Docker public registry is 
+        /// specified and the cluster has registry caches deployed because the 
+        /// caches handle authentication with the upstream registry in this case.
+        /// </note>
+        /// </remarks>
+        public bool RegistryLogin(string registry, string username = null, string password = null)
+        {
+            Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
+
+            if (NeonClusterHelper.IsDockerPublicRegistry(registry))
+            {
+                return true;
+            }
+
+            try
+            {
+                CommandBundle bundle;
+
+                if (!string.IsNullOrEmpty(username))
+                {
+                    bundle = new CommandBundle("cat password.txt | docker login", "--username", username, "--password-stdin", registry);
+
+                    bundle.AddFile("password.txt", password);
+                }
+                else if (NeonClusterHelper.IsDockerPublicRegistry(registry))
+                {
+                    // Logging out of the Docker public registry is equivalent to 
+                    // setting a NULL username.
+
+                    bundle = new CommandBundle("docker logout", registry);
+                }
+                else
+                {
+                    // $todo(jeff.lill):
+                    //
+                    // I'm pretty sure that it's not possible to log into a 
+                    // a non-Docker public registry without a username so we'll
+                    // just return FALSE here.
+                    //
+                    // This could probably use some more research to be sure.
+                    // For example, I believe that Elasticsearch has their own
+                    // registry now and I don't know if they require an account.
+                    
+                    return false;
+                }
+
+                var response = SudoCommand(bundle);
+
+                return response.ExitCode == 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Logs the node out of a Docker registry. 
+        /// </summary>
+        /// <param name="registry">The target registry hostname.</param>
+        /// <returns><c>true</c> if the logout succeeded.</returns>
+        /// <remarks>
+        /// <note>
+        /// This does nothing but return <c>true</c> if the Docker public registry is 
+        /// specified and the cluster has registry caches deployed because the 
+        /// caches handle authentication with the upstream registry in this case.
+        /// </note>
+        /// </remarks>
+        public bool RegistryLogout(string registry)
+        {
+            Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
+
+            if (NeonClusterHelper.IsDockerPublicRegistry(registry))
+            {
+                return true;
+            }
+
+            try
+            {
+                var response = SudoCommand("docker logout", registry);
+
+                return response.ExitCode == 0;
+            }
+            catch
+            {
+                return false;
+            }
+        }
+
+        /// <summary>
+        /// Starts or restarts the <b>neon-registry-cache</b> container running on 
+        /// the node with new upstream registry credentials.
+        /// </summary>
+        /// <param name="registry">The target registry hostname.</param>
+        /// <param name="username">Optional username.</param>
+        /// <param name="password">Optional password.</param>
+        /// <returns><c>true</c> if the operation succeeded or was unnecessary.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method currently does nothing but return <c>true</c> for non-manager
+        /// nodes or if the registry specified is not the Docker public registry
+        /// because cache supports only the public registry or if the registry
+        /// cache is not enabled for this cluster.
+        /// </note>
+        /// </remarks>
+        public bool RestartRegistryCache(string registry, string username = null, string password = null)
+        {
+            Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
+
+            username = username ?? string.Empty;
+            password = password ?? string.Empty;
+
+            // Return immediately if this is a NOP for the current node and environment.
+
+            if (!NeonClusterHelper.IsDockerPublicRegistry(registry) || !Cluster.Definition.Docker.RegistryCache)
+            {
+                return true;
+            }
+
+            // $hack(jeff.lill)
+
+            var nodeDefinition = Metadata as NodeDefinition;
+
+            if (nodeDefinition == null || nodeDefinition.Role != NodeRole.Manager)
+            {
+                return true;
+            }
+
+            // Stop any existing registry cache container.  Note that we'll
+            // also determine Docker image being used so we can restart with
+            // the same one (if it has been changed since cluster deployment).
+
+            var image    = Cluster.Definition.Docker.RegistryCacheImage;   // Default to this if there's no container.
+            var response = SudoCommand("docker", "ps", "-a", "--filter", "name=neon-registry-cache", "--format", "{{.Image}}");
+
+            if (response.ExitCode != 0)
+            {
+                return false;
+            }
+
+            if (response.OutputText.Trim() != string.Empty)
+            {
+                image = response.OutputText.Trim();
+            }
+
+            response = SudoCommand("docker", "rm", "--force", "neon-registry-cache");
+
+            if (response.ExitCode != 0)
+            {
+                return false;
+            }
+
+            // Start/restart the registry cache.
+
+            var runCommand = new CommandBundle(
+                "docker run",
+                "--name", "neon-registry-cache",
+                "--detach",
+                "--restart", "always",
+                "--publish", $"{NeonHostPorts.DockerRegistryCache}:5000",
+                "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",
+                "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",
+                "--env", $"HOSTNAME={Name}.{NeonHosts.RegistryCache}",
+                "--env", $"REGISTRY={registry}",
+                "--env", $"USERNAME={username}",
+                "--env", $"PASSWORD={password}",
+                "--env", "LOG_LEVEL=info",
+                image);
+
+            response = SudoCommand(runCommand);
+
+            if (response.ExitCode != 0)
+            {
+                return false;
+            }
+
+            // Upload a script so it will be easier to manually restart the container.
+
+            // $todo(jeff.lill);
+            //
+            // Persisting the registry credentials in the uploaded script here is 
+            // probably not the best idea, but I really like the idea of having
+            // this script available to make it easy to restart the cache if
+            // necessary.
+            //
+            // There are a couple of mitigating factors:
+            //
+            //      * The scripts folder can only be accessed by the ROOT user
+            //      * These are Docker public registry credentials only
+            //
+            // Users can create and use read-only credentials, which is 
+            // probably a best practice anyway for most clusters or they
+            // can deploy a custom registry (whose crdentials will be 
+            // persisted to Vault).
+
+            UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-registry-cache.sh"), runCommand.ToBash());
+
+            return true;
+        }
     }
 }

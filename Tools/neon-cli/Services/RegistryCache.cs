@@ -140,7 +140,7 @@ namespace NeonCli
                         // Start the registry cache using the required Docker public registry
                         // credentials, if any.
 
-                        var publicRegistryCredentials = cluster.Definition.Docker.Registries.SingleOrDefault(r => r.Registry == NeonClusterConst.DockerPublicRegistry);
+                        var publicRegistryCredentials = cluster.Definition.Docker.Registries.SingleOrDefault(r => NeonClusterHelper.IsDockerPublicRegistry(r.Registry));
 
                         publicRegistryCredentials          = publicRegistryCredentials ?? new RegistryCredentials() { Registry = NeonClusterConst.DockerPublicRegistry };
                         publicRegistryCredentials.Username = publicRegistryCredentials.Username ?? string.Empty;
@@ -166,6 +166,23 @@ namespace NeonCli
                         node.SudoCommand(runCommand);
 
                         // Upload a script so it will be easier to manually restart the container.
+
+                        // $todo(jeff.lill);
+                        //
+                        // Persisting the registry credentials in the uploaded script here is 
+                        // probably not the best idea, but I really like the idea of having
+                        // this script available to make it easy to restart the cache if
+                        // necessary.
+                        //
+                        // There are a couple of mitigating factors:
+                        //
+                        //      * The scripts folder can only be accessed by the ROOT user
+                        //      * These are Docker public registry credentials only
+                        //
+                        // Users can create and use read-only credentials, which is 
+                        // probably a best practice anyway for most clusters or they
+                        // can deploy a custom registry (whose crdentials will be 
+                        // persisted to Vault).
 
                         node.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-registry-cache.sh"), runCommand.ToBash());
                     });

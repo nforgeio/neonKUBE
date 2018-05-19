@@ -37,7 +37,7 @@ USAGE:
 
 AWGUMENTS:
 
-    REGISTRY    - Hostname for the registry (e.g. registry-1.docker.io)
+    REGISTRY    - Registry hostname (e.g. registry-1.docker.io)
     USERNAME    - Optional username
     PASSWORD    - Optional password or ""-"" to read from STDIN
 
@@ -80,9 +80,10 @@ when these aren't specified.
                     registries = cluster.ListRegistryCredentials();
 
                     // Special-case the Docker public registry if it's not
-                    // set explicitly.
+                    // set explicitly.  All neonCLUSTERs implicitly reference
+                    // the public registry.
 
-                    if (!registries.Exists(r => r.Registry.Equals(NeonClusterConst.DockerPublicRegistry, StringComparison.InvariantCultureIgnoreCase)))
+                    if (!registries.Exists(r => NeonClusterHelper.IsDockerPublicRegistry(r.Registry)))
                     {
                         registries.Add(
                             new RegistryCredentials()
@@ -133,27 +134,72 @@ when these aren't specified.
 
                     if (string.IsNullOrEmpty(username))
                     {
-                        do
-                        {
-                            Console.Write("username: ");
-                            username = Console.ReadLine().Trim();
-                        }
-                        while (string.IsNullOrEmpty(username));
+                        Console.Write("username: ");
+                        username = Console.ReadLine().Trim();
                     }
-                    else if (string.IsNullOrEmpty(password))
+                    else if (string.IsNullOrEmpty(password) && !string.IsNullOrEmpty(username))
                     {
                         Console.Write("password: ");
                         password = Console.ReadLine();
                     }
 
-                    // Verify the credentials on a single node.
+                    username = username ?? string.Empty;
+                    password = password ?? string.Empty;
 
-                    // $todo(jeff.lill):
-                    //
-                    // Complete this implementation.  Note that we also need to update
-                    // registry cache credentials when we're logging into the Docker
-                    // public registry.
+                    // Verify the credentials on a single node first.
 
+                    var manager = cluster.GetHealthyManager();
+
+                    Console.WriteLine($"Verifying registry credentials on [{manager.Name}].");
+
+                    if (!manager.RegistryLogin(registry, username, password))
+                    {
+                        Console.Error.WriteLine($"*** ERROR: Registry login failed on [{manager.Name}].");
+                        Program.Exit(1);
+                    }
+
+                    Console.WriteLine($"Registry credentials are valid.");
+
+                    // Login all of the nodes.
+
+                    var sbFailedNodes = new StringBuilder();
+
+                    Console.WriteLine("Updating all cluster nodes.");
+
+                    var loginActions = new List<Action>();
+
+                    foreach (var node in cluster.Nodes)
+                    {
+                        loginActions.Add(
+                            () =>
+                            {
+                                if (!node.RegistryLogin(registry, username, password))
+                                {
+                                    lock (sbFailedNodes)
+                                    {
+                                        sbFailedNodes.AppendWithSeparator(node.Name, ", ");
+                                    }
+                                }
+                            });
+                    }
+
+                    NeonHelper.WaitForParallel(loginActions);
+
+                    if (sbFailedNodes.Length == 0)
+                    {
+                        Console.WriteLine($"All cluster nodes are logged into [{registry}].");
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine($"*** ERROR: Inconsistent cluster state because these nodes could not be logged in: {sbFailedNodes}");
+                        Program.Exit(1);
+                    }
+
+                    // Restart the registry cache containers running on the managers
+                    // with the new credentials if we're updating credentials for the 
+                    // Docker public registry and the cache is enabled.
+
+                    cluster.RestartRegistryCaches(registry, username, password);
                     break;
 
                 case "logout":

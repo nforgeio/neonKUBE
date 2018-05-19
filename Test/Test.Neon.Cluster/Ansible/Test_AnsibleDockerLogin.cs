@@ -163,5 +163,29 @@ namespace TestNeonCluster
                 Assert.Null(clusterProxy.GetRegistryCredential(NeonClusterConst.DockerPublicRegistry));
             }
         }
+
+        [Fact(Skip = "TODO")]
+        public void RegistryCache()
+        {
+            // $todo(jeff.lill):
+            //
+            // We need to verify that this works for clusters with registry caches as
+            // well as those without.  Here's some things to test:
+            //
+            //      * Are registry caches restarted with the new credentials?
+            //
+            //      * For clusters with caches, we shouldn't change the node
+            //        credentials for the Docker public registry because
+            //        nodes don't authenticate against the cache and only
+            //        the cache authenticates against the registry.
+            //
+            //      * Verify that we actually use the current image from
+            //        the running cache containers before we restart them.
+            //
+            //      * Verify that we fall-back to a reasonable image if
+            //        cache containers arfen't running.
+            //
+            //      * Verify the correct behavior when there's no cache enabled.
+        }
     }
 }

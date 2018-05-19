@@ -155,7 +155,7 @@ NODE IDENTIFIERS:
                         // Special-case the Docker public registry if it's not
                         // set explicitly.
 
-                        if (!registries.Exists(r => r.Registry.Equals(NeonClusterConst.DockerPublicRegistry, StringComparison.InvariantCultureIgnoreCase)))
+                        if (!registries.Exists(r => NeonClusterHelper.IsDockerPublicRegistry(r.Registry)))
                         {
                             registries.Add(
                                 new RegistryCredentials()

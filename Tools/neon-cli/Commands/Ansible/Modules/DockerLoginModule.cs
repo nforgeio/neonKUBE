@@ -164,6 +164,8 @@ namespace NeonCli.Ansible
                 context.WriteLine(AnsibleVerbosity.Info, $"Credentials for [{registry}] do not exist.");
             }
 
+            var sbErrorNodes = new StringBuilder();
+
             switch (state)
             {
                 case "absent":
@@ -182,7 +184,6 @@ namespace NeonCli.Ansible
                     // have all nodes logout, ignoring any errors to be sure they're
                     // all logged out.
 
-
                     if (existingCredentials != null)
                     {
                         context.Changed = true;
@@ -199,21 +200,27 @@ namespace NeonCli.Ansible
                         logoutActions.Add(
                             () =>
                             {
-                                node.Connect();
-
-                                try
+                                if (!node.RegistryLogout(registry))
                                 {
-                                    node.SudoCommand($"docker logout {registry}", RunOptions.None);
-                                }
-                                finally
-                                {
-                                    node.Disconnect();
+                                    lock (sbErrorNodes)
+                                    {
+                                        sbErrorNodes.AppendWithSeparator(node.Name, ", ");
+                                    }
                                 }
                             });
                     }
 
                     NeonHelper.WaitForParallel(logoutActions);
-                    context.WriteLine(AnsibleVerbosity.Trace, $"All cluster nodes are logged out.");
+
+                    if (sbErrorNodes.Length == 0)
+                    {
+                        context.WriteLine(AnsibleVerbosity.Trace, $"All cluster nodes are logged out.");
+                    }
+                    else
+                    {
+                        context.WriteErrorLine($"These nodes could not be logged out: {sbErrorNodes}");
+                        context.WriteErrorLine($"The cluster may be in an inconsistent state.");
+                    }
                     break;
 
                 case "present":
@@ -248,50 +255,59 @@ namespace NeonCli.Ansible
 
                     cluster.SetRegistryCredential(registry, username, password);
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Logging all cluster nodes into [{registry}].");
+                    // Log all of the nodes in with the new registry credentials.
+                    //
+                    // Note that we won't do this if the registry cache is enabled and we're 
+                    // updating credentials for the Docker public registry because for this 
+                    // configuration, only the registry cache needs the upstream credentials.
+                    // The nodes don't authenticate against the local registry cache.
 
-                    var loginActions = new List<Action>();
-                    var sbErrorNodes = new StringBuilder();
-
-                    foreach (var node in cluster.Nodes)
+                    if (!cluster.Definition.Docker.RegistryCache || !NeonClusterHelper.IsDockerPublicRegistry(registry))
                     {
-                        loginActions.Add(
-                            () =>
-                            {
-                                node.Connect();
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging all cluster nodes into [{registry}].");
 
-                                try
+                        var loginActions = new List<Action>();
+
+                        foreach (var node in cluster.Nodes)
+                        {
+                            loginActions.Add(
+                                () =>
                                 {
-                                    var bundle = new CommandBundle($"cat password.txt | docker login --password-stdin", "--username", username);
-
-                                    bundle.AddFile("password.txt", password);
-
-                                    var response = node.SudoCommand(bundle, RunOptions.None);
-
-                                    if (response.ExitCode != 0)
+                                    if (!node.RegistryLogin(registry, username, password))
                                     {
                                         lock (sbErrorNodes)
                                         {
                                             sbErrorNodes.AppendWithSeparator(node.Name, ", ");
                                         }
                                     }
-                                }
-                                finally
-                                {
-                                    node.Disconnect();
-                                }
-                            });
-                    }
+                                });
+                        }
 
-                    NeonHelper.WaitForParallel(loginActions);
+                        NeonHelper.WaitForParallel(loginActions);
 
-                    if (sbErrorNodes.Length == 0)
-                    {
-                        context.WriteLine(AnsibleVerbosity.Trace, $"All cluster nodes are logged out.");
+                        if (sbErrorNodes.Length == 0)
+                        {
+                            context.WriteLine(AnsibleVerbosity.Trace, $"All cluster nodes were updated.");
+                        }
+                        else
+                        {
+                            context.WriteErrorLine($"These nodes could not be updated: {sbErrorNodes}");
+                            context.WriteErrorLine($"The cluster may be in an inconsistent state.");
+                        }
                     }
                     else
                     {
-                        context.WriteErrorLine($"These nodes could not be logged out: {sbErrorNodes}");
+                        // Restart the cluster registry cache containers with the new credentials.
+
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Restarting the cluster registry caches.");
+
+                        if (!cluster.RestartRegistryCaches(registry, username, password))
+                        {
+                            context.WriteErrorLine("Unable to restart one or more of the cluster registry caches.");
+                            return;
+                        }
+
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Cluster registry caches restarted.");
                     }
 
                     context.Changed = existingCredentials == null;

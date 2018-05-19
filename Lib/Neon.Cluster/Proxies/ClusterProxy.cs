@@ -861,28 +861,28 @@ vault policy-write {policy.Name} policy.hcl
         /// <summary>
         /// Adds or updates a Docker registry credential in Vault.
         /// </summary>
-        /// <param name="hostname">The target registry hostname.</param>
+        /// <param name="registry">The target registry hostname.</param>
         /// <param name="username">The username.</param>
         /// <param name="password">The password.</param>
-        public void SetRegistryCredential(string hostname, string username, string password)
+        public void SetRegistryCredential(string registry, string username, string password)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
             Covenant.Requires<ArgumentNullException>(password != null);
 
-            Vault.WriteStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{hostname}", $"{username}/{password}").Wait();
+            Vault.WriteStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}", $"{username}/{password}").Wait();
         }
 
         /// <summary>
         /// Returns the credentials for a specific Docker registry from Vault.
         /// </summary>
-        /// <param name="hostname">The target registry hostname.</param>
+        /// <param name="registry">The target registry hostname.</param>
         /// <returns>The credentials or <c>null</c> if none exists.</returns>
-        public RegistryCredentials GetRegistryCredential(string hostname)
+        public RegistryCredentials GetRegistryCredential(string registry)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
 
-            var usernamePassword = Vault.ReadStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{hostname}", noException: true).Result;
+            var usernamePassword = Vault.ReadStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}", noException: true).Result;
 
             if (usernamePassword == null)
             {
@@ -895,26 +895,67 @@ vault policy-write {policy.Name} policy.hcl
             {
                 return new RegistryCredentials()
                 {
-                    Registry = hostname,
+                    Registry = registry,
                     Username = fields[0],
                     Password = fields[1]
                 };
             }
             else
             {
-                throw new NeonClusterException($"Invalid credentials for the [{hostname}] registry.");
+                throw new NeonClusterException($"Invalid credentials for the [{registry}] registry.");
             }
         }
 
         /// <summary>
         /// Removes a Docker registry credential from Vault.
         /// </summary>
-        /// <param name="hostname">The target registry hostname.</param>
-        public void RemoveRegistryCredential(string hostname)
+        /// <param name="registry">The target registry hostname.</param>
+        public void RemoveRegistryCredential(string registry)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
 
-            Vault.DeleteAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{hostname}").Wait();
+            Vault.DeleteAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}").Wait();
+        }
+
+        /// <summary>
+        /// Restarts the cluster registry caches as required, using the 
+        /// credentials passed.
+        /// </summary>
+        /// <param name="registry">The target registry hostname.</param>
+        /// <param name="username">The username.</param>
+        /// <param name="password">The password.</param>
+        /// <returns><c>true</c> if the operation succeeded or was unnecessary.</returns>
+        /// <remarks>
+        /// <note>
+        /// This method currently does nothing but return <c>true</c> if the 
+        /// registry specified is not the Docker public registry because the 
+        /// cache supports only the public registry or if the registry cache
+        /// is not enabled for this cluster.
+        /// </note>
+        /// </remarks>
+        public bool RestartRegistryCaches(string registry, string username, string password)
+        {
+            // Return immediately if this is a NOP for the current node and environment.
+
+            if (!NeonClusterHelper.IsDockerPublicRegistry(registry) || !Definition.Docker.RegistryCache)
+            {
+                return true;
+            }
+
+            // We're not going to restart these in parallel so only one
+            // manager cache will be down at any given time.  This should
+            // result in no cache downtime for clusters with multiple
+            // managers.
+
+            foreach (var manager in Managers)
+            {
+                if (!manager.RestartRegistryCache(registry, username, password))
+                {
+                    return false;
+                }
+            }
+
+            return true;
         }
 
         /// <summary>
