@@ -149,6 +149,12 @@ namespace Neon.Xunit
     ///     <see cref="RemoveStack(string)"/>
     ///     </description>
     /// </item>
+    /// <item>
+    ///     <term><b>Volumes</b></term>
+    ///     <description>
+    ///     <see cref="ClearVolumes(bool)"/>
+    ///     </description>
+    /// </item>
     /// </list>
     /// <note>
     /// <see cref="DockerFixture"/> derives from <see cref="TestFixtureSet"/> so you can
@@ -1731,6 +1737,55 @@ namespace Neon.Xunit
             if (names.Count > 0)
             {
                 DockerExecute("network", "rm", names.ToArray());
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Volumes
+
+        /// <summary>
+        /// Removes all cluster volumes.
+        /// </summary>
+        /// <param name="removeSystem">Optionally remove system volumes as well.</param>
+        /// <remarks>
+        /// By default, this method will not remove neonCLUSTER system volumes
+        /// whose names begin with <b>neon-</b>.  You can remove these too by
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// </remarks>
+        public void ClearVolumes(bool removeSystem = false)
+        {
+            base.CheckDisposed();
+
+            var result = DockerExecute("volume", "ls", "--format", "{{.Name}}");
+
+            if (result.ExitCode != 0)
+            {
+                throw new Exception($"Cannot list Docker volumes: {result.AllText}");
+            }
+
+            var volumes = new List<string>();
+
+            using (var reader = new StringReader(result.OutputText))
+            {
+                foreach (var line in reader.Lines(ignoreBlank: true))
+                {
+                    if (!removeSystem && line.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        continue;
+                    }
+
+                    volumes.Add(line.Trim());
+                }
+            }
+
+            if (volumes.Count > 0)
+            {
+                result = DockerExecute("volume", "rm", volumes);
+
+                if (result.ExitCode != 0)
+                {
+                    throw new Exception($"Cannot remove Docker volumes: {result.AllText}");
+                }
             }
         }
     }

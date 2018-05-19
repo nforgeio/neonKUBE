@@ -204,6 +204,12 @@ namespace Neon.Xunit.Cluster
     ///     <see cref="DockerFixture.RemoveStack(string)"/>
     ///     </description>
     /// </item>
+    /// <item>
+    ///     <term><b>Volumes</b></term>
+    ///     <description>
+    ///     <see cref="DockerFixture.ClearVolumes(bool)"/>
+    ///     </description>
+    /// </item>
     /// </list>
     /// <note>
     /// <see cref="ClusterFixture"/> derives from <see cref="TestFixtureSet"/> so you can
@@ -669,12 +675,20 @@ namespace Neon.Xunit.Cluster
                     () => ClearNetworks(),
                     () => ClearNodes(),
                     () => ClearVault(),
-                    () => ClearSecrets()
+                    () => ClearSecrets(),
+                    () => ClearVolumes()
                 });
         }
 
         //---------------------------------------------------------------------
         // Containers
+
+        // $todo(jeff.lill):
+        //
+        // Rethink these methods.  Perhaps we can implement new ones that include
+        // a node name parameter or something.  It would also be nice if Reset()
+        // could actually ensure that all containers are removed from a previous
+        // test run.
 
         /// <summary>
         /// <b>DO NOTE USE:</b> This inherited method from <see cref="DockerFixture"/> doesn't
@@ -815,7 +829,75 @@ namespace Neon.Xunit.Cluster
             }
 
             NeonHelper.WaitForParallel(actions);
+        }
 
+        //---------------------------------------------------------------------
+        // Volumes
+
+        /// <summary>
+        /// Removes all cluster volumes from the cluster nodes.
+        /// </summary>
+        /// <param name="removeSystem">Optionally remove system volumes as well.</param>
+        /// <remarks>
+        /// By default, this method will not remove neonCLUSTER system volumes
+        /// whose names begin with <b>neon-</b>.  You can remove these too by
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// </remarks>
+        public new void ClearVolumes(bool removeSystem = false)
+        {
+            base.CheckDisposed();
+
+            var actions = new List<Action>();
+
+            foreach (var node in cluster.Nodes)
+            {
+                actions.Add(
+                    () =>
+                    {
+                        try
+                        {
+                            node.Connect();
+
+                            var result = node.DockerCommand(RunOptions.None, "volume", "ls", "--format", "{{.Name}}");
+
+                            if (result.ExitCode != 0)
+                            {
+                                throw new Exception($"Cannot list Docker volumes: {result.AllText}");
+                            }
+
+                            var volumes = new List<string>();
+
+                            using (var reader = new StringReader(result.OutputText))
+                            {
+                                foreach (var line in reader.Lines(ignoreBlank: true))
+                                {
+                                    if (!removeSystem && line.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
+                                    {
+                                        continue;
+                                    }
+
+                                    volumes.Add(line.Trim());
+                                }
+                            }
+
+                            if (volumes.Count > 0)
+                            {
+                                result = node.DockerCommand(RunOptions.None, "volume", "rm", volumes);
+
+                                if (result.ExitCode != 0)
+                                {
+                                    throw new Exception($"Cannot remove Docker volumes: {result.AllText}");
+                                }
+                            }
+                        }
+                        finally
+                        {
+                            node.Disconnect();
+                        }
+                    });
+            }
+
+            NeonHelper.WaitForParallel(actions);
         }
 
         //---------------------------------------------------------------------
