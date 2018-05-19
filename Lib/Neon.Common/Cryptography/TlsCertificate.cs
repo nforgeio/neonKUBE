@@ -79,9 +79,32 @@ namespace Neon.Cryptography
         /// </summary>
         /// <param name="pemCombined">The PEM encoded certificate and private key.</param>
         /// <returns>The parsed <see cref="TlsCertificate"/>.</returns>
+        /// <exception cref="FormatException">Thrown if the certificate could not be parsed.</exception>
         public static TlsCertificate Parse(string pemCombined)
         {
-            return new TlsCertificate(pemCombined);
+            return TlsCertificate.Parse(pemCombined);
+        }
+
+        /// <summary>
+        /// Attempts to parse a certificate and private key from PEM encoded text.
+        /// </summary>
+        /// <param name="pemCombined">The PEM encoded certificate and private key.</param>
+        /// <param name="certificate">Returns as the parsed certificate.</param>
+        /// <returns><c>true</c> if the certificate was parsed successfully.</returns>
+        public static bool TryParse(string pemCombined, out TlsCertificate certificate)
+        {
+            try
+            {
+                certificate = TlsCertificate.Parse(pemCombined);
+
+                return true;
+            }
+            catch
+            {
+                certificate = default(TlsCertificate);
+
+                return false;
+            }
         }
 
         /// <summary>
@@ -176,8 +199,6 @@ namespace Neon.Cryptography
                 var certPem     = File.ReadAllText(certPath) + File.ReadAllText(keyPath);
                 var certificate = TlsCertificate.Parse(certPem);
 
-                certificate.Parse();
-
                 return certificate;
             }
             catch (Win32Exception e)
@@ -190,9 +211,8 @@ namespace Neon.Cryptography
             }
         }
 
-
         /// <summary>
-        /// Verifies certificate file.
+        /// Verifies a certificate file.
         /// </summary>
         /// <param name="path">Path to the certificate.</param>
         /// <exception cref="ArgumentException">Thrown if the certificate is not valid.</exception>
@@ -408,8 +428,8 @@ namespace Neon.Cryptography
             var clone =
                 new TlsCertificate()
                 {
-                    CertPem       = this.CertPem,
-                    KeyPem        = this.KeyPem,
+                    CertPem    = this.CertPem,
+                    KeyPem     = this.KeyPem,
                     ValidFrom  = this.ValidFrom,
                     ValidUntil = this.ValidUntil
                 };
@@ -767,6 +787,7 @@ namespace Neon.Cryptography
         /// <summary>
         /// Attempts to parse the certificate details.
         /// </summary>
+        /// <exception cref="FormatException">Thrown if the certificate cannot be parsed.</exception>
         public void Parse()
         {
             // $todo(jeff.lill):
