@@ -156,9 +156,8 @@ For a registry deployed as a Docker service, garbage collection can be performed
 ```
 docker service update --env READ_ONLY=true neon-registry
 
-docker service start  \
-   --name neon-registry-garbage \
-   --replicas 1 \
+docker run \
+   --name neon-registry-prune \
    --restart-condition=none \
    --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
    neoncluster/neon-registry garbage-collect
@@ -167,6 +166,6 @@ docker service update --env READ_ONLY=false neon-registry
 ```
 &nbsp;
 
-These commands restarts the registry instances as **read-only**, runs the garbage collector as a single instance service, and then restarts the registry instances as **read/write**.
+These commands restarts the registry instances as **read-only**, runs the garbage collector as a container, and then restarts the registry instances as **read/write**.
 
 Garbage collection for registries deployed as containers will work much the same except that you'll need to handle restarting the containers as **read-only** and **read/write** manually or using scripts.
