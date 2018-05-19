@@ -103,7 +103,7 @@ SETTINGS:
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new DockerShimInfo(isShimmed: false, ensureConnection: true);
+            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
         }
     }
 }
