@@ -99,8 +99,8 @@ latest)
     ;;
 
 *)
-    # Specific Docker version requested.  We'll set ${binary_uri}
-    # to the URI for binary and perform the actual installation below.
+    # Specific Docker version requested.  We'll perform the 
+    # actual installation below.
 
     docker_version=${NEON_DOCKER_VERSION}
     ;;
@@ -113,7 +113,12 @@ if [ "${docker_version}" != "" ] ; then
 
 	apt-get install -yq apt-transport-https ca-certificates curl software-properties-common
 
-	# Configure the stable, edge, and testing repositorties
+    # Add any necessary APT keys.  It appears that sometimes Docker doesn't
+    # keep the Ubuntu key server up-to-date.
+
+    sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 7EA0A9C3F273FCD8
+
+	# Configure the stable, edge, and testing respositores.
 
 	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) edge"
@@ -133,7 +138,7 @@ if [ "${docker_version}" != "" ] ; then
 	# Docker wouldn't install without this.  Perhaps this will
 	# change in the future.
 
-	apt-get install -yq --allow-unauthenticated docker-ce=${docker_version}
+	apt-get install -yq docker-ce=${docker_version}
 fi
 
 #--------------------------------------------------------------------------

@@ -30,7 +30,6 @@ namespace Neon.Cluster
     public class DockerOptions
     {
         private const string    defaultLogOptions         = "--log-driver=fluentd --log-opt tag= --log-opt fluentd-async-connect=true";
-        private const string    defaultRegistry           = "https://registry-1.docker.io";
         private const bool      defaultRegistryCache      = true;
         private const string    defaultRegistryCacheImage = "neoncluster/neon-registry-cache:latest";
         private const bool      defaultExperimental       = false;

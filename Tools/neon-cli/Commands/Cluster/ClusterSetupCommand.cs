@@ -1111,7 +1111,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                 }
             }
 
-            registries.Add(NeonClusterConst.DockerPublicRegistry);
+            registries.Add($"https://{NeonClusterConst.DockerPublicRegistry}");
 
             settings.Add("registry-mirrors", registries);
 
