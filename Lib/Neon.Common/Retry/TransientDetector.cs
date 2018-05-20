@@ -104,15 +104,20 @@ namespace Neon.Retry
                     case SocketError.ConnectionReset:
                     case SocketError.HostDown:
                     case SocketError.HostNotFound:
-                    case SocketError.HostUnreachable:
                     case SocketError.Interrupted:
                     case SocketError.NotConnected:
-                    case SocketError.NetworkDown:
                     case SocketError.NetworkReset:
-                    case SocketError.NetworkUnreachable:
                     case SocketError.TimedOut:
 
                         return true;
+
+                    // These really aren't transient.
+
+                    case SocketError.HostUnreachable:
+                    case SocketError.NetworkDown:
+                    case SocketError.NetworkUnreachable:
+
+                        return false;
                 }
 
                 return false;
