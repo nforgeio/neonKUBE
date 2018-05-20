@@ -2334,7 +2334,6 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
                     // Enable the Ceph dashboard.
 
                     node.Status = "ceph dashboard";
-
                     node.SudoCommand("ceph mgr module enable dashboard");
 
                     // Remove the temp folder.
