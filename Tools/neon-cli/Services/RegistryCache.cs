@@ -101,7 +101,7 @@ namespace NeonCli
             }
 
             // For managers, upload the individual cache certificate and 
-            // private key  files for managers [cache.crt] and [cache.key] at
+            // private key files for managers [cache.crt] and [cache.key] at
             // [/etc/neon-registry-cache/].  This directory will be 
             // mapped into the cache container.
             //
@@ -121,6 +121,7 @@ namespace NeonCli
                         var sbScript    = new StringBuilder();
 
                         sbScript.AppendLine("mkdir -p /etc/neon-registry-cache");
+                        sbScript.AppendLine("chmod 600 /etc/neon-registry-cache");
 
                         copyCommand.AddFile($"cache.crt", cluster.ClusterLogin.RegistryCerts[node.Name]);
                         copyCommand.AddFile($"cache.key", cluster.ClusterLogin.RegistryKeys[node.Name]);
@@ -157,7 +158,7 @@ namespace NeonCli
                             "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",
                             "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",
                             "--env", $"HOSTNAME={node.Name}.{NeonHosts.RegistryCache}",
-                            "--env", $"REGISTRY={publicRegistryCredentials.Registry}",
+                            "--env", $"REGISTRY=https://{publicRegistryCredentials.Registry}",
                             "--env", $"USERNAME={publicRegistryCredentials.Username}",
                             "--env", $"PASSWORD={publicRegistryCredentials.Password}",
                             "--env", "LOG_LEVEL=info",

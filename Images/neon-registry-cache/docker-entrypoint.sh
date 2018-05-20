@@ -13,11 +13,6 @@ if [ "${HOSTNAME}" == "" ] ; then
     exit 1
 fi
 
-if [ "${PASSWORD}" == "" ] ; then
-    . log-error.sh "PASSWORD environment variable is required."
-    exit 1
-fi
-
 if [ "${REGISTRY}" == "" ] ; then
     export REGISTRY=https://registry-1.docker.io
 fi
