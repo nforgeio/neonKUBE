@@ -481,7 +481,7 @@ namespace Neon.Common
                     }
                 }
 
-                redirector.Wait();    // Wait for the standard output/error streams
+                redirector.Wait();  // Wait for the standard output/error streams
                                     // to receive all the data
 
                 return new ExecuteResult()

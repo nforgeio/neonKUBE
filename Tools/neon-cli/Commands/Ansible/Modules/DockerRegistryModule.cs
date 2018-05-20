@@ -73,6 +73,9 @@ namespace NeonCli.Ansible
         // password     see comment                         registry password
         //                                                  required if [state=present]
         //
+        // secret       see comment                         anti-spoofing secret string
+        //                                                  required if [state=present]
+        //
         // image        no          neoncluster/neon-registry the Docker image to deploy
         //
         // Check Mode:
@@ -116,9 +119,21 @@ namespace NeonCli.Ansible
         // standard non-replicated Docker volume, but that's not cool, so we're not
         // going there.
         //
-        // The registry needs to be secured with a username and password.  The current
-        // [neon-registry] image supports only one user that has read/write access to
-        // the registry.  This may change for future releases.
+        // The registry needs to be secured with a username, password and anti-spoofing 
+        // secret.  The current [neon-registry] image supports only one user that has 
+        // read/write access to the registry.  This may change for future releases.
+        //
+        // Pass [secret] as a secure password that should be different from [password].
+        // You can use this command to generate a cryptographically secure password:
+        //
+        //      neon create password
+        //
+        // IMPORTANT: You should avoid changing the [secret] once you've deployed
+        //            your registry and have clusters and users logged into it. 
+        //            Changing the secret will cause these clusters and users to 
+        //            reject your registry as potentially hacked and you'll need 
+        //            to have everyone logout and then login again to correct this, 
+        //            which probably isn't what you want.
         //
         // You can specify one of three module states:
         //
@@ -160,8 +175,10 @@ namespace NeonCli.Ansible
         //        neon_docker_registry:
         //          state: present
         //          hostname: registry.test.com
+        //          certificate: {{ my_certificate_pem }
         //          username: billy
         //          password: bob
+        //          secret: QKDa79aeVYd5t5W4rOHB
         //
         // This example changes the registry credentials and has all cluster nodes
         // log back in with them.
@@ -173,8 +190,10 @@ namespace NeonCli.Ansible
         //        neon_docker_registry:
         //          state: present
         //          hostname: registry.test.com
+        //          certificate: {{ my_certificate_pem }
         //          username: billy
         //          password: newpassword2
+        //          secret: QKDa79aeVYd5t5W4rOHB
         //
         // This example restarts or deploys the registry with a custom registry
         // image.
@@ -186,8 +205,10 @@ namespace NeonCli.Ansible
         //        neon_docker_registry:
         //          state: present
         //          hostname: registry.test.com
+        //          certificate: {{ my_certificate_pem }
         //          username: billy
         //          password: newpassword2
+        //          secret: QKDa79aeVYd5t5W4rOHB
         //          image: mydocker/custom-image
         //
         // This example removes unreferenced image layers by temporarily putting
@@ -223,6 +244,7 @@ namespace NeonCli.Ansible
             "certificate",
             "username",
             "password",
+            "secret",
             "image"
         };
 
@@ -270,7 +292,7 @@ namespace NeonCli.Ansible
 
             var currentHostname = cluster.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Result;
             var currentSecret   = cluster.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Result;
-            var currentImage    = currentService.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA;
+            var currentImage    = currentService?.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA;
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Reading existing credentials for [{currentHostname}].");
 
@@ -305,7 +327,7 @@ namespace NeonCli.Ansible
 
                     if (currentService == null)
                     {
-                        context.WriteLine(AnsibleVerbosity.Important, "The local registry is not deployed.");
+                        context.WriteLine(AnsibleVerbosity.Important, "[neon-registry] is not currently deployed.");
                     }
 
                     if (context.CheckMode)
@@ -314,14 +336,20 @@ namespace NeonCli.Ansible
                         return;
                     }
 
+                    if (currentService == null)
+                    {
+                        return; // Nothing to do
+                    }
+
+                    context.Changed = true;
+
                     // Remove the registry credentials from Vault if present and then
                     // have all nodes logout, ignoring any errors to be sure they're
                     // all logged out.
 
                     if (currentCredentials != null)
                     {
-                        context.Changed = true;
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Removing credentials for [{currentHostname}].");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Removing registry credentials for [{currentHostname}].");
                         cluster.RemoveRegistryCredential(currentHostname);
                     }
 
@@ -382,10 +410,15 @@ namespace NeonCli.Ansible
 
                     NeonHelper.WaitForParallel(volumeRemoveActions);
 
-                    // Delete the load balancer rule and certificate.
+                    // Remove the load balancer rule and certificate.
 
                     cluster.PublicLoadBalancer.RemoveRule("neon-registry");
                     cluster.Certificate.Remove("neon-registry");
+
+                    // Remove any related Vault state.
+
+                    cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Wait();
+                    cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Wait();
                     break;
 
                 case "present":
@@ -431,6 +464,13 @@ namespace NeonCli.Ansible
                         throw new ArgumentException($"[password] module argument is required.");
                     }
 
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [secret]");
+
+                    if (!context.Arguments.TryGetValue<string>("secret", out var secret) || string.IsNullOrEmpty(secret))
+                    {
+                        throw new ArgumentException($"[secret] module argument is required.");
+                    }
+
                     context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [image]");
 
                     if (!context.Arguments.TryGetValue<string>("image", out var image))
@@ -443,9 +483,15 @@ namespace NeonCli.Ansible
                     var hostnameChanged    = hostname != currentCredentials.Registry;
                     var usernameChanged    = username != currentCredentials.Username;
                     var passwordChanged    = password != currentCredentials.Password;
+                    var secretChanged      = secret != currentSecret;
                     var imageChanged       = image != currentImage;
                     var certificateChanged = certificate.CombinedNormalizedPem != currentCertificate.CombinedNormalizedPem;
-                    var updateRequired     = hostnameChanged || usernameChanged || passwordChanged || imageChanged || certificateChanged;
+                    var updateRequired     = hostnameChanged || 
+                                             usernameChanged || 
+                                             passwordChanged || 
+                                             secretChanged || 
+                                             imageChanged || 
+                                             certificateChanged;
 
                     // Handle CHECK-MODE.
 
@@ -477,8 +523,6 @@ namespace NeonCli.Ansible
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Setting certificate.");
                         cluster.Certificate.Set("neon-registry", certificate);
-
-                        var secret = NeonHelper.GetRandomPassword(20);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Updating Consul settings.");
                         cluster.Consul.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/secret", secret).Wait();
@@ -590,7 +634,7 @@ namespace NeonCli.Ansible
                             "--constraint", "node.role==manager",
                             "--env", $"USERNAME={username}",
                             "--env", $"PASSWORD={password}",
-                            "--env", $"SECRET={currentSecret}",
+                            "--env", $"SECRET={secret}",
                             "--env", $"LOG_LEVEL=info",
                             "--env", $"READ_ONLY=false",
                             "--mount", "type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry",

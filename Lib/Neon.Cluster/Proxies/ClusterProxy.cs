@@ -1319,13 +1319,18 @@ vault policy-write {policy.Name} policy.hcl
         /// </summary>
         /// <param name="name">The service name.</param>
         /// <param name="strict">Optionally specify strict JSON parsing.</param>
-        /// <returns>The <see cref="ServiceDetails"/>.</returns>
+        /// <returns>The <see cref="ServiceDetails"/> or <c>null</c> if the service doesn't exist.</returns>
         public ServiceDetails InspectService(string name, bool strict = false)
         {
             var response = GetHealthyManager().DockerCommand(RunOptions.None, "service", "inspect", name);
 
             if (response.ExitCode != 0)
             {
+                if (response.AllText.Contains("inspect: unrecognized service"))
+                {
+                    return null;
+                }
+
                 throw new Exception($"Cannot inspect service [{name}]: {response.AllText}");
             }
 

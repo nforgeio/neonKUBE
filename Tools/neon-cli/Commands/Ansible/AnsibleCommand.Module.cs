@@ -49,7 +49,6 @@ namespace NeonCli
                 Program.Exit(0);
             }
 
-            File.AppendAllText("log.txt", "*** 2\r\n");
             var context = new ModuleContext()
             {
                 Module = module

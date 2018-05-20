@@ -858,7 +858,7 @@ namespace Neon.Xunit.Cluster
                         {
                             node.Connect();
 
-                            var result = node.DockerCommand(RunOptions.None, "volume", "ls", "--format", "{{.Name}}");
+                            var result = node.DockerCommand(RunOptions.None, "docker", "volume", "ls", "--format", "{{.Name}}");
 
                             if (result.ExitCode != 0)
                             {
@@ -876,17 +876,37 @@ namespace Neon.Xunit.Cluster
                                         continue;
                                     }
 
+                                    if (line.Equals("neon-do-not-remove"))
+                                    {
+                                        // Never remove this volume.
+
+                                        continue;
+                                    }
+
                                     volumes.Add(line.Trim());
                                 }
                             }
 
-                            if (volumes.Count > 0)
-                            {
-                                result = node.DockerCommand(RunOptions.None, "volume", "rm", volumes);
+                            // We're going to remove the volumes one at a time so we can 
+                            // ignore the [volume in use] errors.  We'll see these for
+                            // built-in neonCLUSTER containers that bind-mount to the local
+                            // file system.
+                            //
+                            // The problem is that these volumes are identified only via
+                            // a UUID and there's no quick way to identify what these 
+                            // volumes are mounted to, outside of inspecting all of the
+                            // node containers.
+                            //
+                            // I believe that ignoring these errors is probably the expected
+                            // behavior anyway.
 
-                                if (result.ExitCode != 0)
+                            foreach (var volume in volumes)
+                            {
+                                result = node.DockerCommand(RunOptions.None, "docker", "volume", "rm", volumes);
+
+                                if (result.ExitCode != 0 && !result.ErrorText.Contains("volume is in use"))
                                 {
-                                    throw new Exception($"Cannot remove Docker volumes: {result.AllText}");
+                                    throw new Exception($"Cannot remove Docker volume on [node={node.Name}]: {result.AllText}");
                                 }
                             }
                         }

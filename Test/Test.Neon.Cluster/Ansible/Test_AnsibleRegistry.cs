@@ -59,12 +59,13 @@ $@"
   hosts: localhost
   tasks:
     - name: registry
-      neon_load_balancer:
+      neon_docker_registry:
         state: present
         hostname: registry.neonforge.com
         certificate: ""{{ _neonforge_net_pem }}""
         username: test
         password: password
+        secret: secret
 ";
             var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("registry");
