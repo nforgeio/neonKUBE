@@ -17,7 +17,7 @@ namespace Neon.Cluster
     /// </summary>
     public class LocalHyperVOptions
     {
-        private const string defaultHostVhdxUri = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.vhdx.zip";
+        private const string defaultHostVhdxUri = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-ubuntu-16.04.latest.vhdx";
 
         /// <summary>
         /// Default constructor.
@@ -29,7 +29,7 @@ namespace Neon.Cluster
         /// <summary>
         /// <para>
         /// URI to the zipped VHDX image with the base Docker host operating system.  This defaults to
-        /// <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.vhdx.zip</b>
+        /// <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-ubuntu-16.04.latest.vhdx</b>
         /// which is the latest supported Ubuntu 16.04 image.
         /// </para>
         /// <note>

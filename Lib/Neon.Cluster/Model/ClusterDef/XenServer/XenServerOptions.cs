@@ -18,8 +18,8 @@ namespace Neon.Cluster
     /// </summary>
     public class XenServerOptions
     {
-        private const string defaultHostXvaUri        = "http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva";
-        private const string defaultTemplate          = "neon-template";    // $todo(jeff.lill): Change this to: [neon-ubuntu-16.04-template] (https://github.com/jefflill/NeonForge/issues/229)
+        private const string defaultHostXvaUri        = "http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-ubuntu-16.04.latest.xva";
+        private const string defaultTemplate          = "neon-ubuntu-16.04-template";
         private const string defaultStorageRepository = "Local storage";
 
         /// <summary>
@@ -32,7 +32,7 @@ namespace Neon.Cluster
         /// <summary>
         /// <para>
         /// URI to the XenServer XVA image to use as a template for creating the virtual machines.  This defaults to
-        /// <b>http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.xva</b>
+        /// <b>http://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-ubuntu-16.04.latest.xva</b>
         /// which is the latest supported Ubuntu 16.04 image.
         /// </para>
         /// <note>

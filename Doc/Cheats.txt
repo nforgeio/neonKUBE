@@ -28,13 +28,6 @@ neon login rm root@home-small --force
 neon cluster prepare %NF_ROOT%\Devops\test\clusters\home-small\cluster.json --log-folder=c:\cluster-logs --max-parallel=10 --force
 neon cluster setup --log-folder=c:\cluster-logs --max-parallel=10 --unredacted root@home-small --noshim --image-tag=jeff-latest
 
-# Create host VHDX template zip files that will be compatible with the [neon-cli] tool.
-
-set FOLDER=C:\Docker\vhdx
-REM neon zip create %FOLDER%\ubuntu-14.04-prep.vhdx %FOLDER%\ubuntu-14.04-prep.vhdx.zip
-neon zip create %FOLDER%\ubuntu-16.04.3-prep.vhdx %FOLDER%\ubuntu-16.04.3-prep.vhdx.zip
-copy %FOLDER%\ubuntu-16.04.3-prep.vhdx.zip %FOLDER%\ubuntu-16.04.latest-prep.vhdx.zip
-
 #------------------------------------------------------------------------------
 # RabbitMQ
 

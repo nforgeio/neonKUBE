@@ -17,7 +17,7 @@ namespace Neon.Cluster
     /// </summary>
     public class HyperVOptions
     {
-        private const string defaultHostVhdxUri      = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.vhdx.zip";
+        private const string defaultHostVhdxUri      = "https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-ubuntu-16.04.latest.vhdx";
         internal const string defaultVmMinimumMemory = "2GB";
 
         /// <summary>
@@ -30,13 +30,16 @@ namespace Neon.Cluster
         /// <summary>
         /// <para>
         /// URI to the zipped VHDX image with the base Docker host operating system.  This defaults to
-        /// <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/ubuntu-16.04.latest-prep.vhdx.zip</b>
+        /// <b>https://s3-us-west-2.amazonaws.com/neonforge/neoncluster/neon-ubuntu-16.04.latest.vhdx</b>
         /// which is the latest supported Ubuntu 16.04 image.
         /// </para>
         /// <note>
         /// Production cluster definitions should be configured with an VHDX with a specific version
         /// of the host operating system to ensure that cluster nodes are provisioned with the same
         /// operating system version.
+        /// </note>
+        /// <note>
+        /// The image file is actually a Hyper-V VHDX zipped using <b>neon zip create PATH-TO-VHDX PATH-TO-ZIP</b>.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "HostVhdxUri", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
