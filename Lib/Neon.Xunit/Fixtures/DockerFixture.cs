@@ -803,7 +803,7 @@ namespace Neon.Xunit
 
                     if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        continue;   // Ignore built-in neonCLUSTER secrets.
+                        continue;   // Ignore built-in neonCLUSTER services.
                     }
 
                     services.Add(
@@ -1212,7 +1212,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm stacks.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonCLUSTER secrets whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include built-in neonCLUSTER stacks whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="StackInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         public List<StackInfo> ListStacks(bool includeSystem = false)
@@ -1236,7 +1236,7 @@ namespace Neon.Xunit
 
                     if (!includeSystem && fields[1].StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                     {
-                        continue;   // Ignore built-in neonCLUSTER secrets.
+                        continue;   // Ignore built-in neonCLUSTER stacks.
                     }
 
                     stacks.Add(
@@ -1630,7 +1630,7 @@ namespace Neon.Xunit
         /// <summary>
         /// Returns information about the current swarm networks.
         /// </summary>
-        /// <param name="includeSystem">Optionally include built-in neonCLUSTER secrets whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include built-in neonCLUSTER networks whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="NetworkInfo"/>.</returns>
         /// <exception cref="ObjectDisposedException">Thrown if the fixture has been disposed.</exception>
         /// <remarks>

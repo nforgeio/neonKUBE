@@ -253,8 +253,6 @@ namespace NeonCli.Ansible
                 return;
             }
 
-            // Determine whether the registry is deployed.
-
             var manager      = cluster.GetHealthyManager();
             var sbErrorNodes = new StringBuilder();
 
@@ -272,49 +270,7 @@ namespace NeonCli.Ansible
 
             var currentHostname = cluster.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Result;
             var currentSecret   = cluster.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Result;
-
-            if (currentService != null)
-            {
-                if (string.IsNullOrEmpty(currentHostname))
-                {
-                    // The service is running but the [hostname] Consul setting is not
-                    // present.  We'll attempt to repair this by obtaining the hostname
-                    // from the deployed service's environment variable.
-
-                    context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service and its Consul [hostname] setting are inconsistent.  Attempting repair.");
-
-                    currentHostname = currentService.GetEnv("hostname");
-
-                    if (string.IsNullOrEmpty(currentHostname))
-                    {
-                        context.WriteErrorLine($"[neon-registry] Consul settings cannot be repaired.");
-                        return;
-                    }
-
-                    cluster.Consul.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/hostname", currentHostname).Wait();
-                    context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service Consul [hostname] setting is repaired.");
-                }
-
-                if (string.IsNullOrEmpty(currentSecret))
-                {
-                    // The service is running but the [secret] Consul setting is not
-                    // present.  We'll attempt to repair this by obtaining the hostname
-                    // from the deployed service's environment variable.
-
-                    context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service and its Consul [secret] setting are inconsistent.  Attempting repair.");
-
-                    currentSecret = currentService.GetEnv("secret");
-
-                    if (string.IsNullOrEmpty(currentHostname))
-                    {
-                        context.WriteErrorLine($"[neon-registry] Consul settings cannot be repaired.");
-                        return;
-                    }
-
-                    cluster.Consul.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/secret", currentSecret).Wait();
-                    context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service Consul [secret] setting was repaired.");
-                }
-            }
+            var currentImage    = currentService.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA;
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Reading existing credentials for [{currentHostname}].");
 
@@ -327,35 +283,16 @@ namespace NeonCli.Ansible
             else
             {
                 context.WriteLine(AnsibleVerbosity.Info, $"Credentials for [{currentHostname}] do not exist.");
-            }
 
-            if (currentService != null && currentCredentials == null)
-            {
-                // The service is running but the registry credentials are not present
-                // in Vault.  We'll attempt to repair this by obtaining the hostname from
-                // the deployed service's environment variables.
-
-                context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service and the Vault settings are inconsistent.  Attempting repair.");
-
-                var currentUsername = currentService.GetEnv("username");
-                var currentPassword = currentService.GetEnv("password");
-
-                if (string.IsNullOrEmpty(currentUsername) || string.IsNullOrEmpty(currentPassword))
-                {
-                    context.WriteErrorLine($"[neon-registry] Consul settings cannot be repaired.");
-                    return;
-                }
+                // Set blank properties for the change detection below.
 
                 currentCredentials =
                     new RegistryCredentials()
                     {
-                        Registry = currentHostname,
-                        Username = currentUsername,
-                        Password = currentPassword
+                        Registry = string.Empty,
+                        Username = string.Empty,
+                        Password = string.Empty
                     };
-
-                cluster.SetRegistryCredential(currentHostname, currentUsername, currentPassword);
-                context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service Vault settings were repaired.");
             }
 
             // Obtain the current registry certificate, if any.
@@ -453,6 +390,12 @@ namespace NeonCli.Ansible
 
                 case "present":
 
+                    if (!cluster.Definition.Ceph.Enabled)
+                    {
+                        context.WriteErrorLine("The local registry service required cluster CephhFS.");
+                        return;
+                    }
+
                     // Parse the [hostname], [certificate], [username] and [password] arguments.
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [hostname]");
@@ -488,13 +431,21 @@ namespace NeonCli.Ansible
                         throw new ArgumentException($"[password] module argument is required.");
                     }
 
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [image]");
+
+                    if (!context.Arguments.TryGetValue<string>("image", out var image))
+                    {
+                        image = "neoncluster/neon-registry:latest";
+                    }
+
                     // Detect service changes.
 
                     var hostnameChanged    = hostname != currentCredentials.Registry;
                     var usernameChanged    = username != currentCredentials.Username;
                     var passwordChanged    = password != currentCredentials.Password;
+                    var imageChanged       = image != currentImage;
                     var certificateChanged = certificate.CombinedNormalizedPem != currentCertificate.CombinedNormalizedPem;
-                    var updateRequired     = hostnameChanged || usernameChanged || passwordChanged || certificateChanged;
+                    var updateRequired     = hostnameChanged || usernameChanged || passwordChanged || imageChanged || certificateChanged;
 
                     // Handle CHECK-MODE.
 
@@ -519,6 +470,7 @@ namespace NeonCli.Ansible
 
                     if (currentService == null)
                     {
+                        context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service needs to be created.");
                         context.Changed = true;
 
                         // The registry service isn't running, so we'll do a full deployment.
@@ -555,7 +507,6 @@ namespace NeonCli.Ansible
                                 }
                             });
 
-
                         context.WriteLine(AnsibleVerbosity.Trace, $"Touching certificate.");
                         cluster.Certificate.Touch();
 
@@ -573,7 +524,8 @@ namespace NeonCli.Ansible
                             "--env", $"READ_ONLY=false",
                             "--mount", "type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry",
                             "--network", "neon-public",
-                            "--restart-delay", "10s");
+                            "--restart-delay", "10s",
+                            image);
 
                         if (createResponse.ExitCode != 0)
                         {
@@ -585,6 +537,7 @@ namespace NeonCli.Ansible
                     }
                     else if (updateRequired)
                     {
+                        context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service update is required.");
                         context.Changed = true;
 
                         // Update the service and related settings as required.
@@ -643,6 +596,7 @@ namespace NeonCli.Ansible
                             "--mount", "type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry",
                             "--network", "neon-public",
                             "--restart-delay", "10s",
+                            "--image", image,
                             "neon-registry");
 
                         if (updateResponse.ExitCode != 0)
@@ -652,6 +606,11 @@ namespace NeonCli.Ansible
                         }
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Service updated.");
+                    }
+                    else
+                    {
+                        context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service update is not required.");
+                        context.Changed = false;
                     }
                     break;
 

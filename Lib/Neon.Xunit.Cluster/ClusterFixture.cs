@@ -207,7 +207,7 @@ namespace Neon.Xunit.Cluster
     /// <item>
     ///     <term><b>Volumes</b></term>
     ///     <description>
-    ///     <see cref="DockerFixture.ClearVolumes(bool)"/>
+    ///     <see cref="ClearVolumes(bool)"/>
     ///     </description>
     /// </item>
     /// </list>
