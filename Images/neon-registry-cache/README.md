@@ -18,7 +18,7 @@ This image derives from the offical [registry](https://hub.docker.com/_/registry
 
 # Environment Variables
 
-* **HOSTNAME** (*required*) - host name for this instance.
+* **HOSTNAME** (*required*) - hostname for this instance.
 
 * **REGISTRY** (*optional*) - URL of the remote registry being cached.  This defaults to the Docker Public registry at https://registry-1.docker.io.
 
@@ -52,7 +52,7 @@ The neonCLUSTER **neon-cli** handles the deployment of Docker pull-thru registry
 
 3. Configures Linux on all nodes to trust the certificates as well.
 
-4. Updates **/etc/hosts** on all cluster nodes with A records that map each manager node IP address to the corresponding host name.
+4. Updates **/etc/hosts** on all cluster nodes with A records that map each manager node IP address to the corresponding hostname.
 
 5. Configures the Docker systemd unit file with the list of with the manager registry cache URIs followed by the external authoritative registry URI. 
 

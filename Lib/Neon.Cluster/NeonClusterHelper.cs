@@ -809,7 +809,7 @@ namespace Neon.Cluster
             Environment.SetEnvironmentVariable("NEON_APT_PROXY", GetPackageProxyReferences(clusterDefinition));
 
             // Temporarily modify the local DNS resolver hosts file so we'll be able
-            // resolve common cluster host names.
+            // resolve common cluster hostnames.
 
             var hosts = new Dictionary<string, IPAddress>();
 

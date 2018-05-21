@@ -45,7 +45,7 @@ namespace TestNeonCluster
         }
 
         /// <summary>
-        /// Returns a unique host name for testing.
+        /// Returns a unique hostname for testing.
         /// </summary>
         /// <returns></returns>
         private string GetHostname()
@@ -54,7 +54,7 @@ namespace TestNeonCluster
         }
 
         /// <summary>
-        /// Returns the DNS entry for a host name.
+        /// Returns the DNS entry for a hostname.
         /// </summary>
         /// <param name="host">The hostname.</param>
         /// <returns>The <see cref="DnsEntry"/> or <c>null</c>.</returns>

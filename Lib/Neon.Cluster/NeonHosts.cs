@@ -12,17 +12,17 @@ using System.Threading.Tasks;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Defines the DNS host names used by built-in node level applications as well
+    /// Defines the DNS hostnames used by built-in node level applications as well
     /// as Docker containers and services.
     /// </summary>
     /// <remarks>
     /// <para>
-    /// DNS configuration for these host names may be included in node <b>hosts</b> files,
+    /// DNS configuration for these hostnames may be included in node <b>hosts</b> files,
     /// Docker container [hosts] files and potentially other places such as the
     /// Consul DNS implementation.
     /// </para>
     /// <para>
-    /// By convention, built-in DNS host names will be prefixed by <b>neon-*</b> and
+    /// By convention, built-in DNS hostnames will be prefixed by <b>neon-*</b> and
     /// will have the <b>.cluster</b> top-level domain.
     /// </para>
     /// </remarks>
@@ -60,7 +60,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Cluster services access Vault using this host name to take advantage of the <b>neon-proxy-vault</b>
+        /// Cluster services access Vault using this hostname to take advantage of the <b>neon-proxy-vault</b>
         /// which provides for failover.
         /// </para>
         /// <para>

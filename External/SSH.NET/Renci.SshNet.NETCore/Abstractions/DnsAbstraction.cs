@@ -22,7 +22,7 @@ namespace Renci.SshNet.Abstractions
         /// <summary>
         /// Returns the Internet Protocol (IP) addresses for the specified host.
         /// </summary>
-        /// <param name="hostNameOrAddress">The host name or IP address to resolve</param>
+        /// <param name="hostNameOrAddress">The hostname or IP address to resolve</param>
         /// <returns>
         /// An array of type <see cref="IPAddress"/> that holds the IP addresses for the host that
         /// is specified by the <paramref name="hostNameOrAddress"/> parameter.
@@ -38,7 +38,7 @@ namespace Renci.SshNet.Abstractions
 #elif FEATURE_DNS_APM
             var asyncResult = Dns.BeginGetHostAddresses(hostNameOrAddress, null, null);
             if (!asyncResult.AsyncWaitHandle.WaitOne(Session.InfiniteTimeSpan))
-                throw new SshOperationTimeoutException("Timeout resolving host name.");
+                throw new SshOperationTimeoutException("Timeout resolving hostname.");
             return Dns.EndGetHostAddresses(asyncResult);
 #elif FEATURE_DNS_TAP
             return Dns.GetHostAddressesAsync(hostNameOrAddress).Result;

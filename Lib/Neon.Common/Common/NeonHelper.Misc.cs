@@ -866,7 +866,7 @@ namespace Neon.Common
         /// Used to temporarily modify the <b>hosts</b> file used by the DNS resolver
         /// for debugging purposes.
         /// </summary>
-        /// <param name="hostEntries">A dictionary mapping the host names to an IP address or <c>null</c>.</param>
+        /// <param name="hostEntries">A dictionary mapping the hostnames to an IP address or <c>null</c>.</param>
         /// <remarks>
         /// <note>
         /// This requires elevated administrative privileges.  You'll need to launch Visual Studio

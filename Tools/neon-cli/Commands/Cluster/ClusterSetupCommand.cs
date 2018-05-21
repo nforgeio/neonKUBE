@@ -806,7 +806,7 @@ OPTIONS:
                     node.Status = "run: setup-apt-proxy.sh";
                     node.SudoCommand("setup-apt-proxy.sh");
 
-                    // Perform basic node setup including changing the host name.
+                    // Perform basic node setup including changing the hostname.
 
                     UploadHostsFile(node);
                     UploadHostEnvFile(node);

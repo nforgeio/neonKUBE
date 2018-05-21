@@ -1103,7 +1103,7 @@ namespace NeonCli.Ansible.Docker
                 // NOTE: 
                 //
                 // The REST API allows additional aliases to be specified after
-                // the first host name.  We're going to ignore these because 
+                // the first hostname.  We're going to ignore these because 
                 // there's no way to specify these on the command line which
                 // specifies these as:
                 //

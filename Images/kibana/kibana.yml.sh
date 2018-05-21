@@ -11,7 +11,7 @@ cat <<EOF > ${KIBANA_CONFIG_PATH}
 # Kibana is served by a back end server. This setting specifies the port to use.
 #server.port: 5601
 
-# Specifies the address to which the Kibana server will bind. IP addresses and host names are both valid values.
+# Specifies the address to which the Kibana server will bind. IP addresses and hostnames are both valid values.
 # The default is 'localhost', which usually means remote machines will not be able to connect.
 # To allow connections from remote users, set this parameter to a non-loopback address.
 server.host: '0.0.0.0'

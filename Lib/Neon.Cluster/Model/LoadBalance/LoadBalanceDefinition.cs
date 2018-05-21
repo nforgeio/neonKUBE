@@ -70,7 +70,7 @@ namespace Neon.Cluster
 
             // Verify that there are no existing frontend port/host conflicts:
             //
-            //      * HTTP rules can share ports but host names must be unique.
+            //      * HTTP rules can share ports but hostnames must be unique.
             //      * HTTP rules on the same port cannot mix TLS and non-TLS.
             //      * Only one TCP port per rule is allowed.
 

@@ -57,12 +57,12 @@ echo "***     Prevent memory swap" 1>&2
 setcap cap_ipc_lock=+ep $(readlink -f /usr/local/bin/vault)
 
 #------------------------------------------------------------------------------
-# We need to map the Vault host name to the Docker host IP in local hosts 
+# We need to map the Vault hostname to the Docker host IP in local hosts 
 # file so the VAULT_ADDR and VAULT_DIRECT_ADDR URLs will resolve.
 
 cat <<EOF >> /etc/hosts
 
-# Map the Hashicorp Vault host name to the Docker node address.
+# Map the Hashicorp Vault hostname to the Docker node address.
 
 ${NEON_NODE_IP} ${NEON_VAULT_HOSTNAME}
 EOF

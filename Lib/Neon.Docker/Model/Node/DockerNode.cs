@@ -104,7 +104,7 @@ namespace Neon.Docker
         public Dictionary<string, string> Labels { get; private set; }
 
         /// <summary>
-        /// Returns the node host name.
+        /// Returns the node hostname.
         /// </summary>
         public string Hostname { get; private set; }
 

@@ -27,7 +27,7 @@ namespace Neon.Docker
         public List<string> Nameservers { get; set; }
 
         /// <summary>
-        /// Domain search list for host name lookups.
+        /// Domain search list for hostname lookups.
         /// </summary>
         [JsonProperty(PropertyName = "Search", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Populate)]
         [DefaultValue(null)]

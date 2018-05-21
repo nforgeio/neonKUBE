@@ -135,7 +135,7 @@ discovery.zen.minimum_master_nodes: ${ELASTICSEARCH_QUORUM}
 discovery.zen.ping_timeout: 15s
 
 # The ELASTICSEARCH_BOOTSTRAP_NODES environment variable is expected to have been
-# set to the IP addresses or DNS host names of one or more of the Elasticsearch nodes 
+# set to the IP addresses or DNS hostnames of one or more of the Elasticsearch nodes 
 # that will coordinate the mutual discovery of the cluster nodes.
 #
 #   ELASTICSEARCH_BOOTSTRAP_NODES=node0:port,node1:port",...

@@ -31,7 +31,7 @@ namespace Neon.Cluster
     {
         /// <summary>
         /// <para>
-        /// The host name to be matched for this frontend.
+        /// The hostname to be matched for this frontend.
         /// </para>
         /// <note>
         /// This is required for rules targeting the load balancer's default HTTP/S 
@@ -185,7 +185,7 @@ namespace Neon.Cluster
                 ProxyPort == NeonHostPorts.ProxyPublicHttp || ProxyPort == NeonHostPorts.ProxyPublicHttps ||
                 ProxyPort == NeonHostPorts.ProxyPrivateHttp || ProxyPort == NeonHostPorts.ProxyPrivateHttps)
             {
-                // The host name is required so verify it.
+                // The hostname is required so verify it.
 
                 if (string.IsNullOrEmpty(Host))
                 {
@@ -198,7 +198,7 @@ namespace Neon.Cluster
             }
             else
             {
-                // The host name is not required but verify it if one is specified.
+                // The hostname is not required but verify it if one is specified.
 
                 if (!string.IsNullOrEmpty(Host) && !ClusterDefinition.DnsHostRegex.IsMatch(Host))
                 {

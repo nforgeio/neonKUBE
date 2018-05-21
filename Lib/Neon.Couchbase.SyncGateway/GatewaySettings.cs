@@ -29,7 +29,7 @@ namespace Neon.Couchbase.SyncGateway
     public class GatewaySettings
     {
         /// <summary>
-        /// The host name of the Sync Gateway. 
+        /// The hostname of the Sync Gateway. 
         /// </summary>
         public string Host { get; set; }
 

@@ -157,11 +157,11 @@ namespace Neon.Cryptography
         }
 
         /// <summary>
-        /// Generates a self-signed certificate for a host name.
+        /// Generates a self-signed certificate for a hostname.
         /// </summary>
         /// <param name="hostname">
         /// <para>
-        /// The host name.
+        /// The hostname.
         /// </para>
         /// <note>
         /// You can use include a <b>"*"</b> to specify a wildcard
@@ -684,7 +684,7 @@ namespace Neon.Cryptography
 
             if (Hosts.Count == 0)
             {
-                throw new FormatException("Invalid certificate dump: No host names found.");
+                throw new FormatException("Invalid certificate dump: No hostnames found.");
             }
         }
 
@@ -748,7 +748,7 @@ namespace Neon.Cryptography
                         }
                     }
 
-                    // The next line specifies the comma separated DNS host names.
+                    // The next line specifies the comma separated DNS hostnames.
 
                     var hostEntries = reader.ReadLine().Split(',');
 
@@ -784,7 +784,7 @@ namespace Neon.Cryptography
 
             if (Hosts.Count == 0)
             {
-                throw new FormatException("Invalid certificate dump: No host names found.");
+                throw new FormatException("Invalid certificate dump: No hostnames found.");
             }
         }
 

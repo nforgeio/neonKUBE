@@ -343,7 +343,7 @@ export NeonSysLogFacility_ProxyNumbe=23
 #------------------------------------------------------------------------------
 # NeonHosts:
 #
-# Defines the DNS host names used by built-in node level applications as well
+# Defines the DNS hostnames used by built-in node level applications as well
 # as Docker containers and services.
 
 # The base DNS name for the internal cluster Docker registry cache instances deployed on the manager nodes.
@@ -365,7 +365,7 @@ export NeonHosts_Vault=neon-consul.cluster
 
 # The DNS name for the cluster's HashiCorp Vault proxy.
 #
-# Cluster services access Vault using this host name to take advantage of the [neon-proxy-vault]
+# Cluster services access Vault using this hostname to take advantage of the [neon-proxy-vault]
 # which provides for failover.
 #
 # This is also the base name for the manager node specific endpoints like

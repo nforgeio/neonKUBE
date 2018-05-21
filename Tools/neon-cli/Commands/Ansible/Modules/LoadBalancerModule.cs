@@ -360,7 +360,7 @@ namespace NeonCli.Ansible
                     {
                         // List the certificate key/names and then fetch each one
                         // to capture details like the expiration date and covered
-                        // host names.
+                        // hostnames.
 
                         foreach (var certName in vault.ListAsync("neon-secret/cert").Result)
                         {

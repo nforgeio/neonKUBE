@@ -31,9 +31,9 @@ namespace Neon.Docker
         }
 
         /// <summary>
-        /// Constructs settings using a DNS host name for the Docker engine.
+        /// Constructs settings using a DNS hostname for the Docker engine.
         /// </summary>
-        /// <param name="host">Engine host name.</param>
+        /// <param name="host">Engine hostname.</param>
         /// <param name="port">Optional TCP port (defaults to <see cref="NetworkPorts.Docker"/> [<b>2375</b>]).</param>
         /// <param name="secure">Optionally specifies that the connection will be secured via TLS (defaults to <c>false</c>).</param>
         public DockerSettings(string host, int port = NetworkPorts.Docker, bool secure = false)

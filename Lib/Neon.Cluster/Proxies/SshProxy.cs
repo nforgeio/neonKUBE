@@ -2712,7 +2712,7 @@ echo $? > {cmdFolder}/exit
         /// </summary>
         /// <param name="name">The certificate name (included in errors).</param>
         /// <param name="certificate">The certificate being tested or <c>null</c>.</param>
-        /// <param name="hostname">The host name to be secured by the certificate.</param>
+        /// <param name="hostname">The hostname to be secured by the certificate.</param>
         /// <returns>The command response.</returns>
         /// <remarks>
         /// You may pass <paramref name="certificate"/> as <c>null</c> to indicate that no 
@@ -2731,7 +2731,7 @@ echo $? > {cmdFolder}/exit
 
             if (string.IsNullOrEmpty(hostname))
             {
-                throw new ArgumentException($"No host name is specified for the [{name}] certificate test.");
+                throw new ArgumentException($"No hostname is specified for the [{name}] certificate test.");
             }
 
             // Verify that the private key looks reasonable.

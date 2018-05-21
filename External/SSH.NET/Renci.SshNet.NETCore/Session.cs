@@ -1596,7 +1596,7 @@ namespace Renci.SshNet
         /// <summary>
         /// Establishes a socket connection to the specified host and port.
         /// </summary>
-        /// <param name="host">The host name of the server to connect to.</param>
+        /// <param name="host">The hostname of the server to connect to.</param>
         /// <param name="port">The port to connect to.</param>
         /// <exception cref="SshOperationTimeoutException">The connection failed to establish within the configured <see cref="Renci.SshNet.ConnectionInfo.Timeout"/>.</exception>
         /// <exception cref="SocketException">An error occurred trying to establish the connection.</exception>

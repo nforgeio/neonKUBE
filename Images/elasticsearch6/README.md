@@ -119,4 +119,4 @@ docker run --detach --name es-node-2 \
 
 ````
 &nbsp;
-Note that we needed to know the IP address or DNS host names of some Docker nodes hosting the Elasticsearch instances and pass these in `ELASTICSEARCH_BOOTSTRAP_NODES` so the instances can discover each other and form the cluster.
+Note that we needed to know the IP address or DNS hostnames of some Docker nodes hosting the Elasticsearch instances and pass these in `ELASTICSEARCH_BOOTSTRAP_NODES` so the instances can discover each other and form the cluster.

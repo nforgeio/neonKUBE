@@ -10,7 +10,7 @@
 #       using a [PreprocessReader].
 #
 # This script continues the configuration of a node VM by assigning its
-# host name and adding it to a Docker cluster.
+# hostname and adding it to a Docker cluster.
 #
 # Note: This should be called after the node has been initialized via
 #       a direct call to [setup-prep-node.sh] or after it has been
@@ -58,9 +58,9 @@ fi
 apt-get update
 apt-get install -yq jq aptitude gdebi-core
 
-# Configure the host name.
+# Configure the hostname.
 #
-# NOTE: This assumes that the host name was originally configured 
+# NOTE: This assumes that the hostname was originally configured 
 #       configured to be "ubuntu" as described in:
 #
 #       [Ubuntu-16.04 neonCLUSTER Template.docx]

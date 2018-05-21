@@ -230,7 +230,7 @@ namespace NeonCli
         }
 
         /// <summary>
-        /// Returns the host name for a registry cache instance hosted on a manager node.
+        /// Returns the hostname for a registry cache instance hosted on a manager node.
         /// </summary>
         /// <param name="manager">The manager node.</param>
         /// <returns>The hostname.</returns>

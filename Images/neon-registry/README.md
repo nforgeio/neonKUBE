@@ -38,9 +38,9 @@ The **neon-registry** image may be deployed as a Docker container or service.  W
 
 In either case, you'll generally need the following:
 
-1. A DNS host name with the IP address of the registry, like: `REGISTRY.MY-CLUSTER.COM`.  This will need to be public if you need to push images from outside your cluster.
+1. A DNS hostname with the IP address of the registry, like: `REGISTRY.MY-CLUSTER.COM`.  This will need to be public if you need to push images from outside your cluster.
 
-2. A TLS certificate for the registry host name.  This should be a real certificate (not self-signed).  [namecheap.com](http://namecheap.com) sells single site certificates for less than $10, so just bite the bullet and purchase one.
+2. A TLS certificate for the registry hostname.  This should be a real certificate (not self-signed).  [namecheap.com](http://namecheap.com) sells single site certificates for less than $10, so just bite the bullet and purchase one.
 
 3. The username and password to secure access to the registry.
 

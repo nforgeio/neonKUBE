@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_AnsibleRegistry.cs
+// FILE:	    Test_AnsibleDockerRegistry.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -30,12 +30,12 @@ using Xunit;
 
 namespace TestNeonCluster
 {
-    public class Test_AnsibleRegistry : IClassFixture<ClusterFixture>
+    public class Test_AnsibleDockerRegistry : IClassFixture<ClusterFixture>
     {
         private ClusterFixture cluster;
         private ClusterProxy clusterProxy;
 
-        public Test_AnsibleRegistry(ClusterFixture cluster)
+        public Test_AnsibleDockerRegistry(ClusterFixture cluster)
         {
             if (!cluster.LoginAndInitialize())
             {

@@ -161,6 +161,12 @@ namespace Neon.Cluster
         public static readonly string ConsulDnsHostsMd5Key = $"{ConsulDnsRootKey}/answers/hosts.md5";
 
         /// <summary>
+        /// Hostname prefix used to distinguish build-in system DNS 
+        /// entries from operator managed ones.
+        /// </summary>
+        public static readonly string SystemDnsHostnamePrefix = "[neon]-";
+
+        /// <summary>
         /// Consul key where cluster dashboards are registered.
         /// </summary>
         public const string ConsulDashboardsKey = "neon/dashboards";

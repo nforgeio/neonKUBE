@@ -33,7 +33,7 @@ namespace Neon.Cluster
     public class VmHost
     {
         /// <summary>
-        /// The XenServer host name.  This is used to by <see cref="NodeDefinition"/> instances
+        /// The XenServer hostname.  This is used to by <see cref="NodeDefinition"/> instances
         /// to specify where a cluster node is to be provisioned.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

@@ -14,7 +14,7 @@
 # script requires that:
 #
 #       * OpenSSH was installed
-#       * Host name was left as the default: "ubuntu"
+#       * Hostname was left as the default: "ubuntu"
 #       * [sudo] be configured to not request passwords
 
 # Configure Bash strict mode so that the entire script will fail if 

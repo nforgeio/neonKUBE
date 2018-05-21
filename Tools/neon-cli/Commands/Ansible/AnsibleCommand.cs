@@ -140,7 +140,7 @@ are organized into these predefined host groups:
     ceph-mon        - nodes hosting Ceph monitor service
     ceph-osd        - nodes hosting Ceph OSD service
 
-The special reserved [swarm-manager] host name can be used to target 
+The special reserved [swarm-manager] hostname can be used to target 
 Docker Swarm related tasks as a healthy Swarm manager node.
 
 Host variables will be generated for each cluster node.  These will include
@@ -183,7 +183,7 @@ are organized into four groups:
     ceph-mon        - nodes hosting Ceph monitor service
     ceph-osd        - nodes hosting Ceph OSD service
 
-The special reserved [swarm-manager] host name can be used to target 
+The special reserved [swarm-manager] hostname can be used to target 
 Docker Swarm related tasks as a healthy Swarm manager node.
 
 Host variables will be generated for each cluster node.  These will include
