@@ -12,7 +12,7 @@ The **neon-dns-mon** service integrates with **neon-dns** and PowerDNS installed
 
 **neon-dns-mon** runs as a single replica, typically on one of the manager nodes.  It is responsible for monitoring the DNS entries located in Consul at **neon/dns/entries**, checking these endpoints for health and then updating the the cluster hosts file at **neon/dns/answers/hosts.txt**.
 
-**neon-dns** is deployed as a global service on all swarm nodes and also as a container on each pet.  Each of these instances monitor **neon/dns/answers/hosts.txt** for changes and updates the local PowerDNS hosts file and then signals the local **neon-dns-loader** service to have PowerDNS reload the hosts.
+**neon-dns** is deployed as a global service on all manager nodes.  Each of these instances monitor **neon/dns/answers/hosts.txt** for changes and updates the local PowerDNS hosts file and then signals the local **neon-dns-loader** service to have PowerDNS reload the hosts on the managers.  Once this happens, all cluster nodes will see the change as entry TTLs expire because the managers act as the upstream nameservers for the cluster.
 
 # Environment Variables
 
@@ -20,7 +20,7 @@ The **neon-dns-mon** service integrates with **neon-dns** and PowerDNS installed
 
 * **PING_TIMEOUT** (*optional*) - specifies the maximum time to wait for an ICMP ping health check response.  This defaults to **1.5 seconds**.
 
-* **POLL_INTERVAL** (*optional*) - specifies the interval the service uses when generating DNS host entries.  This defaults to **15 seconds**.
+* **POLL_INTERVAL** (*optional*) - specifies the interval the service uses when monitoring DNS host entries for changes.  This defaults to **5 seconds**.
 
 * **WARN_INTERVAL** (*optional*) - specifies the interval service uses to limit logged warnings.  This defaults to **5 minutes**.
 

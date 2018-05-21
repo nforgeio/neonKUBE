@@ -12,11 +12,11 @@ The **neon-dns** service integrates with **neon-dns-mon** and PowerDNS installed
 
 **neon-dns-mon** runs as a single replica, typically on one of the manager nodes.  It is responsible for monitoring the DNS entries located in Consul at **neon/dns/entries**, checking these endpoints for health and then updating the the cluster hosts file at **neon/dns/answers/hosts.txt**.
 
-**neon-dns** is deployed as a global service on all swarm nodes and also as a container on each pet.  Each of these instances monitor **neon/dns/answers/hosts.txt** for changes and updates the local PowerDNS hosts file and then signals the local **neon-dns-loader** service to have PowerDNS reload the hosts.
+**neon-dns** is deployed as a global service on all manager nodes.  Each of these instances monitor **neon/dns/answers/hosts.txt** for changes and updates the local PowerDNS hosts file and then signals the local **neon-dns-loader** service to have PowerDNS reload the hosts on the managers.  Once this happens, all cluster nodes will see the change as entry TTLs expire because the managers act as the upstream nameservers for the cluster.
 
 # Environment Variables
 
-* **POLL_INTERVAL** (*optional*) - specifies the interval used when polling Consul for DNS changes.  This defaults to **15 seconds**.
+* **POLL_INTERVAL** (*optional*) - specifies the interval used when polling Consul for DNS changes.  This defaults to **5 seconds**.
 
 * **VERIFY_INTERVAL** (*optional*) - specifies the interval used verify that the manager has the correct hosts even when no changes were detected from Consul.  This defaults to **5 minutes**.
 
