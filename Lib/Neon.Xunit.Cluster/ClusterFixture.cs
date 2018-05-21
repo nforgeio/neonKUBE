@@ -145,6 +145,16 @@ namespace Neon.Xunit.Cluster
     ///     </description>
     /// </item>
     /// <item>
+    ///     <term><b>DNS</b></term>
+    ///     <description>
+    ///     <see cref="ClearDns(bool)"/><br/>
+    ///     <see cref="ListDns(bool)"/><br/>
+    ///     <see cref="RemoveDns(string)"/><br/>
+    ///     <see cref="SetDns(DnsEntry)"/><br/>
+    ///     <see cref="WaitForDns()"/>
+    ///     </description>
+    /// </item>
+    /// <item>
     ///     <term><b>Images</b></term>
     ///     <description>
     ///     <see cref="ClearImages()"/><br/>
@@ -248,6 +258,44 @@ namespace Neon.Xunit.Cluster
     /// <threadsafety instance="true"/>
     public class ClusterFixture : DockerFixture
     {
+        //---------------------------------------------------------------------
+        // Local types
+
+        /// <summary>
+        /// Describes a DNS entry persisted to the cluster.
+        /// </summary>
+        public class DnsItem
+        {
+            /// <summary>
+            /// Internal constructor.
+            /// </summary>
+            /// <param name="name">
+            /// The DNS entry name.  Note that system entries will have names
+            /// prefixed by <b>[neon]-</b>.
+            /// </param>
+            /// <param name="entry">The saved DNS entry definition.</param>
+            internal DnsItem(string name, DnsEntry entry)
+            {
+                Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+                Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
+                Covenant.Requires<ArgumentNullException>(entry != null);
+
+                this.Name  = name;
+                this.Entry = entry;
+            }
+
+            /// <summary>
+            /// Returns the DNS entry name.  Note that system entries will have names
+            /// prefixed by <b>[neon]-</b>.
+            /// </summary>
+            public string Name { get; private set; }
+
+            /// <summary>
+            /// Returns the saved DNS entry definition.
+            /// </summary>
+            public DnsEntry Entry { get; private set; }
+        }
+
         //---------------------------------------------------------------------
         // Static members
 
@@ -672,6 +720,7 @@ namespace Neon.Xunit.Cluster
                     () => ClearCertificates(),
                     () => ClearConsul(),
                     () => ClearConfigs(),
+                    () => ClearDns(),
                     () => ClearNetworks(),
                     () => ClearNodes(),
                     () => ClearVault(),
@@ -750,6 +799,162 @@ namespace Neon.Xunit.Cluster
         public new void ClearContainers(bool removeSystem = false)
         {
             throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not support this method.");
+        }
+
+        //---------------------------------------------------------------------
+        // DNS
+
+        /// <summary>
+        /// Removes all local cluster DNS entries.
+        /// </summary>
+        /// <param name="removeSystem">Optionally remove system entries as well.</param>
+        /// <remarks>
+        /// By default, this method will not remove neonCLUSTER system en tries
+        /// whose names begin with <b>[neon]-</b>.  You can remove these too by
+        /// passing <paramref name="removeSystem"/><c>=true</c>.
+        /// </remarks>
+        public void ClearDns(bool removeSystem = false)
+        {
+            var tasks = new List<Task>();
+
+            foreach (var key in Consul.KV.ListKeys(NeonClusterConst.ConsulDnsEntriesKey).Result)
+            {
+                if (!removeSystem && key.StartsWith(NeonClusterConst.SystemDnsHostnamePrefix, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    continue;
+                }
+
+                tasks.Add(Consul.KV.Delete(key));
+            }
+
+            if (tasks.Count > 0)
+            {
+                NeonHelper.WaitAllAsync(tasks).Wait();
+
+                // $todo(jeff.lill):
+                //
+                // Ideally, we'd also wait for the [/etc/powerdns/hosts] file on all
+                // nodes to be updated by [neon-dns/neon-dns-updater] and also for
+                // the TTL for all entries to expire, but I don't want to take the
+                // testing performance hit.  Perhaps there's a better way.
+            }
+        }
+
+        /// <summary>
+        /// Lists the DNS entries persisted to the cluster.
+        /// </summary>
+        /// <param name="includeSystem">
+        /// Optionally include the built-in system images whose names are 
+        /// prefixed by <b>[neon]-</b>.
+        /// </param>
+        /// <returns>The list of <see cref="DnsItem"/> instances.</returns>
+        public List<DnsItem> ListDns(bool includeSystem = false)
+        {
+            var list = new List<DnsItem>();
+
+            foreach (var key in cluster.Consul.KV.ListKeys(NeonClusterConst.ConsulDnsEntriesKey).Result)
+            {
+                if (!includeSystem && key.StartsWith(NeonClusterConst.SystemDnsHostnamePrefix, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    continue;
+                }
+
+                var entry = cluster.Consul.KV.GetObjectOrDefault<DnsEntry>($"{NeonClusterConst.ConsulDnsEntriesKey}/{key}").Result;
+
+                if (entry == null)
+                {
+                    return null;    // It's possible for the key to have been removed since it was listed.
+                }
+
+                list.Add(new DnsItem(key, entry));
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Removes the named cluster DNS entry if it exists.
+        /// </summary>
+        /// <param name="name">
+        /// The DNS entry name.  Note that system entry names are 
+        /// prefixed by <b>[neon]-</b>.
+        /// </param>
+        public void RemoveDns(string name)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+
+            cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulDnsEntriesKey}/{name}").Wait();
+        }
+
+        /// <summary>
+        /// Sets a cluster DNS entry.
+        /// </summary>
+        /// <param name="name">
+        /// The DNS entry name.  Note that system entry names are 
+        /// prefixed by <b>[neon]-</b>.
+        /// </param>
+        /// <param name="entry">The entry to be set.</param>
+        public void SetDns(string name, DnsEntry entry)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(entry != null);
+
+            cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{name}", entry).Wait();
+        }
+
+        /// <summary>
+        /// Waits for the cluster DNS state and the DNS entries to converge.
+        /// </summary>
+        /// <remarks>
+        /// <para>
+        /// It may take some time for changes made to the cluster DNS to be
+        /// reflected in the DNS names actually resolved on the cluster nodes.
+        /// Here's an outline of the process:
+        /// </para>
+        /// <list type="number">
+        /// <item>
+        /// The [neon-dns-mon] service checks the cluster DNS entries for 
+        /// changes every 5 seconds, performs any required endpoint health 
+        /// checks and then writes the actual DNS host to address mappings
+        /// to Consul.
+        /// </item>
+        /// <item>
+        /// The [neon-dns] service running on each cluster manager, checks
+        /// the Consul host/address mappings generated by [neon-dns-mon]
+        /// for changes every 5 seconds.  When changes is detected, 
+        /// [neon-dns] creates a local file on the managers signalling
+        /// the change.
+        /// </item>
+        /// <item>
+        /// The [neon-dns-loader] systemd service running locally on each manager
+        /// monitors for the signal file created by [neon-dns] when the 
+        /// DNS host/address mappings have changed once a second, and signals
+        /// the PowerDNS instance on the manager to reload the entries.
+        /// </item>
+        /// <item>
+        /// All cluster nodes are configured to use the managers as their
+        /// upstream name server so any DNS name resolutions will ultimately
+        /// be forwarded to a manager, once and locally cached resolutions
+        /// will have expired.  Cluster DNS entries are cached for 30 seconds,
+        /// so it may take up to 30 seconds for a PowerDNS update to be
+        /// consistent on all cluster nodes.
+        /// </item>
+        /// </list>
+        /// <para>
+        /// As you can see, it can take something like:
+        /// </para>
+        /// <code>
+        /// 5 + 5 + 1 + 30 = 46 seconds
+        /// </code>
+        /// <para>
+        /// For a change to the cluster DNS to ultimately be consistent on all
+        /// cluster nodes.  This method waits 60 seconds to add some time for
+        /// health checks and other overhead.
+        /// </para>
+        /// </remarks>
+        public void WaitForDns()
+        {
+            Thread.Sleep(TimeSpan.FromSeconds(60));
         }
 
         //---------------------------------------------------------------------
@@ -1259,17 +1464,6 @@ namespace Neon.Xunit.Cluster
                     tasks.Add(Consul.KV.Delete($"{NeonClusterConst.ConsulDashboardsKey}/{dashboard.Name}"));
                 }
             }
-
-            // Clear the DNS entries.
-
-            // $todo(jeff.lill):
-            //
-            // Ideally, we'd also wait for the [/etc/powerdns/hosts] file on all
-            // nodes to be updated by [neon-dns/neon-dns-updater] and also for
-            // the TTL for all entries to expire, but I don't want to take the
-            // testing performance hit.  Perhaps there's a better way.
-
-            tasks.Add(Consul.KV.DeleteTree(NeonClusterConst.ConsulDnsEntriesKey));
 
             NeonHelper.WaitAllAsync(tasks).Wait();
         }

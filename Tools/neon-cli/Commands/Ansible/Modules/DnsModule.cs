@@ -87,6 +87,13 @@ namespace NeonCli.Ansible
         //
         // check        no          no          yes/no      Require endpoint health checks
         //
+        //
+        // NOTE: DNS hostnames prefixed by "[neon]-" identify built-in 
+        //       system DNS entries used to resolve things like the local 
+        //       Docker registry service [neon-registry] if deployed.  You
+        //       should leave the system entries alone unless you really 
+        //       know what you're doing.
+        //
         // Examples:
         // ---------
         //
@@ -311,6 +318,16 @@ namespace NeonCli.Ansible
                         Hostname  = hostname,
                         Endpoints = endpoints
                     };
+
+                    // Note that the entry host name may be prefixed by: "[neon]-"
+                    // to specify an internal neonCLUSTER entry.  We need to remove
+                    // this from the entry record but keep it when persisting the
+                    // entry to Consul.
+
+                    if (newEntry.Hostname.StartsWith(NeonClusterConst.SystemDnsHostnamePrefix, StringComparison.InvariantCultureIgnoreCase))
+                    {
+                        newEntry.Hostname = newEntry.Hostname.Substring(NeonClusterConst.SystemDnsHostnamePrefix.Length);
+                    }
 
                     // Validate the new DNS entry.
 

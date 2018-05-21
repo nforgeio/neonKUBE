@@ -146,6 +146,12 @@ services:
             Assert.False(cluster.Consul.KV.Exists("test/folder/value4").Result);
         }
 
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        public void ClearDNS()
+        {
+        }
+
         /// <summary>
         /// Returns a self-signed PEM encoded certificate and private key for testing purposes.
         /// </summary>

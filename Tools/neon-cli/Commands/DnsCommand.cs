@@ -105,6 +105,12 @@ The YAML example below defines [my-managers] using the [managers] group:
 
 Note that [neon-dns-mon] automatically creates DNS entries for all cluster 
 host groups if they don't already exist (named like: [GROUPNAME.cluster]).
+
+NOTE: DNS hostnames prefixed by ""[neon]-"" identify built-in 
+      system DNS entries used to resolve things like the local 
+      Docker registry service [neon-registry] if deployed.  You
+      should leave the system entries alone unless you really 
+      know what you're doing.
 ";
 
         private ClusterLogin    clusterLogin;
@@ -170,7 +176,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
                 case "set":
 
-                    PutEntry(commandLine);
+                    SetEntry(commandLine);
                     break;
 
                 case "rm":
@@ -305,7 +311,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <summary>
         /// Print host addresses to the console.
         /// </summary>
-        /// <param name="host">The host name.</param>
+        /// <param name="host">The hostname.</param>
         /// <param name="addresses">The host addresses.</param>
         /// <param name="maxHostNameWidth">Optionally specifies the maximum name width.</param>
         private void PrintHostAddresses(string host, List<string> addresses, int maxHostNameWidth = 0)
@@ -458,7 +464,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// Implements the <b>set</b> command.
         /// </summary>
         /// <param name="commandLine">The command line.</param>
-        private void PutEntry(CommandLine commandLine)
+        private void SetEntry(CommandLine commandLine)
         {
             DnsEntry dnsEntry;
 
@@ -510,6 +516,21 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                 dnsEntry = NeonHelper.JsonOrYamlDeserialize<DnsEntry>(data, strict: true);
             }
 
+            // Note that the entry host name may be prefixed by: "[neon]-"
+            // to specify an internal neonCLUSTER entry.  We need to remove
+            // this from the entry record but keep it when persisting the
+            // entry to Consul.
+
+            var entryName = dnsEntry.Hostname;
+
+            if (dnsEntry.Hostname.StartsWith(NeonClusterConst.SystemDnsHostnamePrefix, StringComparison.InvariantCultureIgnoreCase))
+            {
+                dnsEntry.Hostname = dnsEntry.Hostname.Substring(NeonClusterConst.SystemDnsHostnamePrefix.Length);
+                entryName         = NeonClusterConst.SystemDnsHostnamePrefix + dnsEntry.Hostname;
+            }
+
+            // Check for errors.
+
             var errors = dnsEntry.Validate(cluster.Definition, cluster.Definition.GetNodeGroups(excludeAllGroup: true));
 
             if (errors.Count > 0)
@@ -522,12 +543,14 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                 Program.Exit(1);
             }
 
-            var key = GetEntryConsulKey(dnsEntry.Hostname);
+            // Persist the entry to Consul.
+
+            var key = GetEntryConsulKey(entryName);
 
             cluster.Consul.KV.PutObject(key, dnsEntry, Formatting.Indented).Wait();
 
             Console.WriteLine();
-            Console.WriteLine($"Saved [{dnsEntry.Hostname}] DNS host entry.");
+            Console.WriteLine($"Saved [{entryName}] DNS host entry.");
         }
 
         /// <summary>
@@ -540,7 +563,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
             if (!ClusterDefinition.DnsHostRegex.IsMatch(hostname))
             {
-                Console.Error.WriteLine($"*** ERROR: [{hostname}] is not a valid DNS host name.");
+                Console.Error.WriteLine($"*** ERROR: [{hostname}] is not a valid DNS hostname.");
                 Program.Exit(1);
             }
         }
