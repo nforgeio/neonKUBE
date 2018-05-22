@@ -48,10 +48,10 @@ namespace TestNeonCluster
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void Deploy()
+        public void DeployAndRemove()
         {
             //-----------------------------------------------------------------
-            // Verify that we can add a simple public load balancer rule.
+            // Verify that we can deploy a local Docker registry.
 
             var playbook =
 $@"
@@ -74,6 +74,14 @@ $@"
             Assert.True(taskResult.Changed);
 
             Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+
+            //-----------------------------------------------------------------
+            // Wait for the DNS changes to converge and then verify that the
+            // registry hostname has been redirected to the cluster managers.
+
+            cluster.ConvergeDns();
+
+            var manager = clusterProxy.GetHealthyManager();
         }
     }
 }

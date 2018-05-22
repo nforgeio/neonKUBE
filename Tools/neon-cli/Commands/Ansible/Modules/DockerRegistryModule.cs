@@ -321,6 +321,8 @@ namespace NeonCli.Ansible
 
             var currentCertificate = cluster.Certificate.Get("neon-registry");
 
+            // Perform the operation.
+
             switch (state)
             {
                 case "absent":
@@ -492,7 +494,6 @@ namespace NeonCli.Ansible
                                              secretChanged || 
                                              imageChanged || 
                                              certificateChanged;
-
                     // Handle CHECK-MODE.
 
                     if (context.CheckMode)
@@ -512,6 +513,31 @@ namespace NeonCli.Ansible
                         return;
                     }
 
+                    // Create the local DNS entry we'll use to redirect traffic targeting the registry
+                    // hostname to the cluster managers.  We need to do this because registry IP addresses
+                    // are typically public, typically targetting the external firewall or load balancer
+                    // interface.
+                    //
+                    // The problem is that cluster nodes will generally be unable to connect to the
+                    // local managers through the firewall/load balancer because most network routers
+                    // block network traffic that originates from inside the cluster, then leaves
+                    // to hit the external router interface with the expectation of being routed
+                    // back inside.  I believe this is an anti-spoofing security measure.
+
+                    var dnsRedirect =
+                        new DnsEntry()
+                        {
+                            Hostname  = hostname,
+                            Endpoints = new List<DnsEndpoint>()
+                            {
+                                new DnsEndpoint()
+                                {
+                                    Check  = true,
+                                    Target = "group=managers"
+                                }
+                            }
+                        };
+
                     // Perform the operation.
 
                     if (currentService == null)
@@ -527,6 +553,9 @@ namespace NeonCli.Ansible
                         context.WriteLine(AnsibleVerbosity.Trace, $"Updating Consul settings.");
                         cluster.Consul.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/secret", secret).Wait();
                         cluster.Consul.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/hostname", hostname).Wait();
+
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Adding local cluster DNS entry for [{hostname}].");
+                        cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}-neon-registry", dnsRedirect).Wait();
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Saving load balancer rule.");
                         cluster.PublicLoadBalancer.SetRule(
@@ -618,6 +647,9 @@ namespace NeonCli.Ansible
                                         }
                                     }
                                 });
+
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster DNS entry for [{hostname}].");
+                            cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}-neon-registry", dnsRedirect).Wait();
                         }
 
                         if (certificateChanged || hostnameChanged)
