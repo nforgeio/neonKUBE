@@ -495,6 +495,37 @@ namespace NeonCli.Ansible
                                              secretChanged || 
                                              imageChanged || 
                                              certificateChanged;
+
+                    if (hostnameChanged)
+                    {
+                        context.WriteLine(AnsibleVerbosity.Info, $"[hostname] changed from [{currentCredentials?.Registry}] --> [{hostname}]");
+                    }
+
+                    if (usernameChanged)
+                    {
+                        context.WriteLine(AnsibleVerbosity.Info, $"[username] changed from [{currentCredentials?.Username}] --> [{username}]");
+                    }
+
+                    if (usernameChanged)
+                    {
+                        context.WriteLine(AnsibleVerbosity.Info, $"[password] changed from [{currentCredentials?.Password}] --> [**REDACTED**]");
+                    }
+
+                    if (secretChanged)
+                    {
+                        context.WriteLine(AnsibleVerbosity.Info, $"[secret] changed from [{currentSecret}] --> [**REDACTED**]");
+                    }
+
+                    if (imageChanged)
+                    {
+                        context.WriteLine(AnsibleVerbosity.Info, $"[image] changed from [{currentImage}] --> [{image}]");
+                    }
+
+                    if (certificateChanged)
+                    {
+                        context.WriteLine(AnsibleVerbosity.Info, $"[certificate] changed from [{currentCertificate?.CombinedNormalizedPem}] --> [{certificate?.CombinedNormalizedPem}]");
+                    }
+
                     // Handle CHECK-MODE.
 
                     if (context.CheckMode)
@@ -559,37 +590,15 @@ namespace NeonCli.Ansible
                         cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}-neon-registry", dnsRedirect).Wait();
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Writing load balancer rule.");
-                        cluster.PublicLoadBalancer.SetRule(
-                            new LoadBalancerHttpRule()
-                            {
-                                Name      = "neon-registry",
-                                Frontends = new List<LoadBalancerHttpFrontend>()
-                                {
-                                    new LoadBalancerHttpFrontend()
-                                    {
-                                        Host     = hostname,
-                                        CertName = "neon-registry",
-                                    }
-                                },
-
-                                Backends = new List<LoadBalancerHttpBackend>()
-                                {
-                                    new LoadBalancerHttpBackend()
-                                    {
-                                        Group = "managers",
-                                        Port  = 5000
-                                    }
-                                }
-                            });
+                        cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Touching certificate.");
                         cluster.Certificate.Touch();
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Creating service.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Creating the [neon-registry] service.");
 
                         var createResponse = manager.DockerCommand(RunOptions.None,
                             "docker service create",
-                            "--name", "neon-registry",
                             "--mode", "global",
                             "--constraint", "node.role==manager",
                             "--env", $"USERNAME={username}",
@@ -600,7 +609,8 @@ namespace NeonCli.Ansible
                             "--mount", "type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry",
                             "--network", "neon-public",
                             "--restart-delay", "10s",
-                            image);
+                            "--image", image,
+                            "neon-registry");
 
                         if (createResponse.ExitCode != 0)
                         {
@@ -627,28 +637,7 @@ namespace NeonCli.Ansible
                         if (hostnameChanged)
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating load balancer rule.");
-
-                            cluster.PublicLoadBalancer.SetRule(
-                                new LoadBalancerHttpRule()
-                                {
-                                    Frontends = new List<LoadBalancerHttpFrontend>()
-                                    {
-                                        new LoadBalancerHttpFrontend()
-                                        {
-                                            Host     = hostname,
-                                            CertName = "neon-registry",
-                                        }
-                                    },
-
-                                    Backends = new List<LoadBalancerHttpBackend>()
-                                    {
-                                        new LoadBalancerHttpBackend()
-                                        {
-                                            Group = "managers",
-                                            Port  = 5000
-                                        }
-                                    }
-                                });
+                            cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
 
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster DNS entry for [{hostname}].");
                             cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}-neon-registry", dnsRedirect).Wait();
@@ -664,16 +653,11 @@ namespace NeonCli.Ansible
 
                         var updateResponse = manager.DockerCommand(RunOptions.None,
                             "docker service update",
-                            "--mode", "global",
-                            "--constraint", "node.role==manager",
-                            "--env", $"USERNAME={username}",
-                            "--env", $"PASSWORD={password}",
-                            "--env", $"SECRET={secret}",
-                            "--env", $"LOG_LEVEL=info",
-                            "--env", $"READ_ONLY=false",
-                            "--mount", "type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry",
-                            "--network", "neon-public",
-                            "--restart-delay", "10s",
+                            "--env-rm", "USERNAME", "--env-add", $"USERNAME={username}",
+                            "--env-rm", "PASSWORD", "--env-add", $"PASSWORD={password}",
+                            "--env-rm", "SECRET", "--env-add", $"SECRET={secret}",
+                            "--env-rm", "LOG_LEVEL", "--env-add", $"LOG_LEVEL=info",
+                            "--env-rm", "READ_ONLY", "--env-add", $"READ_ONLY=false",
                             "--image", image,
                             "neon-registry");
 
@@ -720,7 +704,7 @@ namespace NeonCli.Ansible
 @"#!/bin/bash
 # Update [neon-registry] to READ-ONLY mode:
 
-docker service update --env READ_ONLY=true neon-registry
+docker service update --env-rm READ_ONLY --env-add READ_ONLY=true neon-registry
 
 # Prune the registry:
 
@@ -732,7 +716,7 @@ docker run \
 
 # Restore [neon-registry] to READ/WRITE mode:
 
-docker service update --env READ_ONLY=false neon-registry
+docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
 ";
                     var bundle = new CommandBundle("./collect.sh");
 
@@ -755,6 +739,36 @@ docker service update --env READ_ONLY=false neon-registry
 
                     throw new ArgumentException($"[state={state}] is not one of the valid choices: [present], [absent], or [prune].");
             }
+        }
+
+        /// <summary>
+        /// Returns the load balancer rule for the [neon-registry] service.
+        /// </summary>
+        /// <param name="hostname">The registry hostname.</param>
+        /// <returns>The <see cref="LoadBalancerHttpRule"/>.</returns>
+        private LoadBalancerHttpRule GetRegistryLoadBalancerRule(string hostname)
+        {
+            return new LoadBalancerHttpRule()
+            {
+                Name      = "neon-registry",
+                Frontends = new List<LoadBalancerHttpFrontend>()
+                                {
+                                    new LoadBalancerHttpFrontend()
+                                    {
+                                        Host     = hostname,
+                                        CertName = "neon-registry",
+                                    }
+                                },
+
+                Backends = new List<LoadBalancerHttpBackend>()
+                                {
+                                    new LoadBalancerHttpBackend()
+                                    {
+                                        Group = "managers",
+                                        Port  = 5000
+                                    }
+                                }
+            };
         }
     }
 }
