@@ -220,7 +220,7 @@ namespace NeonCli.Ansible
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Reading [{name}]");
 
-                        var existingCert = vault.ReadJsonAsync<TlsCertificate>(vaultPath, noException: true).Result;
+                        var existingCert = vault.ReadJsonOrDefaultAsync<TlsCertificate>(vaultPath).Result;
                         var changed      = false;
 
                         if (existingCert == null)

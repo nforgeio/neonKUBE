@@ -294,27 +294,28 @@ namespace NeonCli.Ansible
             var currentSecret   = cluster.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Result;
             var currentImage    = currentService?.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA;
 
-            context.WriteLine(AnsibleVerbosity.Trace, $"Reading existing credentials for [{currentHostname}].");
+            var currentCredentials =        // Set blank properties for the change detection below.
+                new RegistryCredentials()
+                {
+                    Registry = string.Empty,
+                    Username = string.Empty,
+                    Password = string.Empty
+                };
 
-            var currentCredentials = cluster.GetRegistryCredential(currentHostname);
-
-            if (currentCredentials != null)
+            if (!string.IsNullOrEmpty(currentHostname))
             {
-                context.WriteLine(AnsibleVerbosity.Info, $"Credentials for [{currentHostname}] exist.");
-            }
-            else
-            {
-                context.WriteLine(AnsibleVerbosity.Info, $"Credentials for [{currentHostname}] do not exist.");
+                context.WriteLine(AnsibleVerbosity.Trace, $"Reading existing credentials for [{currentHostname}].");
 
-                // Set blank properties for the change detection below.
+                currentCredentials = cluster.GetRegistryCredential(currentHostname);
 
-                currentCredentials =
-                    new RegistryCredentials()
-                    {
-                        Registry = string.Empty,
-                        Username = string.Empty,
-                        Password = string.Empty
-                    };
+                if (currentCredentials != null)
+                {
+                    context.WriteLine(AnsibleVerbosity.Info, $"Credentials for [{currentHostname}] exist.");
+                }
+                else
+                {
+                    context.WriteLine(AnsibleVerbosity.Info, $"Credentials for [{currentHostname}] do not exist.");
+                }
             }
 
             // Obtain the current registry certificate, if any.
@@ -482,12 +483,12 @@ namespace NeonCli.Ansible
 
                     // Detect service changes.
 
-                    var hostnameChanged    = hostname != currentCredentials.Registry;
-                    var usernameChanged    = username != currentCredentials.Username;
-                    var passwordChanged    = password != currentCredentials.Password;
+                    var hostnameChanged    = hostname != currentCredentials?.Registry;
+                    var usernameChanged    = username != currentCredentials?.Username;
+                    var passwordChanged    = password != currentCredentials?.Password;
                     var secretChanged      = secret != currentSecret;
                     var imageChanged       = image != currentImage;
-                    var certificateChanged = certificate.CombinedNormalizedPem != currentCertificate.CombinedNormalizedPem;
+                    var certificateChanged = certificate?.CombinedNormalizedPem != currentCertificate?.CombinedNormalizedPem;
                     var updateRequired     = hostnameChanged || 
                                              usernameChanged || 
                                              passwordChanged || 
@@ -557,10 +558,11 @@ namespace NeonCli.Ansible
                         context.WriteLine(AnsibleVerbosity.Trace, $"Adding local cluster DNS entry for [{hostname}].");
                         cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}-neon-registry", dnsRedirect).Wait();
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Saving load balancer rule.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Writing load balancer rule.");
                         cluster.PublicLoadBalancer.SetRule(
                             new LoadBalancerHttpRule()
                             {
+                                Name      = "neon-registry",
                                 Frontends = new List<LoadBalancerHttpFrontend>()
                                 {
                                     new LoadBalancerHttpFrontend()
@@ -712,7 +714,7 @@ namespace NeonCli.Ansible
                     // to READ/WRITE mode.
                     //
                     // The nice thing about this is that the operation will continue to
-                    // completion on the manager node even if we loose the SSH connection.
+                    // completion on the manager node even if we lose the SSH connection.
 
                     var updateScript =
 @"#!/bin/bash

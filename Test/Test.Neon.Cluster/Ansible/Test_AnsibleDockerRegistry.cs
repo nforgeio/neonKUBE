@@ -50,38 +50,48 @@ namespace TestNeonCluster
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void DeployAndRemove()
         {
-            //-----------------------------------------------------------------
-            // Verify that we can deploy a local Docker registry.
+            // We're going to create a temporary Ansible working folder and copy 
+            // the test secrets file there so we can reference it from the playbooks.
 
-            var playbook =
-$@"
+            using (var folder = new TempFolder())
+            {
+                File.Copy(TestHelper.AnsibleSecretsPath, Path.Combine(folder.Path, "secrets.yaml"));
+
+                //-----------------------------------------------------------------
+                // Verify that we can deploy a local Docker registry.
+
+                var playbook =
+@"
 - name: test
   hosts: localhost
+  vars_files:
+    - secrets.yaml
   tasks:
     - name: registry
       neon_docker_registry:
         state: present
-        hostname: registry.neonforge.com
+        hostname: registry.neonforge.net
         certificate: ""{{ _neonforge_net_pem }}""
         username: test
         password: password
         secret: secret
 ";
-            var results = AnsiblePlayer.PlayNoGather(playbook);
-            var taskResult = results.GetTaskResult("registry");
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook, "--vault-id", TestHelper.AnsiblePasswordFile);
+                var taskResult = results.GetTaskResult("registry");
 
-            Assert.True(taskResult.Success);
-            Assert.True(taskResult.Changed);
+                Assert.True(taskResult.Success);
+                Assert.True(taskResult.Changed);
 
-            Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
 
-            //-----------------------------------------------------------------
-            // Wait for the DNS changes to converge and then verify that the
-            // registry hostname has been redirected to the cluster managers.
+                //-----------------------------------------------------------------
+                // Wait for the DNS changes to converge and then verify that the
+                // registry hostname has been redirected to the cluster managers.
 
-            cluster.ConvergeDns();
+                cluster.ConvergeDns();
 
-            var manager = clusterProxy.GetHealthyManager();
+                var manager = clusterProxy.GetHealthyManager();
+            }
         }
     }
 }
