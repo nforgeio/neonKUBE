@@ -548,10 +548,10 @@ namespace Consul
         /// </summary>
         /// <param name="kv">The key/value endpoint.</param>
         /// <param name="keyPrefix">The path prefix or <c>null</c> list the root keys.</param>
-        /// <param name="recurse">Optionally recurse to enumerate subkeys as well (defaults to <c>false</c>).</param>
+        /// <param name="mode">Specifies how the keys are to be listed.  This defaults to <see cref="ConsulListMode.FullKey"/>.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The items or an empty list if the prefix does not exist.</returns>
-        public static async Task<IEnumerable<string>> ListKeys(this IKVEndpoint kv, string keyPrefix = null, bool recurse = false, CancellationToken cancellationToken = default)
+        public static async Task<IEnumerable<string>> ListKeys(this IKVEndpoint kv, string keyPrefix = null, ConsulListMode mode = ConsulListMode.FullKey, CancellationToken cancellationToken = default)
         {
             keyPrefix = keyPrefix ?? string.Empty;
 
@@ -562,7 +562,7 @@ namespace Consul
                 return new string[0];
             }
 
-            if (recurse)
+            if (mode == ConsulListMode.FullKeyRecursive)
             {
                 var items = new List<string>(response.Length);
 
@@ -599,16 +599,26 @@ namespace Consul
                     {
                         var slashPos = key.IndexOf('/', keyPrefix.Length == 0 ? 0 : prefixWithoutSlash.Length + 1);
 
-                        key = key.Substring(0, slashPos);
-
-                        // We may see multiple subkeys beneath a key at this level,
-                        // so we'll use the HashSet to verify that we're returning
-                        // any given key just once.
-
-                        if (!items.Contains(key))
+                        if (slashPos != -1)
                         {
-                            items.Add(key);
+                            key = key.Substring(0, slashPos);
                         }
+                    }
+
+                    if (mode == ConsulListMode.PartialKey)
+                    {
+                        // Remove the key prefix.
+
+                        key = key.Substring(prefixWithoutSlash.Length + 1);
+                    }
+
+                    // We may see multiple subkeys beneath a key at this level,
+                    // so we'll use the HashSet to verify that we're returning
+                    // any given key just once.
+
+                    if (!items.Contains(key))
+                    {
+                        items.Add(key);
                     }
                 }
 

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_Registry.cs
+// FILE:	    Test_ClusterRegistry.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -19,12 +19,12 @@ using Xunit;
 
 namespace TestNeonCluster
 {
-    public class Test_Registry : IClassFixture<ClusterFixture>
+    public class Test_ClusterRegistry : IClassFixture<ClusterFixture>
     {
         private ClusterFixture  cluster;
         private ClusterProxy    clusterProxy;
 
-        public Test_Registry(ClusterFixture cluster)
+        public Test_ClusterRegistry(ClusterFixture cluster)
         {
             if (!cluster.LoginAndInitialize())
             {

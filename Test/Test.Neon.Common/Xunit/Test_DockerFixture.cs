@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_Docker.cs
+// FILE:	    Test_DockerFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -17,11 +17,11 @@ using Xunit;
 
 namespace TestCommon
 {
-    public class Test_Docker : IClassFixture<DockerFixture>
+    public class Test_DockerFixture : IClassFixture<DockerFixture>
     {
         private DockerFixture docker;
 
-        public Test_Docker(DockerFixture fixture)
+        public Test_DockerFixture(DockerFixture fixture)
         {
             this.docker = fixture;
 
@@ -74,6 +74,23 @@ services:
             // Verify that restarting a service doesn't barf.
 
             docker.RestartService("test-service");
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        public void ClearVolumes()
+        {
+            //-----------------------------------------------------------------
+            // Create a test volume on the cluster node and then verify
+            // that ClearVolumes() removes them.
+
+            docker.DockerExecute("docker volume create test-volume");
+            docker.ClearVolumes();
+
+            var response = docker.DockerExecute("volume ls --format \"{{.Name}}\"");
+
+            Assert.Equal(0, response.ExitCode);
+            Assert.DoesNotContain("test-volume", response.OutputText);
         }
     }
 }

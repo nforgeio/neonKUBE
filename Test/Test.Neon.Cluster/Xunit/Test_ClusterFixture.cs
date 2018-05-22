@@ -25,16 +25,15 @@ namespace TestNeonCluster
     public class Test_ClusterFixture : IClassFixture<ClusterFixture>
     {
         private ClusterFixture cluster;
+        private ClusterProxy clusterProxy;
 
         public Test_ClusterFixture(ClusterFixture cluster)
         {
-            this.cluster = cluster;
-
             // We're passing [login=null] below to connect to the cluster specified
             // by the NEON_TEST_CLUSTER environment variable.  This needs to be 
             // initialized with the login for a deployed cluster.
 
-            if (this.cluster.LoginAndInitialize())
+            if (cluster.LoginAndInitialize())
             {
                 cluster.Reset();
 
@@ -88,6 +87,9 @@ services:
                         async () => await cluster.Consul.KV.PutString("test/folder/value4", "four")
                     });
             }
+
+            this.cluster = cluster;
+            this.clusterProxy = cluster.Cluster;
         }
 
         [Fact]
@@ -148,8 +150,57 @@ services:
 
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
-        public void ClearDNS()
+        public void ClearVolumes()
         {
+            //-----------------------------------------------------------------
+            // Create a test volume on each of the cluster nodes and then verify
+            // that ClearVolumes() removes them.
+
+            var actions = new List<Action>();
+
+            foreach (var node in clusterProxy.Nodes)
+            {
+                actions.Add(
+                    () =>
+                    {
+                        node.SudoCommand("docker volume create test-volume", RunOptions.None);
+                    });
+            }
+
+            NeonHelper.WaitForParallel(actions);
+
+            cluster.ClearVolumes();
+
+            var sbUncleared = new StringBuilder();
+
+            actions.Clear();
+
+            foreach (var node in clusterProxy.Nodes)
+            {
+                actions.Add(
+                    () =>
+                    {
+                        var response = node.SudoCommand("docker volume ls --format \"{{.Name}}\"", RunOptions.None);
+
+                        if (response.ExitCode != 0)
+                        {
+                            lock (sbUncleared)
+                            {
+                                sbUncleared.AppendLine($"{node.Name}: exitcode={response.ExitCode} message={response.AllText}");
+                            }
+                        }
+                        else if (response.AllText.Contains("test-volume"))
+                        {
+                            lock (sbUncleared)
+                            {
+                                sbUncleared.AppendLine($"{node.Name}: [test-volume] still exists.");
+                            }
+                        }
+                    });
+            }
+
+            NeonHelper.WaitForParallel(actions);
+            Assert.Empty(sbUncleared.ToString());
         }
 
         /// <summary>

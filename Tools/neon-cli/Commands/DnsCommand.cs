@@ -106,7 +106,7 @@ The YAML example below defines [my-managers] using the [managers] group:
 Note that [neon-dns-mon] automatically creates DNS entries for all cluster 
 host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
-NOTE: DNS hostnames prefixed by ""[neon]-"" identify built-in 
+NOTE: DNS hostnames prefixed by ""(neon)-"" identify built-in 
       system DNS entries used to resolve things like the local 
       Docker registry service [neon-registry] if deployed.  You
       should leave the system entries alone unless you really 
@@ -516,7 +516,7 @@ NOTE: DNS hostnames prefixed by ""[neon]-"" identify built-in
                 dnsEntry = NeonHelper.JsonOrYamlDeserialize<DnsEntry>(data, strict: true);
             }
 
-            // Note that the entry host name may be prefixed by: "[neon]-"
+            // Note that the entry host name may be prefixed by: "(neon)-"
             // to specify an internal neonCLUSTER entry.  We need to remove
             // this from the entry record but keep it when persisting the
             // entry to Consul.

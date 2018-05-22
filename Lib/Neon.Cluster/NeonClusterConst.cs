@@ -164,7 +164,7 @@ namespace Neon.Cluster
         /// Hostname prefix used to distinguish build-in system DNS 
         /// entries from operator managed ones.
         /// </summary>
-        public static readonly string SystemDnsHostnamePrefix = "[neon]-";
+        public static readonly string SystemDnsHostnamePrefix = "(neon)-";
 
         /// <summary>
         /// Consul key where cluster dashboards are registered.

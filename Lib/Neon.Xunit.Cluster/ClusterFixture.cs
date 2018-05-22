@@ -147,11 +147,11 @@ namespace Neon.Xunit.Cluster
     /// <item>
     ///     <term><b>DNS</b></term>
     ///     <description>
-    ///     <see cref="ClearDns(bool)"/><br/>
-    ///     <see cref="ListDns(bool)"/><br/>
-    ///     <see cref="RemoveDns(string)"/><br/>
-    ///     <see cref="SetDns(DnsEntry)"/><br/>
-    ///     <see cref="WaitForDns()"/>
+    ///     <see cref="ClearDnsEntries(bool)"/><br/>
+    ///     <see cref="ConvergeDns()"/>
+    ///     <see cref="ListDnsEntries(bool)"/><br/>
+    ///     <see cref="RemoveDnsEntry(string)"/><br/>
+    ///     <see cref="SetDnsEntry(string, DnsEntry)"/><br/>
     ///     </description>
     /// </item>
     /// <item>
@@ -271,13 +271,12 @@ namespace Neon.Xunit.Cluster
             /// </summary>
             /// <param name="name">
             /// The DNS entry name.  Note that system entries will have names
-            /// prefixed by <b>[neon]-</b>.
+            /// prefixed by <b>(neon)-</b>.
             /// </param>
             /// <param name="entry">The saved DNS entry definition.</param>
             internal DnsItem(string name, DnsEntry entry)
             {
                 Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-                Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
                 Covenant.Requires<ArgumentNullException>(entry != null);
 
                 this.Name  = name;
@@ -286,7 +285,7 @@ namespace Neon.Xunit.Cluster
 
             /// <summary>
             /// Returns the DNS entry name.  Note that system entries will have names
-            /// prefixed by <b>[neon]-</b>.
+            /// prefixed by <b>(neon)-</b>.
             /// </summary>
             public string Name { get; private set; }
 
@@ -720,7 +719,7 @@ namespace Neon.Xunit.Cluster
                     () => ClearCertificates(),
                     () => ClearConsul(),
                     () => ClearConfigs(),
-                    () => ClearDns(),
+                    () => ClearDnsEntries(),
                     () => ClearNetworks(),
                     () => ClearNodes(),
                     () => ClearVault(),
@@ -810,10 +809,10 @@ namespace Neon.Xunit.Cluster
         /// <param name="removeSystem">Optionally remove system entries as well.</param>
         /// <remarks>
         /// By default, this method will not remove neonCLUSTER system en tries
-        /// whose names begin with <b>[neon]-</b>.  You can remove these too by
+        /// whose names begin with <b>(neon)-</b>.  You can remove these too by
         /// passing <paramref name="removeSystem"/><c>=true</c>.
         /// </remarks>
-        public void ClearDns(bool removeSystem = false)
+        public void ClearDnsEntries(bool removeSystem = false)
         {
             var tasks = new List<Task>();
 
@@ -845,14 +844,14 @@ namespace Neon.Xunit.Cluster
         /// </summary>
         /// <param name="includeSystem">
         /// Optionally include the built-in system images whose names are 
-        /// prefixed by <b>[neon]-</b>.
+        /// prefixed by <b>(neon)-</b>.
         /// </param>
         /// <returns>The list of <see cref="DnsItem"/> instances.</returns>
-        public List<DnsItem> ListDns(bool includeSystem = false)
+        public List<DnsItem> ListDnsEntries(bool includeSystem = false)
         {
             var list = new List<DnsItem>();
 
-            foreach (var key in cluster.Consul.KV.ListKeys(NeonClusterConst.ConsulDnsEntriesKey).Result)
+            foreach (var key in cluster.Consul.KV.ListKeys(NeonClusterConst.ConsulDnsEntriesKey, ConsulListMode.PartialKey).Result)
             {
                 if (!includeSystem && key.StartsWith(NeonClusterConst.SystemDnsHostnamePrefix, StringComparison.InvariantCultureIgnoreCase))
                 {
@@ -877,9 +876,9 @@ namespace Neon.Xunit.Cluster
         /// </summary>
         /// <param name="name">
         /// The DNS entry name.  Note that system entry names are 
-        /// prefixed by <b>[neon]-</b>.
+        /// prefixed by <b>(neon)-</b>.
         /// </param>
-        public void RemoveDns(string name)
+        public void RemoveDnsEntry(string name)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
@@ -891,10 +890,10 @@ namespace Neon.Xunit.Cluster
         /// </summary>
         /// <param name="name">
         /// The DNS entry name.  Note that system entry names are 
-        /// prefixed by <b>[neon]-</b>.
+        /// prefixed by <b>(neon)-</b>.
         /// </param>
         /// <param name="entry">The entry to be set.</param>
-        public void SetDns(string name, DnsEntry entry)
+        public void SetDnsEntry(string name, DnsEntry entry)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentNullException>(entry != null);
@@ -948,11 +947,11 @@ namespace Neon.Xunit.Cluster
         /// </code>
         /// <para>
         /// For a change to the cluster DNS to ultimately be consistent on all
-        /// cluster nodes.  This method waits 60 seconds to add some time for
-        /// health checks and other overhead.
+        /// cluster nodes.  This method waits 60 seconds to add about 15seconds
+        /// for health checks and other overhead.
         /// </para>
         /// </remarks>
-        public void WaitForDns()
+        public void ConvergeDns()
         {
             Thread.Sleep(TimeSpan.FromSeconds(60));
         }

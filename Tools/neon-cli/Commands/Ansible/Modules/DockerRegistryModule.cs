@@ -175,7 +175,7 @@ namespace NeonCli.Ansible
         //        neon_docker_registry:
         //          state: present
         //          hostname: registry.test.com
-        //          certificate: {{ my_certificate_pem }
+        //          certificate: {{ my_certificate_pem }}
         //          username: billy
         //          password: bob
         //          secret: QKDa79aeVYd5t5W4rOHB
@@ -190,7 +190,7 @@ namespace NeonCli.Ansible
         //        neon_docker_registry:
         //          state: present
         //          hostname: registry.test.com
-        //          certificate: {{ my_certificate_pem }
+        //          certificate: {{ my_certificate_pem }}
         //          username: billy
         //          password: newpassword2
         //          secret: QKDa79aeVYd5t5W4rOHB
@@ -205,7 +205,7 @@ namespace NeonCli.Ansible
         //        neon_docker_registry:
         //          state: present
         //          hostname: registry.test.com
-        //          certificate: {{ my_certificate_pem }
+        //          certificate: {{ my_certificate_pem }}
         //          username: billy
         //          password: newpassword2
         //          secret: QKDa79aeVYd5t5W4rOHB

@@ -88,7 +88,7 @@ namespace NeonCli.Ansible
         // check        no          no          yes/no      Require endpoint health checks
         //
         //
-        // NOTE: DNS hostnames prefixed by "[neon]-" identify built-in 
+        // NOTE: DNS hostnames prefixed by "(neon)-" identify built-in 
         //       system DNS entries used to resolve things like the local 
         //       Docker registry service [neon-registry] if deployed.  You
         //       should leave the system entries alone unless you really 
@@ -319,7 +319,7 @@ namespace NeonCli.Ansible
                         Endpoints = endpoints
                     };
 
-                    // Note that the entry host name may be prefixed by: "[neon]-"
+                    // Note that the entry host name may be prefixed by: "(neon)-"
                     // to specify an internal neonCLUSTER entry.  We need to remove
                     // this from the entry record but keep it when persisting the
                     // entry to Consul.
