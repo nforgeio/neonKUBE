@@ -61,7 +61,7 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
 
-            return cluster.Vault.ReadJsonAsync<TlsCertificate>(NeonClusterHelper.GetVaultCertificateKey(name)).Result;
+            return cluster.Vault.ReadJsonOrDefaultAsync<TlsCertificate>(NeonClusterHelper.GetVaultCertificateKey(name)).Result;
         }
 
         /// <summary>

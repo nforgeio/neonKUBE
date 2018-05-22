@@ -880,12 +880,12 @@ vault policy-write {policy.Name} policy.hcl
         /// Returns the credentials for a specific Docker registry from Vault.
         /// </summary>
         /// <param name="registry">The target registry hostname.</param>
-        /// <returns>The credentials or <c>null</c> if none exists.</returns>
+        /// <returns>The credentials or <c>null</c> if no credentials exists.</returns>
         public RegistryCredentials GetRegistryCredential(string registry)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
 
-            var usernamePassword = Vault.ReadStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}", noException: true).Result;
+            var usernamePassword = Vault.ReadStringOrDefaultAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}").Result;
 
             if (usernamePassword == null)
             {

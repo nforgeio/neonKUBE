@@ -270,21 +270,17 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Reads the Vault object located at the specified path as a dynamic.
+        /// Reads the Vault object located at the specified path as a dynamic throwing
+        /// a <see cref="KeyNotFoundException"/> if the path doesn't exist.
         /// </summary>
         /// <param name="path">The object path.</param>
-        /// <param name="noException">
-        /// Optionally specifies that <c>null</c> should be returned if the object doesn't 
-        /// exist rather than throwning a <see cref="KeyNotFoundException"/>.
-        /// </param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The result as a <c>dynamic</c> object.</returns>
         /// <exception cref="KeyNotFoundException">
-        /// Thrown if no object is present at <paramref name="path"/> and 
-        /// <paramref name="noException"/>=<c>false</c>.
+        /// Thrown if no object is present at <paramref name="path"/>.
         /// </exception>
         /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
-        public async Task<dynamic> ReadDynamicAsync(string path, bool noException = false, CancellationToken cancellationToken = default)
+        public async Task<dynamic> ReadDynamicAsync(string path, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
@@ -298,39 +294,55 @@ namespace Neon.Cluster
             {
                 if (e.StatusCode == HttpStatusCode.NotFound)
                 {
-                    if (noException)
-                    {
-                        return default(dynamic);
-                    }
-                    else
-                    {
-                        throw new KeyNotFoundException($"Vault [path={path}] not found.");
-                    }
+                    throw new KeyNotFoundException($"Vault [path={path}] not found.", e);
                 }
-                else
-                {
-                    throw;
-                }
+
+                throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
             }
         }
 
         /// <summary>
-        /// Reads and deserializes the Vault object located at the specified path as JSON.
+        /// Reads the Vault object located at the specified path as a dynamic, returning
+        /// <c>null</c> if the path does not exist.
+        /// </summary>
+        /// <param name="path">The object path.</param>
+        /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
+        /// <returns>The result as a <c>dynamic</c> object or <c>null</c>.</returns>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
+        public async Task<dynamic> ReadDynamicOrDefaultAsync(string path, CancellationToken cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+
+            try
+            {
+                return (await jsonClient.GetAsync($"/{vaultApiVersion}/{Normalize(path)}", null, cancellationToken))
+                    .AsDynamic()
+                    .data;
+            }
+            catch (HttpException e)
+            {
+                if (e.StatusCode == HttpStatusCode.NotFound)
+                {
+                    return default(dynamic);
+                }
+
+                throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
+            }
+        }
+
+        /// <summary>
+        /// Reads and deserializes the Vault object located at the specified path as JSON
+        /// throwing a <see cref="KeyNotFoundException"/> if the path doesn't exist.
         /// </summary>
         /// <typeparam name="T">The type being read.</typeparam>
         /// <param name="path">The object path.</param>
-        /// <param name="noException">
-        /// Optionally specifies that <c>null</c> should be returned if the object doesn't 
-        /// exist rather than throwning a <see cref="KeyNotFoundException"/>.
-        /// </param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The result as a <c>dynamic</c> object.</returns>
         /// <exception cref="KeyNotFoundException">
-        /// Thrown if no object is present at <paramref name="path"/> and 
-        /// <paramref name="noException"/>=<c>false</c>.
+        /// Thrown if no object is present at <paramref name="path"/>.
         /// </exception>
         /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
-        public async Task<T> ReadJsonAsync<T>(string path, bool noException = false, CancellationToken cancellationToken = default)
+        public async Task<T> ReadJsonAsync<T>(string path, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
@@ -347,19 +359,43 @@ namespace Neon.Cluster
             {
                 if (e.StatusCode == HttpStatusCode.NotFound)
                 {
-                    if (noException)
-                    {
-                        return default(T);
-                    }
-                    else
-                    {
-                        throw new KeyNotFoundException($"Vault [path={path}] not found.");
-                    }
+                    throw new KeyNotFoundException($"Vault [path={path}] not found.", e);
                 }
-                else
+
+                throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
+            }
+        }
+
+        /// <summary>
+        /// Reads and deserializes the Vault object located at the specified path as JSON,
+        /// returning the default value if the path doesn't exist.
+        /// </summary>
+        /// <typeparam name="T">The type being read.</typeparam>
+        /// <param name="path">The object path.</param>
+        /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
+        /// <returns>The result as a <c>dynamic</c> object or <c>null</c> if the path doesn't exist.</returns>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
+        public async Task<T> ReadJsonOrDefaultAsync<T>(string path, CancellationToken cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+
+            try
+            {
+                var jsonText = (await jsonClient.GetAsync($"/{vaultApiVersion}/{Normalize(path)}", null, cancellationToken))
+                    .AsDynamic()
+                    .data
+                    .ToString();
+
+                return NeonHelper.JsonDeserialize<T>(jsonText);
+            }
+            catch (HttpException e)
+            {
+                if (e.StatusCode == HttpStatusCode.NotFound)
                 {
-                    throw;
+                    return default(T);
                 }
+
+                throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
             }
         }
 
@@ -418,21 +454,17 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Reads the Vault object located at the specified path as a decoded base-64 byte array.
+        /// Reads the Vault object located at the specified path as a decoded base-64 byte array,
+        /// throwing a <see cref="KeyNotFoundException"/> if the path doesn't exist.
         /// </summary>
         /// <param name="path">The object path.</param>
-        /// <param name="noException">
-        /// Optionally specifies that <c>null</c> should be returned if the object doesn't 
-        /// exist rather than throwning a <see cref="KeyNotFoundException"/>.
-        /// </param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The byte array.</returns>
         /// <exception cref="KeyNotFoundException">
-        /// Thrown if no object is present at <paramref name="path"/> and 
-        /// <paramref name="noException"/>=<c>false</c>.
+        /// Thrown if no object is present at <paramref name="path"/>.
         /// </exception>
         /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
-        public async Task<byte[]> ReadBytesAsync(string path, bool noException = false, CancellationToken cancellationToken = default)
+        public async Task<byte[]> ReadBytesAsync(string path, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
@@ -448,41 +480,79 @@ namespace Neon.Cluster
             {
                 if (e.StatusCode == HttpStatusCode.NotFound)
                 {
-                    if (noException)
-                    {
-                        return default(byte[]);
-                    }
-                    else
-                    {
-                        throw new KeyNotFoundException($"Vault [path={path}] not found.", e);
-                    }
+                    throw new KeyNotFoundException($"Vault [path={path}] not found.", e);
                 }
-                else
+
+                throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
+            }
+        }
+
+        /// <summary>
+        /// Reads the Vault object located at the specified path as a decoded base-64 byte array,
+        /// returning <c>null</c> if the path doesn't exist.
+        /// </summary>
+        /// <param name="path">The object path.</param>
+        /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
+        /// <returns>The byte array or <c>null</c> if the path doesn't exist.</returns>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
+        public async Task<byte[]> ReadBytesOrDefaultAsync(string path, CancellationToken cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+
+            try
+            {
+                var bytesObject = (await jsonClient.GetAsync($"/{vaultApiVersion}/{Normalize(path)}", null, cancellationToken))
+                    .AsDynamic()
+                    .data;
+
+                return Convert.FromBase64String((string)bytesObject.value);
+            }
+            catch (HttpException e)
+            {
+                if (e.StatusCode == HttpStatusCode.NotFound)
                 {
-                    throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
+                    return null;
                 }
+
+                throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
             }
         }
 
         /// <summary>
         /// Reads the Vault string located at the specified path by decoding a base-64 byte array
-        /// and then decoding the bytes as UTF-8.
+        /// and then decoding the bytes as UTF-8, throwing a <see cref="KeyNotFoundException"/>
+        /// if the path doesn't exist.
         /// </summary>
         /// <param name="path">The object path.</param>
-        /// <param name="noException">
-        /// Optionally specifies that <c>null</c> should be returned if the object doesn't 
-        /// exist rather than throwning a <see cref="KeyNotFoundException"/>.
-        /// </param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
         /// <returns>The string.</returns>
         /// <exception cref="KeyNotFoundException">
-        /// Thrown if no object is present at <paramref name="path"/> and 
-        /// <paramref name="noException"/>=<c>false</c>.
+        /// Thrown if no object is present at <paramref name="path"/>.
         /// </exception>
         /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
-        public async Task<string> ReadStringAsync(string path, bool noException = false, CancellationToken cancellationToken = default)
+        public async Task<string> ReadStringAsync(string path, CancellationToken cancellationToken = default)
         {
-            var bytes = await ReadBytesAsync(path, noException, cancellationToken);
+            var bytes = await ReadBytesAsync(path, cancellationToken);
+
+            if (bytes == null)
+            {
+                return null;
+            }
+
+            return Encoding.UTF8.GetString(bytes);
+        }
+
+        /// <summary>
+        /// Reads the Vault string located at the specified path by decoding a base-64 byte array
+        /// and then decoding the bytes as UTF-8, returning <c>null</c> if the path doesn't exist.
+        /// </summary>
+        /// <param name="path">The object path.</param>
+        /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
+        /// <returns>The string or <c>null</c> if the path doesn't exist..</returns>
+        /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
+        public async Task<string> ReadStringOrDefaultAsync(string path, CancellationToken cancellationToken = default)
+        {
+            var bytes = await ReadBytesOrDefaultAsync(path, cancellationToken);
 
             if (bytes == null)
             {
