@@ -36,10 +36,18 @@ namespace Neon.Cluster
     /// <summary>
     /// <para>
     /// Uses an SSH/SCP connection to provide access to Linux machines to access
-    /// files, run commands, etc., typically for setup purposes.
+    /// files, run commands, etc.
     /// </para>
     /// <note>
-    /// This class <b>is not thread-safe.</b>
+    /// <para>
+    /// This class <b>is thread-safe</b> but is not capable of performing operations
+    /// in parallel.  The class will ensure that operations submitted in parallel
+    /// from multiple threads will be performed one at a time.
+    /// </para>
+    /// <para>
+    /// You can use <see cref="Clone()"/> to make a copy of a proxy that can be
+    /// used to perform parallel operations against the same machine.
+    /// </para>
     /// </note>
     /// </summary>
     /// <typeparam name="TMetadata">
@@ -60,8 +68,8 @@ namespace Neon.Cluster
     /// <para>
     /// Call <see cref="Dispose()"/> or <see cref="Disconnect()"/> to close the connection.
     /// </para>
-    /// <threadsafety instance="false"/>
     /// </remarks>
+    /// <threadsafety instance="true"/>
     public class SshProxy<TMetadata> : IDisposable
         where TMetadata : class
     {
@@ -173,6 +181,17 @@ namespace Neon.Cluster
                     isDisposed = true;
                 }
             }
+        }
+
+        /// <summary>
+        /// Returns a clone of the SSH proxy.  This can be useful for situations where you
+        /// need to be able to perform multiple SSH/SCP operations against the same
+        /// machine in parallel.
+        /// </summary>
+        /// <returns></returns>
+        public SshProxy<TMetadata> Clone()
+        {
+            return new SshProxy<TMetadata>(Name, PublicAddress, PrivateAddress, credentials, logWriter);
         }
 
         /// <summary>
@@ -385,7 +404,10 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(newCredentials != null);
 
-            this.credentials = newCredentials;
+            lock (syncLock)
+            {
+                this.credentials = newCredentials;
+            }
         }
 
         /// <summary>
@@ -406,49 +428,55 @@ namespace Neon.Cluster
         {
             get
             {
-                var result = status;
-
-                if (IsFaulted)
+                lock (syncLock)
                 {
-                    if (string.IsNullOrEmpty(faultMessage))
+                    var result = status;
+
+                    if (IsFaulted)
                     {
-                        result = "*** FAULTED ***";
+                        if (string.IsNullOrEmpty(faultMessage))
+                        {
+                            result = "*** FAULTED ***";
+                        }
+                        else
+                        {
+                            result = $"*** FAULT: {faultMessage}";
+                        }
                     }
-                    else
+
+                    // Only return the first line of the status.
+
+                    result = result ?? string.Empty;
+
+                    var pos = result.IndexOfAny(new char[] { '\r', '\n' });
+
+                    if (pos != -1)
                     {
-                        result = $"*** FAULT: {faultMessage}";
+                        result = result.Substring(0, pos).TrimEnd();
                     }
+
+                    return result;
                 }
-
-                // Only return the first line of the status.
-
-                result = result ?? string.Empty;
-
-                var pos = result.IndexOfAny(new char[] { '\r', '\n' });
-
-                if (pos != -1)
-                {
-                    result = result.Substring(0, pos).TrimEnd();
-                }
-
-                return result;
             }
 
             set
             {
-                if (!string.IsNullOrEmpty(value) && value != status)
+                lock (syncLock)
                 {
-                    if (IsFaulted)
+                    if (!string.IsNullOrEmpty(value) && value != status)
                     {
-                        LogLine($"*** STATUS[*FAULTED*]");
+                        if (IsFaulted)
+                        {
+                            LogLine($"*** STATUS[*FAULTED*]");
+                        }
+                        else
+                        {
+                            LogLine($"*** STATUS: {value}");
+                        }
                     }
-                    else
-                    {
-                        LogLine($"*** STATUS: {value}");
-                    }
-                }
 
-                status = value;
+                    status = value;
+                }
             }
         }
 
@@ -464,10 +492,19 @@ namespace Neon.Cluster
         {
             get
             {
-                return IsFaulted || isReady;
+                lock (syncLock)
+                {
+                    return IsFaulted || isReady;
+                }
             }
 
-            set { isReady = value; }
+            set
+            {
+                lock (syncLock)
+                {
+                    isReady = value;
+                }
+            }
         }
 
         /// <summary>
@@ -486,30 +523,33 @@ namespace Neon.Cluster
         /// </summary>
         public void Shutdown()
         {
-            Status = "shutting down...";
-
-            try
+            lock (syncLock)
             {
-                SudoCommand("shutdown -h 0", RunOptions.Defaults | RunOptions.Shutdown);
-                Disconnect();
-            }
-            catch (SshConnectionException)
-            {
-                // Sometimes we "An established connection was aborted by the server."
-                // exceptions here, which we'll ignore (because we're shutting down).
-            }
-            finally
-            {
-                // Be very sure that the connections are cleared.
+                Status = "shutting down...";
 
-                sshClient = null;
-                scpClient = null;
+                try
+                {
+                    SudoCommand("shutdown -h 0", RunOptions.Defaults | RunOptions.Shutdown);
+                    Disconnect();
+                }
+                catch (SshConnectionException)
+                {
+                    // Sometimes we "An established connection was aborted by the server."
+                    // exceptions here, which we'll ignore (because we're shutting down).
+                }
+                finally
+                {
+                    // Be very sure that the connections are cleared.
+
+                    sshClient = null;
+                    scpClient = null;
+                }
+
+                // Give the server a chance to stop.
+
+                Thread.Sleep(TimeSpan.FromSeconds(10));
+                Status = "stopped";
             }
-
-            // Give the server a chance to stop.
-
-            Thread.Sleep(TimeSpan.FromSeconds(10));
-            Status = "stopped";
         }
 
         /// <summary>
@@ -518,77 +558,80 @@ namespace Neon.Cluster
         /// <param name="wait">Optionally wait for the server to reboot (defaults to <c>true</c>).</param>
         public void Reboot(bool wait = true)
         {
-            Status = "rebooting...";
-
-            // We need to be very sure that the remote server has actually 
-            // rebooted and that we're not logging into the same session.
-            // Originally, I just waited 10 seconds and assumed that the
-            // SSH server (and maybe Linux) would have shutdown by then
-            // so all I'd need to do is wait to reconnect.
-            //
-            // This was fragile and I have encountered situations where
-            // SSH server was still running and the server hadn't restarted
-            // after 10 seconds so I essentially reconnected to the server
-            // with the reboot still pending.
-            //
-            // To ensure against this, I'm going to do the following:
-            //
-            //      1. Create a transient file at [/dev/shm/neoncluster/rebooting]. 
-            //         Since [/dev/shm] is a TMPFS, this file will no longer
-            //         exist after a reboot.
-            //
-            //      2. Command the server to reboot.
-            //
-            //      3. Loop and attempt to reconnect.  After reconnecting,
-            //         verify that the [/dev/shm/neoncluster/rebooting] file is no
-            //         longer present.  Reboot is complete if it's gone,
-            //         otherwise, we need to continue trying.
-            //
-            //         We're also going to submit a new reboot command every 
-            //         10 seconds when [/dev/shm/neoncluster/rebooting] is still present
-            //         in case the original reboot command was somehow missed
-            //         because the reboot command is not retried automatically.
-            //  
-            //         Note that step #3 is actually taken care of in the
-            //         [WaitForBoot()] method.
-
-            try
+            lock (syncLock)
             {
-                SudoCommand($"touch {RebootStatusPath}");
-                LogLine("*** REBOOT");
-                SudoCommand("reboot", RunOptions.Defaults | RunOptions.Shutdown);
-                LogLine("*** REBOOT submitted");
-            }
-            catch (SshConnectionException)
-            {
-                LogLine("*** REBOOT: SshConnectionException");
-            }
+                Status = "rebooting...";
 
-            // Make sure we're disconnected.
+                // We need to be very sure that the remote server has actually 
+                // rebooted and that we're not logging into the same session.
+                // Originally, I just waited 10 seconds and assumed that the
+                // SSH server (and maybe Linux) would have shutdown by then
+                // so all I'd need to do is wait to reconnect.
+                //
+                // This was fragile and I have encountered situations where
+                // SSH server was still running and the server hadn't restarted
+                // after 10 seconds so I essentially reconnected to the server
+                // with the reboot still pending.
+                //
+                // To ensure against this, I'm going to do the following:
+                //
+                //      1. Create a transient file at [/dev/shm/neoncluster/rebooting]. 
+                //         Since [/dev/shm] is a TMPFS, this file will no longer
+                //         exist after a reboot.
+                //
+                //      2. Command the server to reboot.
+                //
+                //      3. Loop and attempt to reconnect.  After reconnecting,
+                //         verify that the [/dev/shm/neoncluster/rebooting] file is no
+                //         longer present.  Reboot is complete if it's gone,
+                //         otherwise, we need to continue trying.
+                //
+                //         We're also going to submit a new reboot command every 
+                //         10 seconds when [/dev/shm/neoncluster/rebooting] is still present
+                //         in case the original reboot command was somehow missed
+                //         because the reboot command is not retried automatically.
+                //  
+                //         Note that step #3 is actually taken care of in the
+                //         [WaitForBoot()] method.
 
-            try
-            {
-                Disconnect();
-            }
-            catch (SshConnectionException)
-            {
-                // We'll ignore these because we're rebooting.
-            }
-            finally
-            {
-                // Be very sure that the connections are cleared.
+                try
+                {
+                    SudoCommand($"touch {RebootStatusPath}");
+                    LogLine("*** REBOOT");
+                    SudoCommand("reboot", RunOptions.Defaults | RunOptions.Shutdown);
+                    LogLine("*** REBOOT submitted");
+                }
+                catch (SshConnectionException)
+                {
+                    LogLine("*** REBOOT: SshConnectionException");
+                }
 
-                sshClient = null;
-                scpClient = null;
-            }
+                // Make sure we're disconnected.
 
-            // Give the server a chance to restart.
+                try
+                {
+                    Disconnect();
+                }
+                catch (SshConnectionException)
+                {
+                    // We'll ignore these because we're rebooting.
+                }
+                finally
+                {
+                    // Be very sure that the connections are cleared.
 
-            Thread.Sleep(TimeSpan.FromSeconds(10));
+                    sshClient = null;
+                    scpClient = null;
+                }
 
-            if (wait)
-            {
-                WaitForBoot();
+                // Give the server a chance to restart.
+
+                Thread.Sleep(TimeSpan.FromSeconds(10));
+
+                if (wait)
+                {
+                    WaitForBoot();
+                }
             }
         }
 
@@ -598,9 +641,12 @@ namespace Neon.Cluster
         /// <param name="text">The text.</param>
         public void Log(string text)
         {
-            if (logWriter != null)
+            lock (syncLock)
             {
-                logWriter.Write(text);
+                if (logWriter != null)
+                {
+                    logWriter.Write(text);
+                }
             }
         }
 
@@ -610,10 +656,13 @@ namespace Neon.Cluster
         /// <param name="text">The text.</param>
         public void LogLine(string text)
         {
-            if (logWriter != null)
+            lock (syncLock)
             {
-                logWriter.WriteLine(text);
-                LogFlush();
+                if (logWriter != null)
+                {
+                    logWriter.WriteLine(text);
+                    LogFlush();
+                }
             }
         }
 
@@ -622,9 +671,12 @@ namespace Neon.Cluster
         /// </summary>
         public void LogFlush()
         {
-            if (logWriter != null)
+            lock (syncLock)
             {
-                logWriter.Flush();
+                if (logWriter != null)
+                {
+                    logWriter.Flush();
+                }
             }
         }
 
@@ -634,8 +686,11 @@ namespace Neon.Cluster
         /// <param name="e">The exception.</param>
         public void LogException(Exception e)
         {
-            LogLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
-            LogLine($"*** STACK: {e.StackTrace}");
+            lock (syncLock)
+            {
+                LogLine($"*** ERROR: {NeonHelper.ExceptionError(e)}");
+                LogLine($"*** STACK: {e.StackTrace}");
+            }
         }
 
         /// <summary>
@@ -645,8 +700,11 @@ namespace Neon.Cluster
         /// <param name="e">The exception.</param>
         public void LogException(string message, Exception e)
         {
-            LogLine($"*** ERROR: {message}: {NeonHelper.ExceptionError(e)}");
-            LogLine($"*** STACK: {e.StackTrace}");
+            lock (syncLock)
+            {
+                LogLine($"*** ERROR: {message}: {NeonHelper.ExceptionError(e)}");
+                LogLine($"*** STACK: {e.StackTrace}");
+            }
         }
 
         /// <summary>
@@ -655,17 +713,20 @@ namespace Neon.Cluster
         /// <param name="message">The optional message to be logged.</param>
         public void Fault(string message = null)
         {
-            if (!string.IsNullOrEmpty(message))
+            lock (syncLock)
             {
-                faultMessage = message;
-                LogLine("*** ERROR: " + message);
-            }
-            else
-            {
-                LogLine("*** ERROR: Unspecified FAULT");
-            }
+                if (!string.IsNullOrEmpty(message))
+                {
+                    faultMessage = message;
+                    LogLine("*** ERROR: " + message);
+                }
+                else
+                {
+                    LogLine("*** ERROR: Unspecified FAULT");
+                }
 
-            IsFaulted = true;
+                IsFaulted = true;
+            }
         }
 
         /// <summary>
@@ -727,18 +788,21 @@ namespace Neon.Cluster
         /// <param name="timeout">Maximum amount of time to wait for a connection (defaults to <see cref="ConnectTimeout"/>).</param>
         public void Connect(TimeSpan timeout = default(TimeSpan))
         {
-            if (timeout == default(TimeSpan))
+            lock (syncLock)
             {
-                timeout = ConnectTimeout;
-            }
+                if (timeout == default(TimeSpan))
+                {
+                    timeout = ConnectTimeout;
+                }
 
-            try
-            {
-                WaitForBoot(timeout);
-            }
-            catch (Exception e)
-            {
-                throw new NeonClusterException($"Unable to connect to the cluster within [{timeout}].", e);
+                try
+                {
+                    WaitForBoot(timeout);
+                }
+                catch (Exception e)
+                {
+                    throw new NeonClusterException($"Unable to connect to the cluster within [{timeout}].", e);
+                }
             }
         }
 
@@ -756,80 +820,83 @@ namespace Neon.Cluster
         /// </remarks>
         public void WaitForBoot(TimeSpan? timeout = null)
         {
-            Covenant.Requires<ArgumentException>(timeout != null ? timeout >= TimeSpan.Zero : true);
-
-            var operationTimer = new PolledTimer(timeout ?? TimeSpan.FromMinutes(10));
-
-            while (true)
+            lock (syncLock)
             {
-                using (var sshClient = new SshClient(GetConnectionInfo()))
+                Covenant.Requires<ArgumentException>(timeout != null ? timeout >= TimeSpan.Zero : true);
+
+                var operationTimer = new PolledTimer(timeout ?? TimeSpan.FromMinutes(10));
+
+                while (true)
                 {
-                    try
+                    using (var sshClient = new SshClient(GetConnectionInfo()))
                     {
-                        LogLine($"*** WAITFORBOOT: CONNECT TO [{sshClient.ConnectionInfo.Host}:{sshClient.ConnectionInfo.Port}]");
-
-                        sshClient.Connect();
-
-                        // We need to verify that the [/dev/shm/neoncluster/rebooting] file is not present
-                        // to ensure that the machine has actually restarted (see [Reboot()]
-                        // for more information.
-
-                        var response = sshClient.RunCommand($"if [ -f \"{RebootStatusPath}\" ] ; then exit 0; else exit 1; fi");
-
-                        if (response.ExitStatus != 0)
+                        try
                         {
-                            // [/dev/shm/neoncluster/rebooting] file is not present, so we're done.
+                            LogLine($"*** WAITFORBOOT: CONNECT TO [{sshClient.ConnectionInfo.Host}:{sshClient.ConnectionInfo.Port}]");
 
-                            break;
+                            sshClient.Connect();
+
+                            // We need to verify that the [/dev/shm/neoncluster/rebooting] file is not present
+                            // to ensure that the machine has actually restarted (see [Reboot()]
+                            // for more information.
+
+                            var response = sshClient.RunCommand($"if [ -f \"{RebootStatusPath}\" ] ; then exit 0; else exit 1; fi");
+
+                            if (response.ExitStatus != 0)
+                            {
+                                // [/dev/shm/neoncluster/rebooting] file is not present, so we're done.
+
+                                break;
+                            }
+                            else
+                            {
+                                // It's possible that the original reboot command was lost
+                                // and since that's not retried automatically, we'll resubmit
+                                // it here.
+
+                                try
+                                {
+                                    LogLine("*** WAITFORBOOT: REBOOT");
+                                    sshClient.RunCommand("sudo reboot");
+                                }
+                                catch (Exception e)
+                                {
+                                    // Intentionally ignoring any exceptions other than logging
+                                    // them because we're going to retry in the surrounding loop.
+
+                                    LogException("*** WAITFORBOOT[submit]", e);
+                                }
+                                finally
+                                {
+                                    LogLine("*** WAITFORBOOT: REBOOT submitted");
+                                }
+                            }
                         }
-                        else
+                        catch (Exception e)
                         {
-                            // It's possible that the original reboot command was lost
-                            // and since that's not retried automatically, we'll resubmit
-                            // it here.
+                            LogException("*** WAITFORBOOT[error]", e);
 
-                            try
+                            if (e is SshAuthenticationException)
                             {
-                                LogLine("*** WAITFORBOOT: REBOOT");
-                                sshClient.RunCommand("sudo reboot");
-                            }
-                            catch (Exception e)
-                            {
-                                // Intentionally ignoring any exceptions other than logging
-                                // them because we're going to retry in the surrounding loop.
+                                // Don't retry if the credentials are bad.
 
-                                LogException("*** WAITFORBOOT[submit]", e);
+                                throw;
                             }
-                            finally
+
+                            if (operationTimer.HasFired)
                             {
-                                LogLine("*** WAITFORBOOT: REBOOT submitted");
+                                throw;
                             }
+
+                            LogLine($"*** WARNING: Wait for boot failed: {NeonHelper.ExceptionError(e)}");
                         }
                     }
-                    catch (Exception e)
-                    {
-                        LogException("*** WAITFORBOOT[error]", e);
 
-                        if (e is SshAuthenticationException)
-                        {
-                            // Don't retry if the credentials are bad.
-
-                            throw;
-                        }
-
-                        if (operationTimer.HasFired)
-                        {
-                            throw;
-                        }
-
-                        LogLine($"*** WARNING: Wait for boot failed: {NeonHelper.ExceptionError(e)}");
-                    }
+                    Thread.Sleep(TimeSpan.FromSeconds(5));
                 }
 
-                Thread.Sleep(TimeSpan.FromSeconds(5));
+                Status = "online";
             }
-
-            Status = "online";
         }
 
         /// <summary>
@@ -978,11 +1045,14 @@ namespace Neon.Cluster
         /// </summary>
         private void EnsureUploadFolder()
         {
-            if (!hasUploadFolder)
+            lock (syncLock)
             {
-                RunCommand($"mkdir -p {UploadFolderPath}", RunOptions.LogOnErrorOnly | RunOptions.IgnoreRemotePath);
+                if (!hasUploadFolder)
+                {
+                    RunCommand($"mkdir -p {UploadFolderPath}", RunOptions.LogOnErrorOnly | RunOptions.IgnoreRemotePath);
 
-                hasUploadFolder = true;
+                    hasUploadFolder = true;
+                }
             }
         }
 
@@ -992,31 +1062,34 @@ namespace Neon.Cluster
         /// </summary>
         public void InitializeNeonFolders()
         {
-            Status = "prepare: folders";
+            lock (syncLock)
+            {
+                Status = "prepare: folders";
 
-            SudoCommand($"mkdir -p {NeonHostFolders.Config}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {NeonHostFolders.Config}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"mkdir -p {NeonHostFolders.Config}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"chmod 600 {NeonHostFolders.Config}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {NeonHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {NeonHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"mkdir -p {NeonHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"chmod 600 {NeonHostFolders.Secrets}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {NeonHostFolders.State}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {NeonHostFolders.State}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"mkdir -p {NeonHostFolders.State}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"chmod 600 {NeonHostFolders.State}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {NeonHostFolders.Setup}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {NeonHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"mkdir -p {NeonHostFolders.Setup}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"chmod 600 {NeonHostFolders.Setup}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {NeonHostFolders.Tools}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {NeonHostFolders.Tools}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"mkdir -p {NeonHostFolders.Tools}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"chmod 600 {NeonHostFolders.Tools}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {NeonHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {NeonHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"mkdir -p {NeonHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"chmod 600 {NeonHostFolders.Scripts}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {NeonHostFolders.Archive}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 600 {NeonHostFolders.Archive}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"mkdir -p {NeonHostFolders.Archive}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"chmod 600 {NeonHostFolders.Archive}", RunOptions.LogOnErrorOnly);
 
-            SudoCommand($"mkdir -p {NeonHostFolders.Exec}", RunOptions.LogOnErrorOnly);
-            SudoCommand($"chmod 777 {NeonHostFolders.Exec}", RunOptions.LogOnErrorOnly);   // Allow non-[sudo] access.
+                SudoCommand($"mkdir -p {NeonHostFolders.Exec}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"chmod 777 {NeonHostFolders.Exec}", RunOptions.LogOnErrorOnly);   // Allow non-[sudo] access.
+            }
         }
 
         /// <summary>
@@ -1029,21 +1102,24 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
             Covenant.Requires<ArgumentNullException>(output != null);
 
-            if (IsFaulted)
+            lock (syncLock)
             {
-                return;
-            }
+                if (IsFaulted)
+                {
+                    return;
+                }
 
-            LogLine($"*** Downloading: {path}");
+                LogLine($"*** Downloading: {path}");
 
-            try
-            {
-                SafeDownload(path, output);
-            }
-            catch (Exception e)
-            {
-                LogException("*** ERROR Downloading", e);
-                throw;
+                try
+                {
+                    SafeDownload(path, output);
+                }
+                catch (Exception e)
+                {
+                    LogException("*** ERROR Downloading", e);
+                    throw;
+                }
             }
         }
 
@@ -1056,11 +1132,14 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
-            using (var ms = new MemoryStream())
+            lock (syncLock)
             {
-                Download(path, ms);
+                using (var ms = new MemoryStream())
+                {
+                    Download(path, ms);
 
-                return ms.ToArray();
+                    return ms.ToArray();
+                }
             }
         }
 
@@ -1073,11 +1152,14 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
-            using (var ms = new MemoryStream())
+            lock (syncLock)
             {
-                Download(path, ms);
+                using (var ms = new MemoryStream())
+                {
+                    Download(path, ms);
 
-                return Encoding.UTF8.GetString(ms.ToArray());
+                    return Encoding.UTF8.GetString(ms.ToArray());
+                }
             }
         }
 
@@ -1089,9 +1171,12 @@ namespace Neon.Cluster
         /// <returns><c>true</c> if the directory exists.</returns>
         public bool DirectoryExists(string path, RunOptions runOptions = RunOptions.None)
         {
-            var response = SudoCommand($"if [ -d \"{path}\" ] ; then exit 0; else exit 1; fi", runOptions);
+            lock (syncLock)
+            {
+                var response = SudoCommand($"if [ -d \"{path}\" ] ; then exit 0; else exit 1; fi", runOptions);
 
-            return response.ExitCode == 0;
+                return response.ExitCode == 0;
+            }
         }
 
         /// <summary>
@@ -1102,9 +1187,12 @@ namespace Neon.Cluster
         /// <returns><c>true</c> if the file exists.</returns>
         public bool FileExists(string path, RunOptions runOptions = RunOptions.None)
         {
-            var response = SudoCommand($"if [ -f \"{path}\" ] ; then exit 0; else exit 1; fi", runOptions);
+            lock (syncLock)
+            {
+                var response = SudoCommand($"if [ -f \"{path}\" ] ; then exit 0; else exit 1; fi", runOptions);
 
-            return response.ExitCode == 0;
+                return response.ExitCode == 0;
+            }
         }
 
         /// <summary>
@@ -1133,36 +1221,39 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(input != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
-            if (IsFaulted)
+            lock (syncLock)
             {
-                return;
-            }
-
-            LogLine($"*** Uploading: {path}");
-
-            try
-            {
-                EnsureUploadFolder();
-
-                var uploadPath = $"{UploadFolderPath}/{LinuxPath.GetFileName(path)}-{Guid.NewGuid().ToString("D")}";
-
-                SafeUpload(input, uploadPath);
-
-                SudoCommand($"mkdir -p {LinuxPath.GetDirectoryName(path)}", RunOptions.LogOnErrorOnly);
-
-                if (userPermissions)
+                if (IsFaulted)
                 {
-                    RunCommand($"if [ -f {uploadPath} ]; then mv {uploadPath} {path}; fi", RunOptions.LogOnErrorOnly);
+                    return;
                 }
-                else
+
+                LogLine($"*** Uploading: {path}");
+
+                try
                 {
-                    SudoCommand($"if [ -f {uploadPath} ]; then mv {uploadPath} {path}; fi", RunOptions.LogOnErrorOnly);
+                    EnsureUploadFolder();
+
+                    var uploadPath = $"{UploadFolderPath}/{LinuxPath.GetFileName(path)}-{Guid.NewGuid().ToString("D")}";
+
+                    SafeUpload(input, uploadPath);
+
+                    SudoCommand($"mkdir -p {LinuxPath.GetDirectoryName(path)}", RunOptions.LogOnErrorOnly);
+
+                    if (userPermissions)
+                    {
+                        RunCommand($"if [ -f {uploadPath} ]; then mv {uploadPath} {path}; fi", RunOptions.LogOnErrorOnly);
+                    }
+                    else
+                    {
+                        SudoCommand($"if [ -f {uploadPath} ]; then mv {uploadPath} {path}; fi", RunOptions.LogOnErrorOnly);
+                    }
                 }
-            }
-            catch (Exception e)
-            {
-                LogException("*** ERROR Uploading", e);
-                throw;
+                catch (Exception e)
+                {
+                    LogException("*** ERROR Uploading", e);
+                    throw;
+                }
             }
         }
 
@@ -1175,14 +1266,17 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
-            if (bytes == null)
+            lock (syncLock)
             {
-                bytes = new byte[0];
-            }
+                if (bytes == null)
+                {
+                    bytes = new byte[0];
+                }
 
-            using (var ms = new MemoryStream(bytes))
-            {
-                Upload(path, ms);
+                using (var ms = new MemoryStream(bytes))
+                {
+                    Upload(path, ms);
+                }
             }
         }
 
@@ -1218,28 +1312,31 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(textStream != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
-            inputEncoding  = inputEncoding ?? Encoding.UTF8;
-            outputEncoding = outputEncoding ?? Encoding.UTF8;
-
-            using (var reader = new StreamReader(textStream, inputEncoding))
+            lock (syncLock)
             {
-                using (var binaryStream = new MemoryStream(64 * 1024))
-                {
-                    foreach (var line in reader.Lines())
-                    {
-                        var convertedLine = line;
+                inputEncoding  = inputEncoding ?? Encoding.UTF8;
+                outputEncoding = outputEncoding ?? Encoding.UTF8;
 
-                        if (tabStop > 0)
+                using (var reader = new StreamReader(textStream, inputEncoding))
+                {
+                    using (var binaryStream = new MemoryStream(64 * 1024))
+                    {
+                        foreach (var line in reader.Lines())
                         {
-                            convertedLine = NeonHelper.ExpandTabs(convertedLine, tabStop: tabStop);
+                            var convertedLine = line;
+
+                            if (tabStop > 0)
+                            {
+                                convertedLine = NeonHelper.ExpandTabs(convertedLine, tabStop: tabStop);
+                            }
+
+                            binaryStream.Write(outputEncoding.GetBytes(convertedLine));
+                            binaryStream.WriteByte((byte)'\n');
                         }
 
-                        binaryStream.Write(outputEncoding.GetBytes(convertedLine));
-                        binaryStream.WriteByte((byte)'\n');
+                        binaryStream.Position = 0;
+                        Upload(path, binaryStream);
                     }
-
-                    binaryStream.Position = 0;
-                    Upload(path, binaryStream);
                 }
             }
         }
@@ -1272,9 +1369,12 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(text != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
 
-            using (var textStream = new MemoryStream(Encoding.UTF8.GetBytes(text)))
+            lock (syncLock)
             {
-                UploadText(path, textStream, tabStop, Encoding.UTF8, outputEncoding);
+                using (var textStream = new MemoryStream(Encoding.UTF8.GetBytes(text)))
+                {
+                    UploadText(path, textStream, tabStop, Encoding.UTF8, outputEncoding);
+                }
             }
         }
 
@@ -1289,26 +1389,29 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(source));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
 
-            if (IsFaulted)
+            lock (syncLock)
             {
-                return;
-            }
-
-            Directory.CreateDirectory(Path.GetDirectoryName(target));
-
-            LogLine($"*** Downloading: [{source}] --> [{target}]");
-
-            try
-            {
-                using (var output = new FileStream(target, FileMode.Create, FileAccess.ReadWrite))
+                if (IsFaulted)
                 {
-                    SafeDownload(source, output);
+                    return;
                 }
-            }
-            catch (Exception e)
-            {
-                LogException("*** ERROR Downloading", e);
-                throw;
+
+                Directory.CreateDirectory(Path.GetDirectoryName(target));
+
+                LogLine($"*** Downloading: [{source}] --> [{target}]");
+
+                try
+                {
+                    using (var output = new FileStream(target, FileMode.Create, FileAccess.ReadWrite))
+                    {
+                        SafeDownload(source, output);
+                    }
+                }
+                catch (Exception e)
+                {
+                    LogException("*** ERROR Downloading", e);
+                    throw;
+                }
             }
         }
 
@@ -1339,27 +1442,29 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(targetFolder));
 
-            using (var input = new FileStream(sourcePath, FileMode.Open, FileAccess.Read))
+            lock (syncLock)
             {
-                var binaryPath = LinuxPath.Combine(targetFolder, $"{targetName}.mono");
+                using (var input = new FileStream(sourcePath, FileMode.Open, FileAccess.Read))
+                {
+                    var binaryPath = LinuxPath.Combine(targetFolder, $"{targetName}.mono");
 
-                Upload(binaryPath, input);
+                    Upload(binaryPath, input);
 
-                // Set the permissions on the binary that match those we'll set
-                // for the wrapping script, except stripping off the executable
-                // flags.
+                    // Set the permissions on the binary that match those we'll set
+                    // for the wrapping script, except stripping off the executable
+                    // flags.
 
-                var binaryPermissions = new LinuxPermissions(permissions);
+                    var binaryPermissions = new LinuxPermissions(permissions);
 
-                binaryPermissions.OwnerExecute = false;
-                binaryPermissions.GroupExecute = false;
-                binaryPermissions.AllExecute   = false;
+                    binaryPermissions.OwnerExecute = false;
+                    binaryPermissions.GroupExecute = false;
+                    binaryPermissions.AllExecute   = false;
 
-                SudoCommand($"chmod {binaryPermissions} {binaryPath}", RunOptions.LogOnErrorOnly);
-            }
+                    SudoCommand($"chmod {binaryPermissions} {binaryPath}", RunOptions.LogOnErrorOnly);
+                }
 
-            var scriptPath = LinuxPath.Combine(targetFolder, targetName);
-            var script =
+                var scriptPath = LinuxPath.Combine(targetFolder, targetName);
+                var script =
 $@"#!/bin/bash
 #------------------------------------------------------------------------------
 # Seamlessly invokes the [{targetName}.mono] executable using the Mono
@@ -1368,8 +1473,9 @@ $@"#!/bin/bash
 mono {scriptPath}.mono $@
 ";
 
-            UploadText(scriptPath, script, tabStop: 4);
-            SudoCommand($"chmod {permissions} {scriptPath}", RunOptions.LogOnErrorOnly);
+                UploadText(scriptPath, script, tabStop: 4);
+                SudoCommand($"chmod {permissions} {scriptPath}", RunOptions.LogOnErrorOnly);
+            }
         }
 
         /// <summary>
@@ -1610,7 +1716,10 @@ mono {scriptPath}.mono $@
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
 
-            return RunCommand(command, DefaultRunOptions, args);
+            lock (syncLock)
+            {
+                return RunCommand(command, DefaultRunOptions, args);
+            }
         }
 
         /// <summary>
@@ -1925,215 +2034,218 @@ echo $? > {cmdFolder}/exit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
 
-            if (command.Contains('<') || command.Contains('>'))
+            lock (syncLock)
             {
-                throw new ArgumentException($"[{nameof(SudoCommand)}(command,...)] does not support angle brackets (<) or (>).  Upload and run a [{nameof(CommandBundle)}] instead.");
-            }
-
-            var startLogged = false;
-
-            command = FormatCommand(command, args);
-
-            if (!string.IsNullOrWhiteSpace(RemotePath) && (runOptions & RunOptions.IgnoreRemotePath) == 0)
-            {
-                command = $"export PATH={RemotePath} && {command}";
-            }
-
-            if ((runOptions & RunOptions.Defaults) != 0)
-            {
-                runOptions |= DefaultRunOptions;
-            }
-
-            var runWhenFaulted = (runOptions & RunOptions.RunWhenFaulted) != 0;
-            var logOnErrorOnly = (runOptions & RunOptions.LogOnErrorOnly) != 0 && (runOptions & RunOptions.LogOutput) == 0;
-            var faultOnError   = (runOptions & RunOptions.FaultOnError) != 0;
-            var binaryOutput   = (runOptions & RunOptions.BinaryOutput) != 0;
-            var redact         = (runOptions & RunOptions.Redact) != 0;
-            var logBundle      = (runOptions & RunOptions.LogBundle) != 0;
-            var shutdown       = (runOptions & RunOptions.Shutdown) != 0;
-
-            if (IsFaulted && !runWhenFaulted)
-            {
-                return new CommandResponse()
+                if (command.Contains('<') || command.Contains('>'))
                 {
-                    Command        = command,
-                    ExitCode       = 1,
-                    ProxyIsFaulted = true,
-                    ErrorText      = "** Cluster node is faulted **"
-                };
-            }
-
-            EnsureSshConnection();
-
-            // Generate the command string we'll log by stripping out the 
-            // remote PATH statement, if there is one.
-
-            var commandToLog = command.Replace($"export PATH={RemotePath} && ", string.Empty);
-
-            if (redact)
-            {
-                // Redact everything after the commmand word.
-
-                var posEnd = commandToLog.IndexOf(' ');
-
-                if (posEnd != -1)
-                {
-                    commandToLog = commandToLog.Substring(0, posEnd + 1) + Redacted;
+                    throw new ArgumentException($"[{nameof(SudoCommand)}(command,...)] does not support angle brackets (<) or (>).  Upload and run a [{nameof(CommandBundle)}] instead.");
                 }
-            }
 
-            if (logBundle)
-            {
-                startLogged = true;
-            }
-            else if (!logOnErrorOnly)
-            {
-                LogLine($"START: {commandToLog}");
+                var startLogged = false;
 
-                startLogged = true;
-            }
+                command = FormatCommand(command, args);
 
-            SafeSshCommand      result;
-            CommandResponse     response;
-            string              bashCommand = ToBash(command, args);
+                if (!string.IsNullOrWhiteSpace(RemotePath) && (runOptions & RunOptions.IgnoreRemotePath) == 0)
+                {
+                    command = $"export PATH={RemotePath} && {command}";
+                }
 
-            if (shutdown)
-            {
-                // We just ran commands that shutdown or rebooted the server 
-                // directly to prevent continuously rebooting the server.
-                //
-                // Because we're not using [SafeRunCommand()], there's some
-                // risk that the connection is lost just before the command
-                // is executed.  We're going to mitigate this by ensuring
-                // that we have a fresh new SSH connection before invoking
-                // the command.
+                if ((runOptions & RunOptions.Defaults) != 0)
+                {
+                    runOptions |= DefaultRunOptions;
+                }
 
-                InternalSshDisconnect();
+                var runWhenFaulted = (runOptions & RunOptions.RunWhenFaulted) != 0;
+                var logOnErrorOnly = (runOptions & RunOptions.LogOnErrorOnly) != 0 && (runOptions & RunOptions.LogOutput) == 0;
+                var faultOnError   = (runOptions & RunOptions.FaultOnError) != 0;
+                var binaryOutput   = (runOptions & RunOptions.BinaryOutput) != 0;
+                var redact         = (runOptions & RunOptions.Redact) != 0;
+                var logBundle      = (runOptions & RunOptions.LogBundle) != 0;
+                var shutdown       = (runOptions & RunOptions.Shutdown) != 0;
+
+                if (IsFaulted && !runWhenFaulted)
+                {
+                    return new CommandResponse()
+                    {
+                        Command        = command,
+                        ExitCode       = 1,
+                        ProxyIsFaulted = true,
+                        ErrorText      = "** Cluster node is faulted **"
+                    };
+                }
+
                 EnsureSshConnection();
 
-                var cmdResult = sshClient.RunCommand(command);
+                // Generate the command string we'll log by stripping out the 
+                // remote PATH statement, if there is one.
 
-                response = new CommandResponse()
-                {
-                    Command     = command,
-                    BashCommand = bashCommand,
-                    ExitCode    = cmdResult.ExitStatus,
-                    OutputText  = cmdResult.Result,
-                    ErrorText   = cmdResult.Error
-                };
-            }
-            else if (binaryOutput)
-            {
-                result   = SafeRunCommand($"{command}", binaryOutput: true);
-                response = new CommandResponse()
-                {
-                    Command      = command,
-                    BashCommand  = bashCommand,
-                    ExitCode     = result.ExitStatus,
-                    OutputBinary = result.ResultBinary,
-                    ErrorText    = result.Error
-                };
-            }
-            else
-            {
-                // Text output.
+                var commandToLog = command.Replace($"export PATH={RemotePath} && ", string.Empty);
 
-                result   = SafeRunCommand(command);
-                response = new CommandResponse()
+                if (redact)
                 {
-                    Command     = command,
-                    BashCommand = bashCommand,
-                    ExitCode    = result.ExitStatus,
-                    OutputText  = result.Result,
-                    ErrorText   = result.Error
-                };
-            }
+                    // Redact everything after the commmand word.
 
-            var logEnabled = response.ExitCode != 0 || !logOnErrorOnly;
+                    var posEnd = commandToLog.IndexOf(' ');
 
-            if ((response.ExitCode != 0 && logOnErrorOnly) || (runOptions & RunOptions.LogOutput) != 0)
-            {
-                if (!startLogged)
-                {
-                    LogLine($"START: {commandToLog}");
+                    if (posEnd != -1)
+                    {
+                        commandToLog = commandToLog.Substring(0, posEnd + 1) + Redacted;
+                    }
                 }
 
-                if ((runOptions & RunOptions.LogOutput) != 0)
+                if (logBundle)
                 {
-                    if (binaryOutput)
+                    startLogged = true;
+                }
+                else if (!logOnErrorOnly)
+                {
+                    LogLine($"START: {commandToLog}");
+
+                    startLogged = true;
+                }
+
+                SafeSshCommand  result;
+                CommandResponse response;
+                string          bashCommand = ToBash(command, args);
+
+                if (shutdown)
+                {
+                    // We just ran commands that shutdown or rebooted the server 
+                    // directly to prevent continuously rebooting the server.
+                    //
+                    // Because we're not using [SafeRunCommand()], there's some
+                    // risk that the connection is lost just before the command
+                    // is executed.  We're going to mitigate this by ensuring
+                    // that we have a fresh new SSH connection before invoking
+                    // the command.
+
+                    InternalSshDisconnect();
+                    EnsureSshConnection();
+
+                    var cmdResult = sshClient.RunCommand(command);
+
+                    response = new CommandResponse()
                     {
-                        LogLine($"    BINARY OUTPUT [length={response.OutputBinary.Length}]");
+                        Command     = command,
+                        BashCommand = bashCommand,
+                        ExitCode    = cmdResult.ExitStatus,
+                        OutputText  = cmdResult.Result,
+                        ErrorText   = cmdResult.Error
+                    };
+                }
+                else if (binaryOutput)
+                {
+                    result = SafeRunCommand($"{command}", binaryOutput: true);
+                    response = new CommandResponse()
+                    {
+                        Command      = command,
+                        BashCommand  = bashCommand,
+                        ExitCode     = result.ExitStatus,
+                        OutputBinary = result.ResultBinary,
+                        ErrorText    = result.Error
+                    };
+                }
+                else
+                {
+                    // Text output.
+
+                    result = SafeRunCommand(command);
+                    response = new CommandResponse()
+                    {
+                        Command     = command,
+                        BashCommand = bashCommand,
+                        ExitCode    = result.ExitStatus,
+                        OutputText  = result.Result,
+                        ErrorText   = result.Error
+                    };
+                }
+
+                var logEnabled = response.ExitCode != 0 || !logOnErrorOnly;
+
+                if ((response.ExitCode != 0 && logOnErrorOnly) || (runOptions & RunOptions.LogOutput) != 0)
+                {
+                    if (!startLogged)
+                    {
+                        LogLine($"START: {commandToLog}");
                     }
-                    else
+
+                    if ((runOptions & RunOptions.LogOutput) != 0)
                     {
-                        if (redact)
+                        if (binaryOutput)
                         {
-                            LogLine("    " + Redacted);
+                            LogLine($"    BINARY OUTPUT [length={response.OutputBinary.Length}]");
                         }
                         else
                         {
-                            using (var reader = new StringReader(response.OutputText))
+                            if (redact)
                             {
-                                foreach (var line in reader.Lines())
+                                LogLine("    " + Redacted);
+                            }
+                            else
+                            {
+                                using (var reader = new StringReader(response.OutputText))
                                 {
-                                    LogLine("    " + line);
+                                    foreach (var line in reader.Lines())
+                                    {
+                                        LogLine("    " + line);
+                                    }
                                 }
                             }
                         }
                     }
                 }
-            }
 
-            if (response.ExitCode != 0 || !logOnErrorOnly || (runOptions & RunOptions.LogOutput) != 0)
-            {
-                if (redact)
+                if (response.ExitCode != 0 || !logOnErrorOnly || (runOptions & RunOptions.LogOutput) != 0)
                 {
-                    LogLine("STDERR");
-                    LogLine("    " + Redacted);
-                }
-                else
-                {
-                    using (var reader = new StringReader(response.ErrorText))
+                    if (redact)
                     {
-                        var extendedWritten = false;
-
-                        foreach (var line in reader.Lines())
+                        LogLine("STDERR");
+                        LogLine("    " + Redacted);
+                    }
+                    else
+                    {
+                        using (var reader = new StringReader(response.ErrorText))
                         {
-                            if (!extendedWritten)
-                            {
-                                LogLine("STDERR");
-                                extendedWritten = true;
-                            }
+                            var extendedWritten = false;
 
-                            LogLine("    " + line);
+                            foreach (var line in reader.Lines())
+                            {
+                                if (!extendedWritten)
+                                {
+                                    LogLine("STDERR");
+                                    extendedWritten = true;
+                                }
+
+                                LogLine("    " + line);
+                            }
+                        }
+                    }
+
+                    if (response.ExitCode == 0)
+                    {
+                        LogLine("END [OK]");
+                    }
+                    else
+                    {
+                        LogLine($"END [ERROR={response.ExitCode}]");
+                    }
+
+                    if (response.ExitCode != 0)
+                    {
+                        if (faultOnError)
+                        {
+                            Status    = $"ERROR[{response.ExitCode}]";
+                            IsFaulted = true;
+
+                            var message = redact ? "**REDACTED COMMAND**" : bashCommand;
+
+                            throw new RemoteCommandException($"[exitcode={response.ExitCode}: {message}");
                         }
                     }
                 }
 
-                if (response.ExitCode == 0)
-                {
-                    LogLine("END [OK]");
-                }
-                else
-                {
-                    LogLine($"END [ERROR={response.ExitCode}]");
-                }
-
-                if (response.ExitCode != 0)
-                {
-                    if (faultOnError)
-                    {
-                        Status    = $"ERROR[{response.ExitCode}]";
-                        IsFaulted = true;
-
-                        var message = redact ? "**REDACTED COMMAND**" : bashCommand;
-
-                        throw new RemoteCommandException($"[exitcode={response.ExitCode}: {message}");
-                    }
-                }
+                return response;
             }
-
-            return response;
         }
 
         /// <summary>
@@ -2181,41 +2293,44 @@ echo $? > {cmdFolder}/exit
         {
             Covenant.Requires<ArgumentNullException>(bundle != null);
 
-            // Write the START log line here so we can log the actual command being
-            // executed and then disable this at the lower level, which would have 
-            // logged the execution of the "__run.sh" script.
-
-            LogLine("----------------------------------------");
-
-            if ((runOptions & RunOptions.Redact) != 0)
+            lock (syncLock)
             {
-                LogLine($"START-BUNDLE: {Redacted}");
-            }
-            else
-            {
-                LogLine($"START-BUNDLE: {bundle}");
-            }
+                // Write the START log line here so we can log the actual command being
+                // executed and then disable this at the lower level, which would have 
+                // logged the execution of the "__run.sh" script.
 
-            // Upload and extract the bundle and then run the "__run.sh" script.
-
-            var bundleFolder = UploadBundle(bundle, runOptions, userPermissions: true);
-
-            try
-            {
-                var response = RunCommand($"cd {bundleFolder} && ./__run.sh", runOptions | RunOptions.LogBundle);
-
-                response.BashCommand = bundle.ToBash();
-
-                LogLine($"END-BUNDLE");
                 LogLine("----------------------------------------");
 
-                return response;
-            }
-            finally
-            {
-                // Remove the bundle files.
+                if ((runOptions & RunOptions.Redact) != 0)
+                {
+                    LogLine($"START-BUNDLE: {Redacted}");
+                }
+                else
+                {
+                    LogLine($"START-BUNDLE: {bundle}");
+                }
 
-                RunCommand($"rm -rf {bundleFolder}", RunOptions.RunWhenFaulted, RunOptions.LogOnErrorOnly);
+                // Upload and extract the bundle and then run the "__run.sh" script.
+
+                var bundleFolder = UploadBundle(bundle, runOptions, userPermissions: true);
+
+                try
+                {
+                    var response = RunCommand($"cd {bundleFolder} && ./__run.sh", runOptions | RunOptions.LogBundle);
+
+                    response.BashCommand = bundle.ToBash();
+
+                    LogLine($"END-BUNDLE");
+                    LogLine("----------------------------------------");
+
+                    return response;
+                }
+                finally
+                {
+                    // Remove the bundle files.
+
+                    RunCommand($"rm -rf {bundleFolder}", RunOptions.RunWhenFaulted, RunOptions.LogOnErrorOnly);
+                }
             }
         }
 
@@ -2246,7 +2361,10 @@ echo $? > {cmdFolder}/exit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
 
-            return SudoCommand(command, DefaultRunOptions, args);
+            lock (syncLock)
+            {
+                return SudoCommand(command, DefaultRunOptions, args);
+            }
         }
 
         /// <summary>
@@ -2283,18 +2401,21 @@ echo $? > {cmdFolder}/exit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
 
-            command = FormatCommand(command, args);
-
-            if (!string.IsNullOrWhiteSpace(RemotePath) && (runOptions & RunOptions.IgnoreRemotePath) == 0)
+            lock (syncLock)
             {
-                command = $"export PATH={RemotePath} && {command}";
+                command = FormatCommand(command, args);
+
+                if (!string.IsNullOrWhiteSpace(RemotePath) && (runOptions & RunOptions.IgnoreRemotePath) == 0)
+                {
+                    command = $"export PATH={RemotePath} && {command}";
+                }
+
+                var response = RunCommand($"sudo bash -c '{command}'", runOptions | RunOptions.IgnoreRemotePath);
+
+                response.BashCommand = ToBash(command, args);
+
+                return response;
             }
-
-            var response = RunCommand($"sudo bash -c '{command}'", runOptions | RunOptions.IgnoreRemotePath);
-
-            response.BashCommand = ToBash(command, args);
-
-            return response;
         }
 
         // $todo(jeff.lill):
@@ -2341,7 +2462,10 @@ echo $? > {cmdFolder}/exit
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(user));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
 
-            return SudoCommandAsUser(user, command, DefaultRunOptions, args);
+            lock (syncLock)
+            {
+                return SudoCommandAsUser(user, command, DefaultRunOptions, args);
+            }
         }
 
         /// <summary>
@@ -2381,28 +2505,31 @@ echo $? > {cmdFolder}/exit
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(user));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(command));
 
-            command = $"sudo -u {user} bash -c '{command}'";
-
-            var sbScript = new StringBuilder();
-
-            sbScript.AppendLine("#!/bin/bash");
-
-            if (!string.IsNullOrWhiteSpace(RemotePath) && (runOptions & RunOptions.IgnoreRemotePath) == 0)
+            lock (syncLock)
             {
-                sbScript.AppendLine($"export PATH={RemotePath}");
+                command = $"sudo -u {user} bash -c '{command}'";
+
+                var sbScript = new StringBuilder();
+
+                sbScript.AppendLine("#!/bin/bash");
+
+                if (!string.IsNullOrWhiteSpace(RemotePath) && (runOptions & RunOptions.IgnoreRemotePath) == 0)
+                {
+                    sbScript.AppendLine($"export PATH={RemotePath}");
+                }
+
+                sbScript.AppendLine(command);
+
+                var bundle = new CommandBundle("./script.sh");
+
+                bundle.AddFile("script.sh", sbScript.ToString(), isExecutable: true);
+
+                var response = SudoCommand(bundle, runOptions | RunOptions.IgnoreRemotePath);
+
+                response.BashCommand = ToBash(command, args);
+
+                return response;
             }
-
-            sbScript.AppendLine(command);
-
-            var bundle = new CommandBundle("./script.sh");
-
-            bundle.AddFile("script.sh", sbScript.ToString(), isExecutable: true);
-
-            var response = SudoCommand(bundle, runOptions | RunOptions.IgnoreRemotePath);
-
-            response.BashCommand = ToBash(command, args);
-
-            return response;
         }
 
         /// <summary>
@@ -2449,41 +2576,44 @@ echo $? > {cmdFolder}/exit
         {
             Covenant.Requires<ArgumentNullException>(bundle != null);
 
-            // Write the START log line here so we can log the actual command being
-            // executed and then disable this at the lower level, which would have 
-            // logged the execution of the "__run.sh" script.
-
-            LogLine("----------------------------------------");
-
-            if ((runOptions & RunOptions.Redact) != 0)
+            lock (syncLock)
             {
-                LogLine($"START-BUNDLE: {Redacted}");
-            }
-            else
-            {
-                LogLine($"START-BUNDLE: {bundle}");
-            }
+                // Write the START log line here so we can log the actual command being
+                // executed and then disable this at the lower level, which would have 
+                // logged the execution of the "__run.sh" script.
 
-            // Upload and extract the bundle and then run the "__run.sh" script.
-
-            var bundleFolder = UploadBundle(bundle, runOptions, userPermissions: false);
-
-            try
-            {
-                var response = SudoCommand($"cd {bundleFolder} && /bin/bash ./__run.sh", runOptions | RunOptions.LogBundle);
-
-                response.BashCommand = bundle.ToBash();
-
-                LogLine($"END-BUNDLE");
                 LogLine("----------------------------------------");
 
-                return response;
-            }
-            finally
-            {
-                // Remove the bundle files.
+                if ((runOptions & RunOptions.Redact) != 0)
+                {
+                    LogLine($"START-BUNDLE: {Redacted}");
+                }
+                else
+                {
+                    LogLine($"START-BUNDLE: {bundle}");
+                }
 
-                SudoCommand($"rm -rf {bundleFolder}", runOptions);
+                // Upload and extract the bundle and then run the "__run.sh" script.
+
+                var bundleFolder = UploadBundle(bundle, runOptions, userPermissions: false);
+
+                try
+                {
+                    var response = SudoCommand($"cd {bundleFolder} && /bin/bash ./__run.sh", runOptions | RunOptions.LogBundle);
+
+                    response.BashCommand = bundle.ToBash();
+
+                    LogLine($"END-BUNDLE");
+                    LogLine("----------------------------------------");
+
+                    return response;
+                }
+                finally
+                {
+                    // Remove the bundle files.
+
+                    SudoCommand($"rm -rf {bundleFolder}", runOptions);
+                }
             }
         }
 
@@ -2508,54 +2638,57 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public CommandResponse DockerCommand(RunOptions runOptions, string command, params object[] args)
         {
-            // $todo(jeff.lill): Hardcoding transient error handling for now.
-
-            CommandResponse response    = null;
-            int             attempt     = 0;
-            int             maxAttempts = 10;
-            TimeSpan        delay       = TimeSpan.FromSeconds(15);
-            string          orgStatus   = Status;
-
-            while (attempt++ < maxAttempts)
+            lock (syncLock)
             {
-                response             = SudoCommand(command, runOptions, args);
-                response.BashCommand = ToBash(command, args);
+                // $todo(jeff.lill): Hardcoding transient error handling for now.
 
-                if (response.ExitCode == 0)
+                CommandResponse     response = null;
+                int                 attempt = 0;
+                int                 maxAttempts = 10;
+                TimeSpan            delay = TimeSpan.FromSeconds(15);
+                string              orgStatus = Status;
+
+                while (attempt++ < maxAttempts)
                 {
-                    return response;
-                }
+                    response = SudoCommand(command, runOptions, args);
+                    response.BashCommand = ToBash(command, args);
 
-                // Simple transitent error detection.
-
-                if (response.ErrorText.Contains("i/o timeout") || response.ErrorText.Contains("Client.Timeout"))
-                {
-                    Status = $"[retry:{attempt}/{maxAttempts}]: {orgStatus}";
-                    LogLine($"*** Waiting [{delay}] before retrying after a possible transient error.");
-
-                    Thread.Sleep(delay);
-                }
-                else
-                {
-                    // Looks like a hard error.
-
-                    if (runOptions.HasFlag(RunOptions.FaultOnError))
+                    if (response.ExitCode == 0)
                     {
-                        Fault(response.ErrorText.Trim());
+                        return response;
                     }
 
-                    return response;
+                    // Simple transitent error detection.
+
+                    if (response.ErrorText.Contains("i/o timeout") || response.ErrorText.Contains("Client.Timeout"))
+                    {
+                        Status = $"[retry:{attempt}/{maxAttempts}]: {orgStatus}";
+                        LogLine($"*** Waiting [{delay}] before retrying after a possible transient error.");
+
+                        Thread.Sleep(delay);
+                    }
+                    else
+                    {
+                        // Looks like a hard error.
+
+                        if (runOptions.HasFlag(RunOptions.FaultOnError))
+                        {
+                            Fault(response.ErrorText.Trim());
+                        }
+
+                        return response;
+                    }
                 }
+
+                LogLine($"*** Operation failed after trying [{maxAttempts}] times.");
+
+                if (runOptions.HasFlag(RunOptions.FaultOnError))
+                {
+                    Fault();
+                }
+
+                return response;
             }
-
-            LogLine($"*** Operation failed after trying [{maxAttempts}] times.");
-
-            if (runOptions.HasFlag(RunOptions.FaultOnError))
-            {
-                Fault();
-            }
-
-            return response;
         }
 
         /// <summary>
@@ -2578,7 +2711,10 @@ echo $? > {cmdFolder}/exit
         /// </remarks>
         public CommandResponse DockerCommand(string command, params object[] args)
         {
-            return DockerCommand(RunOptions.LogOutput, command, args);
+            lock (syncLock)
+            {
+                return DockerCommand(RunOptions.LogOutput, command, args);
+            }
         }
 
         /// <summary>
@@ -2609,13 +2745,16 @@ echo $? > {cmdFolder}/exit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId));
 
-            InvokeIdempotentAction(actionId,
-                () =>
-                {
-                    var response = DockerCommand(runOptions, command, args);
+            lock (syncLock)
+            {
+                InvokeIdempotentAction(actionId,
+                    () =>
+                    {
+                        var response = DockerCommand(runOptions, command, args);
 
-                    postAction?.Invoke(response);
-                });
+                        postAction?.Invoke(response);
+                    });
+            }
         }
 
         /// <summary>
@@ -2645,13 +2784,16 @@ echo $? > {cmdFolder}/exit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId));
 
-            InvokeIdempotentAction(actionId,
-                () =>
-                {
-                    var response = DockerCommand(command, args);
+            lock (syncLock)
+            {
+                InvokeIdempotentAction(actionId,
+                    () =>
+                    {
+                        var response = DockerCommand(command, args);
 
-                    postAction?.Invoke(response);
-                });
+                        postAction?.Invoke(response);
+                    });
+            }
         }
 
         /// <summary>
@@ -2678,32 +2820,35 @@ echo $? > {cmdFolder}/exit
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId));
             Covenant.Requires<ArgumentNullException>(action != null);
 
-            foreach (var ch in actionId)
+            lock (syncLock)
             {
-                if (!char.IsLetterOrDigit(ch) && ch != '-')
+                foreach (var ch in actionId)
                 {
-                    throw new ArgumentException($"Idempotent action name [{actionId}] is invalid because it includes a character that's not a letter, digit, or dash.");
+                    if (!char.IsLetterOrDigit(ch) && ch != '-')
+                    {
+                        throw new ArgumentException($"Idempotent action name [{actionId}] is invalid because it includes a character that's not a letter, digit, or dash.");
+                    }
                 }
-            }
 
-            var statePath = LinuxPath.Combine(NeonHostFolders.State, $"finished-{actionId}");
+                var statePath = LinuxPath.Combine(NeonHostFolders.State, $"finished-{actionId}");
 
-            if (!hasStateFolder)
-            {
-                SudoCommand($"mkdir -p {NeonHostFolders.State}");
-                hasStateFolder = true;
-            }
+                if (!hasStateFolder)
+                {
+                    SudoCommand($"mkdir -p {NeonHostFolders.State}");
+                    hasStateFolder = true;
+                }
 
-            if (FileExists(statePath))
-            {
-                return;
-            }
+                if (FileExists(statePath))
+                {
+                    return;
+                }
 
-            action();
+                action();
 
-            if (!IsFaulted)
-            {
-                SudoCommand($"touch {statePath}");
+                if (!IsFaulted)
+                {
+                    SudoCommand($"touch {statePath}");
+                }
             }
         }
 
@@ -2722,67 +2867,70 @@ echo $? > {cmdFolder}/exit
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
 
-            if (certificate == null)
+            lock (syncLock)
             {
-                return new CommandResponse() { ExitCode = 0 };
-            }
+                if (certificate == null)
+                {
+                    return new CommandResponse() { ExitCode = 0 };
+                }
 
-            Status = $"verifying: [{name}] certificate";
+                Status = $"verifying: [{name}] certificate";
 
-            if (string.IsNullOrEmpty(hostname))
-            {
-                throw new ArgumentException($"No hostname is specified for the [{name}] certificate test.");
-            }
+                if (string.IsNullOrEmpty(hostname))
+                {
+                    throw new ArgumentException($"No hostname is specified for the [{name}] certificate test.");
+                }
 
-            // Verify that the private key looks reasonable.
+                // Verify that the private key looks reasonable.
 
-            if (!certificate.KeyPem.StartsWith("-----BEGIN PRIVATE KEY-----"))
-            {
-                throw new FormatException($"The [{name}] certificate's private key is not PEM encoded.");
-            }
+                if (!certificate.KeyPem.StartsWith("-----BEGIN PRIVATE KEY-----"))
+                {
+                    throw new FormatException($"The [{name}] certificate's private key is not PEM encoded.");
+                }
 
-            // Verify the certificate.
+                // Verify the certificate.
 
-            if (!certificate.CertPem.StartsWith("-----BEGIN CERTIFICATE-----"))
-            {
-                throw new ArgumentException($"The [{name}] certificate is not PEM encoded.");
-            }
+                if (!certificate.CertPem.StartsWith("-----BEGIN CERTIFICATE-----"))
+                {
+                    throw new ArgumentException($"The [{name}] certificate is not PEM encoded.");
+                }
 
-            // We're going to split the certificate into two files, the issued
-            // certificate and the certificate authority's certificate chain
-            // (AKA the CA bundle).
-            //
-            // Then we're going to upload these to [/tmp/cert.crt] and [/tmp/cert.ca]
-            // and then use the [openssl] command to verify it.
+                // We're going to split the certificate into two files, the issued
+                // certificate and the certificate authority's certificate chain
+                // (AKA the CA bundle).
+                //
+                // Then we're going to upload these to [/tmp/cert.crt] and [/tmp/cert.ca]
+                // and then use the [openssl] command to verify it.
 
-            var pos = certificate.CertPem.IndexOf("-----END CERTIFICATE-----");
+                var pos = certificate.CertPem.IndexOf("-----END CERTIFICATE-----");
 
-            if (pos == -1)
-            {
-                throw new ArgumentNullException($"The [{name}] certificate is not formatted properly.");
-            }
+                if (pos == -1)
+                {
+                    throw new ArgumentNullException($"The [{name}] certificate is not formatted properly.");
+                }
 
-            pos = certificate.CertPem.IndexOf("-----BEGIN CERTIFICATE-----", pos);
+                pos = certificate.CertPem.IndexOf("-----BEGIN CERTIFICATE-----", pos);
 
-            var issuedCert = certificate.CertPem.Substring(0, pos);
-            var caBundle   = certificate.CertPem.Substring(pos);
+                var issuedCert = certificate.CertPem.Substring(0, pos);
+                var caBundle   = certificate.CertPem.Substring(pos);
 
-            try
-            {
-                UploadText("/tmp/cert.crt", issuedCert);
-                UploadText("/tmp/cert.ca", caBundle);
+                try
+                {
+                    UploadText("/tmp/cert.crt", issuedCert);
+                    UploadText("/tmp/cert.ca", caBundle);
 
-                return SudoCommand(
-                    "openssl verify",
-                    RunOptions.FaultOnError,
-                    "-verify_hostname", hostname,
-                    "-purpose", "sslserver",
-                    "-CAfile", "/tmp/cert.ca",
-                    "/tmp/cert.crt");
-            }
-            finally
-            {
-                SudoCommand("rm -f /tmp/cert.*", RunOptions.LogOnErrorOnly);
+                    return SudoCommand(
+                        "openssl verify",
+                        RunOptions.FaultOnError,
+                        "-verify_hostname", hostname,
+                        "-purpose", "sslserver",
+                        "-CAfile", "/tmp/cert.ca",
+                        "/tmp/cert.crt");
+                }
+                finally
+                {
+                    SudoCommand("rm -f /tmp/cert.*", RunOptions.LogOnErrorOnly);
+                }
             }
         }
 
@@ -2792,9 +2940,12 @@ echo $? > {cmdFolder}/exit
         /// <returns>A <see cref="ShellStream"/>.</returns>
         public ShellStream CreateShell()
         {
-            EnsureSshConnection();
+            lock (syncLock)
+            {
+                EnsureSshConnection();
 
-            return sshClient.CreateShellStream("dumb", 80, 24, 800, 600, 1024);
+                return sshClient.CreateShellStream("dumb", 80, 24, 800, 600, 1024);
+            }
         }
 
         /// <summary>
@@ -2803,11 +2954,14 @@ echo $? > {cmdFolder}/exit
         /// <returns>A <see cref="ShellStream"/>.</returns>
         public ShellStream CreateSudoShell()
         {
-            var shell = CreateShell();
+            lock (syncLock)
+            {
+                var shell = CreateShell();
 
-            shell.WriteLine("sudo");
+                shell.WriteLine("sudo");
 
-            return shell;
+                return shell;
+            }
         }
 
         /// <summary>
@@ -2839,43 +2993,46 @@ echo $? > {cmdFolder}/exit
             Covenant.Requires<ArgumentNullException>(address != null);
             Covenant.Requires<ArgumentException>(address.AddressFamily == System.Net.Sockets.AddressFamily.InterNetwork, "Only IPv4 addresses are currently supported.");
 
-            var result = SudoCommand("ip -o address");
-
-            if (result.ExitCode != 0)
+            lock (syncLock)
             {
-                throw new Exception($"Cannot determine primary network interface via [ip -o address]: [exitcode={result.ExitCode}] {result.AllText}");
-            }
+                var result = SudoCommand("ip -o address");
 
-            // $note(jeff.lill): We support only IPv4 addresses.
-
-            // The [ip -o address] returns network interfaces on single lines that
-            // will look something like:
-            // 
-            // 1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
-            // 1: lo    inet6 ::1/128 scope host \       valid_lft forever preferred_lft forever
-            // 2: enp2s0f0    inet 10.0.0.188/8 brd 10.255.255.255 scope global enp2s0f0\       valid_lft forever preferred_lft forever
-            // 2: enp2s0f0    inet6 2601:600:a07f:fd61:1ec1:deff:fe6f:4a4/64 scope global mngtmpaddr dynamic \       valid_lft 308725sec preferred_lft 308725sec
-            // 2: enp2s0f0    inet6 fe80::1ec1:deff:fe6f:4a4/64 scope link \       valid_lft forever preferred_lft forever
-            //
-            // We're going to look for the line with an [inet] (aka IPv4) address
-            // that matches the node's private address.
-
-            var regex = new Regex(@"^\d+:\s*(?<interface>[^\s]+)\s*inet\s*(?<address>[^/]+)", RegexOptions.IgnoreCase);
-
-            using (var reader = new StringReader(result.OutputText))
-            {
-                foreach (var line in reader.Lines())
+                if (result.ExitCode != 0)
                 {
-                    var match = regex.Match(line);
+                    throw new Exception($"Cannot determine primary network interface via [ip -o address]: [exitcode={result.ExitCode}] {result.AllText}");
+                }
 
-                    if (match.Success && match.Groups["address"].Value == address.ToString())
+                // $note(jeff.lill): We support only IPv4 addresses.
+
+                // The [ip -o address] returns network interfaces on single lines that
+                // will look something like:
+                // 
+                // 1: lo    inet 127.0.0.1/8 scope host lo\       valid_lft forever preferred_lft forever
+                // 1: lo    inet6 ::1/128 scope host \       valid_lft forever preferred_lft forever
+                // 2: enp2s0f0    inet 10.0.0.188/8 brd 10.255.255.255 scope global enp2s0f0\       valid_lft forever preferred_lft forever
+                // 2: enp2s0f0    inet6 2601:600:a07f:fd61:1ec1:deff:fe6f:4a4/64 scope global mngtmpaddr dynamic \       valid_lft 308725sec preferred_lft 308725sec
+                // 2: enp2s0f0    inet6 fe80::1ec1:deff:fe6f:4a4/64 scope link \       valid_lft forever preferred_lft forever
+                //
+                // We're going to look for the line with an [inet] (aka IPv4) address
+                // that matches the node's private address.
+
+                var regex = new Regex(@"^\d+:\s*(?<interface>[^\s]+)\s*inet\s*(?<address>[^/]+)", RegexOptions.IgnoreCase);
+
+                using (var reader = new StringReader(result.OutputText))
+                {
+                    foreach (var line in reader.Lines())
                     {
-                        return match.Groups["interface"].Value;
+                        var match = regex.Match(line);
+
+                        if (match.Success && match.Groups["address"].Value == address.ToString())
+                        {
+                            return match.Groups["interface"].Value;
+                        }
                     }
                 }
-            }
 
-            throw new NeonClusterException($"Cannot find network interface for [address={address}].");
+                throw new NeonClusterException($"Cannot find network interface for [address={address}].");
+            }
         }
 
         /// <summary>
@@ -2896,50 +3053,53 @@ echo $? > {cmdFolder}/exit
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
 
-            if (NeonClusterHelper.IsDockerPublicRegistry(registry))
+            lock (syncLock)
             {
-                return true;
-            }
-
-            try
-            {
-                CommandBundle bundle;
-
-                if (!string.IsNullOrEmpty(username))
+                if (NeonClusterHelper.IsDockerPublicRegistry(registry))
                 {
-                    bundle = new CommandBundle("cat password.txt | docker login", "--username", username, "--password-stdin", registry);
-
-                    bundle.AddFile("password.txt", password);
+                    return true;
                 }
-                else if (NeonClusterHelper.IsDockerPublicRegistry(registry))
-                {
-                    // Logging out of the Docker public registry is equivalent to 
-                    // setting a NULL username.
 
-                    bundle = new CommandBundle("docker logout", registry);
-                }
-                else
+                try
                 {
-                    // $todo(jeff.lill):
-                    //
-                    // I'm pretty sure that it's not possible to log into a 
-                    // a non-Docker public registry without a username so we'll
-                    // just return FALSE here.
-                    //
-                    // This could probably use some more research to be sure.
-                    // For example, I believe that Elasticsearch has their own
-                    // registry now and I don't know if they require an account.
-                    
+                    CommandBundle bundle;
+
+                    if (!string.IsNullOrEmpty(username))
+                    {
+                        bundle = new CommandBundle("cat password.txt | docker login", "--username", username, "--password-stdin", registry);
+
+                        bundle.AddFile("password.txt", password);
+                    }
+                    else if (NeonClusterHelper.IsDockerPublicRegistry(registry))
+                    {
+                        // Logging out of the Docker public registry is equivalent to 
+                        // setting a NULL username.
+
+                        bundle = new CommandBundle("docker logout", registry);
+                    }
+                    else
+                    {
+                        // $todo(jeff.lill):
+                        //
+                        // I'm pretty sure that it's not possible to log into a 
+                        // a non-Docker public registry without a username so we'll
+                        // just return FALSE here.
+                        //
+                        // This could probably use some more research to be sure.
+                        // For example, I believe that Elasticsearch has their own
+                        // registry now and I don't know if they require an account.
+
+                        return false;
+                    }
+
+                    var response = SudoCommand(bundle);
+
+                    return response.ExitCode == 0;
+                }
+                catch
+                {
                     return false;
                 }
-
-                var response = SudoCommand(bundle);
-
-                return response.ExitCode == 0;
-            }
-            catch
-            {
-                return false;
             }
         }
 
@@ -2959,20 +3119,23 @@ echo $? > {cmdFolder}/exit
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
 
-            if (NeonClusterHelper.IsDockerPublicRegistry(registry))
+            lock (syncLock)
             {
-                return true;
-            }
+                if (NeonClusterHelper.IsDockerPublicRegistry(registry))
+                {
+                    return true;
+                }
 
-            try
-            {
-                var response = SudoCommand("docker logout", registry);
+                try
+                {
+                    var response = SudoCommand("docker logout", registry);
 
-                return response.ExitCode == 0;
-            }
-            catch
-            {
-                return false;
+                    return response.ExitCode == 0;
+                }
+                catch
+                {
+                    return false;
+                }
             }
         }
 
@@ -2996,95 +3159,98 @@ echo $? > {cmdFolder}/exit
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
 
-            username = username ?? string.Empty;
-            password = password ?? string.Empty;
-
-            // Return immediately if this is a NOP for the current node and environment.
-
-            if (!NeonClusterHelper.IsDockerPublicRegistry(registry) || !Cluster.Definition.Docker.RegistryCache)
+            lock (syncLock)
             {
+                username = username ?? string.Empty;
+                password = password ?? string.Empty;
+
+                // Return immediately if this is a NOP for the current node and environment.
+
+                if (!NeonClusterHelper.IsDockerPublicRegistry(registry) || !Cluster.Definition.Docker.RegistryCache)
+                {
+                    return true;
+                }
+
+                // $hack(jeff.lill)
+
+                var nodeDefinition = Metadata as NodeDefinition;
+
+                if (nodeDefinition == null || nodeDefinition.Role != NodeRole.Manager)
+                {
+                    return true;
+                }
+
+                // Stop any existing registry cache container.  Note that we'll
+                // also determine Docker image being used so we can restart with
+                // the same one (if it has been changed since cluster deployment).
+
+                var image    = Cluster.Definition.Docker.RegistryCacheImage;   // Default to this if there's no container.
+                var response = DockerCommand(RunOptions.None, "docker", "ps", "-a", "--filter", "name=neon-registry-cache", "--format", "{{.Image}}");
+
+                if (response.ExitCode != 0)
+                {
+                    return false;
+                }
+
+                if (response.OutputText.Trim() != string.Empty)
+                {
+                    image = response.OutputText.Trim();
+                }
+
+                response = DockerCommand(RunOptions.None, "docker", "rm", "--force", "neon-registry-cache");
+
+                if (response.ExitCode != 0)
+                {
+                    return false;
+                }
+
+                // Start/restart the registry cache.
+
+                var runCommand = new CommandBundle(
+                    "docker run",
+                    "--name", "neon-registry-cache",
+                    "--detach",
+                    "--restart", "always",
+                    "--publish", $"{NeonHostPorts.DockerRegistryCache}:5000",
+                    "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",
+                    "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",
+                    "--env", $"HOSTNAME={Name}.{NeonHosts.RegistryCache}",
+                    "--env", $"REGISTRY={registry}",
+                    "--env", $"USERNAME={username}",
+                    "--env", $"PASSWORD={password}",
+                    "--env", "LOG_LEVEL=info",
+                    image);
+
+                response = SudoCommand(runCommand);
+
+                if (response.ExitCode != 0)
+                {
+                    return false;
+                }
+
+                // Upload a script so it will be easier to manually restart the container.
+
+                // $todo(jeff.lill);
+                //
+                // Persisting the registry credentials in the uploaded script here is 
+                // probably not the best idea, but I really like the idea of having
+                // this script available to make it easy to restart the cache if
+                // necessary.
+                //
+                // There are a couple of mitigating factors:
+                //
+                //      * The scripts folder can only be accessed by the ROOT user
+                //      * These are Docker public registry credentials only
+                //
+                // Users can create and use read-only credentials, which is 
+                // probably a best practice anyway for most clusters or they
+                // can deploy a custom registry (whose crdentials will be 
+                // persisted to Vault).
+
+                UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-registry-cache.sh"), runCommand.ToBash());
+
                 return true;
             }
-
-            // $hack(jeff.lill)
-
-            var nodeDefinition = Metadata as NodeDefinition;
-
-            if (nodeDefinition == null || nodeDefinition.Role != NodeRole.Manager)
-            {
-                return true;
-            }
-
-            // Stop any existing registry cache container.  Note that we'll
-            // also determine Docker image being used so we can restart with
-            // the same one (if it has been changed since cluster deployment).
-
-            var image    = Cluster.Definition.Docker.RegistryCacheImage;   // Default to this if there's no container.
-            var response = DockerCommand(RunOptions.None, "docker", "ps", "-a", "--filter", "name=neon-registry-cache", "--format", "{{.Image}}");
-
-            if (response.ExitCode != 0)
-            {
-                return false;
-            }
-
-            if (response.OutputText.Trim() != string.Empty)
-            {
-                image = response.OutputText.Trim();
-            }
-
-            response = DockerCommand(RunOptions.None, "docker", "rm", "--force", "neon-registry-cache");
-
-            if (response.ExitCode != 0)
-            {
-                return false;
-            }
-
-            // Start/restart the registry cache.
-
-            var runCommand = new CommandBundle(
-                "docker run",
-                "--name", "neon-registry-cache",
-                "--detach",
-                "--restart", "always",
-                "--publish", $"{NeonHostPorts.DockerRegistryCache}:5000",
-                "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",
-                "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",
-                "--env", $"HOSTNAME={Name}.{NeonHosts.RegistryCache}",
-                "--env", $"REGISTRY={registry}",
-                "--env", $"USERNAME={username}",
-                "--env", $"PASSWORD={password}",
-                "--env", "LOG_LEVEL=info",
-                image);
-
-            response = SudoCommand(runCommand);
-
-            if (response.ExitCode != 0)
-            {
-                return false;
-            }
-
-            // Upload a script so it will be easier to manually restart the container.
-
-            // $todo(jeff.lill);
-            //
-            // Persisting the registry credentials in the uploaded script here is 
-            // probably not the best idea, but I really like the idea of having
-            // this script available to make it easy to restart the cache if
-            // necessary.
-            //
-            // There are a couple of mitigating factors:
-            //
-            //      * The scripts folder can only be accessed by the ROOT user
-            //      * These are Docker public registry credentials only
-            //
-            // Users can create and use read-only credentials, which is 
-            // probably a best practice anyway for most clusters or they
-            // can deploy a custom registry (whose crdentials will be 
-            // persisted to Vault).
-
-            UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-registry-cache.sh"), runCommand.ToBash());
-
-            return true;
         }
     }
 }
