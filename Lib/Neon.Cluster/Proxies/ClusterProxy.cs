@@ -1322,7 +1322,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <returns>The <see cref="ServiceDetails"/> or <c>null</c> if the service doesn't exist.</returns>
         public ServiceDetails InspectService(string name, bool strict = false)
         {
-            var response = GetHealthyManager().DockerCommand(RunOptions.None, "service", "inspect", name);
+            var response = GetHealthyManager().DockerCommand(RunOptions.None, "docker", "service", "inspect", name);
 
             if (response.ExitCode != 0)
             {
