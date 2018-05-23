@@ -69,6 +69,9 @@ EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-proxy-manager", "Services\neon-proxy-manager\neon-proxy-manager.csproj", "{A6FE18DC-60DD-48D8-BF2E-4432718EFD42}"
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Test", "Test", "{83DC75D5-800D-42F7-9812-BD198A62DD0B}"
+	ProjectSection(SolutionItems) = preProject
+		Test\secrets.yaml = Test\secrets.yaml
+	EndProjectSection
 EndProject
 Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Test.Neon.Models.shared", "Test\Test.Neon.Models.shared\Test.Neon.Models.shared.shproj", "{29E7763D-85D9-4174-92E1-DF739099A36A}"
 EndProject

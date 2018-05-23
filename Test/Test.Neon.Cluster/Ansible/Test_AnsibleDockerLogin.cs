@@ -80,8 +80,8 @@ namespace TestNeonCluster
       neon_docker_login:
         state: present
         registry: registry-1.docker.io
-        username: ""{{ docker_test_username }}""
-        password: ""{{ docker_test_password }}""
+        username: ""{{ DOCKER_TEST_USERNAME }}""
+        password: ""{{ DOCKER_TEST_PASSWORD }}""
 ";
                 var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook, "--vault-id", TestHelper.AnsiblePasswordFile);
                 var taskResult = results.GetTaskResult("login");
@@ -105,8 +105,8 @@ namespace TestNeonCluster
       neon_docker_login:
         state: present
         registry: registry-1.docker.io
-        username: ""{{ docker_test_username }}""
-        password: ""{{ docker_test_password }}""
+        username: ""{{ DOCKER_TEST_USERNAME }}""
+        password: ""{{ DOCKER_TEST_PASSWORD }}""
 ";
                 results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook, "--vault-id", TestHelper.AnsiblePasswordFile);
                 taskResult = results.GetTaskResult("login");
