@@ -53,16 +53,6 @@ namespace TestNeonCluster
             return $"neon-test-{hostId++}.com";
         }
 
-        /// <summary>
-        /// Returns the DNS entry for a hostname.
-        /// </summary>
-        /// <param name="host">The hostname.</param>
-        /// <returns>The <see cref="DnsEntry"/> or <c>null</c>.</returns>
-        private DnsEntry GetDnsEntry(string host)
-        {
-            return cluster.Consul.KV.GetObjectOrDefault<DnsEntry>($"{NeonClusterConst.ConsulDnsEntriesKey}/{host}").Result;
-        }
-
         [Fact]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void CheckArgs()
@@ -122,7 +112,7 @@ $@"
 
             // Should start out without this entry.
 
-            Assert.Null(GetDnsEntry(host));
+            Assert.Null(cluster.Cluster.LocalDns.Get(host));
 
             //-----------------------------------------------------------------
             // Create a DNS entry and then verify that it was added.
@@ -149,7 +139,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
             
-            var entry = GetDnsEntry(host);
+            var entry = cluster.Cluster.LocalDns.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("1.1.1.1", entry.Endpoints.Single().Target);
@@ -168,7 +158,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            entry = GetDnsEntry(host);
+            entry = cluster.Cluster.LocalDns.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("1.1.1.1", entry.Endpoints.Single().Target);
@@ -183,7 +173,7 @@ $@"
 
             // Should start out without this entry.
 
-            Assert.Null(GetDnsEntry(host));
+            Assert.Null(cluster.Cluster.LocalDns.Get(host));
 
             // Create a DNS entry and then verify that it was added.
 
@@ -209,7 +199,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var entry = GetDnsEntry(host);
+            var entry = cluster.Cluster.LocalDns.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("1.1.1.1", entry.Endpoints.Single().Target);
@@ -240,7 +230,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            entry = GetDnsEntry(host);
+            entry = cluster.Cluster.LocalDns.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
@@ -259,7 +249,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            entry = GetDnsEntry(host);
+            entry = cluster.Cluster.LocalDns.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
@@ -274,7 +264,7 @@ $@"
 
             // Should start out without this entry.
 
-            Assert.Null(GetDnsEntry(host));
+            Assert.Null(cluster.Cluster.LocalDns.Get(host));
 
             //-----------------------------------------------------------------
             // Create a DNS entry and then verify that it was added.
@@ -301,7 +291,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var entry = GetDnsEntry(host);
+            var entry = cluster.Cluster.LocalDns.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
@@ -319,7 +309,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            entry = GetDnsEntry(host);
+            entry = cluster.Cluster.LocalDns.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
@@ -348,7 +338,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Null(GetDnsEntry(host));
+            Assert.Null(cluster.Cluster.LocalDns.Get(host));
 
             //-----------------------------------------------------------------
             // Run the playbook again but this time nothing should
@@ -362,7 +352,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Null(GetDnsEntry(host));
+            Assert.Null(cluster.Cluster.LocalDns.Get(host));
         }
     }
 }

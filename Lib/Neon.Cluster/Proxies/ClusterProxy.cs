@@ -148,6 +148,7 @@ namespace Neon.Cluster
             this.nodeProxyCreator    = nodeProxyCreator;
             this.DockerSecret        = new DockerSecretsManager(this);
             this.Certificate         = new CertiticateManager(this);
+            this.LocalDns            = new LocalDnsManager(this);
             this.PublicLoadBalancer  = new LoadBalanceManager(this, "public");
             this.PrivateLoadBalancer = new LoadBalanceManager(this, "private");
 
@@ -240,14 +241,19 @@ namespace Neon.Cluster
         public SshProxy<NodeDefinition> FirstManager { get; private set; }
 
         /// <summary>
-        /// Returns the object to be used to manage cluster Docker secrets.
+        /// Manages cluster Docker secrets.
         /// </summary>
         public DockerSecretsManager DockerSecret { get; private set; }
 
         /// <summary>
-        /// Returns the object to be used to manage cluster TLS certificates.
+        /// Manages cluster TLS certificates.
         /// </summary>
         public CertiticateManager Certificate { get; private set; }
+
+        /// <summary>
+        /// Manages the local cluster DNS.
+        /// </summary>
+        public LocalDnsManager LocalDns { get; private set; }
 
         /// <summary>
         /// Manages the cluster's public load balancer.

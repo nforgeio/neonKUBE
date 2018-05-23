@@ -54,7 +54,7 @@ namespace TestNeonCluster
             // that it actually resolves correctly on a manager, worker, and
             // pet (if the cluster includes workers and pets).
 
-            cluster.SetDnsEntry("foo.test.com",
+            cluster.SetDnsEntry(
                 new DnsEntry()
                 {
                     Hostname  = "foo.test.com",
@@ -68,23 +68,24 @@ namespace TestNeonCluster
                     }
                 });
 
-            var item = cluster.ListDnsEntries().SingleOrDefault(i => i.Name == "foo.test.com");
+            var item = cluster.ListDnsEntries().SingleOrDefault(i => i.Hostname == "foo.test.com");
 
             Assert.NotNull(item);
-            Assert.Equal("foo.test.com", item.Entry.Hostname);
-            Assert.Single(item.Entry.Endpoints);
+            Assert.Equal("foo.test.com", item.Hostname);
+            Assert.Single(item.Endpoints);
 
-            var endpoint = item.Entry.Endpoints.First();
+            var endpoint = item.Endpoints.First();
 
             Assert.Equal("1.2.3.4", endpoint.Target);
             Assert.False(endpoint.Check);
 
             // Test a DNS entry marked as belonging to the system.
 
-            cluster.SetDnsEntry("(neon)-bar.test.com",
+            cluster.SetDnsEntry(
                 new DnsEntry()
                 {
                     Hostname  = "bar.test.com",
+                    IsSystem  = true,
                     Endpoints = new List<DnsEndpoint>()
                     {
                         new DnsEndpoint()
@@ -101,17 +102,18 @@ namespace TestNeonCluster
 
             Assert.Single(cluster.ListDnsEntries());
             Assert.Equal(2, cluster.ListDnsEntries(includeSystem: true).Count);
+            Assert.True(cluster.ListDnsEntries(includeSystem: true).Single(i => i.Hostname == "bar.test.com").IsSystem);
 
             //-----------------------------------------------------------------
             // Re-verify the non-system entry to ensure it didn't get munged.
 
-            item = cluster.ListDnsEntries().SingleOrDefault(i => i.Name == "foo.test.com");
+            item = cluster.ListDnsEntries().SingleOrDefault(i => i.Hostname == "foo.test.com");
 
             Assert.NotNull(item);
-            Assert.Equal("foo.test.com", item.Entry.Hostname);
-            Assert.Single(item.Entry.Endpoints);
+            Assert.Equal("foo.test.com", item.Hostname);
+            Assert.Single(item.Endpoints);
 
-            endpoint = item.Entry.Endpoints.First();
+            endpoint = item.Endpoints.First();
 
             Assert.Equal("1.2.3.4", endpoint.Target);
             Assert.False(endpoint.Check);
@@ -119,13 +121,13 @@ namespace TestNeonCluster
             //-----------------------------------------------------------------
             // Verify the new system entry.
 
-            item = cluster.ListDnsEntries(includeSystem: true).SingleOrDefault(i => i.Name == "(neon)-bar.test.com");
+            item = cluster.ListDnsEntries(includeSystem: true).SingleOrDefault(i => i.Hostname == "(neon)-bar.test.com");
 
             Assert.NotNull(item);
-            Assert.Equal("bar.test.com", item.Entry.Hostname);
-            Assert.Single(item.Entry.Endpoints);
+            Assert.Equal("bar.test.com", item.Hostname);
+            Assert.Single(item.Endpoints);
 
-            endpoint = item.Entry.Endpoints.First();
+            endpoint = item.Endpoints.First();
 
             Assert.Equal("5.6.7.8", endpoint.Target);
             Assert.False(endpoint.Check);

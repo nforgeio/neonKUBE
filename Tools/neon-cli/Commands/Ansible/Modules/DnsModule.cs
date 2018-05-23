@@ -85,6 +85,8 @@ namespace NeonCli.Ansible
         //                                      HOSTNAME    CNAME like host: www.google.com
         //                                      GROUP       Host group like: group=managers
         //
+        // system       no          no          yes/no      Indicates a built-in system entry
+        //
         // check        no          no          yes/no      Require endpoint health checks
         //
         //
@@ -189,6 +191,7 @@ namespace NeonCli.Ansible
         {
             "state",
             "hostname",
+            "system",
             "endpoints"
         };
 
@@ -223,6 +226,10 @@ namespace NeonCli.Ansible
             {
                 throw new ArgumentException($"[hostname={hostname}] is not a valid DNS hostname.");
             }
+
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [system]");
+
+            var system = context.ParseBool("system") ?? false;
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [state]");
 
@@ -316,18 +323,9 @@ namespace NeonCli.Ansible
                     var newEntry = new DnsEntry()
                     {
                         Hostname  = hostname,
+                        IsSystem  = system,
                         Endpoints = endpoints
                     };
-
-                    // Note that the entry host name may be prefixed by: "(neon)-"
-                    // to specify an internal neonCLUSTER entry.  We need to remove
-                    // this from the entry record but keep it when persisting the
-                    // entry to Consul.
-
-                    if (newEntry.Hostname.StartsWith(NeonClusterConst.SystemDnsHostnamePrefix, StringComparison.InvariantCultureIgnoreCase))
-                    {
-                        newEntry.Hostname = newEntry.Hostname.Substring(NeonClusterConst.SystemDnsHostnamePrefix.Length);
-                    }
 
                     // Validate the new DNS entry.
 

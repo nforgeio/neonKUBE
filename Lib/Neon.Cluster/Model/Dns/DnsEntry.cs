@@ -35,6 +35,13 @@ namespace Neon.Cluster
         public string Hostname { get; set; }
 
         /// <summary>
+        /// Indicates that this is a built-in system entry.
+        /// </summary>
+        [JsonProperty(PropertyName = "IsSystem", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(false)]
+        public bool IsSystem { get; set; }
+
+        /// <summary>
         /// Lists the domain endpoints.
         /// </summary>
         [JsonProperty(PropertyName = "Endpoints", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]

@@ -62,7 +62,7 @@ namespace NeonCli.Ansible
         //                                      prune       removed unreferenced image layers
         //
         // hostname     see comment                         registry public DNS name
-        //                                                  required if [state=present]
+        //                                                  required if [state=present or absent]
         //
         // certificate  see comment                         registry PEM encode TLS certificate
         //                                                  and private key
@@ -252,7 +252,8 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var cluster = NeonClusterHelper.Cluster;
+            var         cluster = NeonClusterHelper.Cluster;
+            string      hostname;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {
@@ -328,6 +329,13 @@ namespace NeonCli.Ansible
             switch (state)
             {
                 case "absent":
+
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [hostname]");
+
+                    if (!context.Arguments.TryGetValue<string>("hostname", out hostname))
+                    {
+                        throw new ArgumentException($"[hostname] module argument is required.");
+                    }
 
                     if (currentService == null)
                     {
@@ -467,10 +475,10 @@ namespace NeonCli.Ansible
 
                     cluster.RemoveRegistryCredential(currentHostname);
 
-                    // Remove the [neon-registry] DNS redirect.
+                    // Remove the local DNS entry.
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [{currentHostname}] DNS redirect.");
-                    cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}neon-registry");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [{currentHostname}] local DNS entry.");
+                    cluster.LocalDns.Remove(hostname);
                     break;
 
                 case "present":
@@ -485,7 +493,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [hostname]");
 
-                    if (!context.Arguments.TryGetValue<string>("hostname", out var hostname))
+                    if (!context.Arguments.TryGetValue<string>("hostname", out hostname))
                     {
                         throw new ArgumentException($"[hostname] module argument is required.");
                     }
@@ -626,7 +634,7 @@ namespace NeonCli.Ansible
                         cluster.Consul.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/hostname", hostname).Wait();
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Adding local cluster DNS entry for [{hostname}].");
-                        cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}neon-registry", dnsRedirect).Wait();
+                        cluster.LocalDns.Set(dnsRedirect);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Writing load balancer rule.");
                         cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
@@ -682,7 +690,7 @@ namespace NeonCli.Ansible
                             cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
 
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster DNS entry for [{hostname}].");
-                            cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}neon-registry", dnsRedirect).Wait();
+                            cluster.LocalDns.Set(dnsRedirect);
                         }
 
                         if (hostnameChanged)
@@ -838,6 +846,7 @@ docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
             return new DnsEntry()
             {
                 Hostname  = hostname,
+                IsSystem  = true,
                 Endpoints = new List<DnsEndpoint>()
                             {
                                 new DnsEndpoint()

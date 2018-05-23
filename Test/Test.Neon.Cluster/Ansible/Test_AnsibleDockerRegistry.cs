@@ -59,7 +59,8 @@ namespace TestNeonCluster
 
             clusterProxy.Certificate.Remove("neon-registry");
             clusterProxy.PublicLoadBalancer.RemoveRule("neon-registry");
-            clusterProxy.Consul.KV.Delete($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}neon-registry").Wait();
+            clusterProxy.LocalDns.Remove("xunit-registry.neonforge.net");
+            clusterProxy.LocalDns.Remove("xunit-registry2.neonforge.net");
             clusterProxy.RemoveRegistryCredential("xunit-registry.neonforge.net");
             clusterProxy.RemoveRegistryCredential("xunit-registry2.neonforge.net");
         }
@@ -101,7 +102,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Changed);
 
                 Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Name == $"{NeonClusterConst.SystemDnsHostnamePrefix}neon-registry"));
+                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
                 Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
@@ -120,6 +121,11 @@ namespace TestNeonCluster
                     Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
+                var dnsEntry = clusterProxy.LocalDns.Get("xunit-registry.neonforge.net");
+
+                Assert.NotNull(dnsEntry);
+                Assert.True(dnsEntry.IsSystem);
+
                 //-------------------------------------------------------------
                 // Run the playbook again and verify that nothing changed.
 
@@ -130,7 +136,7 @@ namespace TestNeonCluster
                 Assert.False(taskResult.Changed);
 
                 Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Name == $"{NeonClusterConst.SystemDnsHostnamePrefix}neon-registry"));
+                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
                 Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
@@ -148,6 +154,11 @@ namespace TestNeonCluster
                 {
                     Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
+
+                dnsEntry = clusterProxy.LocalDns.Get("xunit-registry.neonforge.net");
+
+                Assert.NotNull(dnsEntry);
+                Assert.True(dnsEntry.IsSystem);
 
                 //-------------------------------------------------------------
                 // Remove the registry and verify that service and related items
@@ -172,7 +183,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Changed);
 
                 Assert.Empty(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Empty(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Name == $"{NeonClusterConst.SystemDnsHostnamePrefix}neon-registry"));
+                Assert.Empty(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
                 Assert.Empty(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Empty(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
@@ -187,6 +198,10 @@ namespace TestNeonCluster
                 {
                     Assert.Empty(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
+
+                dnsEntry = clusterProxy.LocalDns.Get("xunit-registry.neonforge.net");
+
+                Assert.Null(dnsEntry);
 
                 //-------------------------------------------------------------
                 // Run the playbook again and verify that nothing changed.
@@ -198,7 +213,7 @@ namespace TestNeonCluster
                 Assert.False(taskResult.Changed);
 
                 Assert.Empty(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Empty(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Name == $"{NeonClusterConst.SystemDnsHostnamePrefix}neon-registry"));
+                Assert.Empty(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
                 Assert.Empty(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
                 Assert.Empty(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
@@ -213,6 +228,10 @@ namespace TestNeonCluster
                 {
                     Assert.Empty(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
+
+                dnsEntry = clusterProxy.LocalDns.Get("xunit-registry.neonforge.net");
+
+                Assert.Null(dnsEntry);
             }
         }
     }

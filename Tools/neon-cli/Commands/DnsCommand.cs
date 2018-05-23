@@ -21,6 +21,10 @@ using Neon.Common;
 using Neon.Net;
 using System.Diagnostics.Contracts;
 
+// $todo(jeff.lill):
+//
+// Add options to manage built-in system entries.
+
 namespace NeonCli
 {
     /// <summary>
@@ -374,9 +378,9 @@ NOTE: DNS hostnames prefixed by ""(neon)-"" identify built-in
 
             host = host.ToLowerInvariant();
 
-            var entryDefDef = cluster.Consul.KV.GetObjectOrDefault<DnsEntry>(GetEntryConsulKey(host)).Result;
+            var entry = cluster.LocalDns.Get(host);
 
-            if (entryDefDef == null)
+            if (entry == null)
             {
                 Console.Error.WriteLine($"*** ERROR: DNS entry for [{host}] does not exist.");
                 Program.Exit(1);
@@ -384,11 +388,11 @@ NOTE: DNS hostnames prefixed by ""(neon)-"" identify built-in
 
             if (yaml)
             {
-                Console.WriteLine(NeonHelper.YamlSerialize(entryDefDef));
+                Console.WriteLine(NeonHelper.YamlSerialize(entry));
             }
             else
             {
-                Console.WriteLine(NeonHelper.JsonSerialize(entryDefDef, Formatting.Indented));
+                Console.WriteLine(NeonHelper.JsonSerialize(entry, Formatting.Indented));
             }
         }
 
@@ -398,21 +402,20 @@ NOTE: DNS hostnames prefixed by ""(neon)-"" identify built-in
         /// <param name="commandLine">The command line.</param>
         private void ListEntries(CommandLine commandLine)
         {
-            var result = cluster.Consul.KV.ListOrDefault<DnsEntry>(NeonClusterConst.ConsulDnsEntriesKey).Result;
+            var entries = cluster.LocalDns.List();
 
             Console.WriteLine();
 
-            if (result == null)
+            if (entries.Count == 0)
             {
                 Console.WriteLine("[0] DNS host entries");
                 return;
             }
 
-            var entryDefs    = result.ToList();
-            var maxHostWidth = entryDefs.Max(t => t.Hostname.Length);
+            var maxHostWidth = entries.Max(item => item.Hostname.Length);
             var answers      = GetAnswers();
 
-            foreach (var entry in entryDefs)
+            foreach (var entry in entries)
             {
                 var host         = entry.Hostname.ToLowerInvariant();
                 var hostPart     = $"{host} {new string(' ', maxHostWidth - host.Length)}";
@@ -427,19 +430,7 @@ NOTE: DNS hostnames prefixed by ""(neon)-"" identify built-in
             }
 
             Console.WriteLine();
-            Console.WriteLine($"[{entryDefs.Count}] DNS host entries");
-        }
-
-        /// <summary>
-        /// Returns the Consul key for a DNS host entry based on its hostname.
-        /// </summary>
-        /// <param name="hostname">The entry hostname.</param>
-        /// <returns>The Consul key path.</returns>
-        private string GetEntryConsulKey(string hostname)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
-
-            return $"{NeonClusterConst.ConsulDnsEntriesKey}/{hostname}";
+            Console.WriteLine($"[{entries.Count}] DNS host entries");
         }
 
         /// <summary>
@@ -456,7 +447,7 @@ NOTE: DNS hostnames prefixed by ""(neon)-"" identify built-in
                 Program.Exit(1);
             }
 
-            cluster.Consul.KV.Delete(GetEntryConsulKey(entryHost)).Wait();
+            cluster.LocalDns.Remove(entryHost);
             Console.WriteLine($"Removed [{entryHost}] (if it existed).");
         }
 
@@ -516,19 +507,6 @@ NOTE: DNS hostnames prefixed by ""(neon)-"" identify built-in
                 dnsEntry = NeonHelper.JsonOrYamlDeserialize<DnsEntry>(data, strict: true);
             }
 
-            // Note that the entry host name may be prefixed by: "(neon)-"
-            // to specify an internal neonCLUSTER entry.  We need to remove
-            // this from the entry record but keep it when persisting the
-            // entry to Consul.
-
-            var entryName = dnsEntry.Hostname;
-
-            if (dnsEntry.Hostname.StartsWith(NeonClusterConst.SystemDnsHostnamePrefix, StringComparison.InvariantCultureIgnoreCase))
-            {
-                dnsEntry.Hostname = dnsEntry.Hostname.Substring(NeonClusterConst.SystemDnsHostnamePrefix.Length);
-                entryName         = NeonClusterConst.SystemDnsHostnamePrefix + dnsEntry.Hostname;
-            }
-
             // Check for errors.
 
             var errors = dnsEntry.Validate(cluster.Definition, cluster.Definition.GetNodeGroups(excludeAllGroup: true));
@@ -545,12 +523,10 @@ NOTE: DNS hostnames prefixed by ""(neon)-"" identify built-in
 
             // Persist the entry to Consul.
 
-            var key = GetEntryConsulKey(entryName);
-
-            cluster.Consul.KV.PutObject(key, dnsEntry, Formatting.Indented).Wait();
+            cluster.LocalDns.Set(dnsEntry);
 
             Console.WriteLine();
-            Console.WriteLine($"Saved [{entryName}] DNS host entry.");
+            Console.WriteLine($"Saved [{dnsEntry.Hostname}] DNS host entry.");
         }
 
         /// <summary>
