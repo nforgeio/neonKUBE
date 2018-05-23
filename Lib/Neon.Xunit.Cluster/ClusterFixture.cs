@@ -760,10 +760,10 @@ namespace Neon.Xunit.Cluster
         /// <b>DO NOTE USE:</b> This inherited method from <see cref="DockerFixture"/> doesn't
         /// make sense for a multi-node cluster.
         /// </summary>
-        /// <param name="removeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="DockerFixture.ContainerInfo"/>.</returns>
         /// <exception cref="InvalidOperationException">Thrown always.</exception>
-        public new List<ContainerInfo> ListContainers(bool removeSystem = false)
+        public new List<ContainerInfo> ListContainers(bool includeSystem = false)
         {
             base.CheckDisposed();
             this.CheckCluster();
@@ -1058,11 +1058,11 @@ namespace Neon.Xunit.Cluster
                 actions.Add(
                     () =>
                     {
-                        try
+                        using (var nodeProxy = node.Clone())
                         {
-                            node.Connect();
+                            nodeProxy.Connect();
 
-                            var result = node.DockerCommand(RunOptions.None, "docker", "volume", "ls", "--format", "{{.Name}}");
+                            var result = nodeProxy.DockerCommand(RunOptions.None, "docker", "volume", "ls", "--format", "{{.Name}}");
 
                             if (result.ExitCode != 0)
                             {
@@ -1106,17 +1106,13 @@ namespace Neon.Xunit.Cluster
 
                             foreach (var volume in volumes)
                             {
-                                result = node.DockerCommand(RunOptions.None, "docker", "volume", "rm", volumes);
+                                result = nodeProxy.DockerCommand(RunOptions.None, "docker", "volume", "rm", volumes);
 
                                 if (result.ExitCode != 0 && !result.ErrorText.Contains("volume is in use"))
                                 {
-                                    throw new Exception($"Cannot remove Docker volume on [node={node.Name}]: {result.AllText}");
+                                    throw new Exception($"Cannot remove Docker volume on [node={nodeProxy.Name}]: {result.AllText}");
                                 }
                             }
-                        }
-                        finally
-                        {
-                            node.Disconnect();
                         }
                     });
             }
@@ -1168,9 +1164,9 @@ namespace Neon.Xunit.Cluster
         /// Lists load balancer rules.
         /// </summary>
         /// <param name="loadBalancerName">The load balancer name (<b>public</b> or <b>private</b>).</param>
-        /// <param name="removeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
         /// <returns>The rules for the named load balancer.</returns>
-        public List<LoadBalancerRule> ListLoadBalancerRules(string loadBalancerName, bool removeSystem = false)
+        public List<LoadBalancerRule> ListLoadBalancerRules(string loadBalancerName, bool includeSystem = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(loadBalancerName));
 
@@ -1180,7 +1176,7 @@ namespace Neon.Xunit.Cluster
             var loadbalancer = cluster.GetLoadBalancerManager(loadBalancerName);
             var rules        = loadbalancer.ListRules();
 
-            if (removeSystem)
+            if (includeSystem)
             {
                 return rules.ToList();
             }
@@ -1357,16 +1353,16 @@ namespace Neon.Xunit.Cluster
         /// <summary>
         /// Lists the names of the cluster certificates.
         /// </summary>
-        /// <param name="removeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
+        /// <param name="includeSystem">Optionally include built-in neonCLUSTER containers whose names start with <b>neon-</b>.</param>
         /// <returns>The certificate names.</returns>
-        public List<string> ListCertificates(bool removeSystem = false)
+        public List<string> ListCertificates(bool includeSystem = false)
         {
             base.CheckDisposed();
             this.CheckCluster();
 
             var certificates = cluster.Certificate.List();
 
-            if (removeSystem)
+            if (includeSystem)
             {
                 return certificates.ToList();
             }
