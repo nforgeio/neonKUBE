@@ -191,7 +191,10 @@ namespace Neon.Cluster
         /// <returns></returns>
         public SshProxy<TMetadata> Clone()
         {
-            return new SshProxy<TMetadata>(Name, PublicAddress, PrivateAddress, credentials, logWriter);
+            return new SshProxy<TMetadata>(Name, PublicAddress, PrivateAddress, credentials, logWriter)
+            {
+                Metadata = this.Metadata
+            };
         }
 
         /// <summary>
