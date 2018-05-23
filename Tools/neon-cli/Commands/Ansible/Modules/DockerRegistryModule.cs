@@ -28,6 +28,7 @@ using Neon.Cryptography;
 using Neon.Common;
 using Neon.IO;
 using Neon.Net;
+using Neon.Retry;
 
 namespace NeonCli.Ansible
 {
@@ -304,17 +305,17 @@ namespace NeonCli.Ansible
 
             if (!string.IsNullOrEmpty(currentHostname))
             {
-                context.WriteLine(AnsibleVerbosity.Trace, $"Reading existing credentials for [{currentHostname}].");
+                context.WriteLine(AnsibleVerbosity.Trace, $"Reading existing registry credentials for [{currentHostname}].");
 
                 currentCredentials = cluster.GetRegistryCredential(currentHostname);
 
                 if (currentCredentials != null)
                 {
-                    context.WriteLine(AnsibleVerbosity.Info, $"Credentials for [{currentHostname}] exist.");
+                    context.WriteLine(AnsibleVerbosity.Info, $"Registry credentials for [{currentHostname}] exist.");
                 }
                 else
                 {
-                    context.WriteLine(AnsibleVerbosity.Info, $"Credentials for [{currentHostname}] do not exist.");
+                    context.WriteLine(AnsibleVerbosity.Info, $"Registry credentials for [{currentHostname}] do not exist.");
                 }
             }
 
@@ -396,21 +397,54 @@ namespace NeonCli.Ansible
                     context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] volumes.");
 
                     var volumeRemoveActions = new List<Action>();
+                    var volumeRetryPolicy   = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(2));
 
                     foreach (var node in cluster.Managers)
                     {
                         volumeRemoveActions.Add(
                             () =>
                             {
-                                var removeResponse = node.DockerCommand(RunOptions.None, "docker", "volume", "rm", "neon-registry");
+                                // $hack(jeff.lill):
+                                //
+                                // Docker service removal appears to be synchronous but the removal of the
+                                // actual service task containers is not.  We're going to detect this and
+                                // throw a [TransientException] and then retry.
 
-                                if (removeResponse.ExitCode != 0)
+                                lock (context)
                                 {
-                                    lock (syncLock)
-                                    {
-                                        context.WriteLine(AnsibleVerbosity.Info, $"Error removing [neon-registry] volume from [{node.Name}: {removeResponse.ErrorText}");
-                                    }
+                                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing [neon-registry] volume on [{node.Name}].");
                                 }
+
+                                volumeRetryPolicy.InvokeAsync(
+                                    async () =>
+                                    {
+                                        var response = node.DockerCommand(RunOptions.None, "docker", "volume", "rm", "neon-registry");
+
+                                        if (response.ExitCode != 0)
+                                        {
+                                            var message = $"Error removing [neon-registry] volume from [{node.Name}: {response.ErrorText}";
+
+                                            lock (syncLock)
+                                            {
+                                                context.WriteLine(AnsibleVerbosity.Info, message);
+                                            }
+
+                                            if (response.AllText.Contains("volume is in use"))
+                                            {
+                                                throw new TransientException(message);
+                                            }
+                                        }
+                                        else
+                                        {
+                                            lock (context)
+                                            {
+                                                context.WriteLine(AnsibleVerbosity.Trace, $"Removed [neon-registry] volume on [{node.Name}].");
+                                            }
+                                        }
+
+                                        await Task.Delay(0);
+
+                                    }).Wait();
                             });
                     }
 
@@ -423,16 +457,20 @@ namespace NeonCli.Ansible
                     context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] load balancer certificate.");
                     cluster.Certificate.Remove("neon-registry");
 
-                    // Remove any related Vault state.
+                    // Remove any related Consul state.
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] Consul [hostname] and [secret].");
                     cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Wait();
                     cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Wait();
 
+                    // Remove the registry credentials from Vault.
+
+                    cluster.RemoveRegistryCredential(currentHostname);
+
                     // Remove the [neon-registry] DNS redirect.
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [{currentHostname}] DNS redirect.");
-                    cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}{currentHostname}");
+                    cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}neon-registry");
                     break;
 
                 case "present":
@@ -596,6 +634,9 @@ namespace NeonCli.Ansible
                         context.WriteLine(AnsibleVerbosity.Trace, $"Touching certificate.");
                         cluster.Certificate.Touch();
 
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Saving [{hostname}] registry credentials to Vault.");
+                        cluster.SetRegistryCredential(hostname, username, password);
+
                         context.WriteLine(AnsibleVerbosity.Trace, $"Creating the [neon-registry] service.");
 
                         var createResponse = manager.DockerCommand(RunOptions.None,
@@ -611,7 +652,6 @@ namespace NeonCli.Ansible
                             "--mount", "type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry",
                             "--network", "neon-public",
                             "--restart-delay", "10s",
-                            "--log-driver", "json-file",    // $todo(jeff.lill): Delete this
                             image);
 
                         if (createResponse.ExitCode != 0)
@@ -645,6 +685,21 @@ namespace NeonCli.Ansible
                             cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}neon-registry", dnsRedirect).Wait();
                         }
 
+                        if (hostnameChanged)
+                        {
+                            if (!string.IsNullOrEmpty(currentHostname))
+                            {
+                                context.WriteLine(AnsibleVerbosity.Trace, $"Removing old [{currentHostname}] registry credentials from Vault.");
+                                cluster.RemoveRegistryCredential(currentHostname);
+                            }
+                        }
+
+                        if (hostnameChanged || usernameChanged || passwordChanged)
+                        {
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Saving [{hostname}] registry credentials to Vault.");
+                            cluster.SetRegistryCredential(hostname, username, password);
+                        }
+
                         if (certificateChanged || hostnameChanged)
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Touching certificate.");
@@ -655,18 +710,17 @@ namespace NeonCli.Ansible
 
                         var updateResponse = manager.DockerCommand(RunOptions.None,
                             "docker service update",
-                            "--env-rm", "USERNAME",  "--env-add", $"USERNAME={username}",
-                            "--env-rm", "PASSWORD",  "--env-add", $"PASSWORD={password}",
-                            "--env-rm", "SECRET",    "--env-add", $"SECRET={secret}",
-                            "--env-rm", "LOG_LEVEL", "--env-add", $"LOG_LEVEL=info",
-                            "--env-rm", "READ_ONLY", "--env-add", $"READ_ONLY=false",
+                            "--env-add", $"USERNAME={username}",
+                            "--env-add", $"PASSWORD={password}",
+                            "--env-add", $"SECRET={secret}",
+                            "--env-add", $"LOG_LEVEL=info",
+                            "--env-add", $"READ_ONLY=false",
                             "--image", image,
                             "neon-registry");
 
                         if (updateResponse.ExitCode != 0)
                         {
                             context.WriteErrorLine($"[neon-registry] service update failed: {updateResponse.ErrorText}");
-context.WriteErrorLine(updateResponse.BashCommand);
                             return;
                         }
 
