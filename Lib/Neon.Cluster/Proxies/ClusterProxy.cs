@@ -1326,7 +1326,7 @@ vault policy-write {policy.Name} policy.hcl
 
             if (response.ExitCode != 0)
             {
-                if (response.AllText.Contains("inspect: unrecognized service"))
+                if (response.AllText.Contains("Status: Error: no such service:"))
                 {
                     return null;
                 }
