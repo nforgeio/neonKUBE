@@ -318,7 +318,7 @@ namespace NeonCli.Ansible
                 }
             }
 
-            // Obtain the current registry certificate, if any.
+            // Obtain the current registry TLS certificate (if any).
 
             var currentCertificate = cluster.Certificate.Get("neon-registry");
 
@@ -390,7 +390,10 @@ namespace NeonCli.Ansible
                     // Delete the [neon-registry] service and volume.  Note that
                     // the volume should exist on all of the manager nodes.
 
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] service.");
                     manager.DockerCommand(RunOptions.None, "docker", "service", "rm", "neon-registry");
+
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] volumes.");
 
                     var volumeRemoveActions = new List<Action>();
 
@@ -415,13 +418,21 @@ namespace NeonCli.Ansible
 
                     // Remove the load balancer rule and certificate.
 
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] load balancer rule.");
                     cluster.PublicLoadBalancer.RemoveRule("neon-registry");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] load balancer certificate.");
                     cluster.Certificate.Remove("neon-registry");
 
                     // Remove any related Vault state.
 
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] Consul [hostname] and [secret].");
                     cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Wait();
                     cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Wait();
+
+                    // Remove the [neon-registry] DNS redirect.
+
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [{currentHostname}] DNS redirect.");
+                    cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}{currentHostname}");
                     break;
 
                 case "present":
@@ -523,7 +534,9 @@ namespace NeonCli.Ansible
 
                     if (certificateChanged)
                     {
-                        context.WriteLine(AnsibleVerbosity.Info, $"[certificate] changed from [{currentCertificate?.CombinedNormalizedPem}] --> [{certificate?.CombinedNormalizedPem}]");
+                        var currentCertRedacted = currentCertificate != null ? "**REDACTED**" : "**NONE**";
+
+                        context.WriteLine(AnsibleVerbosity.Info, $"[certificate] changed from [{currentCertRedacted}] --> [**REDACTED**]");
                     }
 
                     // Handle CHECK-MODE.
@@ -556,19 +569,7 @@ namespace NeonCli.Ansible
                     // to hit the external router interface with the expectation of being routed
                     // back inside.  I believe this is an anti-spoofing security measure.
 
-                    var dnsRedirect =
-                        new DnsEntry()
-                        {
-                            Hostname  = hostname,
-                            Endpoints = new List<DnsEndpoint>()
-                            {
-                                new DnsEndpoint()
-                                {
-                                    Check  = true,
-                                    Target = "group=managers"
-                                }
-                            }
-                        };
+                    var dnsRedirect = GetRegistryDnsEntry(hostname);
 
                     // Perform the operation.
 
@@ -587,7 +588,7 @@ namespace NeonCli.Ansible
                         cluster.Consul.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/hostname", hostname).Wait();
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Adding local cluster DNS entry for [{hostname}].");
-                        cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}-neon-registry", dnsRedirect).Wait();
+                        cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}neon-registry", dnsRedirect).Wait();
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Writing load balancer rule.");
                         cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
@@ -599,6 +600,7 @@ namespace NeonCli.Ansible
 
                         var createResponse = manager.DockerCommand(RunOptions.None,
                             "docker service create",
+                            "--name", "neon-registry",
                             "--mode", "global",
                             "--constraint", "node.role==manager",
                             "--env", $"USERNAME={username}",
@@ -609,8 +611,8 @@ namespace NeonCli.Ansible
                             "--mount", "type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry",
                             "--network", "neon-public",
                             "--restart-delay", "10s",
-                            "--image", image,
-                            "neon-registry");
+                            "--log-driver", "json-file",    // $todo(jeff.lill): Delete this
+                            image);
 
                         if (createResponse.ExitCode != 0)
                         {
@@ -640,7 +642,7 @@ namespace NeonCli.Ansible
                             cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
 
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster DNS entry for [{hostname}].");
-                            cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}-neon-registry", dnsRedirect).Wait();
+                            cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{NeonClusterConst.SystemDnsHostnamePrefix}neon-registry", dnsRedirect).Wait();
                         }
 
                         if (certificateChanged || hostnameChanged)
@@ -653,9 +655,9 @@ namespace NeonCli.Ansible
 
                         var updateResponse = manager.DockerCommand(RunOptions.None,
                             "docker service update",
-                            "--env-rm", "USERNAME", "--env-add", $"USERNAME={username}",
-                            "--env-rm", "PASSWORD", "--env-add", $"PASSWORD={password}",
-                            "--env-rm", "SECRET", "--env-add", $"SECRET={secret}",
+                            "--env-rm", "USERNAME",  "--env-add", $"USERNAME={username}",
+                            "--env-rm", "PASSWORD",  "--env-add", $"PASSWORD={password}",
+                            "--env-rm", "SECRET",    "--env-add", $"SECRET={secret}",
                             "--env-rm", "LOG_LEVEL", "--env-add", $"LOG_LEVEL=info",
                             "--env-rm", "READ_ONLY", "--env-add", $"READ_ONLY=false",
                             "--image", image,
@@ -664,6 +666,7 @@ namespace NeonCli.Ansible
                         if (updateResponse.ExitCode != 0)
                         {
                             context.WriteErrorLine($"[neon-registry] service update failed: {updateResponse.ErrorText}");
+context.WriteErrorLine(updateResponse.BashCommand);
                             return;
                         }
 
@@ -768,6 +771,27 @@ docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
                                         Port  = 5000
                                     }
                                 }
+            };
+        }
+
+        /// <summary>
+        /// Returns the 
+        /// </summary>
+        /// <param name="hostname"></param>
+        /// <returns></returns>
+        private DnsEntry GetRegistryDnsEntry(string hostname)
+        {
+            return new DnsEntry()
+            {
+                Hostname  = hostname,
+                Endpoints = new List<DnsEndpoint>()
+                            {
+                                new DnsEndpoint()
+                                {
+                                    Check  = true,
+                                    Target = "group=managers"
+                                }
+                            }
             };
         }
     }
