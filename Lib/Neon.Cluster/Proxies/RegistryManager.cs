@@ -7,6 +7,8 @@ using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 
+using Consul;
+
 namespace Neon.Cluster
 {
     /// <summary>
@@ -158,6 +160,60 @@ namespace Neon.Cluster
             }
 
             return true;
+        }
+
+        /// <summary>
+        /// Returns the hostname for the local Docker registry if one is
+        /// deployed.
+        /// </summary>
+        /// <returns>The hostname or <c>null</c>.</returns>
+        public string GetLocalHostname()
+        {
+            return cluster.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Result;
+        }
+
+        /// <summary>
+        /// Persists the hostname for the local Docker registry.
+        /// </summary>
+        /// <param name="hostname">The new hostname for the local Docker registry or <c>null</c> to remove it.</param>
+        public void SetLocalHostname(string hostname)
+        {
+            Covenant.Requires<ArgumentException>(string.IsNullOrEmpty(hostname) || ClusterDefinition.NameRegex.IsMatch(hostname));
+
+            if (string.IsNullOrEmpty(hostname))
+            {
+                cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Wait();
+            }
+            else
+            {
+                cluster.Consul.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/hostname", hostname).Wait();
+            }
+        }
+
+        /// <summary>
+        /// Returns the secret for the local Docker registry if one is
+        /// deployed.
+        /// </summary>
+        /// <returns>The hostname or <c>null</c>.</returns>
+        public string GetLocalSecret()
+        {
+            return cluster.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Result;
+        }
+
+        /// <summary>
+        /// Persists the secret for the local Docker registry.
+        /// </summary>
+        /// <param name="secret">The new secret for the local Docker registry or <c>null</c> to remove it.</param>
+        public void SetLocalSecret(string secret)
+        {
+            if (string.IsNullOrEmpty(secret))
+            {
+                cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Wait();
+            }
+            else
+            {
+                cluster.Consul.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/secret", secret).Wait();
+            }
         }
     }
 }

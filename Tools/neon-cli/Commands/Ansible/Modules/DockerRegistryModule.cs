@@ -292,8 +292,8 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Getting current registry hostname from Consul.");
 
-            var currentHostname = cluster.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Result;
-            var currentSecret   = cluster.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Result;
+            var currentHostname = cluster.Registry.GetLocalHostname();
+            var currentSecret   = cluster.Registry.GetLocalSecret();
             var currentImage    = currentService?.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA;
 
             var currentCredentials =        // Set blank properties for the change detection below.
@@ -468,8 +468,8 @@ namespace NeonCli.Ansible
                     // Remove any related Consul state.
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] Consul [hostname] and [secret].");
-                    cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Wait();
-                    cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Wait();
+                    cluster.Registry.SetLocalHostname(null);
+                    cluster.Registry.SetLocalSecret(null);
 
                     // Remove the registry credentials from Vault.
 
@@ -630,8 +630,8 @@ namespace NeonCli.Ansible
                         cluster.Certificate.Set("neon-registry", certificate);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Updating Consul settings.");
-                        cluster.Consul.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/secret", secret).Wait();
-                        cluster.Consul.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/hostname", hostname).Wait();
+                        cluster.Registry.SetLocalHostname(hostname);
+                        cluster.Registry.SetLocalSecret(secret);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Adding local cluster DNS entry for [{hostname}].");
                         cluster.LocalDns.Set(dnsRedirect);
@@ -691,15 +691,21 @@ namespace NeonCli.Ansible
 
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster DNS entry for [{hostname}].");
                             cluster.LocalDns.Set(dnsRedirect);
-                        }
 
-                        if (hostnameChanged)
-                        {
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster hostname [{hostname}].");
+                            cluster.Registry.SetLocalHostname(hostname);
+
                             if (!string.IsNullOrEmpty(currentHostname))
                             {
                                 context.WriteLine(AnsibleVerbosity.Trace, $"Removing old [{currentHostname}] registry credentials from Vault.");
                                 cluster.Registry.Remove(currentHostname);
                             }
+                        }
+
+                        if (secretChanged)
+                        {
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster secret.");
+                            cluster.Registry.SetLocalSecret(secret);
                         }
 
                         if (hostnameChanged || usernameChanged || passwordChanged)

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    Test_AnsibleDns.cs
+// FILE:	    Test_AnsibleHosts.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -21,7 +21,7 @@ using Xunit;
 
 namespace TestNeonCluster
 {
-    public class Test_AnsibleDns : IClassFixture<ClusterFixture>
+    public class Test_AnsibleHosts : IClassFixture<ClusterFixture>
     {
         //---------------------------------------------------------------------
         // Static members
@@ -33,7 +33,7 @@ namespace TestNeonCluster
 
         private ClusterFixture  cluster;
 
-        public Test_AnsibleDns(ClusterFixture cluster)
+        public Test_AnsibleHosts(ClusterFixture cluster)
         {
             this.cluster = cluster;
 
@@ -68,7 +68,7 @@ $@"
   hosts: localhost
   tasks:
     - name: manage dns
-      neon_dns:
+      neon_hosts:
         state: present
         hostname: {host}
         UNKNOWN: argument
@@ -90,7 +90,7 @@ $@"
   hosts: localhost
   tasks:
     - name: manage dns
-      neon_dns:
+      neon_hosts:
         state: present
         hostname: {host}
         endpoints:
@@ -123,7 +123,7 @@ $@"
   hosts: localhost
   tasks:
     - name: manage dns
-      neon_dns:
+      neon_hosts:
         state: present
         hostname: {host}
         endpoints:
@@ -183,7 +183,7 @@ $@"
   hosts: localhost
   tasks:
     - name: manage dns
-      neon_dns:
+      neon_hosts:
         state: present
         hostname: {host}
         endpoints:
@@ -214,7 +214,7 @@ $@"
   hosts: localhost
   tasks:
     - name: manage dns
-      neon_dns:
+      neon_hosts:
         state: present
         hostname: {host}
         endpoints:
@@ -275,7 +275,7 @@ $@"
   hosts: localhost
   tasks:
     - name: manage dns
-      neon_dns:
+      neon_hosts:
         state: present
         hostname: {host}
         endpoints:
@@ -323,7 +323,7 @@ $@"
   hosts: localhost
   tasks:
     - name: manage dns
-      neon_dns:
+      neon_hosts:
         state: absent
         hostname: {host}
         endpoints:

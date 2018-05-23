@@ -110,11 +110,6 @@ namespace NeonCli
                         new DashboardModule().Run(context);
                         break;
 
-                    case "neon_dns":
-
-                        new DnsModule().Run(context);
-                        break;
-
                     case "neon_docker_config":
 
                         new DockerConfigModule().Run(context);
@@ -138,6 +133,11 @@ namespace NeonCli
                     case "neon_docker_service":
 
                         new DockerServiceModule().Run(context);
+                        break;
+
+                    case "neon_hosts":
+
+                        new HostsModule().Run(context);
                         break;
 
                     case "neon_load_balancer":

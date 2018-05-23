@@ -112,8 +112,8 @@ namespace TestNeonCluster
                 Assert.Equal("test", registryCredentials.Username);
                 Assert.Equal("password", registryCredentials.Password);
 
-                Assert.Equal("xunit-registry.neonforge.net", clusterProxy.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Result);
-                Assert.Equal("secret", clusterProxy.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Result);
+                Assert.Equal("xunit-registry.neonforge.net", clusterProxy.Registry.GetLocalHostname());
+                Assert.Equal("secret", clusterProxy.Registry.GetLocalSecret());
 
                 foreach (var manager in clusterProxy.Managers)
                 {
@@ -146,8 +146,8 @@ namespace TestNeonCluster
                 Assert.Equal("test", registryCredentials.Username);
                 Assert.Equal("password", registryCredentials.Password);
 
-                Assert.Equal("xunit-registry.neonforge.net", clusterProxy.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Result);
-                Assert.Equal("secret", clusterProxy.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Result);
+                Assert.Equal("xunit-registry.neonforge.net", clusterProxy.Registry.GetLocalHostname());
+                Assert.Equal("secret", clusterProxy.Registry.GetLocalSecret());
 
                 foreach (var manager in clusterProxy.Managers)
                 {
@@ -190,8 +190,8 @@ namespace TestNeonCluster
 
                 Assert.Null(registryCredentials);
 
-                Assert.Null(clusterProxy.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Result);
-                Assert.Null(clusterProxy.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Result);
+                Assert.Null(clusterProxy.Registry.GetLocalHostname());
+                Assert.Null(clusterProxy.Registry.GetLocalSecret());
 
                 foreach (var manager in clusterProxy.Managers)
                 {
@@ -220,8 +220,8 @@ namespace TestNeonCluster
 
                 Assert.Null(registryCredentials);
 
-                Assert.Null(clusterProxy.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Result);
-                Assert.Null(clusterProxy.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Result);
+                Assert.Null(clusterProxy.Registry.GetLocalHostname());
+                Assert.Null(clusterProxy.Registry.GetLocalSecret());
 
                 foreach (var manager in clusterProxy.Managers)
                 {
@@ -231,6 +231,308 @@ namespace TestNeonCluster
                 dnsEntry = clusterProxy.LocalDns.Get("xunit-registry.neonforge.net");
 
                 Assert.Null(dnsEntry);
+            }
+        }
+
+        [Fact]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
+        public void Update()
+        {
+            // We're going to create a temporary Ansible working folder and copy 
+            // the test secrets file there so we can reference it from the playbooks.
+
+            using (var folder = new TempFolder())
+            {
+                File.Copy(TestHelper.AnsibleSecretsPath, Path.Combine(folder.Path, "secrets.yaml"));
+
+                //-------------------------------------------------------------
+                // Deploy a local Docker registry so we can verify that we can 
+                // update it.
+
+                var playbook =
+@"
+- name: test
+  hosts: localhost
+  vars_files:
+    - secrets.yaml
+  tasks:
+    - name: registry
+      neon_docker_registry:
+        state: present
+        hostname: xunit-registry.neonforge.net
+        certificate: ""{{ _neonforge_net_pem }}""
+        username: test
+        password: password
+        secret: secret
+";
+                var results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook, "--vault-id", TestHelper.AnsiblePasswordFile);
+                var taskResult = results.GetTaskResult("registry");
+
+                Assert.True(taskResult.Success);
+                Assert.True(taskResult.Changed);
+
+                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
+                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+
+                var registryCredentials = clusterProxy.Registry.Get("xunit-registry.neonforge.net");
+
+                Assert.NotNull(registryCredentials);
+                Assert.Equal("xunit-registry.neonforge.net", registryCredentials.Registry);
+                Assert.Equal("test", registryCredentials.Username);
+                Assert.Equal("password", registryCredentials.Password);
+
+                Assert.Equal("xunit-registry.neonforge.net", clusterProxy.Registry.GetLocalHostname());
+                Assert.Equal("secret", clusterProxy.Registry.GetLocalSecret());
+
+                foreach (var manager in clusterProxy.Managers)
+                {
+                    Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                }
+
+                var dnsEntry = clusterProxy.LocalDns.Get("xunit-registry.neonforge.net");
+
+                Assert.NotNull(dnsEntry);
+                Assert.True(dnsEntry.IsSystem);
+
+                //-------------------------------------------------------------
+                // Update the hostname and verify.
+
+                playbook =
+@"
+- name: test
+  hosts: localhost
+  vars_files:
+    - secrets.yaml
+  tasks:
+    - name: registry
+      neon_docker_registry:
+        state: present
+        hostname: xunit-registry2.neonforge.net
+        certificate: ""{{ _neonforge_net_pem }}""
+        username: test
+        password: password
+        secret: secret
+";
+
+                results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook, "--vault-id", TestHelper.AnsiblePasswordFile);
+                taskResult = results.GetTaskResult("registry");
+
+                Assert.True(taskResult.Success);
+                Assert.True(taskResult.Changed);
+
+                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
+                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+
+                registryCredentials = clusterProxy.Registry.Get("xunit-registry2.neonforge.net");
+
+                Assert.NotNull(registryCredentials);
+                Assert.Equal("xunit-registry2.neonforge.net", registryCredentials.Registry);
+                Assert.Equal("test", registryCredentials.Username);
+                Assert.Equal("password", registryCredentials.Password);
+
+                Assert.Equal("xunit-registry2.neonforge.net", clusterProxy.Registry.GetLocalHostname());
+                Assert.Equal("secret", clusterProxy.Registry.GetLocalSecret());
+
+                foreach (var manager in clusterProxy.Managers)
+                {
+                    Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                }
+
+                dnsEntry = clusterProxy.LocalDns.Get("xunit-registry2.neonforge.net");
+
+                Assert.NotNull(dnsEntry);
+                Assert.True(dnsEntry.IsSystem);
+
+                //-------------------------------------------------------------
+                // Update the username and verify.
+
+                playbook =
+@"
+- name: test
+  hosts: localhost
+  vars_files:
+    - secrets.yaml
+  tasks:
+    - name: registry
+      neon_docker_registry:
+        state: present
+        hostname: xunit-registry2.neonforge.net
+        certificate: ""{{ _neonforge_net_pem }}""
+        username: test2
+        password: password
+        secret: secret
+";
+
+                results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook, "--vault-id", TestHelper.AnsiblePasswordFile);
+                taskResult = results.GetTaskResult("registry");
+
+                Assert.True(taskResult.Success);
+                Assert.True(taskResult.Changed);
+
+                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
+                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+
+                registryCredentials = clusterProxy.Registry.Get("xunit-registry2.neonforge.net");
+
+                Assert.NotNull(registryCredentials);
+                Assert.Equal("xunit-registry2.neonforge.net", registryCredentials.Registry);
+                Assert.Equal("test2", registryCredentials.Username);
+                Assert.Equal("password", registryCredentials.Password);
+
+                Assert.Equal("xunit-registry2.neonforge.net", clusterProxy.Registry.GetLocalHostname());
+                Assert.Equal("secret", clusterProxy.Registry.GetLocalSecret());
+
+                foreach (var manager in clusterProxy.Managers)
+                {
+                    Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                }
+
+                dnsEntry = clusterProxy.LocalDns.Get("xunit-registry2.neonforge.net");
+
+                Assert.NotNull(dnsEntry);
+                Assert.True(dnsEntry.IsSystem);
+
+                //-------------------------------------------------------------
+                // Update the password and verify.
+
+                playbook =
+@"
+- name: test
+  hosts: localhost
+  vars_files:
+    - secrets.yaml
+  tasks:
+    - name: registry
+      neon_docker_registry:
+        state: present
+        hostname: xunit-registry2.neonforge.net
+        certificate: ""{{ _neonforge_net_pem }}""
+        username: test2
+        password: password2
+        secret: secret
+";
+
+                results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook, "--vault-id", TestHelper.AnsiblePasswordFile);
+                taskResult = results.GetTaskResult("registry");
+
+                Assert.True(taskResult.Success);
+                Assert.True(taskResult.Changed);
+
+                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
+                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+
+                registryCredentials = clusterProxy.Registry.Get("xunit-registry2.neonforge.net");
+
+                Assert.NotNull(registryCredentials);
+                Assert.Equal("xunit-registry2.neonforge.net", registryCredentials.Registry);
+                Assert.Equal("test2", registryCredentials.Username);
+                Assert.Equal("password2", registryCredentials.Password);
+
+                Assert.Equal("xunit-registry2.neonforge.net", clusterProxy.Registry.GetLocalHostname());
+                Assert.Equal("secret", clusterProxy.Registry.GetLocalSecret());
+
+                foreach (var manager in clusterProxy.Managers)
+                {
+                    Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                }
+
+                dnsEntry = clusterProxy.LocalDns.Get("xunit-registry2.neonforge.net");
+
+                Assert.NotNull(dnsEntry);
+                Assert.True(dnsEntry.IsSystem);
+
+                //-------------------------------------------------------------
+                // Update the secret and verify.
+
+                playbook =
+@"
+- name: test
+  hosts: localhost
+  vars_files:
+    - secrets.yaml
+  tasks:
+    - name: registry
+      neon_docker_registry:
+        state: present
+        hostname: xunit-registry2.neonforge.net
+        certificate: ""{{ _neonforge_net_pem }}""
+        username: test2
+        password: password2
+        secret: secret2
+";
+
+                results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook, "--vault-id", TestHelper.AnsiblePasswordFile);
+                taskResult = results.GetTaskResult("registry");
+
+                Assert.True(taskResult.Success);
+                Assert.True(taskResult.Changed);
+
+                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
+                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+
+                registryCredentials = clusterProxy.Registry.Get("xunit-registry2.neonforge.net");
+
+                Assert.NotNull(registryCredentials);
+                Assert.Equal("xunit-registry2.neonforge.net", registryCredentials.Registry);
+                Assert.Equal("test2", registryCredentials.Username);
+                Assert.Equal("password2", registryCredentials.Password);
+
+                Assert.Equal("xunit-registry2.neonforge.net", clusterProxy.Registry.GetLocalHostname());
+                Assert.Equal("secret2", clusterProxy.Registry.GetLocalSecret());
+
+                foreach (var manager in clusterProxy.Managers)
+                {
+                    Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                }
+
+                dnsEntry = clusterProxy.LocalDns.Get("xunit-registry2.neonforge.net");
+
+                Assert.NotNull(dnsEntry);
+                Assert.True(dnsEntry.IsSystem);
+
+                //-------------------------------------------------------------
+                // Run the playbook again and verify that nothing changed this time.
+
+                results = AnsiblePlayer.PlayInFolderNoGather(folder.Path, playbook, "--vault-id", TestHelper.AnsiblePasswordFile);
+                taskResult = results.GetTaskResult("registry");
+
+                Assert.True(taskResult.Success);
+                Assert.False(taskResult.Changed);
+
+                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
+                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+
+                registryCredentials = clusterProxy.Registry.Get("xunit-registry2.neonforge.net");
+
+                Assert.NotNull(registryCredentials);
+                Assert.Equal("xunit-registry2.neonforge.net", registryCredentials.Registry);
+                Assert.Equal("test2", registryCredentials.Username);
+                Assert.Equal("password2", registryCredentials.Password);
+
+                Assert.Equal("xunit-registry2.neonforge.net", clusterProxy.Registry.GetLocalHostname());
+                Assert.Equal("secret2", clusterProxy.Registry.GetLocalSecret());
+
+                foreach (var manager in clusterProxy.Managers)
+                {
+                    Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                }
+
+                dnsEntry = clusterProxy.LocalDns.Get("xunit-registry2.neonforge.net");
+
+                Assert.NotNull(dnsEntry);
+                Assert.True(dnsEntry.IsSystem);
             }
         }
     }
