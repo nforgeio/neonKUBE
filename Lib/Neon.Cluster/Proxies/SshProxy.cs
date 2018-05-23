@@ -188,13 +188,17 @@ namespace Neon.Cluster
         /// need to be able to perform multiple SSH/SCP operations against the same
         /// machine in parallel.
         /// </summary>
-        /// <returns></returns>
+        /// <returns>The cloned <see cref="SshProxy{TMetadata}"/>.</returns>
         public SshProxy<TMetadata> Clone()
         {
-            return new SshProxy<TMetadata>(Name, PublicAddress, PrivateAddress, credentials, logWriter)
+            var sshProxy = new SshProxy<TMetadata>(Name, PublicAddress, PrivateAddress, credentials, logWriter)
             {
                 Metadata = this.Metadata
             };
+
+            sshProxy.Connect();
+
+            return sshProxy;
         }
 
         /// <summary>
