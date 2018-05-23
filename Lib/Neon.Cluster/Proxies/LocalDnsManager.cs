@@ -146,7 +146,7 @@ namespace Neon.Cluster
 
             var existing = Get(entry.Hostname);
 
-            if (existing.IsSystem != entry.IsSystem)
+            if (existing != null && existing.IsSystem != entry.IsSystem)
             {
                 if (existing.IsSystem)
                 {

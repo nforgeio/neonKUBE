@@ -191,7 +191,7 @@ namespace Neon.Cluster
         /// <returns>The cloned <see cref="SshProxy{TMetadata}"/>.</returns>
         public SshProxy<TMetadata> Clone()
         {
-            var sshProxy = new SshProxy<TMetadata>(Name, PublicAddress, PrivateAddress, credentials, logWriter)
+            var sshProxy = new SshProxy<TMetadata>(Name, PublicAddress, PrivateAddress, credentials)
             {
                 Metadata = this.Metadata
             };

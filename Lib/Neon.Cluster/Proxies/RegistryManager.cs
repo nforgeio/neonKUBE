@@ -137,7 +137,7 @@ namespace Neon.Cluster
         /// </remarks>
         public bool RestartCache(string registry, string username, string password)
         {
-            // Return immediately if this is a NOP for the current node and environment.
+            // Return immediately if this is a NOP.
 
             if (!NeonClusterHelper.IsDockerPublicRegistry(registry) || !cluster.Definition.Docker.RegistryCache)
             {

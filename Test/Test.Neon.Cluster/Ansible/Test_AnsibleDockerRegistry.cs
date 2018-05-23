@@ -19,14 +19,13 @@ using Couchbase.Linq.Extensions;
 using Couchbase.N1QL;
 using Newtonsoft.Json.Linq;
 
+using Neon.Cluster;
+using Neon.Data;
 using Neon.Common;
 using Neon.IO;
 using Neon.Xunit;
 using Neon.Xunit.Cluster;
 using Neon.Xunit.Couchbase;
-
-using Neon.Data;
-using Neon.Cluster;
 
 using Xunit;
 
