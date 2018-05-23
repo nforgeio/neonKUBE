@@ -423,7 +423,7 @@ OPTIONS:
                         foreach (var credential in cluster.Definition.Docker.Registries
                             .Where(r => !string.IsNullOrEmpty(r.Username)))
                         {
-                            cluster.SetRegistryCredential(credential.Registry, credential.Username, credential.Password);
+                            cluster.Registry.Set(credential.Registry, credential.Username, credential.Password);
                         }
                     });
 

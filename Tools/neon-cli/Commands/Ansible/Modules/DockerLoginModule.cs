@@ -153,7 +153,7 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Reading existing credentials for [{registry}].");
 
-            var existingCredentials = cluster.GetRegistryCredential(registry);
+            var existingCredentials = cluster.Registry.Get(registry);
 
             if (existingCredentials != null)
             {
@@ -188,7 +188,7 @@ namespace NeonCli.Ansible
                     {
                         context.Changed = true;
                         context.WriteLine(AnsibleVerbosity.Trace, $"Removing credentials for [{registry}].");
-                        cluster.RemoveRegistryCredential(registry);
+                        cluster.Registry.Remove(registry);
                     }
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Logging all cluster nodes out of [{registry}].");
@@ -253,7 +253,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Saving credentials for [{registry}].");
 
-                    cluster.SetRegistryCredential(registry, username, password);
+                    cluster.Registry.Set(registry, username, password);
 
                     // Log all of the nodes in with the new registry credentials.
                     //
@@ -301,7 +301,7 @@ namespace NeonCli.Ansible
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Restarting the cluster registry caches.");
 
-                        if (!cluster.RestartRegistryCaches(registry, username, password))
+                        if (!cluster.Registry.RestartCache(registry, username, password))
                         {
                             context.WriteErrorLine("Unable to restart one or more of the cluster registry caches.");
                             return;

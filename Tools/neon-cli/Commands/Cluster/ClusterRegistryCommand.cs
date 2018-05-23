@@ -77,7 +77,7 @@ when these aren't specified.
                 case "ls":
                 case "list":
 
-                    registries = cluster.ListRegistryCredentials();
+                    registries = cluster.Registry.List();
 
                     // Special-case the Docker public registry if it's not
                     // set explicitly.  All neonCLUSTERs implicitly reference
@@ -199,7 +199,7 @@ when these aren't specified.
                     // with the new credentials if we're updating credentials for the 
                     // Docker public registry and the cache is enabled.
 
-                    cluster.RestartRegistryCaches(registry, username, password);
+                    cluster.Registry.RestartCache(registry, username, password);
                     break;
 
                 case "logout":

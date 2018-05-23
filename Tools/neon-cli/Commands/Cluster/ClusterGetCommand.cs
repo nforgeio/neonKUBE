@@ -150,7 +150,7 @@ NODE IDENTIFIERS:
 
                     case "registries":
 
-                        var registries = cluster.ListRegistryCredentials();
+                        var registries = cluster.Registry.List();
 
                         // Special-case the Docker public registry if it's not
                         // set explicitly.

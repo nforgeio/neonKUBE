@@ -308,7 +308,7 @@ namespace NeonCli.Ansible
             {
                 context.WriteLine(AnsibleVerbosity.Trace, $"Reading existing registry credentials for [{currentHostname}].");
 
-                currentCredentials = cluster.GetRegistryCredential(currentHostname);
+                currentCredentials = cluster.Registry.Get(currentHostname);
 
                 if (currentCredentials != null)
                 {
@@ -362,7 +362,7 @@ namespace NeonCli.Ansible
                     if (currentCredentials != null)
                     {
                         context.WriteLine(AnsibleVerbosity.Trace, $"Removing registry credentials for [{currentHostname}].");
-                        cluster.RemoveRegistryCredential(currentHostname);
+                        cluster.Registry.Remove(currentHostname);
                     }
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Logging all cluster nodes out of [{currentHostname}].");
@@ -473,7 +473,7 @@ namespace NeonCli.Ansible
 
                     // Remove the registry credentials from Vault.
 
-                    cluster.RemoveRegistryCredential(currentHostname);
+                    cluster.Registry.Remove(currentHostname);
 
                     // Remove the local DNS entry.
 
@@ -643,7 +643,7 @@ namespace NeonCli.Ansible
                         cluster.Certificate.Touch();
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Saving [{hostname}] registry credentials to Vault.");
-                        cluster.SetRegistryCredential(hostname, username, password);
+                        cluster.Registry.Set(hostname, username, password);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Creating the [neon-registry] service.");
 
@@ -698,14 +698,14 @@ namespace NeonCli.Ansible
                             if (!string.IsNullOrEmpty(currentHostname))
                             {
                                 context.WriteLine(AnsibleVerbosity.Trace, $"Removing old [{currentHostname}] registry credentials from Vault.");
-                                cluster.RemoveRegistryCredential(currentHostname);
+                                cluster.Registry.Remove(currentHostname);
                             }
                         }
 
                         if (hostnameChanged || usernameChanged || passwordChanged)
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Saving [{hostname}] registry credentials to Vault.");
-                            cluster.SetRegistryCredential(hostname, username, password);
+                            cluster.Registry.Set(hostname, username, password);
                         }
 
                         if (certificateChanged || hostnameChanged)

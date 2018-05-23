@@ -151,6 +151,7 @@ namespace Neon.Cluster
             this.LocalDns            = new LocalDnsManager(this);
             this.PublicLoadBalancer  = new LoadBalanceManager(this, "public");
             this.PrivateLoadBalancer = new LoadBalanceManager(this, "private");
+            this.Registry            = new RegistryManager(this);
 
             CreateNodes();
         }
@@ -264,6 +265,11 @@ namespace Neon.Cluster
         /// Manages the cluster's private load balancer.
         /// </summary>
         public LoadBalanceManager PrivateLoadBalancer { get; private set; }
+
+        /// <summary>
+        /// Manages the cluster's Docker registry credentials and local registry.
+        /// </summary>
+        public RegistryManager Registry { get; private set; }
 
         /// <summary>
         /// Returns the named load balancer manager.
@@ -833,138 +839,6 @@ vault policy-write {policy.Name} policy.hcl
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(roleName));
 
             return VaultCommand($"vault delete auth/approle/role/{roleName}");
-        }
-
-        /// <summary>
-        /// Lists the Docker registry credentials assigned to the cluster.
-        /// </summary>
-        /// <returns>The list of credentials.</returns>
-        public List<RegistryCredentials> ListRegistryCredentials()
-        {
-            var credentials = new List<RegistryCredentials>();
-
-            foreach (var hostname in Vault.ListAsync(NeonClusterConst.VaultRegistryCredentialsKey).Result)
-            {
-                var usernamePassword = Vault.ReadStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{hostname}").Result;
-                var fields           = usernamePassword.Split(new char[] { '/' }, 2);
-
-                if (fields.Length == 2)
-                {
-                    credentials.Add(
-                        new RegistryCredentials()
-                        {
-                            Registry = hostname,
-                            Username = fields[0],
-                            Password = fields[1]
-                        });
-                }
-                else
-                {
-                    throw new NeonClusterException($"Invalid credentials for the [{hostname}] registry.");
-                }
-            }
-
-            return credentials;
-        }
-
-        /// <summary>
-        /// Adds or updates a Docker registry credential in Vault.
-        /// </summary>
-        /// <param name="registry">The target registry hostname.</param>
-        /// <param name="username">The username.</param>
-        /// <param name="password">The password.</param>
-        public void SetRegistryCredential(string registry, string username, string password)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
-            Covenant.Requires<ArgumentNullException>(password != null);
-
-            Vault.WriteStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}", $"{username}/{password}").Wait();
-        }
-
-        /// <summary>
-        /// Returns the credentials for a specific Docker registry from Vault.
-        /// </summary>
-        /// <param name="registry">The target registry hostname.</param>
-        /// <returns>The credentials or <c>null</c> if no credentials exists.</returns>
-        public RegistryCredentials GetRegistryCredential(string registry)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
-
-            var usernamePassword = Vault.ReadStringOrDefaultAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}").Result;
-
-            if (usernamePassword == null)
-            {
-                return null;
-            }
-
-            var fields = usernamePassword.Split(new char[] { '/' }, 2);
-
-            if (fields.Length == 2)
-            {
-                return new RegistryCredentials()
-                {
-                    Registry = registry,
-                    Username = fields[0],
-                    Password = fields[1]
-                };
-            }
-            else
-            {
-                throw new NeonClusterException($"Invalid credentials for the [{registry}] registry.");
-            }
-        }
-
-        /// <summary>
-        /// Removes a Docker registry credential from Vault.
-        /// </summary>
-        /// <param name="registry">The target registry hostname.</param>
-        public void RemoveRegistryCredential(string registry)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
-
-            Vault.DeleteAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}").Wait();
-        }
-
-        /// <summary>
-        /// Restarts the cluster registry caches as required, using the 
-        /// credentials passed.
-        /// </summary>
-        /// <param name="registry">The target registry hostname.</param>
-        /// <param name="username">The username.</param>
-        /// <param name="password">The password.</param>
-        /// <returns><c>true</c> if the operation succeeded or was unnecessary.</returns>
-        /// <remarks>
-        /// <note>
-        /// This method currently does nothing but return <c>true</c> if the 
-        /// registry specified is not the Docker public registry because the 
-        /// cache supports only the public registry or if the registry cache
-        /// is not enabled for this cluster.
-        /// </note>
-        /// </remarks>
-        public bool RestartRegistryCaches(string registry, string username, string password)
-        {
-            // Return immediately if this is a NOP for the current node and environment.
-
-            if (!NeonClusterHelper.IsDockerPublicRegistry(registry) || !Definition.Docker.RegistryCache)
-            {
-                return true;
-            }
-
-            // We're not going to restart these in parallel so only one
-            // manager cache will be down at any given time.  This should
-            // result in no cache downtime for clusters with multiple
-            // managers.
-
-            foreach (var manager in Managers)
-            {
-                if (!manager.RestartRegistryCache(registry, username, password))
-                {
-                    return false;
-                }
-            }
-
-            return true;
         }
 
         /// <summary>

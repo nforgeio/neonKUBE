@@ -50,7 +50,7 @@ namespace TestNeonCluster
 
             // Ensure that we're not already logged into Docker Hub.
 
-            clusterProxy.RemoveRegistryCredential(NeonClusterConst.DockerPublicRegistry);
+            clusterProxy.Registry.Remove(NeonClusterConst.DockerPublicRegistry);
         }
 
         [Fact]
@@ -89,7 +89,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.NotNull(clusterProxy.GetRegistryCredential(NeonClusterConst.DockerPublicRegistry));
+                Assert.NotNull(clusterProxy.Registry.Get(NeonClusterConst.DockerPublicRegistry));
 
                 //-----------------------------------------------------------------
                 // Run the play again and verify that [changed=false].
@@ -114,7 +114,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.False(taskResult.Changed);
 
-                Assert.NotNull(clusterProxy.GetRegistryCredential(NeonClusterConst.DockerPublicRegistry));
+                Assert.NotNull(clusterProxy.Registry.Get(NeonClusterConst.DockerPublicRegistry));
 
                 //-----------------------------------------------------------------
                 // Verify that we log off the test Docker hub account.
@@ -137,7 +137,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Null(clusterProxy.GetRegistryCredential(NeonClusterConst.DockerPublicRegistry));
+                Assert.Null(clusterProxy.Registry.Get(NeonClusterConst.DockerPublicRegistry));
 
                 //-----------------------------------------------------------------
                 // Run the play again and verify that [changed=false].
@@ -160,7 +160,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.False(taskResult.Changed);
 
-                Assert.Null(clusterProxy.GetRegistryCredential(NeonClusterConst.DockerPublicRegistry));
+                Assert.Null(clusterProxy.Registry.Get(NeonClusterConst.DockerPublicRegistry));
             }
         }
 
