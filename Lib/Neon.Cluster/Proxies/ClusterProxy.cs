@@ -148,7 +148,7 @@ namespace Neon.Cluster
             this.nodeProxyCreator    = nodeProxyCreator;
             this.DockerSecret        = new DockerSecretsManager(this);
             this.Certificate         = new CertiticateManager(this);
-            this.LocalDns            = new LocalDnsManager(this);
+            this.Hosts               = new HostsManager(this);
             this.PublicLoadBalancer  = new LoadBalanceManager(this, "public");
             this.PrivateLoadBalancer = new LoadBalanceManager(this, "private");
             this.Registry            = new RegistryManager(this);
@@ -254,7 +254,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Manages the local cluster DNS.
         /// </summary>
-        public LocalDnsManager LocalDns { get; private set; }
+        public HostsManager Hosts { get; private set; }
 
         /// <summary>
         /// Manages the cluster's public load balancer.

@@ -777,9 +777,9 @@ namespace Neon.Xunit.Cluster
         {
             var actions = new List<Action>();
 
-            foreach (var entry in cluster.LocalDns.List(includeSystem: removeSystem))
+            foreach (var entry in cluster.Hosts.List(includeSystem: removeSystem))
             {
-                actions.Add(() => cluster.LocalDns.Remove(entry.Hostname));
+                actions.Add(() => cluster.Hosts.Remove(entry.Hostname));
             }
 
             NeonHelper.WaitForParallel(actions);
@@ -795,7 +795,7 @@ namespace Neon.Xunit.Cluster
         /// <returns>The list of <see cref="DnsEntry"/> instances.</returns>
         public List<DnsEntry> ListDnsEntries(bool includeSystem = false)
         {
-            return cluster.LocalDns.List(includeSystem);
+            return cluster.Hosts.List(includeSystem);
         }
 
         /// <summary>
@@ -807,7 +807,7 @@ namespace Neon.Xunit.Cluster
         /// </param>
         public void RemoveDnsEntry(string name)
         {
-            cluster.LocalDns.Remove(name);
+            cluster.Hosts.Remove(name);
         }
 
         /// <summary>
@@ -816,7 +816,7 @@ namespace Neon.Xunit.Cluster
         /// <param name="entry">The entry to be set.</param>
         public void SetDnsEntry(DnsEntry entry)
         {
-            cluster.LocalDns.Set(entry);
+            cluster.Hosts.Set(entry);
         }
 
         /// <summary>

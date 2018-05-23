@@ -478,7 +478,7 @@ namespace NeonCli.Ansible
                     // Remove the local DNS entry.
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [{currentHostname}] local DNS entry.");
-                    cluster.LocalDns.Remove(hostname);
+                    cluster.Hosts.Remove(hostname);
                     break;
 
                 case "present":
@@ -634,7 +634,7 @@ namespace NeonCli.Ansible
                         cluster.Registry.SetLocalSecret(secret);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Adding local cluster DNS entry for [{hostname}].");
-                        cluster.LocalDns.Set(dnsRedirect);
+                        cluster.Hosts.Set(dnsRedirect);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Writing load balancer rule.");
                         cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
@@ -690,7 +690,7 @@ namespace NeonCli.Ansible
                             cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
 
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster DNS entry for [{hostname}].");
-                            cluster.LocalDns.Set(dnsRedirect);
+                            cluster.Hosts.Set(dnsRedirect);
 
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster hostname [{hostname}].");
                             cluster.Registry.SetLocalHostname(hostname);

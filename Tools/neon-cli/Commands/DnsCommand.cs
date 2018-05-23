@@ -378,7 +378,7 @@ NOTE: DNS hostnames prefixed by ""(neon)-"" identify built-in
 
             host = host.ToLowerInvariant();
 
-            var entry = cluster.LocalDns.Get(host);
+            var entry = cluster.Hosts.Get(host);
 
             if (entry == null)
             {
@@ -402,7 +402,7 @@ NOTE: DNS hostnames prefixed by ""(neon)-"" identify built-in
         /// <param name="commandLine">The command line.</param>
         private void ListEntries(CommandLine commandLine)
         {
-            var entries = cluster.LocalDns.List();
+            var entries = cluster.Hosts.List();
 
             Console.WriteLine();
 
@@ -447,7 +447,7 @@ NOTE: DNS hostnames prefixed by ""(neon)-"" identify built-in
                 Program.Exit(1);
             }
 
-            cluster.LocalDns.Remove(entryHost);
+            cluster.Hosts.Remove(entryHost);
             Console.WriteLine($"Removed [{entryHost}] (if it existed).");
         }
 
@@ -523,7 +523,7 @@ NOTE: DNS hostnames prefixed by ""(neon)-"" identify built-in
 
             // Persist the entry to Consul.
 
-            cluster.LocalDns.Set(dnsEntry);
+            cluster.Hosts.Set(dnsEntry);
 
             Console.WriteLine();
             Console.WriteLine($"Saved [{dnsEntry.Hostname}] DNS host entry.");

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    LocalDnsManager.cs
+// FILE:	    HostsManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -24,9 +24,9 @@ using Neon.Time;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Handles local cluster DNS related operations for a <see cref="ClusterProxy"/>.
+    /// Handles local cluster DNS hosts krelated operations for a <see cref="ClusterProxy"/>.
     /// </summary>
-    public sealed class LocalDnsManager
+    public sealed class HostsManager
     {
         //---------------------------------------------------------------------
         // Static members
@@ -56,7 +56,7 @@ namespace Neon.Cluster
         /// Internal constructor.
         /// </summary>
         /// <param name="cluster">The parent <see cref="ClusterProxy"/>.</param>
-        internal LocalDnsManager(ClusterProxy cluster)
+        internal HostsManager(ClusterProxy cluster)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null);
 
