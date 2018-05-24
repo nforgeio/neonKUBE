@@ -152,8 +152,8 @@ if [ -f ${CONFIG_NEW_FOLDER}/.certs ] ; then
         # temporary JSON file and build the HAProxy certificates
         # by appending the key to the cert.
 
-        cat ${CERT_TEMP} | jq -r '.data.Cert' > ${CERT_DIR}/${CERT_FILE}
-        cat ${CERT_TEMP} | jq -r '.data.Key' >> ${CERT_DIR}/${CERT_FILE}
+        cat ${CERT_TEMP} | jq -r '.data.CertPem' > ${CERT_DIR}/${CERT_FILE}
+        cat ${CERT_TEMP} | jq -r '.data.KeyPem' >> ${CERT_DIR}/${CERT_FILE}
 
         if [ "${DEBUG}" != "true" ] ; then
             rm ${CERT_TEMP}
@@ -211,7 +211,7 @@ case $? in
 
 esac
 
-# Purge the current contents of [/tmp/secrets/haproxy] and then copy the
+# Purge the current contents of [/dev/shm/secrets/haproxy] and then copy the
 # new config files over.
 
 rm -rf ${CONFIG_FOLDER}/*
@@ -259,9 +259,9 @@ haproxy -f ${CONFIG_PATH} ${STOP_OPTION} ${DEBUG_OPTION}
 sleep ${START_SECONDS}
 . log-info.sh "HAProxy is running"
 
-# Purge the contents of [/tmp/secrets/haproxy] and [/tmp/secrets/haproxy-new]
+# Purge the contents of [/dev/shm/secrets/haproxy] and [/dev/shm/secrets/haproxy-new]
 # so we don't leave secrets such as TLS key lying around in a file system
-# (even a tmpfs).
+# (even on a tmpfs).
 
 if [ "${DEBUG}" != "true" ] ; then
     rm -rf ${CONFIG_FOLDER}/*

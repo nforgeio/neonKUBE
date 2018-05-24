@@ -75,13 +75,15 @@ else
     export VAULT_TOKEN=
 fi
 
-# Ensure that the [/tmp/secrets] folder exists if one wasn't mounted as a tmpfs.
+# Ensure that the [/dev/shm/secrets] folder exists if one wasn't mounted 
+# as a tmpfs.  [/dev/shm] stands for "shared memory" and is a built-in
+# tmpfs with a capacity of 64MB, which should be plenty for most clusters.
 
-export SECRETS_TMP=/tmp/secrets
+export SECRETS_TMP=/dev/shm/secrets
 mkdir -p ${SECRETS_TMP}
 
-# Create [/tmp/secrets/haproxy] to hold the HAProxy configuration and 
-# [/tmp/secrets/haproxy-new] to temporarily hold the new configuration
+# Create [/dev/shm/secrets/haproxy] to hold the HAProxy configuration and 
+# [/dev/shm/secrets/haproxy-new] to temporarily hold the new configuration
 # while it is being validated.
 
 export CONFIG_FOLDER=${SECRETS_TMP}/haproxy
@@ -98,8 +100,8 @@ export CONFIG_NEW_PATH=${CONFIG_NEW_FOLDER}/haproxy.cfg
 # Consul key is modified (even if the same value is set again).
 #
 # [onconfigchange.sh] will download and validate the configuration within
-# the [/tmp/secrets/haproxy-new] directory and then copy it to [/tmp/secrets/haproxy]
-# before starting or restarting HAProxy.
+# the [/dev/shm/secrets/haproxy-new] directory and then copy it to
+# [/dev/shm/secrets/haproxy] before starting or restarting HAProxy.
 #
 # Note the the [consul watch] command returns only if [onconfigchange.sh]
 # returns a non-zero exit code.

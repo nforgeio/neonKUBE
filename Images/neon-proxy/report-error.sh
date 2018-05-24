@@ -26,7 +26,7 @@ else
     message="Unspecified Error"
 fi
 
-# Purge the contents of [/tmp/secrets/haproxy] and [/tmp/secrets/haproxy-new]
+# Purge the contents of [/dev/shm/secrets/haproxy] and [/dev/shm/secrets/haproxy-new]
 # before we exit so we don't leave secrets such as TLS key lying around in a 
 # file system (even a tmpfs).
 
@@ -46,5 +46,7 @@ if [ "${RESTARTING}" == "true" ] ; then
 else
     . log-critical.sh "${message}"
 
-    exit 1
+    if [ "${DEBUG}" != "true" ] ; then
+        exit 1
+    fi
 fi
