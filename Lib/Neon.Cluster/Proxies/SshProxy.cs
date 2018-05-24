@@ -68,6 +68,94 @@ namespace Neon.Cluster
     public class SshProxy<TMetadata> : IDisposable
         where TMetadata : class
     {
+        //---------------------------------------------------------------------
+        // Static members
+
+        private static Dictionary<string, object> connectLocks = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
+
+        /// <summary>
+        /// Returns the object to be used to when establishing connections to
+        /// a target server.
+        /// </summary>
+        /// <param name="host">The target server hostname or IP address.</param>
+        /// <returns>The lock object.</returns>
+        private static object GetConnectLock(string host)
+        {
+            // $hack(jeff.lill):
+            //
+            // SSH.NET appears to have an issue when attempting to establish multiple
+            // connections to the same server at the same time.  We never saw this in
+            // the past because we were only using SshProxy to establish single connections
+            // to any given server.
+            //
+            // This changed with thre [ClusterFixture] implementation that attempts to
+            // parallelize cluster reset operations for better test execution performance.
+            //
+            // The symptom is that we see:
+            //
+            //      Renci.SshNet.Common.SshException:
+            //          Message type 52 is not valid in the current context.
+            //
+            // sometimes while connecting or executing a command.
+            //
+            //-----------------------------------------------------------------
+            // I found this issue from 2014: http://library759.rssing.com/chan-6841305/all_p61.html
+            //
+            // I run a bunch of threads (max 30) which all create a client and connect to the same server, and run a few commands.
+            // All the clients use the same ConnectionInfo object to connect.
+            //
+            // The following exception occurs either on Connect, or RunCommand, but mostly on Connect.
+            //      Renci.SshClient.Common.SshException: Message type 52 is not valid.
+            //      at Renci.SshClient.Session.WaitHandle(WaitHandle waitHandle)
+            //      at Renci.SshClient.PasswordConnectionInfo.OnAuthenticate()
+            //      at Renci.SshClient.ConnectionInfo.Authenticate(Session session)
+            //      at Renci.SshClient.Session.Connect()
+            //      at Renci.SshClient.BaseClient.Connect()
+            //      at upresources.LinuxSSH.Process(Object sender, DoWorkEventArgs e)
+            //
+            // I have seen this behaviour with the max number of threads set to 3, but that was in debug-mode in VS 2010.
+            //
+            // Please tell me if there's additional information I can provide.
+            // Comments: ** Comment from web user: drieseng **
+            //
+            // I can reproduce this consistently when using the same ConnectionInfo for multiple connections (on multiple threads).
+            //
+            // This is because the authentication methods are not thread-safe. The EventWaitHandle and authentication result are on
+            // the AuthenticationMethod, and - when its shared by multiple threads - it can lead to the exception mentioned in this issue.
+            //
+            // When the EventWaitHandle of an Authenticate invocation for a given session is actually getting set by the authentication 
+            // attempt of another session, then SSH_MSG_USERAUTH_SUCCESS (and others) is unregistered while the session itself still has 
+            // to receive this message. Once it receives the message, the exception above is thrown.
+            //-----------------------------------------------------------------
+
+            // $hack(jeff.lill):
+            //
+            // It appears that SSH.NET may assume that only a single connection attempt
+            // to any given server will be in flight at any given time.  We're going to
+            // mitigate this by allocating a lock object for each unique SSH service 
+            // hostname and use that to ensure that only a single connection attempt
+            // will be made at a time against any given server.
+            //
+            // This will result in a memory leak if you try to do something like crawl
+            // the web with this :)
+
+            lock (connectLocks)
+            {
+                if (connectLocks.TryGetValue(host, out var hostLock))
+                {
+                    return hostLock;
+                }
+
+                hostLock = new object();
+                connectLocks.Add(host, hostLock);
+
+                return hostLock;
+            }
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
         // SSH and SCP keep-alive ping interval.
         private const double KeepAliveSeconds = 15.0;
 
@@ -788,7 +876,10 @@ namespace Neon.Cluster
                     {
                         LogLine($"*** WAITFORBOOT: CONNECT TO [{sshClient.ConnectionInfo.Host}:{sshClient.ConnectionInfo.Port}]");
 
-                        sshClient.Connect();
+                        lock (GetConnectLock(sshClient.ConnectionInfo.Host))
+                        {
+                            sshClient.Connect();
+                        }
 
                         // We need to verify that the [/dev/shm/neoncluster/rebooting] file is not present
                         // to ensure that the machine has actually restarted (see [Reboot()]
@@ -889,7 +980,10 @@ namespace Neon.Cluster
 
                     try
                     {
-                        sshClient.Connect();
+                        lock (GetConnectLock(sshClient.ConnectionInfo.Host))
+                        {
+                            sshClient.Connect();
+                        }
 
                         this.sshClient = sshClient;
                         return;
@@ -952,7 +1046,10 @@ namespace Neon.Cluster
 
                     try
                     {
-                        scpClient.Connect();
+                        lock (GetConnectLock(scpClient.ConnectionInfo.Host))
+                        {
+                            scpClient.Connect();
+                        }
 
                         this.scpClient = scpClient;
                         return;
