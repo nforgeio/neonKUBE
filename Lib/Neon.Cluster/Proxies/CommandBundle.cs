@@ -46,6 +46,9 @@ namespace Neon.Cluster
     /// </remarks>
     public class CommandBundle : List<CommandFile>
     {
+        //---------------------------------------------------------------------
+        // Static members
+
         /// <summary>
         /// <para>
         /// This is a meta command line argument that can be added to a command
@@ -60,14 +63,111 @@ namespace Neon.Cluster
         public const string ArgBreak = "-!arg-break!-";
 
         /// <summary>
+        /// Normalizes the bundle command arguments into a single list of strings
+        /// by expanding any arguments that can enumerate strings, normalizing common
+        /// value types like booleans, and adding surrounding quotes if necessary.
+        /// </summary>
+        /// <param name="args">The arguments to be normalized.</param>
+        /// <param name="keepArgBreaks">
+        /// Optionally specifies that any <see cref="ArgBreak"/> arguments are 
+        /// included in the output.
+        /// </param>
+        /// <returns>List of normalized arguments.</returns>
+        internal static List<string> NormalizeArgs(IEnumerable<object> args, bool keepArgBreaks = false)
+        {
+            var normalized = new List<string>();
+
+            if (args == null)
+            {
+                return normalized;
+            }
+
+            foreach (var arg in args)
+            {
+                if (arg == null)
+                {
+                    continue;
+                }
+                else if (arg is string && (string)arg == CommandBundle.ArgBreak)
+                {
+                    if (keepArgBreaks)
+                    {
+                        normalized.Add(CommandBundle.ArgBreak);
+                    }
+                }
+                else if (arg is bool)
+                {
+                    normalized.Add((bool)arg ? "true" : "false");
+                }
+                else if (arg is float || arg is double)
+                {
+                    var value = (double)arg;
+
+                    normalized.Add(value.ToString("0.#"));
+                }
+                else if (arg is IEnumerable<string>)
+                {
+                    // Expand string arrays into multiple arguments.
+
+                    foreach (var value in (IEnumerable<string>)arg)
+                    {
+                        var valueString = value.ToString();
+
+                        if (string.IsNullOrWhiteSpace(valueString))
+                        {
+                            valueString = "-"; // $todo(jeff.lill): Not sure if this makes sense any more.
+                        }
+                        else if (valueString.Contains(' '))
+                        {
+                            valueString = "\"" + valueString + "\"";
+                        }
+
+                        normalized.Add(valueString);
+                    }
+                }
+                else
+                {
+                    var argString = arg.ToString();
+
+                    if (string.IsNullOrWhiteSpace(argString))
+                    {
+                        argString = "-";
+                    }
+                    else if (argString.Contains(' '))
+                    {
+                        argString = "\"" + argString + "\"";
+                    }
+
+                    normalized.Add(argString);
+                }
+            }
+
+            return normalized;
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        /// <summary>
         /// Constructor.
         /// </summary>
         /// <param name="command">The command.</param>
-        /// <param name="args">The command arguments.</param>
+        /// <param name="args">The command arguments or <c>null</c>.</param>
         /// <remarks>
-        /// <note>
-        /// Any <c>null</c> arguments will be ignored.
-        /// </note>
+        /// <para>
+        /// The <paramref name="args"/> parameter optionally specifies an array of
+        /// command argument objects.  With a few exceptions, these arguments will 
+        /// be passed to the command by rendering the object into a <c>string</c>
+        /// by calling its <see cref="Object.ToString()"/> method.  <c>null</c>
+        /// and empty string arguments will be ignored and <see cref="IEnumerable{strring}"/>
+        /// arguments will be expanded.
+        /// </para>
+        /// <para>
+        /// <c>bool</c> and <c>double</c> arguments get special treatment.  <c>bool</c>
+        /// values will be rendered as <c>true</c> or <c>false</c> and <c>double</c>
+        /// arguments will be rendered using <c>double.ToString("#.0")</c>.  If you
+        /// need something different, you can convert your arguments to strings first.
+        /// </para>
         /// </remarks>
         public CommandBundle(string command, params object[] args)
         {
@@ -180,65 +280,9 @@ namespace Neon.Cluster
 
             sb.Append(Command);
 
-            foreach (var arg in Args)
+            foreach (var arg in NormalizeArgs(Args))
             {
-                if (arg == null)
-                {
-                    continue;
-                }
-
-                sb.Append(' ');
-
-                if (arg is bool)
-                {
-                    sb.Append((bool)arg ? "true" : "false");
-                }
-                else if (arg is IEnumerable<string>)
-                {
-                    // Expand string arrays into multiple arguments.
-
-                    var first = true;
-
-                    foreach (var value in (IEnumerable<string>)arg)
-                    {
-                        var valueString = value.ToString();
-
-                        if (string.IsNullOrWhiteSpace(valueString))
-                        {
-                            valueString = "-"; // $todo(jeff.lill): Not sure if this makes sense any more.
-                        }
-                        else if (valueString.Contains(' '))
-                        {
-                            valueString = "\"" + valueString + "\"";
-                        }
-
-                        if (first)
-                        {
-                            first = false;
-                        }
-                        else
-                        {
-                            sb.Append(' ');
-                        }
-
-                        sb.Append(valueString);
-                    }
-                }
-                else
-                {
-                    var argString = arg.ToString();
-
-                    if (string.IsNullOrWhiteSpace(argString))
-                    {
-                        argString = "-";
-                    }
-                    else if (argString.Contains(' '))
-                    {
-                        argString = "\"" + argString + "\"";
-                    }
-
-                    sb.Append(argString);
-                }
+                sb.AppendWithSeparator(arg);
             }
 
             return sb.ToString();
@@ -259,7 +303,7 @@ namespace Neon.Cluster
         /// </exception>
         /// <remarks>
         /// This can be useful for making copies of cluster configuration commands
-        /// on the server as scripts for sutiations where system operators need
+        /// on the server as scripts for situations where system operators need
         /// to manually tweak things.
         /// </remarks>
         public string ToBash(string comment = null)
@@ -278,11 +322,12 @@ namespace Neon.Cluster
 
             sb.Append(Command);
 
-            var argIndex = 0;
+            var argIndex       = 0;
+            var normalizedArgs = NormalizeArgs(Args, keepArgBreaks: true);
 
-            while (argIndex < Args.Length)
+            while (argIndex < normalizedArgs.Count)
             {
-                var arg = Args[argIndex++].ToString();
+                var arg = normalizedArgs[argIndex++].ToString();
 
                 if (arg == ArgBreak)
                 {
@@ -311,9 +356,9 @@ namespace Neon.Cluster
                 // The workaround is to add a [CommandStep.ArgBreak] string 
                 // to the parameters just before any non-option arguments.
 
-                if (argIndex < Args.Length)
+                if (argIndex < normalizedArgs.Count)
                 {
-                    var nextArg = Args[argIndex].ToString();
+                    var nextArg = normalizedArgs[argIndex].ToString();
 
                     if (nextArg.StartsWith("-") || nextArg == ArgBreak)
                     {

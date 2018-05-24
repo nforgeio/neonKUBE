@@ -74,6 +74,20 @@ namespace Neon.Cluster
         /// You'll need to passes the full Docker command, including the leading
         /// <b>docker</b> client program name.
         /// </note>
+        /// <para>
+        /// The <paramref name="args"/> parameter optionally specifies an array of
+        /// command argument objects.  With a few exceptions, these arguments will 
+        /// be passed to the command by rendering the object into a <c>string</c>
+        /// by calling its <see cref="Object.ToString()"/> method.  <c>null</c>
+        /// and empty string arguments will be ignored and <see cref="IEnumerable{strring}"/>
+        /// arguments will be expanded.
+        /// </para>
+        /// <para>
+        /// <c>bool</c> and <c>double</c> arguments get special treatment.  <c>bool</c>
+        /// values will be rendered as <c>true</c> or <c>false</c> and <c>double</c>
+        /// arguments will be rendered using <c>double.ToString("#.0")</c>.  If you
+        /// need something different, you can convert your arguments to strings first.
+        /// </para>
         /// </remarks>
         public static CommandStep CreateDocker(string nodeName, string command, params object[] args)
         {
@@ -90,7 +104,6 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="nodeName">The Docker node name.</param>
         /// <param name="operationName">The idempotent operation name.</param>
-
         /// <param name="command">The Linux command.</param>
         /// <param name="args">The command arguments.</param>
         /// <remarks>
@@ -103,6 +116,20 @@ namespace Neon.Cluster
         /// You'll need to passes the full Docker command, including the leading
         /// <b>docker</b> client program name.
         /// </note>
+        /// <para>
+        /// The <paramref name="args"/> parameter optionally specifies an array of
+        /// command argument objects.  With a few exceptions, these arguments will 
+        /// be passed to the command by rendering the object into a <c>string</c>
+        /// by calling its <see cref="Object.ToString()"/> method.  <c>null</c>
+        /// and empty string arguments will be ignored and <see cref="IEnumerable{strring}"/>
+        /// arguments will be expanded.
+        /// </para>
+        /// <para>
+        /// <c>bool</c> and <c>double</c> arguments get special treatment.  <c>bool</c>
+        /// values will be rendered as <c>true</c> or <c>false</c> and <c>double</c>
+        /// arguments will be rendered using <c>double.ToString("#.0")</c>.  If you
+        /// need something different, you can convert your arguments to strings first.
+        /// </para>
         /// </remarks>
         public static CommandStep CreateIdempotentDocker(string nodeName, string operationName, string command, params object[] args)
         {
@@ -254,23 +281,6 @@ namespace Neon.Cluster
             node.Status = string.Empty;
         }
 
-        /// <summary>
-        /// Ensures that a Bash command argument is escaped as necessary.
-        /// </summary>
-        /// <param name="arg">The argument string.</param>
-        /// <returns>The safe argument.</returns>
-        private string SafeArg(string arg)
-        {
-            if (arg.IndexOfAny(new char[] { ' ', '\t', '"' }) != -1)
-            {
-                arg = arg.Replace('\t', ' ');
-                arg = arg.Replace("\"", "\\\"");
-                arg = "\"" + arg + "\"";
-            }
-
-            return arg;
-        }
-
         /// <inheritdoc/>
         public override string ToString()
         {
@@ -278,16 +288,9 @@ namespace Neon.Cluster
 
             sb.Append($"{commandBundle.Command}");
 
-            foreach (var arg in commandBundle.Args)
+            foreach (var arg in CommandBundle.NormalizeArgs(commandBundle.Args))
             {
-                var argString = arg.ToString();
-
-                if (argString == CommandBundle.ArgBreak)
-                {
-                    continue;   // Ignore these
-                }
-
-                sb.Append($" {SafeArg(argString)}");
+                sb.AppendWithSeparator(arg);
             }
 
             if (commandBundle.Count > 0)
@@ -313,7 +316,7 @@ namespace Neon.Cluster
         /// </exception>
         /// <remarks>
         /// This can be useful for making copies of cluster configuration commands
-        /// on the server as scripts for sutiations where system operators need
+        /// on the server as scripts for situations where system operators need
         /// to manually tweak things.
         /// </remarks>
         public string ToBash(string comment = null)
