@@ -835,32 +835,33 @@ docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
                                 {
                                     new LoadBalancerHttpBackend()
                                     {
-                                        Group = "managers",
-                                        Port  = 5000
+                                        Server = "neon-registry",
+                                        Port   = 5000
                                     }
                                 }
             };
         }
 
         /// <summary>
-        /// Returns the 
+        /// Returns the local cluster DNS override for the registry.
         /// </summary>
-        /// <param name="hostname"></param>
-        /// <returns></returns>
+        /// <param name="hostname">The registry hostname.</param>
+        /// <returns>The <see cref="DnsEntry"/>.</returns>
         private DnsEntry GetRegistryDnsEntry(string hostname)
         {
             return new DnsEntry()
             {
                 Hostname  = hostname,
                 IsSystem  = true,
-                Endpoints = new List<DnsEndpoint>()
-                            {
-                                new DnsEndpoint()
-                                {
-                                    Check  = true,
-                                    Target = "group=managers"
-                                }
-                            }
+                Endpoints = 
+                new List<DnsEndpoint>()
+                {
+                    new DnsEndpoint()
+                    {
+                        Check   = true,
+                        Target = "group=managers"
+                    }
+                }
             };
         }
     }
