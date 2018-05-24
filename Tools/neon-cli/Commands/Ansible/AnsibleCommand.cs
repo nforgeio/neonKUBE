@@ -328,7 +328,7 @@ MODULES:
     neon_docker_login       - Manages Docker registry logins
     neon_docker_secret      - Manages Docker secrets
     neon_docker_service     - Manages Docker services
-    neon_hosts              - Manages cluster DNS host overrides
+    neon_dns_hosts          - Manages cluster DNS host overrides
     neon_load_balancer      - Manager cluster load balancers  
 ";
 

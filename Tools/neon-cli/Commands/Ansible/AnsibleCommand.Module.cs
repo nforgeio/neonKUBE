@@ -135,9 +135,9 @@ namespace NeonCli
                         new DockerServiceModule().Run(context);
                         break;
 
-                    case "neon_hosts":
+                    case "neon_dns_hosts":
 
-                        new HostsModule().Run(context);
+                        new DnsHostsModule().Run(context);
                         break;
 
                     case "neon_load_balancer":
