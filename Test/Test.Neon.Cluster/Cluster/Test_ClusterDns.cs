@@ -105,26 +105,13 @@ namespace TestNeonCluster
             Assert.True(cluster.ListDnsEntries(includeSystem: true).Single(i => i.Hostname == "bar.test.com").IsSystem);
 
             //-----------------------------------------------------------------
-            // Re-verify the non-system entry to ensure it didn't get munged.
-
-            item = cluster.ListDnsEntries().SingleOrDefault(i => i.Hostname == "foo.test.com");
-
-            Assert.NotNull(item);
-            Assert.Equal("foo.test.com", item.Hostname);
-            Assert.Single(item.Endpoints);
-
-            endpoint = item.Endpoints.First();
-
-            Assert.Equal("1.2.3.4", endpoint.Target);
-            Assert.False(endpoint.Check);
-
-            //-----------------------------------------------------------------
             // Verify the new system entry.
 
-            item = cluster.ListDnsEntries(includeSystem: true).SingleOrDefault(i => i.Hostname == "(neon)-bar.test.com");
+            item = cluster.ListDnsEntries(includeSystem: true).SingleOrDefault(i => i.Hostname == "bar.test.com");
 
             Assert.NotNull(item);
             Assert.Equal("bar.test.com", item.Hostname);
+            Assert.True(item.IsSystem);
             Assert.Single(item.Endpoints);
 
             endpoint = item.Endpoints.First();
