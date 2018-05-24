@@ -18,6 +18,11 @@ if [ "${PASSWORD}" == "" ] ; then
     exit 1
 fi
 
+if [ "${SECRET}" == "" ] ; then
+    . log-error.sh "SECRET environment variable is required."
+    exit 1
+fi
+
 if [ "${READ_ONLY}" == "" ] ; then
     export READ_ONLY=false
 fi
@@ -27,8 +32,8 @@ if [ "${LOG_LEVEL}" == "" ] ; then
 fi
 
 . log-info.sh "USERNAME=${USERNAME}"
-. log-info.sh "PASSWORD=** REDACTED **"
-. log-info.sh "SECRET=** REDACTED **"
+. log-info.sh "PASSWORD=**REDACTED**"
+. log-info.sh "SECRET=**REDACTED**"
 . log-info.sh "READ_ONLY=${READ_ONLY}"
 . log-info.sh "LOG_LEVEL=${LOG_LEVEL}"
 
@@ -45,7 +50,7 @@ fi
 
 # Create the encrypted credentials.
 
-htpasswd -Bbn ${USERNAME} ${PASSWPORD} > /dev/shm/htpasswd
+htpasswd -Bbn ${USERNAME} ${PASSWORD} > /dev/shm/htpasswd
 
 # Generate the registry configuration.
 
