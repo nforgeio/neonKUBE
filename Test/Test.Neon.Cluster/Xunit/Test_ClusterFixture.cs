@@ -163,7 +163,10 @@ services:
                 actions.Add(
                     () =>
                     {
-                        node.SudoCommand("docker volume create test-volume", RunOptions.None);
+                        using (var nodeClone = node.Clone())
+                        {
+                            nodeClone.SudoCommand("docker volume create test-volume", RunOptions.None);
+                        }
                     });
             }
 
@@ -180,20 +183,23 @@ services:
                 actions.Add(
                     () =>
                     {
-                        var response = node.SudoCommand("docker volume ls --format \"{{.Name}}\"", RunOptions.None);
+                        using (var nodeClone = node.Clone())
+                        {
+                            var response = nodeClone.SudoCommand("docker volume ls --format \"{{.Name}}\"", RunOptions.None);
 
-                        if (response.ExitCode != 0)
-                        {
-                            lock (sbUncleared)
+                            if (response.ExitCode != 0)
                             {
-                                sbUncleared.AppendLine($"{node.Name}: exitcode={response.ExitCode} message={response.AllText}");
+                                lock (sbUncleared)
+                                {
+                                    sbUncleared.AppendLine($"{nodeClone.Name}: exitcode={response.ExitCode} message={response.AllText}");
+                                }
                             }
-                        }
-                        else if (response.AllText.Contains("test-volume"))
-                        {
-                            lock (sbUncleared)
+                            else if (response.AllText.Contains("test-volume"))
                             {
-                                sbUncleared.AppendLine($"{node.Name}: [test-volume] still exists.");
+                                lock (sbUncleared)
+                                {
+                                    sbUncleared.AppendLine($"{nodeClone.Name}: [test-volume] still exists.");
+                                }
                             }
                         }
                     });

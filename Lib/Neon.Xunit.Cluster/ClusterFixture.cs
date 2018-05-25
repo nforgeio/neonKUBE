@@ -908,10 +908,9 @@ namespace Neon.Xunit.Cluster
                 actions.Add(
                     () =>
                     {
-                        using (var nodeProxy = node.Clone())
+                        using (var nodeClone = node.Clone())
                         {
-                            nodeProxy.Connect();
-                            nodeProxy.DockerCommand("docker image prune --all --force", RunOptions.None);
+                            nodeClone.DockerCommand("docker image prune --all --force", RunOptions.None);
                         }
                     });
             }
@@ -934,10 +933,9 @@ namespace Neon.Xunit.Cluster
                 actions.Add(
                     () =>
                     {
-                        using (var nodeProxy = node.Clone())
+                        using (var nodeClone = node.Clone())
                         {
-                            nodeProxy.Connect();
-                            nodeProxy.DockerCommand($"docker image pull {image}", RunOptions.None);
+                            nodeClone.DockerCommand($"docker image pull {image}", RunOptions.None);
                         }
                     });
             }
@@ -968,11 +966,9 @@ namespace Neon.Xunit.Cluster
                 actions.Add(
                     () =>
                     {
-                        using (var nodeProxy = node.Clone())
+                        using (var nodeClone = node.Clone())
                         {
-                            nodeProxy.Connect();
-
-                            var result = nodeProxy.DockerCommand(RunOptions.None, "docker", "volume", "ls", "--format", "{{.Name}}");
+                            var result = nodeClone.DockerCommand(RunOptions.None, "docker", "volume", "ls", "--format", "{{.Name}}");
 
                             if (result.ExitCode != 0)
                             {
@@ -1016,11 +1012,11 @@ namespace Neon.Xunit.Cluster
 
                             foreach (var volume in volumes)
                             {
-                                result = nodeProxy.DockerCommand(RunOptions.None, "docker", "volume", "rm", volumes);
+                                result = nodeClone.DockerCommand(RunOptions.None, "docker", "volume", "rm", volumes);
 
                                 if (result.ExitCode != 0 && !result.ErrorText.Contains("volume is in use"))
                                 {
-                                    throw new Exception($"Cannot remove Docker volume on [node={nodeProxy.Name}]: {result.AllText}");
+                                    throw new Exception($"Cannot remove Docker volume on [node={nodeClone.Name}]: {result.AllText}");
                                 }
                             }
                         }
@@ -1439,20 +1435,18 @@ namespace Neon.Xunit.Cluster
                 actions.Add(
                     () =>
                     {
-                        using (var nodeProxy = node.Clone()) {
-
-                            nodeProxy.Connect();
+                        using (var nodeClone = node.Clone()) {
 
                             // List the containers and build up a list of the container
                             // IDs we're going to remove.
 
                             if (!noContainers)
                             {
-                                var response = nodeProxy.SudoCommand("docker ps --format {{.ID}}~{{.Names}}", RunOptions.None);
+                                var response = nodeClone.SudoCommand("docker ps --format {{.ID}}~{{.Names}}", RunOptions.None);
 
                                 if (response.ExitCode != 0)
                                 {
-                                    throw new Exception($"Unable to list node [{nodeProxy.Name}] containers: {response.AllText}");
+                                    throw new Exception($"Unable to list node [{nodeClone.Name}] containers: {response.AllText}");
                                 }
 
                                 var sbDeleteIDs = new StringBuilder();
@@ -1462,8 +1456,8 @@ namespace Neon.Xunit.Cluster
                                     foreach (var line in reader.Lines())
                                     {
                                         var fields = line.Split('~');
-                                        var id = fields[0];
-                                        var name = fields[1];
+                                        var id     = fields[0];
+                                        var name   = fields[1];
 
                                         if (removeSystem || !name.StartsWith("neon-", StringComparison.InvariantCultureIgnoreCase))
                                         {
@@ -1474,11 +1468,11 @@ namespace Neon.Xunit.Cluster
 
                                 if (sbDeleteIDs.Length > 0)
                                 {
-                                    response = nodeProxy.SudoCommand($"docker rm --force {sbDeleteIDs}", RunOptions.None);
+                                    response = nodeClone.SudoCommand($"docker rm --force {sbDeleteIDs}", RunOptions.None);
 
                                     if (response.ExitCode != 0)
                                     {
-                                        throw new Exception($"Unable to remove node [{nodeProxy.Name}] containers: {response.AllText}");
+                                        throw new Exception($"Unable to remove node [{nodeClone.Name}] containers: {response.AllText}");
                                     }
                                 }
                             }
@@ -1487,21 +1481,21 @@ namespace Neon.Xunit.Cluster
 
                             if (!noVolumes)
                             {
-                                var response = nodeProxy.SudoCommand($"docker volume prune --force", RunOptions.None);
+                                var response = nodeClone.SudoCommand($"docker volume prune --force", RunOptions.None);
 
                                 if (response.ExitCode != 0)
                                 {
-                                    throw new Exception($"Unable to purge node [{nodeProxy.Name}] volumes: {response.AllText}");
+                                    throw new Exception($"Unable to purge node [{nodeClone.Name}] volumes: {response.AllText}");
                                 }
                             }
 
                             if (!noNetworks)
                             {
-                                var response = nodeProxy.SudoCommand($"docker network prune --force", RunOptions.None);
+                                var response = nodeClone.SudoCommand($"docker network prune --force", RunOptions.None);
 
                                 if (response.ExitCode != 0)
                                 {
-                                    throw new Exception($"Unable to purge node [{nodeProxy.Name}] networks: {response.AllText}");
+                                    throw new Exception($"Unable to purge node [{nodeClone.Name}] networks: {response.AllText}");
                                 }
                             }
                         }

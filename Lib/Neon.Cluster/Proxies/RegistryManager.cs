@@ -165,13 +165,16 @@ cat password.txt | docker login --username ""{username}"" --password-stdin {regi
                 actions.Add(
                     () =>
                     {
-                        var response = node.SudoCommand($"docker logout", RunOptions.None, registry);
-
-                        if (response.ExitCode != 0)
+                        using (var clonedNode = node.Clone())
                         {
-                            lock (errors)
+                            var response = clonedNode.SudoCommand($"docker logout", RunOptions.None, registry);
+
+                            if (response.ExitCode != 0)
                             {
-                                errors.Add($"{node}: {response.ErrorSummary}");
+                                lock (errors)
+                                {
+                                    errors.Add($"{clonedNode.Name}: {response.ErrorSummary}");
+                                }
                             }
                         }
                     });

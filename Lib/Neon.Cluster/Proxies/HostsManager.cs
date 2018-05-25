@@ -64,7 +64,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns a named local DNS entry.
+        /// Returns a named cluster DNS host entry.
         /// </summary>
         /// <param name="hostname">The DNS hostname (case insenstive).</param>
         /// <returns>The <see cref="DnsEntry"/> or <c>null</c> if it doesn't exist.</returns>
@@ -79,7 +79,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Lists the local DNS entries.
+        /// Lists the cluster DNS host entries.
         /// </summary>
         /// <param name="includeSystem">Optionally include built-in system entries.</param>
         /// <returns>The list of name/entry values.</returns>
@@ -106,7 +106,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Removes a named local DNS entry.
+        /// Removes a cluster DNS host entry.
         /// </summary>
         /// <param name="hostname">The DNS hostname (case insenstive).</param>
         public void Remove(string hostname)
@@ -120,7 +120,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Sets a named local DNS entry.
+        /// Sets a cluster DNS host entry.
         /// </summary>
         /// <param name="entry">The entry definition.</param>
         /// <exception cref="InvalidOperationException">

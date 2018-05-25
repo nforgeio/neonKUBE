@@ -164,36 +164,8 @@ when these aren't specified.
 
                     var sbFailedNodes = new StringBuilder();
 
-                    Console.WriteLine("Updating all cluster nodes.");
-
-                    var loginActions = new List<Action>();
-
-                    foreach (var node in cluster.Nodes)
-                    {
-                        loginActions.Add(
-                            () =>
-                            {
-                                if (!node.RegistryLogin(registry, username, password))
-                                {
-                                    lock (sbFailedNodes)
-                                    {
-                                        sbFailedNodes.AppendWithSeparator(node.Name, ", ");
-                                    }
-                                }
-                            });
-                    }
-
-                    NeonHelper.WaitForParallel(loginActions);
-
-                    if (sbFailedNodes.Length == 0)
-                    {
-                        Console.WriteLine($"All cluster nodes are logged into [{registry}].");
-                    }
-                    else
-                    {
-                        Console.Error.WriteLine($"*** ERROR: Inconsistent cluster state because these nodes could not be logged in: {sbFailedNodes}");
-                        Program.Exit(1);
-                    }
+                    Console.WriteLine($"Logging the cluster into the [{registry}] registry.");
+                    cluster.Registry.Login(registry, username, password);
 
                     // Restart the registry cache containers running on the managers
                     // with the new credentials if we're updating credentials for the 

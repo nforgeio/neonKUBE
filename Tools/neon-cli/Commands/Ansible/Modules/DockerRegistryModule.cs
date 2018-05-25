@@ -355,9 +355,7 @@ namespace NeonCli.Ansible
 
                     context.Changed = true;
 
-                    // Remove the registry credentials from Vault if present and then
-                    // have all nodes logout, ignoring any errors to be sure they're
-                    // all logged out.
+                    // Logout of the registry.
 
                     if (currentCredentials != null)
                     {
@@ -387,41 +385,44 @@ namespace NeonCli.Ansible
                                 // actual service task containers is not.  We're going to detect this and
                                 // throw a [TransientException] and then retry.
 
-                                lock (context)
+                                using (var clonedNode = node.Clone())
                                 {
-                                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing [neon-registry] volume on [{node.Name}].");
-                                }
-
-                                volumeRetryPolicy.InvokeAsync(
-                                    async () =>
+                                    lock (context)
                                     {
-                                        var response = node.DockerCommand(RunOptions.None, "docker", "volume", "rm", "neon-registry");
+                                        context.WriteLine(AnsibleVerbosity.Trace, $"Removing [neon-registry] volume on [{clonedNode.Name}].");
+                                    }
 
-                                        if (response.ExitCode != 0)
+                                    volumeRetryPolicy.InvokeAsync(
+                                        async () =>
                                         {
-                                            var message = $"Error removing [neon-registry] volume from [{node.Name}: {response.ErrorText}";
+                                            var response = clonedNode.DockerCommand(RunOptions.None, "docker", "volume", "rm", "neon-registry");
 
-                                            lock (syncLock)
+                                            if (response.ExitCode != 0)
                                             {
-                                                context.WriteLine(AnsibleVerbosity.Info, message);
+                                                var message = $"Error removing [neon-registry] volume from [{clonedNode.Name}: {response.ErrorText}";
+
+                                                lock (syncLock)
+                                                {
+                                                    context.WriteLine(AnsibleVerbosity.Info, message);
+                                                }
+
+                                                if (response.AllText.Contains("volume is in use"))
+                                                {
+                                                    throw new TransientException(message);
+                                                }
+                                            }
+                                            else
+                                            {
+                                                lock (context)
+                                                {
+                                                    context.WriteLine(AnsibleVerbosity.Trace, $"Removed [neon-registry] volume on [{clonedNode.Name}].");
+                                                }
                                             }
 
-                                            if (response.AllText.Contains("volume is in use"))
-                                            {
-                                                throw new TransientException(message);
-                                            }
-                                        }
-                                        else
-                                        {
-                                            lock (context)
-                                            {
-                                                context.WriteLine(AnsibleVerbosity.Trace, $"Removed [neon-registry] volume on [{node.Name}].");
-                                            }
-                                        }
+                                            await Task.Delay(0);
 
-                                        await Task.Delay(0);
-
-                                    }).Wait();
+                                        }).Wait();
+                                }
                             });
                     }
 
@@ -445,9 +446,9 @@ namespace NeonCli.Ansible
                     context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster out of the [{currentHostname}] registry.");
                     cluster.Registry.Logout(currentHostname);
 
-                    // Remove the local DNS entry.
+                    // Remove the cluster DNS host entry.
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [{currentHostname}] local DNS entry.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [{currentHostname}] registry DNS hosts entry.");
                     cluster.Hosts.Remove(hostname);
                     break;
 
@@ -574,7 +575,7 @@ namespace NeonCli.Ansible
                         return;
                     }
 
-                    // Create the local DNS entry we'll use to redirect traffic targeting the registry
+                    // Create the cluster DNS host entry we'll use to redirect traffic targeting the registry
                     // hostname to the cluster managers.  We need to do this because registry IP addresses
                     // are typically public, typically targetting the external firewall or load balancer
                     // interface.
@@ -637,7 +638,7 @@ namespace NeonCli.Ansible
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Service created.");
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging into the [{hostname}] registry.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster into the [{hostname}] registry.");
                         cluster.Registry.Login(hostname, username, password);
                     }
                     else if (updateRequired)
@@ -680,7 +681,7 @@ namespace NeonCli.Ansible
 
                         if (certificateChanged || hostnameChanged)
                         {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Touching certificate.");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Touching certificate Consul change key.");
                             cluster.Certificate.Touch();
                         }
 
@@ -704,12 +705,12 @@ namespace NeonCli.Ansible
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Service updated.");
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging into the [{hostname}] registry.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster into the [{hostname}] registry.");
                         cluster.Registry.Login(hostname, username, password);
                     }
                     else
                     {
-                        context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service update is not required but we're logging all nodes in anywayto ensure cluster consistency.");
+                        context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service update is not required but we're logging all nodes into [{hostname}] to ensure cluster consistency.");
                         cluster.Registry.Login(hostname, username, password);
 
                         context.Changed = false;

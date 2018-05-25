@@ -180,47 +180,16 @@ namespace NeonCli.Ansible
                         return;
                     }
 
-                    // Remove the registry credentials from Vault if present and then
-                    // have all nodes logout, ignoring any errors to be sure they're
-                    // all logged out.
+                    // Log the cluster out of the registry.
 
                     if (existingCredentials != null)
                     {
                         context.Changed = true;
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Removing credentials for [{registry}].");
-                        cluster.Registry.Logout(registry);
                     }
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Logging all cluster nodes out of [{registry}].");
-
-                    var logoutActions = new List<Action>();
-
-                    foreach (var node in cluster.Nodes)
-                    {
-                        logoutActions.Add(
-                            () =>
-                            {
-                                if (!node.RegistryLogout(registry))
-                                {
-                                    lock (sbErrorNodes)
-                                    {
-                                        sbErrorNodes.AppendWithSeparator(node.Name, ", ");
-                                    }
-                                }
-                            });
-                    }
-
-                    NeonHelper.WaitForParallel(logoutActions);
-
-                    if (sbErrorNodes.Length == 0)
-                    {
-                        context.WriteLine(AnsibleVerbosity.Trace, $"All cluster nodes are logged out.");
-                    }
-                    else
-                    {
-                        context.WriteErrorLine($"These nodes could not be logged out: {sbErrorNodes}");
-                        context.WriteErrorLine($"The cluster may be in an inconsistent state.");
-                    }
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster out of the [{registry}] registry.");
+                    cluster.Registry.Logout(registry);
+                    context.WriteLine(AnsibleVerbosity.Trace, $"All cluster nodes are logged out.");
                     break;
 
                 case "present":
@@ -251,8 +220,7 @@ namespace NeonCli.Ansible
                         throw new ArgumentException($"[password] module argument is required.");
                     }
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Saving credentials for [{registry}].");
-
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster into the [{registry}] registry.");
                     cluster.Registry.Login(registry, username, password);
 
                     // Log all of the nodes in with the new registry credentials.
@@ -264,36 +232,8 @@ namespace NeonCli.Ansible
 
                     if (!cluster.Definition.Docker.RegistryCache || !NeonClusterHelper.IsDockerPublicRegistry(registry))
                     {
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging all cluster nodes into [{registry}].");
-
-                        var loginActions = new List<Action>();
-
-                        foreach (var node in cluster.Nodes)
-                        {
-                            loginActions.Add(
-                                () =>
-                                {
-                                    if (!node.RegistryLogin(registry, username, password))
-                                    {
-                                        lock (sbErrorNodes)
-                                        {
-                                            sbErrorNodes.AppendWithSeparator(node.Name, ", ");
-                                        }
-                                    }
-                                });
-                        }
-
-                        NeonHelper.WaitForParallel(loginActions);
-
-                        if (sbErrorNodes.Length == 0)
-                        {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"All cluster nodes were updated.");
-                        }
-                        else
-                        {
-                            context.WriteErrorLine($"These nodes could not be updated: {sbErrorNodes}");
-                            context.WriteErrorLine($"The cluster may be in an inconsistent state.");
-                        }
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster into the [{registry}] registry.");
+                        cluster.Registry.Login(registry, username, password);
                     }
                     else
                     {
