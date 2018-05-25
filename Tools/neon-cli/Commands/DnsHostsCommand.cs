@@ -39,14 +39,14 @@ Manages cluster DNS local hosts records.  This works much like the Linux
 
 USAGE:
 
-    neon dns-hosts help                         - Describes DNS entry format
-    neon dns-hosts addr|addresses [HOST]        - Lists current host addresses
-    neon dns-hosts [--yaml] get HOST            - Gets DNS host settings
-    neon dns-hosts ls|list                      - Lists the DNS host entries
-    neon dns-hosts rm|remove HOST               - Removes DNS host settings
-    neon dns-hosts set [--check] HOST ADDRESSES - Sets DNS host settings
-    neon dns-hosts set PATH                     - Sets DNS settings from a file
-    neon dns-hosts set -                        - Sets DNS settings from STDIN
+    neon dns-hosts help                                  - Describes DNS entry format
+    neon dns-hosts addr|addresses [HOST]                 - Lists current host addresses
+    neon dns-hosts [--yaml] get HOST                     - Gets DNS host settings
+    neon dns-hosts ls|list                               - Lists the DNS host entries
+    neon dns-hosts [--wait] rm|remove HOST               - Removes DNS host settings
+    neon dns-hosts [--wait] set [--check] HOST ADDRESSES - Sets DNS host settings
+    neon dns-hosts [--wait] set PATH                     - Sets DNS settings from a file
+    neon dns-hosts s[--wait] et -                        - Sets DNS settings from STDIN
 
 ARGUMENTS:
 
@@ -60,6 +60,9 @@ OPTIONS:
 
     --check     - Indicates that indvidual endpoint health should be
                   verified by sending ICMP pings.
+
+    --wait      - Wait 60 seconds for the change to propagate across
+                  the cluster.
 
     --yaml      - Output YAML instead of JSON.
 ";
@@ -124,7 +127,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--check", "--yaml" }; }
+            get { return new string[] { "--check", "--wait", "--yaml" }; }
         }
 
         /// <inheritdoc/>
@@ -373,7 +376,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
             host = host.ToLowerInvariant();
 
-            var entry = cluster.Hosts.Get(host);
+            var entry = cluster.DnsHosts.Get(host);
 
             if (entry == null)
             {
@@ -397,7 +400,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <param name="commandLine">The command line.</param>
         private void ListEntries(CommandLine commandLine)
         {
-            var entries = cluster.Hosts.List();
+            var entries = cluster.DnsHosts.List();
 
             Console.WriteLine();
 
@@ -435,6 +438,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         private void RemoveEntry(CommandLine commandLine)
         {
             var entryHost = commandLine.Arguments.ElementAtOrDefault(1);
+            var wait      = commandLine.HasOption("--wait");
 
             if (entryHost == null)
             {
@@ -442,7 +446,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                 Program.Exit(1);
             }
 
-            cluster.Hosts.Remove(entryHost);
+            cluster.DnsHosts.Remove(entryHost, waitUntilPropagated: wait);
             Console.WriteLine($"Removed [{entryHost}] (if it existed).");
         }
 
@@ -453,6 +457,8 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         private void SetEntry(CommandLine commandLine)
         {
             DnsEntry dnsEntry;
+
+            var wait = commandLine.HasOption("--wait");
 
             if (commandLine.Arguments.Length >= 3)
             {
@@ -518,7 +524,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
             // Persist the entry to Consul.
 
-            cluster.Hosts.Set(dnsEntry);
+            cluster.DnsHosts.Set(dnsEntry, waitUntilPropagated: wait);
 
             Console.WriteLine();
             Console.WriteLine($"Saved [{dnsEntry.Hostname}] DNS host entry.");

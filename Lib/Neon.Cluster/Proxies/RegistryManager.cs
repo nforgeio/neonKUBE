@@ -45,7 +45,7 @@ namespace Neon.Cluster
             foreach (var hostname in cluster.Vault.ListAsync(NeonClusterConst.VaultRegistryCredentialsKey).Result)
             {
                 var usernamePassword = cluster.Vault.ReadStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{hostname}").Result;
-                var fields           = usernamePassword.Split(new char[] { '/' }, 2);
+                var fields = usernamePassword.Split(new char[] { '/' }, 2);
 
                 if (fields.Length == 2)
                 {
@@ -70,13 +70,13 @@ namespace Neon.Cluster
         /// Logs the cluster into a Docker registry or updates the registry credentials
         /// if already logged in.
         /// </summary>
-        /// <param name="registry">The registry hostname.</param>
+        /// <param name="registry">The registry hostname or <c>null</c> to specify the Docker public registry.</param>
         /// <param name="username">The username.</param>
         /// <param name="password">The password.</param>
         /// <exception cref="NeonClusterException">Thrown if one or more of the cluster nodes could not be logged in.</exception>
         public void Login(string registry, string username, string password)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
+            Covenant.Requires<ArgumentNullException>(string.IsNullOrEmpty(registry) || ClusterDefinition.DnsHostRegex.IsMatch(registry));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
             Covenant.Requires<ArgumentNullException>(password != null);
 
@@ -96,21 +96,7 @@ namespace Neon.Cluster
                     {
                         using (var clonedNode = node.Clone())
                         {
-                            // Use a command bundle so we're not passing the credentials
-                            // on the command line.
-
-                            var loginBundle = new CommandBundle("./docker-login.sh");
-
-                            loginBundle.AddFile("docker-login.sh",
-$@"#!/bin/bash
-
-cat password.txt | docker login --username ""{username}"" --password-stdin {registry}
-",
-                                isExecutable: true);
-
-                            loginBundle.AddFile("password.txt", password);
-
-                            var response = clonedNode.SudoCommand(loginBundle, cluster.SecureRunOptions);
+                            var response = clonedNode.SudoCommand("docker login", RunOptions.None, "--username", username, "--password", password, registry);
 
                             if (response.ExitCode != 0)
                             {
