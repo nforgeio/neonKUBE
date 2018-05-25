@@ -31,7 +31,7 @@ if (Test-Path bin)
 }
 
 Exec { mkdir bin }
-Exec { dotnet publish "$src_tools_path\\neon-cli\\neon-cli.csproj" -c Debug -o "$pwd\bin" }
+Exec { dotnet publish "$src_tools_path\\neon-cli\\neon-cli.csproj" -c Release -o "$pwd\bin" }
 
 # Split the build binaries into [__app] (application) and [__dep] dependency subfolders
 # so we can tune the image layers.
