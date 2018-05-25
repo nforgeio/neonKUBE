@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DnsCommand.cs
+// FILE:	    DnsHostsCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,24 +28,25 @@ using System.Diagnostics.Contracts;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>dns</b> command.
+    /// Implements the <b>dns-hosts</b> command.
     /// </summary>
-    public class DnsCommand : CommandBase
+    public class DnsHostsCommand : CommandBase
     {
         private const string usage =
 @"
-Manages cluster DNS records.
+Manages cluster DNS local hosts records.  This works much like the Linux
+[/etc/hosts] file except that it manages DNS records for the entire cluster.
 
 USAGE:
 
-    neon dns help                           - Describes DNS entry format
-    neon dns addr|addresses [HOST]          - Lists current host addresses
-    neon dns [--yaml] get HOST              - Gets DNS host settings
-    neon dns ls|list                        - Lists the DNS host entries
-    neon dns rm|remove HOST                 - Removes DNS host settings
-    neon dns set [--check] HOST ADDRESSES   - Sets DNS host settings
-    neon dns set PATH                       - Sets DNS settings from a file
-    neon dns set -                          - Sets DNS settings from STDIN
+    neon dns-hosts help                         - Describes DNS entry format
+    neon dns-hosts addr|addresses [HOST]        - Lists current host addresses
+    neon dns-hosts [--yaml] get HOST            - Gets DNS host settings
+    neon dns-hosts ls|list                      - Lists the DNS host entries
+    neon dns-hosts rm|remove HOST               - Removes DNS host settings
+    neon dns-hosts set [--check] HOST ADDRESSES - Sets DNS host settings
+    neon dns-hosts set PATH                     - Sets DNS settings from a file
+    neon dns-hosts set -                        - Sets DNS settings from STDIN
 
 ARGUMENTS:
 
@@ -109,12 +110,6 @@ The YAML example below defines [my-managers] using the [managers] group:
 
 Note that [neon-dns-mon] automatically creates DNS entries for all cluster 
 host groups if they don't already exist (named like: [GROUPNAME.cluster]).
-
-NOTE: DNS hostnames prefixed by ""(neon)-"" identify built-in 
-      system DNS entries used to resolve things like the local 
-      Docker registry service [neon-registry] if deployed.  You
-      should leave the system entries alone unless you really 
-      know what you're doing.
 ";
 
         private ClusterLogin    clusterLogin;
@@ -123,7 +118,7 @@ NOTE: DNS hostnames prefixed by ""(neon)-"" identify built-in
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "dns" }; }
+            get { return new string[] { "dns-hosts" }; }
         }
 
         /// <inheritdoc/>
