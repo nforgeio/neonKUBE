@@ -153,7 +153,7 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Reading existing credentials for [{registry}].");
 
-            var existingCredentials = cluster.Registry.Get(registry);
+            var existingCredentials = cluster.Registry.GetCredentials(registry);
 
             if (existingCredentials != null)
             {
@@ -188,7 +188,7 @@ namespace NeonCli.Ansible
                     {
                         context.Changed = true;
                         context.WriteLine(AnsibleVerbosity.Trace, $"Removing credentials for [{registry}].");
-                        cluster.Registry.Remove(registry);
+                        cluster.Registry.Logout(registry);
                     }
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Logging all cluster nodes out of [{registry}].");
@@ -253,7 +253,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Saving credentials for [{registry}].");
 
-                    cluster.Registry.Set(registry, username, password);
+                    cluster.Registry.Login(registry, username, password);
 
                     // Log all of the nodes in with the new registry credentials.
                     //

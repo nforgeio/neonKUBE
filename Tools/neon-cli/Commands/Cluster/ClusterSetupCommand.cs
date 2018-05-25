@@ -417,14 +417,6 @@ OPTIONS:
                         VaultProxy();
                         VaultInitialize();
                         ConsulInitialize();
-
-                        // Persist the Docker registry credentials to Vault.
-
-                        foreach (var credential in cluster.Definition.Docker.Registries
-                            .Where(r => !string.IsNullOrEmpty(r.Username)))
-                        {
-                            cluster.Registry.Set(credential.Registry, credential.Username, credential.Password);
-                        }
                     });
 
                 var clusterServices = new ClusterServices(cluster);
@@ -1332,39 +1324,12 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                     node.SudoCommand("chmod 640 /etc/docker/daemon.json");
                     node.SudoCommand("setup-docker.sh");
 
-                    // Log into any Docker registries that require credentials.
-
-                    RegistryLogin(node);
-
                     // Clean up any cached APT files.
 
                     node.Status = "clean up";
                     node.SudoCommand("apt-get clean -yq");
                     node.SudoCommand("rm -rf /var/lib/apt/lists");
                 });
-        }
-
-        /// <summary>
-        /// Logs a node into any Docker registries that require credentials.
-        /// </summary>
-        /// <param name="node">The target node.</param>
-        private void RegistryLogin(SshProxy<NodeDefinition> node)
-        {
-            foreach (var registry in cluster.Definition.Docker.Registries)
-            {
-                node.Status = "docker login";
-
-                var loginCommand = new CommandBundle("./docker-login.sh");
-
-                loginCommand.AddFile("docker-login.sh",
-$@"docker login \
--u ""{registry.Username}"" \
--p ""{registry.Password}"" \
-{registry.Registry}",
-                    isExecutable: true);
-
-                node.SudoCommand(loginCommand, cluster.SecureRunOptions);
-            }
         }
 
         /// <summary>
@@ -1543,10 +1508,6 @@ $@"docker login \
                     node.SudoCommand("mkdir -p /etc/docker");
                     node.UploadText("/etc/docker/daemon.json", GetDockerConfig(node));
                     node.SudoCommand("setup-docker.sh");
-
-                    // Log into any Docker registries that require credentials.
-
-                    RegistryLogin(node);
 
                     // Other initialization.
 

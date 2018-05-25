@@ -6,8 +6,12 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Linq;
+using System.Text;
 
 using Consul;
+
+using Neon.Common;
 
 namespace Neon.Cluster
 {
@@ -63,18 +67,133 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Adds or updates Docker cluster registry credentials.
+        /// Logs the cluster into a Docker registry or updates the registry credentials
+        /// if already logged in.
         /// </summary>
-        /// <param name="registry">The target registry hostname.</param>
+        /// <param name="registry">The registry hostname.</param>
         /// <param name="username">The username.</param>
         /// <param name="password">The password.</param>
-        public void Set(string registry, string username, string password)
+        /// <exception cref="NeonClusterException">Thrown if one or more of the cluster nodes could not be logged in.</exception>
+        public void Login(string registry, string username, string password)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
             Covenant.Requires<ArgumentNullException>(password != null);
 
-            cluster. Vault.WriteStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}", $"{username}/{password}").Wait();
+            // Update the registry credentials in Vault.
+
+            cluster.Vault.WriteStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}", $"{username}/{password}").Wait();
+
+            // Login all of the cluster nodes in parallel.
+
+            var actions = new List<Action>();
+            var errors  = new List<string>();
+
+            foreach (var node in cluster.Nodes)
+            {
+                actions.Add(
+                    () =>
+                    {
+                        using (var clonedNode = node.Clone())
+                        {
+                            // Use a command bundle so we're not passing the credentials
+                            // on the command line.
+
+                            var loginBundle = new CommandBundle("./docker-login.sh");
+
+                            loginBundle.AddFile("docker-login.sh",
+$@"#!/bin/bash
+
+cat password.txt | docker login --username ""{username}"" --password-stdin {registry}
+",
+                                isExecutable: true);
+
+                            loginBundle.AddFile("password.txt", password);
+
+                            var response = clonedNode.SudoCommand(loginBundle, cluster.SecureRunOptions);
+
+                            if (response.ExitCode != 0)
+                            {
+                                lock (errors)
+                                {
+                                    errors.Add($"{clonedNode.Name}: {response.ErrorSummary}");
+                                }
+                            }
+                        }
+                    });
+            }
+
+            NeonHelper.WaitForParallel(actions);
+
+            if (errors.Count > 0)
+            {
+                var sb = new StringBuilder();
+
+                sb.AppendLine($"Could not login [{errors.Count}] nodes to the [{registry}] Docker registry.");
+                sb.AppendLine($"Your cluster may now be in an inconsistent state.");
+                sb.AppendLine();
+
+                foreach (var error in errors)
+                {
+                    sb.AppendLine(error);
+                }
+
+                throw new NeonClusterException(sb.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Logs the cluster out of a Docker registry.
+        /// </summary>
+        /// <param name="registry">The registry hostname.</param>
+        /// <exception cref="NeonClusterException">Thrown if one or more of the cluster nodes could not be logged out.</exception>
+        public void Logout(string registry)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
+
+            // Remove the registry credentials from Vault.
+
+            cluster.Vault.DeleteAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}").Wait();
+
+            // Logout of all of the cluster nodes in parallel.
+
+            var actions = new List<Action>();
+            var errors  = new List<string>();
+
+            foreach (var node in cluster.Nodes)
+            {
+                actions.Add(
+                    () =>
+                    {
+                        var response = node.SudoCommand($"docker logout", RunOptions.None, registry);
+
+                        if (response.ExitCode != 0)
+                        {
+                            lock (errors)
+                            {
+                                errors.Add($"{node}: {response.ErrorSummary}");
+                            }
+                        }
+                    });
+            }
+
+            NeonHelper.WaitForParallel(actions);
+
+            if (errors.Count > 0)
+            {
+                var sb = new StringBuilder();
+
+                sb.AppendLine($"Could not logout [{errors.Count}] nodes from the [{registry}] Docker registry.");
+                sb.AppendLine($"Your cluster may now be in an inconsistent state.");
+                sb.AppendLine();
+
+                foreach (var error in errors)
+                {
+                    sb.AppendLine(error);
+                }
+
+                throw new NeonClusterException(sb.ToString());
+            }
         }
 
         /// <summary>
@@ -82,7 +201,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="registry">The target registry hostname.</param>
         /// <returns>The credentials or <c>null</c> if no credentials exists.</returns>
-        public RegistryCredentials Get(string registry)
+        public RegistryCredentials GetCredentials(string registry)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
 
@@ -108,17 +227,6 @@ namespace Neon.Cluster
             {
                 throw new NeonClusterException($"Invalid credentials for the [{registry}] registry.");
             }
-        }
-
-        /// <summary>
-        /// Disconnects a Docker registry from the cluster.
-        /// </summary>
-        /// <param name="registry">The target registry hostname.</param>
-        public void Remove(string registry)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
-
-            cluster.Vault.DeleteAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}").Wait();
         }
 
         /// <summary>
@@ -163,8 +271,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns the hostname for the local Docker registry if one is
-        /// deployed.
+        /// Returns the hostname for the local Docker registry if one is deployed.
         /// </summary>
         /// <returns>The hostname or <c>null</c>.</returns>
         public string GetLocalHostname()

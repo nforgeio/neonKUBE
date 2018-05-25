@@ -308,7 +308,7 @@ namespace NeonCli.Ansible
             {
                 context.WriteLine(AnsibleVerbosity.Trace, $"Reading existing registry credentials for [{currentHostname}].");
 
-                currentCredentials = cluster.Registry.Get(currentHostname);
+                currentCredentials = cluster.Registry.GetCredentials(currentHostname);
 
                 if (currentCredentials != null)
                 {
@@ -361,39 +361,8 @@ namespace NeonCli.Ansible
 
                     if (currentCredentials != null)
                     {
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Removing registry credentials for [{currentHostname}].");
-                        cluster.Registry.Remove(currentHostname);
-                    }
-
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Logging all cluster nodes out of [{currentHostname}].");
-
-                    var logoutActions = new List<Action>();
-
-                    foreach (var node in cluster.Nodes)
-                    {
-                        logoutActions.Add(
-                            () =>
-                            {
-                                if (!node.RegistryLogout(currentHostname))
-                                {
-                                    lock (syncLock)
-                                    {
-                                        sbErrorNodes.AppendWithSeparator(node.Name, ", ");
-                                    }
-                                }
-                            });
-                    }
-
-                    NeonHelper.WaitForParallel(logoutActions);
-
-                    if (sbErrorNodes.Length == 0)
-                    {
-                        context.WriteLine(AnsibleVerbosity.Trace, $"All cluster nodes are logged out.");
-                    }
-                    else
-                    {
-                        context.WriteErrorLine($"These nodes could not be logged out: {sbErrorNodes}");
-                        context.WriteErrorLine($"The cluster may be in an inconsistent state.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster out of the [{currentHostname}] registry.");
+                        cluster.Registry.Logout(currentHostname);
                     }
 
                     // Delete the [neon-registry] service and volume.  Note that
@@ -471,9 +440,10 @@ namespace NeonCli.Ansible
                     cluster.Registry.SetLocalHostname(null);
                     cluster.Registry.SetLocalSecret(null);
 
-                    // Remove the registry credentials from Vault.
+                    // Logout the cluster from the registry.
 
-                    cluster.Registry.Remove(currentHostname);
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster out of the [{currentHostname}] registry.");
+                    cluster.Registry.Logout(currentHostname);
 
                     // Remove the local DNS entry.
 
@@ -642,9 +612,6 @@ namespace NeonCli.Ansible
                         context.WriteLine(AnsibleVerbosity.Trace, $"Touching certificate.");
                         cluster.Certificate.Touch();
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Saving [{hostname}] registry credentials to Vault.");
-                        cluster.Registry.Set(hostname, username, password);
-
                         context.WriteLine(AnsibleVerbosity.Trace, $"Creating the [neon-registry] service.");
 
                         var createResponse = manager.DockerCommand(RunOptions.None,
@@ -669,6 +636,9 @@ namespace NeonCli.Ansible
                         }
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Service created.");
+
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging into the [{hostname}] registry.");
+                        cluster.Registry.Login(hostname, username, password);
                     }
                     else if (updateRequired)
                     {
@@ -697,8 +667,8 @@ namespace NeonCli.Ansible
 
                             if (!string.IsNullOrEmpty(currentHostname))
                             {
-                                context.WriteLine(AnsibleVerbosity.Trace, $"Removing old [{currentHostname}] registry credentials from Vault.");
-                                cluster.Registry.Remove(currentHostname);
+                                context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster out of the [{currentHostname}] registry.");
+                                cluster.Registry.Logout(currentHostname);
                             }
                         }
 
@@ -706,12 +676,6 @@ namespace NeonCli.Ansible
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster secret.");
                             cluster.Registry.SetLocalSecret(secret);
-                        }
-
-                        if (hostnameChanged || usernameChanged || passwordChanged)
-                        {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Saving [{hostname}] registry credentials to Vault.");
-                            cluster.Registry.Set(hostname, username, password);
                         }
 
                         if (certificateChanged || hostnameChanged)
@@ -739,10 +703,15 @@ namespace NeonCli.Ansible
                         }
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Service updated.");
+
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging into the [{hostname}] registry.");
+                        cluster.Registry.Login(hostname, username, password);
                     }
                     else
                     {
-                        context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service update is not required.");
+                        context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service update is not required but we're logging all nodes in anywayto ensure cluster consistency.");
+                        cluster.Registry.Login(hostname, username, password);
+
                         context.Changed = false;
                     }
                     break;
@@ -823,22 +792,22 @@ docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
             {
                 Name      = "neon-registry",
                 Frontends = new List<LoadBalancerHttpFrontend>()
-                                {
-                                    new LoadBalancerHttpFrontend()
-                                    {
-                                        Host     = hostname,
-                                        CertName = "neon-registry",
-                                    }
-                                },
+                {
+                    new LoadBalancerHttpFrontend()
+                    {
+                        Host     = hostname,
+                        CertName = "neon-registry",
+                    }
+                },
 
                 Backends = new List<LoadBalancerHttpBackend>()
-                                {
-                                    new LoadBalancerHttpBackend()
-                                    {
-                                        Server = "neon-registry",
-                                        Port   = 5000
-                                    }
-                                }
+                {
+                    new LoadBalancerHttpBackend()
+                    {
+                        Server = "neon-registry",
+                        Port   = 5000
+                    }
+                }
             };
         }
 

@@ -334,6 +334,18 @@ namespace NeonCli
                         "--network", NeonClusterConst.PrivateNetwork,
                         Program.ResolveDockerImage(cluster.Definition.ProxyImage));
                 });
+
+            // Log the cluster into any Docker registries with credentials.
+
+            firstManager.InvokeIdempotentAction("setup-registry-login",
+                () =>
+                {
+                    foreach (var credential in cluster.Definition.Docker.Registries
+                        .Where(r => !string.IsNullOrEmpty(r.Username)))
+                    {
+                        cluster.Registry.Login(credential.Registry, credential.Username, credential.Password);
+                    }
+                });
         }
 
         /// <summary>
