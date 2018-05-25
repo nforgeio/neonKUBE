@@ -5,7 +5,7 @@
     <RootNamespace>Neon.Xunit.Cluster</RootNamespace>
     <PackageId>Neon.Xunit.Cluster</PackageId>
     <Version>6.3.18.0</Version>
-    <Authors>neonFORGE, LLC</Authors>
+    <Authors>Jeff Lill</Authors>
     <Product>neonCLUSTER</Product>
     <Description>neonCLUSTER unit testing helpers.</Description>
     <Copyright>Copyright © 2016-2018 by neonFORGE LLC.  All rights reserved.</Copyright>
