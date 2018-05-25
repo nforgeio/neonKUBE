@@ -90,6 +90,7 @@ COMMAND SUMMARY:
     neon login rm           USER@CLUSTER
     neon login status
     neon reboot             NODE...
+    neon registry           CMD...
     neon run                -- CMD...
     neon scp                [NODE]
     neon ssh                [NODE]
@@ -248,6 +249,7 @@ Note that the tool may require admin privileges for [--noshim] mode.
                     new LoginStatusCommand(),
                     new LogoutCommand(),
                     new RebootCommand(),
+                    new RegistryCommand(),
                     new RunCommand(),
                     new ScpCommand(),
                     new SshCommand(),
