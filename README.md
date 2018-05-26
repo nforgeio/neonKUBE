@@ -81,30 +81,32 @@ Follow steps below to configure a development or test workstation.
 
 11. **Close** any running instances of **Visual Studio**
 
-12. Configure the build **environment variables**:
+12. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
+
+13. Configure the build **environment variables**:
 
   * Open **File Explorer**
   * Navigate to the directory holding the cloned repository
   * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
   * Close the CMD window when the script is finished
 
-13. Enable PowerShell script execution via (in a CMD window as administrator):
+14. Enable PowerShell script execution via (in a CMD window as administrator):
 
   `powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser`
 
-14. Import the Ansible passwords used for encrypting secret files in the Git repository Import using this command (use the standard neonFORGE **DEVOPS Password** when prompted):
+15. Import the Ansible passwords used for encrypting secret files in the Git repository Import using this command (use the standard neonFORGE **DEVOPS Password** when prompted):
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon ansible password import %NF_ROOT%\passwords.zip`
 
-15. Restart Visual Studio and/or any command windows to pick up the change the environment variable changes above.
+16. Restart Visual Studio and/or any command windows to pick up the change the environment variable changes above.
 
-16. Confirm that the solution builds:
+17. Confirm that the solution builds:
 
   * Run **Visual Studio** as **administrator**
   * Open **$/neonFORGE.sln** (where **$** is the repo root directory)
   * Select **Build/Rebuild** Solution
 
-17. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+18. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
 
   * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
   * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
@@ -113,8 +115,6 @@ Follow steps below to configure a development or test workstation.
   * WinSCP: Enable **hidden files**.  Start **WinSCP**, select **Tools/Preferences...", and then click **Panels** on the left and check **Show hidden files**:
   
     ![WinSCP Hidden Files](./README/WinSCPHiddenFiles.png)
-
-18. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
 
 19. Install **OpenVPN**
 
