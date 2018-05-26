@@ -94,7 +94,8 @@ namespace TestNeonCluster
                             Check  = false
                         }
                     }
-                });
+                },
+                waitUntilPropagated: true);
 
             //-----------------------------------------------------------------
             // Verify that the system DNS entry DOES NOT appear in the normal listing
@@ -120,10 +121,10 @@ namespace TestNeonCluster
             Assert.False(endpoint.Check);
 
             //-----------------------------------------------------------------
-            // Wait for the cluster DNS to converge and then verify that the
-            // two hostnames resolve correctly on various node types.
-
-            cluster.ConvergeDns();
+            // Verify that the two hostnames resolve correctly on various node types.
+            // Note that we don't need to wait for the cluster DNS hosts to converge 
+            // because we specified [waitUntilPropagated: true] when we persisted
+            // the DNS entry above.
 
             var manager = clusterProxy.Managers.First();   // We'll always have at least one manager.
 

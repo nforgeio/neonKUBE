@@ -814,9 +814,14 @@ namespace Neon.Xunit.Cluster
         /// Sets a cluster DNS entry.
         /// </summary>
         /// <param name="entry">The entry to be set.</param>
-        public void SetDnsEntry(DnsEntry entry)
+        /// <param name="waitUntilPropagated">
+        /// Optionally waits for <see cref="DnsHostsManager.PropagationTimeout"/> 
+        /// for the change to be propagated across the cluster.  This defaults to
+        /// <c>false</c>.
+        /// </param>
+        public void SetDnsEntry(DnsEntry entry, bool waitUntilPropagated = false)
         {
-            cluster.DnsHosts.Set(entry);
+            cluster.DnsHosts.Set(entry, waitUntilPropagated);
         }
 
         /// <summary>
