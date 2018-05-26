@@ -241,7 +241,7 @@ namespace NeonCli
         /// </summary>
         static ResourceFiles()
         {
-            Linux = new Folder("Linux", 
+            Linux = new Folder("Resources", 
                 folders: new List<Folder>()
                 {
                     new Folder("Ubuntu-16.04",
