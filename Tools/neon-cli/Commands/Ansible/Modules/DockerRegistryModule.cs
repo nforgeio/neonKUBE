@@ -449,7 +449,7 @@ namespace NeonCli.Ansible
                     // Remove the cluster DNS host entry.
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [{currentHostname}] registry DNS hosts entry.");
-                    cluster.Hosts.Remove(hostname);
+                    cluster.DnsHosts.Remove(hostname);
                     break;
 
                 case "present":
@@ -604,8 +604,8 @@ namespace NeonCli.Ansible
                         cluster.Registry.SetLocalHostname(hostname);
                         cluster.Registry.SetLocalSecret(secret);
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Adding local cluster DNS entry for [{hostname}].");
-                        cluster.Hosts.Set(dnsRedirect);
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Adding cluster DNS host entry for [{hostname}] (slow).");
+                        cluster.DnsHosts.Set(dnsRedirect, waitUntilPropagated: true);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Writing load balancer rule.");
                         cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
@@ -660,8 +660,8 @@ namespace NeonCli.Ansible
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating load balancer rule.");
                             cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
 
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster DNS entry for [{hostname}].");
-                            cluster.Hosts.Set(dnsRedirect);
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating cluster DNS host entry for [{hostname}] (slow).");
+                            cluster.DnsHosts.Set(dnsRedirect, waitUntilPropagated: true);
 
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster hostname [{hostname}].");
                             cluster.Registry.SetLocalHostname(hostname);

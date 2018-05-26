@@ -3203,5 +3203,56 @@ echo $? > {cmdFolder}/exit
 
             return true;
         }
+
+        /// <summary>
+        /// Waits for a specific hostname to resolve on the connected node.
+        /// This is useful for ensuring that cluster DNS host entry changes
+        /// have been propagated by the [neon-dns-mon], [neon-dns], and
+        /// PowerDNS services and are ready for use.
+        /// </summary>
+        /// <param name="hostname">The DNS hostname to be checked.</param>
+        /// <param name="timeout">
+        /// Optional timeout.  This defaults to a reasonable value 
+        /// (<see cref="DnsHostsManager.PropagationTimeout"/>) that is appropriate 
+        /// for the cluster DNS host services.  You may customize this if
+        /// you're checking DNS entries served from another source.
+        /// </param>
+        /// <exception cref="TimeoutException">Thrown if the hostname didn't resolve in time.</exception>
+        /// <remarks>
+        /// <note>
+        /// This method only verifies that the DNS hostnames resolves, not that
+        /// it resolves to a specific value.  So you can't use this to ensure that
+        /// a change to an existing DNS entry has been propagated.
+        /// </note>
+        /// </remarks>
+        public void WaitForDnsHost(string hostname, TimeSpan timeout = default(TimeSpan))
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
+            Covenant.Requires<ArgumentNullException>(ClusterDefinition.DnsHostRegex.IsMatch(hostname));
+
+            if (timeout <= TimeSpan.Zero)
+            {
+                timeout = DnsHostsManager.PropagationTimeout;
+            }
+
+            try
+            {
+                NeonHelper.WaitFor(
+                    () =>
+                    {
+                        var response = RunCommand("nslookup", RunOptions.None, hostname);
+
+                        return response.ExitCode == 0;
+                    },
+                    timeout: timeout,
+                    pollTime: TimeSpan.FromMilliseconds(500));
+            }
+            catch (TimeoutException)
+            {
+                // Re-throw with a nicer exception message.
+
+                throw new TimeoutException($"Unable to resolve [{hostname}] within [{timeout}].");
+            }
+        }
     }
 }

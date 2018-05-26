@@ -58,8 +58,8 @@ namespace TestNeonCluster
 
             clusterProxy.Certificate.Remove("neon-registry");
             clusterProxy.PublicLoadBalancer.RemoveRule("neon-registry");
-            clusterProxy.Hosts.Remove("xunit-registry.neonforge.net");
-            clusterProxy.Hosts.Remove("xunit-registry2.neonforge.net");
+            clusterProxy.DnsHosts.Remove("xunit-registry.neonforge.net");
+            clusterProxy.DnsHosts.Remove("xunit-registry2.neonforge.net");
             clusterProxy.Registry.Logout("xunit-registry.neonforge.net");
             clusterProxy.Registry.Logout("xunit-registry2.neonforge.net");
         }
@@ -120,7 +120,7 @@ namespace TestNeonCluster
                     Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                var dnsEntry = clusterProxy.Hosts.Get("xunit-registry.neonforge.net");
+                var dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -154,7 +154,7 @@ namespace TestNeonCluster
                     Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.Hosts.Get("xunit-registry.neonforge.net");
+                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -198,7 +198,7 @@ namespace TestNeonCluster
                     Assert.Empty(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.Hosts.Get("xunit-registry.neonforge.net");
+                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry.neonforge.net");
 
                 Assert.Null(dnsEntry);
 
@@ -228,7 +228,7 @@ namespace TestNeonCluster
                     Assert.Empty(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.Hosts.Get("xunit-registry.neonforge.net");
+                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry.neonforge.net");
 
                 Assert.Null(dnsEntry);
             }
@@ -291,7 +291,7 @@ namespace TestNeonCluster
                     Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                var dnsEntry = clusterProxy.Hosts.Get("xunit-registry.neonforge.net");
+                var dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -342,7 +342,7 @@ namespace TestNeonCluster
                     Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.Hosts.Get("xunit-registry2.neonforge.net");
+                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -393,7 +393,7 @@ namespace TestNeonCluster
                     Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.Hosts.Get("xunit-registry2.neonforge.net");
+                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -444,7 +444,7 @@ namespace TestNeonCluster
                     Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.Hosts.Get("xunit-registry2.neonforge.net");
+                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -495,7 +495,7 @@ namespace TestNeonCluster
                     Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.Hosts.Get("xunit-registry2.neonforge.net");
+                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -529,7 +529,7 @@ namespace TestNeonCluster
                     Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.Hosts.Get("xunit-registry2.neonforge.net");
+                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -592,7 +592,7 @@ namespace TestNeonCluster
                     Assert.Single(cluster.ListVolumes(node.Name).Where(name => name == "neon-registry"));
                 }
 
-                var dnsEntry = clusterProxy.Hosts.Get("xunit-registry.neonforge.net");
+                var dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -721,7 +721,7 @@ namespace TestNeonCluster
                     Assert.Single(cluster.ListVolumes(node.Name).Where(name => name == "neon-registry"));
                 }
 
-                var dnsEntry = clusterProxy.Hosts.Get("xunit-registry.neonforge.net");
+                var dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
