@@ -806,7 +806,19 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
         /// </summary>
         public static string PuttyPath
         {
-            get { return Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles(x86)"), @"PuTTY\putty.exe"); }
+            get
+            {
+                // Look for a x64 or x86 version of PuTTY at their default install locations.
+
+                var path = Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles"), @"PuTTY\putty.exe");
+
+                if (File.Exists(path))
+                {
+                    return path;
+                }
+
+                return Path.Combine(Environment.GetEnvironmentVariable("ProgramFiles(x86)"), @"PuTTY\putty.exe");
+            }
         }
 
         /// <summary>
