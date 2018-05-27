@@ -151,7 +151,7 @@ namespace Neon.Xunit.Cluster
     ///     <see cref="ConvergeDns()"/>
     ///     <see cref="ListDnsEntries(bool)"/><br/>
     ///     <see cref="RemoveDnsEntry(string)"/><br/>
-    ///     <see cref="SetDnsEntry(DnsEntry)"/><br/>
+    ///     <see cref="SetDnsEntry(DnsEntry, bool)"/>
     ///     </description>
     /// </item>
     /// <item>
