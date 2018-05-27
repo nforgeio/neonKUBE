@@ -818,7 +818,7 @@ namespace Neon.Cluster
             hosts.Add($"{manager.Name}.{NeonHosts.Vault}", manager.PrivateAddress);
             hosts.Add(NeonHosts.LogEsData, manager.PrivateAddress);
 
-            NeonHelper.ModifyHostsFile(hosts);
+            NetHelper.ModifyHostsFile(hosts);
 
             NeonClusterHelper.secrets = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             NeonClusterHelper.configs = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
@@ -843,7 +843,7 @@ namespace Neon.Cluster
 
             log.LogInfo("Emulating cluster close.");
 
-            NeonHelper.ModifyHostsFile();
+            NetHelper.ModifyHostsFile();
         }
 
         /// <summary>

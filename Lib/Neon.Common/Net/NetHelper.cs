@@ -7,10 +7,12 @@ using System;
 using System.Collections;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.IO;
 using System.Linq;
 using System.Net;
 using System.Net.Sockets;
 using System.Text;
+using System.Threading;
 using System.Threading.Tasks;
 
 using Neon.Common;
@@ -129,6 +131,103 @@ namespace Neon.Net
         public static bool IsValidPort(int port)
         {
             return 0 < port && port <= ushort.MaxValue;
+        }
+
+        /// <summary>
+        /// Used to temporarily modify the <b>hosts</b> file used by the DNS resolver
+        /// for debugging purposes.
+        /// </summary>
+        /// <param name="hostEntries">A dictionary mapping the hostnames to an IP address or <c>null</c>.</param>
+        /// <remarks>
+        /// <note>
+        /// This requires elevated administrative privileges.  You'll need to launch Visual Studio
+        /// or favorite development envirnment with these.
+        /// </note>
+        /// <para>
+        /// This method adds or removes a temporary section of host entry definitions
+        /// delimited by special comment lines.  When <paramref name="hostEntries"/> is 
+        /// non-null or empty, the section will be added or updated.  Otherwise, the
+        /// section will be removed.
+        /// </para>
+        /// </remarks>
+        public static void ModifyHostsFile(Dictionary<string, IPAddress> hostEntries = null)
+        {
+#if XAMARIN
+            throw new NotSupportedException();
+#else
+            string hostsPath;
+
+            if (NeonHelper.IsWindows)
+            {
+                hostsPath = Path.Combine(Environment.GetEnvironmentVariable("windir"), "System32", "drivers", "etc", "hosts");
+            }
+            else if (NeonHelper.IsLinux || NeonHelper.IsOSX)
+            {
+                hostsPath = "/etc/hosts";
+            }
+            else
+            {
+                throw new NotSupportedException();
+            }
+
+            const string beginMarker = "# BEGIN-NEONHELPER-MODIFY";
+            const string endMarker   = "# END-NEONHELPER-MODIFY";
+
+            var inputLines  = File.ReadAllLines(hostsPath);
+            var lines       = new List<string>();
+            var tempSection = false;
+
+            // Strip out any existing temporary sections.
+
+            foreach (var line in inputLines)
+            {
+                switch (line.Trim())
+                {
+                    case beginMarker:
+
+                        tempSection = true;
+                        break;
+
+                    case endMarker:
+
+                        tempSection = false;
+                        break;
+
+                    default:
+
+                        if (!tempSection)
+                        {
+                            lines.Add(line);
+                        }
+                        break;
+                }
+            }
+
+            if (hostEntries?.Count > 0)
+            {
+                // Append the new entries.
+
+                lines.Add(beginMarker);
+
+                foreach (var item in hostEntries)
+                {
+                    var address = item.Value.ToString();
+
+                    lines.Add($"        {address}{new string(' ', 16 - address.Length)}    {item.Key}");
+                }
+
+                lines.Add(endMarker);
+            }
+
+            File.WriteAllLines(hostsPath, lines.ToArray());
+
+            // It can take a bit of time for the DNS resolver to pick
+            // up the change, so we'll mitigate this by pausing for a bit.
+            //
+            //      https://github.com/jefflill/NeonForge/issues/244
+
+            Thread.Sleep(TimeSpan.FromMilliseconds(500));
+#endif
         }
     }
 }
