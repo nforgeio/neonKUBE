@@ -949,6 +949,13 @@ namespace Neon.Common
             }
 
             File.WriteAllLines(hostsPath, lines.ToArray());
+
+            // It can take a bit of time for the DNS resolver to pick
+            // up the change, so we'll mitigate this by pausing for a bit.
+            //
+            //      https://github.com/jefflill/NeonForge/issues/244
+
+            Thread.Sleep(TimeSpan.FromMilliseconds(500));
 #endif
         }
 

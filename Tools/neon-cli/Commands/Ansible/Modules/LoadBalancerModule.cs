@@ -440,7 +440,7 @@ namespace NeonCli.Ansible
                         }
                         else
                         {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating rule [{ruleName}].");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Writing rule [{ruleName}].");
                             loadBalancer.SetRule(newRule);
                             context.WriteLine(AnsibleVerbosity.Info, $"Rule updated.");
                             context.Changed = !context.CheckMode;
