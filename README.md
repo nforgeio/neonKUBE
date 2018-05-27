@@ -29,39 +29,44 @@ Follow steps below to configure a development or test workstation.
 
 4. Ensure that hardware virtualization is enabled in your BIOS.
 
-5. Install **Visual Studio Community Edition 15.4.1** from [here](https://www.visualstudio.com/downloads/).  Do a full install to ensure that you have everything.  This an overkill, but it may help prevent build problems in the future.
+5. Install **Visual Studio Community Edition 15.7+** from [here](https://www.visualstudio.com/downloads/).  Do a full install to ensure that you have everything.  This an overkill, but it may help prevent build problems in the future.
 
   * Select **all workloads** on the first panel
-  * Select **individual components**
-  * Click to select **all components**
+  * Select **individual components** and enable these:
+    * **.NET:** All SDKs and Targeting Packs
+	* **Code Tools:** Git for Windows, GitHub extensions for Visual Studio
+	* **PowerShell Tools**
+	* **Help Viewer**
   * Click **Install** (and take a coffee break)
-
+  * Install .NET SDK 2.1.200 (x64 installer) from [here](https://www.microsoft.com/net/download/dotnet-core/sdk-2.1.200}
+  * Apply any pending **Visual Studio updates**
+  * **Close** Visual Studio and install any updates
+  
 6. Create a **shortcut** for Visual Studio and configure it to run as **administrator**.  To build and run neonFORGE applications and services, **Visual Studio must be running with elevated privileges**.
-7. Install .NET Framework 4.7 Developer Pack from: [here](https://www.microsoft.com/net/download/thank-you/net47-developer-pack)
-8. Install **Git for Windows** with defaults from [here](https://git-scm.com/download/win).
-9. Install **Docker for Windows** from [here](https://www.docker.com/products/docker#/windows).
+
+7. Install **Docker for Windows** from [here](https://store.docker.com/editions/community/docker-ce-desktop-windows)
 
   * Use the **Stable** channel unless you have a specific need for bleeding edge features
   * **Right-click** the Docker icon in the system tray and select **Settings...*
 
     ![System Tray](./README/DockerSysTray.png)
-  * Select the **Shared Drives** tab and **share** the drive with the project source code
+  * Select the **Shared Drives** tab and **share** the drive where you'll clone the project source code (typically drive C:)
   * You'll need to enter your workstation **credentials**
   * Select the **Daemon** tab on the left and make sure that **Experimental** is **unchecked**
 
-10. Test your Docker configuration.
+8. Test your Docker configuration.
 
-  * Open a **DOS** command window.
+  * Open a **CMD** command window.
   * Run this command: `docker pull alpine`
 
-11. If the previous step failed with a **Network Timeout** or another error, you'll need to update Docker's network settings:
+9. If the previous step failed with a **Network Timeout** or another error, you'll need to update Docker's network settings:
 
   * **Right-click** the Docker again in the system tray and select **Settings...*
   * Click **Network** on the left, select Fixed DNS Server and then **Apply**
 
     ![Docker Network Settings](./README/DockerNetwork.png)
 
-12. **Clone** the source repository on your workstation:
+10. **Clone** the source repository on your workstation:
 
   * Create an individual Github account [here](https://github.com/join?source=header-home) if you don't already have one
   * Have one of the neonFORGE repository administrators **grant you access** to the repository
@@ -74,66 +79,62 @@ Follow steps below to configure a development or test workstation.
     ![Video Studio Clone](./README/VisualStudioClone.png)
   * Click **Clone**
 
-13. **Close** any running instances of **Visual Studio**
+11. **Close** any running instances of **Visual Studio**
 
-14. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+12. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
 
-  * Install both **WinSCP** and **PuTTY** from [here](http://winscp.net/eng/download.php) (PuTTY is near the bottom of the page)
+13. Configure the build **environment variables**:
+
+  * Open **File Explorer**
+  * Navigate to the directory holding the cloned repository
+  * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
+  * Close the CMD window when the script is finished
+
+14. Enable PowerShell script execution via (in a CMD window as administrator):
+
+  `powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser`
+
+15. Import the Ansible passwords used for encrypting secret files in the Git repository Import using this command (use the standard neonFORGE **DEVOPS Password** when prompted):
+
+&nbsp;&nbsp;&nbsp;&nbsp;`neon ansible password import %NF_ROOT%\passwords.zip`
+
+16. Restart Visual Studio and/or any command windows to pick up the change the environment variable changes above.
+
+17. Confirm that the solution builds:
+
+  * Run **Visual Studio** as **administrator**
+  * Open **$/neonFORGE.sln** (where **$** is the repo root directory)
+  * Select **Build/Rebuild** Solution
+
+18. Many server components are deployed to Linux, so you’ll need terminal and file management programs.  We’re currently standardizing on **PuTTY** for the terminal and **WinSCP** for file transfer. install both programs to their default directories:
+
+  * Install **WinSCP** from [here](http://winscp.net/eng/download.php) (I typically use the "Explorer" interface)
+  * Install **PuTTY** from [here](https://www.chiark.greenend.org.uk/~sgtatham/putty/latest.html)
   * Run **WinSCP* and enable **hidden file display** [WinSCP Hidden Files](/README/WinSCPHiddenFile.png)
   * *Optional*: The default PuTTY color scheme sucks (dark blue on a black background doesn’t work for me).  You can update the default scheme to Zenburn Light by **right-clicking** on the `$\External\zenburn-ligh-putty.reg` in **Windows Explorer** and selecting **Merge**
   * WinSCP: Enable **hidden files**.  Start **WinSCP**, select **Tools/Preferences...", and then click **Panels** on the left and check **Show hidden files**:
   
     ![WinSCP Hidden Files](./README/WinSCPHiddenFiles.png)
 
-15. Configure the build **environment variables**:
+19. Install **OpenVPN**
 
-  * Open **File Explorer**
-  * Navigate to the directory holding the cloned repository
-  * **Right-click** on **buildenv.cmd** and then **Run as adminstrator**
-  * Close the DOS window when the script is finished
+   * Download the Windows Installer from [here](https://openvpn.net/index.php/open-source/downloads.html)
+   * Run this command as administrator in a CMD window to install a second TAP interface:
 
-16. Enable PowerShell script execution via:
+   `"%PROGRAMFILES%\Tap-Windows\bin\addtap.bat"`
 
-  `powershell Set-ExecutionPolicy -ExecutionPolicy Unrestricted -Scope CurrentUser`
+20. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
 
-18. Import the Ansible passwords used for encrypting secret files in the Git repository Import using this command (use the standard neonFORGE **DEVOPS Password** when prompted):
+21. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
 
-&nbsp;&nbsp;&nbsp;&nbsp;`neon ansible password import %NF_ROOT%\passwords.zip`
+22. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
 
-19. Restart Visual Studio and/or any command windows to pick up the change the environment variable changes above.
-
-20. Confirm that the solution builds:
-
-  * Run **Visual Studio** as **administrator**
-  * Open **$/neonFORGE.sln** (where **$** is the repo root directory)
-  * Select **Build/Rebuild** Solution
-
-21. Install **7-Zip (32-bit)** (using the Windows *.msi* installer) from: [here](http://www.7-zip.org/download.html)
-
-22. Install **OpenVPN** from (using the Windows Installer): [here](https://openvpn.net/index.php/open-source/downloads.html)
-
-23. *Optional*: Install **Fiddler4** from: [here](http://www.telerik.com/download/fiddler)
-
-24. *Optional*: Install **Notepad++** from: [here](https://notepad-plus-plus.org/download)
-
-25. *Optional*: In Chrome, install the **Markdown Viewer** extension from: [here](https://github.com/simov/markdown-viewer)
-
-26. *Optional*: Install **Postman** REST API tool from: [here](https://www.getpostman.com/postman)
-
-27. *Optional*: Download **Cmdr** *Mini* command shell from [here](http://cmder.net/).
+23. *Optional*: Download **Cmdr** *Mini* command shell from [here](http://cmder.net/):
 
   * Unzip it into a new folder and then ensure that this folder is in your **PATH**.
   * Confgure this to run as administrator.
   * Run Cmdr and configure settings.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
-
-32. *Temporary*: Install components required by Blazer:
-
-    a. Install .NET Core and Visual Studio Communit previews as described: [here](https://blazor.net/docs/get-started.html)
-    b. Configure the following two NuGet package sources:
-
-        https://dotnet.myget.org/F/blazor-dev/api/v3/index.json
-        https://dotnet.myget.org/F/dotnet-core/api/v3/index.json
 
 # Git Branches and Docker Image Tagging Conventions
 

@@ -829,8 +829,6 @@ namespace Neon.Xunit.Cluster
         /// </summary>
         /// <remarks>
         /// <para>
-        /// <remarks>
-        /// <para>
         /// It may take some time for changes made to the cluster DNS to be
         /// reflected in the DNS names actually resolved on the cluster nodes.
         /// </para>
