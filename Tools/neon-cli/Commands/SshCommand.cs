@@ -116,7 +116,7 @@ ARGUMENTS:
 
             if (!File.Exists(Program.PuttyPath))
             {
-                Console.Error.WriteLine($"*** ERROR: PuTTY is application not installed at [{Program.PuttyPath}].");
+                Console.Error.WriteLine($"*** ERROR: PuTTY application is not installed at [{Program.PuttyPath}].");
                 Program.Exit(1);
             }
 
