@@ -640,14 +640,14 @@ verb 3
             //
             // I'm not entirely sure why my VPN health checks didn't detect this
             // problem.  I believe this may have occurred because the OpenVPN
-            // process hasn't terminated yet when I did the first health check
-            // and so it appear healthy (a race condition).
+            // process hasn't yet terminated when I did the first health check
+            // and so it appeared healthy (a race condition).
             //
-            // I'm going to hack around this by moving the 5000 second delay
+            // I'm going to hack around this by moving the 10sec delay
             // from further down in this method to here so hopefully OpenVPN
             // will terminate in time to detect the problem.
 
-            Thread.Sleep(5000);
+            Thread.Sleep(TimeSpan.FromSeconds(10));
 
             // Wait for the VPN to connect.
 
