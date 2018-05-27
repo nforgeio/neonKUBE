@@ -70,7 +70,8 @@ namespace Neon.Net
         /// </summary>
         /// <param name="message">Exception message.</param>
         /// <param name="innerException">Optional inner exception.</param>
-        public HttpException(string message, Exception innerException = null)
+        /// <param name="requestUri">The optional request URL.</param>
+        public HttpException(string message, Exception innerException = null, string requestUri = null)
             : base(GetMessage(message, innerException))
         {
             var httpException = innerException as HttpException;
@@ -81,6 +82,25 @@ namespace Neon.Net
                 this.RequestUri   = httpException.RequestUri;
                 this.ReasonPhrase = httpException.ReasonPhrase ?? string.Empty;
             }
+            else
+            {
+                this.StatusCode   = (HttpStatusCode)0;
+                this.RequestUri   = requestUri;
+                this.ReasonPhrase = message;
+            }
+        }
+
+        /// <summary>
+        /// Constructor.
+        /// </summary>
+        /// <param name="innerException">Optional inner exception.</param>
+        /// <param name="requestUri">The optional request URL.</param>
+        public HttpException(Exception innerException, string requestUri = null)
+            : base($"[exception={innerException.GetType().Name}{GetUriString(requestUri)}]")
+        {
+            this.StatusCode   = (HttpStatusCode)0;
+            this.RequestUri   = requestUri;
+            this.ReasonPhrase = innerException.Message;
         }
 
         /// <summary>
@@ -88,7 +108,7 @@ namespace Neon.Net
         /// </summary>
         /// <param name="statusCode">The HTTP response status code.</param>
         /// <param name="reasonPhrase">The HTTP response peason phrase (or <c>null</c>).</param>
-        /// <param name="requestUri">The optional URL.</param>
+        /// <param name="requestUri">The optional request URL.</param>
         public HttpException(HttpStatusCode statusCode, string reasonPhrase = null, string requestUri = null)
             : base($"[status={(int)statusCode}{GetReasonString(reasonPhrase)}{GetUriString(requestUri)}]: {statusCode}")
         {

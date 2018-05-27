@@ -155,6 +155,28 @@ namespace Neon.Retry
                 e = aggregateException.InnerException;
             }
 
+            var httpException = e as HttpException;
+
+            if (httpException != null)
+            {
+                if ((int)httpException.StatusCode < 400)
+                {
+                    return true;
+                }
+
+                switch (httpException.StatusCode)
+                {
+                    case HttpStatusCode.GatewayTimeout:
+                    case HttpStatusCode.InternalServerError:
+                    case HttpStatusCode.ServiceUnavailable:
+                    case (HttpStatusCode)429: // To many requests
+
+                        return true;
+                }
+
+                return false;
+            }
+
             var httpRequestException = e as HttpRequestException;
 
             if (httpRequestException != null)
@@ -185,28 +207,6 @@ namespace Neon.Retry
                                 return true;
                         }
                     }
-                }
-
-                return false;
-            }
-
-            var httpException = e as HttpException;
-
-            if (httpException != null)
-            {
-                if ((int)httpException.StatusCode < 400)
-                {
-                    return true;
-                }
-
-                switch (httpException.StatusCode)
-                {
-                    case HttpStatusCode.GatewayTimeout:
-                    case HttpStatusCode.InternalServerError:
-                    case HttpStatusCode.ServiceUnavailable:
-                    case (HttpStatusCode)429: // To many requests
-
-                        return true;
                 }
 
                 return false;

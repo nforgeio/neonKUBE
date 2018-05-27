@@ -44,15 +44,15 @@ namespace Neon.Net
 
             // $note(jeff.lill):
             //
-            // I've seen situations where JSON REST APIs return [Content-Type] as [text/plain] and [text/json]
+            // I've seen services where JSON REST APIs return [Content-Type] as [text/plain] and [text/json]
             // so we'll accept those too.
 
             var jsonContent = httpRespose.Content.Headers.ContentType != null &&
-                              (
-                                  httpRespose.Content.Headers.ContentType.MediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase) ||
-                                  httpRespose.Content.Headers.ContentType.MediaType.Equals("text/plain", StringComparison.OrdinalIgnoreCase) ||
-                                  httpRespose.Content.Headers.ContentType.MediaType.Equals("text/json", StringComparison.OrdinalIgnoreCase)
-                              );
+                (
+                    httpRespose.Content.Headers.ContentType.MediaType.Equals("application/json", StringComparison.OrdinalIgnoreCase) ||
+                    httpRespose.Content.Headers.ContentType.MediaType.Equals("text/plain", StringComparison.OrdinalIgnoreCase) ||
+                    httpRespose.Content.Headers.ContentType.MediaType.Equals("text/json", StringComparison.OrdinalIgnoreCase)
+                );
 
             this.RequestUri   = requestUri;
             this.HttpResponse = httpRespose;

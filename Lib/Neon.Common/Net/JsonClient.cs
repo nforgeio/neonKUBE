@@ -287,20 +287,28 @@ namespace Neon.Net
             return await safeRetryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
+                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+
+                        jsonResponse.EnsureSuccess();
+
+                        return jsonResponse;
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
-
-                    jsonResponse.EnsureSuccess();
-
-                    return jsonResponse;
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -324,20 +332,28 @@ namespace Neon.Net
             var result = await safeRetryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
+                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+
+                        jsonResponse.EnsureSuccess();
+
+                        return jsonResponse;
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
-
-                    jsonResponse.EnsureSuccess();
-
-                    return jsonResponse;
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
 
             return result.As<TResult>();
@@ -366,20 +382,28 @@ namespace Neon.Net
             return await retryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
+                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+
+                        jsonResponse.EnsureSuccess();
+
+                        return jsonResponse;
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
-
-                    jsonResponse.EnsureSuccess();
-
-                    return jsonResponse;
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -401,17 +425,25 @@ namespace Neon.Net
             return await unsafeRetryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
+
+                        return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
-
-                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -437,17 +469,25 @@ namespace Neon.Net
             return await retryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
+
+                        return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.GetAsync(requestUri, cancellationToken, activity);
-
-                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -471,20 +511,28 @@ namespace Neon.Net
             return await safeRetryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+
+                        jsonResponse.EnsureSuccess();
+
+                        return jsonResponse;
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
-
-                    jsonResponse.EnsureSuccess();
-
-                    return jsonResponse;
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -509,20 +557,28 @@ namespace Neon.Net
             var result = await safeRetryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+
+                        jsonResponse.EnsureSuccess();
+
+                        return jsonResponse;
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
-
-                    jsonResponse.EnsureSuccess();
-
-                    return jsonResponse;
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
 
             return result.As<TResult>();
@@ -552,20 +608,28 @@ namespace Neon.Net
             return await retryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+
+                        jsonResponse.EnsureSuccess();
+
+                        return jsonResponse;
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
-
-                    jsonResponse.EnsureSuccess();
-
-                    return jsonResponse;
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -588,17 +652,25 @@ namespace Neon.Net
             return await unsafeRetryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.PutAsync(FormatUri(uri, args), CreateJsonContent(document), cancellationToken, activity);
+
+                        return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.PutAsync(FormatUri(uri, args), CreateJsonContent(document), cancellationToken, activity);
-
-                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -625,17 +697,25 @@ namespace Neon.Net
             return await retryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+
+                        return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.PutAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
-
-                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -660,20 +740,28 @@ namespace Neon.Net
             return await safeRetryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+
+                        jsonResponse.EnsureSuccess();
+
+                        return jsonResponse;
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
-
-                    jsonResponse.EnsureSuccess();
-
-                    return jsonResponse;
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -699,20 +787,28 @@ namespace Neon.Net
             var result = await safeRetryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+
+                        jsonResponse.EnsureSuccess();
+
+                        return jsonResponse;
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
-
-                    jsonResponse.EnsureSuccess();
-
-                    return jsonResponse;
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
 
             return result.As<TResult>();
@@ -743,20 +839,28 @@ namespace Neon.Net
             return await retryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+
+                        jsonResponse.EnsureSuccess();
+
+                        return jsonResponse;
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
-
-                    jsonResponse.EnsureSuccess();
-
-                    return jsonResponse;
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -780,17 +884,25 @@ namespace Neon.Net
             return await unsafeRetryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+
+                        return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
-
-                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -818,17 +930,25 @@ namespace Neon.Net
             return await retryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
+
+                        return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.PostAsync(requestUri, CreateJsonContent(document), cancellationToken, activity);
-
-                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -851,20 +971,28 @@ namespace Neon.Net
             return await safeRetryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
+                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+
+                        jsonResponse.EnsureSuccess();
+
+                        return jsonResponse;
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
-
-                    jsonResponse.EnsureSuccess();
-
-                    return jsonResponse;
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -888,20 +1016,28 @@ namespace Neon.Net
             var result = await safeRetryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
+                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+
+                        jsonResponse.EnsureSuccess();
+
+                        return jsonResponse;
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
-
-                    jsonResponse.EnsureSuccess();
-
-                    return jsonResponse;
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
 
             return result.As<TResult>();
@@ -930,20 +1066,28 @@ namespace Neon.Net
             return await retryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
+                        var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+
+                        jsonResponse.EnsureSuccess();
+
+                        return jsonResponse;
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
-                    var jsonResponse = new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
-
-                    jsonResponse.EnsureSuccess();
-
-                    return jsonResponse;
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -965,17 +1109,25 @@ namespace Neon.Net
             return await unsafeRetryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
+
+                        return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
-
-                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
 
@@ -1001,17 +1153,25 @@ namespace Neon.Net
             return await retryPolicy.InvokeAsync(
                 async () =>
                 {
-                    var client = this.client;
+                    var requestUri = FormatUri(uri, args);
 
-                    if (client == null)
+                    try
                     {
-                        throw new ObjectDisposedException(nameof(JsonClient));
+                        var client = this.client;
+
+                        if (client == null)
+                        {
+                            throw new ObjectDisposedException(nameof(JsonClient));
+                        }
+
+                        var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
+
+                        return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
                     }
-
-                    var requestUri   = FormatUri(uri, args);
-                    var httpResponse = await client.DeleteAsync(requestUri, cancellationToken, activity);
-
-                    return new JsonResponse(requestUri, httpResponse, await httpResponse.Content.ReadAsStringAsync());
+                    catch (HttpRequestException e)
+                    {
+                        throw new HttpException(e, requestUri);
+                    }
                 });
         }
     }
