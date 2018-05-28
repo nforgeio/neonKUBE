@@ -64,6 +64,11 @@ namespace Neon.Common
         public const string CRLF = "\r\n";
 
         /// <summary>
+        /// Returns the native text line ending for the current environment.
+        /// </summary>
+        public static readonly string LineEnding = IsWindows ? "\r\n" : "\n";
+
+        /// <summary>
         /// The constant 1,024 (2^10).
         /// </summary>
         public const int Kilo = 1024;
