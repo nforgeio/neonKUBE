@@ -194,8 +194,8 @@ namespace NeonProxyManager
 
             if (!await consul.KV.Exists(pollSecondsKey))
             {
-                log.LogInfo($"Persisting setting [{pollSecondsKey}=120.0]");
-                await consul.KV.PutDouble(pollSecondsKey, 300.0);
+                log.LogInfo($"Persisting setting [{pollSecondsKey}=60.0]");
+                await consul.KV.PutDouble(pollSecondsKey, 60.0);
             }
 
             if (!await consul.KV.Exists(certWarnDaysKey))
