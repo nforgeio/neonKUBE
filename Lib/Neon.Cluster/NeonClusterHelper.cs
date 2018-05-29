@@ -457,7 +457,7 @@ namespace Neon.Cluster
         /// </summary>
         public static void TouchCertificates()
         {
-            Consul.KV.PutString("neon/service/neon-proxy-manager/conf/cert-update", DateTime.UtcNow).Wait();
+            Consul.KV.PutString("neon/service/neon-proxy-manager/conf/cert-update", Guid.NewGuid().ToString("D")).Wait();
         }
 
         /// <summary>
