@@ -33,10 +33,12 @@ Follow steps below to configure a development or test workstation.
 
   * Select **all workloads** on the first panel
   * Select **individual components** and enable these:
-    * **.NET:** All SDKs and Targeting Packs
-	* **Code Tools:** Git for Windows, GitHub extensions for Visual Studio
-	* **PowerShell Tools**
-	* **Help Viewer**
+    * **.NET:** All SDKs, Targeting Packs, and Advanced ASP.NET Features
+	* **Code Tools:**
+      * Git for Windows
+      * GitHub extensions for Visual Studio
+	  * PowerShell Tools
+	  * Help Viewer
   * Click **Install** (and take a coffee break)
   * Install .NET SDK 2.1.200 (x64 installer) from [here](https://www.microsoft.com/net/download/dotnet-core/sdk-2.1.200}
   * Apply any pending **Visual Studio updates**
