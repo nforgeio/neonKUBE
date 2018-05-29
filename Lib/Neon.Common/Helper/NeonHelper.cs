@@ -108,6 +108,13 @@ namespace Neon.Common
         private static ServiceContainer serviceContainer;
 
         /// <summary>
+        /// Set to <c>true</c> when the special UTF-8 encoding provider with the misspelled
+        /// name <b>utf8</b> (without the dash) has been initialized.  See 
+        /// <see cref="RegisterMisspelledUtf8Provider()"/> for more information.
+        /// </summary>
+        private static bool specialUtf8EncodingProvider = false;
+
+        /// <summary>
         /// The root dependency injection service container used by Neon class libraries. 
         /// and applications.
         /// </summary>
@@ -187,6 +194,25 @@ namespace Neon.Common
         public static bool Is32BitBuild
         {
             get { return !Is64Bit; }
+        }
+
+        /// <summary>
+        /// Ensures that a special UTF-8 text encoding provider misnamed as <b>utf8</b>
+        /// (without the dash) is registered.  This is required sometimes because
+        /// certain REST APIs may return incorrect <b>charset</b> values.
+        /// </summary>
+        public static void RegisterMisspelledUtf8Provider()
+        {
+            lock (syncRoot)
+            {
+                if (specialUtf8EncodingProvider)
+                {
+                    return;
+                }
+
+                Encoding.RegisterProvider(new SpecialUtf8EncodingProvider());
+                specialUtf8EncodingProvider = true;
+            }
         }
 
         /// <summary>
