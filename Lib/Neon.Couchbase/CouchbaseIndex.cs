@@ -45,7 +45,7 @@ namespace Couchbase
             this.Type      = (string)index.@using ?? "gsi";
             this.IsPrimary = (bool?)index.is_primary ?? false;
             this.State     = (string)index.state ?? string.Empty;
-            this.Where     = (string)index.condition ?? string.Empty;
+            this.Where     = (string)index.condition;
 
             var keyArray = (JArray)index.index_key;
 
@@ -55,11 +55,11 @@ namespace Couchbase
             }
             else
             {
-                var keys = new string[keyArray.Count];
+                Keys = new string[keyArray.Count];
 
                 for (int i = 0; i < keyArray.Count; i++)
                 {
-                    keys[i] = (string)keyArray[i];
+                    Keys[i] = (string)keyArray[i];
                 }
             }
         }
