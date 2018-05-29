@@ -478,7 +478,7 @@ namespace NeonCli.Ansible
 
                         // Fetch the index if it already exists.
 
-                        var existingIndex = await GetIndexAsync(bucket, name);
+                        var existingIndex = await bucket.GetIndexAsync(name);
 
                         if (existingIndex == null)
                         {
@@ -489,9 +489,8 @@ namespace NeonCli.Ansible
                             context.WriteLine(AnsibleVerbosity.Trace, $"Index [{name}] exists.");
                         }
 
-                        var existingIsPrimary = existingIndex != null && (bool?)existingIndex.is_primary ?? false;
+                        var existingIsPrimary = existingIndex != null && existingIndex.IsPrimary;
 
-                        context.WriteLine(AnsibleVerbosity.Trace, "*** 1");
                         switch (state.ToLowerInvariant())
                         {
                             case "present":
@@ -631,7 +630,7 @@ namespace NeonCli.Ansible
                                     }
                                     // Compare the old/new index types.
 
-                                    var orgType = ((string)existingIndex.@using).ToUpperInvariant();
+                                    var orgType = existingIndex.Type.ToUpperInvariant();
 
                                     if (!string.Equals(orgType, type, StringComparison.InvariantCultureIgnoreCase))
                                     {
@@ -645,9 +644,9 @@ namespace NeonCli.Ansible
 
                                     if (!primary)
                                     {
-                                        var orgKeys = (JArray)existingIndex.index_key;
+                                        var orgKeys = existingIndex.Keys;
 
-                                        if (orgKeys.Count != keys.Count)
+                                        if (orgKeys.Length != keys.Count)
                                         {
                                             keysChanged = true;
                                         }
@@ -658,12 +657,12 @@ namespace NeonCli.Ansible
 
                                             var keysSet = new Dictionary<string, bool>(StringComparer.InvariantCultureIgnoreCase);
 
-                                            for (int i = 0; i < orgKeys.Count; i++)
+                                            for (int i = 0; i < orgKeys.Length; i++)
                                             {
                                                 keysSet[(string)orgKeys[i]] = false;
                                             }
 
-                                            for (int i = 0; i < orgKeys.Count; i++)
+                                            for (int i = 0; i < orgKeys.Length; i++)
                                             {
                                                 keysSet[CbHelper.LiteralName(keys[i])] = true;
                                             }
@@ -694,7 +693,7 @@ namespace NeonCli.Ansible
 
                                     // Compare the filter condition.
 
-                                    var orgWhere = (string)existingIndex.condition;
+                                    var orgWhere = existingIndex.Where;
 
                                     if (orgWhere != where)
                                     {
@@ -740,7 +739,7 @@ namespace NeonCli.Ansible
                                                 // Wait for the index to come online.
 
                                                 context.WriteLine(AnsibleVerbosity.Info, $"Waiting for index [{name}] to be built.");
-                                                await WaitForIndexStateAsync(bucket, name, "online");
+                                                await bucket.WaitForIndexAsync(name, "online");
                                                 context.WriteLine(AnsibleVerbosity.Info, $"Completed building index [{name}].");
                                             }
                                         }
@@ -771,7 +770,7 @@ namespace NeonCli.Ansible
                                             // Wait for the index to come online.
 
                                             context.WriteLine(AnsibleVerbosity.Info, $"Waiting for index [{name}] to be built.");
-                                            await WaitForIndexStateAsync(bucket, name, "online");
+                                            await bucket.WaitForIndexAsync(name, "online");
                                             context.WriteLine(AnsibleVerbosity.Info, $"Completed building index [{name}].");
                                         }
                                     }
@@ -791,7 +790,7 @@ namespace NeonCli.Ansible
                                         context.Changed = true;
                                         context.WriteLine(AnsibleVerbosity.Info, $"Dropping index [{indexId}].");
 
-                                        string orgType = (string)(existingIndex.Property("using")) ?? "gsi";
+                                        string orgType = existingIndex.Type;
                                         string dropCommand;
 
                                         if (existingIsPrimary)
@@ -802,7 +801,6 @@ namespace NeonCli.Ansible
                                         {
                                             dropCommand = $"drop index {CbHelper.LiteralName(bucket.Name)}.{CbHelper.LiteralName(name)} using {orgType.ToUpperInvariant()}";
                                         }
-                                        context.WriteLine(AnsibleVerbosity.Trace, "*** 2-e");
 
                                         context.WriteLine(AnsibleVerbosity.Trace, $"COMMAND: {dropCommand}");
                                         await bucket.QuerySafeAsync<dynamic>(dropCommand);
@@ -819,7 +817,7 @@ namespace NeonCli.Ansible
 
                                 // List the names of the deferred GSI indexes.
 
-                                var deferredIndexes = ((await ListIndexesAsync(bucket)).Where(index => (string)index.state == "deferred" && (string)index.@using == "gsi")).ToList();
+                                var deferredIndexes = ((await bucket.ListIndexesAsync()).Where(index => index.State == "deferred" && index.Type == "gsi")).ToList();
 
                                 context.WriteLine(AnsibleVerbosity.Info, $"[{deferredIndexes.Count}] deferred GSI indexes exist.");
 
@@ -836,7 +834,7 @@ namespace NeonCli.Ansible
 
                                 foreach (var deferredIndex in deferredIndexes)
                                 {
-                                    sbIndexList.AppendWithSeparator($"{CbHelper.LiteralName((string)deferredIndex.name)}", ", ");
+                                    sbIndexList.AppendWithSeparator($"{CbHelper.LiteralName(deferredIndex.Name)}", ", ");
                                 }
 
                                 if (context.CheckMode)
@@ -864,7 +862,7 @@ namespace NeonCli.Ansible
 
                                     foreach (var deferredIndex in deferredIndexes)
                                     {
-                                        await WaitForIndexStateAsync(bucket, (string)deferredIndex.name, "online");
+                                        await bucket.WaitForIndexAsync(deferredIndex.Name, "online");
                                     }
                                     
                                     context.WriteLine(AnsibleVerbosity.Info, $"Completed building [{deferredIndexes.Count}] indexes.");
@@ -878,64 +876,6 @@ namespace NeonCli.Ansible
                     }
 
                 }).Wait();
-        }
-
-        /// <summary>
-        /// Lists the indexes for the test bucket.
-        /// </summary>
-        /// <param name="bucket">The Couchbase bucket.</param>
-        /// <returns>The list of index information.</returns>
-        private async Task<List<dynamic>> ListIndexesAsync(NeonBucket bucket)
-        {
-            var indexes = await bucket.QuerySafeAsync<dynamic>(new QueryRequest($"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}"));
-            var list    = new List<dynamic>();
-
-            foreach (var index in indexes)
-            {
-                list.Add(index.indexes);    // Strip off the extra "indexes" level.
-            }
-
-            return list;
-        }
-
-        /// <summary>
-        /// Returns information about a named Couchbase index for the test bucket.
-        /// </summary>
-        /// <param name="bucket">The Couchbase bucket.</param>
-        /// <param name="name">The index name.</param>
-        /// <returns>
-        /// The index information as a <c>dynamic</c> or <c>null</c> 
-        /// if the index doesn't exist.
-        /// </returns>
-        private async Task<dynamic> GetIndexAsync(NeonBucket bucket, string name)
-        {
-            var indexes = await ListIndexesAsync(bucket);
-
-            return indexes.SingleOrDefault(index => ((string)index.name).Equals(name, StringComparison.InvariantCultureIgnoreCase));
-        }
-
-        /// <summary>
-        /// Waits for an index to report as a specific state.
-        /// </summary>
-        /// <param name="bucket">The Couchbase bucket.</param>
-        /// <param name="name">The index name.</param>
-        /// <param name="state">The desired index state.</param>
-        private async Task WaitForIndexStateAsync(NeonBucket bucket, string name, string state)
-        {
-            await NeonHelper.WaitForAsync(
-                async () =>
-                {
-                    dynamic index = await GetIndexAsync(bucket, name);
-
-                    if (index == null)
-                    {
-                        return true;    // This is actually an error.
-                    }
-
-                    return (string)index.state == state;
-                },
-                timeout: TimeSpan.FromDays(365),
-                pollTime: TimeSpan.FromSeconds(1));
         }
     }
 }

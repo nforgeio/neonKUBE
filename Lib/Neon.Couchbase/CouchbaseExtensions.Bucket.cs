@@ -6,6 +6,8 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics.Contracts;
+using System.Dynamic;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 
@@ -175,6 +177,31 @@ namespace Couchbase
         /// </summary>
         /// <typeparam name="T">The document content type.</typeparam>
         /// <param name="result">The operation result.</param>
+        /// <exception cref="CouchbaseResponseException">Thrown for errors.</exception>
+        /// <exception cref="TransientException">Thrown if the error is potentially transient and the operation should be retried.</exception>
+        /// <remarks>
+        /// <para>
+        /// This method is similar to the built-in Couchbase
+        /// <see cref="ResponseExtensions.EnsureSuccess{T}(IQueryResult{T})"/>
+        /// method, but may be better for many situations for these reasons:
+        /// </para>
+        /// <list type="bullet">
+        ///     <item>
+        ///     This method includes information about the specific errors detected.
+        ///     <see cref="ResponseExtensions.EnsureSuccess{T}(IQueryResult{T})"/>
+        ///     only returns a generic <b>Fatal Error</b> message and expects you
+        ///     to examine the <see cref="CouchbaseQueryResponseException.Errors"/> 
+        ///     property in your code.  This methods does that for you by including
+        ///     the errors in the exception message so that that they will be included
+        ///     in any diagnostic logging your doing without any additional effort.
+        ///     </item>
+        ///     <item>
+        ///     This method throws a <see cref="TransientException"/> if the
+        ///     error indicates that it should be retried.  This makes it easy
+        ///     to use a Neon <see cref="IRetryPolicy"/> to perform retries.
+        ///     </item>
+        /// </list>
+        /// </remarks>
         public static void VerifySuccess<T>(IQueryResult<T> result)
         {
             if (result.Success)
@@ -182,12 +209,29 @@ namespace Couchbase
                 return;
             }
 
-            if (result.ShouldRetry())
+            // Build a better exception message that includes the actual error
+            // codes and messages.
+
+            var message = string.Empty;
+
+            foreach (var error in result.Errors)
             {
-                throw new TransientException(result.Message, result.Exception);
+                message += $"Couchbase Error [code={error.Code}]: {error.Message}{NeonHelper.LineEnding}";
             }
 
-            result.EnsureSuccess();
+            if (result.ShouldRetry())
+            {
+                throw new TransientException(message, result.Exception);
+            }
+
+            try
+            {
+                result.EnsureSuccess();
+            }
+            catch (CouchbaseQueryResponseException e)
+            {
+                throw new CouchbaseQueryResponseException(message, e.Status, e.Errors.ToList());
+            }
         }
 
         /// <summary>
@@ -207,8 +251,7 @@ namespace Couchbase
         }
 
         /// <summary>
-        /// Waits until the bucket is ready by performing a series of small
-        /// read operations.
+        /// Waits until the bucket is ready.
         /// </summary>
         /// <param name="bucket">The bucket.</param>
         /// <param name="timeout">The maximum time to wait.</param>
@@ -216,6 +259,20 @@ namespace Couchbase
         /// <exception cref="TimeoutException">Thrown if the operation timed out.</exception>
         public static async Task WaitUntilReadyAsync(this IBucket bucket, TimeSpan timeout)
         {
+            // One or more of the buncket nodes may be warming up or be offline
+            // or in another bad state.  Nodes will not be ready when they're
+            // warming up after node start or after the bucket was flushed.
+            //
+            // I'm just hardcoding a pause time for now, that appears to work.
+            // I tried to query the node status using the Couchbase [ClusterManager]
+            // class but that didn't work because it appears that the Couchbase Server
+            // REST API is returning the character set as "utf8" instead of
+            // "utf-8" with a dash.
+
+            await Task.Delay(TimeSpan.FromSeconds(10));
+
+            // Perform some small read operations until we see no exceptions.
+
             var timer     = new PolledTimer(timeout);
             var exception = (Exception)null;
 
@@ -1153,6 +1210,64 @@ namespace Couchbase
             var result = await bucket.UpsertAsync<TEntity>(entity.GetKey(), entity, cas, expiration, replicateTo, persistTo);
 
             VerifySuccess(result, replicateOrPersist: replicateTo != ReplicateTo.Zero || persistTo != PersistTo.Zero);
+        }
+
+        /// <summary>
+        /// Lists the indexes for the test bucket.
+        /// </summary>
+        /// <param name="bucket">The Couchbase bucket.</param>
+        /// <returns>The list of index information.</returns>
+        public static async Task<List<CouchbaseIndex>> ListIndexesAsync(this IBucket bucket)
+        {
+            var indexes = await bucket.QuerySafeAsync<dynamic>(new QueryRequest($"select * from system:indexes where keyspace_id={CbHelper.Literal(bucket.Name)}"));
+            var list    = new List<CouchbaseIndex>();
+
+            foreach (var index in indexes)
+            {
+                list.Add(new CouchbaseIndex(index));
+            }
+
+            return list;
+        }
+
+        /// <summary>
+        /// Returns information about a named Couchbase index for the test bucket.
+        /// </summary>
+        /// <param name="bucket">The Couchbase bucket.</param>
+        /// <param name="name">The index name.</param>
+        /// <returns>
+        /// The index information as a <c>dynamic</c> or <c>null</c> 
+        /// if the index doesn't exist.
+        /// </returns>
+        public static async Task<CouchbaseIndex> GetIndexAsync(this IBucket bucket, string name)
+        {
+            var indexes = await ListIndexesAsync(bucket);
+
+            return indexes.SingleOrDefault(index => index.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase));
+        }
+
+        /// <summary>
+        /// Waits for a named index to enter a specific state (defaults to <b>online</b>).
+        /// </summary>
+        /// <param name="bucket">The bucket.</param>
+        /// <param name="name">The index name.</param>
+        /// <param name="state">Optionally specifies the desire state (defaults to <b>online</b>).</param>
+        public static async Task WaitForIndexAsync(this IBucket bucket, string name, string state = "online")
+        {
+            await NeonHelper.WaitForAsync(
+                async () =>
+                {
+                    var index = await GetIndexAsync(bucket, name);
+
+                    if (index == null)
+                    {
+                        return false;
+                    }
+
+                    return index.State == state;
+                },
+                timeout: TimeSpan.FromDays(365),
+                pollTime: TimeSpan.FromMilliseconds(250));
         }
     }
 }

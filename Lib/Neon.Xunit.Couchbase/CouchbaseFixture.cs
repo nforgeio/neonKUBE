@@ -19,6 +19,8 @@ using Neon.Common;
 using Neon.Data;
 using Neon.Retry;
 using Couchbase.Linq;
+using System.Threading.Tasks;
+using System.Text;
 
 namespace Neon.Xunit.Couchbase
 {
@@ -122,12 +124,12 @@ namespace Neon.Xunit.Couchbase
         /// </list>
         /// </remarks>
         public bool Start(
-            CouchbaseSettings   settings = null,
-            string              image = "neoncluster/couchbase-test:latest",
-            string              name = "cb-test",
-            string[]            env = null,
-            string              username = "Administrator",
-            string              password = "password",
+            CouchbaseSettings   settings  = null,
+            string              image     = "neoncluster/couchbase-test:latest",
+            string              name      = "cb-test",
+            string[]            env       = null,
+            string              username  = "Administrator",
+            string              password  = "password",
             bool                noPrimary = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
@@ -159,12 +161,12 @@ namespace Neon.Xunit.Couchbase
         /// was already initialized.
         /// </returns>
         public void StartInAction(
-            CouchbaseSettings   settings = null,
-            string              image = "neoncluster/couchbase-test:latest",
-            string              name = "cb-test",
-            string[]            env = null,
-            string              username = "Administrator",
-            string              password = "password",
+            CouchbaseSettings   settings  = null,
+            string              image     = "neoncluster/couchbase-test:latest",
+            string              name      = "cb-test",
+            string[]            env       = null,
+            string              username  = "Administrator",
+            string              password  = "password",
             bool                noPrimary = false)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(image));
@@ -193,6 +195,10 @@ namespace Neon.Xunit.Couchbase
             Username = username;
             Password = password;
 
+            // Wait for the cluster to warm up.
+
+            Bucket.WaitUntilReadyAsync(TimeSpan.FromSeconds(10)).Wait();
+
             // It appears that it may take a bit of time for the Couchbase query
             // service to start in new container we started above.  We're going to
             // retry creating the primary index (or a dummy index) until it works.
@@ -213,6 +219,7 @@ namespace Neon.Xunit.Couchbase
                         if (!noPrimary)
                         {
                             await Bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(Bucket.Name)} using gsi");
+                            await Bucket.WaitForIndexAsync("#primary");
                         }
                         else
                         {
@@ -270,66 +277,37 @@ namespace Neon.Xunit.Couchbase
 
             // Flush the bucket data.
 
-            using (var manager = Bucket.CreateManager())
+            using (var bucketManager = Bucket.CreateManager())
             {
-                manager.Flush();
+                bucketManager.Flush();
+                Bucket.WaitUntilReadyAsync(TimeSpan.FromSeconds(30)).Wait();
             }
 
             // Drop all of the bucket indexes.
 
-            var existingIndexes = Bucket.QuerySafeAsync<JObject>("select * from system:indexes").Result;
+            var existingIndexes = Bucket.ListIndexesAsync().Result;
 
-            foreach (var indexObject in existingIndexes)
+            if (existingIndexes.Count > 0)
             {
-                var index = (JObject)indexObject.GetValue("indexes");
-                var name  = (string)index.GetValue("name");
-                var type  = (string)index.GetValue("using");
-
-                Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(Bucket.Name)}.{CbHelper.LiteralName(name)} using {type}").Wait();
+                foreach (var index in existingIndexes)
+                {
+                    Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName(Bucket.Name)}.{CbHelper.LiteralName(index.Name)} using {index.Type}").Wait();
+                }
             }
 
-            // Create the primary index if requested.
+            // Create the primary index if this was enabled when the fixture was started.
 
             if (createPrimaryIndex)
             {
-                // $hack(jeff.lill):
-                //
-                // The Couchbase index service sometimes gets itself into a bad state
-                // sometime after indexes are dropped.  I believe the hack below
-                // mitigates this by dropping an apparently partially created bad primary
-                // index and then attempting to recreate it.
-
-                for (int i = 0; i < 10; i++)
-                {
-                    try
-                    {
-                        Bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
-                        break;
-                    }
-                    catch (Exception e)
-                    {
-                        if (!CouchbaseTransientDetector.IsTransient(e))
-                        {
-                            throw;
-                        }
-
-                        try
-                        {
-                            Bucket.QuerySafeAsync<dynamic>($"drop index {CbHelper.LiteralName("#primary")}.{CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
-                        }
-                        catch
-                        {
-                            // Ignoring these.
-                        }
-                    }
-                }
+                Bucket.QuerySafeAsync<dynamic>($"create primary index on {CbHelper.LiteralName(Bucket.Name)} using gsi").Wait();
+                Bucket.WaitForIndexAsync("#primary").Wait();
             }
         }
 
         /// <summary>
         /// This method completely resets the fixture by removing the Couchbase 
-        /// container from Docker.  Use <see cref="Flush"/> if you just want to clear
-        /// the database,
+        /// container from Docker.  Use <see cref="Flush"/> if you just want to 
+        /// clear the database.
         /// </summary>
         public override void Reset()
         {
