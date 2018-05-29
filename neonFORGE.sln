@@ -23,6 +23,7 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F1
 		.gitattributes = .gitattributes
 		.gitignore = .gitignore
 		buildenv.cmd = buildenv.cmd
+		global.json = global.json
 		nuget-version.txt = nuget-version.txt
 		passwords.zip = passwords.zip
 		README.md = README.md
