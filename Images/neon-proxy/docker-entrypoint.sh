@@ -53,12 +53,12 @@ fi
 # Verify that the Consul keys actually exist.
 
 if ! consul kv get ${CONFIG_KEY} > /dev/nul ; then
-    . log-critical.sh "The [${CONFIG_KEY}] key cannot be retrieved from Consul."
+    . log-critical.sh "[${CONFIG_KEY}] key cannot be retrieved from Consul."
     exit 1
 fi
 
 if ! consul kv get ${CONFIG_HASH_KEY} > /dev/nul ; then
-    . log-critical.sh "The [${CONFIG_HASH_KEY}] key cannot be retrieved from Consul."
+    . log-critical.sh "[${CONFIG_HASH_KEY}] key cannot be retrieved from Consul."
     exit 1
 fi
 
@@ -76,10 +76,10 @@ if [ "${START_SECONDS}" == "" ] ; then
     export START_SECONDS=10
 fi
 
-# Attempt Vault authentication using the ${VAULT_CREDENTIALS} secret.  This
-# will set ${VAULT_TOKEN} if successful.
+# Attempt Vault authentication using the VAULT_CREDENTIALS secret.  This
+# will set VAULT_TOKEN if successful.
 # 
-# If ${VAULT_CREDENTIALS} doesn't exist or is empty, then ${VAULT_TOKEN} will
+# If VAULT_CREDENTIALS doesn't exist or is empty, then VAULT_TOKEN will
 # be set to an empty string resulting in the container being unable to pull
 # TLS certificates from Vault.  This mode is used for deploying the 
 # [neon-proxy-public-bridge] and [neon-proxy-private-bridge] containers on 
@@ -124,7 +124,7 @@ export CONFIG_NEW_PATH=${CONFIG_NEW_FOLDER}/haproxy.cfg
 # Note the the [consul watch] command returns only if [onconfigchange.sh]
 # returns a non-zero exit code.
 
-LAST_HASH=
+LAST_HASH=0d3001e6-3031-444f-8529-7f58a4faf179
 
 while true
 do
@@ -137,7 +137,7 @@ do
     fi
 
     if [ "${NEW_HASH}" != "${LAST_HASH}" ] ; then
-        onconfigchange.sh
+        . onconfigchange.sh
         LAST_HASH=${NEW_HASH}
     fi
 

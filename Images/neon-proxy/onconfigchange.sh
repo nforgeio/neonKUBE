@@ -225,11 +225,16 @@ else
     . log-info.sh "HAProxy is starting ${STOP_TYPE}"
 fi
 
-if [ "${DEBUG}" == "true" ] ; then
-    DEBUG_OPTION=-d
-else
-    DEBUG_OPTION=
-fi
+# Uncomment the IF statement below to have HAProxy start In
+# DEBUG mode as well, when DEBUG=true.  This mode generates
+# a lot of noise and will probably impact performance so we
+# really don't want this for most debugging situations.
+
+DEBUG_OPTION=
+
+# if [ "${DEBUG}" == "true" ] ; then
+#     DEBUG_OPTION=-d
+# fi
 
 # HAProxy will fork itself below because the generated configuration FILE
 # specifies [daemon] mode.  This allows the script to return to the Consul
@@ -240,14 +245,15 @@ export HAPROXY_CONFIG_FOLDER=${CONFIG_FOLDER}
 haproxy -f ${CONFIG_PATH} ${STOP_OPTION} ${DEBUG_OPTION}
 
 # Give HAProxy a chance to start/restart cleanly before 
-# the returning to check for another update.
+# returning to check for another update.
 
 sleep ${START_SECONDS}
 . log-info.sh "HAProxy is running"
 
 # Purge the contents of [/dev/shm/secrets/haproxy] and [/dev/shm/secrets/haproxy-new]
 # so we don't leave secrets such as TLS key lying around in a file system
-# (even on a tmpfs).
+# (even on a tmpfs).  We'll leave these intact for DEBUG mode so we can
+# manually poke around the config.
 
 if [ "${DEBUG}" != "true" ] ; then
     rm -rf ${CONFIG_FOLDER}/*

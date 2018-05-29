@@ -30,6 +30,7 @@ using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
+using Neon.Time;
 
 namespace NeonProxyManager
 {
@@ -47,8 +48,9 @@ namespace NeonProxyManager
         private const string pollSecondsKey         = consulPrefix + "/poll-seconds";
         private const string fallbackPollSecondsKey = consulPrefix + "/fallback-poll-seconds";
         private const string certWarnDaysKey        = consulPrefix + "/cert-warn-days";
-        private const string proxyConf              = consulPrefix + "/conf";
-        private const string proxyStatus            = consulPrefix + "/status";
+        private const string proxyConfKey           = consulPrefix + "/conf";
+        private const string proxyStatusKey         = consulPrefix + "/status";
+        private const string proxyReloadKey         = proxyConfKey + "/reload";
         private const string vaultCertPrefix        = "neon-secret/cert";
         private const string allPrefix              = "~all~";   // Special path prefix indicating that all paths should be matched.
 
@@ -217,18 +219,28 @@ namespace NeonProxyManager
             certWarnTime         = TimeSpan.FromDays(await consul.KV.GetDouble(certWarnDaysKey));
 
             log.LogInfo(() => $"Using setting [{pollSecondsKey}={pollInterval.TotalSeconds}]");
+
+            if (fallbackPollInterval < pollInterval)
+            {
+                log.LogWarn(() => $"{fallbackPollSecondsKey}={fallbackPollInterval.TotalSeconds}] should not be less than [{pollSecondsKey}={pollInterval.TotalSeconds}]");
+            }
+
             log.LogInfo(() => $"Using setting [{fallbackPollSecondsKey}={fallbackPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{certWarnDaysKey}={certWarnTime.TotalSeconds}]");
 
             // The implementation is pretty straight forward: We're going to watch
-            // the [neon/service/neon-proxy-manager/conf/] prefix for changes 
-            // with the timeout set to [pollTime].  The watch will fire 
-            // whenever [neon-cli] modifies a cluster certificate or any of
-            // the rules or settings for a load balancer.
+            // the [neon/service/neon-proxy-manager/conf/reload] hash for changes 
+            // with the timeout set to [pollTime].  This key will be updated to a 
+            // new UUID whenever [neon-cli] modifies a cluster certificate or any 
+            // of the rules or settings for a load balancer.
             //
-            // Whenever the watch fires, the code will rebuild the load balancer
+            // Whenever the reload key changes, the code will rebuild the load balancer
             // configurations and also update the deployment's public load balancer
-            // and network security as required.
+            // and network security as required.  The code will also do a full update
+            // every [fallbackPollInterval] regardless of whether the hash has changed
+            // to ensure that the certificates are still valid and also as a failsafe
+            // that ensures that proxies will be eventually converged even when there's
+            // been some problem with uploading the reload hash.
 
             var cts  = new CancellationTokenSource();
             var ct   = cts.Token;
@@ -263,7 +275,9 @@ namespace NeonProxyManager
                 {
                     log.LogInfo("Starting [Monitor] task.");
 
-                    var initialPoll = true;
+                    var initialPoll    = true;
+                    var lastReloadHash = "0d3001e6-3031-444f-8529-7f58a4faf179";
+                    var fallbackTimer  = new PolledTimer(fallbackPollInterval, autoReset: true);
 
                     while (true)
                     {
@@ -273,97 +287,117 @@ namespace NeonProxyManager
                             return;
                         }
 
-                        var utcNow = DateTime.UtcNow;
-
                         try
                         {
-                            log.LogInfo(() => "Watching for routing changes.");
+                            log.LogInfo(() => "Polling for certificate and load balancer rule changes.");
 
-                            await consul.KV.WatchPrefix(proxyConf + "/",
-                                async () =>
+                            while (!terminator.CancellationToken.IsCancellationRequested)
+                            {
+                                if (fallbackTimer.HasFired)
                                 {
-                                    if (initialPoll)
+                                    // The fallback timer has fired so we're going to break this
+                                    // loop to process the load balancer configurations.
+
+                                    log.LogInfo(() => "Fallback timer has fired.");
+                                    break;
+                                }
+
+                                var newReloadHash = await consul.KV.GetStringOrDefault(proxyReloadKey) ?? string.Empty;
+
+                                if (newReloadHash != lastReloadHash)
+                                {
+                                    // The reload hash has changed so we're going to break to
+                                    // process the load balancer configurations.
+
+                                    lastReloadHash = newReloadHash;
+                                    log.LogInfo(() => "Detected reload hash change on PollTmer.");
+                                    break;
+                                }
+
+                                await Task.Delay(pollInterval);
+                            }
+
+
+                            if (initialPoll)
+                            {
+                                log.LogInfo("Proxy startup poll.");
+                                initialPoll = false;
+                            }
+                            else
+                            {
+                                log.LogInfo("Potential load balancer rule or certificate change detected.");
+                            }
+
+                            // Load and check the cluster certificates.
+
+                            var clusterCerts = new ClusterCerts();
+                            var utcNow       = DateTime.UtcNow;
+
+                            log.LogInfo(() => "Reading cluster certificates.");
+
+                            try
+                            {
+                                foreach (var certName in await vault.ListAsync(vaultCertPrefix))
+                                {
+                                    var certJson    = (await vault.ReadDynamicAsync($"{vaultCertPrefix}/{certName}")).ToString();
+                                    var certificate = NeonHelper.JsonDeserialize<TlsCertificate>(certJson);
+                                    var certInfo    = new CertInfo(certName, certificate);
+
+                                    if (!certInfo.Certificate.IsValidDate(utcNow))
                                     {
-                                        log.LogInfo("Proxy startup poll.");
-                                        initialPoll = false;
+                                        log.LogError(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] expired at [{certInfo.Certificate.ValidUntil.Value}].");
                                     }
-                                    else
+                                    else if (!certInfo.Certificate.IsValidDate(utcNow + certWarnTime))
                                     {
-                                        log.LogInfo("Potential load balancer rule or certificate change detected.");
+                                        log.LogWarn(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] will expire in [{(certInfo.Certificate.ValidUntil.Value - utcNow).TotalDays}] days at [{certInfo.Certificate.ValidUntil}].");
                                     }
 
-                                    // Load and check the cluster certificates.
+                                    clusterCerts.Add(certInfo);
+                                }
+                            }
+                            catch (Exception e)
+                            {
+                                log.LogError("Unable to load certificates from Vault.", e);
+                                log.LogError("Aborting load balancer configuration.");
+                                continue;
+                            }
 
-                                    var clusterCerts = new ClusterCerts();
+                            // Fetch the cluster definition and detect whether it changed since the
+                            // previous run.
 
-                                    log.LogInfo(() => "Reading cluster certificates.");
+                            var currentClusterDefinition = await NeonClusterHelper.GetDefinitionAsync(clusterDefinition, cts.Token);
 
-                                    try
-                                    {
-                                        foreach (var certName in await vault.ListAsync(vaultCertPrefix))
-                                        {
-                                            var certJson    = (await vault.ReadDynamicAsync($"{vaultCertPrefix}/{certName}")).ToString();
-                                            var certificate = NeonHelper.JsonDeserialize<TlsCertificate>(certJson);
-                                            var certInfo    = new CertInfo(certName, certificate);
+                            clusterDefinitionChanged = clusterDefinition == null || !NeonHelper.JsonEquals(clusterDefinition, currentClusterDefinition);
+                            clusterDefinition        = currentClusterDefinition;
 
-                                            if (!certInfo.Certificate.IsValidDate(utcNow))
-                                            {
-                                                log.LogError(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] expired at [{certInfo.Certificate.ValidUntil.Value}].");
-                                            }
-                                            else if (!certInfo.Certificate.IsValidDate(utcNow + certWarnTime))
-                                            {
-                                                log.LogWarn(() => $"Certificate [{certInfo.Name}] for [hosts={certInfo.Certificate.HostNames}] will expire in [{(certInfo.Certificate.ValidUntil.Value - utcNow).TotalDays}] days at [{certInfo.Certificate.ValidUntil}].");
-                                            }
+                            // Fetch the list of active Docker Swarm nodes.  We'll need this to generate the
+                            // proxy bridge configurations.
 
-                                            clusterCerts.Add(certInfo);
-                                        }
-                                    }
-                                    catch (Exception e)
-                                    {
-                                        log.LogError("Unable to load certificates from Vault.", e);
-                                        log.LogError("Aborting load balancer configuration.");
-                                        return;
-                                    }
+                            swarmNodes = await docker.NodeListAsync();
 
-                                    // Fetch the cluster definition and detech whether it changed since the
-                                    // previous run.
+                            // Rebuild the proxy configurations and write the captured status to
+                            // Consul to make it available for the [neon proxy public|private status]
+                            // command.  Note that we're going to build the [neon-proxy-public-bridge]
+                            // and [neon-proxy-private-bridge] configurations as well for use by any 
+                            // cluster pet nodes.
 
-                                    var currentClusterDefinition = await NeonClusterHelper.GetDefinitionAsync(clusterDefinition, cts.Token);
+                            var publicBuildStatus = await BuildProxyConfigAsync("public", clusterCerts, ct);
+                            var publicProxyStatus = new LoadBalancerStatus() { Status = publicBuildStatus.Status };
 
-                                    clusterDefinitionChanged = clusterDefinition == null || !NeonHelper.JsonEquals(clusterDefinition, currentClusterDefinition);
-                                    clusterDefinition        = currentClusterDefinition;
+                            await consul.KV.PutString($"{proxyStatusKey}/public", NeonHelper.JsonSerialize(publicProxyStatus), ct);
 
-                                    // Fetch the list of active Docker Swarm nodes.  We'll need this to generate the
-                                    // proxy bridge configurations.
+                            var privateBuildStatus = await BuildProxyConfigAsync("private", clusterCerts, ct);
+                            var privateProxyStatus = new LoadBalancerStatus() { Status = privateBuildStatus.Status };
 
-                                    swarmNodes = await docker.NodeListAsync();
+                            await consul.KV.PutString($"{proxyStatusKey}/private", NeonHelper.JsonSerialize(privateProxyStatus), ct);
 
-                                    // Rebuild the proxy configurations and write the captured status to
-                                    // Consul to make it available for the [neon proxy public|private status]
-                                    // command.  Note that we're going to build the [neon-proxy-public-bridge]
-                                    // and [neon-proxy-private-bridge] configurations as well for use by any 
-                                    // cluster pet nodes.
+                            // We need to ensure that the deployment's load balancer and security
+                            // rules are updated to match changes to the public load balancer rules.
+                            // Note that we're going to call this even if the PUBLIC load balancer
+                            // hasn't changed to ensure that the load balancer doesn't get
+                            // out of sync.
 
-                                    var publicBuildStatus = await BuildProxyConfigAsync("public", clusterCerts, ct);
-                                    var publicProxyStatus = new LoadBalancerStatus() { Status = publicBuildStatus.Status };
-
-                                    await consul.KV.PutString($"{proxyStatus}/public", NeonHelper.JsonSerialize(publicProxyStatus), ct);
-
-                                    var privateBuildStatus = await BuildProxyConfigAsync("private", clusterCerts, ct);
-                                    var privateProxyStatus = new LoadBalancerStatus() { Status = privateBuildStatus.Status };
-
-                                    await consul.KV.PutString($"{proxyStatus}/private", NeonHelper.JsonSerialize(privateProxyStatus), ct);
-
-                                    // We need to ensure that the deployment's load balancer and security
-                                    // rules are updated to match changes to the public load balancer rules.
-                                    // Note that we're going to call this even if the PUBLIC load balancer
-                                    // hasn't changed to ensure that the load balancer doesn't get
-                                    // out of sync.
-
-                                    await UpdateClusterNetwork(publicBuildStatus.Rules, cts.Token);
-                                },
-                                timeout: fallbackPollInterval,
-                                cancellationToken: terminator.CancellationToken);
+                            await UpdateClusterNetwork(publicBuildStatus.Rules, cts.Token);
                         }
                         catch (TaskCanceledException)
                         {
@@ -436,7 +470,7 @@ namespace NeonProxyManager
 
             // Load the load balancer's settings and rules.
 
-            string                  proxyPrefix = $"{proxyConf}/{loadBalancerName}";
+            string                  proxyPrefix = $"{proxyConfKey}/{loadBalancerName}";
             var                     rules       = new Dictionary<string, LoadBalancerRule>();
             var                     hostGroups  = clusterDefinition.GetNodeGroups(excludeAllGroup: false);
             LoadBalancerSettings    settings;

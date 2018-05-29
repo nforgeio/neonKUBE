@@ -78,6 +78,7 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(settings != null);
 
             cluster.Consul.KV.PutObject(GetProxySettingsKey(), settings, Formatting.Indented).Wait();
+            cluster.SignalLoadBalancerUpdate();
         }
 
         /// <summary>
