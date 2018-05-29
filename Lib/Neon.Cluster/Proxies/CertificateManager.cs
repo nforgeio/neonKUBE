@@ -50,6 +50,7 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
 
             cluster.Vault.DeleteAsync(NeonClusterHelper.GetVaultCertificateKey(name)).Wait();
+            cluster.SignalLoadBalancerUpdate();
         }
 
         /// <summary>
@@ -94,6 +95,7 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(certificate != null);
 
             cluster.Vault.WriteJsonAsync(NeonClusterHelper.GetVaultCertificateKey(name), certificate).Wait();
+            cluster.SignalLoadBalancerUpdate();
         }
 
         /// <summary>
@@ -113,16 +115,6 @@ namespace Neon.Cluster
             }
 
             return certificates;
-        }
-
-        /// <summary>
-        /// Indicates that the cluster certificates may have been changed.  This has the effect
-        /// of signalling <b>neon-proxy-manager</b> to to regenerate the proxy definitions and
-        /// restart all of the load balancers when changes are detected.
-        /// </summary>
-        public void Touch()
-        {
-            NeonClusterHelper.TouchCertificates();
         }
     }
 }

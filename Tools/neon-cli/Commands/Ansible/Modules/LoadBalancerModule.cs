@@ -272,7 +272,7 @@ namespace NeonCli.Ansible
                         if (force)
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{ruleName}] does not exist but since [force=true] we're going to update anyway.");
-                            NeonClusterHelper.TouchCertificates();  // This signals [neon-proxy-manager] to regenerate the proxy config.
+                            NeonClusterHelper.Cluster.SignalLoadBalancerUpdate();
                             context.Changed = true;
                         }
                         else
@@ -417,7 +417,7 @@ namespace NeonCli.Ansible
                             if (force)
                             {
                                 context.WriteLine(AnsibleVerbosity.Trace, $"Rules are the same but since [force=true] we're going to update anyway.");
-                                NeonClusterHelper.TouchCertificates();  // This signals [neon-proxy-manager] to regenerate the proxy config.
+                                NeonClusterHelper.Cluster.SignalLoadBalancerUpdate();
                                 changed = true;
                             }
                             else

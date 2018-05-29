@@ -132,6 +132,7 @@ namespace Neon.Cluster
             if (cluster.Consul.KV.Exists(ruleKey).Result)
             {
                 cluster.Consul.KV.Delete(ruleKey);
+                cluster.SignalLoadBalancerUpdate();
 
                 return true;
             }
@@ -192,9 +193,11 @@ namespace Neon.Cluster
 
             validationContext.ThrowIfErrors();
 
-            // Save the rule to the cluster.
+            // Save the rule to the cluster and signal that the
+            // load balancers need to be updated.
 
             cluster.Consul.KV.PutObject(ruleKey, rule, Formatting.Indented).Wait();
+            cluster.SignalLoadBalancerUpdate();
 
             return update;
         }

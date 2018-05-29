@@ -42,14 +42,15 @@ namespace NeonProxyManager
     /// </summary>
     public static class Program
     {
-        private static readonly string serviceName = $"neon-proxy-manager:{GitVersion}";
-        private const string consulPrefix          = "neon/service/neon-proxy-manager";
-        private const string pollSecondsKey        = consulPrefix + "/poll-seconds";
-        private const string certWarnDaysKey       = consulPrefix + "/cert-warn-days";
-        private const string proxyConf             = consulPrefix + "/conf";
-        private const string proxyStatus           = consulPrefix + "/status";
-        private const string vaultCertPrefix       = "neon-secret/cert";
-        private const string allPrefix             = "~all~";   // Special path prefix indicating that all paths should be matched.
+        private static readonly string serviceName  = $"neon-proxy-manager:{GitVersion}";
+        private const string consulPrefix           = "neon/service/neon-proxy-manager";
+        private const string pollSecondsKey         = consulPrefix + "/poll-seconds";
+        private const string fallbackPollSecondsKey = consulPrefix + "/fallback-poll-seconds";
+        private const string certWarnDaysKey        = consulPrefix + "/cert-warn-days";
+        private const string proxyConf              = consulPrefix + "/conf";
+        private const string proxyStatus            = consulPrefix + "/status";
+        private const string vaultCertPrefix        = "neon-secret/cert";
+        private const string allPrefix              = "~all~";   // Special path prefix indicating that all paths should be matched.
 
         private static TimeSpan                 delayTime = TimeSpan.FromSeconds(5);
         private static ProcessTerminator        terminator;
@@ -58,6 +59,7 @@ namespace NeonProxyManager
         private static ConsulClient             consul;
         private static DockerClient             docker;
         private static TimeSpan                 pollInterval;
+        private static TimeSpan                 fallbackPollInterval;
         private static TimeSpan                 certWarnTime;
         private static ClusterDefinition        clusterDefinition;
         private static bool                     clusterDefinitionChanged;
@@ -194,8 +196,14 @@ namespace NeonProxyManager
 
             if (!await consul.KV.Exists(pollSecondsKey))
             {
-                log.LogInfo($"Persisting setting [{pollSecondsKey}=60.0]");
-                await consul.KV.PutDouble(pollSecondsKey, 60.0);
+                log.LogInfo($"Persisting setting [{pollSecondsKey}=10.0]");
+                await consul.KV.PutDouble(pollSecondsKey, 10.0);
+            }
+
+            if (!await consul.KV.Exists(fallbackPollSecondsKey))
+            {
+                log.LogInfo($"Persisting setting [{fallbackPollSecondsKey}=300.0]");
+                await consul.KV.PutDouble(fallbackPollSecondsKey, 300.0);
             }
 
             if (!await consul.KV.Exists(certWarnDaysKey))
@@ -204,10 +212,12 @@ namespace NeonProxyManager
                 await consul.KV.PutDouble(certWarnDaysKey, 30.0);
             }
 
-            pollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(pollSecondsKey));
-            certWarnTime = TimeSpan.FromDays(await consul.KV.GetDouble(certWarnDaysKey));
+            pollInterval         = TimeSpan.FromSeconds(await consul.KV.GetDouble(pollSecondsKey));
+            fallbackPollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(fallbackPollSecondsKey));
+            certWarnTime         = TimeSpan.FromDays(await consul.KV.GetDouble(certWarnDaysKey));
 
             log.LogInfo(() => $"Using setting [{pollSecondsKey}={pollInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{fallbackPollSecondsKey}={fallbackPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{certWarnDaysKey}={certWarnTime.TotalSeconds}]");
 
             // The implementation is pretty straight forward: We're going to watch
@@ -352,7 +362,7 @@ namespace NeonProxyManager
 
                                     await UpdateClusterNetwork(publicBuildStatus.Rules, cts.Token);
                                 },
-                                timeout: pollInterval,
+                                timeout: fallbackPollInterval,
                                 cancellationToken: terminator.CancellationToken);
                         }
                         catch (TaskCanceledException)

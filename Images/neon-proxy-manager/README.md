@@ -85,7 +85,9 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`name2: <LoadBalancerRule json>`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`...`
 
-* **poll-seconds** (*double*) - how often the proxy manager should scan TLS certificates persisted in Vault for expiration checks and updates and also poll the individual proxy definitions for changes.
+* **poll-seconds** (*double*) - how often the proxy manager should poll the **reload** UUID key for changes, updating the proxy definitions when a change is detected.  This defaults to 10 seconds.
+
+* **fallback-poll-seconds** (*double*) - how often the proxy manager should scan TLS certificates persisted in Vault for expiration checks and updates and also poll the individual proxy definitions for changes.  This defaults to 300 seconsds or 5 minutes.
 
 * **cert-warn-days** (*double*) - number of days in advance to begin warning of certificate expirations.
 
@@ -97,9 +99,7 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 
 * **conf** - root key for proxy settings that need to be monitored for changes.
 
-* **reload** - touched when the neon proxy NAME reload command is executed.  **neon-proxy-manager** monitors this and republishes immediately on a change.
-
-* **cert-update** - touched by the **neon-cli** whenever certificates are modified.  **neon-proxy-manager** monitors this and republishes immediately on a change.
+* **reload** - set to a new UUID whenever a certificate or load balancer rule is changed.  **neon-proxy-manager** monitors this and republishes when a change is detected.
 
 * **settings** - global (per proxy) settings for a load balancer formatted as JSON.
 

@@ -20,7 +20,7 @@ This image includes the following packages:
 
 This image dynamically configures HAProxy by retrieving configuration data persisted to a Consul key.  The data is a binary ZIP archive including the `haproxy.cfg` text file.  This is formatted as standard HAProxy configuration file.  The ZIP archive may also include other files such as TLS public/private keys as well as the optional `.certs` file that specifies any certificates to be obtained from Vault.
 
-All you need to do is pass the **CONFIG_KEY** environment variable as the Consul key where the configuration ZIP archive will be saved.  Here's a logical overview of how this works:
+All you need to do is pass the **UPDATE_KEY** environment variable as the Consul key where the configuration ZIP archive will be saved.  Here's a logical overview of how this works:
 
 1. The key value is retrieved from Consul and persists it to `/dev/shm/secrets/haproxy/haproxy.zip`.  The container exits if the value can't be retrieved.
 
@@ -36,11 +36,15 @@ All you need to do is pass the **CONFIG_KEY** environment variable as the Consul
 
 * **CONFIG_KEY** (*required*) - Consul key holding the HAProxy ZIP archive configuration.
 
+* **CONFIG_HASH_KEY** (*required*) - Consul key holding MD5 hash of the configuration used when polling for changes.
+
 * **VAULT_CREDENTIALS** (*required*) - optionally names the file within `/run/secrets/` that holds the Vault credentials the proxy will need to access TLS certificates.  If this is not specified or is blank, then the the proxy won't be able to handle HTTPS routes but HTTP and TCP routes will still work.
 
 * **WARN_SECONDS** (*optional*) - seconds between logging warning while HAProxy is running with an out-of-date configuration.  This defaults to 300 (5 minutes).
 
 * **START_SECONDS** (*optional*) - seconds to give the chance HAProxy to start cleanly before processing configuration changes.  This defaults to 10 seconds.
+
+* **POLL_SECONDS** (*optional*) - seconds between polling **UPDATE_KEY** for changes.  This defaults to 15 seconds.
 
 * **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
@@ -48,7 +52,7 @@ All you need to do is pass the **CONFIG_KEY** environment variable as the Consul
 
 # HAProxy ZIP Archive
 
-This image expects the Consul **CONFIG_KEY** key value to be a ZIP archive holding the `haproxy.cfg` configuration file as well as another assets such as site certificate files.  `haproxy.cfg` file format is described at [haproxy.org](http://www.haproxy.org/#docs).
+This image expects the Consul **UPDATE_KEY** key value to be a ZIP archive holding the `haproxy.cfg` configuration file as well as another assets such as site certificate files.  `haproxy.cfg` file format is described at [haproxy.org](http://www.haproxy.org/#docs).
 
 To use TLS certificates or certificate authorities, you'll need to use the **HAPROXY_CONFIG_FOLDER** environment variable when specifying the base locations.  This is set to the path to the folder where the HAProxy configuration archive contents were extracted.
 
@@ -112,7 +116,7 @@ docker service create \
     --detach=false \
     --mount type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
-    --env CONFIG_KEY=neon/service/neon-proxy-manager/proxies/public/conf \
+    --env UPDATE_KEY=neon/service/neon-proxy-manager/proxies/public/conf \
     --env VAULT_CREDENTIALS=neon-proxy-public-credentials \
     --env LOG_LEVEL=INFO \
     --env DEBUG=false \
@@ -129,7 +133,7 @@ docker service create \
     --detach=false \
     --mount type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
-    --env CONFIG_KEY=neon/service/neon-proxy-manager/proxies/private/conf \
+    --env UPDATE_KEY=neon/service/neon-proxy-manager/proxies/private/conf \
     --env VAULT_CREDENTIALS=neon-proxy-private-credentials \
     --env LOG_LEVEL=INFO \
     --env DEBUG=false \

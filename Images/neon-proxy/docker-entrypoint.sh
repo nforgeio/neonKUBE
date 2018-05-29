@@ -8,9 +8,11 @@
 
 . log-info.sh "Starting [neon-proxy]"
 . log-info.sh "CONFIG_KEY=${CONFIG_KEY}"
+. log-info.sh "CONFIG_HASH_KEY=${CONFIG_HASH_KEY}"
 . log-info.sh "VAULT_CREDENTIALS=${VAULT_CREDENTIALS}"
 . log-info.sh "WARN_SECONDS=${WARN_SECONDS}"
 . log-info.sh "START_SECONDS=${START_SECONDS}"
+. log-info.sh "POLL_SECONDS=${POLL_SECONDS}"
 . log-info.sh "LOG_LEVEL=${LOG_LEVEL}"
 . log-info.sh "DEBUG=${DEBUG}"
 
@@ -41,17 +43,33 @@ if [ "${CONFIG_KEY}" == "" ] ; then
     exit 1
 fi
 
-# Verify that the key actually exists.
+# Verify that a CONFIG_HASH_KEY was passed.
+
+if [ "${CONFIG_HASH_KEY}" == "" ] ; then
+    . log-critical.sh "CONFIG_HASH_KEY environment variable is missing or empty."
+    exit 1
+fi
+
+# Verify that the Consul keys actually exist.
 
 if ! consul kv get ${CONFIG_KEY} > /dev/nul ; then
     . log-critical.sh "The [${CONFIG_KEY}] key cannot be retrieved from Consul."
     exit 1
 fi
 
-# Load the other environment variable parameters.
+if ! consul kv get ${CONFIG_HASH_KEY} > /dev/nul ; then
+    . log-critical.sh "The [${CONFIG_HASH_KEY}] key cannot be retrieved from Consul."
+    exit 1
+fi
+
+# Set the other environment variable defaults if necessary.
 
 if [ "${WARN_SECONDS}" == "" ] ; then
     export WARN_SECONDS=300
+fi
+
+if [ "${POLL_SECONDS}" == "" ] ; then
+    export POLL_SECONDS=15
 fi
 
 if [ "${START_SECONDS}" == "" ] ; then
@@ -106,4 +124,22 @@ export CONFIG_NEW_PATH=${CONFIG_NEW_FOLDER}/haproxy.cfg
 # Note the the [consul watch] command returns only if [onconfigchange.sh]
 # returns a non-zero exit code.
 
-consul watch -type=key -key=${CONFIG_KEY} onconfigchange.sh
+LAST_HASH=
+
+while true
+do
+    NEW_HASH=$(consul kv get ${CONFIG_HASH_KEY})
+
+    if [ "$?" != "0" ] ; then
+        . log-warn.sh "The [${CONFIG_HASH_KEY}] key cannot be retrieved from Consul."
+        sleep ${POLL_SECONDS}
+        continue
+    fi
+
+    if [ "${NEW_HASH}" != "${LAST_HASH}" ] ; then
+        onconfigchange.sh
+        LAST_HASH=${NEW_HASH}
+    fi
+
+    sleep ${POLL_SECONDS}
+done

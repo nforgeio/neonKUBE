@@ -4,23 +4,9 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# This is called when the container starts and then whenever the CONFIG_KEY is 
-# is modified in Consul.  A JSON record detailing the change (like that depicted
-# below) will be passed as STDIN:
+# This is called when the container starts and also whenever the main script
+# detects that the proxy configuration has changed.
 #
-#   {
-#       "Key": "foo/bar/baz",
-#       "CreateIndex": 1793,
-#       "ModifyIndex": 1793,
-#       "LockIndex": 0,
-#       "Flags": 0,
-#       "Value": "aGV5",
-#       "Session": ""
-#   }
-#
-# Note that we don't actually need to parse this for this scenario because all we
-# need is to know is that the configuration key was modified.
-
 # We'll detect whether we're starting HAProxy for the first time or an existing 
 # instance is to be restarted.
 #
@@ -34,7 +20,7 @@ if pidof haproxy ; then
     export RESTARTING=true
 fi
 
-. log-info.sh "Consul watch notification."
+. log-info.sh "Proxy change detected."
 
 # Download the new configuration to [/tmp/haproxy/config-new] (after clearing it).
 
@@ -254,7 +240,7 @@ export HAPROXY_CONFIG_FOLDER=${CONFIG_FOLDER}
 haproxy -f ${CONFIG_PATH} ${STOP_OPTION} ${DEBUG_OPTION}
 
 # Give HAProxy a chance to start/restart cleanly before 
-# the potential for another update.
+# the returning to check for another update.
 
 sleep ${START_SECONDS}
 . log-info.sh "HAProxy is running"

@@ -610,9 +610,6 @@ namespace NeonCli.Ansible
                         context.WriteLine(AnsibleVerbosity.Trace, $"Writing load balancer rule.");
                         cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Touching certificate.");
-                        cluster.Certificate.Touch();
-
                         context.WriteLine(AnsibleVerbosity.Trace, $"Creating the [neon-registry] service.");
 
                         var createResponse = manager.DockerCommand(RunOptions.None,
@@ -652,7 +649,6 @@ namespace NeonCli.Ansible
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating certificate.");
                             cluster.Certificate.Set("neon-registry", certificate);
-                            cluster.Certificate.Touch();
                         }
 
                         if (hostnameChanged)
@@ -681,8 +677,8 @@ namespace NeonCli.Ansible
 
                         if (certificateChanged || hostnameChanged)
                         {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Touching certificate Consul change key.");
-                            cluster.Certificate.Touch();
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Signalling load balancer update.");
+                            cluster.SignalLoadBalancerUpdate();
                         }
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Updating service.");

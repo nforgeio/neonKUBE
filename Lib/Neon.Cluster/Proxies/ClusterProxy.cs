@@ -1226,5 +1226,15 @@ vault policy-write {policy.Name} policy.hcl
 
             return details;
         }
+
+        /// <summary>
+        /// Indicates that the cluster certificates and or load balancer rules may have been changed.
+        /// This has the effect of signalling <b>neon-proxy-manager</b> to to regenerate the proxy 
+        /// definitions and update all of the load balancers when changes are detected.
+        /// </summary>
+        public void SignalLoadBalancerUpdate()
+        {
+            Consul.KV.PutString("neon/service/neon-proxy-manager/conf/reload", Guid.NewGuid().ToString("D")).Wait();
+        }
     }
 }

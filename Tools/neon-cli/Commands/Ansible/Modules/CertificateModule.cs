@@ -28,6 +28,8 @@ using Neon.Common;
 using Neon.IO;
 using Neon.Net;
 
+// $todo(jeff.lill): Recode to use: CertificateManager
+
 namespace NeonCli.Ansible
 {
     //---------------------------------------------------------------------
@@ -197,7 +199,7 @@ namespace NeonCli.Ansible
                                 vault.DeleteAsync(vaultPath).Wait();
                                 context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate deleted");
 
-                                TouchCertChanged();
+                                SignalCertChanged();
                                 context.WriteLine(AnsibleVerbosity.Trace, $"Consul: Signal the certificate change");
                             }
 
@@ -253,6 +255,7 @@ namespace NeonCli.Ansible
                                 context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Saving [{name}] certificate");
                                 vault.WriteJsonAsync(vaultPath, certificate).Wait();
                                 context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate saved");
+                                SignalCertChanged();
                             }
                         }
 
@@ -269,9 +272,9 @@ namespace NeonCli.Ansible
         /// Update the <b>neon-proxy-manager</b> Consul key to indicate that changes
         /// have been made to the cluster certificates.
         /// </summary>
-        private void TouchCertChanged()
+        private void SignalCertChanged()
         {
-            NeonClusterHelper.TouchCertificates();
+            NeonClusterHelper.Cluster.SignalLoadBalancerUpdate();
         }
     }
 }

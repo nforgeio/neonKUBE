@@ -451,16 +451,6 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Indicates that the cluster certificates may have been changed.  This has the effect
-        /// of signalling <b>neon-proxy-manager</b> to to regenerate the proxy definitions and
-        /// restart all of the load balancers when changes are detected.
-        /// </summary>
-        public static void TouchCertificates()
-        {
-            Consul.KV.PutString("neon/service/neon-proxy-manager/conf/cert-update", Guid.NewGuid().ToString("D")).Wait();
-        }
-
-        /// <summary>
         /// Returns the cluster's Vault URI.
         /// </summary>
         public static Uri VaultUri

@@ -23,6 +23,8 @@ using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 
+// $todo(jeff.lill): Recode to use: CertificateManager
+
 namespace NeonCli
 {
     /// <summary>
@@ -298,7 +300,7 @@ certificates, and then finally the private key.
                         }
 
                         vault.DeleteAsync(NeonClusterHelper.GetVaultCertificateKey(certName)).Wait();
-                        NeonClusterHelper.TouchCertificates();
+                        NeonClusterHelper.Cluster.SignalLoadBalancerUpdate();
                         Console.WriteLine($"Certificate [{certName}] was deleted if it existed.");
                     }
                     break;
@@ -333,7 +335,7 @@ certificates, and then finally the private key.
 
                         certificate.Parse();
                         vault.WriteJsonAsync(NeonClusterHelper.GetVaultCertificateKey(commandLine.Arguments[0]), certificate).Wait();
-                        NeonClusterHelper.TouchCertificates();
+                        NeonClusterHelper.Cluster.SignalLoadBalancerUpdate();
 
                         Console.WriteLine($"Certificate [{certName}] was added or updated.");
                     }
