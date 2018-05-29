@@ -29,7 +29,7 @@ Follow steps below to configure a development or test workstation.
 
 4. Ensure that hardware virtualization is enabled in your BIOS.
 
-5. Install **Visual Studio Community Edition 15.7+** from [here](https://www.visualstudio.com/downloads/).  Do a full install to ensure that you have everything.  This an overkill, but it may help prevent build problems in the future.
+5. Install **Visual Studio Community Edition 15.7+** from [here](https://www.visualstudio.com/downloads/).
 
   * Select **all workloads** on the first panel
   * Select **individual components** and enable these:
