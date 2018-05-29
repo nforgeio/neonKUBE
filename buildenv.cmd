@@ -48,15 +48,22 @@ if not exist "%NF_TEMP%" mkdir "%NF_TEMP%"
 if not exist "%NF_TOOLBIN%" mkdir "%NF_TOOLBIN%"
 if not exist "%NF_ROOT%\Build" mkdir "%NF_ROOT%\Build"
 
-REM Configure the PATH
+REM Configure the PATH.
+REM
+REM Note that some tools like PuTTY and 7-Zip may be installed assoc
+REM x86 or x64 to different directories.  We'll include commands that
+REM attempt to add both locations to the path and the [pathtool] is
+REM smart enough to only add directories that actually exist.
 
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_BUILD%"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_TOOLBIN%"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_TOOLBIN%\OpenSSL"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_ROOT%\.nuget"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%DOTNETPATH%"
+%NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files\PuTTY"
 %NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\PuTTY"
 %NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\WinSCP"
+%NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files\7-Zip"
 %NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\7-Zip"
 
 :done
