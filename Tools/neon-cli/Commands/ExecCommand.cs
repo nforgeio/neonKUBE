@@ -33,11 +33,11 @@ namespace NeonCli
     public class ExecCommand : CommandBase
     {
         private const string usage = @"
-Executes a Bash command or script on one or more cluster host nodes.
+Executes a Bash command or script on one or more cluster nodes.
 
 USAGE:
 
-    neon [OPTIONS] exec COMMAND [ARGS]
+    neon [OPTIONS] exec -- COMMAND [ARGS]
 
 ARGUMENTS:
 
@@ -48,6 +48,9 @@ OPTIONS:
     --node          - Zero are more target node names (separated by commas)
                       or a plus (+) symbol to target to all nodes.  Executes 
                       on the first cluster manager if no node is specified.
+
+    --group=GROUP   - Runs the command on the nodes in a cluster node
+                      group like: managers, workers, pets,...
 
     --text=PATH     - Text file to be uploaded to the node(s) before
                       executing the command.  Multiple files are allowed.
@@ -86,6 +89,13 @@ NOTES:
       of nodes to reboot in parallel.  This defaults to one for this 
       command.
 
+    * Use [--group=NAME] to run the command on the nodes in the named
+      node group.  neonCLUSTER builds-in the following node groups
+      and it's possible to define custom groups in your cluster definition:
+
+            cluster, swarm, managers, workers, pets, 
+            ceph, ceph-mon, ceph-mds, ceph-osd
+
 EXAMPLES:
 
 List the Docker nodes on a cluster manager:
@@ -117,13 +127,13 @@ does this on the first manager node:
         /// <inheritdoc/>
         public override string SplitItem
         {
-            get { return "exec"; }
+            get { return "--"; }
         }
 
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--node", "--text", "--data", "--script" }; }
+            get { return new string[] { "--node", "--group", "--text", "--data", "--script" }; }
         }
 
         /// <inheritdoc/>
@@ -135,9 +145,7 @@ does this on the first manager node:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            // Split the command line on "exec".
-
-            var split = commandLine.Split("exec");
+            var split = commandLine.Split("--");
 
             var leftCommandLine  = split.Left;
             var rightCommandLine = split.Right;
@@ -150,45 +158,82 @@ does this on the first manager node:
                 Program.Exit(0);
             }
 
-            var clusterLogin = Program.ConnectCluster();
+            Program.ConnectCluster();
+
+            var cluster = NeonClusterHelper.Cluster;
 
             // Process the nodes.
 
             var nodeDefinitions = new List<NodeDefinition>();
             var nodeOption      = leftCommandLine.GetOption("--node", null);
 
-            if (string.IsNullOrWhiteSpace(nodeOption))
+            if (!string.IsNullOrWhiteSpace(nodeOption))
             {
-                nodeDefinitions.Add(clusterLogin.Definition.Managers.First());
-            }
-            else if (nodeOption == "+")
-            {
-                foreach (var manager in clusterLogin.Definition.SortedManagers)
+                if (nodeOption == "+")
                 {
-                    nodeDefinitions.Add(manager);
-                }
-
-                foreach (var worker in clusterLogin.Definition.SortedWorkers)
-                {
-                    nodeDefinitions.Add(worker);
-                }
-            }
-            else
-            {
-                foreach (var name in nodeOption.Split(','))
-                {
-                    var trimmedName = name.Trim();
-
-                    NodeDefinition node;
-
-                    if (!clusterLogin.Definition.NodeDefinitions.TryGetValue(trimmedName, out node))
+                    foreach (var manager in cluster.Definition.SortedManagers)
                     {
-                        Console.Error.WriteLine($"*** ERROR: Node [{trimmedName}] is not present in the cluster.");
-                        Program.Exit(1);
+                        nodeDefinitions.Add(manager);
                     }
 
-                    nodeDefinitions.Add(node);
+                    foreach (var worker in cluster.Definition.SortedWorkers)
+                    {
+                        nodeDefinitions.Add(worker);
+                    }
+
+                    foreach (var pet in cluster.Definition.SortedPets)
+                    {
+                        nodeDefinitions.Add(pet);
+                    }
                 }
+                else
+                {
+                    foreach (var name in nodeOption.Split(',', StringSplitOptions.RemoveEmptyEntries))
+                    {
+                        var trimmedName = name.Trim();
+
+                        NodeDefinition node;
+
+                        if (!cluster.Definition.NodeDefinitions.TryGetValue(trimmedName, out node))
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Node [{trimmedName}] is not present in the cluster.");
+                            Program.Exit(1);
+                        }
+
+                        nodeDefinitions.Add(node);
+                    }
+                }
+            }
+
+            var groupName = leftCommandLine.GetOption("--group");
+
+            if (!string.IsNullOrEmpty(groupName))
+            {
+                var nodeGroups = cluster.Definition.GetNodeGroups();
+
+                if (!nodeGroups.TryGetValue(groupName, out var group))
+                {
+                    Console.Error.WriteLine($"*** ERROR: Node group [{groupName}] is not defined for the cluster.");
+                    Program.Exit(1);
+                }
+
+                // Add the group nodes to the node definitions if they aren't
+                // already present.
+
+                foreach (var node in group)
+                {
+                    if (nodeDefinitions.Count(n => n.Name.Equals(node.Name, StringComparison.InvariantCultureIgnoreCase)) == 0)
+                    {
+                        nodeDefinitions.Add(node);
+                    }
+                }
+            }
+
+            if (nodeDefinitions.Count == 0)
+            {
+                // Default to a healthy manager.
+
+                nodeDefinitions.Add(cluster.GetHealthyManager().Metadata);
             }
 
             // Create the command bundle by appending the right command.
@@ -240,8 +285,6 @@ does this on the first manager node:
             }
 
             // Perform the operation.
-
-            var cluster = new ClusterProxy(clusterLogin);
 
             if (nodeDefinitions.Count == 1)
             {
