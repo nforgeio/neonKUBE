@@ -1352,7 +1352,7 @@ namespace Neon.Xunit.Cluster
 
             // Clear any non-system dashboards.
 
-            foreach (var dashboard in Consul.KV.ListOrEmpty<ClusterDashboard>(NeonClusterConst.ConsulDashboardsKey).Result)
+            foreach (var dashboard in cluster.Dashboard.List())
             {
                 if (dashboard.Folder == null)
                 {
@@ -1361,7 +1361,7 @@ namespace Neon.Xunit.Cluster
 
                 if (!dashboard.Folder.Equals(NeonClusterConst.DashboardSystemFolder, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    tasks.Add(Consul.KV.Delete($"{NeonClusterConst.ConsulDashboardsKey}/{dashboard.Name}"));
+                    tasks.Add(Task.Run(() => cluster.Dashboard.Remove(dashboard.Name)));
                 }
             }
 

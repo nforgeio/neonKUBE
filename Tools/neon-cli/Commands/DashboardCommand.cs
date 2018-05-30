@@ -155,10 +155,7 @@ dashboard names are reserved for use as commands:
                 Program.Exit(1);
             }
 
-            name = name.ToLowerInvariant();
-
-            var key       = GetDashboardConsulKey(name);
-            var dashboard = cluster.Consul.KV.GetObjectOrDefault<ClusterDashboard>(key).Result;
+            var dashboard = cluster.Dashboard.Get(name);
 
             if (dashboard == null)
             {
@@ -175,19 +172,10 @@ dashboard names are reserved for use as commands:
         /// <param name="commandLine">The command line.</param>
         private void List(CommandLine commandLine)
         {
-            var result = cluster.Consul.KV.ListOrDefault<ClusterDashboard>(NeonClusterConst.ConsulDashboardsKey).Result;
-
-            Console.WriteLine();
-
-            if (result == null)
-            {
-                Console.WriteLine("[0] dashboards");
-                return;
-            }
-
-            var dashboards   = result.ToList();
+            var dashboards   = cluster.Dashboard.List();
             var maxNameWidth = dashboards.Max(d => d.Name.Length);
 
+            Console.WriteLine();
             Console.WriteLine($"[{dashboards.Count}] dashboards");
             Console.WriteLine();
 
@@ -197,18 +185,6 @@ dashboard names are reserved for use as commands:
 
                 Console.WriteLine($"{namePart} {dashboard.Url}");
             }
-        }
-
-        /// <summary>
-        /// Returns the Consul key for a dashboard based on its name.
-        /// </summary>
-        /// <param name="name">The dashboard name.</param>
-        /// <returns>The Consul key path.</returns>
-        private string GetDashboardConsulKey(string name)
-        {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
-
-            return $"{NeonClusterConst.ConsulDashboardsKey}/{name}";
         }
 
         /// <summary>
@@ -233,15 +209,15 @@ dashboard names are reserved for use as commands:
 
             name = name.ToLowerInvariant();
 
-            var result = cluster.Consul.KV.ListOrDefault<ClusterDashboard>(NeonClusterConst.ConsulDashboardsKey).Result;
+            var existingDashboard = cluster.Dashboard.Get(name);
 
-            if (result == null || result.Count(d => d.Name.Equals(name, StringComparison.InvariantCultureIgnoreCase)) == 0)
+            if (existingDashboard == null)
             {
                 Console.Error.WriteLine($"*** ERROR: Dashboard [{name}] does not exist.");
                 Program.Exit(1);
             }
 
-            cluster.Consul.KV.Delete(GetDashboardConsulKey(name)).Wait();
+            cluster.Dashboard.Remove(name);
             Console.WriteLine($"Removed [{name}] dashboard.");
         }
 
@@ -278,7 +254,6 @@ dashboard names are reserved for use as commands:
             var folder      = commandLine.GetOption("--folder");
             var description = commandLine.GetOption("--description");
 
-            var key       = GetDashboardConsulKey(name);
             var dashboard = new ClusterDashboard()
             {
                 Name        = name,
@@ -300,7 +275,7 @@ dashboard names are reserved for use as commands:
                 Program.Exit(1);
             }
 
-            cluster.Consul.KV.PutObject(key, dashboard, Formatting.Indented).Wait();
+            cluster.Dashboard.Set(dashboard);
 
             Console.WriteLine();
             Console.WriteLine($"Saved [{name}] dashboard.");
@@ -316,7 +291,7 @@ dashboard names are reserved for use as commands:
 
             name = name ?? "cluster";   // Default to the neonCLUSTER dashboard
 
-            var dashboard = cluster.Consul.KV.GetObjectOrDefault<ClusterDashboard>($"{NeonClusterConst.ConsulDashboardsKey}/{name}").Result;
+            var dashboard = cluster.Dashboard.Get(name);
 
             if (dashboard == null)
             {

@@ -155,17 +155,15 @@ namespace NeonCli.Ansible
 
             // We have the required arguments, so perform the operation.
 
-            var dashboardKey = $"{NeonClusterConst.ConsulDashboardsKey}/{name}";
-
             switch (state)
             {
                 case "absent":
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Check if dashboard [{name}] exists.");
 
-                    if (consul.KV.Exists(dashboardKey).Result)
+                    if (cluster.Dashboard.Get(name) != null)
                     {
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Dashboard [{name}] does exist.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Dashboard [{name}] already exists.");
 
                         if (context.CheckMode)
                         {
@@ -174,7 +172,7 @@ namespace NeonCli.Ansible
                         else
                         {
                             context.WriteLine(AnsibleVerbosity.Info, $"Deleting dashboard [{name}].");
-                            consul.KV.Delete(dashboardKey);
+                            cluster.Dashboard.Remove(name);
                             context.WriteLine(AnsibleVerbosity.Trace, $"Dashboard [{name}] deleted.");
                             context.Changed = true;
                         }
@@ -250,7 +248,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Looking for existing dashboard [{name}]");
 
-                    var existingDashboard = consul.KV.GetObjectOrDefault<ClusterDashboard>(dashboardKey).Result;
+                    var existingDashboard = cluster.Dashboard.Get(name);
                     var changed           = false;
 
                     if (existingDashboard != null)
@@ -283,7 +281,7 @@ namespace NeonCli.Ansible
                         else
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating dashboard.");
-                            consul.KV.PutObject(dashboardKey, newDashboard, Formatting.Indented).Wait();
+                            cluster.Dashboard.Set(newDashboard);
                             context.WriteLine(AnsibleVerbosity.Info, $"Dashboard updated.");
 
                             context.Changed = true;

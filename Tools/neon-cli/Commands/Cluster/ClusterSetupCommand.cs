@@ -3497,7 +3497,7 @@ systemctl restart sshd
                             Description = "Ceph distributed file system"
                         };
 
-                        cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDashboardsKey}/{cephDashboard.Name}", cephDashboard, Formatting.Indented).Wait();
+                        cluster.Dashboard.Set(cephDashboard);
 
                         var rule = new LoadBalancerHttpRule()
                         {
@@ -3559,7 +3559,7 @@ systemctl restart sshd
                             Description = "Cluster Kibana status and event logs"
                         };
 
-                        cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDashboardsKey}/{kibanaDashboard.Name}", kibanaDashboard, Formatting.Indented).Wait();
+                        cluster.Dashboard.Set(kibanaDashboard);
                         firstManager.Status = string.Empty;
                     }
 
@@ -3578,7 +3578,7 @@ systemctl restart sshd
                             Description = "Cluster Consul key/value store"
                         };
 
-                        cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDashboardsKey}/{consulDashboard.Name}", consulDashboard, Formatting.Indented).Wait();
+                        cluster.Dashboard.Set(consulDashboard);
                         firstManager.Status = string.Empty;
                     }
                 });

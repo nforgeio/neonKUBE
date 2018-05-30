@@ -32,16 +32,18 @@ namespace TestNeonCluster
         // Instance members
 
         private ClusterFixture cluster;
+        private ClusterProxy clusterProxy;
 
         public Test_AnsibleDashboard(ClusterFixture cluster)
         {
-            this.cluster = cluster;
-
             // We're going to use unique dashboard name for each test
             // so we only need to reset the test fixture once for
             // all tests implemented by this class.
 
             cluster.LoginAndInitialize(login: null);
+
+            this.cluster = cluster;
+            this.clusterProxy = cluster.Cluster;
         }
 
         /// <summary>
@@ -51,16 +53,6 @@ namespace TestNeonCluster
         private string GetDashboardName()
         {
             return $"test-{dashboardId++}";
-        }
-
-        /// <summary>
-        /// Returns the entry for a cluster dashboard.
-        /// </summary>
-        /// <param name="name">The dashboard name.</param>
-        /// <returns>The <see cref="ClusterDashboard"/> or <c>null</c>.</returns>
-        private ClusterDashboard GetDashboard(string name)
-        {
-            return cluster.Consul.KV.GetObjectOrDefault<ClusterDashboard>($"{NeonClusterConst.ConsulDashboardsKey}/{name}").Result;
         }
 
         [Fact]
@@ -98,7 +90,7 @@ $@"
 
             // Should start out without this dashboard.
 
-            Assert.Null(GetDashboard(name));
+            Assert.Null(clusterProxy.Dashboard.Get(name));
 
             //-----------------------------------------------------------------
             // Create a dashboard and then verify that it was added.
@@ -126,7 +118,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var dashboard = GetDashboard(name);
+            var dashboard = clusterProxy.Dashboard.Get(name);
 
             Assert.NotNull(dashboard);
             Assert.Equal(name, dashboard.Name);
@@ -148,7 +140,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            dashboard = GetDashboard(name);
+            dashboard = clusterProxy.Dashboard.Get(name);
 
             Assert.NotNull(dashboard);
             Assert.Equal(name, dashboard.Name);
@@ -166,7 +158,7 @@ $@"
 
             // Should start out without this dashboard.
 
-            Assert.Null(GetDashboard(name));
+            Assert.Null(clusterProxy.Dashboard.Get(name));
 
             //-----------------------------------------------------------------
             // Create a dashboard and then verify that it was added.
@@ -194,7 +186,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var dashboard = GetDashboard(name);
+            var dashboard = clusterProxy.Dashboard.Get(name);
 
             Assert.NotNull(dashboard);
             Assert.Equal(name, dashboard.Name);
@@ -229,7 +221,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            dashboard = GetDashboard(name);
+            dashboard = clusterProxy.Dashboard.Get(name);
 
             Assert.NotNull(dashboard);
             Assert.Equal(name, dashboard.Name);
@@ -251,7 +243,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            dashboard = GetDashboard(name);
+            dashboard = clusterProxy.Dashboard.Get(name);
 
             Assert.NotNull(dashboard);
             Assert.Equal(name, dashboard.Name);
@@ -269,7 +261,7 @@ $@"
 
             // Should start out without this dashboard.
 
-            Assert.Null(GetDashboard(name));
+            Assert.Null(clusterProxy.Dashboard.Get(name));
 
             //-----------------------------------------------------------------
             // Create a dashboard and then verify that it was added.
@@ -297,7 +289,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var dashboard = GetDashboard(name);
+            var dashboard = clusterProxy.Dashboard.Get(name);
 
             Assert.NotNull(dashboard);
             Assert.Equal(name, dashboard.Name);
@@ -327,7 +319,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Null(GetDashboard(name));
+            Assert.Null(clusterProxy.Dashboard.Get(name));
 
             //-----------------------------------------------------------------
             // Run the playbook again but this time nothing should
@@ -341,7 +333,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Null(GetDashboard(name));
+            Assert.Null(clusterProxy.Dashboard.Get(name));
         }
     }
 }

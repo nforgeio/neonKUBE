@@ -79,7 +79,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="name">The certificate name.</param>
         /// <param name="certificate">The certificate.</param>
-        /// <exception cref="ArgumentException">Thrown if the cerfiticate  not valid.</exception>
+        /// <exception cref="ArgumentException">Thrown if the certificate is not valid.</exception>
         /// <remarks>
         /// <note>
         /// The <paramref name="certificate"/> must be fully parsed (e.g. it's
