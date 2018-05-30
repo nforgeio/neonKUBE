@@ -23,12 +23,10 @@ using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 
-// $todo(jeff.lill): Recode to use: CertificateManager
-
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>cert</b> command.
+    /// Implements the <b>certificate</b>|<b>cert</b> command.
     /// </summary>
     public class CertCommand : CommandBase
     {
@@ -83,13 +81,13 @@ Manages cluster TLS certificiates.
 
 USAGE:
 
-    neon cert combine PATH-CERT PATH-KEY PATH-OUTPUT
-    neon cert get NAME
-    neon cert list|ls [--expired | --expiring]
-    neon cert remove|rm NAME
-    neon cert set NAME PATH
-    neon cert split PATH PATH-CERT PATH-KEY 
-    neon cert verify PATH
+    neon certificate|cert combine PATH-CERT PATH-KEY PATH-OUTPUT
+    neon certificate|cert get NAME
+    neon certificate|cert list|ls [--expired | --expiring]
+    neon certificate|cert remove|rm NAME
+    neon certificate|cert set NAME PATH
+    neon certificate|cert split PATH PATH-CERT PATH-KEY 
+    neon certificate|cert verify PATH
 
 ARGUMENTS:
 
@@ -128,6 +126,12 @@ certificates, and then finally the private key.
         }
 
         /// <inheritdoc/>
+        public override string[] AltWords
+        {
+            get { return new string[] { "certificate" }; }
+        }
+
+        /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
             get { return new string[] { "--expired", "--expiring" }; }
@@ -151,6 +155,7 @@ certificates, and then finally the private key.
             // Process the command arguments.
 
             TlsCertificate  certificate;
+            string          certName;
 
             var command = commandLine.Arguments.FirstOrDefault();
 
@@ -162,34 +167,35 @@ certificates, and then finally the private key.
 
             commandLine = commandLine.Shift(1);
 
-            string certName;
-
             switch (command)
             {
                 case "get":
 
                     Program.ConnectCluster();
 
-                    using (var vault = NeonClusterHelper.OpenVault(Program.ClusterLogin.VaultCredentials.RootToken))
+                    certName = commandLine.Arguments.FirstOrDefault();
+
+                    if (string.IsNullOrEmpty(certName))
                     {
-                        certName = commandLine.Arguments.FirstOrDefault();
-
-                        if (string.IsNullOrEmpty(certName))
-                        {
-                            Console.Error.WriteLine("*** ERROR: Expected arguments: NAME");
-                            Program.Exit(1);
-                        }
-
-                        if (!ClusterDefinition.IsValidName(certName))
-                        {
-                            Console.Error.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
-                            Program.Exit(1);
-                        }
-
-                        certificate = vault.ReadJsonAsync<TlsCertificate>(NeonClusterHelper.GetVaultCertificateKey(certName)).Result;
-
-                        Console.WriteLine(certificate.CombinedPem);
+                        Console.Error.WriteLine("*** ERROR: Expected arguments: NAME");
+                        Program.Exit(1);
                     }
+
+                    if (!ClusterDefinition.IsValidName(certName))
+                    {
+                        Console.Error.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
+                        Program.Exit(1);
+                    }
+
+                    certificate = NeonClusterHelper.Cluster.Certificate.Get(certName);
+
+                    if (certificate == null)
+                    {
+                        Console.Error.WriteLine($"*** ERROR: Certificate [{certName}] does not exist.");
+                        Program.Exit(1);
+                    }
+
+                    Console.WriteLine(certificate.CombinedPem);
                     break;
 
                 case "join":
@@ -210,71 +216,68 @@ certificates, and then finally the private key.
 
                     Program.ConnectCluster();
 
-                    using (var vault = NeonClusterHelper.OpenVault(Program.ClusterLogin.VaultCredentials.RootToken))
+                    var certList = new List<CertInfo>();
+
+                    DateTime?   checkDate = null;
+                    bool        expired   = false;
+
+                    if (commandLine.GetOption("--expired") != null)
                     {
-                        var certList = new List<CertInfo>();
+                        checkDate = DateTime.UtcNow;
+                        expired   = true;
+                    }
+                    else if (commandLine.GetOption("--expiring") != null)
+                    {
+                        checkDate = DateTime.UtcNow + TimeSpan.FromDays(30);
+                    }
 
-                        DateTime?   checkDate = null;
-                        bool        expired   = false;
+                    // List the certificate key/names and then fetch each one
+                    // to capture details like the expiration date and covered
+                    // hostnames.
 
-                        if (commandLine.GetOption("--expired") != null)
+                    foreach (var name in NeonClusterHelper.Cluster.Certificate.List())
+                    {
+                        certificate = NeonClusterHelper.Cluster.Certificate.Get(name);
+
+                        if (checkDate.HasValue && certificate.IsValidDate(checkDate))
                         {
-                            checkDate = DateTime.UtcNow;
-                            expired   = true;
-                        }
-                        else if (commandLine.GetOption("--expiring") != null)
-                        {
-                            checkDate = DateTime.UtcNow + TimeSpan.FromDays(30);
-                        }
-
-                        // List the certificate key/names and then fetch each one
-                        // to capture details like the expiration date and covered
-                        // hostnames.
-
-                        foreach (var name in vault.ListAsync("neon-secret/cert").Result)
-                        {
-                            certificate = vault.ReadJsonAsync<TlsCertificate>(NeonClusterHelper.GetVaultCertificateKey(name)).Result;
-
-                            if (checkDate.HasValue && certificate.IsValidDate(checkDate))
-                            {
-                                continue;
-                            }
-
-                            certList.Add(new CertInfo(name, certificate));
+                            continue;
                         }
 
-                        if (checkDate.HasValue && certList.Count == 0)
+                        certList.Add(new CertInfo(name, certificate));
+                    }
+
+                    if (checkDate.HasValue && certList.Count == 0)
+                    {
+                        Console.WriteLine(expired ? "* No certificates have expired." : "* No certificates are expiring within 30 days.");
+                        Program.Exit(0);
+                    }
+
+                    if (certList.Count > 0)
+                    {
+                        var nameHeader       = "Name";
+                        var validUntilHeader = "Valid Until";
+                        var hostsHeader      = "Hosts";
+                        var nameColumnWidth  = Math.Max(nameHeader.Length, certList.Max(ci => ci.Name.Length));
+                        var dateColumnWidth  = Math.Max(validUntilHeader.Length, certList.Max(ci => ci.ValidUntil.Length));
+                        var hostColumnWidth  = Math.Max(hostsHeader.Length, certList.Max(ci => ci.Hosts.Length));
+
+                        Console.WriteLine($"{nameHeader}{new string(' ', nameColumnWidth - "Name".Length)}   {validUntilHeader}{new string(' ', dateColumnWidth - validUntilHeader.Length)}   {hostsHeader}");
+                        Console.WriteLine($"{new string('-', nameColumnWidth)}   {new string('-', dateColumnWidth)}   {new string('-', hostColumnWidth)}");
+
+                        foreach (var certInfo in certList.OrderBy(ci => ci.Name.ToLowerInvariant()))
                         {
-                            Console.WriteLine(expired ? "* No certificates have expired." : "* No certificates are expiring within 30 days.");
-                            Program.Exit(0);
+                            Console.WriteLine($"{certInfo.Name}{new string(' ', nameColumnWidth - certInfo.Name.Length)}   {certInfo.ValidUntil}{new string(' ', dateColumnWidth - certInfo.ValidUntil.Length)}   {certInfo.Hosts}");
                         }
 
-                        if (certList.Count > 0)
+                        if (checkDate.HasValue)
                         {
-                            var nameHeader       = "Name";
-                            var validUntilHeader = "Valid Until";
-                            var hostsHeader      = "Hosts";
-                            var nameColumnWidth  = Math.Max(nameHeader.Length, certList.Max(ci => ci.Name.Length));
-                            var dateColumnWidth  = Math.Max(validUntilHeader.Length, certList.Max(ci => ci.ValidUntil.Length));
-                            var hostColumnWidth  = Math.Max(hostsHeader.Length, certList.Max(ci => ci.Hosts.Length));
-
-                            Console.WriteLine($"{nameHeader}{new string(' ', nameColumnWidth - "Name".Length)}   {validUntilHeader}{new string(' ', dateColumnWidth - validUntilHeader.Length)}   {hostsHeader}");
-                            Console.WriteLine($"{new string('-', nameColumnWidth)}   {new string('-', dateColumnWidth)}   {new string('-', hostColumnWidth)}");
-
-                            foreach (var certInfo in certList.OrderBy(ci => ci.Name.ToLowerInvariant()))
-                            {
-                                Console.WriteLine($"{certInfo.Name}{new string(' ', nameColumnWidth - certInfo.Name.Length)}   {certInfo.ValidUntil}{new string(' ', dateColumnWidth - certInfo.ValidUntil.Length)}   {certInfo.Hosts}");
-                            }
-
-                            if (checkDate.HasValue)
-                            {
-                                Program.Exit(1);
-                            }
+                            Program.Exit(1);
                         }
-                        else
-                        {
-                            Console.WriteLine("* No certificates");
-                        }
+                    }
+                    else
+                    {
+                        Console.WriteLine("* No certificates");
                     }
                     break;
 
@@ -283,25 +286,29 @@ certificates, and then finally the private key.
 
                     Program.ConnectCluster();
 
-                    using (var vault = NeonClusterHelper.OpenVault(Program.ClusterLogin.VaultCredentials.RootToken))
+                    certName = commandLine.Arguments.FirstOrDefault();
+
+                    if (string.IsNullOrEmpty(certName))
                     {
-                        certName = commandLine.Arguments.FirstOrDefault();
+                        Console.Error.WriteLine("*** ERROR: Expected arguments: NAME");
+                        Program.Exit(1);
+                    }
 
-                        if (string.IsNullOrEmpty(certName))
-                        {
-                            Console.Error.WriteLine("*** ERROR: Expected arguments: NAME");
-                            Program.Exit(1);
-                        }
+                    if (!ClusterDefinition.IsValidName(certName))
+                    {
+                        Console.Error.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
+                        Program.Exit(1);
+                    }
 
-                        if (!ClusterDefinition.IsValidName(certName))
-                        {
-                            Console.Error.WriteLine($"*** ERROR: [{certName}] is not a valid certificate name.");
-                            Program.Exit(1);
-                        }
-
-                        vault.DeleteAsync(NeonClusterHelper.GetVaultCertificateKey(certName)).Wait();
-                        NeonClusterHelper.Cluster.SignalLoadBalancerUpdate();
-                        Console.WriteLine($"Certificate [{certName}] was deleted if it existed.");
+                    if (NeonClusterHelper.Cluster.Certificate.Get(certName) != null)
+                    {
+                        NeonClusterHelper.Cluster.Certificate.Remove(certName);
+                        Console.WriteLine($"Certificate [{certName}] was removed.");
+                    }
+                    else
+                    {
+                        Console.Error.WriteLine($"*** ERROR: [{certName}] does not exist.");
+                        Program.Exit(1);
                     }
                     break;
 
@@ -334,10 +341,17 @@ certificates, and then finally the private key.
                         certificate = TlsCertificate.Load(commandLine.Arguments.ElementAtOrDefault(1));
 
                         certificate.Parse();
-                        vault.WriteJsonAsync(NeonClusterHelper.GetVaultCertificateKey(commandLine.Arguments[0]), certificate).Wait();
-                        NeonClusterHelper.Cluster.SignalLoadBalancerUpdate();
 
-                        Console.WriteLine($"Certificate [{certName}] was added or updated.");
+                        if (NeonClusterHelper.Cluster.Certificate.Get(certName) == null)
+                        {
+                            NeonClusterHelper.Cluster.Certificate.Set(certName, certificate);
+                            Console.WriteLine($"Certificate [{certName}] was added.");
+                        }
+                        else
+                        {
+                            NeonClusterHelper.Cluster.Certificate.Set(certName, certificate);
+                            Console.WriteLine($"Certificate [{certName}] was updated.");
+                        }
                     }
                     break;
 

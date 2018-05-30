@@ -15,7 +15,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Consul;
 using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
@@ -128,6 +127,8 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
+            var cluster = NeonClusterHelper.Cluster;
+
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {
                 context.Failed = true;
@@ -170,111 +171,88 @@ namespace NeonCli.Ansible
                 throw new ArgumentException("Access Denied: Root Vault credentials are required.");
             }
 
-            var vaultPath = NeonClusterHelper.GetVaultCertificateKey(name);
-
-            context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Certificate path is [{vaultPath}]");
-            context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Opening Vault");
-
-            using (var vault = NeonClusterHelper.OpenVault(context.Login.VaultCredentials.RootToken))
+            switch (state)
             {
-                context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Opened");
+                case "absent":
 
-                switch (state)
-                {
-                    case "absent":
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Vault: checking for [{name}] certificate");
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Vault: checking for [{name}] certificate");
+                    if (cluster.Certificate.Get(name) != null)
+                    {
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Vault: [{name}] certificate exists");
 
-                        if (vault.ExistsAsync(vaultPath).Result)
+                        if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Vault: [{name}] certificate exists");
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Deleting [{name}]");
-
-                            if (context.CheckMode)
-                            {
-                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: Certificate [{name}] will be deleted when CHECK-MODE is disabled.");
-                            }
-                            else
-                            {
-                                vault.DeleteAsync(vaultPath).Wait();
-                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate deleted");
-
-                                SignalCertChanged();
-                                context.WriteLine(AnsibleVerbosity.Trace, $"Consul: Signal the certificate change");
-                            }
-
-                            context.Changed = !context.CheckMode;
+                            context.WriteLine(AnsibleVerbosity.Info, $"Certificate [{name}] will be removed when CHECK-MODE is disabled.");
                         }
                         else
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate does not exist");
-                        }
-                        break;
-
-                    case "present":
-
-                        if (!context.Arguments.TryGetValue<string>("value", out var value))
-                        {
-                            throw new ArgumentException($"[value] module argument is required.");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Removing [{name}] certyificate.");
+                            cluster.Certificate.Remove(name);
+                            context.WriteLine(AnsibleVerbosity.Info, $"[{name}] certificate removed");
                         }
 
-                        var certificate = TlsCertificate.Parse(value);    // This validates the certificate/private key
+                        context.Changed = !context.CheckMode;
+                    }
+                    else
+                    {
+                        context.WriteLine(AnsibleVerbosity.Info, $"[{name}] certificate does not exist");
+                    }
+                    break;
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Reading [{name}]");
+                case "present":
 
-                        var existingCert = vault.ReadJsonOrDefaultAsync<TlsCertificate>(vaultPath).Result;
-                        var changed      = false;
+                    if (!context.Arguments.TryGetValue<string>("value", out var value))
+                    {
+                        throw new ArgumentException($"[value] module argument is required.");
+                    }
 
-                        if (existingCert == null)
+                    var certificate = TlsCertificate.Parse(value);    // This validates the certificate/private key
+
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Reading [{name}] certificate");
+
+                    var existingCert = cluster.Certificate.Get(name);
+                    var changed      = false;
+
+                    if (existingCert == null)
+                    {
+                        context.WriteLine(AnsibleVerbosity.Info, $"[{name}] certificate does not exist");
+                        context.Changed = !context.CheckMode;
+
+                        changed = true;
+                    }
+                    else if (!NeonHelper.JsonEquals(existingCert, certificate) || force)
+                    {
+                        context.WriteLine(AnsibleVerbosity.Info, $"[{name}] certificate does exists but is different");
+                        context.Changed = !context.CheckMode;
+
+                        changed = true;
+                    }
+                    else
+                    {
+                        context.WriteLine(AnsibleVerbosity.Info, $"[{name}] certificate is unchanged");
+                    }
+
+                    if (changed)
+                    {
+                        if (context.CheckMode)
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate does not exist");
-                            context.Changed = !context.CheckMode;
-
-                            changed = true;
-                        }
-                        else if (!NeonHelper.JsonEquals(existingCert, certificate) || force)
-                        {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate does exists but is different");
-                            context.Changed = !context.CheckMode;
-
-                            changed = true;
+                            context.WriteLine(AnsibleVerbosity.Info, $"Certificate [{name}] will be updated when CHECK-MODE is disabled.");
                         }
                         else
                         {
-                            context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate is unchanged");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Saving [{name}] certificate");
+                            cluster.Certificate.Set(name, certificate);
+                            context.WriteLine(AnsibleVerbosity.Info, $"[{name}] certificate saved");
                         }
+                    }
 
-                        if (changed)
-                        {
-                            if (context.CheckMode)
-                            {
-                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: Certificate [{name}] will be deleted when CHECK-MODE is disabled.");
-                            }
-                            else
-                            {
-                                context.WriteLine(AnsibleVerbosity.Trace, $"Vault: Saving [{name}] certificate");
-                                vault.WriteJsonAsync(vaultPath, certificate).Wait();
-                                context.WriteLine(AnsibleVerbosity.Info, $"Vault: [{name}] certificate saved");
-                                SignalCertChanged();
-                            }
-                        }
+                    break;
 
-                        break;
+                default:
 
-                    default:
-
-                        throw new ArgumentException($"[state={state}] is not one of the valid choices: [present] or [absent].");
-                }
+                    throw new ArgumentException($"[state={state}] is not one of the valid choices: [present] or [absent].");
             }
-        }
-
-        /// <summary>
-        /// Update the <b>neon-proxy-manager</b> Consul key to indicate that changes
-        /// have been made to the cluster certificates.
-        /// </summary>
-        private void SignalCertChanged()
-        {
-            NeonClusterHelper.Cluster.SignalLoadBalancerUpdate();
         }
     }
 }
