@@ -136,7 +136,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Indicates whether HTTP or TCP traffic is to be handled (defaults to <see cref="LoadBalancerMode.Http"/>).
         /// </summary>
-        [JsonProperty(PropertyName = "Mode", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [JsonProperty(PropertyName = "Mode", Required = Required.Always)]
         [DefaultValue(LoadBalancerMode.Http)]
         public LoadBalancerMode Mode { get; set; } = LoadBalancerMode.Http;
 
@@ -216,6 +216,8 @@ namespace Neon.Cluster
             {
                 context.Error($"Load balancer resolver [{nameof(Resolver)}={Resolver}] does not exist.");
             }
+
+            Resolver = Resolver ?? defaultResolverName;
         }
 
         /// <summary>
