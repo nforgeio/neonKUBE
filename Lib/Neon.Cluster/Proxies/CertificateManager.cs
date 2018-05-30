@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CertiticateManager.cs
+// FILE:	    CertificateManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -24,7 +24,7 @@ namespace Neon.Cluster
     /// <summary>
     /// Handles TLS certificate related operations for a <see cref="ClusterProxy"/>.
     /// </summary>
-    public sealed class CertiticateManager
+    public sealed class CertificateManager
     {
         private const string vaultCertPrefix = "neon-secret/cert";
 
@@ -34,7 +34,7 @@ namespace Neon.Cluster
         /// Internal constructor.
         /// </summary>
         /// <param name="cluster">The parent <see cref="ClusterProxy"/>.</param>
-        internal CertiticateManager(ClusterProxy cluster)
+        internal CertificateManager(ClusterProxy cluster)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null);
 
