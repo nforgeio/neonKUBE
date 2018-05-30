@@ -39,7 +39,7 @@
     //"Version": "experimental",
     "Registries": [
       {
-        "Hostname": "registry-1.docker.io",
+        "Hostname": "docker.io",
         "Username": "stokebot",
         "Password": "Leather.632"
       }

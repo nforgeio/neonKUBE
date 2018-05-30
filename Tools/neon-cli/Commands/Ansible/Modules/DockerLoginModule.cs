@@ -61,7 +61,7 @@ namespace NeonCli.Ansible
         // name         yes                                 registry.
         //
         // registry     yes                                 the registry hostname
-        //                                                  (e.g. registry-1.docker.io)
+        //                                                  (e.g. docker.io)
         //
         // username     see comment                         required if [state=present]
         //

@@ -37,7 +37,7 @@ USAGE:
 
 AWGUMENTS:
 
-    REGISTRY    - Registry hostname (e.g. registry-1.docker.io)
+    REGISTRY    - Registry hostname (e.g. docker.io)
     USERNAME    - Optional username
     PASSWORD    - Optional password or ""-"" to read from STDIN
 

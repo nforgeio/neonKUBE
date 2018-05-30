@@ -298,7 +298,7 @@ USAGE:
 
         // ""Registry"": [
         //   {
-        //     ""HostName"": ""registry-1.docker.io"",
+        //     ""HostName"": ""docker.io"",
         //     ""Username"": ""MY-USERNAME"",
         //     ""Password"": ""MY-PASSWORD""
         //   }

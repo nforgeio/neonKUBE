@@ -54,7 +54,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Hostname of the Docker public registry.
         /// </summary>
-        public const string DockerPublicRegistry = "registry-1.docker.io";
+        public const string DockerPublicRegistry = "docker.io";
 
         /// <summary>
         /// The default Vault transit key.

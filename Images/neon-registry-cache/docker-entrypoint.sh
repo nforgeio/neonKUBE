@@ -14,7 +14,7 @@ if [ "${HOSTNAME}" == "" ] ; then
 fi
 
 if [ "${REGISTRY}" == "" ] ; then
-    export REGISTRY=https://registry-1.docker.io
+    export REGISTRY=https://docker.io
 fi
 
 if [ "${LOG_LEVEL}" == "" ] ; then
