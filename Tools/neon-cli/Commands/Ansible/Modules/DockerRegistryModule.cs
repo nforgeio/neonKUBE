@@ -30,6 +30,12 @@ using Neon.IO;
 using Neon.Net;
 using Neon.Retry;
 
+// $note(jeff.lill):
+//
+// I would have loke to have used [RegistryManager] to consolidate this code
+// but there's some subtle logic around registry deployment that prevents
+// this, at least for now.
+
 namespace NeonCli.Ansible
 {
     /// <summary>
@@ -673,12 +679,6 @@ namespace NeonCli.Ansible
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster secret.");
                             cluster.Registry.SetLocalSecret(secret);
-                        }
-
-                        if (certificateChanged || hostnameChanged)
-                        {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Signalling load balancer update.");
-                            cluster.SignalLoadBalancerUpdate();
                         }
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Updating service.");

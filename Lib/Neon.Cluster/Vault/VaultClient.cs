@@ -297,7 +297,7 @@ namespace Neon.Cluster
                     throw new KeyNotFoundException($"Vault [path={path}] not found.", e);
                 }
 
-                throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
+                throw new HttpException($"Unable to read Vault bytes from [path={path}]", e);
             }
         }
 
@@ -326,7 +326,7 @@ namespace Neon.Cluster
                     return default(dynamic);
                 }
 
-                throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
+                throw new HttpException($"Unable to read Vault bytes from [path={path}]", e);
             }
         }
 
@@ -362,7 +362,7 @@ namespace Neon.Cluster
                     throw new KeyNotFoundException($"Vault [path={path}] not found.", e);
                 }
 
-                throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
+                throw new HttpException($"Unable to read Vault bytes from [path={path}]", e);
             }
         }
 
@@ -395,7 +395,7 @@ namespace Neon.Cluster
                     return default(T);
                 }
 
-                throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
+                throw new HttpException($"[status={e.StatusCode}]: Unable to read Vault bytes from [path={path}]", e);
             }
         }
 
@@ -483,7 +483,7 @@ namespace Neon.Cluster
                     throw new KeyNotFoundException($"Vault [path={path}] not found.", e);
                 }
 
-                throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
+                throw new HttpException($"Unable to read Vault bytes from [path={path}]", e);
             }
         }
 
@@ -514,7 +514,7 @@ namespace Neon.Cluster
                     return null;
                 }
 
-                throw new HttpException($"Unable to read Vault bytes from path={path}]", e);
+                throw new HttpException($"Unable to read Vault bytes from [path={path}]", e);
             }
         }
 

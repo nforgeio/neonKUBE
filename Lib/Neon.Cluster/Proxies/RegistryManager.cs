@@ -8,10 +8,12 @@ using System.Collections.Generic;
 using System.Diagnostics.Contracts;
 using System.Linq;
 using System.Text;
-
+using System.Threading.Tasks;
 using Consul;
 
 using Neon.Common;
+using Neon.Cryptography;
+using Neon.Retry;
 
 namespace Neon.Cluster
 {
@@ -310,6 +312,257 @@ namespace Neon.Cluster
             {
                 cluster.Consul.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/secret", secret).Wait();
             }
+        }
+
+        /// <summary>
+        /// Determines whether a local Docker registry is deployed to the cluster.
+        /// </summary>
+        public bool HasLocalRegistry
+        {
+            get { return cluster.InspectService("neon-registry") != null;  }
+        }
+
+        /// <summary>
+        /// Deploys the local Docker registry to the cluster.
+        /// </summary>
+        /// <param name="hostname">The registry hostname.</param>
+        /// <param name="username">The registry username.</param>
+        /// <param name="password">The registry password.</param>
+        /// <param name="secret">The registry secret.</param>
+        /// <param name="certificate">The certificate used to secure the registry.</param>
+        /// <param name="image">Optionally specifies the Docker image to be deployed (defaults to <b>neoncluster/neon-registry</b>).</param>
+        /// <param name="progress">Optional action that will be called with a progress message.</param>
+        /// <exception cref="NeonClusterException">Thrown if a registry is already deployed or deployment failed.</exception>
+        /// <exception cref="NotSupportedException">Thrown if the cluster does not support local registries.</exception>
+        public void CreateLocalRegistry(
+            string          hostname, 
+            string          username, 
+            string          password, 
+            string          secret, 
+            TlsCertificate  certificate, 
+            string          image    = "neoncluster/neon-registry", 
+            Action<string>  progress = null)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
+            Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(hostname));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(password));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secret));
+            Covenant.Requires<ArgumentNullException>(certificate != null);
+
+            if (!cluster.Definition.Ceph.Enabled)
+            {
+                throw new NotSupportedException("Cannot deploy a local Docker registry to the cluster because the cluster's Cepf file system is not enabled.");
+            }
+
+            if (HasLocalRegistry)
+            {
+                throw new NeonClusterException("The [neon-registry] service is already deployed.");
+            }
+
+            progress?.Invoke($"Setting certificate.");
+            cluster.Certificate.Set("neon-registry", certificate);
+
+            progress?.Invoke($"Updating Consul settings.");
+            cluster.Registry.SetLocalHostname(hostname);
+            cluster.Registry.SetLocalSecret(secret);
+
+            progress?.Invoke($"Adding cluster DNS host entry for [{hostname}] (slow).");
+            cluster.DnsHosts.Set(GetRegistryDnsEntry(hostname), waitUntilPropagated: true);
+
+            progress?.Invoke($"Writing load balancer rule.");
+            cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
+
+            progress?.Invoke($"Creating the [neon-registry] service.");
+
+            var manager = cluster.GetHealthyManager();
+
+            var createResponse = manager.DockerCommand(RunOptions.None,
+                "docker service create",
+                "--name", "neon-registry",
+                "--mode", "global",
+                "--constraint", "node.role==manager",
+                "--env", $"USERNAME={username}",
+                "--env", $"PASSWORD={password}",
+                "--env", $"SECRET={secret}",
+                "--env", $"LOG_LEVEL=info",
+                "--env", $"READ_ONLY=false",
+                "--mount", "type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry",
+                "--network", "neon-public",
+                "--restart-delay", "10s",
+                image);
+
+            if (createResponse.ExitCode != 0)
+            {
+                throw new NeonClusterException($"[neon-registry] service create failed: {createResponse.ErrorText}");
+            }
+
+            progress?.Invoke($"Service created.");
+            progress?.Invoke($"Logging the cluster into the [{hostname}] registry.");
+            cluster.Registry.Login(hostname, username, password);
+        }
+
+        /// <summary>
+        /// Removes then local Docker registry from the cluster.
+        /// </summary>
+        /// <param name="progress">Optional action that will be called with a progress message.</param>
+        /// <exception cref="NeonClusterException">Thrown if no registry is deployed or there was an error removing it.</exception>
+        public void RemoveLocalRegistry(Action<string> progress = null)
+        {
+            if (!HasLocalRegistry)
+            {
+                throw new NeonClusterException("The [neon-registry] service is not deployed.");
+            }
+
+            var syncLock = new object();
+            var manager  = cluster.GetHealthyManager();
+            var hostname = cluster.Registry.GetLocalHostname();
+
+            // Logout of the registry.
+
+            progress?.Invoke($"Logging the cluster out of the [{hostname}] registry.");
+            cluster.Registry.Logout(hostname);
+
+            // Delete the [neon-registry] service and volume.  Note that
+            // the volume should exist on all of the manager nodes.
+
+            progress?.Invoke($"Removing the [neon-registry] service.");
+            manager.DockerCommand(RunOptions.None, "docker", "service", "rm", "neon-registry");
+
+            progress?.Invoke($"Removing the [neon-registry] volumes.");
+
+            var volumeRemoveActions = new List<Action>();
+            var volumeRetryPolicy   = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(2));
+
+            foreach (var node in cluster.Managers)
+            {
+                volumeRemoveActions.Add(
+                    () =>
+                    {
+                        // $hack(jeff.lill):
+                        //
+                        // Docker service removal appears to be synchronous but the removal of the
+                        // actual service task containers is not.  We're going to detect this and
+                        // throw a [TransientException] and then retry.
+
+                        using (var clonedNode = node.Clone())
+                        {
+                            lock (syncLock)
+                            {
+                                progress?.Invoke($"Removing [neon-registry] volume on [{clonedNode.Name}].");
+                            }
+
+                            volumeRetryPolicy.InvokeAsync(
+                                async () =>
+                                {
+                                    var response = clonedNode.DockerCommand(RunOptions.None, "docker", "volume", "rm", "neon-registry");
+
+                                    if (response.ExitCode != 0)
+                                    {
+                                        var message = $"Error removing [neon-registry] volume from [{clonedNode.Name}: {response.ErrorText}";
+
+                                        lock (syncLock)
+                                        {
+                                            progress?.Invoke(message);
+                                        }
+
+                                        if (response.AllText.Contains("volume is in use"))
+                                        {
+                                            throw new TransientException(message);
+                                        }
+                                    }
+                                    else
+                                    {
+                                        lock (syncLock)
+                                        {
+                                            progress?.Invoke($"Removed [neon-registry] volume on [{clonedNode.Name}].");
+                                        }
+                                    }
+
+                                    await Task.Delay(0);
+
+                                }).Wait();
+                        }
+                    });
+            }
+
+            NeonHelper.WaitForParallel(volumeRemoveActions);
+
+            // Remove the load balancer rule and certificate.
+
+            progress?.Invoke($"Removing the [neon-registry] load balancer rule.");
+            cluster.PublicLoadBalancer.RemoveRule("neon-registry");
+            progress?.Invoke($"Removing the [neon-registry] load balancer certificate.");
+            cluster.Certificate.Remove("neon-registry");
+
+            // Remove any related Consul state.
+
+            progress?.Invoke($"Removing the [neon-registry] Consul [hostname] and [secret].");
+            cluster.Registry.SetLocalHostname(null);
+            cluster.Registry.SetLocalSecret(null);
+
+            // Logout the cluster from the registry.
+
+            progress?.Invoke($"Logging the cluster out of the [{hostname}] registry.");
+            cluster.Registry.Logout(hostname);
+
+            // Remove the cluster DNS host entry.
+
+            progress?.Invoke($"Removing the [{hostname}] registry DNS hosts entry.");
+            cluster.DnsHosts.Remove(hostname);
+        }
+
+        /// <summary>
+        /// Returns the local cluster DNS override for the registry.
+        /// </summary>
+        /// <param name="hostname">The registry hostname.</param>
+        /// <returns>The <see cref="DnsEntry"/>.</returns>
+        private DnsEntry GetRegistryDnsEntry(string hostname)
+        {
+            return new DnsEntry()
+            {
+                Hostname  = hostname,
+                IsSystem  = true,
+                Endpoints =
+                new List<DnsEndpoint>()
+                {
+                    new DnsEndpoint()
+                    {
+                        Check   = true,
+                        Target = "group=managers"
+                    }
+                }
+            };
+        }
+
+        /// <summary>
+        /// Returns the load balancer rule for the [neon-registry] service.
+        /// </summary>
+        /// <param name="hostname">The registry hostname.</param>
+        /// <returns>The <see cref="LoadBalancerHttpRule"/>.</returns>
+        private LoadBalancerHttpRule GetRegistryLoadBalancerRule(string hostname)
+        {
+            return new LoadBalancerHttpRule()
+            {
+                Name = "neon-registry",
+                Frontends = new List<LoadBalancerHttpFrontend>()
+                {
+                    new LoadBalancerHttpFrontend()
+                    {
+                        Host     = hostname,
+                        CertName = "neon-registry",
+                    }
+                },
+
+                Backends = new List<LoadBalancerHttpBackend>()
+                {
+                    new LoadBalancerHttpBackend()
+                    {
+                        Server = "neon-registry",
+                        Port   = 5000
+                    }
+                }
+            };
         }
     }
 }
