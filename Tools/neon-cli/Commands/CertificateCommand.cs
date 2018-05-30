@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    CertCommand.cs
+// FILE:	    CertificateCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -28,7 +28,7 @@ namespace NeonCli
     /// <summary>
     /// Implements the <b>certificate</b>|<b>cert</b> command.
     /// </summary>
-    public class CertCommand : CommandBase
+    public class CertificateCommand : CommandBase
     {
         //---------------------------------------------------------------------
         // Private types

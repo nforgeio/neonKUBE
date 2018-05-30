@@ -227,7 +227,7 @@ Note that the tool may require admin privileges for [--noshim] mode.
                     new ClusterSetupCommand(),
                     new ClusterVerifyCommand(),
                     new CouchbaseCommand(),
-                    new CertCommand(),
+                    new CertificateCommand(),
                     new ConsulCommand(),
                     new CreateCommand(),
                     new CreateCypherCommand(),
