@@ -225,10 +225,10 @@ else
     . log-info.sh "HAProxy is starting ${STOP_TYPE}"
 fi
 
-# Uncomment the IF statement below to have HAProxy start In
+# Uncomment the IF statement below to have HAProxy start in
 # DEBUG mode as well, when DEBUG=true.  This mode generates
-# a lot of noise and will probably impact performance so we
-# really don't want this for most debugging situations.
+# a lot of logging noise and will probably impact performance 
+# so we really don't want this for most debugging situations.
 
 DEBUG_OPTION=
 

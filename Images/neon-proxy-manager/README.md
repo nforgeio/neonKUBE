@@ -99,7 +99,7 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 
 * **conf** - root key for proxy settings that need to be monitored for changes.
 
-* **reload** - set to a new UUID whenever a certificate or load balancer rule is changed.  **neon-proxy-manager** monitors this and republishes when a change is detected.
+* **reload** - set to a new UUID whenever a certificate or load balancer rule is changed.  **neon-proxy-manager** monitors this and republishes HAQProxy configurations when a change is detected.
 
 * **settings** - global (per proxy) settings for a load balancer formatted as JSON.
 
@@ -117,7 +117,7 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 
 # Deployment
 
-**neon-proxy-manager** is typically deployed only to manager nodes.  Multiple instances may be run safely because they will coordinate their activities using a Consul lock, but the best practice is to deploy this as a Docker swarm mode service with one replica constrained to manager nodes with **mode=global**.  This relies on Docker to ensure that only one instance is running.
+**neon-proxy-manager** is typically deployed only to manager nodes.  The best practice is to deploy this as a Docker swarm mode service with one replica constrained to manager nodes with **mode=global**.  This relies on Docker to ensure that only one instance is running.
 
 **neon-cli** deploys **neon-proxy-manager** when the cluster is provisioned using this Docker command:
 
