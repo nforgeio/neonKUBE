@@ -234,5 +234,72 @@ namespace Neon.Cluster
                 Thread.Sleep(PropagationTimeout);
             }
         }
+
+        /// <summary>
+        /// Returns the current DNS host/answers as a dictionary.
+        /// </summary>
+        /// <returns>The answers dictionary.</returns>
+        public Dictionary<string, List<string>> GetAnswers()
+        {
+            var hosts  = cluster.Consul.KV.GetStringOrDefault(NeonClusterConst.ConsulDnsHostsKey).Result;
+            var answers = new Dictionary<string, List<string>>(StringComparer.InvariantCultureIgnoreCase);
+
+            if (hosts == null)
+            {
+                return answers;
+            }
+
+            var unhealthyPrefix = "# unhealthy:";
+
+            using (var reader = new StringReader(hosts))
+            {
+                foreach (var line in reader.Lines())
+                {
+                    if (line.StartsWith(unhealthyPrefix))
+                    {
+                        // Comment lines formatted like:
+                        //
+                        //      # unhealthy: HOSTNAME
+                        //
+                        // Have no health endpoints.  We're going to add an empty
+                        // list for these and highlight these below.
+
+                        var host = line.Substring(unhealthyPrefix.Length).Trim();
+
+                        if (!answers.TryGetValue(host, out var addresses))
+                        {
+                            addresses = new List<string>();
+                            answers.Add(host, addresses);
+                        }
+                    }
+                    else if (line.StartsWith("#"))
+                    {
+                        // Ignore other comment lines.
+                    }
+                    else
+                    {
+                        var fields = line.Split(new char[] { ' ' }, StringSplitOptions.RemoveEmptyEntries);
+
+                        if (fields.Length != 2)
+                        {
+                            continue;
+                        }
+
+                        var address = fields[0];
+                        var host    = fields[1];
+
+                        if (!answers.TryGetValue(host, out var addresses))
+                        {
+                            addresses = new List<string>();
+                            answers.Add(host, addresses);
+                        }
+
+                        addresses.Add(address);
+                    }
+                }
+            }
+
+            return answers;
+        }
     }
 }

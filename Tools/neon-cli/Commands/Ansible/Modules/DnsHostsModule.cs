@@ -15,7 +15,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Consul;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft;
 using Newtonsoft.Json;
@@ -257,15 +256,13 @@ namespace NeonCli.Ansible
             
             // We have the required arguments, so perform the operation.
 
-            var hostKey = $"{NeonClusterConst.ConsulDnsEntriesKey}/{hostname}";
-
             switch (state)
             {
                 case "absent":
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Check if DNS entry [{hostname}] exists.");
 
-                    if (consul.KV.Exists(hostKey).Result)
+                    if (cluster.DnsHosts.Get(hostname) != null)
                     {
                         context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry [{hostname}] does exist.");
                         context.WriteLine(AnsibleVerbosity.Info, $"Deleting DNS entry [{hostname}].");
@@ -276,7 +273,7 @@ namespace NeonCli.Ansible
                         }
                         else
                         {
-                            consul.KV.Delete(hostKey);
+                            cluster.DnsHosts.Remove(hostname);
                             context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry [{hostname}] deleted.");
                         }
 
@@ -319,7 +316,7 @@ namespace NeonCli.Ansible
                         endpoints.Add(item.ToObject<DnsEndpoint>());
                     }
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"[{endpoints.Count}] endpoints parsed");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"[{endpoints.Count}] endpoints parsed.");
 
                     // Construct the new entry.
 
@@ -355,9 +352,9 @@ namespace NeonCli.Ansible
                     // Try reading an existing entry with this name and then determine
                     // whether the two versions of the entry are actually different. 
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Look up existing DNS entry for [{hostname}]");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Look up existing DNS entry for [{hostname}].");
 
-                    var existingEntry = consul.KV.GetObjectOrDefault<DnsEntry>(hostKey).Result;
+                    var existingEntry = cluster.DnsHosts.Get(hostname);
                     var changed       = false;
 
                     if (existingEntry != null)
@@ -390,7 +387,7 @@ namespace NeonCli.Ansible
                         else
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating DNS entry.");
-                            consul.KV.PutObject(hostKey, newEntry).Wait();
+                            cluster.DnsHosts.Set(newEntry);
                             context.WriteLine(AnsibleVerbosity.Info, $"DNS entry updated.");
                         }
 

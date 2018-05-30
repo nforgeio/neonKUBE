@@ -18,6 +18,7 @@
 
   <ItemGroup>
     <PackageReference Include="GitInfo" Version="2.0.10" />
+    <PackageReference Include="System.Diagnostics.StackTrace" Version="4.3.0" />
     <PackageReference Include="System.Runtime" Version="4.3.0" />
     <PackageReference Include="System.Runtime.Loader" Version="4.3.0" />
     <PackageReference Include="System.Security.Principal.Windows" Version="4.4.1" />

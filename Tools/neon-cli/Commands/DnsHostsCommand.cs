@@ -13,7 +13,6 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Consul;
 using Newtonsoft.Json;
 
 using Neon.Cluster;
@@ -46,7 +45,7 @@ USAGE:
     neon dns-hosts [--wait] rm|remove HOST               - Removes DNS host settings
     neon dns-hosts [--wait] set [--check] HOST ADDRESSES - Sets DNS host settings
     neon dns-hosts [--wait] set PATH                     - Sets DNS settings from a file
-    neon dns-hosts s[--wait] et -                        - Sets DNS settings from STDIN
+    neon dns-hosts [--wait] set -                        - Sets DNS settings from STDIN
 
 ARGUMENTS:
 
@@ -211,7 +210,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         {
             // We're simply going to download and parse [neon/dns/answers/hosts.txt].
 
-            var answers   = GetAnswers();
+            var answers   = cluster.DnsHosts.GetAnswers();
             var entryHost = commandLine.Arguments.ElementAtOrDefault(1);
 
             Console.WriteLine();
@@ -239,75 +238,6 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                     PrintHostAddresses(item.Key, item.Value, maxHostNameWidth);
                 }
             }
-        }
-
-        /// <summary>
-        /// Returns the current DNS host/answers as a dictionary.
-        /// </summary>
-        /// <returns>The answers dictionary.</returns>
-        private Dictionary<string, List<string>> GetAnswers()
-        {
-            var hosts = cluster.Consul.KV.GetStringOrDefault("neon/dns/answers/hosts.txt").Result;
-
-            if (hosts == null)
-            {
-                Console.Error.WriteLine($"*** ERROR: [neon/dns/answers/hosts.txt] does not exist in Consul.");
-                Console.Error.WriteLine($"***        Verify that [neon-dns-mon] service is running.");
-                Program.Exit(1);
-            }
-
-            var answers         = new Dictionary<string, List<string>>(StringComparer.InvariantCultureIgnoreCase);
-            var unhealthyPrefix = "# unhealthy:";
-
-            using (var reader = new StringReader(hosts))
-            {
-                foreach (var line in reader.Lines())
-                {
-                    if (line.StartsWith(unhealthyPrefix))
-                    {
-                        // Comment lines formatted like:
-                        //
-                        //      # unhealthy: HOSTNAME
-                        //
-                        // Have no health endpoints.  We're going to add an empty
-                        // list for these and highlight these below.
-
-                        var host = line.Substring(unhealthyPrefix.Length).Trim();
-
-                        if (!answers.TryGetValue(host, out var addresses))
-                        {
-                            addresses = new List<string>();
-                            answers.Add(host, addresses);
-                        }
-                    }
-                    else if (line.StartsWith("#"))
-                    {
-                        // Ignore other comment lines.
-                    }
-                    else
-                    {
-                        var fields = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
-
-                        if (fields.Length != 2)
-                        {
-                            continue;
-                        }
-
-                        var address = fields[0];
-                        var host    = fields[1];
-
-                        if (!answers.TryGetValue(host, out var addresses))
-                        {
-                            addresses = new List<string>();
-                            answers.Add(host, addresses);
-                        }
-
-                        addresses.Add(address);
-                    }
-                }
-            }
-
-            return answers;
         }
 
         /// <summary>
@@ -411,7 +341,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
             }
 
             var maxHostWidth = entries.Max(item => item.Hostname.Length);
-            var answers      = GetAnswers();
+            var answers      = cluster.DnsHosts.GetAnswers();
 
             foreach (var entry in entries)
             {
@@ -522,7 +452,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                 Program.Exit(1);
             }
 
-            // Persist the entry to Consul.
+            // Persist the entry.
 
             cluster.DnsHosts.Set(dnsEntry, waitUntilPropagated: wait);
 
