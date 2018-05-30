@@ -146,6 +146,8 @@ namespace Neon.Cluster
             this.ClusterLogin        = new ClusterLogin();
             this.defaultRunOptions   = defaultRunOptions;
             this.nodeProxyCreator    = nodeProxyCreator;
+
+            this.DockerConfig        = new DockerConfigManager(this);
             this.DockerSecret        = new DockerSecretsManager(this);
             this.Certificate         = new CertificateManager(this);
             this.Dashboard           = new DashboardManager(this);
@@ -241,6 +243,11 @@ namespace Neon.Cluster
         /// Returns the first cluster manager node as sorted by name.
         /// </summary>
         public SshProxy<NodeDefinition> FirstManager { get; private set; }
+
+        /// <summary>
+        /// Manages cluster Docker configs.
+        /// </summary>
+        public DockerConfigManager DockerConfig { get; private set; }
 
         /// <summary>
         /// Manages cluster Docker secrets.
