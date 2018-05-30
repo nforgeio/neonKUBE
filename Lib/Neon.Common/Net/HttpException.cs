@@ -15,10 +15,9 @@ using System.Threading.Tasks;
 namespace Neon.Net
 {
     /// <summary>
-    /// An extension of <see cref="HttpRequestException"/> that includes the response
-    /// <see cref="StatusCode"/> and <see cref="ReasonPhrase"/>.
+    /// Describes an HTTP error.
     /// </summary>
-    public class HttpException : HttpRequestException
+    public class HttpException : Exception
     {
         //---------------------------------------------------------------------
         // Static members
@@ -93,7 +92,7 @@ namespace Neon.Net
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="innerException">Optional inner exception.</param>
+        /// <param name="innerException">The inner exception.</param>
         /// <param name="requestUri">The optional request URL.</param>
         public HttpException(Exception innerException, string requestUri = null)
             : base($"[exception={innerException.GetType().Name}{GetUriString(requestUri)}]")
