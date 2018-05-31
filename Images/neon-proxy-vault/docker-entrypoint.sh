@@ -44,6 +44,10 @@ fi
 #
 # Note that the [neon-log-collector] depends on the format of the proxy frontend
 # and backend names, so don't change these.
+#
+# NOTE: We're using an external health check script rather than using the
+#       HAProxy integrated check because we're proxying TCP rather than 
+#       HTTPS because the certificate/security is handled by Vault.
 
 mkdir -p /etc/haproxy
 configPath=/etc/haproxy/haproxy.cfg

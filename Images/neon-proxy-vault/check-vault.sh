@@ -19,17 +19,22 @@
 # as the service port.  HAPROXY_SERVER_NAME is set to an hostname like
 # [manager-0.neon-vault.cluster] in the HAProxy config file.
 #
-# The script returns 0 if the endpoint is ready, non-zero if it's unavailable or sealed.
+# The script returns 0 if the endpoint is ready, non-zero if it's unavailable, 
+# sealed, or is not the active leader.
 #
 # NOTE: This relies on [/etc/neoncluster/env-host] being mounted and that it
 #       adds the vault instance host definitions to the container's [/etc/hosts].
 
 set -e
-SEAL_STATUS=$(curl https://${HAPROXY_SERVER_NAME}:${HAPROXY_SERVER_PORT}/v1/sys/seal-status --silent --insecure --connect-timeout 5 --max-time 10)
-SEAL_STATUS=$(echo ${SEAL_STATUS} | jq -r '.sealed')
 
-if [ "${SEAL_STATUS}" = 'false' ]; then
+# We're going to verify health via the [/v1/sys/health] API.  This returns  
+# the OK/200 status when the instance is unsealed and active (the leader).
+
+STATUS_CODE=$(curl -I -X HEAD https://${HAPROXY_SERVER_NAME}:${HAPROXY_SERVER_PORT}/v1/sys/health --silent --insecure --connect-timeout 1 --max-time 5 2> /dev/null | head -n 1|cut -d$' ' -f2)
+
+if [ "${STATUS_CODE}" == '200' ]; then
     exit 0
 else
     exit 1
 fi
+

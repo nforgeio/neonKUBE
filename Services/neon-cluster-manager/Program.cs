@@ -269,7 +269,7 @@ namespace NeonClusterManager
             foreach (var managerNode in clusterNodes.Where(n => n.Role == "manager")
                 .OrderBy(n => n.Hostname))
             {
-                vaultUris.Add($"https://{managerNode.Hostname}.neon-vault.cluster:{NetworkPorts.Vault}");
+                vaultUris.Add($"https://{managerNode.Hostname}.neon-vault.cluster:{NeonHostPorts.ProxyVault}");
             }
 
             return vaultUris;

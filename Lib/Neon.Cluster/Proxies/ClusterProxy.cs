@@ -538,7 +538,7 @@ namespace Neon.Cluster
                         return vaultClient;
                     }
 
-                    vaultClient = VaultClient.OpenWithToken(new Uri(Definition.Vault.GetDirectUri(GetHealthyManager().Name)), ClusterLogin.VaultCredentials.RootToken);
+                    vaultClient = VaultClient.OpenWithToken(new Uri(Definition.Vault.Uri), ClusterLogin.VaultCredentials.RootToken);
                 }
 
                 return vaultClient;
