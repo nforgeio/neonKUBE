@@ -123,7 +123,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns a brief message suitable for including in a related exception message.
+        /// Returns an error message suitable for including in a related exception message.
         /// </summary>
         public string ErrorSummary
         {
@@ -134,7 +134,7 @@ namespace Neon.Cluster
                     return string.Empty;
                 }
 
-                return $"[exitcode={ExitCode}]: {Command}";
+                return $"[exitcode={ExitCode}]: {ErrorText}";
             }
         }
     }
