@@ -169,41 +169,24 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting [{configName}] config.");
 
-            var manager     = cluster.GetHealthyManager();
-            var response    = manager.DockerCommand(RunOptions.None, "docker config inspect", configName);
-            var configState = (string)null;
-            var bytes       = (byte[])null;
+            var manager = cluster.GetHealthyManager();
+            var exists  = cluster.DockerConfig.Exists(configName);
+            var bytes   = (byte[])null;
 
-            if (response.ExitCode == 0)
+            if (exists)
             {
-                configState = response.OutputText;
                 context.WriteLine(AnsibleVerbosity.Trace, $"{configName}] config exists.");
             }
             else
             {
-                // $todo(jeff.lill): 
-                //
-                // I'm trying to distinguish between a a failure because the config doesn't
-                // exist and other potential failures (e.g. Docker is not running).
-                //
-                // This is a bit fragile.
-
-                if (response.ErrorText.StartsWith("Status: Error: no such config:", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    context.WriteLine(AnsibleVerbosity.Trace, $"[{configName}] config does not exist.");
-                }
-                else
-                {
-                    context.WriteErrorLine(response.ErrorText);
-                    return;
-                }
+                context.WriteLine(AnsibleVerbosity.Trace, $"[{configName}] config does not exist.");
             }
 
             switch (state)
             {
                 case "absent":
 
-                    if (configState != null)
+                    if (exists)
                     {
                         context.Changed = !context.CheckMode;
 
@@ -213,23 +196,15 @@ namespace NeonCli.Ansible
                         }
                         else
                         {
+                            context.Changed = true;
                             context.WriteLine(AnsibleVerbosity.Trace, $"Removing config [{configName}].");
 
-                            response = manager.DockerCommand("docker config rm", configName);
-
-                            if (response.ExitCode == 0)
-                            {
-                                context.WriteLine(AnsibleVerbosity.Info, $"[{configName}] config was removed.");
-                            }
-                            else
-                            {
-                                context.WriteErrorLine(response.AllText);
-                            }
+                            cluster.DockerConfig.Remove(configName);
                         }
                     }
                     else
                     {
-                        context.WriteLine(AnsibleVerbosity.Info, $"Condig [{configName}] does not exist.");
+                        context.WriteLine(AnsibleVerbosity.Info, $"Config [{configName}] does not exist.");
                     }
                     break;
 
@@ -254,12 +229,12 @@ namespace NeonCli.Ansible
                         }
                         catch
                         {
-                            context.WriteErrorLine("Only one of [bytes] is not a valid base-64 encoded value.");
+                            context.WriteErrorLine("[bytes] is not a valid base-64 encoded value.");
                             return;
                         }
                     }
 
-                    if (configState != null)
+                    if (exists)
                     {
                         context.WriteLine(AnsibleVerbosity.Info, $"Config [{configName}] already exists.");
                     }
@@ -271,29 +246,16 @@ namespace NeonCli.Ansible
                         }
                         else
                         {
+                            context.Changed = true;
                             context.WriteLine(AnsibleVerbosity.Trace, $"Creating config [{configName}].");
 
-                            var bundle = new CommandBundle("docker", "config", "create", configName, "config-file");
-
-                            if (configBytes != null)
+                            if (bytes != null)
                             {
-                                bundle.AddFile("config-file", bytes);
+                                cluster.DockerConfig.Set(configName, bytes);
                             }
                             else
                             {
-                                bundle.AddFile("config-file", configText);
-                            }
-
-                            response = manager.SudoCommand(bundle);
-
-                            if (response.ExitCode == 0)
-                            {
-                                context.WriteLine(AnsibleVerbosity.Info, $"[{configName}] config was created.");
-                                context.Changed = !context.CheckMode;
-                            }
-                            else
-                            {
-                                context.WriteErrorLine(response.AllText);
+                                cluster.DockerConfig.Set(configName, configText);
                             }
                         }
                     }
