@@ -35,28 +35,36 @@ namespace TestNeonCluster
             this.clusterProxy = cluster.Cluster;
         }
 
-        [Fact]
+        [Fact(Skip = "todo")]
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void RegistryCredentials()
         {
+            // $todo(jeff.lill):
+            //
+            // This test needs some work.  It depends on the existence of two
+            // Docker registries which don't exist at this point.  The simple
+            // solution would be to deploy these locally as simple services
+            // using the [neon-registry] image, install a certificate, setup
+            // a cluster DNS host, and add a load balancer rule.
+
             // Verify that we can set, update, list, and remove Docker
             // registry credentials persisted to the cluster Vault.
 
             //-----------------------------------------------------------------
             // Save two registry credentials and then read to verify.
 
-            clusterProxy.Registry.Login("registry1.test.com", "billy", "bob");
-            clusterProxy.Registry.Login("registry2.test.com", "sally", "sue");
+            clusterProxy.Registry.Login("registry1.neonforge.net", "billy", "bob");
+            clusterProxy.Registry.Login("registry2.neonforge.net", "sally", "sue");
 
-            var credential = clusterProxy.Registry.GetCredentials("registry1.test.com");
+            var credential = clusterProxy.Registry.GetCredentials("registry1.neonforge.net");
 
-            Assert.Equal("registry1.test.com", credential.Registry);
+            Assert.Equal("registry1.neonforge.net", credential.Registry);
             Assert.Equal("billy", credential.Username);
             Assert.Equal("bob", credential.Password);
 
-            credential = clusterProxy.Registry.GetCredentials("registry2.test.com");
+            credential = clusterProxy.Registry.GetCredentials("registry2.neonforge.net");
 
-            Assert.Equal("registry2.test.com", credential.Registry);
+            Assert.Equal("registry2.neonforge.net", credential.Registry);
             Assert.Equal("sally", credential.Username);
             Assert.Equal("sue", credential.Password);
 
@@ -75,14 +83,14 @@ namespace TestNeonCluster
             {
                 switch (item.Registry)
                 {
-                    case "registry1.test.com":
+                    case "registry1.neonforge.net":
 
                         Assert.Equal("billy", item.Username);
                         Assert.Equal("bob", item.Password);
                         billyOK = true;
                         break;
 
-                    case "registry2.test.com":
+                    case "registry2.neonforge.net":
 
                         Assert.Equal("sally", item.Username);
                         Assert.Equal("sue", item.Password);
@@ -97,11 +105,11 @@ namespace TestNeonCluster
             //-----------------------------------------------------------------
             // Verify that we can update a credential.
 
-            clusterProxy.Registry.Login("registry2.test.com", "sally", "sue-bob");
+            clusterProxy.Registry.Login("registry2.neonforge.net", "sally", "sue-bob");
 
-            credential = clusterProxy.Registry.GetCredentials("registry2.test.com");
+            credential = clusterProxy.Registry.GetCredentials("registry2.neonforge.net");
 
-            Assert.Equal("registry2.test.com", credential.Registry);
+            Assert.Equal("registry2.neonforge.net", credential.Registry);
             Assert.Equal("sally", credential.Username);
             Assert.Equal("sue-bob", credential.Password);
 
@@ -109,27 +117,17 @@ namespace TestNeonCluster
             // Verify that we can remove credentials, without impacting the
             // remaining credentials.
 
-            clusterProxy.Registry.Logout("registry1.test.com");
-            Assert.Null(clusterProxy.Registry.GetCredentials("registry1.test.com"));
+            clusterProxy.Registry.Logout("registry1.neonforge.net");
+            Assert.Null(clusterProxy.Registry.GetCredentials("registry1.neonforge.net"));
 
-            credential = clusterProxy.Registry.GetCredentials("registry2.test.com");
+            credential = clusterProxy.Registry.GetCredentials("registry2.neonforge.net");
 
-            Assert.Equal("registry2.test.com", credential.Registry);
+            Assert.Equal("registry2.neonforge.net", credential.Registry);
             Assert.Equal("sally", credential.Username);
             Assert.Equal("sue-bob", credential.Password);
 
-            clusterProxy.Registry.Logout("registry2.test.com");
-            Assert.Null(clusterProxy.Registry.GetCredentials("registry2.test.com"));
-        }
-
-        [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
-        public void LocalRegistry()
-        {
-            // Verify that we can use the [neon-registry] image to deploy
-            // a local registry to the cluster.
-
-
+            clusterProxy.Registry.Logout("registry2.neonforge.net");
+            Assert.Null(clusterProxy.Registry.GetCredentials("registry2.neonforge.net"));
         }
     }
 }
