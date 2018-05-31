@@ -169,41 +169,24 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting [{secretName}] secret.");
 
-            var manager     = cluster.GetHealthyManager();
-            var response    = manager.DockerCommand(RunOptions.None, "docker secret inspect", secretName);
-            var secretState = (string)null;
-            var bytes       = (byte[])null;
+            var manager = cluster.GetHealthyManager();
+            var exists  = cluster.DockerSecret.Exists(secretName);
+            var bytes   = (byte[])null;
 
-            if (response.ExitCode == 0)
+            if (exists)
             {
-                secretState = response.OutputText;
                 context.WriteLine(AnsibleVerbosity.Trace, $"{secretName}] secret exists.");
             }
             else
             {
-                // $todo(jeff.lill): 
-                //
-                // I'm trying to distinguish between a a failure because the secret doesn't
-                // exist and other potential failures (e.g. Docker is not running).
-                //
-                // This is a bit fragile.
-
-                if (response.ErrorText.StartsWith("Status: Error: no such secret:", StringComparison.InvariantCultureIgnoreCase))
-                {
-                    context.WriteLine(AnsibleVerbosity.Trace, $"[{secretName}] secret does not exist.");
-                }
-                else
-                {
-                    context.WriteErrorLine(response.ErrorText);
-                    return;
-                }
+                context.WriteLine(AnsibleVerbosity.Trace, $"[{secretName}] secret does not exist.");
             }
 
             switch (state)
             {
                 case "absent":
 
-                    if (secretState != null)
+                    if (exists)
                     {
                         context.Changed = !context.CheckMode;
 
@@ -213,18 +196,10 @@ namespace NeonCli.Ansible
                         }
                         else
                         {
+                            context.Changed = true;
                             context.WriteLine(AnsibleVerbosity.Trace, $"Removing secret [{secretName}].");
 
-                            response = manager.DockerCommand("docker secret rm", secretName);
-
-                            if (response.ExitCode == 0)
-                            {
-                                context.WriteLine(AnsibleVerbosity.Info, $"[{secretName}] secret was removed.");
-                            }
-                            else
-                            {
-                                context.WriteErrorLine(response.AllText);
-                            }
+                            cluster.DockerSecret.Remove(secretName);
                         }
                     }
                     else
@@ -254,12 +229,12 @@ namespace NeonCli.Ansible
                         }
                         catch
                         {
-                            context.WriteErrorLine("Only one of [bytes] is not a valid base-64 encoded value.");
+                            context.WriteErrorLine("[bytes] is not a valid base-64 encoded value.");
                             return;
                         }
                     }
 
-                    if (secretState != null)
+                    if (exists)
                     {
                         context.WriteLine(AnsibleVerbosity.Info, $"Secret [{secretName}] already exists.");
                     }
@@ -271,29 +246,16 @@ namespace NeonCli.Ansible
                         }
                         else
                         {
+                            context.Changed = true;
                             context.WriteLine(AnsibleVerbosity.Trace, $"Creating secret [{secretName}].");
 
-                            var bundle = new CommandBundle("docker", "secret", "create", secretName, "secret-file");
-
-                            if (secretBytes != null)
+                            if (bytes != null)
                             {
-                                bundle.AddFile("secret-file", bytes);
+                                cluster.DockerSecret.Set(secretName, bytes);
                             }
                             else
                             {
-                                bundle.AddFile("secret-file", secretText);
-                            }
-
-                            response = manager.SudoCommand(bundle);
-
-                            if (response.ExitCode == 0)
-                            {
-                                context.WriteLine(AnsibleVerbosity.Info, $"[{secretName}] secret was created.");
-                                context.Changed = !context.CheckMode;
-                            }
-                            else
-                            {
-                                context.WriteErrorLine(response.AllText);
+                                cluster.DockerSecret.Set(secretName, secretText);
                             }
                         }
                     }
@@ -308,7 +270,7 @@ namespace NeonCli.Ansible
 }
 
 //-----------------------------------------------------------------------------
-// Here's some of the documentation for when we implement advanced
+// Here's some of the ideas for when we implement advanced
 // secret/config handling.  Here's the tracking issue:
 //
 //      https://github.com/jefflill/NeonForge/issues/231

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    DockerSecretsManager.cs
+// FILE:	    DockerSecretManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -23,7 +23,7 @@ namespace Neon.Cluster
     /// <summary>
     /// Handles Docker secret related operations for a <see cref="ClusterProxy"/>.
     /// </summary>
-    public sealed class DockerSecretsManager
+    public sealed class DockerSecretManager
     {
         private ClusterProxy cluster;
 
@@ -31,7 +31,7 @@ namespace Neon.Cluster
         /// Internal constructor.
         /// </summary>
         /// <param name="cluster">The parent <see cref="ClusterProxy"/>.</param>
-        internal DockerSecretsManager(ClusterProxy cluster)
+        internal DockerSecretManager(ClusterProxy cluster)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null);
 
@@ -39,12 +39,48 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Determines whether a Docker secret exists.
+        /// </summary>
+        /// <param name="secretName">The secret name.</param>
+        /// <returns><c>true</c> if the secret exists.</returns>
+        /// <exception cref="NeonClusterException">Thrown if the operation failed.</exception>
+        public bool Exists(string secretName)
+        {
+            var manager  = cluster.GetHealthyManager();
+            var response = manager.DockerCommand(RunOptions.None, "docker secret inspect", secretName);
+
+            if (response.ExitCode == 0)
+            {
+                return true;
+            }
+            else
+            {
+                // $todo(jeff.lill): 
+                //
+                // I'm trying to distinguish between a a failure because the secret doesn't
+                // exist and other potential failures (e.g. Docker is not running).
+                //
+                // This is a bit fragile.
+
+                if (response.ErrorText.StartsWith("Status: Error: no such secret:", StringComparison.InvariantCultureIgnoreCase))
+                {
+                    return false;
+                }
+                else
+                {
+                    throw new NeonClusterException(response.ErrorSummary);
+                }
+            }
+        }
+
+        /// <summary>
         /// Creates or updates a cluster Docker string secret.
         /// </summary>
         /// <param name="secretName">The secret name.</param>
         /// <param name="value">The secret value.</param>
-        /// <param name="options">Command run options.</param>
-        public void Set(string secretName, string value, RunOptions options = RunOptions.LogOutput | RunOptions.FaultOnError)
+        /// <param name="options">Optional command run options.</param>
+        /// <exception cref="NeonClusterException">Thrown if the operation failed.</exception>
+        public void Set(string secretName, string value, RunOptions options = RunOptions.None)
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(secretName));
             Covenant.Requires<ArgumentNullException>(value != null);
@@ -57,8 +93,9 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="secretName">The secret name.</param>
         /// <param name="value">The secret value.</param>
-        /// <param name="options">Command run options.</param>
-        public void Set(string secretName, byte[] value, RunOptions options = RunOptions.LogOutput | RunOptions.FaultOnError)
+        /// <param name="options">Optional command run options.</param>
+        /// <exception cref="NeonClusterException">Thrown if the operation failed.</exception>
+        public void Set(string secretName, byte[] value, RunOptions options = RunOptions.None)
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(secretName));
             Covenant.Requires<ArgumentNullException>(value != null);
@@ -96,15 +133,21 @@ fi
 ",
                 isExecutable: true);
 
-            cluster.GetHealthyManager().SudoCommand(bundle, options);
+            var response = cluster.GetHealthyManager().SudoCommand(bundle, options);
+
+            if (response.ExitCode != 0)
+            {
+                throw new NeonClusterException(response.ErrorSummary);
+            }
         }
 
         /// <summary>
         /// Deletes a cluster Docker secret.
         /// </summary>
         /// <param name="secretName">The secret name.</param>
-        /// <param name="options">Command run options.</param>
-        public void Remove(string secretName, RunOptions options = RunOptions.LogOutput | RunOptions.FaultOnError)
+        /// <param name="options">Optional command run options.</param>
+        /// <exception cref="NeonClusterException">Thrown if the operation failed.</exception>
+        public void Remove(string secretName, RunOptions options = RunOptions.None)
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(secretName));
 
@@ -121,7 +164,12 @@ else
 fi
 ",              isExecutable: true);
 
-            cluster.GetHealthyManager().SudoCommand("./delete-secret.sh");
+            var response = cluster.GetHealthyManager().SudoCommand(bundle, RunOptions.None);
+
+            if (response.ExitCode != 0)
+            {
+                throw new NeonClusterException(response.ErrorSummary);
+            }
         }
     }
 }

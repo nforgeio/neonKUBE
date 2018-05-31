@@ -148,7 +148,7 @@ namespace Neon.Cluster
             this.nodeProxyCreator    = nodeProxyCreator;
 
             this.DockerConfig        = new DockerConfigManager(this);
-            this.DockerSecret        = new DockerSecretsManager(this);
+            this.DockerSecret        = new DockerSecretManager(this);
             this.Certificate         = new CertificateManager(this);
             this.Dashboard           = new DashboardManager(this);
             this.DnsHosts            = new DnsHostsManager(this);
@@ -252,7 +252,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Manages cluster Docker secrets.
         /// </summary>
-        public DockerSecretsManager DockerSecret { get; private set; }
+        public DockerSecretManager DockerSecret { get; private set; }
 
         /// <summary>
         /// Manages the cluster TLS certificates.
