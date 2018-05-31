@@ -9,17 +9,7 @@ using System.ComponentModel;
 using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
-using System.Net;
-using System.Net.Http;
-using System.Runtime.Serialization;
 using System.Text;
-using System.Text.RegularExpressions;
-using System.Threading;
-using System.Threading.Tasks;
-
-using Newtonsoft.Json;
-using Newtonsoft.Json.Converters;
-using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
 using Neon.IO;
@@ -27,109 +17,144 @@ using Neon.IO;
 namespace Neon.Cluster
 {
     /// <summary>
-    /// Describes the current status of a Vault server instance.
+    /// Describes the status of a HashiCorp Vault instance parsed
+    /// from a <b>vault status</b> command response.
     /// </summary>
     public class VaultStatus
     {
         /// <summary>
-        /// The server version.
+        /// Constructs an instance by parsing a <b>vault status</b> command response.
         /// </summary>
-        public string Version { get; set; }
-
-        /// <summary>
-        /// Returns <c>true</c> if Vault is initialized.
-        /// </summary>
-        public bool IsInitialized { get; set; }
-
-        /// <summary>
-        /// Returns <c>true</c> if Vault is sealed.
-        /// </summary>
-        public bool IsSealed { get; set; }
-
-        /// <summary>
-        /// Returns <c>true</c> if Vault is operating as a standby instance.
-        /// </summary>
-        public bool IsStandby { get; set; }
-        
-        /// <inheritdoc/>
-        public override bool Equals(object obj)
+        public VaultStatus(string response)
         {
-            var other = obj as VaultStatus;
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(response));
 
-            if (other == null)
+            // $hack(jeff.lill):
+            //
+            // This is somewhat fragile because it depends on the output format
+            // of the [vault status] command which has changed in the past.
+
+            // Unforunately, we need to parse the command's table formatted
+            // output because the JSON/YAML formatted output doesn't include
+            // all of the HA related fields for the current Vault build.
+            //
+            // The command output will look like this when Vault is sealed:
+            //
+            //      Key                Value
+            //      ---                -----
+            //      Seal Type          shamir
+            //      Sealed             true
+            //      Total Shares       1
+            //      Threshold          1
+            //      Unseal Progress    0/1
+            //      Unseal Nonce       n/a
+            //      Version            0.9.6
+            //      HA Enabled         true
+            //
+            // and like this when unsealed:
+            //
+            //      Key             Value
+            //      ---             -----
+            //      Seal Type       shamir
+            //      Sealed          false
+            //      Total Shares    1
+            //      Threshold       1
+            //      Version         0.9.6
+            //      Cluster Name    woodinville.home-small
+            //      Cluster ID      4d8cc51d-00a3-0d7b-b540-9429d05d77d0
+            //      HA Enabled      true
+            //      HA Cluster      https://manager-0.neon-vault.cluster:8201
+            //      HA Mode         active
+            //
+            // Note that the column widths vary between the two versions.
+            // We're going to determine the starting positions of the two   
+            // column headers on the first line to peform the extraction.
+
+            var valuePos = response.IndexOf("Value");
+
+            if (valuePos == -1)
             {
-                return false;
+                throw new FormatException("Unexpected HashiCorp Vault status.");
             }
 
-            return this.Version == other.Version &&
-                   this.IsInitialized == other.IsInitialized &&
-                   this.IsSealed == other.IsSealed &&
-                   this.IsStandby == other.IsStandby;
+            using (var reader = new StringReader(response))
+            {
+                foreach (var line in reader.Lines().Skip(2))
+                {
+                    var key   = line.Substring(0, valuePos).Trim();
+                    var value = line.Substring(valuePos).Trim();
+
+                    switch (key)
+                    {
+                        case "Seal Type":           SealType = value; break;
+                        case "Sealed":              Sealed = value == "true"; break;
+                        case "Total Shares":        TotalShares = int.Parse(value); break;
+                        case "Threshold":           Threshold = int.Parse(value); break;
+                        case "Version":             Version = value; break;
+                        case "Cluster Name":        ClusterName = value; break;
+                        case "Cluster ID":          ClusterId = value; break;
+                        case "HA Enabled":          HAEnabled = value == "true"; break;
+                        case "HA Cluster":          HACluster = value; break;
+                        case "HA Mode":             HAMode = value; break;
+                        case "Active Node Address": ActiveNode = value; break;
+                    }
+                }
+            }
         }
 
-        /// <inheritdoc/>
-        public override int GetHashCode()
-        {
-            var hash = 0;
+        /// <summary>
+        /// Identifies the seal method.
+        /// </summary>
+        public string SealType { get; private set; }
 
-            if (Version != null)
-            {
-                hash = Version.GetHashCode();
-            }
+        /// <summary>
+        /// Indicates whether the Vault is currently sealed.
+        /// </summary>
+        public bool Sealed { get; private set; }
 
-            return hash ^ IsInitialized.GetHashCode() ^ IsSealed.GetHashCode() ^ IsStandby.GetHashCode();
-        }
+        /// <summary>
+        /// Returns the number of shared unseal keys generated for the Vault.
+        /// </summary>
+        public int TotalShares { get; private set; }
 
-        /// <inheritdoc/>
-        public override string ToString()
-        {
-            var value = string.Empty;
+        /// <summary>
+        /// Rrturns the minimum shared keys required to unseal the Vault.
+        /// </summary>
+        public int Threshold { get; private set; }
 
-            if (!IsInitialized)
-            {
-                if (value.Length > 0)
-                {
-                    value += " ";
-                }
+        /// <summary>
+        /// Returns the Vault server version.
+        /// </summary>
+        public string Version { get; private set; }
 
-                value += "NOT-INITIALIZED";
-            }
+        /// <summary>
+        /// Returns the Vault cluster name.
+        /// </summary>
+        public string ClusterName { get; private set; }
 
-            if (IsSealed)
-            {
-                if (value.Length > 0)
-                {
-                    value += " ";
-                }
+        /// <summary>
+        /// Returns the Vault unique cluster ID.
+        /// </summary>
+        public string ClusterId { get; private set; }
 
-                value += "SEALED";
-            }
-            else
-            {
-                if (value.Length > 0)
-                {
-                    value += " ";
-                }
+        /// <summary>
+        /// Indicates whether high-availability mode is enabled.
+        /// </summary>
+        public bool HAEnabled { get; private set; }
 
-                value += "UNSEALED";
-            }
+        /// <summary>
+        /// Returns the internal Vault API URL of the Vault node currently acting as the cluster leader.
+        /// </summary>
+        public string HACluster { get; private set; }
 
-            if (IsStandby)
-            {
-                if (value.Length > 0)
-                {
-                    value += " ";
-                }
+        /// <summary>
+        /// Returns the Vault node status.
+        /// </summary>
+        public string HAMode { get; private set; }
 
-                value += "STANDBY";
-            }
-
-            if (value.Length > 0)
-            {
-                value += " ";
-            }
-
-            return value + $"[version={Version}]";
-        }
+        /// <summary>
+        /// Returns the Vault API URL of the Vault node currently acting as the cluster leader.
+        /// </summary>
+        public string ActiveNode { get; private set; }
     }
 }

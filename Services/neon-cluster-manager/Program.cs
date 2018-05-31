@@ -405,7 +405,7 @@ namespace NeonClusterManager
             // Each cluster manager instance is only going to manage the Vault instance
             // running on the same host manager node.
 
-            var lastVaultStatus = (VaultStatus)null;
+            var lastVaultStatus = (VaultHealthStatus)null;
 
             // We're going to periodically log Vault status even
             // when there is no status changes.

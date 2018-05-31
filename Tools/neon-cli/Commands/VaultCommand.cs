@@ -35,11 +35,12 @@ namespace NeonCli
     {
         private const string usage = @"
 Runs a HashiCorp Vault command on the cluster.  All command line arguments
-and options as well are passed through to the Vault CLI.
+and options as well are passed through to the Vault CLI.  The command also
+includes the root Vault token from the current cluster login.
 
 USAGE:
 
-    neon [OPTIONS] vault [ARGS...]  - Invokes a Vault command
+    neon [OPTIONS] vault [ARGS...]  - Invokes a HashiCorp Vault command
 
 ARGUMENTS:
 
@@ -54,9 +55,9 @@ OPTIONS:
 NOTE: Vault commands are automtaically provided with the root token from the 
       current cluster login.
 
-NOTE: The [unseal] command has been modified to automatically include
-      the unseal key saved with the cluster login on the local
-      workstation.
+NOTE: The [seal], [unseal], and [status] commands have been modified
+      to operate on the entire Vault cluster unless a target [--node]
+      is specified.
 
 NOTE: Vault commands may only be submitted to manager nodes.
 
@@ -149,11 +150,21 @@ NOTE: The following Vault commands are not supported:
 
                 case "seal":
 
+                    // Just run the command on the target node if one was specified.
+
+                    if (nodeName != null)
+                    {
+                        ExecuteOnNode(node, rightCommandLine);
+                        return;
+                    }
+
                     // We need to seal the Vault instance on every manager node unless a
                     // specific node was requsted via [--node].
                     //
                     // Note also that it's not possible to seal a node that's in standby
                     // mode so we'll restart the Vault container instead.
+
+                    Console.WriteLine();
 
                     if (!string.IsNullOrEmpty(nodeName))
                     {
@@ -165,11 +176,11 @@ NOTE: The following Vault commands are not supported:
                         }
                         else
                         {
-                            var standbyMode = response.AllText.Contains("Mode: standby");
+                            var vaultStatus = new VaultStatus(response.OutputText);
 
-                            if (standbyMode)
+                            if (vaultStatus.HAMode == "standby")
                             {
-                                Console.WriteLine($"[{node.Name}] restaring to seal standby vault...");
+                                Console.WriteLine($"[{node.Name}] restarting to seal standby node...");
 
                                 response = node.SudoCommand($"systemctl restart vault");
 
@@ -186,7 +197,7 @@ NOTE: The following Vault commands are not supported:
                             {
                                 Console.WriteLine($"[{node.Name}] sealing...");
 
-                                response = node.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && vault-direct seal", RunOptions.None);
+                                response = node.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && vault-direct operator seal", RunOptions.None);
 
                                 if (response.ExitCode == 0)
                                 {
@@ -217,7 +228,7 @@ NOTE: The following Vault commands are not supported:
                                 continue;
                             }
 
-                            var standbyMode = response.AllText.Contains("Mode: standby");
+                            var vaultStatus = new VaultStatus(response.OutputText);
 
                             if (response.ExitCode != 0)
                             {
@@ -225,11 +236,11 @@ NOTE: The following Vault commands are not supported:
                             }
                             else
                             {
-                                response = manager.SudoCommand($"vault-direct seal");
+                                response = manager.SudoCommand($"vault-direct operator seal");
 
-                                if (standbyMode)
+                                if (vaultStatus.HAMode == "standby")
                                 {
-                                    Console.WriteLine($"[{manager.Name}] restarting to seal standby vault...");
+                                    Console.WriteLine($"[{manager.Name}] restarting to seal standby node...");
 
                                     response = manager.SudoCommand($"systemctl restart vault");
 
@@ -246,7 +257,7 @@ NOTE: The following Vault commands are not supported:
                                 {
                                     Console.WriteLine($"[{manager.Name}] sealing...");
 
-                                    response = manager.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && vault-direct seal", RunOptions.None);
+                                    response = manager.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && vault-direct operator seal", RunOptions.None);
 
                                     if (response.ExitCode == 0)
                                     {
@@ -267,8 +278,18 @@ NOTE: The following Vault commands are not supported:
 
                 case "status":
 
+                    // Just run the command on the target node if one was specified.
+
+                    if (nodeName != null)
+                    {
+                        ExecuteOnNode(node, rightCommandLine);
+                        return;
+                    }
+
                     // We need to obtain the status from the Vault instance on every manager node unless a
                     // specific node was requsted via [--node].
+
+                    Console.WriteLine();
 
                     if (!string.IsNullOrEmpty(nodeName))
                     {
@@ -279,7 +300,7 @@ NOTE: The following Vault commands are not supported:
                     }
                     else
                     {
-                        var failed   = false;
+                        var failed    = false;
                         var allSealed = true;
 
                         foreach (var manager in cluster.Managers)
@@ -294,13 +315,12 @@ NOTE: The following Vault commands are not supported:
                                 continue;
                             }
 
-                            var standbyMode = response.AllText.Contains("Mode: standby");
-                            var mode        = standbyMode ? "[standby]" : "[leader]  <---";
+                            var vaultStatus = new VaultStatus(response.OutputText);
 
                             if (response.ExitCode == 0)
                             {
                                 allSealed = false;
-                                Console.WriteLine($"[{manager.Name}] unsealed {mode}");
+                                Console.WriteLine($"[{manager.Name}] unsealed {vaultStatus.HAMode}");
                             }
                             else if (response.ExitCode == 2)
                             {
@@ -326,8 +346,18 @@ NOTE: The following Vault commands are not supported:
 
                 case "unseal":
 
+                    // Just run the command on the target node if one was specified.
+
+                    if (nodeName != null)
+                    {
+                        ExecuteOnNode(node, rightCommandLine);
+                        return;
+                    }
+
                     // We need to unseal the Vault instance on every manager node unless a
                     // specific node was requsted via [--node].
+
+                    Console.WriteLine();
 
                     if (!string.IsNullOrEmpty(nodeName))
                     {
@@ -353,11 +383,11 @@ NOTE: The following Vault commands are not supported:
                         // Note that we're passing the [-reset] option to ensure that 
                         // any keys from previous attempts have been cleared.
 
-                        node.SudoCommand($"vault-direct unseal -reset");
+                        node.SudoCommand($"vault-direct operator unseal -reset");
 
                         foreach (var key in vaultCredentials.UnsealKeys)
                         {
-                            response = node.SudoCommand($"vault-direct unseal {key}", RunOptions.None);
+                            response = node.SudoCommand($"vault-direct operator unseal {key}", RunOptions.None);
 
                             if (response.ExitCode != 0)
                             {
@@ -404,13 +434,13 @@ NOTE: The following Vault commands are not supported:
                             // Note that we're passing the [-reset] option to ensure that 
                             // any keys from previous attempts have been cleared.
 
-                            manager.SudoCommand($"vault-direct unseal -reset");
+                            manager.SudoCommand($"vault-direct operator unseal -reset");
 
                             var failed = false;
 
                             foreach (var key in vaultCredentials.UnsealKeys)
                             {
-                                response = manager.SudoCommand($"vault-direct unseal {key}", RunOptions.None);
+                                response = manager.SudoCommand($"vault-direct operator unseal {key}", RunOptions.None);
 
                                 if (response.ExitCode != 0)
                                 {
@@ -536,12 +566,7 @@ NOTE: The following Vault commands are not supported:
 
                 default:
 
-                    // We're going to execute the command using the root Vault token.
-
-                    response = node.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && {remoteVaultPath} {rightCommandLine}", RunOptions.IgnoreRemotePath);
-
-                    Console.WriteLine(response.AllText);
-                    Program.Exit(response.ExitCode);
+                    ExecuteOnNode(node, rightCommandLine);
                     break;
             }
         }
@@ -603,6 +628,19 @@ NOTE: The following Vault commands are not supported:
             }
 
             return new DockerShimInfo(isShimmed: true, ensureConnection: true);
+        }
+
+        /// <summary>
+        /// Executes a Vault command on a specific node using the root Vault token.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <param name="commandLine">The Vault command.</param>
+        private void ExecuteOnNode(SshProxy<NodeDefinition> node, CommandLine commandLine)
+        {
+            var response = node.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && {remoteVaultPath} {commandLine}", RunOptions.IgnoreRemotePath);
+
+            Console.WriteLine(response.AllText);
+            Program.Exit(response.ExitCode);
         }
     }
 }

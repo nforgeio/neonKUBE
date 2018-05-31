@@ -240,7 +240,7 @@ does this on the first manager node:
 
             if (rightCommandLine == null)
             {
-                Console.Error.WriteLine($"*** ERROR: A command is expected after [exec].");
+                Console.Error.WriteLine($"*** ERROR: [exec] command expectes: [-- COMMAND...]");
                 Program.Exit(1);
             }
 

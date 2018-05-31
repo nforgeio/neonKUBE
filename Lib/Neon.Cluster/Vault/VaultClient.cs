@@ -201,9 +201,9 @@ namespace Neon.Cluster
         /// Returns the current Vault instance health status.
         /// </summary>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <returns>The <see cref="VaultStatus"/>.</returns>
+        /// <returns>The <see cref="VaultHealthStatus"/>.</returns>
         /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
-        public async Task<VaultStatus> GetHealthAsync(CancellationToken cancellationToken = default)
+        public async Task<VaultHealthStatus> GetHealthAsync(CancellationToken cancellationToken = default)
         {
             // We need to make an unsafe call because Vault will return [503-Service Unavailable] when not 
             // initialized or sealed.
@@ -215,7 +215,7 @@ namespace Neon.Cluster
             {
                 var response = jsonResponse.AsDynamic();
             
-                return new VaultStatus()
+                return new VaultHealthStatus()
                 {
                     IsInitialized = (bool)response.GetValue("initialized"),
                     IsSealed      = (bool)response.GetValue("sealed"),

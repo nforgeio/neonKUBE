@@ -605,8 +605,8 @@ namespace Neon.Cluster
             }
 
             // Now, verify that all managers are really ready by verifying that
-            // we can write a secret to each of them.  We'll keep retrying for
-            // a while when this fails.
+            // we can write a Vault secret to each of them.  We'll keep retrying
+            // for a while when this fails.
 
             readyManagers.Clear();
             timer.Restart();
