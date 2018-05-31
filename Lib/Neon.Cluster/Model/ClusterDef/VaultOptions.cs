@@ -29,11 +29,11 @@ namespace Neon.Cluster
     /// </summary>
     public class VaultOptions
     {
-        private const string        defaultVersion      = "0.9.6";
+        private const string        defaultVersion      = "0.10.1";
         private const int           defaultKeyCount     = 1;
         private const int           defaultKeyThreshold = 1;
         private const string        defaultLease        = "0";
-        private readonly Version    minVersion          = new System.Version("0.9.6");
+        private readonly Version    minVersion          = new System.Version("0.10.1");
 
         /// <summary>
         /// Default constructor.
