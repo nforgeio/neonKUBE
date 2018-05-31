@@ -583,7 +583,7 @@ namespace NeonCli.Ansible
 
                     // Create the cluster DNS host entry we'll use to redirect traffic targeting the registry
                     // hostname to the cluster managers.  We need to do this because registry IP addresses
-                    // are typically public, typically targetting the external firewall or load balancer
+                    // are typically public, typically targeting the external firewall or load balancer
                     // interface.
                     //
                     // The problem is that cluster nodes will generally be unable to connect to the
