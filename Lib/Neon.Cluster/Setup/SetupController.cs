@@ -639,7 +639,7 @@ namespace Neon.Cluster
 
             if (showStepProgress)
             {
-                var width     = maxStepLabelWidth + "[x] DONE".Length + 3;
+                var width     = maxStepLabelWidth + "[x] DONE".Length + 2;
                 var stepCount = steps.Count(s => !s.Quiet);
                 var progress  = new string('-', Math.Max(0, (int)(width * ((currentStep.Number - 1.0) / stepCount)) - 1));
 
@@ -653,7 +653,7 @@ namespace Neon.Cluster
                     progress += new string(' ', width - progress.Length);
                 }
 
-                sbDisplay.AppendLine($"Steps: [{progress}]");
+                sbDisplay.AppendLine($" Steps: [{progress}]");
                 sbDisplay.AppendLine();
             }
             else
