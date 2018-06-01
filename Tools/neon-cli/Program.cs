@@ -1168,7 +1168,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                 {
                     case TargetOS.Ubuntu_16_04:
 
-                        return ResourceFiles.Linux.GetFolder("Ubuntu-16.04");
+                        return ResourceFiles.Root.GetFolder("Ubuntu-16.04");
 
                     default:
 

@@ -232,18 +232,23 @@ namespace NeonCli
         // Static members
 
         /// <summary>
-        /// Returns the Linux root folder.
+        /// Returns the root resource folder.
         /// </summary>
-        public static Folder Linux { get; private set; }
+        public static Folder Root { get; private set; }
 
         /// <summary>
         /// Static constructor.
         /// </summary>
         static ResourceFiles()
         {
-            Linux = new Folder("Resources", 
+            Root = new Folder("Resources", 
                 folders: new List<Folder>()
                 {
+                    new Folder("Kibana",
+                        files: new List<File>()
+                        {
+                            new File("logstash-6-index.json", hasVariables: false)
+                        }),
                     new Folder("Ubuntu-16.04",
                         folders: new List<Folder>()
                         {
@@ -296,7 +301,7 @@ namespace NeonCli
 
             var appFolderPath = Path.GetDirectoryName(Assembly.GetEntryAssembly().CodeBase.Substring(prefix.Length));
 
-            Linux.SetPath(appFolderPath);
+            Root.SetPath(appFolderPath);
         }
     }
 }
