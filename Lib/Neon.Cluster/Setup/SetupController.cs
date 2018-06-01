@@ -39,6 +39,7 @@ namespace Neon.Cluster
 
         private class Step
         {
+            public int                                          Number;
             public string                                       Label;
             public bool                                         Quiet;
             public Action                                       GlobalAction;
@@ -110,6 +111,13 @@ namespace Neon.Cluster
         /// defaults to <c>true</c>.
         ///</summary>
         public bool ShowNodeStatus { get; set; } = true;
+
+        /// <summary>
+        /// Specifies the maximum number of setup steps to be displayed.
+        /// This defaults to <b>5</b>.  You can set <b>0</b> to allow an 
+        /// unlimited number of steps may be displayed.
+        /// </summary>
+        public int MaxDisplayedSteps { get; set; } = 5;
 
         /// <summary>
         /// The maximum number of nodes that will execute setup steps in parallel.  This
@@ -246,7 +254,26 @@ namespace Neon.Cluster
         /// <returns><c>true</c> if all steps completed successfully.</returns>
         public bool Run(bool leaveNodesConnected = false)
         {
-            hasNodeSteps = steps.Exists(s => s.NodeAction != null);     // We don't display node status if there aren't any node specific steps.
+            // Number the steps.  Note that quiet steps don't 
+            // get their own step number.
+
+            var position = 1;
+
+            foreach (var step in steps)
+            {
+                if (step.Quiet)
+                {
+                    step.Number = position;
+                }
+                else
+                {
+                    step.Number = position++;
+                }
+            }
+
+            // We don't display node status if there aren't any node specific steps.
+
+            hasNodeSteps = steps.Exists(s => s.NodeAction != null);
 
             try
             {
@@ -564,7 +591,6 @@ namespace Neon.Cluster
             var maxStepLabelWidth = steps.Max(n => n.Label.Length);
             var maxNodeNameWidth  = nodes.Max(n => n.Name.Length);
             var maxHostNameWidth  = 0;
-            var stepNumber        = 0;
 
             if (typeof(NodeMetadata) == typeof(XenClient))
             {
@@ -576,33 +602,87 @@ namespace Neon.Cluster
             sbDisplay.AppendLine();
             sbDisplay.AppendLine($" {operationTitle}");
 
-            sbDisplay.AppendLine();
-            sbDisplay.AppendLine(" Steps:");
+            var displaySteps     = steps.Where(s => !s.Quiet);
+            var showStepProgress = false;
 
-            foreach (var step in steps.Where(s => !s.Quiet))
+            if (MaxDisplayedSteps > 0 && MaxDisplayedSteps < displaySteps.Count())
             {
-                stepNumber++;
+                // Limit the display steps to just those around the currently
+                // executing step.
 
+                var displayStepsCount = displaySteps.Count();
+                var runningStep       = steps.FirstOrDefault(s => s.Status == StepStatus.Running);
+
+                if (runningStep != null)
+                {
+                    showStepProgress = true;
+
+                    if (runningStep.Number <= 1)
+                    {
+                        displaySteps = displaySteps.Where(s => s.Number <= MaxDisplayedSteps);
+                    }
+                    else if (runningStep.Number >= displayStepsCount - MaxDisplayedSteps + 1)
+                    {
+                        displaySteps = displaySteps.Where(s => s.Number >= displayStepsCount - MaxDisplayedSteps + 1);
+                    }
+                    else
+                    {
+                        var firstDisplayedNumber = runningStep.Number - MaxDisplayedSteps / 2;
+                        var lastDisplayedNumber  = firstDisplayedNumber + MaxDisplayedSteps - 1;
+
+                        displaySteps = displaySteps.Where(s => firstDisplayedNumber <= s.Number && s.Number <= lastDisplayedNumber);
+                    }
+                }
+            }
+
+            sbDisplay.AppendLine();
+
+            if (showStepProgress)
+            {
+                var width     = maxStepLabelWidth + "[x] DONE".Length + 3;
+                var stepCount = steps.Count(s => !s.Quiet);
+                var progress  = new string('-', Math.Max(0, (int)(width * ((currentStep.Number - 1.0) / stepCount)) - 1));
+
+                if (progress.Length > 0)
+                {
+                    progress += ">";
+                }
+
+                if (progress.Length < width)
+                {
+                    progress += new string(' ', width - progress.Length);
+                }
+
+                sbDisplay.AppendLine($"Steps: [{progress}]");
+                sbDisplay.AppendLine();
+            }
+            else
+            {
+                sbDisplay.AppendLine(" Steps:");
+            }
+
+            foreach (var step in displaySteps)
+            {
                 switch (step.Status)
                 {
                     case StepStatus.None:
 
-                        sbDisplay.AppendLine($"     {FormatStepNumber(stepNumber)}{step.Label}");
+                        sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}");
                         break;
 
                     case StepStatus.Running:
 
-                        sbDisplay.AppendLine($" --> {FormatStepNumber(stepNumber)}{step.Label}");
+                        sbDisplay.AppendLine($" --> {FormatStepNumber(step.Number)}{step.Label}");
                         break;
 
                     case StepStatus.Done:
 
-                        sbDisplay.AppendLine($"     {FormatStepNumber(stepNumber)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [x] DONE");
+                        sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [x] DONE");
                         break;
 
                     case StepStatus.Failed:
 
-                        sbDisplay.AppendLine($"     {FormatStepNumber(stepNumber)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [!] FAIL"); ;
+                        sbDisplay.AppendLine($"     {FormatStepNumber(step.Number)}{step.Label}{new string(' ', maxStepLabelWidth - step.Label.Length)}   [!] FAIL"); ;
                         break;
                 }
             }
