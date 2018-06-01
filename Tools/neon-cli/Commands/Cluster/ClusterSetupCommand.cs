@@ -176,16 +176,6 @@ OPTIONS:
                 cluster.SecureRunOptions = RunOptions.None;
             }
 
-            //-----------------------------------------------------------------
-            // $todo(jeff.lill):
-            //
-            // We're temporarily disabling redaction to make it easier to investigate
-            // Vault setup issues.  Comment out or remove this line before final launch.
-            //
-            //      https://github.com/jefflill/NeonForge/issues/225
-
-            cluster.SecureRunOptions = RunOptions.None;
-
             // Perform the setup operations.
 
             var controller = 
