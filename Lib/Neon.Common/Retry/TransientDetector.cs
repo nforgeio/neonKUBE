@@ -128,7 +128,7 @@ namespace Neon.Retry
 
         /// <summary>
         /// Considers <see cref="HttpException"/> and <see cref="HttpRequestException"/> as possible 
-        /// transient errors as well as this exception nested within an <see cref="AggregateException"/>.
+        /// transient errors as well as these exceptions nested within an <see cref="AggregateException"/>.
         /// </summary>
         /// <param name="e">The potential transient exception.</param>
         /// <returns><c>true</c> if the exception is to be considered as transient.</returns>
