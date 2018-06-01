@@ -122,9 +122,7 @@ namespace NeonCli
 
                     cluster.Configure(steps);
 
-                    // Wait for the Elasticsearch cluster to come online.  Note that we're going 
-                    // to wait here even if Kibana isn't enabled to ensure that Elasticsearch is 
-                    // in a good state.
+                    // Wait for the Elasticsearch cluster to come online.
 
                     var esNodeCount = cluster.Definition.Nodes.Count(n => n.Labels.LogEsData);
 
@@ -170,6 +168,11 @@ namespace NeonCli
                             Thread.Sleep(TimeSpan.FromSeconds(10));
                         }
                     }
+
+                    // Metricbeat initializes its Kibana own index pattern in but we need to initialize
+                    // the [logstash-*] index pattern ourselves.
+
+                    
 
                     firstManager.Status = string.Empty;
                 });
