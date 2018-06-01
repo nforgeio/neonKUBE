@@ -28,8 +28,8 @@ namespace Neon.Cluster
     /// </summary>
     public class ConsulOptions
     {
-        private const string        defaultVersion = "1.0.6";
-        private readonly Version    minVersion     = new System.Version("0.7.4");
+        private const string        defaultVersion = "1.1.0";
+        private readonly Version    minVersion     = new System.Version("1.1.0");
 
         /// <summary>
         /// Default constructor.
