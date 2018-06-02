@@ -235,9 +235,34 @@ namespace Neon.Cluster
         {
             var status = this.ToString();
 
+            // Limit the node status to a maximum of 80 characters.  For strings
+            // longer than this, we're going to scan backwards from character 80
+            // until we find a space and then truncate the string at the space
+            // so the status will look nice.
+
             if (status.Length > 80)
             {
-                status = status.Substring(0, 77) + "...";
+                var pos = 80 - "...".Length;    // Leave space for "..."
+
+                for (; pos > 0; pos--)
+                {
+                    if (status[pos] == ' ')
+                    {
+                        break;
+                    }
+                }
+
+                if (pos > 0)
+                {
+                    status = status.Substring(0, pos) + "...";
+                }
+                else
+                {
+                    // Fallback on the chance that a long status has no spaces
+                    // before the break.
+
+                    status = status.Substring(0, 77) + "...";
+                }
             }
 
             node.Status = status;
