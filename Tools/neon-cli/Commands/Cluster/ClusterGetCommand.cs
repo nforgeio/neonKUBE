@@ -43,13 +43,15 @@ ARGUMENTS:
 
 CLUSTER IDENTIFIERS:
 
-    username                - root account username
+    allow-unit-testing      - enables ClusterFixture unit testing (bool)
+    create-date             - cluster creation date (UTC)
     password                - root account password
-    allow-unit-testing      - enable ClusterFixture unit testing (bool)
     registries              - lists the Docker registries and credentials
     sshkey-client-pem       - client SSH private key (PEM format)
     sshkey-client-ppk       - client SSH private key (PPK format)
     sshkey-fingerprint      - SSH host key fingerprint
+    username                - root account username
+    uuid                    - Cluster UUID
     vault-token             - Vault root token
 
 NODE IDENTIFIERS:
@@ -138,9 +140,30 @@ NODE IDENTIFIERS:
 
                 switch (valueExpr.ToLowerInvariant())
                 {
-                    case "username":
+                    case NeonClusterSettings.AllowUnitTesting:
 
-                        Console.Write(clusterLogin.SshUsername);
+                        if (cluster.TryGetSettingBool(NeonClusterSettings.AllowUnitTesting, out var allowUnitTesting))
+                        {
+                            Console.Write(allowUnitTesting ? "true" : "false");
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Cluster setting [{valueExpr}] does not exist.");
+                            Program.Exit(1);
+                        }
+                        break;
+
+                    case NeonClusterSettings.CreateDate:
+
+                        if (cluster.TryGetSettingString(NeonClusterSettings.CreateDate, out var createDate))
+                        {
+                            Console.Write(createDate);
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Cluster setting [{valueExpr}] does not exist.");
+                            Program.Exit(1);
+                        }
                         break;
 
                     case "password":
@@ -195,6 +218,24 @@ NODE IDENTIFIERS:
                         Console.Write(clusterLogin.SshClientKey.PrivatePPK);
                         break;
 
+                    case "username":
+
+                        Console.Write(clusterLogin.SshUsername);
+                        break;
+
+                    case NeonClusterSettings.Uuid:
+
+                        if (cluster.TryGetSettingString(NeonClusterSettings.Uuid, out var uuid))
+                        {
+                            Console.Write(uuid);
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Cluster setting [{valueExpr}] does not exist.");
+                            Program.Exit(1);
+                        }
+                        break;
+
                     case "vault-token":
 
                         if (string.IsNullOrEmpty(clusterLogin.VaultCredentials.RootToken))
@@ -204,19 +245,6 @@ NODE IDENTIFIERS:
                         }
 
                         Console.Write(clusterLogin.VaultCredentials.RootToken);
-                        break;
-
-                    case NeonClusterSettings.AllowUnitTesting:
-
-                        if (cluster.TryGetSettingBool(NeonClusterSettings.AllowUnitTesting, out var allowUnitTesting))
-                        {
-                            Console.Write(allowUnitTesting ? "true" : "false");
-                        }
-                        else
-                        {
-                            Console.Error.WriteLine($"*** ERROR: Cluster setting [{valueExpr}] does not exist.");
-                            Program.Exit(1);
-                        }
                         break;
 
                     default:

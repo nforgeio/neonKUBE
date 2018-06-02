@@ -99,6 +99,21 @@ EOF
 cp /lib/systemd/system/consul.service /lib/systemd/system/consul.service.org
 
 #------------------------------------------------------------------------------
+# Generate a small script that we'll use to start Consul.  We're doing this so
+# we can initialize environment variables as necessary.
+
+cat <<EOF > /usr/local/bin/consul.sh
+#!/bin/bash
+
+# Temporarily enable the new UI until HashiCorp enables it by default.
+export CONSUL_UI_BETA=true
+
+/usr/local/bin/consul "$@"
+EOF
+
+chmod 700 /usr/local/bin/consul.sh
+
+#------------------------------------------------------------------------------
 # Configure and then start the Consul service for the first time.  This will
 # add the encryption key (if there is one) to the key ring.
 
@@ -122,7 +137,7 @@ Before=
 
 [Service]
 Type=simple
-ExecStart=/usr/local/bin/consul agent -server -config-dir /etc/consul.d
+ExecStart=/usr/local/bin/consul.sh agent -server -config-dir /etc/consul.d
 ExecReload=/bin/kill -s HUP \$MAINPID
 
 [Install]

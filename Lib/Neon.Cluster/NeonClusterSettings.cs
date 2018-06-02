@@ -21,5 +21,15 @@ namespace Neon.Cluster
         /// Enables unit testing on the cluster via <b>ClusterFixture</b> (bool).
         /// </summary>
         public const string AllowUnitTesting = "allow-unit-testing";
+
+        /// <summary>
+        /// Cluster's globally unique ID assigned during cluster setup.
+        /// </summary>
+        public const string Uuid = "uuid";
+
+        /// <summary>
+        /// Cluster creation date (UTC).
+        /// </summary>
+        public const string CreateDate = "create-date";
     }
 }

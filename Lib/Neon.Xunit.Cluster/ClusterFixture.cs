@@ -407,6 +407,18 @@ namespace Neon.Xunit.Cluster
 
             cluster = NeonClusterHelper.OpenRemoteCluster(loginPath: loginPath);
 
+            // Ensure that the target cluster allows unit testing.
+
+            if (!cluster.TryGetSettingBool(NeonClusterSettings.AllowUnitTesting, out var allowUnitTesting))
+            {
+                allowUnitTesting = false;
+            }
+
+            if (!allowUnitTesting)
+            {
+                throw new NotSupportedException($"The [{cluster.Name}] cluster does not support unit testing.  Use the [neon cluster set allow-unit-testing=true] command to enable this.");
+            }
+
             // We needed to defer the [Reset()] call until after the cluster
             // was connected.
 

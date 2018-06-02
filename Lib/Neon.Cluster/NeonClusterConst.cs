@@ -141,6 +141,11 @@ namespace Neon.Cluster
         public const string GitProdBranch = "prod";
 
         /// <summary>
+        /// Consul root key for cluster globals. 
+        /// </summary>
+        public static readonly string ClusterRootKey = "neon/cluster";
+
+        /// <summary>
         /// Consul root key for the Dynamic DNS service related values.
         /// </summary>
         public static readonly string ConsulDnsRootKey = "neon/dns";
