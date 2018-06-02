@@ -6,10 +6,6 @@
 
 # Handle the [version] command by printing the [package.json] file.
 
-echo ====================================
-echo ARG: $1
-echo ====================================
-
 if [ "$1" == "version" ] ; then
     cat  /usr/share/kibana/package.json
     exit 0
