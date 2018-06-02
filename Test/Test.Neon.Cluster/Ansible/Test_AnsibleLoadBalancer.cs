@@ -32,18 +32,18 @@ namespace TestNeonCluster
 {
     public class Test_AnsibleLoadBalancer : IClassFixture<ClusterFixture>
     {
-        private ClusterFixture  cluster;
-        private ClusterProxy    clusterProxy;
+        private ClusterFixture  fixture;
+        private ClusterProxy    cluster;
 
-        public Test_AnsibleLoadBalancer(ClusterFixture cluster)
+        public Test_AnsibleLoadBalancer(ClusterFixture fixture)
         {
-            if (!cluster.LoginAndInitialize())
+            if (!fixture.LoginAndInitialize())
             {
-                cluster.ClearLoadBalancers();
+                fixture.ClearLoadBalancers();
             }
 
-            this.cluster      = cluster;
-            this.clusterProxy = cluster.Cluster;
+            this.fixture = fixture;
+            this.cluster = fixture.Cluster;
         }
 
         [Fact]
@@ -77,7 +77,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var rule = (LoadBalancerHttpRule)clusterProxy.PublicLoadBalancer.GetRule("test");
+            var rule = (LoadBalancerHttpRule)cluster.PublicLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -116,7 +116,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)clusterProxy.PublicLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)cluster.PublicLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -156,7 +156,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)clusterProxy.PublicLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)cluster.PublicLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -195,7 +195,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)clusterProxy.PublicLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)cluster.PublicLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -227,7 +227,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)clusterProxy.PublicLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)cluster.PublicLoadBalancer.GetRule("test");
 
             Assert.Null(rule);
 
@@ -251,7 +251,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)clusterProxy.PublicLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)cluster.PublicLoadBalancer.GetRule("test");
 
             Assert.Null(rule);
 
@@ -276,7 +276,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)clusterProxy.PublicLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)cluster.PublicLoadBalancer.GetRule("test");
 
             Assert.Null(rule);
         }
@@ -312,7 +312,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var rule = (LoadBalancerHttpRule)clusterProxy.PrivateLoadBalancer.GetRule("test");
+            var rule = (LoadBalancerHttpRule)cluster.PrivateLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -351,7 +351,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)clusterProxy.PrivateLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)cluster.PrivateLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -391,7 +391,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)clusterProxy.PrivateLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)cluster.PrivateLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -430,7 +430,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)clusterProxy.PrivateLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)cluster.PrivateLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -462,7 +462,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)clusterProxy.PrivateLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)cluster.PrivateLoadBalancer.GetRule("test");
 
             Assert.Null(rule);
 
@@ -486,7 +486,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)clusterProxy.PrivateLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)cluster.PrivateLoadBalancer.GetRule("test");
 
             Assert.Null(rule);
 
@@ -511,7 +511,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)clusterProxy.PrivateLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)cluster.PrivateLoadBalancer.GetRule("test");
 
             Assert.Null(rule);
         }

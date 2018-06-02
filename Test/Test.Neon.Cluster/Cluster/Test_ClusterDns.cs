@@ -21,23 +21,23 @@ namespace TestNeonCluster
 {
     public class Test_ClusterDns : IClassFixture<ClusterFixture>
     {
-        private ClusterFixture cluster;
-        private ClusterProxy clusterProxy;
+        private ClusterFixture  fixture;
+        private ClusterProxy    cluster;
 
-        public Test_ClusterDns(ClusterFixture cluster)
+        public Test_ClusterDns(ClusterFixture fixture)
         {
-            if (!cluster.LoginAndInitialize())
+            if (!fixture.LoginAndInitialize())
             {
-                cluster.Reset();
+                fixture.Reset();
             }
 
-            this.cluster = cluster;
-            this.clusterProxy = cluster.Cluster;
+            this.fixture = fixture;
+            this.cluster = fixture.Cluster;
 
             // Wait for the cluster DNS and all node resolvers to be in
             // a consistent state.  This is slow (about a minute).
 
-            cluster.ConvergeDns();
+            fixture.ConvergeDns();
         }
 
         [Fact]
@@ -47,14 +47,14 @@ namespace TestNeonCluster
             //-----------------------------------------------------------------
             // Verify that the cluster starts out without any non-system DNS entries.
 
-            Assert.Empty(cluster.ListDnsEntries());
+            Assert.Empty(fixture.ListDnsEntries());
 
             //-----------------------------------------------------------------
             // Add a DNS entry and then verify that it can be listed and also
             // that it actually resolves correctly on a manager, worker, and
             // pet (if the cluster includes workers and pets).
 
-            cluster.SetDnsEntry(
+            fixture.SetDnsEntry(
                 new DnsEntry()
                 {
                     Hostname  = "foo.test.com",
@@ -68,7 +68,7 @@ namespace TestNeonCluster
                     }
                 });
 
-            var item = cluster.ListDnsEntries().SingleOrDefault(i => i.Hostname == "foo.test.com");
+            var item = fixture.ListDnsEntries().SingleOrDefault(i => i.Hostname == "foo.test.com");
 
             Assert.NotNull(item);
             Assert.Equal("foo.test.com", item.Hostname);
@@ -81,7 +81,7 @@ namespace TestNeonCluster
 
             // Test a DNS entry marked as belonging to the system.
 
-            cluster.SetDnsEntry(
+            fixture.SetDnsEntry(
                 new DnsEntry()
                 {
                     Hostname  = "bar.test.com",
@@ -101,14 +101,14 @@ namespace TestNeonCluster
             // Verify that the system DNS entry DOES NOT appear in the normal listing
             // and DOES appear when we include system entries.
 
-            Assert.Single(cluster.ListDnsEntries());
-            Assert.Equal(2, cluster.ListDnsEntries(includeSystem: true).Count);
-            Assert.True(cluster.ListDnsEntries(includeSystem: true).Single(i => i.Hostname == "bar.test.com").IsSystem);
+            Assert.Single(fixture.ListDnsEntries());
+            Assert.Equal(2, fixture.ListDnsEntries(includeSystem: true).Count);
+            Assert.True(fixture.ListDnsEntries(includeSystem: true).Single(i => i.Hostname == "bar.test.com").IsSystem);
 
             //-----------------------------------------------------------------
             // Verify the new system entry.
 
-            item = cluster.ListDnsEntries(includeSystem: true).SingleOrDefault(i => i.Hostname == "bar.test.com");
+            item = fixture.ListDnsEntries(includeSystem: true).SingleOrDefault(i => i.Hostname == "bar.test.com");
 
             Assert.NotNull(item);
             Assert.Equal("bar.test.com", item.Hostname);
@@ -126,7 +126,7 @@ namespace TestNeonCluster
             // because we specified [waitUntilPropagated: true] when we persisted
             // the DNS entry above.
 
-            var manager = clusterProxy.Managers.First();   // We'll always have at least one manager.
+            var manager = cluster.Managers.First();   // We'll always have at least one manager.
 
             if (manager != null)
             {
@@ -141,7 +141,7 @@ namespace TestNeonCluster
                 Assert.Contains("Address: 5.6.7.8", response.OutputText);
             }
 
-            var worker = clusterProxy.Workers.FirstOrDefault();
+            var worker = cluster.Workers.FirstOrDefault();
 
             if (worker != null)
             {
@@ -156,7 +156,7 @@ namespace TestNeonCluster
                 Assert.Contains("Address: 5.6.7.8", response.OutputText);
             }
 
-            var pet = clusterProxy.Pets.FirstOrDefault();
+            var pet = cluster.Pets.FirstOrDefault();
 
             if (pet != null)
             {

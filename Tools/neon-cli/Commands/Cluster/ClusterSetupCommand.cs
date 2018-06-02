@@ -1619,7 +1619,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                             // These seem to be transient, so we're going to retry a few times before
                             // actually giving up.
 
-                            var retry = new LinearRetryPolicy(e => e is NeonClusterException, retryInterval: TimeSpan.FromSeconds(2));
+                            var retry = new LinearRetryPolicy(e => e is NeonClusterException, maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(5));
 
                             retry.InvokeAsync(
                                 async () =>

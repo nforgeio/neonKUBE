@@ -38,19 +38,19 @@ namespace TestNeonCluster
 {
     public class Test_AnsibleDockerLogin : IClassFixture<ClusterFixture>
     {
-        private ClusterFixture  cluster;
-        private ClusterProxy    clusterProxy;
+        private ClusterFixture  fixture;
+        private ClusterProxy    cluster;
 
-        public Test_AnsibleDockerLogin(ClusterFixture cluster)
+        public Test_AnsibleDockerLogin(ClusterFixture fixture)
         {
-            cluster.LoginAndInitialize();
+            fixture.LoginAndInitialize();
 
-            this.cluster = cluster;
-            this.clusterProxy = cluster.Cluster;
+            this.fixture = fixture;
+            this.cluster = fixture.Cluster;
 
             // Ensure that we're not already logged into Docker Hub.
 
-            clusterProxy.Registry.Logout(NeonClusterConst.DockerPublicRegistry);
+            this.cluster.Registry.Logout(NeonClusterConst.DockerPublicRegistry);
         }
 
         [Fact]
@@ -89,7 +89,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.NotNull(clusterProxy.Registry.GetCredentials(NeonClusterConst.DockerPublicRegistry));
+                Assert.NotNull(cluster.Registry.GetCredentials(NeonClusterConst.DockerPublicRegistry));
 
                 //-----------------------------------------------------------------
                 // Run the play again and verify that [changed=false].
@@ -114,7 +114,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.False(taskResult.Changed);
 
-                Assert.NotNull(clusterProxy.Registry.GetCredentials(NeonClusterConst.DockerPublicRegistry));
+                Assert.NotNull(cluster.Registry.GetCredentials(NeonClusterConst.DockerPublicRegistry));
 
                 //-----------------------------------------------------------------
                 // Verify that we log off the test Docker hub account.
@@ -137,7 +137,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Null(clusterProxy.Registry.GetCredentials(NeonClusterConst.DockerPublicRegistry));
+                Assert.Null(cluster.Registry.GetCredentials(NeonClusterConst.DockerPublicRegistry));
 
                 //-----------------------------------------------------------------
                 // Run the play again and verify that [changed=false].
@@ -160,7 +160,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.False(taskResult.Changed);
 
-                Assert.Null(clusterProxy.Registry.GetCredentials(NeonClusterConst.DockerPublicRegistry));
+                Assert.Null(cluster.Registry.GetCredentials(NeonClusterConst.DockerPublicRegistry));
             }
         }
 

@@ -21,18 +21,18 @@ namespace TestNeonCluster
 {
     public class Test_ClusterRegistry : IClassFixture<ClusterFixture>
     {
-        private ClusterFixture  cluster;
-        private ClusterProxy    clusterProxy;
+        private ClusterFixture  fixture;
+        private ClusterProxy    cluster;
 
-        public Test_ClusterRegistry(ClusterFixture cluster)
+        public Test_ClusterRegistry(ClusterFixture fixture)
         {
-            if (!cluster.LoginAndInitialize())
+            if (!fixture.LoginAndInitialize())
             {
-                cluster.Reset();
+                fixture.Reset();
             }
 
-            this.cluster      = cluster;
-            this.clusterProxy = cluster.Cluster;
+            this.fixture = fixture;
+            this.cluster = fixture.Cluster;
         }
 
         [Fact(Skip = "todo")]
@@ -53,16 +53,16 @@ namespace TestNeonCluster
             //-----------------------------------------------------------------
             // Save two registry credentials and then read to verify.
 
-            clusterProxy.Registry.Login("registry1.neonforge.net", "billy", "bob");
-            clusterProxy.Registry.Login("registry2.neonforge.net", "sally", "sue");
+            cluster.Registry.Login("registry1.neonforge.net", "billy", "bob");
+            cluster.Registry.Login("registry2.neonforge.net", "sally", "sue");
 
-            var credential = clusterProxy.Registry.GetCredentials("registry1.neonforge.net");
+            var credential = cluster.Registry.GetCredentials("registry1.neonforge.net");
 
             Assert.Equal("registry1.neonforge.net", credential.Registry);
             Assert.Equal("billy", credential.Username);
             Assert.Equal("bob", credential.Password);
 
-            credential = clusterProxy.Registry.GetCredentials("registry2.neonforge.net");
+            credential = cluster.Registry.GetCredentials("registry2.neonforge.net");
 
             Assert.Equal("registry2.neonforge.net", credential.Registry);
             Assert.Equal("sally", credential.Username);
@@ -71,7 +71,7 @@ namespace TestNeonCluster
             //-----------------------------------------------------------------
             // Verify that NULL is returned for a registry that doesn't exist.
 
-            Assert.Null(clusterProxy.Registry.GetCredentials("BAD.REGISTRY"));
+            Assert.Null(cluster.Registry.GetCredentials("BAD.REGISTRY"));
 
             //-----------------------------------------------------------------
             // Verify that we can list credentials.
@@ -79,7 +79,7 @@ namespace TestNeonCluster
             var billyOK = false;
             var sallyOK = false;
 
-            foreach (var item in clusterProxy.Registry.List())
+            foreach (var item in cluster.Registry.List())
             {
                 switch (item.Registry)
                 {
@@ -105,9 +105,9 @@ namespace TestNeonCluster
             //-----------------------------------------------------------------
             // Verify that we can update a credential.
 
-            clusterProxy.Registry.Login("registry2.neonforge.net", "sally", "sue-bob");
+            cluster.Registry.Login("registry2.neonforge.net", "sally", "sue-bob");
 
-            credential = clusterProxy.Registry.GetCredentials("registry2.neonforge.net");
+            credential = cluster.Registry.GetCredentials("registry2.neonforge.net");
 
             Assert.Equal("registry2.neonforge.net", credential.Registry);
             Assert.Equal("sally", credential.Username);
@@ -117,17 +117,17 @@ namespace TestNeonCluster
             // Verify that we can remove credentials, without impacting the
             // remaining credentials.
 
-            clusterProxy.Registry.Logout("registry1.neonforge.net");
-            Assert.Null(clusterProxy.Registry.GetCredentials("registry1.neonforge.net"));
+            cluster.Registry.Logout("registry1.neonforge.net");
+            Assert.Null(cluster.Registry.GetCredentials("registry1.neonforge.net"));
 
-            credential = clusterProxy.Registry.GetCredentials("registry2.neonforge.net");
+            credential = cluster.Registry.GetCredentials("registry2.neonforge.net");
 
             Assert.Equal("registry2.neonforge.net", credential.Registry);
             Assert.Equal("sally", credential.Username);
             Assert.Equal("sue-bob", credential.Password);
 
-            clusterProxy.Registry.Logout("registry2.neonforge.net");
-            Assert.Null(clusterProxy.Registry.GetCredentials("registry2.neonforge.net"));
+            cluster.Registry.Logout("registry2.neonforge.net");
+            Assert.Null(cluster.Registry.GetCredentials("registry2.neonforge.net"));
         }
     }
 }

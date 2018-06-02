@@ -24,8 +24,8 @@ namespace TestNeonCluster
 {
     public class Test_ClusterFixture : IClassFixture<ClusterFixture>
     {
-        private ClusterFixture cluster;
-        private ClusterProxy clusterProxy;
+        private ClusterFixture  fixture;
+        private ClusterProxy    cluster;
 
         public Test_ClusterFixture(ClusterFixture cluster)
         {
@@ -88,8 +88,8 @@ services:
                     });
             }
 
-            this.cluster = cluster;
-            this.clusterProxy = cluster.Cluster;
+            this.fixture = cluster;
+            this.cluster = cluster.Cluster;
         }
 
         [Fact]
@@ -98,54 +98,54 @@ services:
         {
             // Verify that the various cluster objects were created by the constructor.
 
-            Assert.Single(cluster.ListSecrets().Where(item => item.Name == "secret_text"));
-            Assert.Single(cluster.ListSecrets().Where(item => item.Name == "secret_data"));
+            Assert.Single(fixture.ListSecrets().Where(item => item.Name == "secret_text"));
+            Assert.Single(fixture.ListSecrets().Where(item => item.Name == "secret_data"));
 
-            Assert.Single(cluster.ListConfigs().Where(item => item.Name == "config_text"));
-            Assert.Single(cluster.ListConfigs().Where(item => item.Name == "config_data"));
+            Assert.Single(fixture.ListConfigs().Where(item => item.Name == "config_text"));
+            Assert.Single(fixture.ListConfigs().Where(item => item.Name == "config_data"));
 
-            Assert.Single(cluster.ListNetworks().Where(item => item.Name == "test-network"));
+            Assert.Single(fixture.ListNetworks().Where(item => item.Name == "test-network"));
 
-            Assert.Single(cluster.ListServices().Where(item => item.Name == "test-service"));
+            Assert.Single(fixture.ListServices().Where(item => item.Name == "test-service"));
 
-            var stack = cluster.ListStacks().SingleOrDefault(item => item.Name == "test-stack");
+            var stack = fixture.ListStacks().SingleOrDefault(item => item.Name == "test-stack");
 
             Assert.NotNull(stack);
             Assert.Equal(1, stack.ServiceCount);
-            Assert.Single(cluster.ListServices().Where(item => item.Name.Equals("test-stack_sleeper")));
+            Assert.Single(fixture.ListServices().Where(item => item.Name.Equals("test-stack_sleeper")));
 
-            Assert.Single(cluster.ListLoadBalancerRules("public"));
-            Assert.Single(cluster.ListLoadBalancerRules("public").Where(item => item.Name == "test-rule"));
+            Assert.Single(fixture.ListLoadBalancerRules("public"));
+            Assert.Single(fixture.ListLoadBalancerRules("public").Where(item => item.Name == "test-rule"));
 
-            Assert.Single(cluster.ListLoadBalancerRules("private"));
-            Assert.Single(cluster.ListLoadBalancerRules("private").Where(item => item.Name == "test-rule"));
+            Assert.Single(fixture.ListLoadBalancerRules("private"));
+            Assert.Single(fixture.ListLoadBalancerRules("private").Where(item => item.Name == "test-rule"));
 
-            Assert.Equal(2, cluster.ListCertificates().Count);
-            Assert.Single(cluster.ListCertificates().Where(item => item == "test-certificate"));
-            Assert.Single(cluster.ListCertificates().Where(item => item == "test-certificate2"));
+            Assert.Equal(2, fixture.ListCertificates().Count);
+            Assert.Single(fixture.ListCertificates().Where(item => item == "test-certificate"));
+            Assert.Single(fixture.ListCertificates().Where(item => item == "test-certificate2"));
 
-            Assert.Equal("one", cluster.Consul.KV.GetString("test/value1").Result);
-            Assert.Equal("two", cluster.Consul.KV.GetString("test/value2").Result);
-            Assert.Equal("three", cluster.Consul.KV.GetString("test/folder/value3").Result);
-            Assert.Equal("four", cluster.Consul.KV.GetString("test/folder/value4").Result);
+            Assert.Equal("one", fixture.Consul.KV.GetString("test/value1").Result);
+            Assert.Equal("two", fixture.Consul.KV.GetString("test/value2").Result);
+            Assert.Equal("three", fixture.Consul.KV.GetString("test/folder/value3").Result);
+            Assert.Equal("four", fixture.Consul.KV.GetString("test/folder/value4").Result);
 
             // Now reset the cluster and verify that all state was cleared.
 
-            cluster.Reset();
+            fixture.Reset();
 
-            Assert.Empty(cluster.ListServices());
-            Assert.Empty(cluster.ListStacks());
-            Assert.Empty(cluster.ListSecrets());
-            Assert.Empty(cluster.ListConfigs());
-            Assert.Empty(cluster.ListNetworks());
-            Assert.Empty(cluster.ListLoadBalancerRules("public"));
-            Assert.Empty(cluster.ListLoadBalancerRules("private"));
-            Assert.Empty(cluster.ListCertificates());
+            Assert.Empty(fixture.ListServices());
+            Assert.Empty(fixture.ListStacks());
+            Assert.Empty(fixture.ListSecrets());
+            Assert.Empty(fixture.ListConfigs());
+            Assert.Empty(fixture.ListNetworks());
+            Assert.Empty(fixture.ListLoadBalancerRules("public"));
+            Assert.Empty(fixture.ListLoadBalancerRules("private"));
+            Assert.Empty(fixture.ListCertificates());
 
-            Assert.False(cluster.Consul.KV.Exists("test/value1").Result);
-            Assert.False(cluster.Consul.KV.Exists("test/value2").Result);
-            Assert.False(cluster.Consul.KV.Exists("test/folder/value3").Result);
-            Assert.False(cluster.Consul.KV.Exists("test/folder/value4").Result);
+            Assert.False(fixture.Consul.KV.Exists("test/value1").Result);
+            Assert.False(fixture.Consul.KV.Exists("test/value2").Result);
+            Assert.False(fixture.Consul.KV.Exists("test/folder/value3").Result);
+            Assert.False(fixture.Consul.KV.Exists("test/folder/value4").Result);
         }
 
         [Fact]
@@ -158,7 +158,7 @@ services:
 
             var actions = new List<Action>();
 
-            foreach (var node in clusterProxy.Nodes)
+            foreach (var node in cluster.Nodes)
             {
                 actions.Add(
                     () =>
@@ -172,13 +172,13 @@ services:
 
             NeonHelper.WaitForParallel(actions);
 
-            cluster.ClearVolumes();
+            fixture.ClearVolumes();
 
             var sbUncleared = new StringBuilder();
 
             actions.Clear();
 
-            foreach (var node in clusterProxy.Nodes)
+            foreach (var node in cluster.Nodes)
             {
                 actions.Add(
                     () =>

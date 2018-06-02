@@ -30,16 +30,16 @@ namespace TestSamples
 
     public class Test_Docker : IClassFixture<DockerFixture>
     {
-        private DockerFixture       docker;
+        private DockerFixture       fixture;
         private HostsFixture        hosts;
         private CouchbaseFixture    couchbase;
         private NeonBucket          bucket;         
 
-        public Test_Docker(DockerFixture docker)
+        public Test_Docker(DockerFixture fixture)
         {
-            this.docker = docker;
+            this.fixture = fixture;
 
-            var reset = docker.Initialize(
+            var reset = fixture.Initialize(
                 () =>
                 {
                     // We're going to add a [HostsFixture] so tests can modify
@@ -47,18 +47,18 @@ namespace TestSamples
                     // that subfixtures are identified by name and can be
                     // retrieved later using a fixture indexer.
 
-                    docker.AddFixture("hosts", new HostsFixture());
+                    fixture.AddFixture("hosts", new HostsFixture());
 
                     // Add a Couchbase instance to the test.
 
-                    docker.AddFixture("couchbase", new CouchbaseFixture(), subFixture => subFixture.StartInAction());
+                    fixture.AddFixture("couchbase", new CouchbaseFixture(), subFixture => subFixture.StartInAction());
                 });
 
             // Fetch the hosts fixture so it'll be easy to access from
             // the tests.
 
-            hosts     = (HostsFixture)docker["hosts"];
-            couchbase = (CouchbaseFixture)docker["couchbase"];
+            hosts     = (HostsFixture)fixture["hosts"];
+            couchbase = (CouchbaseFixture)fixture["couchbase"];
             bucket    = couchbase.Bucket;
 
             if (!reset)
@@ -67,7 +67,7 @@ namespace TestSamples
                 // method hasn't already done so.
 
                 hosts.Reset();
-                docker.Reset();
+                fixture.Reset();
                 couchbase.Flush();
             }
         }
@@ -79,12 +79,12 @@ namespace TestSamples
             // Confirm that Docker starts out with no running containers,
             // besides the one for the Couchbase fixture.
 
-            Assert.Empty(docker.ListContainers().Where(c => c.Name != couchbase.ContainerName));
+            Assert.Empty(fixture.ListContainers().Where(c => c.Name != couchbase.ContainerName));
 
             // Spin up a sleeping container and verify that it's running.
 
-            docker.RunContainer("sleeping-container", "neoncluster/test");
-            Assert.Single(docker.ListContainers().Where(s => s.Name == "sleeping-container"));
+            fixture.RunContainer("sleeping-container", "neoncluster/test");
+            Assert.Single(fixture.ListContainers().Where(s => s.Name == "sleeping-container"));
         }
 
         [Fact]
@@ -93,12 +93,12 @@ namespace TestSamples
         {
             // Confirm that Docker starts out with no running services.
 
-            Assert.Empty(docker.ListServices());
+            Assert.Empty(fixture.ListServices());
 
             // Spin up a sleeping service and verify that it's running.
 
-            docker.CreateService("sleeping-service", "neoncluster/test");
-            Assert.Single(docker.ListServices().Where(s => s.Name == "sleeping-service"));
+            fixture.CreateService("sleeping-service", "neoncluster/test");
+            Assert.Single(fixture.ListServices().Where(s => s.Name == "sleeping-service"));
         }
 
 
@@ -108,16 +108,16 @@ namespace TestSamples
         {
             // We should start out with no swarm secrets.
 
-            Assert.Empty(docker.ListSecrets());
+            Assert.Empty(fixture.ListSecrets());
 
             // Test adding and removing a secret.
 
-            docker.CreateSecret("my-secret", "Don't tell anyone!");
-            Assert.Single(docker.ListSecrets());
-            Assert.Equal("my-secret", docker.ListSecrets().First().Name);
+            fixture.CreateSecret("my-secret", "Don't tell anyone!");
+            Assert.Single(fixture.ListSecrets());
+            Assert.Equal("my-secret", fixture.ListSecrets().First().Name);
 
-            docker.RemoveSecret("my-secret");
-            Assert.Empty(docker.ListSecrets());
+            fixture.RemoveSecret("my-secret");
+            Assert.Empty(fixture.ListSecrets());
         }
 
         [Fact]
@@ -126,16 +126,16 @@ namespace TestSamples
         {
             // We should start out with no swarm configs.
 
-            Assert.Empty(docker.ListConfigs());
+            Assert.Empty(fixture.ListConfigs());
 
             // Test adding and removing a secret.
 
-            docker.CreateConfig("my-config", "my settings");
-            Assert.Single(docker.ListConfigs());
-            Assert.Equal("my-config", docker.ListConfigs().First().Name);
+            fixture.CreateConfig("my-config", "my settings");
+            Assert.Single(fixture.ListConfigs());
+            Assert.Equal("my-config", fixture.ListConfigs().First().Name);
 
-            docker.RemoveConfig("my-config");
-            Assert.Empty(docker.ListConfigs());
+            fixture.RemoveConfig("my-config");
+            Assert.Empty(fixture.ListConfigs());
         }
 
         [Fact]
@@ -144,16 +144,16 @@ namespace TestSamples
         {
             // We should start out with no swarm networks.
 
-            Assert.Empty(docker.ListNetworks());
+            Assert.Empty(fixture.ListNetworks());
 
             // Test adding and removing a network.
 
-            docker.CreateNetwork("my-network");
-            Assert.Single(docker.ListNetworks());
-            Assert.Equal("my-network", docker.ListNetworks().First().Name);
+            fixture.CreateNetwork("my-network");
+            Assert.Single(fixture.ListNetworks());
+            Assert.Equal("my-network", fixture.ListNetworks().First().Name);
 
-            docker.RemoveNetwork("my-network");
-            Assert.Empty(docker.ListNetworks());
+            fixture.RemoveNetwork("my-network");
+            Assert.Empty(fixture.ListNetworks());
         }
 
         [Fact]
@@ -168,8 +168,8 @@ namespace TestSamples
 
             // Confirm that Docker starts out with no running stacks or services.
 
-            Assert.Empty(docker.ListStacks());
-            Assert.Empty(docker.ListServices());
+            Assert.Empty(fixture.ListStacks());
+            Assert.Empty(fixture.ListServices());
 
             // Use the [HostsFixture] to initialize a couple DNS entries and then verify that these work.
 
@@ -194,7 +194,7 @@ services:
     environment:
       - ""OUTPUT=FOO""
 ";
-            docker.DeployStack("foo-stack", fooCompose);
+            fixture.DeployStack("foo-stack", fooCompose);
 
             var barCompose =
 @"version: '3'
@@ -207,7 +207,7 @@ services:
     environment:
       - ""OUTPUT=BAR""
 ";
-            docker.DeployStack("bar-stack", barCompose);
+            fixture.DeployStack("bar-stack", barCompose);
 
             // Verify that each of the services are returning the expected output.
 
@@ -227,8 +227,8 @@ services:
 
             // Remove one of the stacks and verify.
 
-            docker.RemoveStack("foo-stack");
-            Assert.Empty(docker.ListStacks().Where(s => s.Name == "foo-stack"));
+            fixture.RemoveStack("foo-stack");
+            Assert.Empty(fixture.ListStacks().Where(s => s.Name == "foo-stack"));
         }
 
         [Fact]
@@ -243,8 +243,8 @@ services:
 
             // Confirm that Docker starts out with no running stacks or services.
 
-            Assert.Empty(docker.ListStacks());
-            Assert.Empty(docker.ListStacks());
+            Assert.Empty(fixture.ListStacks());
+            Assert.Empty(fixture.ListStacks());
 
             // Use the [HostsFixture] to initialize a couple DNS entries and then verify that these work.
 
@@ -258,8 +258,8 @@ services:
             // Spin up a couple of NodeJS as stacks configuring them to return
             // different text using the OUTPUT environment variable.
 
-            docker.CreateService("foo", "neoncluster/node", dockerArgs: new string[] { "--publish", "8080:80" }, env: new string[] { "OUTPUT=FOO" });
-            docker.CreateService("bar", "neoncluster/node", dockerArgs: new string[] { "--publish", "8081:80" }, env: new string[] { "OUTPUT=BAR" });
+            fixture.CreateService("foo", "neoncluster/node", dockerArgs: new string[] { "--publish", "8080:80" }, env: new string[] { "OUTPUT=FOO" });
+            fixture.CreateService("bar", "neoncluster/node", dockerArgs: new string[] { "--publish", "8081:80" }, env: new string[] { "OUTPUT=BAR" });
 
             // Verify that each of the services are returning the expected output.
 
@@ -277,10 +277,10 @@ services:
             Assert.Equal("1", await bucket.GetSafeAsync<string>("one"));
             Assert.Equal("2", await bucket.GetSafeAsync<string>("two"));
 
-            // Remove one of the service and verify.
+            // Remove one of the services and verify.
 
-            docker.RemoveStack("foo-service");
-            Assert.Empty(docker.ListServices().Where(s => s.Name == "foo-service"));
+            fixture.RemoveStack("foo-service");
+            Assert.Empty(fixture.ListServices().Where(s => s.Name == "foo-service"));
         }
     }
 }

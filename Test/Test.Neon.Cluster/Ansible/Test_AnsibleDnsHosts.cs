@@ -31,17 +31,17 @@ namespace TestNeonCluster
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterFixture  cluster;
+        private ClusterFixture fixture;
 
-        public Test_AnsibleDnsHosts(ClusterFixture cluster)
+        public Test_AnsibleDnsHosts(ClusterFixture fixture)
         {
-            this.cluster = cluster;
+            this.fixture = fixture;
 
             // We're going to use unique DNS hosts for each test
             // so we only need to reset the test fixture once for
             // all tests implemented by this class.
 
-            cluster.LoginAndInitialize(login: null);
+            fixture.LoginAndInitialize(login: null);
         }
 
         /// <summary>
@@ -112,7 +112,7 @@ $@"
 
             // Should start out without this entry.
 
-            Assert.Null(cluster.Cluster.DnsHosts.Get(host));
+            Assert.Null(fixture.Cluster.DnsHosts.Get(host));
 
             //-----------------------------------------------------------------
             // Create a DNS entry and then verify that it was added.
@@ -139,7 +139,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
             
-            var entry = cluster.Cluster.DnsHosts.Get(host);
+            var entry = fixture.Cluster.DnsHosts.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("1.1.1.1", entry.Endpoints.Single().Target);
@@ -158,7 +158,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            entry = cluster.Cluster.DnsHosts.Get(host);
+            entry = fixture.Cluster.DnsHosts.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("1.1.1.1", entry.Endpoints.Single().Target);
@@ -173,7 +173,7 @@ $@"
 
             // Should start out without this entry.
 
-            Assert.Null(cluster.Cluster.DnsHosts.Get(host));
+            Assert.Null(fixture.Cluster.DnsHosts.Get(host));
 
             // Create a DNS entry and then verify that it was added.
 
@@ -199,7 +199,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var entry = cluster.Cluster.DnsHosts.Get(host);
+            var entry = fixture.Cluster.DnsHosts.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("1.1.1.1", entry.Endpoints.Single().Target);
@@ -230,7 +230,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            entry = cluster.Cluster.DnsHosts.Get(host);
+            entry = fixture.Cluster.DnsHosts.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
@@ -249,7 +249,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            entry = cluster.Cluster.DnsHosts.Get(host);
+            entry = fixture.Cluster.DnsHosts.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
@@ -264,7 +264,7 @@ $@"
 
             // Should start out without this entry.
 
-            Assert.Null(cluster.Cluster.DnsHosts.Get(host));
+            Assert.Null(fixture.Cluster.DnsHosts.Get(host));
 
             //-----------------------------------------------------------------
             // Create a DNS entry and then verify that it was added.
@@ -291,7 +291,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var entry = cluster.Cluster.DnsHosts.Get(host);
+            var entry = fixture.Cluster.DnsHosts.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
@@ -309,7 +309,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            entry = cluster.Cluster.DnsHosts.Get(host);
+            entry = fixture.Cluster.DnsHosts.Get(host);
 
             Assert.NotNull(entry);
             Assert.Equal("2.2.2.2", entry.Endpoints.Single().Target);
@@ -338,7 +338,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Null(cluster.Cluster.DnsHosts.Get(host));
+            Assert.Null(fixture.Cluster.DnsHosts.Get(host));
 
             //-----------------------------------------------------------------
             // Run the playbook again but this time nothing should
@@ -352,7 +352,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Null(cluster.Cluster.DnsHosts.Get(host));
+            Assert.Null(fixture.Cluster.DnsHosts.Get(host));
         }
     }
 }
