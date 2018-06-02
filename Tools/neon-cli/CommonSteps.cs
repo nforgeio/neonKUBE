@@ -319,13 +319,6 @@ TCPKeepAlive yes
                 }
             }
 
-            // $todo(jeff.lill):
-            //
-            // Temporarily enable the new Consul UI.  We can probably delete this in the future
-            // when we upgrade to a version of Consul that enables this by default.
-
-            sb.AppendLine($"CONSUL_UI_BETA=true");
-
             // Upload the new environment to the server.
 
             node.UploadText("/etc/environment", sb.ToString(), tabStop: 4);
