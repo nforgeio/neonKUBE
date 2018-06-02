@@ -85,7 +85,9 @@ SETTINGS:
                 Program.Exit(1);
             }
 
-            switch (fields[0].ToLowerInvariant())
+            var setting = fields[0].ToLowerInvariant();
+
+            switch (setting)
             {
                 case NeonClusterSettings.AllowUnitTesting:
 
@@ -98,6 +100,9 @@ SETTINGS:
                     Program.Exit(1);
                     break;
             }
+
+            Console.WriteLine();
+            Console.WriteLine($"* updated: {setting}");
         }
 
         /// <inheritdoc/>

@@ -9,6 +9,7 @@ using System.ComponentModel;
 using System.Diagnostics;
 using System.Diagnostics.Contracts;
 using System.Dynamic;
+using System.Globalization;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -3172,6 +3173,12 @@ systemctl start neon-volume-plugin
                     loginClone.Definition.Hosting = null;
 
                     NeonClusterHelper.PutDefinitionAsync(loginClone.Definition, savePets: true).Wait();
+
+                    // Save useful global cluster information.
+
+                    cluster.Consul.KV.PutString($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.CreateDate}", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)).Wait();
+                    cluster.Consul.KV.PutBool($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.AllowUnitTesting}", false).Wait();
+                    cluster.Consul.KV.PutString($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.Uuid}", Guid.NewGuid().ToString("D").ToLowerInvariant()).Wait();
                 });
         }
 
