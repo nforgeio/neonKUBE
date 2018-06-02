@@ -11,6 +11,7 @@ using System.Dynamic;
 using System.IO;
 using System.Linq;
 using System.Net;
+using System.Net.NetworkInformation;
 using System.Net.Sockets;
 using System.Text;
 using System.Threading;
@@ -481,31 +482,76 @@ namespace Neon.Cluster.HyperV
         /// to the ethernet adapter named <b>Ethernet</b>.
         /// </summary>
         /// <param name="switchName">The new switch name.</param>
-        public void NewVMExternalSwitch(string switchName)
+        /// <param name="gateway">Address of the cluster network gateway, used to identify a connected network interface.</param>
+        public void NewVMExternalSwitch(string switchName, IPAddress gateway)
         {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName));
+            Covenant.Requires<ArgumentNullException>(gateway != null);
+
+            if (!NetworkInterface.GetIsNetworkAvailable())
+            {
+                throw new HyperVException($"No network connection detected.  Hyper-V provisioning requires a connected network.");
+            }
+
+            // We're going to look for an active (non-loopback) interface that is configured
+            // to use the correct upstream gateway and also has at least one nameserver.
+
             // $todo(jeff.lill):
             //
-            // This may be fragile because it assumes that an ethernet adapter
-            // named "Ethernet" exists and is actually the correct adapter.
+            // This may be a problem for machines with multiple active network interfaces
+            // because I may choose the wrong one (e.g. the slower card).  It might be
+            // useful to have an optional cluster node definition property the explicitly
+            // specifies the adapter to use for a given node.
+            //
+            // Another problem we'll see is for laptops with wi-fi adapters.  Lets say we
+            // setup a cluster when wi-fi is connected and then the user docks the laptop,
+            // connecting to a new wired adapter.  The cluster's virtual switch will still
+            // be configured to use the wi-fi adapter.  The only workaround for this is
+            // probably for the user to modify the virtual switch.
+            //
+            // This last issue is really just another indication that neonCLUSTERs aren't 
+            // really portable in the sense that you can't expect to relocate a cluster 
+            // from one network environment to another (that's why we bought the portable 
+            // routers for motel use). So we'll consider this as by design.
 
-            var adapters             = powershell.ExecuteTable($"Get-NetAdapter");
-            var interfaceDescription = (string)null;
+            var connectedAdapter = (NetworkInterface)null;
 
-            foreach (dynamic adapter in adapters)
+            foreach (var nic in NetworkInterface.GetAllNetworkInterfaces()
+                .Where(n => n.OperationalStatus == OperationalStatus.Up && n.NetworkInterfaceType != NetworkInterfaceType.Loopback))
             {
-                if (((string)adapter.Name).Equals("Ethernet", StringComparison.InvariantCultureIgnoreCase))
+                var nicProperties = nic.GetIPProperties();
+
+                if (nicProperties.DnsAddresses.Count > 0 &&
+                    nicProperties.GatewayAddresses.Count(nicGateway => nicGateway.Address.Equals(gateway)) > 0)
                 {
-                    interfaceDescription = adapter.InterfaceDescription;
+                    connectedAdapter = nic;
                     break;
                 }
             }
 
-            if (interfaceDescription == null)
+            if (connectedAdapter == null)
             {
-                throw new HyperVException($"Cannot create the [{switchName}] virtual external switch because the [Ethernet] network adapter doesn't exist.");
+                throw new HyperVException($"Cannot identify a connected network adapter.");
             }
 
-            powershell.Execute($"New-VMSwitch -Name \"{switchName}\" -NetAdapterInterfaceDescription \"{interfaceDescription}\"");
+            var adapters      = powershell.ExecuteTable($"Get-NetAdapter");
+            var targetAdapter = (string)null;
+
+            foreach (dynamic adapter in adapters)
+            {
+                if (((string)adapter.Name).Equals(connectedAdapter.Name, StringComparison.InvariantCultureIgnoreCase))
+                {
+                    targetAdapter = adapter.Name;
+                    break;
+                }
+            }
+
+            if (targetAdapter == null)
+            {
+                throw new HyperVException($"Internal Error: Cannot identify a connected network adapter.");
+            }
+
+            powershell.Execute($"New-VMSwitch -Name \"{switchName}\" -NetAdapterName \"{targetAdapter}\"");
         }
 
         /// <summary>
