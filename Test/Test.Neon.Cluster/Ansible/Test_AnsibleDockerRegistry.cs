@@ -33,35 +33,35 @@ namespace TestNeonCluster
 {
     public class Test_AnsibleDockerRegistry : IClassFixture<ClusterFixture>
     {
-        private ClusterFixture cluster;
-        private ClusterProxy clusterProxy;
+        private ClusterFixture  fixture;
+        private ClusterProxy    cluster;
 
-        public Test_AnsibleDockerRegistry(ClusterFixture cluster)
+        public Test_AnsibleDockerRegistry(ClusterFixture fixture)
         {
-            if (!cluster.LoginAndInitialize())
+            if (!fixture.LoginAndInitialize())
             {
-                cluster.ClearVolumes();
+                fixture.ClearVolumes();
             }
 
-            this.cluster = cluster;
-            this.clusterProxy = cluster.Cluster;
+            this.fixture = fixture;
+            this.cluster = fixture.Cluster;
 
             // Ensure that tests start without a local registry
             // and related assets.
 
-            var manager = clusterProxy.GetHealthyManager();
+            var manager = this.cluster.GetHealthyManager();
 
-            if (clusterProxy.InspectService("neon-registry") != null)
+            if (this.cluster.InspectService("neon-registry") != null)
             {
                 manager.DockerCommand(RunOptions.None, "docker service rm neon-registry");
             }
 
-            clusterProxy.Certificate.Remove("neon-registry");
-            clusterProxy.PublicLoadBalancer.RemoveRule("neon-registry");
-            clusterProxy.DnsHosts.Remove("xunit-registry.neonforge.net");
-            clusterProxy.DnsHosts.Remove("xunit-registry2.neonforge.net");
-            clusterProxy.Registry.Logout("xunit-registry.neonforge.net");
-            clusterProxy.Registry.Logout("xunit-registry2.neonforge.net");
+            this.cluster.Certificate.Remove("neon-registry");
+            this.cluster.PublicLoadBalancer.RemoveRule("neon-registry");
+            this.cluster.DnsHosts.Remove("xunit-registry.neonforge.net");
+            this.cluster.DnsHosts.Remove("xunit-registry2.neonforge.net");
+            this.cluster.Registry.Logout("xunit-registry.neonforge.net");
+            this.cluster.Registry.Logout("xunit-registry2.neonforge.net");
         }
 
         [Fact]
@@ -100,27 +100,27 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
-                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
-                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+                Assert.Single(fixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(fixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
+                Assert.Single(fixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(fixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
-                var registryCredentials = clusterProxy.Registry.GetCredentials("xunit-registry.neonforge.net");
+                var registryCredentials = cluster.Registry.GetCredentials("xunit-registry.neonforge.net");
 
                 Assert.NotNull(registryCredentials);
                 Assert.Equal("xunit-registry.neonforge.net", registryCredentials.Registry);
                 Assert.Equal("test", registryCredentials.Username);
                 Assert.Equal("password", registryCredentials.Password);
 
-                Assert.Equal("xunit-registry.neonforge.net", clusterProxy.Registry.GetLocalHostname());
-                Assert.Equal("secret", clusterProxy.Registry.GetLocalSecret());
+                Assert.Equal("xunit-registry.neonforge.net", cluster.Registry.GetLocalHostname());
+                Assert.Equal("secret", cluster.Registry.GetLocalSecret());
 
-                foreach (var manager in clusterProxy.Managers)
+                foreach (var manager in cluster.Managers)
                 {
-                    Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                    Assert.Single(fixture.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                var dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry.neonforge.net");
+                var dnsEntry = cluster.DnsHosts.Get("xunit-registry.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -134,27 +134,27 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.False(taskResult.Changed);
 
-                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
-                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
-                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+                Assert.Single(fixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(fixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
+                Assert.Single(fixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(fixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
-                registryCredentials = clusterProxy.Registry.GetCredentials("xunit-registry.neonforge.net");
+                registryCredentials = cluster.Registry.GetCredentials("xunit-registry.neonforge.net");
 
                 Assert.NotNull(registryCredentials);
                 Assert.Equal("xunit-registry.neonforge.net", registryCredentials.Registry);
                 Assert.Equal("test", registryCredentials.Username);
                 Assert.Equal("password", registryCredentials.Password);
 
-                Assert.Equal("xunit-registry.neonforge.net", clusterProxy.Registry.GetLocalHostname());
-                Assert.Equal("secret", clusterProxy.Registry.GetLocalSecret());
+                Assert.Equal("xunit-registry.neonforge.net", cluster.Registry.GetLocalHostname());
+                Assert.Equal("secret", cluster.Registry.GetLocalSecret());
 
-                foreach (var manager in clusterProxy.Managers)
+                foreach (var manager in cluster.Managers)
                 {
-                    Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                    Assert.Single(fixture.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry.neonforge.net");
+                dnsEntry = cluster.DnsHosts.Get("xunit-registry.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -181,24 +181,24 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Empty(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Empty(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
-                Assert.Empty(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
-                Assert.Empty(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+                Assert.Empty(fixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Empty(fixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
+                Assert.Empty(fixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Empty(fixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
-                registryCredentials = clusterProxy.Registry.GetCredentials("xunit-registry.neonforge.net");
+                registryCredentials = cluster.Registry.GetCredentials("xunit-registry.neonforge.net");
 
                 Assert.Null(registryCredentials);
 
-                Assert.Null(clusterProxy.Registry.GetLocalHostname());
-                Assert.Null(clusterProxy.Registry.GetLocalSecret());
+                Assert.Null(cluster.Registry.GetLocalHostname());
+                Assert.Null(cluster.Registry.GetLocalSecret());
 
-                foreach (var manager in clusterProxy.Managers)
+                foreach (var manager in cluster.Managers)
                 {
-                    Assert.Empty(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                    Assert.Empty(fixture.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry.neonforge.net");
+                dnsEntry = cluster.DnsHosts.Get("xunit-registry.neonforge.net");
 
                 Assert.Null(dnsEntry);
 
@@ -211,24 +211,24 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.False(taskResult.Changed);
 
-                Assert.Empty(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Empty(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
-                Assert.Empty(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
-                Assert.Empty(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+                Assert.Empty(fixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Empty(fixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
+                Assert.Empty(fixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Empty(fixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
-                registryCredentials = clusterProxy.Registry.GetCredentials("xunit-registry.neonforge.net");
+                registryCredentials = cluster.Registry.GetCredentials("xunit-registry.neonforge.net");
 
                 Assert.Null(registryCredentials);
 
-                Assert.Null(clusterProxy.Registry.GetLocalHostname());
-                Assert.Null(clusterProxy.Registry.GetLocalSecret());
+                Assert.Null(cluster.Registry.GetLocalHostname());
+                Assert.Null(cluster.Registry.GetLocalSecret());
 
-                foreach (var manager in clusterProxy.Managers)
+                foreach (var manager in cluster.Managers)
                 {
-                    Assert.Empty(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                    Assert.Empty(fixture.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry.neonforge.net");
+                dnsEntry = cluster.DnsHosts.Get("xunit-registry.neonforge.net");
 
                 Assert.Null(dnsEntry);
             }
@@ -271,27 +271,27 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
-                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
-                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+                Assert.Single(fixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(fixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
+                Assert.Single(fixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(fixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
-                var registryCredentials = clusterProxy.Registry.GetCredentials("xunit-registry.neonforge.net");
+                var registryCredentials = cluster.Registry.GetCredentials("xunit-registry.neonforge.net");
 
                 Assert.NotNull(registryCredentials);
                 Assert.Equal("xunit-registry.neonforge.net", registryCredentials.Registry);
                 Assert.Equal("test", registryCredentials.Username);
                 Assert.Equal("password", registryCredentials.Password);
 
-                Assert.Equal("xunit-registry.neonforge.net", clusterProxy.Registry.GetLocalHostname());
-                Assert.Equal("secret", clusterProxy.Registry.GetLocalSecret());
+                Assert.Equal("xunit-registry.neonforge.net", cluster.Registry.GetLocalHostname());
+                Assert.Equal("secret", cluster.Registry.GetLocalSecret());
 
-                foreach (var manager in clusterProxy.Managers)
+                foreach (var manager in cluster.Managers)
                 {
-                    Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                    Assert.Single(fixture.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                var dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry.neonforge.net");
+                var dnsEntry = cluster.DnsHosts.Get("xunit-registry.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -322,27 +322,27 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
-                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
-                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+                Assert.Single(fixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(fixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
+                Assert.Single(fixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(fixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
-                registryCredentials = clusterProxy.Registry.GetCredentials("xunit-registry2.neonforge.net");
+                registryCredentials = cluster.Registry.GetCredentials("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(registryCredentials);
                 Assert.Equal("xunit-registry2.neonforge.net", registryCredentials.Registry);
                 Assert.Equal("test", registryCredentials.Username);
                 Assert.Equal("password", registryCredentials.Password);
 
-                Assert.Equal("xunit-registry2.neonforge.net", clusterProxy.Registry.GetLocalHostname());
-                Assert.Equal("secret", clusterProxy.Registry.GetLocalSecret());
+                Assert.Equal("xunit-registry2.neonforge.net", cluster.Registry.GetLocalHostname());
+                Assert.Equal("secret", cluster.Registry.GetLocalSecret());
 
-                foreach (var manager in clusterProxy.Managers)
+                foreach (var manager in cluster.Managers)
                 {
-                    Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                    Assert.Single(fixture.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry2.neonforge.net");
+                dnsEntry = cluster.DnsHosts.Get("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -373,27 +373,27 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
-                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
-                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+                Assert.Single(fixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(fixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
+                Assert.Single(fixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(fixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
-                registryCredentials = clusterProxy.Registry.GetCredentials("xunit-registry2.neonforge.net");
+                registryCredentials = cluster.Registry.GetCredentials("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(registryCredentials);
                 Assert.Equal("xunit-registry2.neonforge.net", registryCredentials.Registry);
                 Assert.Equal("test2", registryCredentials.Username);
                 Assert.Equal("password", registryCredentials.Password);
 
-                Assert.Equal("xunit-registry2.neonforge.net", clusterProxy.Registry.GetLocalHostname());
-                Assert.Equal("secret", clusterProxy.Registry.GetLocalSecret());
+                Assert.Equal("xunit-registry2.neonforge.net", cluster.Registry.GetLocalHostname());
+                Assert.Equal("secret", cluster.Registry.GetLocalSecret());
 
-                foreach (var manager in clusterProxy.Managers)
+                foreach (var manager in cluster.Managers)
                 {
-                    Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                    Assert.Single(fixture.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry2.neonforge.net");
+                dnsEntry = cluster.DnsHosts.Get("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -424,27 +424,27 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
-                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
-                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+                Assert.Single(fixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(fixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
+                Assert.Single(fixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(fixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
-                registryCredentials = clusterProxy.Registry.GetCredentials("xunit-registry2.neonforge.net");
+                registryCredentials = cluster.Registry.GetCredentials("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(registryCredentials);
                 Assert.Equal("xunit-registry2.neonforge.net", registryCredentials.Registry);
                 Assert.Equal("test2", registryCredentials.Username);
                 Assert.Equal("password2", registryCredentials.Password);
 
-                Assert.Equal("xunit-registry2.neonforge.net", clusterProxy.Registry.GetLocalHostname());
-                Assert.Equal("secret", clusterProxy.Registry.GetLocalSecret());
+                Assert.Equal("xunit-registry2.neonforge.net", cluster.Registry.GetLocalHostname());
+                Assert.Equal("secret", cluster.Registry.GetLocalSecret());
 
-                foreach (var manager in clusterProxy.Managers)
+                foreach (var manager in cluster.Managers)
                 {
-                    Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                    Assert.Single(fixture.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry2.neonforge.net");
+                dnsEntry = cluster.DnsHosts.Get("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -475,27 +475,27 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
-                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
-                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+                Assert.Single(fixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(fixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
+                Assert.Single(fixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(fixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
-                registryCredentials = clusterProxy.Registry.GetCredentials("xunit-registry2.neonforge.net");
+                registryCredentials = cluster.Registry.GetCredentials("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(registryCredentials);
                 Assert.Equal("xunit-registry2.neonforge.net", registryCredentials.Registry);
                 Assert.Equal("test2", registryCredentials.Username);
                 Assert.Equal("password2", registryCredentials.Password);
 
-                Assert.Equal("xunit-registry2.neonforge.net", clusterProxy.Registry.GetLocalHostname());
-                Assert.Equal("secret2", clusterProxy.Registry.GetLocalSecret());
+                Assert.Equal("xunit-registry2.neonforge.net", cluster.Registry.GetLocalHostname());
+                Assert.Equal("secret2", cluster.Registry.GetLocalSecret());
 
-                foreach (var manager in clusterProxy.Managers)
+                foreach (var manager in cluster.Managers)
                 {
-                    Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                    Assert.Single(fixture.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry2.neonforge.net");
+                dnsEntry = cluster.DnsHosts.Get("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -509,27 +509,27 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.False(taskResult.Changed);
 
-                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
-                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
-                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+                Assert.Single(fixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(fixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry2.neonforge.net"));
+                Assert.Single(fixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(fixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
-                registryCredentials = clusterProxy.Registry.GetCredentials("xunit-registry2.neonforge.net");
+                registryCredentials = cluster.Registry.GetCredentials("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(registryCredentials);
                 Assert.Equal("xunit-registry2.neonforge.net", registryCredentials.Registry);
                 Assert.Equal("test2", registryCredentials.Username);
                 Assert.Equal("password2", registryCredentials.Password);
 
-                Assert.Equal("xunit-registry2.neonforge.net", clusterProxy.Registry.GetLocalHostname());
-                Assert.Equal("secret2", clusterProxy.Registry.GetLocalSecret());
+                Assert.Equal("xunit-registry2.neonforge.net", cluster.Registry.GetLocalHostname());
+                Assert.Equal("secret2", cluster.Registry.GetLocalSecret());
 
-                foreach (var manager in clusterProxy.Managers)
+                foreach (var manager in cluster.Managers)
                 {
-                    Assert.Single(cluster.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
+                    Assert.Single(fixture.ListVolumes(manager.Name).Where(name => name == "neon-registry"));
                 }
 
-                dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry2.neonforge.net");
+                dnsEntry = cluster.DnsHosts.Get("xunit-registry2.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -572,27 +572,27 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
-                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
-                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+                Assert.Single(fixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(fixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
+                Assert.Single(fixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(fixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
-                var registryCredentials = clusterProxy.Registry.GetCredentials("xunit-registry.neonforge.net");
+                var registryCredentials = cluster.Registry.GetCredentials("xunit-registry.neonforge.net");
 
                 Assert.NotNull(registryCredentials);
                 Assert.Equal("xunit-registry.neonforge.net", registryCredentials.Registry);
                 Assert.Equal("test", registryCredentials.Username);
                 Assert.Equal("password", registryCredentials.Password);
 
-                Assert.Equal("xunit-registry.neonforge.net", clusterProxy.Registry.GetLocalHostname());
-                Assert.Equal("secret", clusterProxy.Registry.GetLocalSecret());
+                Assert.Equal("xunit-registry.neonforge.net", cluster.Registry.GetLocalHostname());
+                Assert.Equal("secret", cluster.Registry.GetLocalSecret());
 
-                foreach (var node in clusterProxy.Managers)
+                foreach (var node in cluster.Managers)
                 {
-                    Assert.Single(cluster.ListVolumes(node.Name).Where(name => name == "neon-registry"));
+                    Assert.Single(fixture.ListVolumes(node.Name).Where(name => name == "neon-registry"));
                 }
 
-                var dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry.neonforge.net");
+                var dnsEntry = cluster.DnsHosts.Get("xunit-registry.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -601,7 +601,7 @@ namespace TestNeonCluster
                 // Verify that the new registry is actually working by pushing and
                 // pulling an image from it.
 
-                var manager = clusterProxy.GetHealthyManager();
+                var manager = cluster.GetHealthyManager();
 
                 // Ensure that any test images are removed from previous test runs.
 
@@ -701,27 +701,27 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Single(cluster.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
-                Assert.Single(cluster.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
-                Assert.Single(cluster.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
-                Assert.Single(cluster.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
+                Assert.Single(fixture.ListServices(includeSystem: true).Where(s => s.Name == "neon-registry"));
+                Assert.Single(fixture.ListDnsEntries(includeSystem: true).Where(item => item.Hostname == "xunit-registry.neonforge.net"));
+                Assert.Single(fixture.ListLoadBalancerRules("public", includeSystem: true).Where(item => item.Name == "neon-registry"));
+                Assert.Single(fixture.ListCertificates(includeSystem: true).Where(name => name == "neon-registry"));
 
-                var registryCredentials = clusterProxy.Registry.GetCredentials("xunit-registry.neonforge.net");
+                var registryCredentials = cluster.Registry.GetCredentials("xunit-registry.neonforge.net");
 
                 Assert.NotNull(registryCredentials);
                 Assert.Equal("xunit-registry.neonforge.net", registryCredentials.Registry);
                 Assert.Equal("test", registryCredentials.Username);
                 Assert.Equal("password", registryCredentials.Password);
 
-                Assert.Equal("xunit-registry.neonforge.net", clusterProxy.Registry.GetLocalHostname());
-                Assert.Equal("secret", clusterProxy.Registry.GetLocalSecret());
+                Assert.Equal("xunit-registry.neonforge.net", cluster.Registry.GetLocalHostname());
+                Assert.Equal("secret", cluster.Registry.GetLocalSecret());
 
-                foreach (var node in clusterProxy.Managers)
+                foreach (var node in cluster.Managers)
                 {
-                    Assert.Single(cluster.ListVolumes(node.Name).Where(name => name == "neon-registry"));
+                    Assert.Single(fixture.ListVolumes(node.Name).Where(name => name == "neon-registry"));
                 }
 
-                var dnsEntry = clusterProxy.DnsHosts.Get("xunit-registry.neonforge.net");
+                var dnsEntry = cluster.DnsHosts.Get("xunit-registry.neonforge.net");
 
                 Assert.NotNull(dnsEntry);
                 Assert.True(dnsEntry.IsSystem);
@@ -755,7 +755,7 @@ namespace TestNeonCluster
                 //-------------------------------------------------------------
                 // Verify that the registry is read/write after pruning.
 
-                var manager = clusterProxy.GetHealthyManager();
+                var manager = cluster.GetHealthyManager();
 
                 // Ensure that any test images are removed from previous test runs.
 

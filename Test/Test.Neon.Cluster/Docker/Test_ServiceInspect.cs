@@ -36,35 +36,35 @@ namespace TestNeonCluster
 
         private const bool strict = true;
 
-        private DockerFixture docker;
+        private DockerFixture fixture;
 
-        public Test_ServiceInspect(DockerFixture docker)
+        public Test_ServiceInspect(DockerFixture fixture)
         {
-            this.docker = docker;
+            this.fixture = fixture;
 
             // We're passing [login=null] below to connect to the cluster specified
             // by the NEON_TEST_CLUSTER environment variable.  This needs to be 
             // initialized with the login for a deployed cluster.
 
-            if (this.docker.Initialize())
+            if (this.fixture.Initialize())
             {
                 // Initialize the service with some secrets, configs, and networks
                 // we can reference from services in our tests.
 
-                docker.Reset();
+                fixture.Reset();
 
-                docker.CreateSecret("secret-1", "password1");
-                docker.CreateSecret("secret-2", "password2");
+                fixture.CreateSecret("secret-1", "password1");
+                fixture.CreateSecret("secret-2", "password2");
 
-                docker.CreateConfig("config-1", "config1");
-                docker.CreateConfig("config-2", "config2");
+                fixture.CreateConfig("config-1", "config1");
+                fixture.CreateConfig("config-2", "config2");
 
-                docker.CreateNetwork("network-1");
-                docker.CreateNetwork("network-2");
+                fixture.CreateNetwork("network-1");
+                fixture.CreateNetwork("network-2");
             }
             else
             {
-                docker.ClearServices();
+                fixture.ClearServices();
             }
         }
 
@@ -75,10 +75,10 @@ namespace TestNeonCluster
             // Deploy a very simple service and then verify that the
             // service details were parsed correctly.
 
-            docker.CreateService("test", "neoncluster/test");
+            fixture.CreateService("test", "neoncluster/test");
 
-            var info = docker.ListServices().Single(s => s.Name == "test");
-            var details = docker.InspectService("test", strict);
+            var info = fixture.ListServices().Single(s => s.Name == "test");
+            var details = fixture.InspectService("test", strict);
 
             // ID, Version, and Time fields
 
@@ -180,7 +180,7 @@ namespace TestNeonCluster
         {
             // Verify that we can deploy and parse service labels.
 
-            docker.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "neoncluster/test",
                 dockerArgs: 
                     new string[]
                     {
@@ -188,8 +188,8 @@ namespace TestNeonCluster
                         "--label", "hello=world"
                     });
 
-            var info    = docker.ListServices().Single(s => s.Name == "test");
-            var details = docker.InspectService("test", strict);
+            var info    = fixture.ListServices().Single(s => s.Name == "test");
+            var details = fixture.InspectService("test", strict);
 
             Assert.Equal(2, details.Spec.Labels.Count);
             Assert.Equal("bar", details.Spec.Labels["foo"]);
@@ -202,7 +202,7 @@ namespace TestNeonCluster
         {
             // Verify that we can specify environment variables.
 
-            docker.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "neoncluster/test",
                 dockerArgs:
                     new string[]
                     {
@@ -211,8 +211,8 @@ namespace TestNeonCluster
                         "--env", "MAIL"
                     });
 
-            var info    = docker.ListServices().Single(s => s.Name == "test");
-            var details = docker.InspectService("test", strict);
+            var info    = fixture.ListServices().Single(s => s.Name == "test");
+            var details = fixture.InspectService("test", strict);
 
             Assert.Equal(3, details.Spec.TaskTemplate.ContainerSpec.Env.Count);
             Assert.Contains("foo=bar", details.Spec.TaskTemplate.ContainerSpec.Env);
@@ -226,7 +226,7 @@ namespace TestNeonCluster
         {
             // Verify that we can specify DNS configuration.
 
-            docker.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "neoncluster/test",
                 dockerArgs:
                     new string[]
                     {
@@ -235,8 +235,8 @@ namespace TestNeonCluster
                         "--dns-option", "timeout:2"
                     });
 
-            var info    = docker.ListServices().Single(s => s.Name == "test");
-            var details = docker.InspectService("test", strict);
+            var info    = fixture.ListServices().Single(s => s.Name == "test");
+            var details = fixture.InspectService("test", strict);
 
             Assert.Equal(new string[] { "8.8.8.8" }, details.Spec.TaskTemplate.ContainerSpec.DNSConfig.Nameservers);
             Assert.Equal(new string[] { "foo.com" }, details.Spec.TaskTemplate.ContainerSpec.DNSConfig.Search);
@@ -249,7 +249,7 @@ namespace TestNeonCluster
         {
             // Verify that we can specify the container command and arguments.
 
-            docker.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "neoncluster/test",
                 dockerArgs:
                     new string[]
                     {
@@ -261,8 +261,8 @@ namespace TestNeonCluster
                         "50000000"
                     });
 
-            var info = docker.ListServices().Single(s => s.Name == "test");
-            var details = docker.InspectService("test", strict);
+            var info = fixture.ListServices().Single(s => s.Name == "test");
+            var details = fixture.InspectService("test", strict);
 
             Assert.Equal(new string[] { "sleep" }, details.Spec.TaskTemplate.ContainerSpec.Command);
             Assert.Equal(new string[] { "50000000" }, details.Spec.TaskTemplate.ContainerSpec.Args);
@@ -274,7 +274,7 @@ namespace TestNeonCluster
         {
             // Verify that we can specify misc container properties.
 
-            docker.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "neoncluster/test",
                 dockerArgs:
                     new string[]
                     {
@@ -288,8 +288,8 @@ namespace TestNeonCluster
                         "--stop-grace-period", "20000000ns",
                     });
 
-            var info    = docker.ListServices().Single(s => s.Name == "test");
-            var details = docker.InspectService("test", strict);
+            var info    = fixture.ListServices().Single(s => s.Name == "test");
+            var details = fixture.InspectService("test", strict);
 
             Assert.Equal("sleeper", details.Spec.TaskTemplate.ContainerSpec.Hostname);
             Assert.Equal("/", details.Spec.TaskTemplate.ContainerSpec.Dir);
@@ -307,7 +307,7 @@ namespace TestNeonCluster
         {
             // Verify that we can customize health checks.
 
-            docker.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "neoncluster/test",
                 dockerArgs:
                     new string[]
                     {
@@ -318,8 +318,8 @@ namespace TestNeonCluster
                         "--health-timeout", "450000000ns"
                     });
 
-            var info    = docker.ListServices().Single(s => s.Name == "test");
-            var details = docker.InspectService("test", strict);
+            var info    = fixture.ListServices().Single(s => s.Name == "test");
+            var details = fixture.InspectService("test", strict);
 
             Assert.Equal(new string[] { "CMD-SHELL", "echo ok" }, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Test);
             Assert.Equal(250000000L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Interval);
@@ -329,17 +329,17 @@ namespace TestNeonCluster
 
             // ..and that we can disable a check entirely.
 
-            docker.ClearServices();
+            fixture.ClearServices();
 
-            docker.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "neoncluster/test",
                 dockerArgs:
                     new string[]
                     {
                         "--no-healthcheck"
                     });
 
-            info    = docker.ListServices().Single(s => s.Name == "test");
-            details = docker.InspectService("test", strict);
+            info    = fixture.ListServices().Single(s => s.Name == "test");
+            details = fixture.InspectService("test", strict);
 
             Assert.Equal(new string[] { "NONE" }, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Test);
         }
@@ -350,15 +350,15 @@ namespace TestNeonCluster
         {
             // Verify that we can specify service secrets.
 
-            docker.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "neoncluster/test",
                 dockerArgs:
                     new string[]
                     {
                         "--secret", $"source=secret-1,target=secret,uid={TestHelper.TestUID},gid={TestHelper.TestGID},mode=0444",
                     });
 
-            var info    = docker.ListServices().Single(s => s.Name == "test");
-            var details = docker.InspectService("test", strict);
+            var info    = fixture.ListServices().Single(s => s.Name == "test");
+            var details = fixture.InspectService("test", strict);
 
             Assert.Single(details.Spec.TaskTemplate.ContainerSpec.Secrets);
 
@@ -378,15 +378,15 @@ namespace TestNeonCluster
         {
             // Verify that we can specify service configs.
 
-            docker.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "neoncluster/test",
                 dockerArgs:
                     new string[]
                     {
                         "--config", $"source=config-1,target=/my-config,uid={TestHelper.TestUID},gid={TestHelper.TestGID},mode=0444",
                     });
 
-            var info    = docker.ListServices().Single(s => s.Name == "test");
-            var details = docker.InspectService("test", strict);
+            var info    = fixture.ListServices().Single(s => s.Name == "test");
+            var details = fixture.InspectService("test", strict);
 
             Assert.Single(details.Spec.TaskTemplate.ContainerSpec.Configs);
 
@@ -406,15 +406,15 @@ namespace TestNeonCluster
         {
             // Deploy a service in GLOBAL (not replicated mode) and verify.
 
-            docker.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "neoncluster/test",
                 dockerArgs: 
                 new string[]
                     {
                         "--mode", "global"
                     });
 
-            var info    = docker.ListServices().Single(s => s.Name == "test");
-            var details = docker.InspectService("test", strict);
+            var info    = fixture.ListServices().Single(s => s.Name == "test");
+            var details = fixture.InspectService("test", strict);
 
             Assert.NotNull(details.Spec.Mode.Global);
             Assert.Null(details.Spec.Mode.Replicated);
@@ -426,16 +426,16 @@ namespace TestNeonCluster
         {
             // Deploy a service in DNSRR mode and verify.
 
-            docker.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "neoncluster/test",
                 dockerArgs:
                 new string[]
                     {
                         "--endpoint-mode", "dnsrr"
                     });
 
-            Assert.Single(docker.ListServices().Where(s => s.Name == "test"));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == "test"));
 
-            var details = docker.InspectService("test", strict);
+            var details = fixture.InspectService("test", strict);
 
             Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.EndpointSpec.Mode);
         }
@@ -446,7 +446,7 @@ namespace TestNeonCluster
         {
             // Deploy a service with port mappings and verify.
 
-            docker.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "neoncluster/test",
                 dockerArgs:
                 new string[]
                     {
@@ -454,8 +454,8 @@ namespace TestNeonCluster
                         "--publish", "published=8001,target=81,mode=host,protocol=udp"
                     });
 
-            var info    = docker.ListServices().Single(s => s.Name == "test");
-            var details = docker.InspectService("test", strict);
+            var info    = fixture.ListServices().Single(s => s.Name == "test");
+            var details = fixture.InspectService("test", strict);
 
             // We should see one virtual network CIDR assigned.
 
@@ -506,15 +506,15 @@ namespace TestNeonCluster
                 // Volume mount (note that we're not verifying some properties 
                 // like volume drivers, labels, etc.):
 
-                docker.CreateService("test", "neoncluster/test",
+                fixture.CreateService("test", "neoncluster/test",
                     dockerArgs:
                     new string[]
                         {
                             "--mount", $"type=volume,source=test-volume-a,target=/mount,readonly=false"
                         });
 
-                var info    = docker.ListServices().Single(s => s.Name == "test");
-                var details = docker.InspectService("test", strict);
+                var info    = fixture.ListServices().Single(s => s.Name == "test");
+                var details = fixture.InspectService("test", strict);
                 var mount   = details.Spec.TaskTemplate.ContainerSpec.Mounts.Single();
 
                 Assert.Equal(ServiceMountType.Volume, mount.Type);
@@ -525,17 +525,17 @@ namespace TestNeonCluster
 
                 // Verify: readonly=true
 
-                docker.ClearServices();
+                fixture.ClearServices();
 
-                docker.CreateService("test", "neoncluster/test",
+                fixture.CreateService("test", "neoncluster/test",
                     dockerArgs:
                     new string[]
                         {
                             "--mount", $"type=volume,source=test-volume-b,target=/mount,readonly=true"
                         });
 
-                info    = docker.ListServices().Single(s => s.Name == "test");
-                details = docker.InspectService("test", strict);
+                info    = fixture.ListServices().Single(s => s.Name == "test");
+                details = fixture.InspectService("test", strict);
                 mount   = details.Spec.TaskTemplate.ContainerSpec.Mounts.Single();
 
                 Assert.Equal(ServiceMountType.Volume, mount.Type);
@@ -547,21 +547,21 @@ namespace TestNeonCluster
                 //-------------------------------------------------------------
                 // Bind mount:
 
-                docker.ClearServices();
+                fixture.ClearServices();
 
                 // Docker doesn't like backslashes so convert them to forward slashes.
 
                 var tempPath = tempFolder.Path.Replace("\\", "/");
 
-                docker.CreateService("test", "neoncluster/test",
+                fixture.CreateService("test", "neoncluster/test",
                     dockerArgs:
                     new string[]
                         {
                             "--mount", $"type=bind,source={tempPath},target=/mount,readonly=false"
                         });
 
-                info    = docker.ListServices().Single(s => s.Name == "test");
-                details = docker.InspectService("test", strict);
+                info    = fixture.ListServices().Single(s => s.Name == "test");
+                details = fixture.InspectService("test", strict);
                 mount   = details.Spec.TaskTemplate.ContainerSpec.Mounts.Single();
 
                 if (NeonHelper.IsWindows)
@@ -581,17 +581,17 @@ namespace TestNeonCluster
                 //-------------------------------------------------------------
                 // Tmpfs mount:
 
-                docker.ClearServices();
+                fixture.ClearServices();
 
-                docker.CreateService("test", "neoncluster/test",
+                fixture.CreateService("test", "neoncluster/test",
                     dockerArgs:
                     new string[]
                         {
                             "--mount", $"type=tmpfs,target=/mount,tmpfs-size=32000000,tmpfs-mode=777"
                         });
 
-                info    = docker.ListServices().Single(s => s.Name == "test");
-                details = docker.InspectService("test", strict);
+                info    = fixture.ListServices().Single(s => s.Name == "test");
+                details = fixture.InspectService("test", strict);
                 mount   = details.Spec.TaskTemplate.ContainerSpec.Mounts.Single();
 
                 Assert.Equal(ServiceMountType.Tmpfs, mount.Type);
@@ -619,15 +619,15 @@ namespace TestNeonCluster
 
             // Deploy a simple test service.
 
-            docker.CreateService("test", "neoncluster/test",
+            fixture.CreateService("test", "neoncluster/test",
                 dockerArgs:
                     new string[]
                     {
                         "--replicas", "1"
                     });
 
-            var info    = docker.ListServices().Single(s => s.Name == "test");
-            var details = docker.InspectService("test", strict);
+            var info    = fixture.ListServices().Single(s => s.Name == "test");
+            var details = fixture.InspectService("test", strict);
 
             //Assert.Equal(ServiceUpdateState.Completed, details.UpdateStatus.State);
             Assert.Equal(1, details.Spec.Mode.Replicated.Replicas);
@@ -637,15 +637,15 @@ namespace TestNeonCluster
             // Update the service to have 2 replicas and verify that both
             // the current and previous specifications are correct.
 
-            docker.UpdateService("test",
+            fixture.UpdateService("test",
                 dockerArgs:
                     new string[]
                     {
                         "--replicas", "2"
                     });
 
-            info    = docker.ListServices().Single(s => s.Name == "test");
-            details = docker.InspectService("test", strict);
+            info    = fixture.ListServices().Single(s => s.Name == "test");
+            details = fixture.InspectService("test", strict);
 
             //Assert.Equal(ServiceUpdateState.Completed, details.UpdateStatus.State);
             Assert.Equal(2, details.Spec.Mode.Replicated.Replicas);
@@ -653,10 +653,10 @@ namespace TestNeonCluster
 
             // Now rollback the service back and verify.
 
-            docker.RollbackService("test");
+            fixture.RollbackService("test");
 
-            info    = docker.ListServices().Single(s => s.Name == "test");
-            details = docker.InspectService("test", strict);
+            info    = fixture.ListServices().Single(s => s.Name == "test");
+            details = fixture.InspectService("test", strict);
 
             //Assert.Equal(ServiceUpdateState.RollbackCompleted, details.UpdateStatus.State);
             Assert.Equal(1, details.Spec.Mode.Replicated.Replicas);

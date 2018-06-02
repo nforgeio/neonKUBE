@@ -23,24 +23,24 @@ namespace TestCommon
     {
         private static readonly string HostsPath = Path.Combine(Environment.GetFolderPath(Environment.SpecialFolder.Windows), "system32", "drivers", "etc", "hosts");
 
-        private HostsFixture hosts;
+        private HostsFixture fixture;
 
-        public Test_HostsFixture(HostsFixture hosts)
+        public Test_HostsFixture(HostsFixture fixture)
         {
-            this.hosts = hosts;
+            this.fixture = fixture;
 
-            hosts.Initialize(
+            fixture.Initialize(
                 () =>
                 {
                     // Add some entries using deferred commit.
 
-                    hosts.AddHostAddress("www.foo.com", "1.2.3.4", deferCommit: true);
-                    hosts.AddHostAddress("www.bar.com", "5.6.7.8", deferCommit: true);
-                    hosts.Commit();
+                    fixture.AddHostAddress("www.foo.com", "1.2.3.4", deferCommit: true);
+                    fixture.AddHostAddress("www.bar.com", "5.6.7.8", deferCommit: true);
+                    fixture.Commit();
 
                     // Add an entry using auto commit.
 
-                    hosts.AddHostAddress("www.foobar.com", "1.1.1.1");
+                    fixture.AddHostAddress("www.foobar.com", "1.1.1.1");
                 });
         }
 
@@ -59,7 +59,7 @@ namespace TestCommon
         {
             // Verify that we can reset the hosts.
 
-            hosts.Reset();
+            fixture.Reset();
 
             Assert.NotEqual(new IPAddress[] { IPAddress.Parse("1.2.3.4") }, Dns.GetHostAddresses("www.foo.com"));
             Assert.NotEqual(new IPAddress[] { IPAddress.Parse("5.6.7.8") }, Dns.GetHostAddresses("www.bar.com"));
@@ -67,10 +67,10 @@ namespace TestCommon
 
             // Restore the hosts so that other tests will work.
 
-            hosts.AddHostAddress("www.foo.com", "1.2.3.4", deferCommit: true);
-            hosts.AddHostAddress("www.bar.com", "5.6.7.8", deferCommit: true);
-            hosts.AddHostAddress("www.foobar.com", "1.1.1.1", deferCommit: true);
-            hosts.Commit();
+            fixture.AddHostAddress("www.foo.com", "1.2.3.4", deferCommit: true);
+            fixture.AddHostAddress("www.bar.com", "5.6.7.8", deferCommit: true);
+            fixture.AddHostAddress("www.foobar.com", "1.1.1.1", deferCommit: true);
+            fixture.Commit();
         }
 
         [Fact]
@@ -82,9 +82,9 @@ namespace TestCommon
 
             try
             {
-                hosts.Reset();
-                hosts.AddHostAddress("www.foobar.com", "1.1.1.1");
-                hosts.AddHostAddress("www.foobar.com", "1.1.1.1");
+                fixture.Reset();
+                fixture.AddHostAddress("www.foobar.com", "1.1.1.1");
+                fixture.AddHostAddress("www.foobar.com", "1.1.1.1");
 
                 Assert.Equal(new IPAddress[] { IPAddress.Parse("1.1.1.1") }, Dns.GetHostAddresses("www.foobar.com"));
             }
@@ -92,11 +92,11 @@ namespace TestCommon
             {
                 // Restore the hosts so the remaining tests won't be impacted.
 
-                hosts.Reset();
-                hosts.AddHostAddress("www.foo.com", "1.2.3.4", deferCommit: true);
-                hosts.AddHostAddress("www.bar.com", "5.6.7.8", deferCommit: true);
-                hosts.AddHostAddress("www.foobar.com", "1.1.1.1", deferCommit: true);
-                hosts.Commit();
+                fixture.Reset();
+                fixture.AddHostAddress("www.foo.com", "1.2.3.4", deferCommit: true);
+                fixture.AddHostAddress("www.bar.com", "5.6.7.8", deferCommit: true);
+                fixture.AddHostAddress("www.foobar.com", "1.1.1.1", deferCommit: true);
+                fixture.Commit();
             }
         }
     }

@@ -29,11 +29,11 @@ namespace TestNeonCluster
         private const string serviceName = "test";
         private const string serviceImage = "neoncluster/test:0";
 
-        private ClusterFixture cluster;
+        private ClusterFixture fixture;
 
-        public Test_AnsibleDockerService(ClusterFixture cluster)
+        public Test_AnsibleDockerService(ClusterFixture fixture)
         {
-            this.cluster = cluster;
+            this.fixture = fixture;
 
             // The test methods in this class depend on some fixed
             // assets like networks, secrets, configs and such and
@@ -43,18 +43,18 @@ namespace TestNeonCluster
             // only the cluster services between test methods for
             // (hopefully) a bit better test execution performance.
 
-            if (cluster.LoginAndInitialize(login: null))
+            if (fixture.LoginAndInitialize(login: null))
             {
-                cluster.CreateNetwork("network-1");
-                cluster.CreateNetwork("network-2");
-                cluster.CreateSecret("secret-1", "test-1");
-                cluster.CreateSecret("secret-2", "test-2");
-                cluster.CreateConfig("config-1", "test-1");
-                cluster.CreateConfig("config-2", "test-2");
+                fixture.CreateNetwork("network-1");
+                fixture.CreateNetwork("network-2");
+                fixture.CreateSecret("secret-1", "test-1");
+                fixture.CreateSecret("secret-2", "test-2");
+                fixture.CreateConfig("config-1", "test-1");
+                fixture.CreateConfig("config-2", "test-2");
             }
             else
             {
-                cluster.ClearServices();
+                fixture.ClearServices();
             }
         }
 
@@ -81,9 +81,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
 
             Assert.Equal(2, details.Spec.Mode.Replicated.Replicas);
         }
@@ -113,9 +113,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
 
             Assert.Equal(new string[] { "one", "two" }, details.Spec.TaskTemplate.ContainerSpec.Args);
         }
@@ -148,9 +148,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var config = details.Spec.TaskTemplate.ContainerSpec.Configs.FirstOrDefault();
 
             Assert.NotNull(config);
@@ -186,9 +186,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var constraints = details.Spec.TaskTemplate.Placement.Constraints;
 
             Assert.NotNull(constraints);
@@ -221,9 +221,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var labels = details.Spec.TaskTemplate.ContainerSpec.Labels;
 
             Assert.Single(labels);
@@ -259,9 +259,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var dnsConfig = details.Spec.TaskTemplate.ContainerSpec.DNSConfig;
 
             Assert.Equal(2, dnsConfig.Nameservers.Count);
@@ -295,9 +295,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
 
             Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.EndpointSpec.Mode);
         }
@@ -327,9 +327,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
 
             Assert.Equal(new string[] { "sleep", "7777777" }, details.Spec.TaskTemplate.ContainerSpec.Command);
         }
@@ -359,9 +359,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var env     = details.Spec.TaskTemplate.ContainerSpec.Env;
 
             Assert.Equal(2, env.Count);
@@ -394,9 +394,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
 
             Assert.Equal(TestHelper.TestUID, details.Spec.TaskTemplate.ContainerSpec.User);
             Assert.Equal(new string[] { TestHelper.TestGID }, details.Spec.TaskTemplate.ContainerSpec.Groups);
@@ -430,9 +430,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
 
             Assert.Equal(new string[] { "CMD-SHELL", "echo OK" }, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Test);
             Assert.Equal(1000000000L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Interval);
@@ -442,7 +442,7 @@ $@"
 
             // Redeploy the service disabling health checks.
 
-            cluster.RemoveService(serviceName);
+            fixture.RemoveService(serviceName);
 
             playbook =
 $@"
@@ -461,9 +461,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            details = cluster.InspectService(serviceName);
+            details = fixture.InspectService(serviceName);
 
             Assert.Equal(new string[] { "NONE" }, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Test);
         }
@@ -494,9 +494,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var hosts = details.Spec.TaskTemplate.ContainerSpec.Hosts;
 
             Assert.Equal(2, hosts.Count);
@@ -555,9 +555,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var labels = details.Spec.Labels;
 
             Assert.Single(labels);
@@ -589,9 +589,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var limits = details.Spec.TaskTemplate.Resources.Limits;
 
             Assert.Equal(1500000000L, limits.NanoCPUs);
@@ -623,9 +623,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var reservations = details.Spec.TaskTemplate.Resources.Reservations;
 
             Assert.Equal(1500000000L, reservations.NanoCPUs);
@@ -666,9 +666,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var mounts = details.Spec.TaskTemplate.ContainerSpec.Mounts;
 
             Assert.Single(mounts);
@@ -688,7 +688,7 @@ $@"
             //-----------------------------------------------------------------
             // BIND mount:
 
-            cluster.RemoveService("test");
+            fixture.RemoveService("test");
 
             playbook =
 $@"
@@ -713,9 +713,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            details = cluster.InspectService(serviceName);
+            details = fixture.InspectService(serviceName);
             mounts = details.Spec.TaskTemplate.ContainerSpec.Mounts;
 
             Assert.Single(mounts);
@@ -741,7 +741,7 @@ $@"
             //-----------------------------------------------------------------
             // TMPFS mount:
 
-            cluster.RemoveService("test");
+            fixture.RemoveService("test");
 
             playbook =
 $@"
@@ -764,9 +764,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            details = cluster.InspectService(serviceName);
+            details = fixture.InspectService(serviceName);
             mounts = details.Spec.TaskTemplate.ContainerSpec.Mounts;
 
             Assert.Single(mounts);
@@ -807,9 +807,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var ports = details.Spec.EndpointSpec.Ports;
 
             Assert.Single(ports);
@@ -824,7 +824,7 @@ $@"
             //-----------------------------------------------------------------
             // ...again, with explicit values.
 
-            cluster.RemoveService("test");
+            fixture.RemoveService("test");
 
             playbook =
 $@"
@@ -847,9 +847,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            details = cluster.InspectService(serviceName);
+            details = fixture.InspectService(serviceName);
             ports = details.Spec.EndpointSpec.Ports;
 
             Assert.Single(ports);
@@ -864,7 +864,7 @@ $@"
             //-----------------------------------------------------------------
             // ...again, with non-default values.
 
-            cluster.RemoveService("test");
+            fixture.RemoveService("test");
 
             playbook =
 $@"
@@ -887,9 +887,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            details = cluster.InspectService(serviceName);
+            details = fixture.InspectService(serviceName);
             ports = details.Spec.EndpointSpec.Ports;
 
             Assert.Single(ports);
@@ -925,9 +925,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
 
             Assert.True(details.Spec.TaskTemplate.ContainerSpec.ReadOnly);
         }
@@ -959,9 +959,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var policy = details.Spec.TaskTemplate.RestartPolicy;
 
             Assert.Equal(ServiceRestartCondition.OnFailure, policy.Condition);
@@ -1005,9 +1005,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var config = details.Spec.RollbackConfig;
 
             Assert.Equal(2000000000, config.Delay);
@@ -1043,9 +1043,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var networks = details.Spec.TaskTemplate.Networks;
 
             Assert.NotNull(networks);
@@ -1080,9 +1080,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var secret = details.Spec.TaskTemplate.ContainerSpec.Secrets.FirstOrDefault();
 
             Assert.NotNull(secret);
@@ -1116,9 +1116,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
 
             Assert.Equal(5000000000L, details.Spec.TaskTemplate.ContainerSpec.StopGracePeriod);
         }
@@ -1146,9 +1146,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
 
             Assert.Equal("SIGTERM", details.Spec.TaskTemplate.ContainerSpec.StopSignal);
         }
@@ -1179,9 +1179,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
             var config = details.Spec.UpdateConfig;
 
             Assert.Equal(2000000000, config.Delay);

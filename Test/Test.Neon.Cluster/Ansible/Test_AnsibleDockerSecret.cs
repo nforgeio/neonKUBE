@@ -20,17 +20,17 @@ namespace TestNeonCluster
 {
     public class Test_AnsibleDockerSecret : IClassFixture<ClusterFixture>
     {
-        private ClusterFixture cluster;
+        private ClusterFixture fixture;
 
-        public Test_AnsibleDockerSecret(ClusterFixture cluster)
+        public Test_AnsibleDockerSecret(ClusterFixture fixture)
         {
-            this.cluster = cluster;
+            this.fixture = fixture;
 
             // We're going to use unique secret names for each test
             // so we only need to reset the test fixture once for
             // all tests implemented by this class.
 
-            cluster.LoginAndInitialize(login: null);
+            fixture.LoginAndInitialize(login: null);
         }
 
         [Fact]
@@ -84,7 +84,7 @@ $@"
             Assert.Equal("create secret", taskResult.TaskName);
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListSecrets().Where(s => s.Name == name));
+            Assert.Single(fixture.ListSecrets().Where(s => s.Name == name));
 
             // Run the playbook again but this time nothing should
             // be changed because the secret already exists.
@@ -99,7 +99,7 @@ $@"
             Assert.Equal("create secret", taskResult.TaskName);
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Single(cluster.ListSecrets().Where(s => s.Name == name));
+            Assert.Single(fixture.ListSecrets().Where(s => s.Name == name));
         }
 
         [Fact]
@@ -130,7 +130,7 @@ $@"
             Assert.Equal("create secret", taskResult.TaskName);
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListSecrets().Where(s => s.Name == name));
+            Assert.Single(fixture.ListSecrets().Where(s => s.Name == name));
 
             // Run the playbook again but this time nothing should
             // be changed because the secret already exists.
@@ -145,7 +145,7 @@ $@"
             Assert.Equal("create secret", taskResult.TaskName);
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Single(cluster.ListSecrets().Where(s => s.Name == name));
+            Assert.Single(fixture.ListSecrets().Where(s => s.Name == name));
         }
 
         [Fact]
@@ -176,7 +176,7 @@ $@"
             Assert.Equal("create secret", taskResult.TaskName);
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListSecrets().Where(s => s.Name == name));
+            Assert.Single(fixture.ListSecrets().Where(s => s.Name == name));
 
             // Now remove it.
 
@@ -201,7 +201,7 @@ $@"
             Assert.Equal("remove secret", taskResult.TaskName);
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Empty(cluster.ListSecrets().Where(s => s.Name == name));
+            Assert.Empty(fixture.ListSecrets().Where(s => s.Name == name));
 
             // Remove it again to verify that nothing changes.
 
@@ -215,7 +215,7 @@ $@"
             Assert.Equal("remove secret", taskResult.TaskName);
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Empty(cluster.ListSecrets().Where(s => s.Name == name));
+            Assert.Empty(fixture.ListSecrets().Where(s => s.Name == name));
         }
 
         [Fact]
@@ -243,7 +243,7 @@ $@"
             Assert.Equal("create secret", taskResult.TaskName);
             Assert.False(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Empty(cluster.ListSecrets().Where(s => s.Name == name));
+            Assert.Empty(fixture.ListSecrets().Where(s => s.Name == name));
         }
 
         [Fact]
@@ -271,7 +271,7 @@ $@"
             Assert.Equal("create secret", taskResult.TaskName);
             Assert.False(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Empty(cluster.ListSecrets().Where(s => s.Name == name));
+            Assert.Empty(fixture.ListSecrets().Where(s => s.Name == name));
         }
     }
 }

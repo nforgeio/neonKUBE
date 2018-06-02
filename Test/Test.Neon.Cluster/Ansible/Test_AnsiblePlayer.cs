@@ -20,15 +20,15 @@ namespace TestNeonCluster
 {
     public class Test_AnsiblePlayer : IClassFixture<ClusterFixture>
     {
-        private ClusterFixture cluster;
+        private ClusterFixture fixture;
 
-        public Test_AnsiblePlayer(ClusterFixture cluster)
+        public Test_AnsiblePlayer(ClusterFixture fixture)
         {
-            this.cluster = cluster;
+            this.fixture = fixture;
 
             // NOTE: These tests do not require a cluster reset every time.
 
-            cluster.LoginAndInitialize();
+            fixture.LoginAndInitialize();
         }
 
         [Fact]

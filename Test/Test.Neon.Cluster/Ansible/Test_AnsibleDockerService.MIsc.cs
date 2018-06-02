@@ -172,7 +172,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Empty(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Empty(fixture.ListServices().Where(s => s.Name == serviceName));
         }
 
         [Fact]
@@ -197,7 +197,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Empty(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Empty(fixture.ListServices().Where(s => s.Name == serviceName));
         }
 
         [Fact]
@@ -222,9 +222,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            var details = cluster.InspectService(serviceName);
+            var details = fixture.InspectService(serviceName);
 
             Assert.Equal("neoncluster/test:0", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
 
@@ -246,9 +246,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            details = cluster.InspectService(serviceName);
+            details = fixture.InspectService(serviceName);
 
             Assert.Equal("neoncluster/test:0", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
 
@@ -270,9 +270,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            details = cluster.InspectService(serviceName);
+            details = fixture.InspectService(serviceName);
 
             Assert.Equal("neoncluster/test:1", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
 
@@ -293,9 +293,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(cluster.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
 
-            details = cluster.InspectService(serviceName);
+            details = fixture.InspectService(serviceName);
 
             Assert.Equal("neoncluster/test:0", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
         }
