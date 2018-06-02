@@ -1,0 +1,8 @@
+﻿{
+  "index-pattern": {
+    "buildNum": "${BUILDNUM}",
+    "defaultIndex": "logstash-*",
+    "dateFormat": "HH:mm:ss.SSS MM-DD-YYYY",
+    "dateFormat:tz": "UTC"
+  }
+}

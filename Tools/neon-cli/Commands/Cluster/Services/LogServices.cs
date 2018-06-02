@@ -167,12 +167,54 @@ namespace NeonCli
 
                             Thread.Sleep(TimeSpan.FromSeconds(10));
                         }
+
+                        firstManager.Status = "saving the kibana [logstash-*] index pattern";
+
+                        // Save the [logstash-*] index pattern.  Note that MetricBeats is able to 
+                        // initialize itself.
+
+                        var retry = new LinearRetryPolicy(TransientDetector.Http);
+
+                        retry.InvokeAsync(
+                            async () =>
+                            {
+                                var indexJson = ResourceFiles.Root.GetFolder("Kibana").GetFile("logstash-6-index.json").Contents;
+
+                                await jsonClient.PutAsync($"{baseLogEsDataUri}/.kibana/doc/logstash-*?type=config", indexJson);
+
+                            }).Wait();
+
+                        // We need to pull and run the Kibana image with the [version] command
+                        // to retrieve [package.json] file with this information.
+
+                        firstManager.Status = "getting kibana version and build numbers";
+
+                        var kibanaImage = Program.ResolveDockerImage(cluster.Definition.Log.KibanaImage);
+
+                        firstManager.DockerCommand("docker pull", kibanaImage);
+
+                        var versionResponse = firstManager.SudoCommand("docker run --rm", kibanaImage, "version");
+                        var kibanaInfo      = NeonHelper.JsonDeserialize<dynamic>(versionResponse.OutputText);
+                        var kibanaVersion   = (string)kibanaInfo.version;
+                        var kibanaBuild     = (string)kibanaInfo.build.number;
+
+                        // Now we need to save a Kibana config document so that [logstash-*] will be
+                        // the default index and the timestamp will be displayed as UTC and have a
+                        // more useful terse format.
+
+                        firstManager.Status = "configuring kibana";
+
+                        retry.InvokeAsync(
+                            async () =>
+                            {
+                                var configJson = ResourceFiles.Root.GetFolder("Kibana").GetFile("kibana-config.json").Contents;
+
+                                configJson = configJson.Replace("${BUILDNUM}", kibanaBuild);
+
+                                await jsonClient.PutAsync<dynamic>($"{baseLogEsDataUri}/.kibana/doc/config:{kibanaVersion}?type=index-pattern", configJson);
+
+                            }).Wait();
                     }
-
-                    // Metricbeat initializes its Kibana own index pattern in but we need to initialize
-                    // the [logstash-*] index pattern ourselves.
-
-                    
 
                     firstManager.Status = string.Empty;
                 });
