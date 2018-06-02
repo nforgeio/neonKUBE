@@ -53,3 +53,38 @@ docker service create \
     --env ELASTICSEARCH_URL=http://neon-log-esdata.cluster:5303 \
     --log-driver json-file
 ````
+&nbsp;
+You can also run this as a container to get JSON formatted information about the Kibana package:
+````
+docker run --rm neoncluster/kibana version
+````
+&nbsp;
+This will return something like:
+````
+{
+  "name": "kibana",
+  "description": "Kibana is an open source (Apache Licensed), browser based analytics and search dashboard for Elasticsearch. Kibana is a snap to setup and start using. Kibana strives to be easy to get started with, while also being flexible and powerful, just like Elasticsearch.",
+  "keywords": [
+    "kibana",
+    "elasticsearch",
+    "logstash",
+    "analytics",
+    "visualizations",
+    "dashboards",
+    "dashboarding"
+  ],
+  "version": "6.1.1",
+  "branch": "6.x",
+  "build": {
+    "number": 16350,
+    "sha": "80e60a0f288696992b1874212ab4c41c9149901e"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/elastic/kibana.git"
+  },
+  "engines": {
+    "node": "6.12.2"
+  }
+}
+````

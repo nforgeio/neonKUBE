@@ -41,3 +41,4 @@ COPY kibana.yml.sh          /usr/share/kibana/config
 # NOTE: The first command modifies DNS to query for IPv4 before IPv6.
 
 ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]
+CMD ["service"]
