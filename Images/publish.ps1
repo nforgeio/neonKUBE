@@ -68,6 +68,14 @@ if ($all)
 	$dotnet = $True
 	$other  = $True
 }
+elseif ((-not $base) -and (-not $dotnet) -and (-not $other))
+{
+	# Build .NET and other images, but not base images, 
+	# by default.
+
+	$dotnet = $True
+	$other  = $True
+}
 
 # NOTE: 
 #

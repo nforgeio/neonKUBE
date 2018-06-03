@@ -444,14 +444,14 @@ namespace Neon.Cluster
                 // We're going to create the [neonCLUSTER] external switch if there
                 // isn't already an external switch.
 
-                controller.SetOperationStatus("Scanning virtual switches");
+                controller.SetOperationStatus("Scanning network adapters");
 
                 var switches       = hyperv.ListVMSwitches();
                 var externalSwitch = switches.FirstOrDefault(s => s.Type == VirtualSwitchType.External);
 
                 if (externalSwitch == null)
                 {
-                    hyperv.NewVMExternalSwitch(switchName = defaultSwitchName);
+                    hyperv.NewVMExternalSwitch(switchName = defaultSwitchName, IPAddress.Parse(cluster.Definition.Network.Gateway));
                 }
                 else
                 {
