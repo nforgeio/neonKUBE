@@ -23,13 +23,18 @@ namespace Neon.Cluster
         public const string AllowUnitTesting = "allow-unit-testing";
 
         /// <summary>
-        /// Cluster's globally unique ID assigned during cluster setup.
-        /// </summary>
-        public const string Uuid = "uuid";
-
-        /// <summary>
         /// Cluster creation date (UTC).
         /// </summary>
         public const string CreateDate = "create-date";
+
+        /// <summary>
+        /// Disables automatic Vault unsealing (bool).
+        /// </summary>
+        public const string DisableAutoUnseal = "disable-auto-unseal";
+
+        /// <summary>
+        /// Cluster's globally unique ID assigned during cluster setup.
+        /// </summary>
+        public const string Uuid = "uuid";
     }
 }

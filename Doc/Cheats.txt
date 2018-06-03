@@ -30,7 +30,7 @@ neon cluster setup --log-folder=c:\cluster-logs --max-parallel=10 --unredacted r
 
 neon login rm root@home2-small --force
 neon cluster prepare %NF_ROOT%\Devops\test\clusters\home2-small\cluster.json --log-folder=c:\cluster-logs --max-parallel=10 --force
-neon cluster setup --log-folder=c:\cluster-logs --max-parallel=10 --unredacted root@home2-small --noshim --image-tag=jeff-latest
+neon cluster setup --log-folder=c:\cluster-logs --max-parallel=10 --unredacted root@home2-small --image-tag=jeff-latest --noshim
 
 #------------------------------------------------------------------------------
 # RabbitMQ

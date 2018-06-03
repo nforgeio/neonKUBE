@@ -45,6 +45,7 @@ CLUSTER IDENTIFIERS:
 
     allow-unit-testing      - enables ClusterFixture unit testing (bool)
     create-date             - cluster creation date (UTC)
+    disable-auto-unseal     - disables automatic Vault unsealing (bool)
     password                - root account password
     registries              - lists the Docker registries and credentials
     sshkey-client-pem       - client SSH private key (PEM format)
@@ -158,6 +159,19 @@ NODE IDENTIFIERS:
                         if (cluster.TryGetSettingString(NeonClusterSettings.CreateDate, out var createDate))
                         {
                             Console.Write(createDate);
+                        }
+                        else
+                        {
+                            Console.Error.WriteLine($"*** ERROR: Cluster setting [{valueExpr}] does not exist.");
+                            Program.Exit(1);
+                        }
+                        break;
+
+                    case NeonClusterSettings.DisableAutoUnseal:
+
+                        if (cluster.TryGetSettingBool(NeonClusterSettings.DisableAutoUnseal, out var disableAutoUnseal))
+                        {
+                            Console.Write(disableAutoUnseal ? "true" : "false");
                         }
                         else
                         {

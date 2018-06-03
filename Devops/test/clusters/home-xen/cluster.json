@@ -39,7 +39,6 @@
     //"Version": "experimental",
     "Registries": [
       {
-        "Hostname": "docker.io",
         "Username": "stokebot",
         "Password": "Leather.632"
       }
