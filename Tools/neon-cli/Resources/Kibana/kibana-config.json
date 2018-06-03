@@ -1,5 +1,7 @@
 ﻿{
-  "index-pattern": {
+  "type": "config",
+  "updated_at": "${TIMESTAMP}",
+  "config": {
     "buildNum": "${BUILDNUM}",
     "defaultIndex": "logstash-*",
     "dateFormat": "HH:mm:ss.SSS MM-DD-YYYY",

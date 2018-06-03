@@ -1,4 +1,6 @@
 ﻿{
+  "type": "index-pattern",
+  "updated_at": "${TIMESTAMP}",
   "index-pattern": {
     "title": "logstash-*",
     "timeFieldName": "@timestamp",

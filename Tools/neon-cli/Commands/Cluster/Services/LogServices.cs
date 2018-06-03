@@ -126,7 +126,7 @@ namespace NeonCli
 
                     var esNodeCount = cluster.Definition.Nodes.Count(n => n.Labels.LogEsData);
 
-                    firstManager.Status = $"Waiting for [neon-log-esdata] cluster [0/{esNodeCount} nodes ready] (slow)";
+                    firstManager.Status = $"wait for [neon-log-esdata] cluster [0/{esNodeCount} nodes ready]";
 
                     using (var jsonClient = new JsonClient())
                     {
@@ -148,7 +148,7 @@ namespace NeonCli
                                 {
                                     dynamic clusterStatus = response.AsDynamic();
 
-                                    firstManager.Status = $"Waiting for [neon-log-esdata] cluster [{clusterStatus.number_of_nodes}/{esNodeCount} nodes ready] (slow)";
+                                    firstManager.Status = $"wait for [neon-log-esdata] cluster [{clusterStatus.number_of_nodes}/{esNodeCount} nodes ready])";
 
                                     if (clusterStatus.status == "green" && clusterStatus.number_of_nodes == esNodeCount)
                                     {
@@ -168,26 +168,28 @@ namespace NeonCli
                             Thread.Sleep(TimeSpan.FromSeconds(10));
                         }
 
-                        firstManager.Status = "saving the kibana [logstash-*] index pattern";
+                        firstManager.Status = "save the kibana [logstash-*] index pattern";
 
-                        // Save the [logstash-*] index pattern.  Note that MetricBeats is able to 
+                        // Save the [logstash-*] index pattern.  Note that MetricBeat is able to 
                         // initialize itself.
 
-                        var retry = new LinearRetryPolicy(TransientDetector.Http);
+                        //var retry = new LinearRetryPolicy(TransientDetector.Http);
 
-                        retry.InvokeAsync(
-                            async () =>
-                            {
-                                var indexJson = ResourceFiles.Root.GetFolder("Kibana").GetFile("logstash-6-index.json").Contents;
+                        //retry.InvokeAsync(
+                        //    async () =>
+                        //    {
+                        //        var indexJson = ResourceFiles.Root.GetFolder("Kibana").GetFile("logstash-6-index.json").Contents;
 
-                                await jsonClient.PutAsync($"{baseLogEsDataUri}/.kibana/doc/logstash-*?type=config", indexJson);
+                        //        indexJson = indexJson.Replace("${TIMESTAMP}", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
 
-                            }).Wait();
+                        //        await jsonClient.PutAsync($"{baseLogEsDataUri}/.kibana/doc/index-pattern:logstash-*", indexJson);
+
+                        //    }).Wait();
 
                         // We need to pull and run the Kibana image with the [version] command
                         // to retrieve [package.json] file with this information.
 
-                        firstManager.Status = "getting kibana version and build numbers";
+                        firstManager.Status = "determine kibana version and build";
 
                         var kibanaImage = Program.ResolveDockerImage(cluster.Definition.Log.KibanaImage);
 
@@ -200,20 +202,21 @@ namespace NeonCli
 
                         // Now we need to save a Kibana config document so that [logstash-*] will be
                         // the default index and the timestamp will be displayed as UTC and have a
-                        // more useful terse format.
+                        // more useful and terse format.
 
-                        firstManager.Status = "configuring kibana";
+                        //firstManager.Status = "configuring kibana";
 
-                        retry.InvokeAsync(
-                            async () =>
-                            {
-                                var configJson = ResourceFiles.Root.GetFolder("Kibana").GetFile("kibana-config.json").Contents;
+                        //retry.InvokeAsync(
+                        //    async () =>
+                        //    {
+                        //        var configJson = ResourceFiles.Root.GetFolder("Kibana").GetFile("kibana-config.json").Contents;
 
-                                configJson = configJson.Replace("${BUILDNUM}", kibanaBuild);
+                        //        configJson = configJson.Replace("${TIMESTAMP}", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
+                        //        configJson = configJson.Replace("${BUILDNUM}", kibanaBuild);
 
-                                await jsonClient.PutAsync<dynamic>($"{baseLogEsDataUri}/.kibana/doc/config:{kibanaVersion}?type=index-pattern", configJson);
+                        //        await jsonClient.PutAsync<dynamic>($"{baseLogEsDataUri}/.kibana/doc/config:{kibanaVersion}", configJson);
 
-                            }).Wait();
+                        //    }).Wait();
                     }
 
                     firstManager.Status = string.Empty;
