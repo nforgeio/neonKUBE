@@ -108,7 +108,7 @@ cat <<EOF > /usr/local/bin/consul.sh
 # Temporarily enable the new UI until HashiCorp enables it by default.
 export CONSUL_UI_BETA=true
 
-/usr/local/bin/consul "$@"
+/usr/local/bin/consul "\$@"
 EOF
 
 chmod 700 /usr/local/bin/consul.sh
