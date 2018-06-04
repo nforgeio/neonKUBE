@@ -116,8 +116,8 @@ namespace Neon.Xunit.Cluster
     ///     <see cref="ClearCertificates(bool)"/><br/>
     ///     <see cref="ListCertificates(bool)"/><br/>
     ///     <see cref="PutCertificate(string, string)"/><br/>
-    ///     <see cref="PutSelfSignedCertificate(string, string)"/><br/>
     ///     <see cref="RemoveCertificate(string)"/><br/>
+    ///     <see cref="SetSelfSignedCertificate(string, string, Wildcard)"/>
     ///     </description>
     /// </item>
     /// <item>
