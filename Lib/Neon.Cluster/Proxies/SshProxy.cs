@@ -347,7 +347,7 @@ namespace Neon.Cluster
             // it appears to be deadlocked.  Note that this will likely
             // result in resource leaks.
 
-            var deadlockTimeout = TimeSpan.FromSeconds(5);
+            var deadlockTimeout = TimeSpan.FromSeconds(30);
 
             lock (syncLock)
             {
