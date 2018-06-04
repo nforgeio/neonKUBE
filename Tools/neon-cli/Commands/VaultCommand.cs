@@ -13,18 +13,13 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Consul;
 using Newtonsoft;
 using Newtonsoft.Json;
 using Renci.SshNet.Common;
 
 using Neon.Cluster;
 using Neon.Common;
-
-// $todo(jeff.lill):
-//
-// Implement command to change the AutoUnseal behavior for existing clusters:
-//
-//      neon vault autounseal on|off
 
 namespace NeonCli
 {
@@ -125,6 +120,7 @@ NOTE: The following Vault commands are not supported:
             string                      nodeName = leftCommandLine.GetOption("--node", null);
             CommandBundle               bundle;
             CommandResponse             response;
+            bool                        failed = false;
 
             if (!string.IsNullOrEmpty(nodeName))
             {
@@ -210,12 +206,10 @@ NOTE: The following Vault commands are not supported:
                             }
                         }
 
-                        Program.Exit(response.ExitCode);
+                        failed = response.ExitCode != 0;
                     }
                     else
                     {
-                        var failed = false;
-
                         foreach (var manager in cluster.Managers)
                         {
                             try
@@ -272,6 +266,13 @@ NOTE: The following Vault commands are not supported:
                             }
                         }
 
+                        if (!failed)
+                        {
+                            // Disable auto unseal until the operator explicitly unseals Vault again.
+
+                            cluster.Consul.KV.PutBool($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.DisableAutoUnseal}", true).Wait();
+                        }
+
                         Program.Exit(failed ? 1 : 0);
                     }
                     break;
@@ -300,7 +301,6 @@ NOTE: The following Vault commands are not supported:
                     }
                     else
                     {
-                        var failed    = false;
                         var allSealed = true;
 
                         foreach (var manager in cluster.Managers)
@@ -436,8 +436,6 @@ NOTE: The following Vault commands are not supported:
 
                             manager.SudoCommand($"vault-direct operator unseal -reset");
 
-                            var failed = false;
-
                             foreach (var key in vaultCredentials.UnsealKeys)
                             {
                                 response = manager.SudoCommand($"vault-direct operator unseal {key}", RunOptions.None);
@@ -455,6 +453,13 @@ NOTE: The following Vault commands are not supported:
                             {
                                 Console.WriteLine($"[{manager.Name}] unsealed");
                             }
+                        }
+
+                        if (!commandFailed)
+                        {
+                            // Reenable auto unseal.
+
+                            cluster.Consul.KV.PutBool($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.DisableAutoUnseal}", false).Wait();
                         }
 
                         Program.Exit(commandFailed ? 1 : 0);

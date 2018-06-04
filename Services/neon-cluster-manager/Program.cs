@@ -72,7 +72,29 @@ namespace NeonClusterManager
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    NeonClusterHelper.OpenRemoteCluster();
+                    var secrets = new DebugSecrets();
+
+                    // NOTE: 
+                    //
+                    // Add your target cluster's Vault credentials here for 
+                    // manual debugging.  Take care not to commit sensitive
+                    // credentials for production clusters.
+                    //
+                    // You'll find this information in the ROOT cluster login
+                    // for the target cluster.
+
+                    secrets.Add("neon-cluster-manager-vaultkeys",
+                        new VaultCredentials()
+                        {
+                            RootToken    = "a0d1b522-4b74-493a-7e23-d0d98a436051",
+                            KeyThreshold = 1,
+                            UnsealKeys   = new List<string>()
+                            {
+                                "VzHweeYWWOk7hklPmSDNctySSRjFU8rm7Ao3HOhci8k="
+                            }
+                        });
+
+                    NeonClusterHelper.OpenRemoteCluster(secrets);
                 }
                 else
                 {
@@ -202,7 +224,7 @@ namespace NeonClusterManager
 
             if (string.IsNullOrWhiteSpace(vaultCredentialsJson))
             {
-                log.LogInfo(() => "Vault unsealing is DISABLED because [neon-cluster-manager-vaultkeys] Docker secret is not specified.");
+                log.LogInfo(() => "Vault AUTO-UNSEAL is DISABLED because [neon-cluster-manager-vaultkeys] Docker secret is not specified.");
             }
             else
             {
@@ -210,11 +232,11 @@ namespace NeonClusterManager
                 {
                     vaultCredentials = NeonHelper.JsonDeserialize<VaultCredentials>(vaultCredentialsJson);
 
-                    log.LogInfo(() => "Vault unsealing is ENABLED.");
+                    log.LogInfo(() => "Vault AUTO-UNSEAL is ENABLED.");
                 }
                 catch (Exception e)
                 {
-                    log.LogError("Vault unsealing is DISABLED because the [neon-cluster-manager-vaultkeys] Docker secret could not be parsed.", e);
+                    log.LogError("Vault AUTO-UNSEAL is DISABLED because the [neon-cluster-manager-vaultkeys] Docker secret could not be parsed.", e);
                 }
             }
 
@@ -264,12 +286,24 @@ namespace NeonClusterManager
                 return vaultUris;
             }
 
+            // Vault runs on the cluster managers so add a URI for each manager.
+            // Note that we also need to ensure that each Vault manager hostname
+            // has an entry in [/etc/hosts].
+
             var clusterNodes = await docker.NodeListAsync();
+            var hosts        = File.ReadAllText("/etc/hosts");
 
             foreach (var managerNode in clusterNodes.Where(n => n.Role == "manager")
                 .OrderBy(n => n.Hostname))
             {
-                vaultUris.Add($"https://{managerNode.Hostname}.neon-vault.cluster:{NeonHostPorts.ProxyVault}");
+                var vaultHostname = $"{managerNode.Hostname}.neon-vault.cluster";
+
+                vaultUris.Add($"https://{vaultHostname}:{NeonHostPorts.ProxyVault}");
+
+                if (!hosts.Contains($"{vaultHostname} "))
+                {
+                    File.AppendAllText("/etc/hosts", $"{vaultHostname} {managerNode.Addr}\n");
+                }
             }
 
             return vaultUris;
@@ -402,9 +436,6 @@ namespace NeonClusterManager
         /// <returns>The tracking <see cref="Task"/>.</returns>
         private static async Task VaultPollerAsync(string vaultUri)
         {
-            // Each cluster manager instance is only going to manage the Vault instance
-            // running on the same host manager node.
-
             var lastVaultStatus = (VaultHealthStatus)null;
 
             // We're going to periodically log Vault status even
@@ -413,7 +444,7 @@ namespace NeonClusterManager
             var statusUpdateTimeUtc  = DateTime.UtcNow;
             var statusUpdateInterval = TimeSpan.FromMinutes(30);
 
-            log.LogDebug(() => $"Vault: opening [{vaultUri}]");
+            log.LogInfo(() => $"Vault: opening [{vaultUri}]");
 
             using (var vault = VaultClient.OpenWithToken(new Uri(vaultUri)))
             {
@@ -421,6 +452,8 @@ namespace NeonClusterManager
 
                 while (true)
                 {
+                    await Task.Delay(vaultPollInterval, terminator.CancellationToken);
+
                     try
                     {
                         log.LogDebug(() => $"Vault: polling [{vaultUri}]");
@@ -435,8 +468,9 @@ namespace NeonClusterManager
 
                         log.LogDebug(() => $"Vault: querying [{vaultUri}]");
 
-                        var newVaultStatus = await vault.GetHealthAsync(terminator.CancellationToken);
-                        var changed        = false;
+                        var newVaultStatus     = await vault.GetHealthAsync(terminator.CancellationToken);
+                        var autoUnsealDisabled = consul.KV.GetBoolOrDefault($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.DisableAutoUnseal}").Result;
+                        var changed            = false;
 
                         if (lastVaultStatus == null)
                         {
@@ -472,6 +506,11 @@ namespace NeonClusterManager
                                 log.LogInfo(() => $"Vault: status={newVaultStatus} [{vaultUri}]");
                             }
 
+                            if (newVaultStatus.IsSealed && autoUnsealDisabled)
+                            {
+                                log.LogInfo(() => $"Vault AUTO-UNSEAL is temporarily DISABLED because Consul [{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.DisableAutoUnseal}=true].");
+                            }
+
                             statusUpdateTimeUtc = DateTime.UtcNow + statusUpdateInterval;
                         }
 
@@ -481,9 +520,14 @@ namespace NeonClusterManager
 
                         if (newVaultStatus.IsSealed && vaultCredentials != null)
                         {
+                            if (autoUnsealDisabled)
+                            {
+                                continue;   // Don't unseal.
+                            }
+
                             try
                             {
-                                log.LogInfo(() => $"Vault: unsealing [{vaultUri}]");
+                                log.LogInfo(() => $"Vault: UNSEALING [{vaultUri}]");
                                 await vault.UnsealAsync(vaultCredentials, terminator.CancellationToken);
                                 log.LogInfo(() => $"Vault: UNSEALED [{vaultUri}]");
 
@@ -509,8 +553,6 @@ namespace NeonClusterManager
                     {
                         log.LogError($"Vault: [{vaultUri}]", e);
                     }
-
-                    await Task.Delay(vaultPollInterval, terminator.CancellationToken);
                 }
             }
         }

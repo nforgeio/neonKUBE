@@ -3176,10 +3176,11 @@ systemctl start neon-volume-plugin
 
                     NeonClusterHelper.PutDefinitionAsync(loginClone.Definition, savePets: true).Wait();
 
-                    // Save useful global cluster information.
+                    // Save useful global cluster information and initialize default settings.
 
                     cluster.Consul.KV.PutString($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.CreateDate}", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)).Wait();
                     cluster.Consul.KV.PutBool($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.AllowUnitTesting}", false).Wait();
+                    cluster.Consul.KV.PutBool($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.DisableAutoUnseal}", false).Wait();
                     cluster.Consul.KV.PutString($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.Uuid}", Guid.NewGuid().ToString("D").ToLowerInvariant()).Wait();
                 });
         }

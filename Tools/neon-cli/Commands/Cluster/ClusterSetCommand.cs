@@ -41,6 +41,7 @@ ARGUMENTS:
 SETTINGS:
 
     allow-unit-testing      - enable ClusterFixture unit testing (bool)
+    disable-auto-unseal     - disables automatic Vault unsealing (bool)
 ";
         /// <inheritdoc/>
         public override string[] Words
@@ -92,6 +93,11 @@ SETTINGS:
                 case NeonClusterSettings.AllowUnitTesting:
 
                     cluster.SetSetting(NeonClusterSettings.AllowUnitTesting, NeonHelper.ParseBool(fields[1]));
+                    break;
+
+                case NeonClusterSettings.DisableAutoUnseal:
+
+                    cluster.SetSetting(NeonClusterSettings.DisableAutoUnseal, NeonHelper.ParseBool(fields[1]));
                     break;
 
                 default:

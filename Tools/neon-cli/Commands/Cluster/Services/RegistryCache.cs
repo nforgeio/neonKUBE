@@ -149,6 +149,13 @@ namespace NeonCli
 
                         node.Status = "start: neon-registry-cache";
 
+                        var registry = publicRegistryCredentials.Registry;
+
+                        if (string.IsNullOrEmpty(registry) || registry.Equals("docker.io", StringComparison.InvariantCultureIgnoreCase))
+                        {
+                            registry = "registry-1.docker.io";
+                        }
+
                         var runCommand = new CommandBundle(
                             "docker run",
                             "--name", "neon-registry-cache",
@@ -158,7 +165,7 @@ namespace NeonCli
                             "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",
                             "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",
                             "--env", $"HOSTNAME={node.Name}.{NeonHosts.RegistryCache}",
-                            "--env", $"REGISTRY=https://{publicRegistryCredentials.Registry}",
+                            "--env", $"REGISTRY=https://{registry}",
                             "--env", $"USERNAME={publicRegistryCredentials.Username}",
                             "--env", $"PASSWORD={publicRegistryCredentials.Password}",
                             "--env", "LOG_LEVEL=info",
