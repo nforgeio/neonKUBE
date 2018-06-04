@@ -119,9 +119,26 @@ namespace NeonCli
                     }
 
                     AddCollectorSteps(steps);
-
                     cluster.Configure(steps);
 
+                    firstManager.Status = string.Empty;
+                });
+        }
+
+        /// <summary>
+        /// Configures the Kibana dashboard.
+        /// </summary>
+        /// <param name="firstManager">The first cluster proxy manager.</param>
+        public void ConfigureKibana(SshProxy<NodeDefinition> firstManager)
+        {
+            if (!cluster.Definition.Log.Enabled)
+            {
+                return;
+            }
+
+            firstManager.InvokeIdempotentAction("setup-log-kibana",
+                () =>
+                {
                     // Wait for the Elasticsearch cluster to come online.
 
                     var esNodeCount = cluster.Definition.Nodes.Count(n => n.Labels.LogEsData);
@@ -131,8 +148,10 @@ namespace NeonCli
                     using (var jsonClient = new JsonClient())
                     {
                         var baseLogEsDataUri = $"http://{NeonHosts.LogEsData}:{NeonHostPorts.ProxyPrivateHttpLogEsData}";
+                        var baseKibanaUri    = $"http://{firstManager.PrivateAddress}:{NeonHostPorts.Kibana}";
                         var timeout          = TimeSpan.FromMinutes(10);
                         var timeoutTime      = DateTime.UtcNow + timeout;
+                        var retry            = new LinearRetryPolicy(TransientDetector.Http, maxAttempts: 30, retryInterval: TimeSpan.FromSeconds(1));
 
                         // Wait for the Elasticsearch cluster.
 
@@ -160,63 +179,89 @@ namespace NeonCli
                             {
                                 if (DateTime.UtcNow >= timeoutTime)
                                 {
-                                    firstManager.Fault($"Unable to verify [neon-log-esdata] cluster after waiting [{timeout}].");
+                                    firstManager.Fault($"[neon-log-esdata] cluster not ready after waiting [{timeout}].");
                                     return;
                                 }
                             }
 
-                            Thread.Sleep(TimeSpan.FromSeconds(10));
+                            Thread.Sleep(TimeSpan.FromSeconds(1));
                         }
 
-                        firstManager.Status = "save the kibana [logstash-*] index pattern";
+                        // The Kibana API calls below require the [kbn-xsrf] header.
 
-                        // Save the [logstash-*] index pattern.  Note that MetricBeat is able to 
-                        // initialize itself.
+                        jsonClient.HttpClient.DefaultRequestHeaders.Add("kbn-xsrf", "true");
 
-                        //var retry = new LinearRetryPolicy(TransientDetector.Http);
+                        // Load the [logstash-*] index pattern directly into Elasticsearch.
 
-                        //retry.InvokeAsync(
-                        //    async () =>
-                        //    {
-                        //        var indexJson = ResourceFiles.Root.GetFolder("Kibana").GetFile("logstash-6-index.json").Contents;
+                        firstManager.Status = "load the [logstash-*] index pattern";
 
-                        //        indexJson = indexJson.Replace("${TIMESTAMP}", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
+                        retry.InvokeAsync(
+                            async () =>
+                            {
+                                var indexJson = ResourceFiles.Root.GetFolder("Kibana").GetFile("logstash-6-index.json").Contents;
 
-                        //        await jsonClient.PutAsync($"{baseLogEsDataUri}/.kibana/doc/index-pattern:logstash-*", indexJson);
+                                indexJson = indexJson.Replace("${TIMESTAMP}", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
 
-                        //    }).Wait();
+                                await jsonClient.PutAsync($"{baseLogEsDataUri}/.kibana/doc/index-pattern:logstash-*", indexJson);
 
-                        // We need to pull and run the Kibana image with the [version] command
-                        // to retrieve [package.json] file with this information.
+                            }).Wait();
 
-                        firstManager.Status = "determine kibana version and build";
+                        // Ensure that Kibana is ready before we submit any API requests.
 
-                        var kibanaImage = Program.ResolveDockerImage(cluster.Definition.Log.KibanaImage);
+                        firstManager.Status = "wait for kibana";
 
-                        firstManager.DockerCommand("docker pull", kibanaImage);
+                        retry.InvokeAsync(
+                            async () =>
+                            {
+                                var response = await jsonClient.GetAsync<dynamic>($"{baseKibanaUri}/api/status");
 
-                        var versionResponse = firstManager.SudoCommand("docker run --rm", kibanaImage, "version");
-                        var kibanaInfo      = NeonHelper.JsonDeserialize<dynamic>(versionResponse.OutputText);
-                        var kibanaVersion   = (string)kibanaInfo.version;
-                        var kibanaBuild     = (string)kibanaInfo.build.number;
+                                if (response.status.overall.state != "green")
+                                {
+                                    throw new NeonClusterException($"Kibana [state={response.status.overall.state}]");
+                                }
+
+                            }).Wait();
+
+                        // Add the index pattern to Kibana.
+
+                        firstManager.Status = "add index pattern to kibana";
+
+                        retry.InvokeAsync(
+                            async () =>
+                            {
+                                dynamic indexPattern = new ExpandoObject();
+                                dynamic attributes   = new ExpandoObject();
+
+                                attributes.title         = "logstash-*";
+                                attributes.timeFieldName = "@timestamp";
+
+                                indexPattern.attributes = attributes;
+
+                                await jsonClient.PostAsync($"{baseKibanaUri}/api/saved_objects/index-pattern/logstash-*?overwrite=true", indexPattern);
+
+                            }).Wait();
 
                         // Now we need to save a Kibana config document so that [logstash-*] will be
                         // the default index and the timestamp will be displayed as UTC and have a
-                        // more useful and terse format.
+                        // more useful terse format.
 
-                        //firstManager.Status = "configuring kibana";
+                        firstManager.Status = "configure kibana defaults";
 
-                        //retry.InvokeAsync(
-                        //    async () =>
-                        //    {
-                        //        var configJson = ResourceFiles.Root.GetFolder("Kibana").GetFile("kibana-config.json").Contents;
+                        retry.InvokeAsync(
+                            async () =>
+                            {
+                                dynamic setting = new ExpandoObject();
 
-                        //        configJson = configJson.Replace("${TIMESTAMP}", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
-                        //        configJson = configJson.Replace("${BUILDNUM}", kibanaBuild);
+                                setting.value = "logstash-*";
+                                await jsonClient.PostAsync($"{baseKibanaUri}/api/kibana/settings/defaultIndex", setting);
 
-                        //        await jsonClient.PutAsync<dynamic>($"{baseLogEsDataUri}/.kibana/doc/config:{kibanaVersion}", configJson);
+                                setting.value = "HH:mm:ss.SSS MM-DD-YYYY";
+                                await jsonClient.PostAsync($"{baseKibanaUri}/api/kibana/settings/dateFormat", setting);
 
-                        //    }).Wait();
+                                setting.value = "UTC";
+                                await jsonClient.PostAsync($"{baseKibanaUri}/api/kibana/settings/dateFormat:tz", setting);
+
+                            }).Wait();
                     }
 
                     firstManager.Status = string.Empty;

@@ -434,6 +434,8 @@ OPTIONS:
                         {
                             logServices.DeployContainers(node, stepDelay);
                         });
+
+                    controller.AddGlobalStep("kibana config", () => logServices.ConfigureKibana(cluster.FirstManager));
                 }
 
                 controller.AddGlobalStep("dashboards", () => ConfigureDashboards());
