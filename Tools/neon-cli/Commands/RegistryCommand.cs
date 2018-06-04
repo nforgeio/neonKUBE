@@ -40,9 +40,9 @@ USAGE:
 
     Manage an optional local cluster registry:
     ------------------------------------------
-    neon registry service deploy REGISTRY CERT-PATH SECRET [USERNAME [PASSWORD|-]]
+    neon registry service create REGISTRY CERT-PATH SECRET [USERNAME [PASSWORD|-]]
     neon registry service prune
-    neon registry service remove
+    neon registry service remove|rm
     neon registry service status
 
 ARGUMENTS:
@@ -224,7 +224,7 @@ is running or EXITCODE=1 if it's not.
 
                 case "service":
 
-                    var serviceCommand = commandLine.Arguments.ElementAtOrDefault(0);
+                    var serviceCommand = commandLine.Arguments.ElementAtOrDefault(1);
 
                     if (string.IsNullOrEmpty(serviceCommand))
                     {
@@ -234,7 +234,7 @@ is running or EXITCODE=1 if it's not.
 
                     switch (serviceCommand)
                     {
-                        case "deploy":
+                        case "create":
 
                             registry = commandLine.Arguments.ElementAtOrDefault(2);
 
@@ -258,13 +258,13 @@ is running or EXITCODE=1 if it's not.
                                 Program.Exit(1);
                             }
 
-                            if (File.Exists(certPath))
+                            if (!File.Exists(certPath))
                             {
                                 Console.Error.WriteLine($"*** ERROR: Cannot load certificate from [{certPath}].");
                                 Program.Exit(1);
                             }
 
-                            var certificate = TlsCertificate.Load(File.ReadAllText(certPath));
+                            var certificate = TlsCertificate.Load(certPath);
 
                             certificate.Parse();
 
@@ -308,6 +308,7 @@ is running or EXITCODE=1 if it's not.
 
                             // Execute the command.
 
+                            Console.WriteLine();
                             cluster.Registry.CreateLocalRegistry(registry, username, password, secret, certificate,
                                 progress:  message => Console.WriteLine(message));
 
@@ -321,10 +322,12 @@ is running or EXITCODE=1 if it's not.
                                 Program.Exit(1);
                             }
 
+                            Console.WriteLine();
                             cluster.Registry.PruneLocalRegistry(progress: message => Console.WriteLine(message));
                             break;
 
                         case "remove":
+                        case "rm":
 
                             if (!cluster.Registry.HasLocalRegistry)
                             {
@@ -332,10 +335,13 @@ is running or EXITCODE=1 if it's not.
                                 Program.Exit(1);
                             }
 
+                            Console.WriteLine();
                             cluster.Registry.RemoveLocalRegistry(progress: message => Console.WriteLine(message));
                             break;
 
                         case "status":
+
+                            Console.WriteLine();
 
                             if (cluster.Registry.HasLocalRegistry)
                             {

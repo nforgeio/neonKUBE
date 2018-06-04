@@ -610,7 +610,7 @@ namespace NeonCli.Ansible
                         cluster.Registry.SetLocalHostname(hostname);
                         cluster.Registry.SetLocalSecret(secret);
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Adding cluster DNS host entry for [{hostname}] (slow).");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Adding cluster DNS host entry for [{hostname}] (60 seconds).");
                         cluster.DnsHosts.Set(dnsRedirect, waitUntilPropagated: true);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Writing load balancer rule.");
@@ -662,7 +662,7 @@ namespace NeonCli.Ansible
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating load balancer rule.");
                             cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
 
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating cluster DNS host entry for [{hostname}] (slow).");
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating cluster DNS host entry for [{hostname}] (60 seconds).");
                             cluster.DnsHosts.Set(dnsRedirect, waitUntilPropagated: true);
 
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster hostname [{hostname}].");

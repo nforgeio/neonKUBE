@@ -367,13 +367,13 @@ namespace Neon.Cluster
             cluster.Registry.SetLocalHostname(hostname);
             cluster.Registry.SetLocalSecret(secret);
 
-            progress?.Invoke($"Adding cluster DNS host entry for [{hostname}] (slow).");
+            progress?.Invoke($"Adding cluster DNS host entry for [{hostname}] (60 seconds).");
             cluster.DnsHosts.Set(GetRegistryDnsEntry(hostname), waitUntilPropagated: true);
 
             progress?.Invoke($"Writing load balancer rule.");
             cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
 
-            progress?.Invoke($"Creating the [neon-registry] service.");
+            progress?.Invoke($"Creating [neon-registry] service.");
 
             var manager = cluster.GetHealthyManager();
 
@@ -459,16 +459,9 @@ namespace Neon.Cluster
 
                                     if (response.ExitCode != 0)
                                     {
-                                        var message = $"Error removing [neon-registry] volume from [{clonedNode.Name}: {response.ErrorText}";
-
-                                        lock (syncLock)
-                                        {
-                                            progress?.Invoke(message);
-                                        }
-
                                         if (response.AllText.Contains("volume is in use"))
                                         {
-                                            throw new TransientException(message);
+                                            throw new TransientException($"Error removing [neon-registry] volume from [{clonedNode.Name}: {response.ErrorText}");
                                         }
                                     }
                                     else
