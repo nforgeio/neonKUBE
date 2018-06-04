@@ -448,8 +448,6 @@ namespace NeonClusterManager
 
             using (var vault = VaultClient.OpenWithToken(new Uri(vaultUri)))
             {
-                vault.AllowSelfSignedCertificates = true;
-
                 while (true)
                 {
                     await Task.Delay(vaultPollInterval, terminator.CancellationToken);

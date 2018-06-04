@@ -1283,7 +1283,17 @@ namespace Neon.Cluster
 
             VerifyConnected();
 
-            return VaultClient.OpenWithToken(VaultUri, token);
+            var client = VaultClient.OpenWithToken(VaultUri, token);
+
+            // $todo(jeff.lill):
+            //
+            // This should be set from config.  See issue:
+            //
+            //      https://github.com/jefflill/NeonForge/issues/253
+
+            client.AllowSelfSignedCertificates = true;
+
+            return client;
         }
 
         /// <summary>

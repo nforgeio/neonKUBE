@@ -57,8 +57,16 @@ namespace Neon.Cluster
 
             if (!string.IsNullOrEmpty(token))
             {
-                vaultClient.jsonClient.HttpClient.DefaultRequestHeaders.Add("X-Vault-Token", token);
+                vaultClient.jsonClient.DefaultRequestHeaders.Add("X-Vault-Token", token);
             }
+
+            // $todo(jeff.lill):
+            //
+            // This should be set from config.  See issue:
+            //
+            //      https://github.com/jefflill/NeonForge/issues/253
+
+            vaultClient.AllowSelfSignedCertificates = true;
 
             return vaultClient;
         }
@@ -85,7 +93,15 @@ namespace Neon.Cluster
 
             var loginResponse = vaultClient.jsonClient.PostAsync($"/{vaultApiVersion}/auth/approle/login", loginPayload).Result.AsDynamic();
 
-            vaultClient.jsonClient.HttpClient.DefaultRequestHeaders.Add("X-Vault-Token", (string)loginResponse.auth.client_token);
+            vaultClient.jsonClient.DefaultRequestHeaders.Add("X-Vault-Token", (string)loginResponse.auth.client_token);
+
+            // $todo(jeff.lill):
+            //
+            // This should be set from config.  See issue:
+            //
+            //      https://github.com/jefflill/NeonForge/issues/253
+
+            vaultClient.AllowSelfSignedCertificates = true;
 
             return vaultClient;
         }
