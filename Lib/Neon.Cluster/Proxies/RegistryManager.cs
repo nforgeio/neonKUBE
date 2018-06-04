@@ -513,6 +513,56 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Removes then local Docker registry from the cluster.
+        /// </summary>
+        /// <param name="progress">Optional action that will be called with a progress message.</param>
+        /// <exception cref="NeonClusterException">Thrown if no registry is deployed or there was an error removing it.</exception>
+        public void PruneLocalRegistry(Action<string> progress = null)
+        {
+            // We're going to upload a script to one of the managers that handles
+            // putting the [neon-registry] service into READ-ONLY mode, running
+            // the garbage collection container and then restoring [neon-registry]
+            // to READ/WRITE mode.
+            //
+            // The nice thing about this is that the operation will continue to
+            // completion on the manager node even if we lose the SSH connection.
+
+            var manager      = cluster.GetHealthyManager();
+            var updateScript =
+@"#!/bin/bash
+# Update [neon-registry] to READ-ONLY mode:
+
+docker service update --env-rm READ_ONLY --env-add READ_ONLY=true neon-registry
+
+# Prune the registry:
+
+docker run \
+   --name neon-registry-prune \
+   --restart-condition=none \
+   --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
+   neoncluster/neon-registry garbage-collect
+
+# Restore [neon-registry] to READ/WRITE mode:
+
+docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
+";
+            var bundle = new CommandBundle("./collect.sh");
+
+            bundle.AddFile("collect.sh", updateScript, isExecutable: true);
+
+            progress?.Invoke("Registry prune started.");
+
+            var pruneResponse = manager.SudoCommand(bundle, RunOptions.None);
+
+            if (pruneResponse.ExitCode != 0)
+            {
+                throw new NeonClusterException($"The prune operation failed.  The registry may be running in READ-ONLY mode: {pruneResponse.ErrorText}");
+            }
+
+            progress?.Invoke("Registry prune completed.");
+        }
+
+        /// <summary>
         /// Returns the local cluster DNS override for the registry.
         /// </summary>
         /// <param name="hostname">The registry hostname.</param>
@@ -523,8 +573,7 @@ namespace Neon.Cluster
             {
                 Hostname  = hostname,
                 IsSystem  = true,
-                Endpoints =
-                new List<DnsEndpoint>()
+                Endpoints = new List<DnsEndpoint>()
                 {
                     new DnsEndpoint()
                     {
