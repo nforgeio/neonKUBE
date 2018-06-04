@@ -242,6 +242,10 @@ prompt             = no
 default_md         = sha256
 distinguished_name = dn
 
+[req_v3]
+basicConstraints = CA:TRUE
+keyUsage = nonRepudiation, digitalSignature, keyEncipherment
+
 [dn]
 C=US
 ST=.
@@ -263,6 +267,7 @@ subjectAltName = {sbAltNames}
                     $"-subj \"/C=--/ST=./L=./O=./CN={hostname}\" " +
                     $"-reqexts san " +
                     $"-extensions san " +
+                    $"-extensions req_v3 " +
                     $"-keyout \"{keyPath}\" " +
                     $"-out \"{certPath}\" " +
                     $"-config \"{configPath}\"");
