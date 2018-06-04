@@ -35,13 +35,11 @@ USAGE:
 
     Manage cluster registry logins:
     -------------------------------
-
     neon registry login [REGISTRY [USERNAME [PASSWORD|-]]]
     neon registry logout [REGISTRY]
 
     Manage an optional local cluster registry:
-    -------------------------------------------
-
+    ------------------------------------------
     neon registry service deploy REGISTRY CERT-PATH SECRET [USERNAME [PASSWORD|-]]
     neon registry service prune
     neon registry service remove
@@ -224,119 +222,140 @@ is running or EXITCODE=1 if it's not.
                     cluster.Registry.Logout(registry);
                     break;
 
-                //case "service":
+                case "service":
 
-                //    var serviceCommand = commandLine.Arguments.ElementAtOrDefault(0);
+                    var serviceCommand = commandLine.Arguments.ElementAtOrDefault(0);
 
-                //    if (string.IsNullOrEmpty(serviceCommand))
-                //    {
-                //        Console.Error.WriteLine($"*** ERROR: service COMMAND expected.");
-                //        Program.Exit(1);
-                //    }
+                    if (string.IsNullOrEmpty(serviceCommand))
+                    {
+                        Console.Error.WriteLine($"*** ERROR: service COMMAND expected.");
+                        Program.Exit(1);
+                    }
 
-                //    switch (serviceCommand)
-                //    {
-                //        case "deploy":
+                    switch (serviceCommand)
+                    {
+                        case "deploy":
 
-                //            registry = commandLine.Arguments.ElementAtOrDefault(2);
+                            registry = commandLine.Arguments.ElementAtOrDefault(2);
 
-                //            if (string.IsNullOrEmpty(registry))
-                //            {
-                //                Console.Error.WriteLine($"*** ERROR: Expected HOSTNAME.");
-                //                Program.Exit(1);
-                //            }
+                            if (string.IsNullOrEmpty(registry))
+                            {
+                                Console.Error.WriteLine($"*** ERROR: Expected HOSTNAME.");
+                                Program.Exit(1);
+                            }
 
-                //            if (!ClusterDefinition.NameRegex.IsMatch(registry))
-                //            {
-                //                Console.Error.WriteLine($"*** ERROR: [{registry}] is not a valid hostname.");
-                //                Program.Exit(1);
-                //            }
+                            if (!ClusterDefinition.NameRegex.IsMatch(registry))
+                            {
+                                Console.Error.WriteLine($"*** ERROR: [{registry}] is not a valid hostname.");
+                                Program.Exit(1);
+                            }
 
-                //            certPath = commandLine.Arguments.ElementAtOrDefault(3);
+                            certPath = commandLine.Arguments.ElementAtOrDefault(3);
 
-                //            if (string.IsNullOrEmpty(certPath))
-                //            {
-                //                Console.Error.WriteLine($"*** ERROR: Expected CERT-PATH.");
-                //                Program.Exit(1);
-                //            }
+                            if (string.IsNullOrEmpty(certPath))
+                            {
+                                Console.Error.WriteLine($"*** ERROR: Expected CERT-PATH.");
+                                Program.Exit(1);
+                            }
 
-                //            if (File.Exists(certPath))
-                //            {
-                //                Console.Error.WriteLine($"*** ERROR: Cannot load certificate from [{certPath}].");
-                //                Program.Exit(1);
-                //            }
+                            if (File.Exists(certPath))
+                            {
+                                Console.Error.WriteLine($"*** ERROR: Cannot load certificate from [{certPath}].");
+                                Program.Exit(1);
+                            }
 
-                //            var certificate = TlsCertificate.Load(File.ReadAllText(certPath));
+                            var certificate = TlsCertificate.Load(File.ReadAllText(certPath));
 
-                //            certificate.Parse();
+                            certificate.Parse();
 
-                //            if (!certificate.IsValidDate())
-                //            {
-                //                Console.Error.WriteLine($"*** ERROR: The certificate expired on [{certificate.ValidUntil}].");
-                //                Program.Exit(1);
-                //            }
+                            if (!certificate.IsValidDate())
+                            {
+                                Console.Error.WriteLine($"*** ERROR: The certificate expired on [{certificate.ValidUntil}].");
+                                Program.Exit(1);
+                            }
 
-                //            if (!certificate.IsValidHost(registry))
-                //            {
-                //                Console.Error.WriteLine($"*** ERROR: The certificate does not cover [{registry}].");
-                //                Program.Exit(1);
-                //            }
+                            if (!certificate.IsValidHost(registry))
+                            {
+                                Console.Error.WriteLine($"*** ERROR: The certificate does not cover [{registry}].");
+                                Program.Exit(1);
+                            }
 
-                //            secret = commandLine.Arguments.ElementAtOrDefault(4);
+                            secret = commandLine.Arguments.ElementAtOrDefault(4);
 
-                //            if (string.IsNullOrEmpty(secret))
-                //            {
-                //                Console.Error.WriteLine($"*** ERROR: Expected SECRET.");
-                //                Program.Exit(1);
-                //            }
+                            if (string.IsNullOrEmpty(secret))
+                            {
+                                Console.Error.WriteLine($"*** ERROR: Expected SECRET.");
+                                Program.Exit(1);
+                            }
 
-                //            username = commandLine.Arguments.ElementAtOrDefault(5);
+                            username = commandLine.Arguments.ElementAtOrDefault(5);
 
-                //            if (!string.IsNullOrEmpty(username))
-                //            {
-                //                password = commandLine.Arguments.ElementAtOrDefault(6);
+                            if (!string.IsNullOrEmpty(username))
+                            {
+                                password = commandLine.Arguments.ElementAtOrDefault(6);
 
-                //                if (password == "-")
-                //                {
-                //                    password = NeonHelper.ReadStandardInputText().Trim();
+                                if (password == "-")
+                                {
+                                    password = NeonHelper.ReadStandardInputText().Trim();
 
-                //                    if (string.IsNullOrEmpty(password))
-                //                    {
-                //                        Console.Error.WriteLine("*** ERROR: No password was read from STDIN.");
-                //                        Program.Exit(1);
-                //                    }
-                //                }
-                //            }
+                                    if (string.IsNullOrEmpty(password))
+                                    {
+                                        Console.Error.WriteLine("*** ERROR: No password was read from STDIN.");
+                                        Program.Exit(1);
+                                    }
+                                }
+                            }
 
-                //            // Execute the command.
+                            // Execute the command.
 
-                //            cluster.Registry.Deploy(registry, username, certificate, secret, username, password);
-                //            break;
+                            cluster.Registry.CreateLocalRegistry(registry, username, password, secret, certificate,
+                                progress:  message => Console.WriteLine(message));
 
-                //        case "prune":
+                            break;
 
-                //            cluster.Registry.Prune();
-                //            break;
+                        case "prune":
 
-                //        case "remove":
+                            if (!cluster.Registry.HasLocalRegistry)
+                            {
+                                Console.Error.WriteLine($"*** ERROR: The [{cluster.Name}] cluster does not have a local registry deployed.");
+                                Program.Exit(1);
+                            }
 
-                //            cluster.Registry.Remove();
-                //            break;
+                            cluster.Registry.PruneLocalRegistry(progress: message => Console.WriteLine(message));
+                            break;
 
-                //        case "status":
+                        case "remove":
 
-                //            var status = cluster.Registry.Status();
+                            if (!cluster.Registry.HasLocalRegistry)
+                            {
+                                Console.Error.WriteLine($"*** ERROR: The [{cluster.Name}] cluster does not have a local registry deployed.");
+                                Program.Exit(1);
+                            }
 
+                            cluster.Registry.RemoveLocalRegistry(progress: message => Console.WriteLine(message));
+                            break;
 
-                //            break;
+                        case "status":
 
-                //        default:
+                            if (cluster.Registry.HasLocalRegistry)
+                            {
+                                Console.WriteLine($"Local Docker registry is deployed on [{cluster.Name}].");
+                                Program.Exit(0);
+                            }
+                            else
+                            {
+                                Console.WriteLine($"No local Docker registry is deployed on [{cluster.Name}].");
+                                Program.Exit(1);
+                            }
+                            break;
 
-                //            Console.Error.WriteLine($"*** ERROR: Unexpected [{serviceCommand}] command.");
-                //            Program.Exit(1);
-                //            break;
-                //    }
-                //    break;
+                        default:
+
+                            Console.Error.WriteLine($"*** ERROR: Unexpected [{serviceCommand}] command.");
+                            Program.Exit(1);
+                            break;
+                    }
+                    break;
 
                 default:
 
