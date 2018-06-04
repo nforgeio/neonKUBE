@@ -1244,9 +1244,11 @@ namespace Neon.Xunit.Cluster
         /// Specifies the hostname to be protected by the certificate
         /// like <b>test.com</b>.
         /// </para>
-        /// <note>
-        /// You can specify wildcard certifictes like: <b>*.test.com</b>.
-        /// </note>
+        /// </param>
+        /// <param name="wildcard">
+        /// Optionally create a wildcard by specifying
+        /// <see cref="Wildcard.SubdomainsOnly"/> or 
+        /// <see cref="Wildcard.RootAndSubdomains"/>.
         /// </param>
         /// <remarks>
         /// This method is handy for verifying SSL functionality without
@@ -1256,7 +1258,7 @@ namespace Neon.Xunit.Cluster
         /// self-signed certificates.  You'll need to disable these
         /// checks in your test code.
         /// </remarks>
-        public void PutSelfSignedCertificate(string name, string hostname)
+        public void SetSelfSignedCertificate(string name, string hostname, Wildcard wildcard = Wildcard.None)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
@@ -1264,7 +1266,7 @@ namespace Neon.Xunit.Cluster
             base.CheckDisposed();
             this.CheckCluster();
 
-            cluster.Certificate.Set(name, TlsCertificate.CreateSelfSigned(hostname));
+            cluster.Certificate.Set(name, TlsCertificate.CreateSelfSigned(hostname, wildcard: wildcard));
         }
 
         /// <summary>
