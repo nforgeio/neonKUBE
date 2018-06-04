@@ -156,6 +156,12 @@ perform the command on the operator's workstation rather than within a
 Docker container.  You can accomplish this by using the [--noshim].
 Note that the tool may require admin privileges for [--noshim] mode.
 ";
+            // $todo(jeff.lill): DELETE THIS!
+
+            var cert = Neon.Cryptography.TlsCertificate.CreateSelfSigned("test.com", wildcard: Neon.Cryptography.Wildcard.RootAndSubdomains);
+
+            File.WriteAllText(@"C:\Temp\test.pem", cert.CombinedNormalizedPem);
+
             // Disable any logging that might be performed by library classes.
 
             LogManager.Default.LogLevel = LogLevel.None;
