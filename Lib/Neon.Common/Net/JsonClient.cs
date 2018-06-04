@@ -133,6 +133,12 @@ namespace Neon.Net
         }
 
         /// <summary>
+        /// Returns the base client's default request headers property to make it easy
+        /// to customize request headers.
+        /// </summary>
+        public HttpRequestHeaders DefaultRequestHeaders => client.DefaultRequestHeaders;
+
+        /// <summary>
         /// Specifies the MIME type to use posting or putting documents to the endpoint.
         /// This defaults to the standard <b>application/json</b> but some services
         /// may require custom values.

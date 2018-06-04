@@ -189,7 +189,7 @@ namespace NeonCli
 
                         // The Kibana API calls below require the [kbn-xsrf] header.
 
-                        jsonClient.HttpClient.DefaultRequestHeaders.Add("kbn-xsrf", "true");
+                        jsonClient.DefaultRequestHeaders.Add("kbn-xsrf", "true");
 
                         // Load the [logstash-*] index pattern directly into Elasticsearch.
 
