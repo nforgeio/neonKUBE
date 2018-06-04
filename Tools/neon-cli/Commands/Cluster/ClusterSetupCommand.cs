@@ -700,7 +700,7 @@ OPTIONS:
 
             if (clusterLogin.VaultCertificate == null)
             {
-                clusterLogin.VaultCertificate = TlsCertificate.CreateSelfSigned(NeonHosts.Vault, bitCount, validDays);
+                clusterLogin.VaultCertificate = TlsCertificate.CreateSelfSigned(NeonHosts.Vault, bitCount, validDays, Wildcard.RootAndSubdomains);
             }
 
             // $todo(jeff.lill): Generate the Consul cert.

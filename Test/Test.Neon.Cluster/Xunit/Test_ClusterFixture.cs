@@ -79,7 +79,7 @@ services:
 
                             cluster.PutLoadBalancerRule("private", privateRule);
                             cluster.PutCertificate("test-certificate", TestCertificate.CombinedPem);
-                            cluster.PutSelfSignedCertificate("test-certificate2", "*.foo.com");
+                            cluster.SetSelfSignedCertificate("test-certificate2", "*.foo.com");
                         },
                         async () => await cluster.Consul.KV.PutString("test/value1", "one"),
                         async () => await cluster.Consul.KV.PutString("test/value2", "two"),

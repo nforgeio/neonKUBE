@@ -173,8 +173,14 @@ namespace Neon.Cryptography
         /// The number of days the certificate will be valid.  This defaults to 365,000 days
         /// or about 1,000 years.
         /// </param>
+        /// <param name="wildcard">
+        /// Optionally generate a wildcard certificate for the subdomains of 
+        /// <paramref name="hostname"/> or the combination of the subdomains
+        /// and the hostname.  This defaults to <see cref="Wildcard.None"/>
+        /// which does not generate a wildcard certificate.
+        /// </param>
         /// <returns>The <see cref="TlsCertificate"/>.</returns>
-        public static TlsCertificate CreateSelfSigned(string hostname, int bitCount = 2048, int validDays = 365000)
+        public static TlsCertificate CreateSelfSigned(string hostname, int bitCount = 2048, int validDays = 365000, Wildcard wildcard = Wildcard.None)
         {
             Covenant.Requires<ArgumentException>(!string.IsNullOrEmpty(hostname));
             Covenant.Requires<ArgumentException>(bitCount == 1024 || bitCount == 2048 || bitCount == 4096);
@@ -184,16 +190,82 @@ namespace Neon.Cryptography
             var certPath     = Path.Combine(tempFolder, "cache.crt");
             var keyPath      = Path.Combine(tempFolder, "cache.key");
             var combinedPath = Path.Combine(tempFolder, "combined.pem");
+            var hostnames    = new List<string>();
 
             Directory.CreateDirectory(tempFolder);
 
+            switch (wildcard)
+            {
+                case Wildcard.None:
+
+                    hostnames.Add(hostname);
+                    break;
+
+                case Wildcard.SubdomainsOnly:
+
+                    hostname = $"*.{hostname}";
+                    hostnames.Add(hostname);
+                    break;
+
+                case Wildcard.RootAndSubdomains:
+
+                    hostnames.Add(hostname);
+                    hostnames.Add($"*.{hostname}");
+                    break;
+            }
+
             try
             {
+                // We need to specify [Subject Alternative Names] 
+                // because specifying the hostname as the [Common Name]
+                // is deprecated by the IETF and CA/Browser Forums.
+                //
+                // The latest OpenSSL release candidate for (v1.1.1) includes 
+                // a new command line option for this but the current release
+                // does not, so we're going to generate a temporary config
+                // file specifiying this.
+
+                var configPath = Path.Combine(tempFolder, "cert.conf");
+                var sbConfig   = new StringBuilder();
+                var sbAltNames = new StringBuilder();
+
+                foreach (var name in hostnames)
+                {
+                    sbAltNames.AppendWithSeparator($"DNS:{name}", ", ");
+                }
+
+                sbConfig.Append(
+$@"
+[req]
+default_bits       = 2048
+prompt             = no
+default_md         = sha256
+distinguished_name = dn
+
+[dn]
+C=US
+ST=.
+L=.
+O=.
+OU=.
+CN={hostname}
+
+[san]
+subjectAltName = {sbAltNames}
+");
+
+                sbConfig.AppendLine();
+
+                File.WriteAllText(configPath, NeonHelper.ToLinuxLineEndings(sbConfig.ToString()));
+
                 var result = NeonHelper.ExecuteCaptureStreams("openssl",
                     $"req -newkey rsa:{bitCount} -nodes -sha256 -x509 -days {validDays} " +
                     $"-subj \"/C=--/ST=./L=./O=./CN={hostname}\" " +
+                    $"-reqexts san " +
+                    $"-extensions san " +
                     $"-keyout \"{keyPath}\" " +
-                    $"-out \"{certPath}\"");
+                    $"-out \"{certPath}\" " +
+                    $"-config \"{configPath}\"");
 
                 if (result.ExitCode != 0)
                 {
@@ -690,7 +762,7 @@ namespace Neon.Cryptography
 
         /// <summary>
         /// Extracts certificate properties such as <see cref="ValidFrom"/>, <see cref="ValidUntil"/>, and <see cref="Hosts"/> 
-        /// from the dump output from the <b>OpenSSL</b> tool (e.g. via <c>openssl -in cert.pem -text</c>).
+        /// from the dump output from the <b>OpenSSL</b> tool (e.g. via <c>openssl x509 -in cert.pem -text</c>).
         /// </summary>
         /// <param name="info">The dumped certificate information.</param>
         /// <remarks>
