@@ -236,13 +236,13 @@ namespace Neon.Cryptography
 
                 sbConfig.Append(
 $@"
-[REQ]
+[req]
 default_bits       = 2048
 prompt             = no
 default_md         = sha256
-distinguished_name = DN
+distinguished_name = dn
 
-[DN]
+[dn]
 C=US
 ST=.
 L=.
@@ -250,7 +250,7 @@ O=.
 OU=.
 CN={hostname}
 
-[SAN]
+[san]
 subjectAltName = {sbAltNames}
 ");
 
@@ -261,8 +261,8 @@ subjectAltName = {sbAltNames}
                 var result = NeonHelper.ExecuteCaptureStreams("openssl",
                     $"req -newkey rsa:{bitCount} -nodes -sha256 -x509 -days {validDays} " +
                     $"-subj \"/C=--/ST=./L=./O=./CN={hostname}\" " +
-                    $"-reqexts SAN " +
-                    $"-extensions SAN " +
+                    $"-reqexts san " +
+                    $"-extensions san " +
                     $"-keyout \"{keyPath}\" " +
                     $"-out \"{certPath}\" " +
                     $"-config \"{configPath}\"");
