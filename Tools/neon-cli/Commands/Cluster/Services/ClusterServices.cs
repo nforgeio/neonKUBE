@@ -301,6 +301,7 @@ namespace NeonCli
                         "--env", "START_SECONDS=10",
                         "--env", "LOG_LEVEL=INFO",
                         "--env", "DEBUG=false",
+                        "--env", "VAULT_SKIP_VERIFY=true",
                         "--secret", "neon-proxy-public-credentials",
                         publicPublish,
                         proxyConstraint,
@@ -334,6 +335,7 @@ namespace NeonCli
                         "--env", "START_SECONDS=10",
                         "--env", "LOG_LEVEL=INFO",
                         "--env", "DEBUG=false",
+                        "--env", "VAULT_SKIP_VERIFY=true",
                         "--secret", "neon-proxy-private-credentials",
                         privatePublish,
                         proxyConstraint,
@@ -391,6 +393,7 @@ namespace NeonCli
                         "--env", "START_SECONDS=10",
                         "--env", "LOG_LEVEL=INFO",
                         "--env", "DEBUG=false",
+                        "--env", "VAULT_SKIP_VERIFY=true",
                         "--network", "host",
                         "--restart", "always",
                         Program.ResolveDockerImage(cluster.Definition.ProxyImage));
@@ -416,6 +419,7 @@ namespace NeonCli
                         "--env", "START_SECONDS=10",
                         "--env", "LOG_LEVEL=INFO",
                         "--env", "DEBUG=false",
+                        "--env", "VAULT_SKIP_VERIFY=true",
                         "--network", "host",
                         "--restart", "always",
                         Program.ResolveDockerImage(cluster.Definition.ProxyImage));

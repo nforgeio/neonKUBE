@@ -48,7 +48,9 @@ All you need to do is pass the **UPDATE_KEY** environment variable as the Consul
 
 * **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
-* **DEBUG** (*optional*) - set to `true` to enable debug mode.  In this mode, the service will not delete the proxy configuration and certificate after HAProxy loads them into memory so these can be examined for debugging purposes.  HAProxy will also be started in debug mode so that it will emit extensive activity information to standard output. This should not be enabled for production..
+* **DEBUG** (*optional*) - set to `true` to enable debug mode.  In this mode, the service will not delete the proxy configuration and certificate after HAProxy loads them into memory so these can be examined for debugging purposes.  HAProxy will also be started in debug mode so that it will emit extensive activity information to standard output. This should not be enabled for production.
+
+* **VAULT_SKIP_VERIFY** (*optional*) - defined if the service is not to validate the Vault TLS certificate authority.  This is used when Vault is secured by a self-signed certificate, the default condition.
 
 # HAProxy ZIP Archive
 
@@ -120,6 +122,7 @@ docker service create \
     --env VAULT_CREDENTIALS=neon-proxy-public-credentials \
     --env LOG_LEVEL=INFO \
     --env DEBUG=false \
+    --env VAULT_SKIP_VERIFY=true \
     --publish 5100-5299:5100-5299 \
     --secret neon-proxy-public-credentials \
     --constraint node.role!=manager \
@@ -137,6 +140,7 @@ docker service create \
     --env VAULT_CREDENTIALS=neon-proxy-private-credentials \
     --env LOG_LEVEL=INFO \
     --env DEBUG=false \
+    --env VAULT_SKIP_VERIFY=true \
     --publish 5300-5499:5300-5499 \
     --secret neon-proxy-public-credentials \
     --constraint node.role!=manager \
