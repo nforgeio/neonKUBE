@@ -229,19 +229,64 @@ namespace Neon.Cluster
 
             try
             {
-                var response = jsonResponse.AsDynamic();
-            
-                return new VaultHealthStatus()
+                // Build the response from the status code as
+                // described here:
+                //
+                //      https://www.vaultproject.io/api/system/health.html
+
+                var status = new VaultHealthStatus()
                 {
-                    IsInitialized = (bool)response.GetValue("initialized"),
-                    IsSealed      = (bool)response.GetValue("sealed"),
-                    IsStandby     = (bool)response.GetValue("standby"),
-                    Version       = (string)response.GetValue("version")
+                    Version = "0"
                 };
+
+                switch (jsonResponse.StatusCode)
+                {
+                    case (HttpStatusCode)200:
+
+                        status.IsInitialized = true;
+                        status.IsSealed      = false;
+                        status.IsStandby     = false;
+                        break;
+
+                    case (HttpStatusCode)429:
+
+                        status.IsInitialized = true;
+                        status.IsSealed      = false;
+                        status.IsStandby     = true;
+                        break;
+
+                    case (HttpStatusCode)472:
+
+                        status.IsInitialized = true;
+                        status.IsSealed      = false;
+                        status.IsStandby     = false;
+                        status.IsRecovering  = true;
+                        break;
+
+                    case (HttpStatusCode)501:
+
+                        status.IsInitialized = false;
+                        status.IsSealed      = false;
+                        status.IsStandby     = false;
+                        break;
+
+                    case (HttpStatusCode)503:
+
+                        status.IsInitialized = true;
+                        status.IsSealed      = true;
+                        status.IsStandby     = false;
+                        break;
+
+                    default:
+
+                        throw new NeonClusterException($"Vault status returned unexpected HTTP [status={(int)jsonResponse.StatusCode}].");
+                }
+
+                return status;
             }
-            catch
+            catch (HttpException)
             {
-                throw new HttpException(jsonResponse.StatusCode, "Unable to parse the status response.", requestUri);
+                throw;
             }
         }
 

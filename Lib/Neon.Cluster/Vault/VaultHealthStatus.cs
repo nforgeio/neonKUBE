@@ -50,6 +50,11 @@ namespace Neon.Cluster
         /// Returns <c>true</c> if Vault is operating as a standby instance.
         /// </summary>
         public bool IsStandby { get; set; }
+
+        /// <summary>
+        /// Returns <c>true</c> if the Vault instance is in data recovery mode.
+        /// </summary>
+        public bool IsRecovering { get; set; }
         
         /// <inheritdoc/>
         public override bool Equals(object obj)
@@ -64,7 +69,8 @@ namespace Neon.Cluster
             return this.Version == other.Version &&
                    this.IsInitialized == other.IsInitialized &&
                    this.IsSealed == other.IsSealed &&
-                   this.IsStandby == other.IsStandby;
+                   this.IsStandby == other.IsStandby &&
+                   this.IsRecovering == other.IsRecovering;
         }
 
         /// <inheritdoc/>
