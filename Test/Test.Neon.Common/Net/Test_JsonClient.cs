@@ -48,7 +48,7 @@ namespace TestCommon
             using (var jsonClient = new JsonClient())
             {
                 Assert.IsType<ExponentialRetryPolicy>(jsonClient.SafeRetryPolicy);
-                Assert.IsType<ExponentialRetryPolicy>(jsonClient.UnsafeRetryPolicy);
+                Assert.IsType<NoRetryPolicy>(jsonClient.UnsafeRetryPolicy);
             }
         }
     }

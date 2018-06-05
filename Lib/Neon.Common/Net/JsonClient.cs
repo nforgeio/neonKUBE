@@ -64,8 +64,7 @@ namespace Neon.Net
 
         private object          syncLock          = new object();
         private IRetryPolicy    safeRetryPolicy   = new ExponentialRetryPolicy(TransientDetector.NetworkOrHttp);
-        private IRetryPolicy    unsafeRetryPolicy = new ExponentialRetryPolicy(TransientDetector.Network);
-        private HttpClient      client;
+        private IRetryPolicy    unsafeRetryPolicy = new NoRetryPolicy();
 
         /// <summary>
         /// Constructor.
@@ -84,9 +83,9 @@ namespace Neon.Net
                 disposeHandler = false; // Always dispose handlers created by the constructor.
             }
 
-            client = new HttpClient(handler, disposeHandler);
+            HttpClient = new HttpClient(handler, disposeHandler);
 
-            client.DefaultRequestHeaders.Add("Accept", DocumentType);
+            HttpClient.DefaultRequestHeaders.Add("Accept", DocumentType);
         }
 
         /// <summary>
@@ -114,10 +113,10 @@ namespace Neon.Net
         {
             lock (syncLock)
             {
-                if (client != null)
+                if (HttpClient != null)
                 {
-                    client.Dispose();
-                    client = null;
+                    HttpClient.Dispose();
+                    HttpClient = null;
                 }
             }
         }
@@ -136,7 +135,7 @@ namespace Neon.Net
         /// Returns the base client's default request headers property to make it easy
         /// to customize request headers.
         /// </summary>
-        public HttpRequestHeaders DefaultRequestHeaders => client.DefaultRequestHeaders;
+        public HttpRequestHeaders DefaultRequestHeaders => HttpClient.DefaultRequestHeaders;
 
         /// <summary>
         /// Specifies the MIME type to use posting or putting documents to the endpoint.
@@ -148,10 +147,7 @@ namespace Neon.Net
         /// <summary>
         /// Returns the underlying <see cref="System.Net.Http.HttpClient"/>.
         /// </summary>
-        public HttpClient HttpClient
-        {
-            get { return client; }
-        }
+        public HttpClient HttpClient { get; private set; }
 
         /// <summary>
         /// <para>
@@ -297,7 +293,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -342,7 +338,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -392,7 +388,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -435,7 +431,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -479,7 +475,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -521,7 +517,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -567,7 +563,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -618,7 +614,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -662,7 +658,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -707,7 +703,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -750,7 +746,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -797,7 +793,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -849,7 +845,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -894,7 +890,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -940,7 +936,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -981,7 +977,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -1026,7 +1022,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -1076,7 +1072,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -1119,7 +1115,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
@@ -1163,7 +1159,7 @@ namespace Neon.Net
 
                     try
                     {
-                        var client = this.client;
+                        var client = this.HttpClient;
 
                         if (client == null)
                         {
