@@ -238,7 +238,7 @@ namespace NeonDns
 
                         if (File.Exists(reloadSignalPath))
                         {
-                            log.LogWarn("The [neon-dns-loader] service doesn't appear to be running because the reload signal file is present.");
+                            log.LogWarn("[neon-dns-loader] service doesn't appear to be running because the reload signal file is present.");
                         }
                     }
 
