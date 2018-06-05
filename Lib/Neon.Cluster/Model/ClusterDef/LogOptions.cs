@@ -33,7 +33,7 @@ namespace Neon.Cluster
         private const string    defaultCollectorImage     = "neoncluster/neon-log-collector:latest";
         private const string    defaultEsImage            = "neoncluster/elasticsearch:latest";
         private const int       defaultEsShards           = 8;
-        private const int       defaultEsReplication      = 1;
+        private const int       defaultEsReplication      = 0;
         private const string    defaultEsMemory           = "2GB";
         private const string    defaultKibanaImage        = "neoncluster/kibana:latest";
         private const string    defaultMetricbeatImage    = "neoncluster/metricbeat:latest";
@@ -71,7 +71,7 @@ namespace Neon.Cluster
 
         /// <summary>
         /// The number of times Elasticsearch will replicate data within the
-        /// logging cluster for fault tolerance.  This defaults to <b>1</b>
+        /// logging cluster for fault tolerance.  This defaults to <b>0</b>
         /// which ensures that the greatest data capacity at the cost of
         /// no fault tolerance.
         /// </summary>
@@ -156,7 +156,9 @@ namespace Neon.Cluster
                 return;
             }
 
-            if (clusterDefinition.Nodes.Count(n => n.Labels.LogEsData) == 0)
+            var esNodeCount = clusterDefinition.Nodes.Count(n => n.Labels.LogEsData);
+
+            if (esNodeCount == 0)
             {
                 throw new ClusterDefinitionException($"Invalid Log Configuration: At least one node must be labeled with [{NodeLabels.LabelLogEsData}=true].");
             }
@@ -171,9 +173,14 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(EsShards)}={EsShards}]: This must be >= 1.");
             }
 
-            if (EsReplicas <= 0)
+            if (EsReplicas < 0)
             {
-                throw new ClusterDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(EsReplicas)}={EsReplicas}]: This must be >= 1.");
+                throw new ClusterDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(EsReplicas)}={EsReplicas}]: This must be >= 0.");
+            }
+
+            if (EsReplicas >= esNodeCount)
+            {
+                throw new ClusterDefinitionException($"[{nameof(LogOptions)}.{nameof(EsReplicas)}={EsReplicas}] must be less than the ElasticSearch nodes deployed [{esNodeCount}].");
             }
 
             if (string.IsNullOrWhiteSpace(KibanaImage))
