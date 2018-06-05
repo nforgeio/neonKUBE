@@ -92,12 +92,12 @@ SETTINGS:
             {
                 case NeonClusterGlobals.AllowUnitTesting:
 
-                    cluster.SetSetting(NeonClusterGlobals.AllowUnitTesting, NeonHelper.ParseBool(fields[1]));
+                    cluster.SetGlobal(NeonClusterGlobals.AllowUnitTesting, NeonHelper.ParseBool(fields[1]));
                     break;
 
                 case NeonClusterGlobals.DisableAutoUnseal:
 
-                    cluster.SetSetting(NeonClusterGlobals.DisableAutoUnseal, NeonHelper.ParseBool(fields[1]));
+                    cluster.SetGlobal(NeonClusterGlobals.DisableAutoUnseal, NeonHelper.ParseBool(fields[1]));
                     break;
 
                 default:

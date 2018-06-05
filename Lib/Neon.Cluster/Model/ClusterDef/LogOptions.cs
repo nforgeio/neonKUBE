@@ -32,7 +32,7 @@ namespace Neon.Cluster
         private const string    defaultHostImage       = "neoncluster/neon-log-host:latest";
         private const string    defaultCollectorImage  = "neoncluster/neon-log-collector:latest";
         private const string    defaultEsImage         = "neoncluster/elasticsearch:latest";
-        private const int       defaultEsShards        = 8;
+        private const int       defaultEsShards        = 5;
         private const int       defaultEsReplicas      = 0;
         private const string    defaultEsMemory        = "2GB";
         private const string    defaultKibanaImage     = "neoncluster/kibana:latest";
@@ -63,7 +63,7 @@ namespace Neon.Cluster
 
         /// <summary>
         /// The number of Elasticsearch shards to be configured.  This essentially specifies
-        /// the ultimate scalablity of the logging cluster.  This defaults to <b>8</b>.
+        /// the ultimate scalablity of the logging cluster.  This defaults to <b>5</b>.
         /// </summary>
         [JsonProperty(PropertyName = "EsShards", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultEsShards)]

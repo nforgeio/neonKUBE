@@ -9,6 +9,16 @@
 
 . log-info.sh "Starting [neon-log-collector]"
 
+# Initialize environment variable defaults if necessary.
+
+if [ "${SHARD_COUNT}" == "" ] ; then
+  export SHARD_COUNT=5
+fi
+
+if [ "${REPLICA_COUNT}" == "" ] ; then
+  export REPLICA_COUNT=0
+fi
+
 # Add the root directory to the PATH.
 
 PATH=${PATH}:/
@@ -37,6 +47,10 @@ fi
 if [ -f /geoip/database.mmdb.gz ] ; then
     gunzip /geoip/database.mmdb.gz
 fi
+
+# Generate the index template file.
+
+. /logstash-template.json.sh
 
 # Launch TD-Agent.
 

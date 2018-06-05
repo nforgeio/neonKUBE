@@ -159,7 +159,7 @@
     <None Include="neon-log-collector\plugin\filter_neon-proxy.rb" />
     <None Include="neon-log-collector\plugin\filter_neon-systemd.rb" />
     <None Include="neon-log-collector\plugin\neon-common.rb" />
-    <None Include="neon-log-collector\template\logstash.json" />
+    <None Include="neon-log-collector\logstash-template.json.sh" />
     <Content Include="neon-registry-cache\.dockerignore">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </Content>

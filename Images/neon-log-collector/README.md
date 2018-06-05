@@ -35,6 +35,12 @@ The **neon-log-host** image is deployed as local containers on every cluster nod
 
 * Custom neonCLUSTER filter plugins: **neon-docker**, **neon-logfields**, **neon-loglevel**, **neon-proxy**, **neon-proxy-geoip**, and **neon-timestamp**.
 
+# Environment Variables
+
+* **SHARD_COUNT** (*optional*) - specifies the number of shards to create for the index.  This defaults to **5**.
+
+* **REPLICA_COUNT** (*optional*) - specifies the number of times data should be replicated.  This defaults to **0**.
+
 # Deployment
 
 This service is deployed automatically when the **neon-cli** configures a cluster using the following command:
@@ -49,6 +55,8 @@ docker service create \
     --network neon-private \
     --constraint node.role==manager \
     --mount type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true \
+    --env SHARD_COUNT=5 \
+    --env REPLICA_COUNT=0 \
     --log-driver json-file \
     neoncluster/neon-log-collector
 ````

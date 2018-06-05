@@ -1,9 +1,24 @@
+#!/bin/bash
+#------------------------------------------------------------------------------
+# This script generates the [/etc/td-agent/template/logstash-template.json] file
+# by replacing the appropriate settings with these environment variables:
+#
+#   SHARD_COUNT   - Number of index shards
+#   REPLICA_COUNT - Number of data replicas
+#
+# These variables MUST be defined.  [docker-entrypoint.sh] takes care of this.
+
+mkdir -p /etc/td-agent/template
+chmod 600 /etc/td-agent
+chmod 600 /etc/td-agent/template
+
+cat <<EOF > /etc/td-agent/template/logstash-template.json
 {
   "template": "logstash-*",
   "settings": {
     "refresh_interval": "1s",
-    "number_of_shards": 8,
-    "number_of_replicas": 0
+    "number_of_shards": ${SHARD_COUNT},
+    "number_of_replicas": ${REPLICA_COUNT}
   },
   "mappings": {
     "default": {
@@ -290,3 +305,6 @@
     }
   }
 }
+EOF
+
+chmod 600 /etc/td-agent/template/logstash-template.json

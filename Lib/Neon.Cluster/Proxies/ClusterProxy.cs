@@ -855,7 +855,7 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
-        /// Attempts to retrieve a named cluster setting as a <c>string</c>.
+        /// Attempts to retrieve a named cluster global setting as a <c>string</c>.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="output">Returns as the setting value.</param>
@@ -865,7 +865,7 @@ vault policy-write {policy.Name} policy.hcl
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public bool TryGetSettingString(string name, out string output)
+        public bool TryGetGlobalString(string name, out string output)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -886,7 +886,7 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
-        /// Attempts to retrieve a named cluster setting as a <c>bool</c>.
+        /// Attempts to retrieve a named cluster global setting as a <c>bool</c>.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="output">Returns as the setting value.</param>
@@ -897,7 +897,7 @@ vault policy-write {policy.Name} policy.hcl
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public bool TryGetSettingBool(string name, out bool output)
+        public bool TryGetGlobalBool(string name, out bool output)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -918,7 +918,7 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
-        /// Attempts to retrieve a named cluster setting as an <c>int</c>.
+        /// Attempts to retrieve a named cluster global setting as an <c>int</c>.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="output">Returns as the setting value.</param>
@@ -929,7 +929,7 @@ vault policy-write {policy.Name} policy.hcl
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public bool TryGetSettingInt(string name, out int output)
+        public bool TryGetGlobalInt(string name, out int output)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -950,7 +950,7 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
-        /// Attempts to retrieve a named cluster setting as a <c>long</c>.
+        /// Attempts to retrieve a named cluster global setting as a <c>long</c>.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="output">Returns as the setting value.</param>
@@ -961,7 +961,7 @@ vault policy-write {policy.Name} policy.hcl
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public bool TryGetSettingLong(string name, out long output)
+        public bool TryGetGlobalLong(string name, out long output)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -982,7 +982,7 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
-        /// Attempts to retrieve a named cluster setting as a <c>double</c>.
+        /// Attempts to retrieve a named cluster global setting as a <c>double</c>.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="output">Returns as the setting value.</param>
@@ -993,7 +993,7 @@ vault policy-write {policy.Name} policy.hcl
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public bool TryGetSettingDouble(string name, out double output)
+        public bool TryGetGlobalDouble(string name, out double output)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -1014,7 +1014,7 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
-        /// Attempts to retrieve a named cluster setting as a <see cref="TimeSpan"/>.
+        /// Attempts to retrieve a named cluster global setting as a <see cref="TimeSpan"/>.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="output">Returns as the setting value.</param>
@@ -1025,7 +1025,7 @@ vault policy-write {policy.Name} policy.hcl
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public bool TryGetSettingTimeSpan(string name, out TimeSpan output)
+        public bool TryGetGlobalTimeSpan(string name, out TimeSpan output)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -1046,7 +1046,7 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
-        /// Sets or removes a named <c>string</c> cluster setting.
+        /// Sets or removes a named <c>string</c> cluster global setting.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
@@ -1055,7 +1055,7 @@ vault policy-write {policy.Name} policy.hcl
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public async void SetSetting(string name, string value)
+        public async void SetGlobal(string name, string value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -1073,7 +1073,7 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
-        /// Sets or removes a named <c>bool</c> cluster setting.
+        /// Sets or removes a named <c>bool</c> cluster global setting.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
@@ -1082,7 +1082,7 @@ vault policy-write {policy.Name} policy.hcl
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public async void SetSetting(string name, bool? value)
+        public async void SetGlobal(string name, bool? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -1100,7 +1100,7 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
-        /// Sets or removes a named <c>int</c> cluster setting.
+        /// Sets or removes a named <c>int</c> cluster global setting.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
@@ -1109,7 +1109,7 @@ vault policy-write {policy.Name} policy.hcl
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public async void SetSetting(string name, int? value)
+        public async void SetGlobal(string name, int? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -1127,7 +1127,7 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
-        /// Sets or removes a named <c>long</c> cluster setting.
+        /// Sets or removes a named <c>long</c> cluster global setting.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
@@ -1136,7 +1136,7 @@ vault policy-write {policy.Name} policy.hcl
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public async void SetSetting(string name, long? value)
+        public async void SetGlobal(string name, long? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -1154,7 +1154,7 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
-        /// Sets or removes a named <c>double</c> cluster setting.
+        /// Sets or removes a named <c>double</c> cluster global setting.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
@@ -1163,7 +1163,7 @@ vault policy-write {policy.Name} policy.hcl
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public async void SetSetting(string name, double? value)
+        public async void SetGlobal(string name, double? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -1181,7 +1181,7 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
-        /// Sets or removes a named <see cref="TimeSpan"/> cluster setting.
+        /// Sets or removes a named <see cref="TimeSpan"/> cluster global setting.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
@@ -1190,7 +1190,7 @@ vault policy-write {policy.Name} policy.hcl
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public async void SetSetting(string name, TimeSpan? value)
+        public async void SetGlobal(string name, TimeSpan? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));

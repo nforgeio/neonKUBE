@@ -143,7 +143,7 @@ NODE IDENTIFIERS:
                 {
                     case NeonClusterGlobals.AllowUnitTesting:
 
-                        if (cluster.TryGetSettingBool(NeonClusterGlobals.AllowUnitTesting, out var allowUnitTesting))
+                        if (cluster.TryGetGlobalBool(NeonClusterGlobals.AllowUnitTesting, out var allowUnitTesting))
                         {
                             Console.Write(allowUnitTesting ? "true" : "false");
                         }
@@ -156,7 +156,7 @@ NODE IDENTIFIERS:
 
                     case NeonClusterGlobals.CreateDateUtc:
 
-                        if (cluster.TryGetSettingString(NeonClusterGlobals.CreateDateUtc, out var createDate))
+                        if (cluster.TryGetGlobalString(NeonClusterGlobals.CreateDateUtc, out var createDate))
                         {
                             Console.Write(createDate);
                         }
@@ -169,7 +169,7 @@ NODE IDENTIFIERS:
 
                     case NeonClusterGlobals.DisableAutoUnseal:
 
-                        if (cluster.TryGetSettingBool(NeonClusterGlobals.DisableAutoUnseal, out var disableAutoUnseal))
+                        if (cluster.TryGetGlobalBool(NeonClusterGlobals.DisableAutoUnseal, out var disableAutoUnseal))
                         {
                             Console.Write(disableAutoUnseal ? "true" : "false");
                         }
@@ -239,7 +239,7 @@ NODE IDENTIFIERS:
 
                     case NeonClusterGlobals.Uuid:
 
-                        if (cluster.TryGetSettingString(NeonClusterGlobals.Uuid, out var uuid))
+                        if (cluster.TryGetGlobalString(NeonClusterGlobals.Uuid, out var uuid))
                         {
                             Console.Write(uuid);
                         }

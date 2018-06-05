@@ -374,6 +374,37 @@ export NeonHosts_Vault=neon-consul.cluster
 export NeonHosts_Vault=neon-vault.cluster
 
 #------------------------------------------------------------------------------
+# Identifies the global cluster Consul globals and settings.  These are located
+# under [neon/cluster].
+
+# Enables unit testing on the cluster via <b>ClusterFixture</b> (bool).
+export NeonClusterGlobals_AllowUnitTesting=allow-unit-testing
+
+# Cluster creation date (UTC).
+export NeonClusterGlobals_CreateDateUtc=create-date-utc
+
+# Current cluster definition as compressed JSON.
+export NeonClusterGlobals_DefinitionDeflate=definition-deflated
+
+# MD5 hash of the current cluster definition.
+export NeonClusterGlobals_DefinitionHash=definition-hash
+
+# Disables automatic Vault unsealing (bool).
+export NeonClusterGlobals_DisableAutoUnseal=disable-auto-unseal
+
+# Version of the <b>neon-cli</b> that created or last upgraded the cluster.
+export NeonClusterGlobals_NeonCliVersion=neon-cli-version
+
+# Minimum <b>neon-cli</b> version allowed to manage the cluster.
+export NeonClusterGlobals_NeonCliVersionMinimum=neon-cli-version-minimum
+
+# Current cluster pets definition.
+export NeonClusterGlobals_PetsDefinition=pets-definition
+
+# Cluster globally unique ID assigned during cluster setup.
+export NeonClusterGlobals_Uuid=uuid
+
+#------------------------------------------------------------------------------
 # LogSources:
 #
 # Identifies some common applications that may emit logs to be processed

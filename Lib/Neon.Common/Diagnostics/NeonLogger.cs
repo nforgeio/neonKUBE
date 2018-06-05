@@ -212,7 +212,7 @@ namespace Neon.Diagnostics
 
                 if (logManager.EmitTimestamp)
                 {
-                    var timestamp = DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fff+00:00");
+                    var timestamp = DateTime.UtcNow.ToString(NeonHelper.DateFormatTZOffset);
 
                     writer.WriteLine($"[{timestamp}] [{level}]{activity}{module}{index} {message}");
                 }

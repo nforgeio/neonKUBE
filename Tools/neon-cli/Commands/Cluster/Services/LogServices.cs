@@ -200,7 +200,7 @@ namespace NeonCli
                             {
                                 var indexJson = ResourceFiles.Root.GetFolder("Kibana").GetFile("6-logstash-index-pattern.json").Contents;
 
-                                indexJson = indexJson.Replace("${TIMESTAMP}", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
+                                indexJson = indexJson.Replace("${TIMESTAMP}", DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ));
 
                                 await jsonClient.PutAsync($"{baseLogEsDataUri}/.kibana/doc/index-pattern:logstash-*", indexJson);
 
@@ -456,6 +456,8 @@ $@"
                 "--network", $"{NeonClusterConst.PrivateNetwork}",
                 "--constraint", $"node.role==manager",
                 "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
+                "--env", $"SHARD_COUNT={cluster.Definition.Log.EsShards}",
+                "--env", $"REPLICA_COUNT={cluster.Definition.Log.EsReplicas}",
                 "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
                 Program.ResolveDockerImage(cluster.Definition.Log.CollectorImage));
 

@@ -24,7 +24,7 @@ This definition is serialized as JSON and then compressed via deflate before bei
 ````
 neon:
     cluster:
-        definition-deflate  – (json/compressed) the current cluster definition
+        definition-deflated – (json/compressed) the current cluster definition
         definition-hash     - MD5 hash of the definition (base64)
 ````
 &nbsp;

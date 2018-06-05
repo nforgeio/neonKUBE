@@ -33,14 +33,12 @@ RUN mkdir -p /geoip \
 
 # Configure custom scripts, templates and plugins.
 
-COPY docker-entrypoint.sh   /
-COPY _common/*.sh           /
-COPY td-agent.conf          /etc/td-agent
-COPY plugin/*               /etc/td-agent/plugin/
-COPY geoip/                 /geoip/
-COPY template/*             /etc/td-agent/template/
+COPY *.sh           /
+COPY _common/*.sh   /
+COPY td-agent.conf  /etc/td-agent
+COPY plugin/*       /etc/td-agent/plugin/
+COPY geoip/         /geoip/
 
-RUN chmod 700 /*.sh \
-    && chmod 600 /etc/td-agent
+RUN chmod 700 /*.sh
 
 ENTRYPOINT ["/tini", "-g", "--", "/docker-entrypoint.sh"]

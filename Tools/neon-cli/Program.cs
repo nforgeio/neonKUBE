@@ -38,6 +38,14 @@ namespace NeonCli
         public const string Version = "1.2.92";
 
         /// <summary>
+        /// The minimum <b>neon-cli</b> version capable of managing a cluster created
+        /// or updated by the current version of the tool.  This is persisted to the
+        /// cluster.  <b>neon-cli</b> checks this to ensure that it is capable of
+        /// managing a cluster or if it is too old.
+        /// </summary>
+        public const string MinimumVersion = "1.2.92";
+
+        /// <summary>
         /// Host node opewrating system properties or <c>null</c>.
         /// </summary>
         private static OSProperties osProperties;

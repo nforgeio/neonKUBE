@@ -89,6 +89,18 @@ namespace Neon.Common
         public static char[] FileWildcards { get; private set; } = new char[] { '*', '?' };
 
         /// <summary>
+        /// Returns the date format string used for serialize dates to
+        /// strings like: <b>2018-06-05T14:30:13.000Z</b>
+        /// </summary>
+        public const string DateFormatTZ = "yyyy-MM-ddTHH:mm:ss.fffZ";
+
+        /// <summary>
+        /// Returns the date format string used for serialize dates to
+        /// strings like: <b>2018-06-05T14:30:13.000+00:00</b>
+        /// </summary>
+        public const string DateFormatTZOffset = "yyyy-MM-ddTHH:mm:ss.fff+00:00";
+
+        /// <summary>
         /// Indicates whether the current application was built as 32 or 64-bit or <c>null</c>
         /// if this hasn't been determined yet.
         /// </summary>

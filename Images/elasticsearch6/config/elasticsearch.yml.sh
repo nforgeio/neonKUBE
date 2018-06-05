@@ -36,8 +36,8 @@ cat <<EOF > /usr/share/elasticsearch/config/elasticsearch.yml
 
 # Please see the documentation for further information on configuration options:
 #
-#   https://www.elastic.co/guide/en/elasticsearch/reference/5.0/settings.html
-#   https://www.elastic.co/guide/en/elasticsearch/reference/5.0/modules.html
+#   https://www.elastic.co/guide/en/elasticsearch/reference/6.0/settings.html
+#   https://www.elastic.co/guide/en/elasticsearch/reference/6.0/modules.html
 
 # ---------------------------------- Cluster -----------------------------------
 

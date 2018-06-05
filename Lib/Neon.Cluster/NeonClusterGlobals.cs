@@ -30,7 +30,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Current cluster definition as compressed JSON.
         /// </summary>
-        public const string DefinitionDeflate = "definition-deflate";
+        public const string DefinitionDeflate = "definition-deflated";
 
         /// <summary>
         /// MD5 hash of the current cluster definition.
@@ -58,7 +58,7 @@ namespace Neon.Cluster
         public const string PetsDefinition = "pets-definition";
 
         /// <summary>
-        /// Cluster's globally unique ID assigned during cluster setup.
+        /// Cluster globally unique ID assigned during cluster setup.
         /// </summary>
         public const string Uuid = "uuid";
     }

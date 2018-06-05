@@ -337,13 +337,6 @@ OPTIONS:
                         }, 
                         node => node == cluster.FirstManager);
 
-                controller.AddStep("cluster settings",
-                    (node, stepDelay) =>
-                    {
-                        ClusterConsulSettings(node);
-                    },
-                    n => n == cluster.FirstManager);
-
                 controller.AddStep("node labels",
                     (node, stepDelay) =>
                     {
@@ -1547,21 +1540,6 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                         "--subnet", cluster.Definition.Network.PrivateSubnet,
                         cluster.Definition.Network.PrivateAttachable ? "--attachable" : null,
                         NeonClusterConst.PrivateNetwork);
-                });
-        }
-
-        /// <summary>
-        /// Initializes the cluster's Consul settings.
-        /// </summary>
-        /// <param name="manager">The manager node.</param>
-        private void ClusterConsulSettings(SshProxy<NodeDefinition> manager)
-        {
-            manager.InvokeIdempotentAction("setup-cluster-settings",
-                () =>
-                {
-                    manager.Status = "saving settings";
-
-                    cluster.SetSetting(NeonClusterGlobals.AllowUnitTesting, cluster.Definition.AllowUnitTesting);
                 });
         }
 
@@ -3176,12 +3154,14 @@ systemctl start neon-volume-plugin
 
                     NeonClusterHelper.PutDefinitionAsync(loginClone.Definition, savePets: true).Wait();
 
-                    // Save useful global cluster information and initialize default settings.
+                    firstManager.Status = "saving cluster globals";
 
-                    cluster.Consul.KV.PutString($"{NeonClusterConst.ClusterRootKey}/{NeonClusterGlobals.CreateDateUtc}", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)).Wait();
-                    cluster.Consul.KV.PutBool($"{NeonClusterConst.ClusterRootKey}/{NeonClusterGlobals.AllowUnitTesting}", false).Wait();
-                    cluster.Consul.KV.PutBool($"{NeonClusterConst.ClusterRootKey}/{NeonClusterGlobals.DisableAutoUnseal}", false).Wait();
-                    cluster.Consul.KV.PutString($"{NeonClusterConst.ClusterRootKey}/{NeonClusterGlobals.Uuid}", Guid.NewGuid().ToString("D").ToLowerInvariant()).Wait();
+                    cluster.SetGlobal(NeonClusterGlobals.AllowUnitTesting, cluster.Definition.AllowUnitTesting);
+                    cluster.SetGlobal(NeonClusterGlobals.CreateDateUtc, DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ, CultureInfo.InvariantCulture));
+                    cluster.SetGlobal(NeonClusterGlobals.DisableAutoUnseal, false);
+                    cluster.SetGlobal(NeonClusterGlobals.NeonCliVersion, Program.Version);
+                    cluster.SetGlobal(NeonClusterGlobals.NeonCliVersionMinimum, Program.MinimumVersion);
+                    cluster.SetGlobal(NeonClusterGlobals.Uuid, Guid.NewGuid().ToString("D").ToLowerInvariant());
                 });
         }
 
