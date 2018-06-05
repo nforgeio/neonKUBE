@@ -30,6 +30,7 @@ namespace Neon.Cluster
     /// </summary>
     public class HostNodeOptions
     {
+        private const TargetOS      defaultOperatingSystem         = TargetOS.Ubuntu_16_04;
         private const AuthMethods   defaultSshAuth                 = AuthMethods.Tls;
         private const OsUpgrade     defaultUpgrade                 = OsUpgrade.Full;
         private const int           defaultPasswordLength          = 20;
@@ -37,6 +38,14 @@ namespace Neon.Cluster
         private const bool          defaultEnableVolumeNetshare    = true;
         private const bool          defaultAllowPackageManagerIPv6 = false;
         private const int           defaultPackageManagerRetries   = 5;
+
+        /// <summary>
+        /// Specifies the target host operating system.  This currently defaults
+        /// to <see cref="TargetOS.Ubuntu_16_04"/>.
+        /// </summary>
+        [JsonProperty(PropertyName = "OperatingSystem", Required = Required.Default)]
+        [DefaultValue(defaultOperatingSystem)]
+        public TargetOS OperatingSystem { get; set; } = defaultOperatingSystem;
 
         /// <summary>
         /// Specifies whether the host node operating system should be upgraded

@@ -38,6 +38,11 @@ namespace NeonCli
         public const string Version = "1.2.91";
 
         /// <summary>
+        /// Host node opewrating system properties or <c>null</c>.
+        /// </summary>
+        private static OSProperties osProperties;
+
+        /// <summary>
         /// Program entry point.
         /// </summary>
         /// <param name="args">The command line arguments.</param>
@@ -138,7 +143,6 @@ OPTIONS:
     --machine-username=USERNAME         - Overrides default initial machine
                                           username: sysadmin
     --noshim                            - See note below.
-    --os=ubuntu-16.04                   - Target host OS
     -q, --quiet                         - Disables operation progress
     --noterminal                        - Disables the shimmed interactive terminal
     -w=SECONDS, --wait=SECONDS          - Seconds to delay for cluster
@@ -196,7 +200,6 @@ Note that the tool may require admin privileges for [--noshim] mode.
 
                 validOptions.Add("--machine-username");
                 validOptions.Add("--machine-password");
-                validOptions.Add("--os");
                 validOptions.Add("--log-folder");
                 validOptions.Add("-q");
                 validOptions.Add("--quiet");
@@ -552,28 +555,6 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                 // Process the standard command line options.
 
                 var leftCommandLine = CommandLine.Split(command.SplitItem).Left;
-                var os              = leftCommandLine.GetOption("--os", "ubuntu-16.04").ToLowerInvariant();
-
-                switch (os)
-                {
-                    // Choose reasonable operating system specific defaults here.
-
-                    case "ubuntu-16.04":
-
-                        OSProperties = new DockerOSProperties()
-                        {
-                            TargetOS      = TargetOS.Ubuntu_16_04,
-                            StorageDriver = DockerStorageDrivers.Overlay2
-                        };
-                        break;
-
-                    default:
-
-                        Console.Error.WriteLine($"*** ERROR: [--os={os}] is not a supported target operating system.");
-                        Program.Exit(1);
-                        break;
-                }
-
                 // Load the user name and password from the command line options, if present.
 
                 MachineUsername = leftCommandLine.GetOption("--machine-username", "sysadmin");
@@ -959,9 +940,28 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
         }
 
         /// <summary>
-        /// Returns the node operating system specific information.
+        /// The host node operating system information.
         /// </summary>
-        public static DockerOSProperties OSProperties { get; private set; }
+        public static OSProperties OSProperties
+        {
+            get
+            {
+                if (osProperties != null)
+                {
+                    return osProperties;
+                }
+                else if (NeonClusterHelper.Cluster != null)
+                {
+                    return OSProperties.For(NeonClusterHelper.Cluster.Definition.HostNode.OperatingSystem);
+                }
+                else
+                {
+                    throw new InvalidOperationException($"[{nameof(Program)}.{nameof(OSProperties)}] property is not set.");
+                }
+            }
+
+            set { osProperties = value; }
+        }
 
         /// <summary>
         /// Returns the folder where <b>neon-cli</b> persists local state.  This

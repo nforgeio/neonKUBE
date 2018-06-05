@@ -151,6 +151,8 @@ Server Requirements:
                 Program.Exit(1);
             }
 
+            Program.OSProperties = OSProperties.For(clusterDefinition.HostNode.OperatingSystem);
+
             // Configure global options.
 
             if (commandLine.HasOption("--unredacted"))

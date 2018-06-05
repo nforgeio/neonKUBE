@@ -239,6 +239,11 @@ USAGE:
 
     ""HostNode"": {
 
+        // Specifies the operating system to be installed on the cluster nodes.
+        // This currently defaults to [ubuntu-16.04].
+
+        ""OperatingSystem"": ""ubuntu-16.04"",
+
         // Specifies whether the host node operating system should be upgraded
         // during cluster preparation.  The possible values are [full], [partial],
         // and [none].  This defaults to [full] to pick up most criticial updates.

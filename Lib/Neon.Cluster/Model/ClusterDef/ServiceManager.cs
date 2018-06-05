@@ -5,7 +5,7 @@
 
 using System;
 
-namespace NeonCli
+namespace Neon.Cluster
 {
     /// <summary>
     /// Identifies the service manager configured for a Linux node.
