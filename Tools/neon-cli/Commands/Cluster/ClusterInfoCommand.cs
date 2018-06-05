@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterCommand.cs
+// FILE:	    ClusterInfoCommand.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -22,30 +22,22 @@ using Neon.Common;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>cluster</b> command.
+    /// Implements the <b>cluster info</b> command.
     /// </summary>
-    public class ClusterCommand : CommandBase
+    public class ClusterInfoCommand : CommandBase
     {
         private const string usage = @"
-Performs basic cluster provisioning and management.
+Returns information about a cluster.
 
 USAGE:
 
-    neon cluster example    - Outputs a sample cluster definition
-    neon cluster get        - Gets cluster variables and settings
-    neon cluster info       - Outputs cluster information
-    neon cluster node       - Manages cluster nodes
-    neon cluster prepare    - Prepares environment for cluster setup
-    neon cluster registry   - Manages a local Docker registry
-    neon cluster set        - Sets a cluster variable or setting
-    neon cluster setup      - Deploys a cluster
-    neon cluster verify     - Verifies a cluster definition
-";
+    neon cluster info
 
+";
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "cluster" }; }
+            get { return new string[] { "cluster", "info" }; }
         }
 
         /// <inheritdoc/>
@@ -57,13 +49,21 @@ USAGE:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            Help();
+            if (commandLine.HasHelpOption)
+            {
+                Console.WriteLine(usage);
+                Program.Exit(0);
+            }
+
+            var clusterLogin = Program.ConnectCluster();
+            var cluster      = new ClusterProxy(clusterLogin);
+
         }
 
         /// <inheritdoc/>
         public override DockerShimInfo Shim(DockerShim shim)
         {
-            return new DockerShimInfo(isShimmed: true);
+            return new DockerShimInfo(isShimmed: true, ensureConnection: true);
         }
     }
 }

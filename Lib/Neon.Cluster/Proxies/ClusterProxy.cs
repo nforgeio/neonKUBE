@@ -862,7 +862,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <returns><c>true</c> if the setting exists and was returned.</returns>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterSettings"/>.
+        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
         public bool TryGetSettingString(string name, out string output)
@@ -894,7 +894,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterSettings"/>.
+        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
         public bool TryGetSettingBool(string name, out bool output)
@@ -926,7 +926,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterSettings"/>.
+        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
         public bool TryGetSettingInt(string name, out int output)
@@ -958,7 +958,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterSettings"/>.
+        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
         public bool TryGetSettingLong(string name, out long output)
@@ -990,7 +990,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterSettings"/>.
+        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
         public bool TryGetSettingDouble(string name, out double output)
@@ -1022,7 +1022,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterSettings"/>.
+        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
         public bool TryGetSettingTimeSpan(string name, out TimeSpan output)
@@ -1052,7 +1052,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterSettings"/>.
+        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
         public async void SetSetting(string name, string value)
@@ -1079,7 +1079,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterSettings"/>.
+        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
         public async void SetSetting(string name, bool? value)
@@ -1106,7 +1106,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterSettings"/>.
+        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
         public async void SetSetting(string name, int? value)
@@ -1133,7 +1133,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterSettings"/>.
+        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
         public async void SetSetting(string name, long? value)
@@ -1160,7 +1160,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterSettings"/>.
+        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
         public async void SetSetting(string name, double? value)
@@ -1187,7 +1187,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterSettings"/>.
+        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
         public async void SetSetting(string name, TimeSpan? value)

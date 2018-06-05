@@ -1561,7 +1561,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                 {
                     manager.Status = "saving settings";
 
-                    cluster.SetSetting(NeonClusterSettings.AllowUnitTesting, cluster.Definition.AllowUnitTesting);
+                    cluster.SetSetting(NeonClusterGlobals.AllowUnitTesting, cluster.Definition.AllowUnitTesting);
                 });
         }
 
@@ -3178,10 +3178,10 @@ systemctl start neon-volume-plugin
 
                     // Save useful global cluster information and initialize default settings.
 
-                    cluster.Consul.KV.PutString($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.CreateDate}", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)).Wait();
-                    cluster.Consul.KV.PutBool($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.AllowUnitTesting}", false).Wait();
-                    cluster.Consul.KV.PutBool($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.DisableAutoUnseal}", false).Wait();
-                    cluster.Consul.KV.PutString($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.Uuid}", Guid.NewGuid().ToString("D").ToLowerInvariant()).Wait();
+                    cluster.Consul.KV.PutString($"{NeonClusterConst.ClusterRootKey}/{NeonClusterGlobals.CreateDateUtc}", DateTime.UtcNow.ToString("o", CultureInfo.InvariantCulture)).Wait();
+                    cluster.Consul.KV.PutBool($"{NeonClusterConst.ClusterRootKey}/{NeonClusterGlobals.AllowUnitTesting}", false).Wait();
+                    cluster.Consul.KV.PutBool($"{NeonClusterConst.ClusterRootKey}/{NeonClusterGlobals.DisableAutoUnseal}", false).Wait();
+                    cluster.Consul.KV.PutString($"{NeonClusterConst.ClusterRootKey}/{NeonClusterGlobals.Uuid}", Guid.NewGuid().ToString("D").ToLowerInvariant()).Wait();
                 });
         }
 

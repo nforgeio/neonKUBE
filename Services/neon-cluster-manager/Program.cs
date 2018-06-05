@@ -38,7 +38,7 @@ namespace NeonClusterManager
         private static readonly string nodePollSecondsKey    = $"{serviceRootKey}/node_poll_seconds";
         private static readonly string vaultPollSecondsKey   = $"{serviceRootKey}/vault_poll_seconds";
         private static readonly string managerPollSecondsKey = $"{serviceRootKey}/manager_poll_seconds";
-        private static readonly string clusterDefKey         = "neon/cluster/definition.deflate";
+        private static readonly string clusterDefKey         = $"neon/cluster/{NeonClusterGlobals.DefinitionDeflate}";
 
         private static ProcessTerminator        terminator;
         private static INeonLogger              log;
@@ -359,15 +359,15 @@ namespace NeonClusterManager
                     log.LogDebug(() => $"NODE-POLLER [{currentClusterDefinition.Managers.Count()}] managers and [{currentClusterDefinition.Workers.Count()}] workers in current cluster definition.");
 
                     // Cluster pets are not part of the Swarm, so Docker won't return any information
-                    // about them.  We'll read the pet definitions from [neon/cluster/pets.json] in 
+                    // about them.  We'll read the pet definitions from [neon/cluster/pets-definition] in 
                     // Consul.  We'll assume that there are no pets if this key doesn't exist for
                     // backwards compatibility and robustness.
 
-                    var petsJson = await NeonClusterHelper.Consul.KV.GetStringOrDefault("neon/cluster/pets.json", terminator.CancellationToken);
+                    var petsJson = await NeonClusterHelper.Consul.KV.GetStringOrDefault($"neon/cluster/{NeonClusterGlobals.PetsDefinition}", terminator.CancellationToken);
 
                     if (petsJson == null)
                     {
-                        log.LogDebug(() => $"NODE-POLLER [neon/cluster/pets.json] Consul key not found.  Assuming no pets.");
+                        log.LogDebug(() => $"NODE-POLLER [neon/cluster/{NeonClusterGlobals.PetsDefinition}] Consul key not found.  Assuming no pets.");
                     }
                     else
                     {
@@ -382,11 +382,11 @@ namespace NeonClusterManager
                                 currentClusterDefinition.NodeDefinitions.Add(item.Key, item.Value);
                             }
 
-                            log.LogDebug(() => $"NODE-POLLER [neon/cluster/pets.json] defines [{petDefinitions.Count}] pets.");
+                            log.LogDebug(() => $"NODE-POLLER [neon/cluster/{NeonClusterGlobals.PetsDefinition}] defines [{petDefinitions.Count}] pets.");
                         }
                         else
                         {
-                            log.LogDebug(() => $"NODE-POLLER [neon/cluster/pets.json] is empty.");
+                            log.LogDebug(() => $"NODE-POLLER [neon/cluster/{NeonClusterGlobals.PetsDefinition}] is empty.");
                         }
                     }
 
@@ -467,7 +467,7 @@ namespace NeonClusterManager
                         log.LogDebug(() => $"VAULT: Querying [{vaultUri}]");
 
                         var newVaultStatus     = await vault.GetHealthAsync(terminator.CancellationToken);
-                        var autoUnsealDisabled = consul.KV.GetBoolOrDefault($"{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.DisableAutoUnseal}").Result;
+                        var autoUnsealDisabled = consul.KV.GetBoolOrDefault($"{NeonClusterConst.ClusterRootKey}/{NeonClusterGlobals.DisableAutoUnseal}").Result;
                         var changed            = false;
 
                         if (lastVaultStatus == null)
@@ -506,7 +506,7 @@ namespace NeonClusterManager
 
                             if (newVaultStatus.IsSealed && autoUnsealDisabled)
                             {
-                                log.LogInfo(() => $"Vault AUTO-UNSEAL is temporarily DISABLED because Consul [{NeonClusterConst.ClusterRootKey}/{NeonClusterSettings.DisableAutoUnseal}=true].");
+                                log.LogInfo(() => $"Vault AUTO-UNSEAL is temporarily DISABLED because Consul [{NeonClusterConst.ClusterRootKey}/{NeonClusterGlobals.DisableAutoUnseal}=true].");
                             }
 
                             statusUpdateTimeUtc = DateTime.UtcNow + statusUpdateInterval;

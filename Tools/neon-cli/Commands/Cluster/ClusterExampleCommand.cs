@@ -465,9 +465,9 @@ USAGE:
         //
         //  EsShards              The number of Elasticsearch shards. This defaults to 1.
         //
-        //  EsReplication         The number of times Elasticsearch will replicate 
+        //  EsReplicas            The number of times Elasticsearch will replicate 
         //                        data within the logging cluster for fault tolerance.
-        //                        This defaults to 1 which ensures that the greatest 
+        //                        This defaults to 0 which provides the greatest 
         //                        data capacity at the cost of no fault tolerance.
         //
         //  EsMemory              The amount of RAM to dedicate to each cluster log

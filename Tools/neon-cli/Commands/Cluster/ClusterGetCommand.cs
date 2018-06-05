@@ -44,7 +44,7 @@ ARGUMENTS:
 CLUSTER IDENTIFIERS:
 
     allow-unit-testing      - enables ClusterFixture unit testing (bool)
-    create-date             - cluster creation date (UTC)
+    create-date-utc         - cluster creation date (UTC)
     disable-auto-unseal     - disables automatic Vault unsealing (bool)
     password                - root account password
     registries              - lists the Docker registries and credentials
@@ -141,9 +141,9 @@ NODE IDENTIFIERS:
 
                 switch (valueExpr.ToLowerInvariant())
                 {
-                    case NeonClusterSettings.AllowUnitTesting:
+                    case NeonClusterGlobals.AllowUnitTesting:
 
-                        if (cluster.TryGetSettingBool(NeonClusterSettings.AllowUnitTesting, out var allowUnitTesting))
+                        if (cluster.TryGetSettingBool(NeonClusterGlobals.AllowUnitTesting, out var allowUnitTesting))
                         {
                             Console.Write(allowUnitTesting ? "true" : "false");
                         }
@@ -154,9 +154,9 @@ NODE IDENTIFIERS:
                         }
                         break;
 
-                    case NeonClusterSettings.CreateDate:
+                    case NeonClusterGlobals.CreateDateUtc:
 
-                        if (cluster.TryGetSettingString(NeonClusterSettings.CreateDate, out var createDate))
+                        if (cluster.TryGetSettingString(NeonClusterGlobals.CreateDateUtc, out var createDate))
                         {
                             Console.Write(createDate);
                         }
@@ -167,9 +167,9 @@ NODE IDENTIFIERS:
                         }
                         break;
 
-                    case NeonClusterSettings.DisableAutoUnseal:
+                    case NeonClusterGlobals.DisableAutoUnseal:
 
-                        if (cluster.TryGetSettingBool(NeonClusterSettings.DisableAutoUnseal, out var disableAutoUnseal))
+                        if (cluster.TryGetSettingBool(NeonClusterGlobals.DisableAutoUnseal, out var disableAutoUnseal))
                         {
                             Console.Write(disableAutoUnseal ? "true" : "false");
                         }
@@ -237,9 +237,9 @@ NODE IDENTIFIERS:
                         Console.Write(clusterLogin.SshUsername);
                         break;
 
-                    case NeonClusterSettings.Uuid:
+                    case NeonClusterGlobals.Uuid:
 
-                        if (cluster.TryGetSettingString(NeonClusterSettings.Uuid, out var uuid))
+                        if (cluster.TryGetSettingString(NeonClusterGlobals.Uuid, out var uuid))
                         {
                             Console.Write(uuid);
                         }
