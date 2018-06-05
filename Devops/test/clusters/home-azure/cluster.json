@@ -26,6 +26,7 @@
     "Enabled": true
   },
   "HostNode": {
+    "OperatingSystem": "ubuntu-16.04",
     "Upgrade": "partial",
     "SshAuth": "tls",
     "PasswordLength": 20
