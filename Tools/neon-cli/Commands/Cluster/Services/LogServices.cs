@@ -198,7 +198,7 @@ namespace NeonCli
                         retry.InvokeAsync(
                             async () =>
                             {
-                                var indexJson = ResourceFiles.Root.GetFolder("Kibana").GetFile("logstash-6-index.json").Contents;
+                                var indexJson = ResourceFiles.Root.GetFolder("Kibana").GetFile("6-logstash-index-pattern.json").Contents;
 
                                 indexJson = indexJson.Replace("${TIMESTAMP}", DateTime.UtcNow.ToString("yyyy-MM-ddTHH:mm:ss.fffZ"));
 

@@ -247,8 +247,8 @@ namespace NeonCli
                     new Folder("Kibana",
                         files: new List<File>()
                         {
-                            new File("logstash-6-index.json", hasVariables: false),
-                            new File("kibana-config.json", hasVariables: false)
+                            new File("6-logstash-index-pattern.json", hasVariables: false),
+                            new File("6-logstash-index-template.json", hasVariables: false)
                         }),
                     new Folder("Ubuntu-16.04",
                         folders: new List<Folder>()

@@ -1,9 +1,9 @@
-{
+﻿{
   "template": "logstash-*",
   "settings": {
     "refresh_interval": "1s",
-    "number_of_shards": 8,
-    "number_of_replicas": 0
+    "number_of_shards": ${SHARD_COUNT},
+    "number_of_replicas": ${REPLICA_COUNT}
   },
   "mappings": {
     "default": {

@@ -33,7 +33,7 @@ namespace Neon.Cluster
         private const string    defaultCollectorImage     = "neoncluster/neon-log-collector:latest";
         private const string    defaultEsImage            = "neoncluster/elasticsearch:latest";
         private const int       defaultEsShards           = 8;
-        private const int       defaultEsReplication      = 1;
+        private const int       defaultEsReplicas         = 1;
         private const string    defaultEsMemory           = "2GB";
         private const string    defaultKibanaImage        = "neoncluster/kibana:latest";
         private const string    defaultMetricbeatImage    = "neoncluster/metricbeat:latest";
@@ -76,8 +76,8 @@ namespace Neon.Cluster
         /// no fault tolerance.
         /// </summary>
         [JsonProperty(PropertyName = "EsReplicas", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultEsReplication)]
-        public int EsReplicas { get; set; } = defaultEsReplication;
+        [DefaultValue(defaultEsReplicas)]
+        public int EsReplicas { get; set; } = defaultEsReplicas;
 
         /// <summary>
         /// The amount of RAM to dedicate to each cluster log related Elasticsearch container.
@@ -173,7 +173,7 @@ namespace Neon.Cluster
 
             if (EsReplicas <= 0)
             {
-                throw new ClusterDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(EsReplicas)}={EsReplicas}]: This must be >= 1.");
+                throw new ClusterDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(EsReplicas)}={EsReplicas}]: This must be >= 0.");
             }
 
             if (string.IsNullOrWhiteSpace(KibanaImage))
