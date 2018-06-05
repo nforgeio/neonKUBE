@@ -221,60 +221,54 @@ namespace Neon.Cluster
         /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
         public async Task<VaultHealthStatus> GetHealthAsync(CancellationToken cancellationToken = default)
         {
-            // We need to make an unsafe call because Vault will return [503-Service Unavailable] when not 
-            // initialized or sealed.
-
-            var requestUri   = $"/{vaultApiVersion}/sys/health";
-            var jsonResponse = await jsonClient.GetUnsafeAsync(requestUri, cancellationToken: cancellationToken);
-
             try
             {
+                var requestUri   = $"/{vaultApiVersion}/sys/health";
+                var jsonResponse = await jsonClient.GetUnsafeAsync(requestUri, cancellationToken: cancellationToken);
+
                 // Build the response from the status code as
                 // described here:
                 //
                 //      https://www.vaultproject.io/api/system/health.html
 
-                var status = new VaultHealthStatus()
-                {
-                    Version = "0"
-                };
+                var status = new VaultHealthStatus();
 
                 switch (jsonResponse.StatusCode)
                 {
                     case (HttpStatusCode)200:
 
                         status.IsInitialized = true;
-                        status.IsSealed      = false;
-                        status.IsStandby     = false;
+                        status.IsSealed = false;
+                        status.IsStandby = false;
                         break;
 
                     case (HttpStatusCode)429:
 
                         status.IsInitialized = true;
-                        status.IsSealed      = false;
-                        status.IsStandby     = true;
+                        status.IsSealed = false;
+                        status.IsStandby = true;
                         break;
 
                     case (HttpStatusCode)472:
 
                         status.IsInitialized = true;
-                        status.IsSealed      = false;
-                        status.IsStandby     = false;
-                        status.IsRecovering  = true;
+                        status.IsSealed = false;
+                        status.IsStandby = false;
+                        status.IsRecovering = true;
                         break;
 
                     case (HttpStatusCode)501:
 
                         status.IsInitialized = false;
-                        status.IsSealed      = false;
-                        status.IsStandby     = false;
+                        status.IsSealed = false;
+                        status.IsStandby = false;
                         break;
 
                     case (HttpStatusCode)503:
 
                         status.IsInitialized = true;
-                        status.IsSealed      = true;
-                        status.IsStandby     = false;
+                        status.IsSealed = true;
+                        status.IsStandby = false;
                         break;
 
                     default:
@@ -286,7 +280,16 @@ namespace Neon.Cluster
             }
             catch (HttpException)
             {
-                throw;
+                // Vault doesn't answer when its sealed so we'll assume it's
+                // sealed when we get this.
+
+                return new VaultHealthStatus()
+                {
+                    IsInitialized = true,
+                    IsSealed      = true,
+                    IsStandby     = false,
+                    IsRecovering  = false
+                };
             }
         }
 

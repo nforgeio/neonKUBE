@@ -32,11 +32,6 @@ namespace Neon.Cluster
     public class VaultHealthStatus
     {
         /// <summary>
-        /// The server version.
-        /// </summary>
-        public string Version { get; set; }
-
-        /// <summary>
         /// Returns <c>true</c> if Vault is initialized.
         /// </summary>
         public bool IsInitialized { get; set; }
@@ -66,8 +61,7 @@ namespace Neon.Cluster
                 return false;
             }
 
-            return this.Version == other.Version &&
-                   this.IsInitialized == other.IsInitialized &&
+            return this.IsInitialized == other.IsInitialized &&
                    this.IsSealed == other.IsSealed &&
                    this.IsStandby == other.IsStandby &&
                    this.IsRecovering == other.IsRecovering;
@@ -76,14 +70,7 @@ namespace Neon.Cluster
         /// <inheritdoc/>
         public override int GetHashCode()
         {
-            var hash = 0;
-
-            if (Version != null)
-            {
-                hash = Version.GetHashCode();
-            }
-
-            return hash ^ IsInitialized.GetHashCode() ^ IsSealed.GetHashCode() ^ IsStandby.GetHashCode();
+            return IsInitialized.GetHashCode() ^ IsSealed.GetHashCode() ^ IsStandby.GetHashCode();
         }
 
         /// <inheritdoc/>
@@ -135,7 +122,7 @@ namespace Neon.Cluster
                 value += " ";
             }
 
-            return value + $"[version={Version}]";
+            return value;
         }
     }
 }
