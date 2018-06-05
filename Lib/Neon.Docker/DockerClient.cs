@@ -67,7 +67,7 @@ namespace Neon.Docker
         // Instance members
 
         private HttpMessageHandler  handler;
-        private Uri                 baseUri;
+        private string              baseUri;
 
         /// <summary>
         /// Constructor.
@@ -82,7 +82,7 @@ namespace Neon.Docker
 
             if (settings.Uri.Scheme.Equals("unix", StringComparison.OrdinalIgnoreCase))
             {
-                baseUri = new UriBuilder("http", settings.Uri.Segments.Last()).Uri;
+                baseUri = new UriBuilder("http", settings.Uri.Segments.Last()).Uri.ToString();
                 handler = new ManagedHandler(
                     async (string host, int port, CancellationToken cancellationToken) =>
                     {
@@ -95,11 +95,18 @@ namespace Neon.Docker
             }
             else
             {
-                baseUri = settings.Uri;
+                baseUri = settings.Uri.ToString();
                 handler = new HttpClientHandler()
                 {
                     AutomaticDecompression = DecompressionMethods.Deflate | DecompressionMethods.GZip
                 };
+            }
+
+            // Ensure that the [baseUri] doesn't end with a "/".
+
+            if (baseUri.EndsWith("/"))
+            {
+                baseUri = baseUri.Substring(0, baseUri.Length - 1);
             }
 
             this.Settings   = settings;
