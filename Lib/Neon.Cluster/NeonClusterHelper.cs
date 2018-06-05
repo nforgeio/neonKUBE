@@ -1147,7 +1147,7 @@ namespace Neon.Cluster
 
                     try
                     {
-                        var hash = await consul.KV.GetStringOrDefault("neon/cluster/definition.hash");
+                        var hash = await consul.KV.GetStringOrDefault($"neon/cluster/{NeonClusterGlobals.DefinitionHash}");
 
                         if (hash == null)
                         {
@@ -1180,7 +1180,7 @@ namespace Neon.Cluster
 
                 try
                 {
-                    var deflated = await consul.KV.GetBytes("neon/cluster/definition.deflate");
+                    var deflated = await consul.KV.GetBytes($"neon/cluster/{NeonClusterGlobals.DefinitionDeflate}");
                     var json     = NeonHelper.DecompressString(deflated);
 
                     try
@@ -1234,7 +1234,7 @@ namespace Neon.Cluster
             var deflatedFullJson = NeonHelper.CompressString(fullJson);
 
             // [neon-cluster-manager] expects the pet node definitions to be persisted to
-            // Consul at [neon/cluster/pets.json] so that it can include any pets in the
+            // Consul at [neon/cluster/pets-definition] so that it can include any pets in the
             // cluster definition file consumed by [neon-cli] before it executes any 
             // cluster related commands.
 
@@ -1256,15 +1256,15 @@ namespace Neon.Cluster
 
                 var operations = new List<KVTxnOp>()
                     {
-                        new KVTxnOp("neon/cluster/definition.deflate", KVTxnVerb.Set) { Value = deflatedFullJson },
-                        new KVTxnOp("neon/cluster/definition.hash", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(definition.Hash) }
+                        new KVTxnOp($"neon/cluster/{NeonClusterGlobals.DefinitionDeflate}", KVTxnVerb.Set) { Value = deflatedFullJson },
+                        new KVTxnOp($"neon/cluster/{NeonClusterGlobals.DefinitionHash}", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(definition.Hash) }
                     };
 
                 // Add any pets to the transaction if enabled.
 
                 if (savePets)
                 {
-                    operations.Add(new KVTxnOp("neon/cluster/pets.json", KVTxnVerb.Set) { Value = petsJsonBytes });
+                    operations.Add(new KVTxnOp($"neon/cluster/{NeonClusterGlobals.PetsDefinition}", KVTxnVerb.Set) { Value = petsJsonBytes });
                 }
 
                 await consul.KV.Txn(operations);

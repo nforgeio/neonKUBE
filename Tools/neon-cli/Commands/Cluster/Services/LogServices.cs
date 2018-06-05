@@ -167,7 +167,7 @@ namespace NeonCli
                                 {
                                     dynamic clusterStatus = response.AsDynamic();
 
-                                    firstManager.Status = $"wait for [neon-log-esdata] cluster [{clusterStatus.number_of_nodes}/{esNodeCount} nodes ready])";
+                                    firstManager.Status = $"wait for [neon-log-esdata] cluster: [status={clusterStatus.status}] [{clusterStatus.number_of_nodes}/{esNodeCount} nodes joined])";
 
                                     if (clusterStatus.status == "green" && clusterStatus.number_of_nodes == esNodeCount)
                                     {

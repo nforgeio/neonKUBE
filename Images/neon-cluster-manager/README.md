@@ -24,8 +24,8 @@ This definition is serialized as JSON and then compressed via deflate before bei
 ````
 neon:
     cluster:
-        definition.deflate  – (json/compressed) the current cluster definition
-        definition.hash     - MD5 hash of the definition (base64)
+        definition-deflate  – (json/compressed) the current cluster definition
+        definition-hash     - MD5 hash of the definition (base64)
 ````
 &nbsp;
 **neon-cluster-manager** service instances need to be deployed only on cluster manager nodes so it can access the local */var/run/docker.sock* Unix domain socket to query the Swarm status.  The service will be configured to run only one instance at a time although it is safe to run more than one.
