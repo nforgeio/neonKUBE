@@ -35,7 +35,7 @@ namespace NeonCli
         /// <summary>
         /// The <b>neon-cli</b> version.
         /// </summary>
-        public const string Version = "1.2.91";
+        public const string Version = "1.2.92";
 
         /// <summary>
         /// Host node opewrating system properties or <c>null</c>.
