@@ -17,6 +17,7 @@ using System.Text.RegularExpressions;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Consul;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Converters;
 using Newtonsoft.Json.Serialization;
@@ -47,14 +48,36 @@ namespace Neon.Cluster
         // Static members
 
         /// <summary>
-        /// Returns the summary for the currently logged-in cluster.
+        /// Returns the summary from a cluster.
         /// </summary>
+        /// <param name="cluster">The target cluster proxy.</param>
         /// <returns>The <see cref="ClusterSummary"/>.</returns>
-        public static ClusterSummary FromCluster()
+        public static ClusterSummary FromCluster(ClusterProxy cluster)
         {
-            Covenant.Assert(NeonClusterHelper.IsConnected, "Cluster is not connected.");
+            Covenant.Requires<ArgumentNullException>(cluster != null);
 
             var summary = new ClusterSummary();
+
+            // Load the cluster globals.
+
+            var globals = cluster.Consul.KV.DictionaryOrEmpty(NeonClusterConst.ClusterGlobalsKey).Result;
+
+            foreach (var item in globals)
+            {
+                summary.Globals.Add(item.Key, Encoding.UTF8.GetString(item.Value));
+            }
+
+            // Summarize information from the cluster definition.
+
+            summary.NodeCount          = cluster.Definition.Nodes.Count();
+            summary.ManagerCount       = cluster.Definition.Managers.Count();
+            summary.WorkerCount        = cluster.Definition.Workers.Count();
+            summary.PetCount           = cluster.Definition.Pets.Count();
+            summary.OperatingSystem    = cluster.Definition.HostNode.OperatingSystem;
+            summary.HostingEnvironment = cluster.Definition.Hosting.Environment;
+            summary.CephEnabled        = cluster.Definition.Ceph.Enabled;
+            summary.LogEnabled         = cluster.Definition.Log.Enabled;
+            summary.VpnEnabled         = cluster.Definition.Vpn.Enabled;
 
             return summary;
         }
@@ -119,7 +142,7 @@ namespace Neon.Cluster
         /// Returns the minimum version of <b>neon-cli</b> allowed to manager the cluster.
         /// </summary>
         [JsonIgnore]
-        public string NeonCliMinimumVersion
+        public string NeonCliVersionMinimum
         {
             get
             {
@@ -148,5 +171,68 @@ namespace Neon.Cluster
                 return value;
             }
         }
+
+        /// <summary>
+        /// Returns the total number of cluster nodes.
+        /// </summary>
+        [JsonProperty(PropertyName = "NodeCount", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(-1)]
+        public int NodeCount { get; set; }
+
+        /// <summary>
+        /// Returns the number of cluster manager nodes.
+        /// </summary>
+        [JsonProperty(PropertyName = "ManagerCount", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(-1)]
+        public int ManagerCount { get; set; }
+
+        /// <summary>
+        /// Returns the number of cluster worker nodes.
+        /// </summary>
+        [JsonProperty(PropertyName = "WorkerCount", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(-1)]
+        public int WorkerCount { get; set; }
+
+        /// <summary>
+        /// Returns the number of cluster pet nodes.
+        /// </summary>
+        [JsonProperty(PropertyName = "PetCount", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(-1)]
+        public int PetCount { get; set; }
+
+        /// <summary>
+        /// Identifies the operating system deployed on the cluster host nodes.
+        /// </summary>
+        [JsonProperty(PropertyName = "OperatingSystem", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(TargetOS.Unknown)]
+        public TargetOS OperatingSystem { get; set; }
+
+        /// <summary>
+        /// Identifies the cluster hosting environment.
+        /// </summary>
+        [JsonProperty(PropertyName = "HostingEnvironment", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(HostingEnvironments.Unknown)]
+        public HostingEnvironments HostingEnvironment { get; set; }
+
+        /// <summary>
+        /// Indicates that Ceph is enabled.
+        /// </summary>
+        [JsonProperty(PropertyName = "CephEnabled", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(false)]
+        public bool CephEnabled { get; set; }
+
+        /// <summary>
+        /// Indicates that cluster logging is enabled.
+        /// </summary>
+        [JsonProperty(PropertyName = "LogEnabled", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(false)]
+        public bool LogEnabled { get; set; }
+
+        /// <summary>
+        /// Indicates that cluster VPN is enabled.
+        /// </summary>
+        [JsonProperty(PropertyName = "VpnEnabled", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [DefaultValue(false)]
+        public bool VpnEnabled { get; set; }
     }
 }
