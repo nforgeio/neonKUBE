@@ -54,7 +54,7 @@ namespace Neon.Cluster
         private const string        defaultDnsMonImage         = "neoncluster/neon-dns-mon:latest";
         private const string        defaultDrivePrefix         = "sd";
         private const int           defaultStepStaggerSeconds  = 5;
-        private const bool          defaultAllowUnitTesting      = false;
+        private const bool          defaultAllowUnitTesting    = false;
 
         /// <summary>
         /// Regex for verifying cluster names for hosts, routes, groups, etc.

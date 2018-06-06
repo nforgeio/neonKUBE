@@ -44,7 +44,23 @@ namespace Neon.Cluster
         // Local types
 
         //---------------------------------------------------------------------
-        // Implementation
+        // Static members
+
+        /// <summary>
+        /// Returns the summary for the currently logged-in cluster.
+        /// </summary>
+        /// <returns>The <see cref="ClusterSummary"/>.</returns>
+        public static ClusterSummary FromCluster()
+        {
+            Covenant.Assert(NeonClusterHelper.IsConnected, "Cluster is not connected.");
+
+            var summary = new ClusterSummary();
+
+            return summary;
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
 
         /// <summary>
         /// Default constructor.

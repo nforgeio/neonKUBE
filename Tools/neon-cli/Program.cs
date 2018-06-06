@@ -565,6 +565,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                 // Process the standard command line options.
 
                 var leftCommandLine = CommandLine.Split(command.SplitItem).Left;
+
                 // Load the user name and password from the command line options, if present.
 
                 MachineUsername = leftCommandLine.GetOption("--machine-username", "sysadmin");
@@ -1071,6 +1072,11 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                     onStatus: message => Console.Error.WriteLine(message),
                     onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
             }
+
+            // Ensure that the current version of the client is compatible with
+            // the connected cluster.
+
+            // $todo(jeff.lill): Implement this.
 
             return clusterLogin;
         }
