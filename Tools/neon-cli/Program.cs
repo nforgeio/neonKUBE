@@ -43,7 +43,7 @@ namespace NeonCli
         /// cluster.  <b>neon-cli</b> checks this to ensure that it is capable of
         /// managing a cluster or if it is too old.
         /// </summary>
-        public const string MinimumVersion = "1.2.93";
+        public const string MinimumVersion = "1.2.94";
 
         /// <summary>
         /// Host node opewrating system properties or <c>null</c>.
