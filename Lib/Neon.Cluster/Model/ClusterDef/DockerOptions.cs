@@ -287,7 +287,7 @@ namespace Neon.Cluster
             //
             // and then use the following the list the versions:
             //
-            //      apt-get install -yq --allow-unauthenticated docker-ce=${docker_version}
+            //      apt-get install -yq docker-ce=${docker_version}
             //
             // I'm doubtful that it's possible to implement this directly in the [neon-cli].
             // One approach would be to have a service that polls [apt-get] for this a few

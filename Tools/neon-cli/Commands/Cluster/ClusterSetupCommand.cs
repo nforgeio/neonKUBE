@@ -1218,14 +1218,14 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
 
                             node.Status = "package upgrade (partial)";
 
-                            node.SudoCommand("apt-get upgrade -yq --allow-unauthenticated");
+                            node.SudoCommand("apt-get upgrade -yq");
                             break;
 
                         case OsUpgrade.Full:
 
                             node.Status = "package upgrade (full)";
 
-                            node.SudoCommand("apt-get dist-upgrade -yq --allow-unauthenticated");
+                            node.SudoCommand("apt-get dist-upgrade -yq");
                             break;
                     }
 
@@ -1419,14 +1419,14 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
 
                             node.Status = "package upgrade (partial)";
 
-                            node.SudoCommand("apt-get upgrade -yq --allow-unauthenticated");
+                            node.SudoCommand("apt-get upgrade -yq");
                             break;
 
                         case OsUpgrade.Full:
 
                             node.Status = "package upgrade (full)";
 
-                            node.SudoCommand("apt-get dist-upgrade -yq --allow-unauthenticated");
+                            node.SudoCommand("apt-get dist-upgrade -yq");
                             break;
                     }
 

@@ -131,13 +131,6 @@ if [ "${docker_version}" != "" ] ; then
 	#
 	#		apt-cache madison docker-ce
 
-	# $todo(jeff.lill): SECURITY RISK
-	#
-	#	--allow-unauthenticated below is a security risk.
-	#
-	# Docker wouldn't install without this.  Perhaps this will
-	# change in the future.
-
 	apt-get install -yq docker-ce=${docker_version}
 fi
 
