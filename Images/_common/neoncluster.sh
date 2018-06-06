@@ -392,6 +392,10 @@ export NeonClusterGlobals_DefinitionHash=definition-hash
 # Disables automatic Vault unsealing (bool).
 export NeonClusterGlobals_DisableAutoUnseal=disable-auto-unseal
 
+# Specifies the number of days to retain [logstash] and
+# [metricbeat] logs.
+export NeonClusterGlobals_LogRetentionDays=log-rentention-days
+
 # Version of the <b>neon-cli</b> that created or last upgraded the cluster.
 export NeonClusterGlobals_NeonCliVersion=neon-cli-version
 

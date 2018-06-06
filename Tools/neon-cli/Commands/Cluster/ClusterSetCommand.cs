@@ -42,6 +42,7 @@ SETTINGS:
 
     allow-unit-testing      - enable ClusterFixture unit testing (bool)
     disable-auto-unseal     - disables automatic Vault unsealing (bool)
+    log-retention-days      - number of days of logs to keep
 ";
         /// <inheritdoc/>
         public override string[] Words
@@ -87,22 +88,34 @@ SETTINGS:
             }
 
             var setting = fields[0].ToLowerInvariant();
+            var value   = fields[1];
 
             switch (setting)
             {
                 case NeonClusterGlobals.AllowUnitTesting:
 
-                    cluster.SetGlobal(NeonClusterGlobals.AllowUnitTesting, NeonHelper.ParseBool(fields[1]));
+                    cluster.SetGlobal(NeonClusterGlobals.AllowUnitTesting, NeonHelper.ParseBool(value));
                     break;
 
                 case NeonClusterGlobals.DisableAutoUnseal:
 
-                    cluster.SetGlobal(NeonClusterGlobals.DisableAutoUnseal, NeonHelper.ParseBool(fields[1]));
+                    cluster.SetGlobal(NeonClusterGlobals.DisableAutoUnseal, NeonHelper.ParseBool(value));
+                    break;
+
+                case NeonClusterGlobals.LogRetentionDays:
+
+                    if (int.TryParse(value, out var logRetentionDays) || logRetentionDays <= 0)
+                    {
+                        Console.Error.WriteLine($"*** ERROR: [{value}] is not a positive number of days.");
+                        Program.Exit(1);
+                    }
+
+                    cluster.SetGlobal(NeonClusterGlobals.LogRetentionDays, NeonHelper.ParseBool(value));
                     break;
 
                 default:
 
-                    Console.Error.WriteLine($"*** ERROR: [{fields[0]}] is not a valid cluster setting.");
+                    Console.Error.WriteLine($"*** ERROR: [{setting}] is not a valid cluster setting.");
                     Program.Exit(1);
                     break;
             }

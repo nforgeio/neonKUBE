@@ -43,6 +43,12 @@ namespace Neon.Cluster
         public const string DisableAutoUnseal = "disable-auto-unseal";
 
         /// <summary>
+        /// Specifies the number of days to retain <b>logstash</b> and
+        /// <b>metricbeat</b> logs.
+        /// </summary>
+        public const string LogRetentionDays = "log-rentention-days";
+
+        /// <summary>
         /// Version of the <b>neon-cli</b> that created or last upgraded the cluster.
         /// </summary>
         public const string NeonCliVersion = "neon-cli-version";
