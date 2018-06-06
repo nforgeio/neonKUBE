@@ -37,6 +37,7 @@ namespace Neon.Cluster
         private const string    defaultEsMemory        = "2GB";
         private const string    defaultKibanaImage     = "neoncluster/kibana:latest";
         private const string    defaultMetricbeatImage = "neoncluster/metricbeat:latest";
+        private const int       defaultRetentionDays   = 14;
         
         /// <summary>
         /// Default constructor.
@@ -87,6 +88,14 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "EsMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultEsMemory)]
         public string EsMemory { get; set; } = defaultEsMemory;
+
+        /// <summary>
+        /// The positive number of days of logs to be retained in the cluster Elasticsearch cluster.
+        /// This defaults to <b>14 days</b>.
+        /// </summary>
+        [JsonProperty(PropertyName = "RetentionDays", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
+        [DefaultValue(defaultRetentionDays)]
+        public int RetentionDays { get; set; } = defaultRetentionDays;
 
         /// <summary>
         /// Returns the number of bytes of RAM to to dedicate to a log related Elasticsearch
@@ -196,6 +205,11 @@ namespace Neon.Cluster
             if (string.IsNullOrWhiteSpace(CollectorImage))
             {
                 throw new ClusterDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(CollectorImage)}={CollectorImage}].");
+            }
+
+            if (RetentionDays <= 0)
+            {
+                throw new ClusterDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(RetentionDays)}={RetentionDays}]: This must be >= 0.");
             }
         }
     }

@@ -16,6 +16,7 @@ using System.Threading.Tasks;
 using Consul;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
+using Newtonsoft.Json.Linq;
 
 using Neon.Cluster;
 using Neon.Common;
@@ -38,16 +39,19 @@ namespace NeonClusterManager
         private static readonly string nodePollSecondsKey    = $"{serviceRootKey}/node_poll_seconds";
         private static readonly string vaultPollSecondsKey   = $"{serviceRootKey}/vault_poll_seconds";
         private static readonly string managerPollSecondsKey = $"{serviceRootKey}/manager_poll_seconds";
+        private static readonly string logPollSecondsKey     = $"{serviceRootKey}/log_poll_seconds";
         private static readonly string clusterDefKey         = $"neon/cluster/{NeonClusterGlobals.DefinitionDeflate}";
 
         private static ProcessTerminator        terminator;
         private static INeonLogger              log;
+        private static ClusterProxy             cluster;
         private static ConsulClient             consul;
         private static DockerClient             docker;
         private static VaultCredentials         vaultCredentials;
         private static TimeSpan                 nodePollInterval;
         private static TimeSpan                 vaultPollInterval;
         private static TimeSpan                 managerPollInterval;
+        private static TimeSpan                 logPollInterval;
         private static ClusterDefinition        cachedClusterDefinition;
         private static List<string>             vaultUris;
 
@@ -100,6 +104,8 @@ namespace NeonClusterManager
                 {
                     NeonClusterHelper.OpenCluster();
                 }
+
+                cluster = NeonClusterHelper.Cluster;
 
                 // Ensure that we're running on a manager node.  We won't be able
                 // to query swarm status otherwise.
@@ -209,13 +215,21 @@ namespace NeonClusterManager
                 await consul.KV.PutDouble(managerPollSecondsKey, 1800);
             }
 
+            if (!await consul.KV.Exists(logPollSecondsKey))
+            {
+                log.LogInfo($"Persisting setting [{logPollSecondsKey}=300.0]");
+                await consul.KV.PutDouble(logPollSecondsKey, 300);
+            }
+
             nodePollInterval    = TimeSpan.FromSeconds(await consul.KV.GetDouble(nodePollSecondsKey));
             vaultPollInterval   = TimeSpan.FromSeconds(await consul.KV.GetDouble(vaultPollSecondsKey));
             managerPollInterval = TimeSpan.FromSeconds(await consul.KV.GetDouble(managerPollSecondsKey));
+            logPollInterval     = TimeSpan.FromSeconds(await consul.KV.GetDouble(logPollSecondsKey));
 
             log.LogInfo(() => $"Using setting [{nodePollSecondsKey}={nodePollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{vaultPollSecondsKey}={vaultPollInterval.TotalSeconds}]");
             log.LogInfo(() => $"Using setting [{managerPollSecondsKey}={managerPollInterval.TotalSeconds}]");
+            log.LogInfo(() => $"Using setting [{logPollSecondsKey}={logPollInterval.TotalSeconds}]");
 
             // Parse the Vault credentials from the [neon-cluster-manager-vaultkeys] 
             // secret, if it exists.
@@ -262,6 +276,11 @@ namespace NeonClusterManager
             // so it can be restarted automatically by Docker to respond to the change.
 
             tasks.Add(ManagerPollerAsync());
+
+            // Start a task that checks for Elasticsearch [logstash] and [metricbeat] indexes
+            // that are older than the number of retention days.
+
+            tasks.Add(LogPurgerAsync());
 
             // Wait for all tasks to exit cleanly for a normal shutdown.
 
@@ -617,6 +636,104 @@ namespace NeonClusterManager
                 }
 
                 await Task.Delay(vaultPollInterval, terminator.CancellationToken);
+            }
+        }
+
+        /// <summary>
+        /// Handles purging of old <b>logstash</b> and <b>metricbeat</b> Elasticsearch indexes.
+        /// </summary>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        private static async Task LogPurgerAsync()
+        {
+            using (var jsonClient = new JsonClient())
+            {
+                while (true)
+                {
+                    await Task.Delay(logPollInterval);
+
+                    var manager = cluster.GetHealthyManager();
+
+                    try
+                    {
+                        if (terminator.CancellationToken.IsCancellationRequested)
+                        {
+                            log.LogDebug(() => "LOG-PURGE: Terminating.");
+                            return;
+                        }
+
+                        log.LogDebug(() => "LOG-PURGE: Scanning for old Elasticsearch indexes ready for removal.");
+
+                        // We're going to list the indexes and look for [logstash]
+                        // and [metricbeat] indexes that encode the index date like:
+                        //
+                        //      logstash-2018.06.06
+                        //      metricbeat-6.1.1-2018.06.06
+                        //
+                        // The date is simply encodes the day covered by the index.
+                        // We're going to remove any indexes that are at least one
+                        // day older than the current date so that we won't delete
+                        // partial days logs.
+
+                        var utcNow           = DateTime.UtcNow;
+                        var deleteBeforeDate = new DateTime(utcNow.Year, utcNow.Month, utcNow.Day) - TimeSpan.FromDays(1);
+
+                        var indexList = await jsonClient.GetAsync<JObject>($"http://{manager.PrivateAddress}:{NeonHostPorts.ProxyPrivateHttpLogEsData}/_aliases");
+
+                        foreach (var indexProperty in indexList.Properties())
+                        {
+                            var indexName = indexProperty.Name;
+
+                            // We're only purging [logstash] and [metricbeat] indexes.
+
+                            if (!indexName.StartsWith("logstash-") && !indexName.StartsWith("metricbeat-"))
+                            {
+                                continue;
+                            }
+
+                            // Extract the date from the index name.
+
+                            var pos = indexName.LastIndexOf('-');
+
+                            if (pos == -1)
+                            {
+                                log.LogWarn(() => $"LOG-PURGE: Cannot extract date from index named [{indexName}].");
+                                continue;
+                            }
+
+                            var date      = indexName.Substring(pos + 1);
+                            var fields    = date.Split('.');
+                            var indexDate = default(DateTime); ;
+
+                            try
+                            {
+                                indexDate = new DateTime(int.Parse(fields[0]), int.Parse(fields[1]), int.Parse(fields[2]));
+                            }
+                            catch
+                            {
+                                log.LogWarn(() => $"LOG-PURGE: Cannot extract date from index named [{indexName}].");
+                                continue;
+                            }
+
+                            if (indexDate < deleteBeforeDate)
+                            {
+                                log.LogInfo(() => $"LOG-PURGE: Deleting index [{indexName}].");
+                                await jsonClient.DeleteAsync<JObject>($"http://{manager.PrivateAddress}:{NeonHostPorts.ProxyPrivateHttpLogEsData}/{indexName}");
+                                log.LogInfo(() => $"LOG-PURGE: [{indexName}] was deleted.");
+                            }
+                        }
+                    }
+                    catch (OperationCanceledException)
+                    {
+                        log.LogDebug(() => "LOG-PURGE: Terminating.");
+                        return;
+                    }
+                    catch (Exception e)
+                    {
+                        log.LogError($"LOG-PURGE", e);
+                    }
+
+                    await Task.Delay(vaultPollInterval, terminator.CancellationToken);
+                }
             }
         }
     }
