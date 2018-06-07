@@ -66,13 +66,14 @@ namespace Neon.Cluster
         //---------------------------------------------------------------------
         // Implementation
 
-        private const string defaultSwitchName = "Default Switch";
+        private const string defaultSwitchName = "neonCLUSTER";
 
         private ClusterProxy                    cluster;
         private SetupController<NodeDefinition> controller;
         private bool                            forceVmOverwrite;
         private string                          driveTemplatePath;
         private string                          vmDriveFolder;
+        private string                          switchName;
 
         /// <summary>
         /// Constructor.
@@ -440,16 +441,21 @@ namespace Neon.Cluster
 
             using (var hyperv = new HyperVClient())
             {
-                // The virtual machines need to use the [Default Switch].
+                // We're going to create the [neonCLUSTER] external switch if there
+                // isn't already an external switch.
 
                 controller.SetOperationStatus("Scanning network adapters");
 
-                var switches      = hyperv.ListVMSwitches();
-                var defaultSwitch = switches.FirstOrDefault(s => s.Name.Equals(defaultSwitchName, StringComparison.InvariantCultureIgnoreCase));
+                var switches       = hyperv.ListVMSwitches();
+                var externalSwitch = switches.FirstOrDefault(s => s.Type == VirtualSwitchType.External);
 
-                if (defaultSwitch == null)
+                if (externalSwitch == null)
                 {
-                    throw new NeonClusterException($"Cannot locate the Hyper-V virtual switch named [{defaultSwitchName}].");
+                    hyperv.NewVMExternalSwitch(switchName = defaultSwitchName, IPAddress.Parse(cluster.Definition.Network.Gateway));
+                }
+                else
+                {
+                    switchName = externalSwitch.Name;
                 }
 
                 // Ensure that the cluster virtual machines exist and are stopped,
@@ -662,7 +668,7 @@ namespace Neon.Cluster
                     memorySize: memoryBytes.ToString(),
                     minimumMemorySize: minMemoryBytes.ToString(),
                     drivePath: drivePath,
-                    switchName: defaultSwitchName,
+                    switchName: switchName,
                     extraDrives: extraDrives);
 
                 node.Status = $"start virtual machine";
