@@ -149,7 +149,7 @@ namespace NeonCli
                     {
                         var baseLogEsDataUri = $"http://{NeonHosts.LogEsData}:{NeonHostPorts.ProxyPrivateHttpLogEsData}";
                         var baseKibanaUri    = $"http://{firstManager.PrivateAddress}:{NeonHostPorts.Kibana}";
-                        var timeout          = TimeSpan.FromMinutes(10);
+                        var timeout          = TimeSpan.FromMinutes(5);
                         var timeoutTime      = DateTime.UtcNow + timeout;
                         var retry            = new LinearRetryPolicy(TransientDetector.Http, maxAttempts: 30, retryInterval: TimeSpan.FromSeconds(1));
 
@@ -165,11 +165,12 @@ namespace NeonCli
 
                                 if (response.IsSuccess)
                                 {
-                                    dynamic clusterStatus = response.AsDynamic();
+                                    var clusterStatus = response.AsDynamic();
+                                    var status        = (string)(clusterStatus.status).ToUpperInvariant();
 
-                                    firstManager.Status = $"wait for [neon-log-esdata] cluster: [status={clusterStatus.status}] [{clusterStatus.number_of_nodes}/{esNodeCount} nodes joined])";
+                                    firstManager.Status = $"wait for [neon-log-esdata] cluster: [status={status}] [{clusterStatus.number_of_nodes}/{esNodeCount} nodes joined])";
 
-                                    if (clusterStatus.status == "green" && clusterStatus.number_of_nodes == esNodeCount)
+                                    if (status == "GREEN" && clusterStatus.number_of_nodes == esNodeCount)
                                     {
                                         break;
                                     }
