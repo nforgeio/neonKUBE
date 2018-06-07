@@ -258,7 +258,7 @@ namespace NeonClusterManager
 
             var tasks = new List<Task>();
 
-            tasks.Add(NodePollerAsync());
+            tasks.Add(StatePollerAsync());
 
             // We need to start a vault poller for the Vault instance running on each manager
             // node.  We're going to construct the direct Vault URIs by querying Docker for
@@ -333,17 +333,17 @@ namespace NeonClusterManager
         /// definition and hash when changes are detected.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
-        private static async Task NodePollerAsync()
+        private static async Task StatePollerAsync()
         {
             while (true)
             {
                 try
                 {
-                    log.LogDebug(() => "NODE-POLLER Polling");
+                    log.LogDebug(() => "STATE-POLLER: Polling");
 
                     if (terminator.CancellationToken.IsCancellationRequested)
                     {
-                        log.LogDebug(() => "NODE-POLLER Terminating");
+                        log.LogDebug(() => "STATE-POLLER: Terminating");
                         return;
                     }
 
@@ -354,7 +354,7 @@ namespace NeonClusterManager
 
                     // Retrieve the swarm nodes from Docker.
 
-                    log.LogDebug(() => $"NODE-POLLER Querying [{docker.Settings.Uri}]");
+                    log.LogDebug(() => $"STATE-POLLER: Querying [{docker.Settings.Uri}]");
 
                     var swarmNodes = await docker.NodeListAsync();
 
@@ -375,7 +375,7 @@ namespace NeonClusterManager
                         currentClusterDefinition.NodeDefinitions.Add(nodeDefinition.Name, nodeDefinition);
                     }
 
-                    log.LogDebug(() => $"NODE-POLLER [{currentClusterDefinition.Managers.Count()}] managers and [{currentClusterDefinition.Workers.Count()}] workers in current cluster definition.");
+                    log.LogDebug(() => $"STATE-POLLER: [{currentClusterDefinition.Managers.Count()}] managers and [{currentClusterDefinition.Workers.Count()}] workers in current cluster definition.");
 
                     // Cluster pets are not part of the Swarm, so Docker won't return any information
                     // about them.  We'll read the pet definitions from [neon/cluster/pets-definition] in 
@@ -386,7 +386,7 @@ namespace NeonClusterManager
 
                     if (petsJson == null)
                     {
-                        log.LogDebug(() => $"NODE-POLLER [neon/cluster/{NeonClusterGlobals.PetsDefinition}] Consul key not found.  Assuming no pets.");
+                        log.LogDebug(() => $"STATE-POLLER: [neon/cluster/{NeonClusterGlobals.PetsDefinition}] Consul key not found.  Assuming no pets.");
                     }
                     else
                     {
@@ -401,13 +401,17 @@ namespace NeonClusterManager
                                 currentClusterDefinition.NodeDefinitions.Add(item.Key, item.Value);
                             }
 
-                            log.LogDebug(() => $"NODE-POLLER [neon/cluster/{NeonClusterGlobals.PetsDefinition}] defines [{petDefinitions.Count}] pets.");
+                            log.LogDebug(() => $"STATE-POLLER: [neon/cluster/{NeonClusterGlobals.PetsDefinition}] defines [{petDefinitions.Count}] pets.");
                         }
                         else
                         {
-                            log.LogDebug(() => $"NODE-POLLER [neon/cluster/{NeonClusterGlobals.PetsDefinition}] is empty.");
+                            log.LogDebug(() => $"STATE-POLLER: [neon/cluster/{NeonClusterGlobals.PetsDefinition}] is empty.");
                         }
                     }
+
+                    // Fetch the cluster summary and add it to the cluster definition.
+
+                    currentClusterDefinition.Summary = ClusterSummary.FromCluster(cluster, currentClusterDefinition);
 
                     // Determine if the definition has changed.
 
@@ -415,7 +419,7 @@ namespace NeonClusterManager
 
                     if (currentClusterDefinition.Hash != cachedClusterDefinition.Hash)
                     {
-                        log.LogInfo(() => "NODE-POLLER Changed cluster definition.  Updating Consul.");
+                        log.LogInfo(() => "STATE-POLLER: Changed cluster definition.  Updating Consul.");
 
                         await NeonClusterHelper.PutDefinitionAsync(currentClusterDefinition, cancellationToken: terminator.CancellationToken);
 
@@ -423,12 +427,12 @@ namespace NeonClusterManager
                     }
                     else
                     {
-                        log.LogDebug(() => "NODE-POLLER Unchanged cluster definition.");
+                        log.LogDebug(() => "STATE-POLLER: Unchanged cluster definition.");
                     }
                 }
                 catch (OperationCanceledException)
                 {
-                    log.LogDebug(() => "NODE-POLLER Terminating");
+                    log.LogDebug(() => "STATE-POLLER: Terminating");
                     return;
                 }
                 catch (KeyNotFoundException)
@@ -437,11 +441,11 @@ namespace NeonClusterManager
                     // cluster.  This is a serious problem.  This is configured during setup
                     // and there should always be a definition in Consul.
 
-                    log.LogError(() => $"NODE-POLLER No cluster definition has been found at [{clusterDefKey}] in Consul.  This is a serious error that will have to be corrected manually.");
+                    log.LogError(() => $"STATE-POLLER: No cluster definition has been found at [{clusterDefKey}] in Consul.  This is a serious error that will have to be corrected manually.");
                 }
                 catch (Exception e)
                 {
-                    log.LogError("NODE-POLLER", e);
+                    log.LogError("STATE-POLLER", e);
                 }
 
                 await Task.Delay(nodePollInterval, terminator.CancellationToken);
@@ -463,7 +467,7 @@ namespace NeonClusterManager
             var statusUpdateTimeUtc  = DateTime.UtcNow;
             var statusUpdateInterval = TimeSpan.FromMinutes(30);
 
-            log.LogInfo(() => $"VAULT: Opening [{vaultUri}]");
+            log.LogInfo(() => $"VAULT-POLLER: Opening [{vaultUri}]");
 
             using (var vault = VaultClient.OpenWithToken(new Uri(vaultUri)))
             {
@@ -473,7 +477,7 @@ namespace NeonClusterManager
 
                     try
                     {
-                        log.LogDebug(() => $"VAULT: Polling [{vaultUri}]");
+                        log.LogDebug(() => $"VAULT-POLLER: Polling [{vaultUri}]");
 
                         if (terminator.CancellationToken.IsCancellationRequested)
                         {
@@ -483,7 +487,7 @@ namespace NeonClusterManager
 
                         // Monitor Vault for status changes and handle unsealing if enabled.
 
-                        log.LogDebug(() => $"VAULT: Querying [{vaultUri}]");
+                        log.LogDebug(() => $"VAULT-POLLER: Querying [{vaultUri}]");
 
                         var newVaultStatus     = await vault.GetHealthAsync(terminator.CancellationToken);
                         var autoUnsealDisabled = consul.KV.GetBoolOrDefault($"{NeonClusterConst.ClusterGlobalsKey}/{NeonClusterGlobals.DisableAutoUnseal}").Result;
@@ -502,11 +506,11 @@ namespace NeonClusterManager
                         {
                             if (!newVaultStatus.IsInitialized || newVaultStatus.IsSealed)
                             {
-                                log.LogError(() => $"VAULT: status CHANGED [{vaultUri}]");
+                                log.LogError(() => $"VAULT-POLLER: status CHANGED [{vaultUri}]");
                             }
                             else
                             {
-                                log.LogInfo(() => $"VAULT: status CHANGED [{vaultUri}]");
+                                log.LogInfo(() => $"VAULT-POLLER: status CHANGED [{vaultUri}]");
                             }
 
                             statusUpdateTimeUtc = DateTime.UtcNow; // Force logging status below
@@ -516,16 +520,16 @@ namespace NeonClusterManager
                         {
                             if (!newVaultStatus.IsInitialized || newVaultStatus.IsSealed)
                             {
-                                log.LogError(() => $"VAULT: status={newVaultStatus} [{vaultUri}]");
+                                log.LogError(() => $"VAULT-POLLER: status={newVaultStatus} [{vaultUri}]");
                             }
                             else
                             {
-                                log.LogInfo(() => $"VAULT: status={newVaultStatus} [{vaultUri}]");
+                                log.LogInfo(() => $"VAULT-POLLER: status={newVaultStatus} [{vaultUri}]");
                             }
 
                             if (newVaultStatus.IsSealed && autoUnsealDisabled)
                             {
-                                log.LogInfo(() => $"Vault AUTO-UNSEAL is temporarily DISABLED because Consul [{NeonClusterConst.ClusterGlobalsKey}/{NeonClusterGlobals.DisableAutoUnseal}=true].");
+                                log.LogInfo(() => $"VAULT-POLLER: AUTO-UNSEAL is temporarily DISABLED because Consul [{NeonClusterConst.ClusterGlobalsKey}/{NeonClusterGlobals.DisableAutoUnseal}=true].");
                             }
 
                             statusUpdateTimeUtc = DateTime.UtcNow + statusUpdateInterval;
@@ -544,9 +548,9 @@ namespace NeonClusterManager
 
                             try
                             {
-                                log.LogInfo(() => $"VAULT: UNSEALING [{vaultUri}]");
+                                log.LogInfo(() => $"VAULT-POLLER: UNSEALING [{vaultUri}]");
                                 await vault.UnsealAsync(vaultCredentials, terminator.CancellationToken);
-                                log.LogInfo(() => $"VAULT: UNSEALED [{vaultUri}]");
+                                log.LogInfo(() => $"VAULT-POLLER: UNSEALED [{vaultUri}]");
 
                                 // Schedule a status update on the next loop
                                 // and then loop immediately so we'll log the
@@ -557,18 +561,18 @@ namespace NeonClusterManager
                             }
                             catch (Exception e)
                             {
-                                log.LogError($"VAULT: Unseal failed [{vaultUri}]", e);
+                                log.LogError($"VAULT-POLLER: Unseal failed [{vaultUri}]", e);
                             }
                         }
                     }
                     catch (OperationCanceledException)
                     {
-                        log.LogDebug(() => $"VAULT: Terminating [{vaultUri}]");
+                        log.LogDebug(() => $"VAULT-POLLER: Terminating [{vaultUri}]");
                         return;
                     }
                     catch (Exception e)
                     {
-                        log.LogError($"VAULT: [{vaultUri}]", e);
+                        log.LogError($"VAULT-POLLER: [{vaultUri}]", e);
                     }
                 }
             }
@@ -593,11 +597,11 @@ namespace NeonClusterManager
                 {
                     if (terminator.CancellationToken.IsCancellationRequested)
                     {
-                        log.LogDebug(() => "MANAGER: Terminating.");
+                        log.LogDebug(() => "MANAGER-POLLER: Terminating.");
                         return;
                     }
 
-                    log.LogDebug(() => "MANAGER: Polling for cluster manager changes.");
+                    log.LogDebug(() => "MANAGER-POLLER: Polling for cluster manager changes.");
 
                     var latestVaultUris = await GetVaultUrisAsync();
                     var changed         = vaultUris.Count != latestVaultUris.Count;
@@ -616,23 +620,23 @@ namespace NeonClusterManager
 
                     if (changed)
                     {
-                        log.LogInfo("MANAGER: Detected one or more cluster manager node changes.");
-                        log.LogInfo("MANAGER: Exiting the service so that Docker will restart it to pick up the manager node changes.");
+                        log.LogInfo("MANAGER-POLLER: Detected one or more cluster manager node changes.");
+                        log.LogInfo("MANAGER-POLLER: Exiting the service so that Docker will restart it to pick up the manager node changes.");
                         terminator.Exit();
                     }
                     else
                     {
-                        log.LogDebug(() => "MANAGER: No manager changes detected.");
+                        log.LogDebug(() => "MANAGER-POLLER: No manager changes detected.");
                     }
                 }
                 catch (OperationCanceledException)
                 {
-                    log.LogDebug(() => "MANAGER: Terminating.");
+                    log.LogDebug(() => "MANAGER-POLLER: Terminating.");
                     return;
                 }
                 catch (Exception e)
                 {
-                    log.LogError($"MANAGER", e);
+                    log.LogError($"MANAGER-POLLER", e);
                 }
 
                 await Task.Delay(vaultPollInterval, terminator.CancellationToken);
@@ -657,11 +661,11 @@ namespace NeonClusterManager
                     {
                         if (terminator.CancellationToken.IsCancellationRequested)
                         {
-                            log.LogDebug(() => "LOG-PURGE: Terminating.");
+                            log.LogDebug(() => "LOG-PURGER: Terminating.");
                             return;
                         }
 
-                        log.LogDebug(() => "LOG-PURGE: Scanning for old Elasticsearch indexes ready for removal.");
+                        log.LogDebug(() => "LOG-PURGER: Scanning for old Elasticsearch indexes ready for removal.");
 
                         // We're going to list the indexes and look for [logstash]
                         // and [metricbeat] indexes that encode the index date like:
@@ -696,7 +700,7 @@ namespace NeonClusterManager
 
                             if (pos == -1)
                             {
-                                log.LogWarn(() => $"LOG-PURGE: Cannot extract date from index named [{indexName}].");
+                                log.LogWarn(() => $"LOG-PURGER: Cannot extract date from index named [{indexName}].");
                                 continue;
                             }
 
@@ -710,26 +714,26 @@ namespace NeonClusterManager
                             }
                             catch
                             {
-                                log.LogWarn(() => $"LOG-PURGE: Cannot extract date from index named [{indexName}].");
+                                log.LogWarn(() => $"LOG-PURGER: Cannot extract date from index named [{indexName}].");
                                 continue;
                             }
 
                             if (indexDate < deleteBeforeDate)
                             {
-                                log.LogInfo(() => $"LOG-PURGE: Deleting index [{indexName}].");
+                                log.LogInfo(() => $"LOG-PURGER: Deleting index [{indexName}].");
                                 await jsonClient.DeleteAsync<JObject>($"http://{manager.PrivateAddress}:{NeonHostPorts.ProxyPrivateHttpLogEsData}/{indexName}");
-                                log.LogInfo(() => $"LOG-PURGE: [{indexName}] was deleted.");
+                                log.LogInfo(() => $"LOG-PURGER: [{indexName}] was deleted.");
                             }
                         }
                     }
                     catch (OperationCanceledException)
                     {
-                        log.LogDebug(() => "LOG-PURGE: Terminating.");
+                        log.LogDebug(() => "LOG-PURGER: Terminating.");
                         return;
                     }
                     catch (Exception e)
                     {
-                        log.LogError($"LOG-PURGE", e);
+                        log.LogError($"LOG-PURGER", e);
                     }
 
                     await Task.Delay(vaultPollInterval, terminator.CancellationToken);

@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterSummary.cs
+// FILE:	    ClusterInfo.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -51,10 +51,16 @@ namespace Neon.Cluster
         /// Returns the summary from a cluster.
         /// </summary>
         /// <param name="cluster">The target cluster proxy.</param>
+        /// <param name="definition">Optionally overrides the cluster definition passed within <paramref name="cluster"/>.</param>
         /// <returns>The <see cref="ClusterSummary"/>.</returns>
-        public static ClusterSummary FromCluster(ClusterProxy cluster)
+        public static ClusterSummary FromCluster(ClusterProxy cluster, ClusterDefinition definition = null)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null);
+
+            if (definition == null)
+            {
+                definition = cluster.Definition;
+            }
 
             var summary = new ClusterSummary();
 
@@ -69,15 +75,15 @@ namespace Neon.Cluster
 
             // Summarize information from the cluster definition.
 
-            summary.NodeCount          = cluster.Definition.Nodes.Count();
-            summary.ManagerCount       = cluster.Definition.Managers.Count();
-            summary.WorkerCount        = cluster.Definition.Workers.Count();
-            summary.PetCount           = cluster.Definition.Pets.Count();
-            summary.OperatingSystem    = cluster.Definition.HostNode.OperatingSystem;
-            summary.HostingEnvironment = cluster.Definition.Hosting.Environment;
-            summary.CephEnabled        = cluster.Definition.Ceph.Enabled;
-            summary.LogEnabled         = cluster.Definition.Log.Enabled;
-            summary.VpnEnabled         = cluster.Definition.Vpn.Enabled;
+            summary.NodeCount          = definition.Nodes.Count();
+            summary.ManagerCount       = definition.Managers.Count();
+            summary.WorkerCount        = definition.Workers.Count();
+            summary.PetCount           = definition.Pets.Count();
+            summary.OperatingSystem    = definition.HostNode.OperatingSystem;
+            summary.HostingEnvironment = definition.Hosting.Environment;
+            summary.CephEnabled        = definition.Ceph.Enabled;
+            summary.LogEnabled         = definition.Log.Enabled;
+            summary.VpnEnabled         = definition.Vpn.Enabled;
 
             return summary;
         }

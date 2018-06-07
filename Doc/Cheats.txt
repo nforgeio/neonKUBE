@@ -24,11 +24,12 @@ neon logout
 neon login rm root@home-bare --force
 powershell -file %NF_ROOT%\Devops\test\setup-all.ps1 home-bare jeff-latest -noshim
 
+neon logout
 neon login rm root@home-small --force
 neon cluster prepare %NF_ROOT%\Devops\test\clusters\home-small\cluster.json --log-folder=c:\cluster-logs --max-parallel=10 --force --noshim
-neon cluster setup --log-folder=c:\cluster-logs --max-parallel=10 --unredacted root@home-small --noshim
+neon cluster setup --log-folder=c:\cluster-logs --max-parallel=10 --unredacted root@home-small --noshim --image-tag=jeff-latest
 neon cluster set allow-unit-testing=true
-# neon cluster setup --log-folder=c:\cluster-logs --max-parallel=10 --unredacted root@home-small --image-tag=jeff-latest --noshim
+# neon cluster setup --log-folder=c:\cluster-logs --max-parallel=10 --unredacted root@home-small --noshim
 
 neon login rm root@home2-small --force
 neon cluster prepare %NF_ROOT%\Devops\test\clusters\home2-small\cluster.json --log-folder=c:\cluster-logs --max-parallel=10 --force

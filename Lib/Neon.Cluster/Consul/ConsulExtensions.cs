@@ -794,7 +794,6 @@ namespace Consul
         /// <c>null</c> will be returned if the key doesn't exist.  The result keys will not 
         /// include the key prefix.
         /// </summary>
-        /// <typeparam name="T">The item type.</typeparam>
         /// <param name="kv">The key/value endpoint.</param>
         /// <param name="keyPrefix">The path prefix.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
