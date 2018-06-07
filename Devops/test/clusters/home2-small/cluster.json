@@ -66,7 +66,7 @@
       "PrivateAddress": "10.0.0.52",
       "Labels": {
         "StorageSSD": true,
-        "LogEsData": true
+        "LogEsData": false
       }
     },
     "worker-2": {
@@ -74,7 +74,7 @@
       "PrivateAddress": "10.0.0.53",
       "Labels": {
         "StorageSSD": true,
-        "LogEsData": true
+        "LogEsData": false
       }
     },
     "pet-0": {
