@@ -66,9 +66,17 @@ namespace Neon.Cluster
 
             // Load the cluster globals.
 
-            var globals = cluster.Consul.KV.DictionaryOrEmpty(NeonClusterConst.ClusterGlobalsKey).Result;
+            var globals   = cluster.Consul.KV.DictionaryOrEmpty(NeonClusterConst.ClusterGlobalsKey).Result;
+            var internals = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
+            {
+                // We don't include these internal globals in the summary.
 
-            foreach (var item in globals)
+                NeonClusterGlobals.DefinitionDeflate,
+                NeonClusterGlobals.DefinitionHash,
+                NeonClusterGlobals.PetsDefinition
+            };
+
+            foreach (var item in globals.Where(i => !internals.Contains(i.Key)))
             {
                 summary.Globals.Add(item.Key, Encoding.UTF8.GetString(item.Value));
             }
@@ -175,6 +183,25 @@ namespace Neon.Cluster
                 }
 
                 return value;
+            }
+        }
+
+        /// <summary>
+        /// Returns the number of days that cluster logs will be retained.
+        /// </summary>
+        [JsonProperty(PropertyName = "LogRetentionDays", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
+        [JsonIgnore]
+        public int LogRetentionDays
+        {
+            get
+            {
+                if (!Globals.TryGetValue(NeonClusterGlobals.LogRetentionDays, out string value) ||
+                    !int.TryParse(value, out var logRetentionDays))
+                {
+                    return -1;
+                }
+
+                return logRetentionDays;
             }
         }
 
