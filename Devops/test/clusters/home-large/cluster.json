@@ -10,8 +10,8 @@
     "VmDriveFolder": "D:\\VM"
   },
   "Network": {
-    "PremiseSubnet": "10.0.0.0/24",
-    "NodesSubnet": "10.0.0.0/24"
+    "PremiseSubnet": "10.0.0.0/16",
+    "NodesSubnet": "10.0.0.0/16"
   },
   "Vpn": {
     "Enabled": false
