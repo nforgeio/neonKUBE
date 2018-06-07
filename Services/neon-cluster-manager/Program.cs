@@ -90,11 +90,11 @@ namespace NeonClusterManager
                     secrets.Add("neon-cluster-manager-vaultkeys",
                         new VaultCredentials()
                         {
-                            RootToken    = "876d0814-76c0-1d6b-c044-e586c5b41dd7",
+                            RootToken    = "f76dd54d-8360-41fe-77e4-83ef0892d55a",
                             KeyThreshold = 1,
                             UnsealKeys   = new List<string>()
                             {
-                                "VzHweeYWWOk7hklPmSDNctySSRjFU8rm7Ao3HOhci8k="
+                                "80xFR2EeuqjivCisC8lR+Epb2z4S4RH0BU7svQUiNmU="
                             }
                         });
 
@@ -126,11 +126,11 @@ namespace NeonClusterManager
 
                 // Open the cluster data services and then start the main service task.
 
-                log.LogDebug(() => $"Opening Consul");
+                log.LogDebug(() => $"Connecting Consul");
 
                 using (consul = NeonClusterHelper.OpenConsul())
                 {
-                    log.LogDebug(() => $"Opening Docker");
+                    log.LogDebug(() => $"Connecting Docker");
 
                     using (docker = NeonClusterHelper.OpenDocker())
                     {
@@ -588,11 +588,6 @@ namespace NeonClusterManager
         {
             while (true)
             {
-                // We don't need to poll that often because cluster managers
-                // will rarely change.
-
-                await Task.Delay(managerPollInterval);
-
                 try
                 {
                     if (terminator.CancellationToken.IsCancellationRequested)
@@ -639,7 +634,10 @@ namespace NeonClusterManager
                     log.LogError($"MANAGER-POLLER", e);
                 }
 
-                await Task.Delay(vaultPollInterval, terminator.CancellationToken);
+                // We don't need to poll that often because cluster managers
+                // will rarely change.
+
+                await Task.Delay(managerPollInterval, terminator.CancellationToken);
             }
         }
 
@@ -653,8 +651,6 @@ namespace NeonClusterManager
             {
                 while (true)
                 {
-                    await Task.Delay(logPollInterval);
-
                     var manager = cluster.GetHealthyManager();
 
                     try
@@ -674,12 +670,14 @@ namespace NeonClusterManager
                         //      metricbeat-6.1.1-2018.06.06
                         //
                         // The date is simply encodes the day covered by the index.
-                        // We're going to remove any indexes that are at least one
-                        // day older than the current date so that we won't delete
-                        // partial days logs.
+
+                        if (!cluster.TryGetGlobalInt(NeonClusterGlobals.LogRetentionDays, out var retentionDays))
+                        {
+                            retentionDays = 14;
+                        }
 
                         var utcNow           = DateTime.UtcNow;
-                        var deleteBeforeDate = new DateTime(utcNow.Year, utcNow.Month, utcNow.Day) - TimeSpan.FromDays(1);
+                        var deleteBeforeDate = new DateTime(utcNow.Year, utcNow.Month, utcNow.Day) - TimeSpan.FromDays(retentionDays);
 
                         var indexList = await jsonClient.GetAsync<JObject>($"http://{manager.PrivateAddress}:{NeonHostPorts.ProxyPrivateHttpLogEsData}/_aliases");
 
@@ -706,7 +704,7 @@ namespace NeonClusterManager
 
                             var date      = indexName.Substring(pos + 1);
                             var fields    = date.Split('.');
-                            var indexDate = default(DateTime); ;
+                            var indexDate = default(DateTime);
 
                             try
                             {
@@ -736,7 +734,7 @@ namespace NeonClusterManager
                         log.LogError($"LOG-PURGER", e);
                     }
 
-                    await Task.Delay(vaultPollInterval, terminator.CancellationToken);
+                    await Task.Delay(logPollInterval);
                 }
             }
         }
