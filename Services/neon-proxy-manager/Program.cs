@@ -121,11 +121,11 @@ namespace NeonProxyManager
 
                 // Open the cluster data services and then start the main service task.
 
-                log.LogInfo(() => $"Opening Vault");
+                log.LogInfo(() => $"Connecting Vault");
 
                 using (vault = NeonClusterHelper.OpenVault(vaultCredentials))
                 {
-                    log.LogInfo(() => $"Opening Consul");
+                    log.LogInfo(() => $"Connecting Consul");
 
                     using (consul = NeonClusterHelper.OpenConsul())
                     {

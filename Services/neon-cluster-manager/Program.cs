@@ -90,11 +90,11 @@ namespace NeonClusterManager
                     secrets.Add("neon-cluster-manager-vaultkeys",
                         new VaultCredentials()
                         {
-                            RootToken    = "876d0814-76c0-1d6b-c044-e586c5b41dd7",
+                            RootToken    = "f76dd54d-8360-41fe-77e4-83ef0892d55a",
                             KeyThreshold = 1,
                             UnsealKeys   = new List<string>()
                             {
-                                "VzHweeYWWOk7hklPmSDNctySSRjFU8rm7Ao3HOhci8k="
+                                "80xFR2EeuqjivCisC8lR+Epb2z4S4RH0BU7svQUiNmU="
                             }
                         });
 
@@ -126,11 +126,11 @@ namespace NeonClusterManager
 
                 // Open the cluster data services and then start the main service task.
 
-                log.LogDebug(() => $"Opening Consul");
+                log.LogDebug(() => $"Connecting Consul");
 
                 using (consul = NeonClusterHelper.OpenConsul())
                 {
-                    log.LogDebug(() => $"Opening Docker");
+                    log.LogDebug(() => $"Connecting Docker");
 
                     using (docker = NeonClusterHelper.OpenDocker())
                     {
