@@ -3143,14 +3143,14 @@ systemctl start neon-volume-plugin
                 {
                     firstManager.Status = "consul initialize";
 
-                    // Persist the cluster definition (without the hosting options)
+                    // Persist the cluster definition (without important secrets)
                     // to Consul so it will be available services like [neon-proxy-manager]
                     // immediately (before [neon-cluster-manager] spins up).
 
                     var loginClone = clusterLogin.Clone();
 
                     loginClone.ClearRootSecrets();
-                    loginClone.Definition.Hosting = null;
+                    loginClone.Definition.Hosting.ClearSecrets();
 
                     NeonClusterHelper.PutDefinitionAsync(loginClone.Definition, savePets: true).Wait();
 
