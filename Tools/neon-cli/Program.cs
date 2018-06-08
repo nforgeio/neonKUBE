@@ -1017,6 +1017,8 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
 
         /// <summary>
         /// Returns the cluster login information for the currently logged in cluster.
+        /// The method also ensures that the current <b>neon-cli</b> satisfies the cluster's 
+        /// minimum version requirement when logged in.
         /// </summary>
         /// <param name="isRequired">Optionally ensures that a current login is required (defaults to <c>false</c>).</param>
         /// <returns>The current cluster login or <c>null</c>.</returns>
@@ -1072,11 +1074,6 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                     onStatus: message => Console.Error.WriteLine(message),
                     onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
             }
-
-            // Ensure that the current version of the client is compatible with
-            // the connected cluster.
-
-            // $todo(jeff.lill): Implement this.
 
             return clusterLogin;
         }
