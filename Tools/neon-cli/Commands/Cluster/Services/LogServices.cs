@@ -411,7 +411,13 @@ $@"
                                     status      = status.ToUpperInvariant();
                                     node.Status = $"wait for [neon-log-esdata] cluster: [status={status}] [{clusterStatus.number_of_nodes}/{esNodeCount} nodes ready])";
 
-                                    if (status == "GREEN" && clusterStatus.number_of_nodes == esNodeCount)
+                                    // $todo(jeff.lill):
+                                    //
+                                    // We're accepting YELLOW status here due to this issue:
+                                    //
+                                    //      https://github.com/jefflill/NeonForge/issues/257
+
+                                    if ((status == "GREEN" || status == "YELLOW") && clusterStatus.number_of_nodes == esNodeCount)
                                     {
                                         node.Status = "elasticsearch cluster is ready";
                                         break;
