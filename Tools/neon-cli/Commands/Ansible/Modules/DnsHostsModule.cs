@@ -64,6 +64,9 @@ namespace NeonCli.Ansible
         // endpoints    see comment                         target endpoint array (see remarks)  
         //                                                  required when [state=present]
         //
+        // wait         no          no          yes/no      wait about 60s for the DNS change 
+        //                                                  to be propagated to all cluster nodes
+        //
         // Check Mode:
         // -----------
         //
@@ -125,7 +128,8 @@ namespace NeonCli.Ansible
         //              check: yes
         //
         // This example associates multiple addresses, some with health
-        // checks and others without:
+        // checks and others without and also waits 60 seconds for the
+        // changes to be propagated to all cluster nodes:
         //
         //  - name: test
         //    hosts: localhost
@@ -134,6 +138,7 @@ namespace NeonCli.Ansible
         //        neon_dns_hosts:
         //          hostname: foo.com
         //          state: present
+        //          wait: yes
         //          endpoints:
         //            - target: 10.0.0.30
         //              check: yes
@@ -192,7 +197,8 @@ namespace NeonCli.Ansible
             "state",
             "hostname",
             "system",
-            "endpoints"
+            "endpoints",
+            "wait"
         };
 
         private HashSet<string> endpointArgs = new HashSet<string>()
@@ -247,6 +253,10 @@ namespace NeonCli.Ansible
                 throw new ArgumentException($"[endpoints] module argument is required when [state={state}].");
             }
 
+            var wait = context.ParseBool("wait");
+
+            wait = wait ?? false;
+
             if (context.HasErrors)
             {
                 return;
@@ -271,7 +281,7 @@ namespace NeonCli.Ansible
                         }
                         else
                         {
-                            cluster.DnsHosts.Remove(hostname);
+                            cluster.DnsHosts.Remove(hostname, waitUntilPropagated: wait.Value);
                             context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry [{hostname}] deleted.");
                         }
 
@@ -385,7 +395,7 @@ namespace NeonCli.Ansible
                         else
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating DNS entry.");
-                            cluster.DnsHosts.Set(newEntry);
+                            cluster.DnsHosts.Set(newEntry, waitUntilPropagated: wait.Value);
                             context.WriteLine(AnsibleVerbosity.Info, $"DNS entry updated.");
                         }
 
