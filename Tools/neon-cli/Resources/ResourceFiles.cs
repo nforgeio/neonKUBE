@@ -244,10 +244,11 @@ namespace NeonCli
             Root = new Folder("Resources", 
                 folders: new List<Folder>()
                 {
-                    new Folder("Kibana",
+                    new Folder("Elasticsearch",
                         files: new List<File>()
                         {
-                            new File("6-logstash-index-pattern.json", hasVariables: false)
+                            new File("logstash-index-pattern.json", hasVariables: false),
+                            new File("logstash-template.json", hasVariables: false)
                         }),
                     new Folder("Ubuntu-16.04",
                         folders: new List<Folder>()

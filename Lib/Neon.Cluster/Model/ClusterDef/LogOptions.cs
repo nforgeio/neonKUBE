@@ -32,8 +32,6 @@ namespace Neon.Cluster
         private const string    defaultHostImage       = "neoncluster/neon-log-host:latest";
         private const string    defaultCollectorImage  = "neoncluster/neon-log-collector:latest";
         private const string    defaultEsImage         = "neoncluster/elasticsearch:latest";
-        private const int       defaultEsShards        = 5;
-        private const int       defaultEsReplicas      = 0;
         private const string    defaultEsMemory        = "2GB";
         private const string    defaultKibanaImage     = "neoncluster/kibana:latest";
         private const string    defaultMetricbeatImage = "neoncluster/metricbeat:latest";
@@ -61,24 +59,6 @@ namespace Neon.Cluster
         [JsonProperty(PropertyName = "EsImage", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultEsImage)]
         public string EsImage { get; set; } = defaultEsImage;
-
-        /// <summary>
-        /// The number of Elasticsearch shards to be configured.  This essentially specifies
-        /// the ultimate scalablity of the logging cluster.  This defaults to <b>5</b>.
-        /// </summary>
-        [JsonProperty(PropertyName = "EsShards", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultEsShards)]
-        public int EsShards { get; set; } = defaultEsShards;
-
-        /// <summary>
-        /// The number of times Elasticsearch will replicate data within the
-        /// logging cluster for fault tolerance.  This defaults to <b>0</b>
-        /// which ensures that the greatest data capacity at the cost of
-        /// no fault tolerance.
-        /// </summary>
-        [JsonProperty(PropertyName = "EsReplicas", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
-        [DefaultValue(defaultEsReplicas)]
-        public int EsReplicas { get; set; } = defaultEsReplicas;
 
         /// <summary>
         /// The amount of RAM to dedicate to each cluster log related Elasticsearch container.
@@ -175,21 +155,6 @@ namespace Neon.Cluster
             if (string.IsNullOrWhiteSpace(EsImage))
             {
                 throw new ClusterDefinitionException($"Missing [{nameof(LogOptions)}.{nameof(EsImage)} setting.");
-            }
-
-            if (EsShards <= 0)
-            {
-                throw new ClusterDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(EsShards)}={EsShards}]: This must be >= 1.");
-            }
-
-            if (EsReplicas < 0)
-            {
-                throw new ClusterDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(EsReplicas)}={EsReplicas}]: This must be >= 0.");
-            }
-
-            if (EsReplicas >= esNodeCount)
-            {
-                throw new ClusterDefinitionException($"Invalid [{nameof(LogOptions)}.{nameof(EsReplicas)}={EsReplicas}]: This must be >= 1.");
             }
 
             if (string.IsNullOrWhiteSpace(KibanaImage))
