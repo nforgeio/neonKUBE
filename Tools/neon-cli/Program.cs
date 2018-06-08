@@ -35,7 +35,7 @@ namespace NeonCli
         /// <summary>
         /// The <b>neon-cli</b> version.
         /// </summary>
-        public const string Version = "1.2.93";
+        public const string Version = "1.2.95";
 
         /// <summary>
         /// The minimum <b>neon-cli</b> version capable of managing a cluster created
@@ -43,7 +43,7 @@ namespace NeonCli
         /// cluster.  <b>neon-cli</b> checks this to ensure that it is capable of
         /// managing a cluster or if it is too old.
         /// </summary>
-        public const string MinimumVersion = "1.2.93";
+        public const string MinimumVersion = "1.2.95";
 
         /// <summary>
         /// Host node opewrating system properties or <c>null</c>.
@@ -565,6 +565,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                 // Process the standard command line options.
 
                 var leftCommandLine = CommandLine.Split(command.SplitItem).Left;
+
                 // Load the user name and password from the command line options, if present.
 
                 MachineUsername = leftCommandLine.GetOption("--machine-username", "sysadmin");
@@ -1016,6 +1017,8 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
 
         /// <summary>
         /// Returns the cluster login information for the currently logged in cluster.
+        /// The method also ensures that the current <b>neon-cli</b> satisfies the cluster's 
+        /// minimum version requirement when logged in.
         /// </summary>
         /// <param name="isRequired">Optionally ensures that a current login is required (defaults to <c>false</c>).</param>
         /// <returns>The current cluster login or <c>null</c>.</returns>

@@ -58,6 +58,12 @@ namespace Neon.Cluster
         /// for production purposes).
         /// </summary>
         [EnumMember(Value = "xenserver")]
-        XenServer
+        XenServer,
+
+        /// <summary>
+        /// Unknown or unspecified hosting environment.
+        /// </summary>
+        [EnumMember(Value = "unknown")]
+        Unknown
     }
 }

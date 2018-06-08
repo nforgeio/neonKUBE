@@ -143,7 +143,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Consul root key for cluster globals. 
         /// </summary>
-        public static readonly string ClusterRootKey = "neon/cluster";
+        public static readonly string ClusterGlobalsKey = "neon/cluster";
 
         /// <summary>
         /// Consul root key for the Dynamic DNS service related values.

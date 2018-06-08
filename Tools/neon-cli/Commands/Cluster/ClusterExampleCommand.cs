@@ -463,13 +463,6 @@ USAGE:
         //                        to persist cluster log events.  This defaults to 
         //                        [neoncluster/elasticsearch:latest].
         //
-        //  EsShards              The number of Elasticsearch shards. This defaults to 1.
-        //
-        //  EsReplicas            The number of times Elasticsearch will replicate 
-        //                        data within the logging cluster for fault tolerance.
-        //                        This defaults to 0 which provides the greatest 
-        //                        data capacity at the cost of no fault tolerance.
-        //
         //  EsMemory              The amount of RAM to dedicate to each cluster log
         //                        related Elasticsearch container.  This can be expressed
         //                        as ### or ###B (bytes), ###K (kilobytes), ###M (megabytes),

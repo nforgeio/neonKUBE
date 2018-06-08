@@ -872,7 +872,7 @@ vault policy-write {policy.Name} policy.hcl
 
             output = null;
 
-            var key   = $"{NeonClusterConst.ClusterRootKey}/{name}";
+            var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
             var value = Consul.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
@@ -904,7 +904,7 @@ vault policy-write {policy.Name} policy.hcl
 
             output = default(bool);
 
-            var key   = $"{NeonClusterConst.ClusterRootKey}/{name}";
+            var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
             var value = Consul.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
@@ -936,7 +936,7 @@ vault policy-write {policy.Name} policy.hcl
 
             output = default(int);
 
-            var key   = $"{NeonClusterConst.ClusterRootKey}/{name}";
+            var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
             var value = Consul.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
@@ -968,7 +968,7 @@ vault policy-write {policy.Name} policy.hcl
 
             output = default(int);
 
-            var key   = $"{NeonClusterConst.ClusterRootKey}/{name}";
+            var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
             var value = Consul.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
@@ -1000,7 +1000,7 @@ vault policy-write {policy.Name} policy.hcl
 
             output = default(double);
 
-            var key   = $"{NeonClusterConst.ClusterRootKey}/{name}";
+            var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
             var value = Consul.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
@@ -1032,7 +1032,7 @@ vault policy-write {policy.Name} policy.hcl
 
             output = default(TimeSpan);
 
-            var key   = $"{NeonClusterConst.ClusterRootKey}/{name}";
+            var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
             var value = Consul.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
@@ -1060,7 +1060,7 @@ vault policy-write {policy.Name} policy.hcl
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
 
-            var key = $"{NeonClusterConst.ClusterRootKey}/{name}";
+            var key = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
 
             if (value == null)
             {
@@ -1087,7 +1087,7 @@ vault policy-write {policy.Name} policy.hcl
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
 
-            var key = $"{NeonClusterConst.ClusterRootKey}/{name}";
+            var key = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
 
             if (value == null)
             {

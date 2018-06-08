@@ -260,6 +260,11 @@ namespace Neon.Cluster
         /// Optionally indicates that the method should not connect to the cluster
         /// and should simply return the current login in if one is available.
         /// </param>
+        /// <param name="clientVersion">
+        /// Optionally specifies the current <b>neon-cli</b> version to be checked
+        /// against the cluster's minimum required client.
+        /// </param>
+        /// <exception cref="NeonClusterException">Thrown if the current client does not satisfy the minimum version.</exception>
         /// <returns>The current cluster login or <c>null</c>.</returns>
         /// <remarks>
         /// <note>
@@ -268,7 +273,7 @@ namespace Neon.Cluster
         /// the cluster itself or the cached copy.
         /// </note>
         /// </remarks>
-        public static ClusterLogin GetLogin(bool noConnect = false)
+        public static ClusterLogin GetLogin(bool noConnect = false, string clientVersion = null)
         {
             if (File.Exists(CurrentPath))
             {
@@ -298,9 +303,44 @@ namespace Neon.Cluster
 
                     OpenCluster(clusterLogin);
 
-                    var clusterDefinition = GetLiveDefinition(username, clusterName);
+                    var liveDefinition = GetLiveDefinition(username, clusterName);
 
-                    clusterLogin.Definition.NodeDefinitions = clusterDefinition.NodeDefinitions;
+                    clusterLogin.Definition.NodeDefinitions = liveDefinition.NodeDefinitions;
+                    clusterLogin.Definition.Summary         = liveDefinition.Summary;
+
+                    // $todo(jeff.lill): Where should this check happen?????
+#if TODO
+                    // Ensure that the current version of the client is compatible with
+                    // the connected cluster.
+
+                    if (!string.IsNullOrEmpty(clientVersion) && clusterLogin.Definition.Summary != null)
+                    {
+                        // Client versions may include suffixes like: "-rc0", "-beta" or "-preview", etc.
+                        // We're going to ignore these, strip off anything after the dash and just compare
+                        // the version numbers.
+
+                        var curVersion = clientVersion;
+                        var minVersion = clusterLogin.Definition.Summary.NeonCliVersionMinimum;
+                        var dashPos    = curVersion.IndexOf('-');
+
+                        if (dashPos != -1)
+                        {
+                            curVersion = curVersion.Substring(0, dashPos);
+                        }
+
+                        dashPos = minVersion.IndexOf('-');
+
+                        if (dashPos != -1)
+                        {
+                            minVersion = minVersion.Substring(0, dashPos);
+                        }
+
+                        if (new Version(curVersion) < new Version(minVersion))
+                        {
+                            throw new NeonClusterException($"neon-cli v{clientVersion} cannot manage cluster [{clusterLogin.Definition.Name}].  Use neon-cli v{clusterLogin.Definition.Summary.NeonCliVersionMinimum} or greater.");
+                        }
+                    }
+#endif
 
                     return clusterLogin;
                 }

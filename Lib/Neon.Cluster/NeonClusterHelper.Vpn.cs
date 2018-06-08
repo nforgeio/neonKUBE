@@ -326,7 +326,7 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Ensures that a VPN connection to a cluster is open and healthy.
+        /// Ensures that a cluster VPN connection is established and healthy.
         /// </summary>
         /// <param name="clusterLogin">The cluster login.</param>
         /// <param name="timeoutSeconds">Maximum seconds to wait for the VPN connection (defaults to 120 seconds).</param>

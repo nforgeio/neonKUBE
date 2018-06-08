@@ -100,7 +100,7 @@ namespace NeonDnsMon
 
                 // Open Consul and then start the main service task.
 
-                log.LogDebug(() => $"Opening Consul");
+                log.LogDebug(() => $"Connecting Consul");
 
                 using (consul = NeonClusterHelper.OpenConsul())
                 {

@@ -34,7 +34,10 @@
   </ItemGroup>
 
   <ItemGroup>
-    <None Update="Resources\Kibana\6-logstash-index-pattern.json">
+    <None Update="Resources\Elasticsearch\logstash-index-pattern.json">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Update="Resources\Elasticsearch\logstash-template.json">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
     <None Update="Resources\Ubuntu-16.04\conf\cluster.conf.sh">

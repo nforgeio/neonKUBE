@@ -54,7 +54,7 @@ namespace Neon.Cluster
         private const string        defaultDnsMonImage         = "neoncluster/neon-dns-mon:latest";
         private const string        defaultDrivePrefix         = "sd";
         private const int           defaultStepStaggerSeconds  = 5;
-        private const bool          defaultAllowUnitTesting      = false;
+        private const bool          defaultAllowUnitTesting    = false;
 
         /// <summary>
         /// Regex for verifying cluster names for hosts, routes, groups, etc.
@@ -896,8 +896,11 @@ namespace Neon.Cluster
 
             var clone = NeonHelper.JsonClone<ClusterDefinition>(this);
 
-            clone.Hash    = null;
-            clone.Hosting = null;
+            clone.Hash = null;
+
+            // Don't include any hosting related secrets in the clone.
+
+            clone.Hosting.ClearSecrets();
 
             // We need to ensure that JSON.NET serializes the nodes in a consistent
             // order (e.g. ascending order by name) so we'll compute the same hash

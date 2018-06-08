@@ -672,7 +672,6 @@ namespace Consul
         /// <param name="keyPrefix">The path prefix.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
         /// <returns>The items.</returns>
-        /// <exception cref="KeyNotFoundException">Thrown if the <paramref name="keyPrefix"/> does not exist.</exception>
         /// <remarks>
         /// <note>
         /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
@@ -734,6 +733,95 @@ namespace Consul
             }
 
             return items;
+        }
+
+        /// <summary>
+        /// Strips any prefix off of a Consul key.
+        /// </summary>
+        /// <param name="key">The Consul key.</param>
+        /// <returns>The key without any orefix.</returns>
+        private static string StripKeyPrefix(string key)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(key));
+
+            var posSlash = key.LastIndexOf('/');
+
+            if (posSlash == -1)
+            {
+                return key;
+            }
+
+            return key.Substring(posSlash + 1);
+        }
+
+        /// <summary>
+        /// Lists the items beneath a path prefix, returning a dictionary with the keys set 
+        /// to the item names and the values raw bytes.  An empty list if the key doesn't exist.  
+        /// The result keys will not include the key prefix.
+        /// </summary>
+        /// <param name="kv">The key/value endpoint.</param>
+        /// <param name="keyPrefix">The path prefix.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The item dictionary.</returns>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
+        public static async Task<IDictionary<string, byte[]>> DictionaryOrEmpty(this IKVEndpoint kv, string keyPrefix, CancellationToken cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyPrefix));
+
+            var response = (await kv.List(keyPrefix, cancellationToken)).Response;
+            var output   = new Dictionary<string, byte[]>();
+
+            if (response == null)
+            {
+                return output;
+            }
+
+            foreach (var item in response)
+            {
+                output.Add(StripKeyPrefix(item.Key), item.Value);
+            }
+
+            return output;
+        }
+
+        /// <summary>
+        /// Lists the items beneath a path prefix and deserializes them as raw bytes, returning a 
+        /// dictionary with the keys set to the item names and the values set to the key bytes.  
+        /// <c>null</c> will be returned if the key doesn't exist.  The result keys will not 
+        /// include the key prefix.
+        /// </summary>
+        /// <param name="kv">The key/value endpoint.</param>
+        /// <param name="keyPrefix">The path prefix.</param>
+        /// <param name="cancellationToken">The optional cancellation token.</param>
+        /// <returns>The item dictionary or <c>null</c> if the key doesn't exit.</returns>
+        /// <remarks>
+        /// <note>
+        /// Any exceptions thrown will be wrapped within an <see cref="AggregateException"/>.
+        /// </note>
+        /// </remarks>
+        public static async Task<IDictionary<string, byte[]>> DictionaryOrDefault(this IKVEndpoint kv, string keyPrefix, CancellationToken cancellationToken = default)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(keyPrefix));
+
+            var response = (await kv.List(keyPrefix, cancellationToken)).Response;
+
+            if (response == null)
+            {
+                return null;
+            }
+
+            var output = new Dictionary<string, byte[]>();
+
+            foreach (var item in response)
+            {
+                output.Add(StripKeyPrefix(item.Key), item.Value);
+            }
+
+            return output;
         }
 
         /// <summary>

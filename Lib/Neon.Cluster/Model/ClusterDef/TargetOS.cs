@@ -23,6 +23,12 @@ namespace Neon.Cluster
     public enum TargetOS
     {
         /// <summary>
+        /// Unknown or unspecified operating system.
+        /// </summary>
+        [EnumMember(Value ="unknown")]
+        Unknown = 0,
+
+        /// <summary>
         /// Ubuntu 16.04 LTS.
         /// </summary>
         [EnumMember(Value = "ubuntu-16.04")]

@@ -139,53 +139,12 @@ namespace NeonCli
             firstManager.InvokeIdempotentAction("setup-log-kibana",
                 () =>
                 {
-                    // Wait for the Elasticsearch cluster to come online.
-
-                    var esNodeCount = cluster.Definition.Nodes.Count(n => n.Labels.LogEsData);
-
-                    firstManager.Status = $"wait for [neon-log-esdata] cluster [0/{esNodeCount} nodes ready]";
-
                     using (var jsonClient = new JsonClient())
                     {
                         var baseLogEsDataUri = $"http://{NeonHosts.LogEsData}:{NeonHostPorts.ProxyPrivateHttpLogEsData}";
                         var baseKibanaUri    = $"http://{firstManager.PrivateAddress}:{NeonHostPorts.Kibana}";
-                        var timeout          = TimeSpan.FromMinutes(10);
-                        var timeoutTime      = DateTime.UtcNow + timeout;
+                        var timeout          = TimeSpan.FromMinutes(5);
                         var retry            = new LinearRetryPolicy(TransientDetector.Http, maxAttempts: 30, retryInterval: TimeSpan.FromSeconds(1));
-
-                        // Wait for the Elasticsearch cluster.
-
-                        jsonClient.UnsafeRetryPolicy = NoRetryPolicy.Instance;
-
-                        while (true)
-                        {
-                            try
-                            {
-                                var response = jsonClient.GetUnsafeAsync($"{baseLogEsDataUri}/_cluster/health").Result;
-
-                                if (response.IsSuccess)
-                                {
-                                    dynamic clusterStatus = response.AsDynamic();
-
-                                    firstManager.Status = $"wait for [neon-log-esdata] cluster: [status={clusterStatus.status}] [{clusterStatus.number_of_nodes}/{esNodeCount} nodes joined])";
-
-                                    if (clusterStatus.status == "green" && clusterStatus.number_of_nodes == esNodeCount)
-                                    {
-                                        break;
-                                    }
-                                }
-                            }
-                            catch
-                            {
-                                if (DateTime.UtcNow >= timeoutTime)
-                                {
-                                    firstManager.Fault($"[neon-log-esdata] cluster not ready after waiting [{timeout}].");
-                                    return;
-                                }
-                            }
-
-                            Thread.Sleep(TimeSpan.FromSeconds(1));
-                        }
 
                         // The Kibana API calls below require the [kbn-xsrf] header.
 
@@ -198,9 +157,9 @@ namespace NeonCli
                         retry.InvokeAsync(
                             async () =>
                             {
-                                var indexJson = ResourceFiles.Root.GetFolder("Kibana").GetFile("6-logstash-index-pattern.json").Contents;
+                                var indexJson = ResourceFiles.Root.GetFolder("Elasticsearch").GetFile("logstash-index-pattern.json").Contents;
 
-                                indexJson = indexJson.Replace("${TIMESTAMP}", DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ));
+                                indexJson = indexJson.Replace("$TIMESTAMP", DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ));
 
                                 await jsonClient.PutAsync($"{baseLogEsDataUri}/.kibana/doc/index-pattern:logstash-*", indexJson);
 
@@ -230,9 +189,9 @@ namespace NeonCli
                             async () =>
                             {
                                 dynamic indexPattern = new ExpandoObject();
-                                dynamic attributes   = new ExpandoObject();
+                                dynamic attributes = new ExpandoObject();
 
-                                attributes.title         = "logstash-*";
+                                attributes.title = "logstash-*";
                                 attributes.timeFieldName = "@timestamp";
 
                                 indexPattern.attributes = attributes;
@@ -384,43 +343,119 @@ $@"
 
             // Configure a private cluster proxy route to the Elasticsearch nodes.
 
-            var rule = new LoadBalancerHttpRule()
-            {
-                Name     = "neon-log-esdata",
-                System   = true,
-                Log      = false,   // This is important: we don't want to SPAM the log database with its own traffic.
-                Resolver = null
-            };
-
-            rule.Frontends.Add(
-                new LoadBalancerHttpFrontend()
+            steps.Add(ActionStep.Create(cluster.FirstManager.Name, "setup-elasticsearch-lbrule",
+                node =>
                 {
-                     ProxyPort = NeonHostPorts.ProxyPrivateHttpLogEsData
-                });
-
-            foreach (var esNode in esNodes)
-            {
-                rule.Backends.Add(
-                    new LoadBalancerHttpBackend()
+                    var rule = new LoadBalancerHttpRule()
                     {
-                        Server = esNode.Metadata.PrivateAddress.ToString(),
-                        Port   = NeonHostPorts.LogEsDataHttp
-                    });
-            }
+                        Name     = "neon-log-esdata",
+                        System   = true,
+                        Log      = false,   // This is important: we don't want to SPAM the log database with its own traffic.
+                        Resolver = null
+                    };
 
-            cluster.PrivateLoadBalancer.SetRule(rule);
+                    rule.Frontends.Add(
+                        new LoadBalancerHttpFrontend()
+                        {
+                            ProxyPort = NeonHostPorts.ProxyPrivateHttpLogEsData
+                        });
+
+                    foreach (var esNode in esNodes)
+                    {
+                        rule.Backends.Add(
+                            new LoadBalancerHttpBackend()
+                            {
+                                Server = esNode.Metadata.PrivateAddress.ToString(),
+                                Port = NeonHostPorts.LogEsDataHttp
+                            });
+                    }
+
+                    cluster.PrivateLoadBalancer.SetRule(rule);
+                }));
+
+            // Wait for the elasticsearch cluster to become ready and then save the
+            // [logstash-*] template.  We need to do this before [neon-log-collector]
+            // is started so we'll be sure that no indexes will be created before
+            // we have a chance to persist the pattern.
+            //
+            // This works because [neon-log-collector] is the main service responsible
+            // for persisting events to this index.
+
+            steps.Add(ActionStep.Create(cluster.FirstManager.Name, operationName: null,
+                node =>
+                {
+                    node.Status = "waiting for elasticsearch cluster";
+
+                    using (var jsonClient = new JsonClient())
+                    {
+                        var baseLogEsDataUri = $"http://{NeonHosts.LogEsData}:{NeonHostPorts.ProxyPrivateHttpLogEsData}";
+                        var timeout          = TimeSpan.FromMinutes(5);
+                        var timeoutTime      = DateTime.UtcNow + timeout;
+                        var esNodeCount      = cluster.Definition.Nodes.Count(n => n.Labels.LogEsData);
+
+                        // Wait for the Elasticsearch cluster.
+
+                        jsonClient.UnsafeRetryPolicy = NoRetryPolicy.Instance;
+
+                        while (true)
+                        {
+                            try
+                            {
+                                var response = jsonClient.GetUnsafeAsync($"{baseLogEsDataUri}/_cluster/health").Result;
+
+                                if (response.IsSuccess)
+                                {
+                                    var clusterStatus = response.AsDynamic();
+                                    var status = (string)(clusterStatus.status);
+
+                                    status      = status.ToUpperInvariant();
+                                    node.Status = $"wait for [neon-log-esdata] cluster: [status={status}] [{clusterStatus.number_of_nodes}/{esNodeCount} nodes ready])";
+
+                                    // $todo(jeff.lill):
+                                    //
+                                    // We're accepting YELLOW status here due to this issue:
+                                    //
+                                    //      https://github.com/jefflill/NeonForge/issues/257
+
+                                    if ((status == "GREEN" || status == "YELLOW") && clusterStatus.number_of_nodes == esNodeCount)
+                                    {
+                                        node.Status = "elasticsearch cluster is ready";
+                                        break;
+                                    }
+                                }
+                            }
+                            catch
+                            {
+                                if (DateTime.UtcNow >= timeoutTime)
+                                {
+                                    node.Fault($"[neon-log-esdata] cluster not ready after waiting [{timeout}].");
+                                    return;
+                                }
+                            }
+
+                            Thread.Sleep(TimeSpan.FromSeconds(1));
+                        }
+
+                        // Save the [logstash-*]  template pattern.
+
+                        var templatePattern = ResourceFiles.Root.GetFolder("Elasticsearch").GetFile("logstash-template.json").Contents;
+
+                        jsonClient.PutAsync($"{baseLogEsDataUri}/_template/logstash-*", templatePattern).Wait();
+                    }
+                }));
         }
+    
 
         /// <summary>
         /// Adds the steps required to configure the Kibana Elasticsearch/log user interface.
         /// </summary>
         /// <param name="steps">The configuration step list.</param>
-        private void AddKibanaSteps(ConfigStepList steps)
+            private void AddKibanaSteps(ConfigStepList steps)
         {
             // This is super simple: All we need to do is to launch the Kibana 
             // service on the cluster managers.
 
-            var command =  CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-log-kibana",
+            var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-log-kibana",
                 "docker service create",
                 "--name", "neon-log-kibana",
                 "--detach=false",
@@ -446,6 +481,8 @@ $@"
         /// <param name="steps">The configuration step list.</param>
         private void AddCollectorSteps(ConfigStepList steps)
         {
+            // Create the service and upload the script.
+
             var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-log-collector",
                 "docker service create",
                 "--name", "neon-log-collector",
@@ -456,38 +493,44 @@ $@"
                 "--network", $"{NeonClusterConst.PrivateNetwork}",
                 "--constraint", $"node.role==manager",
                 "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
-                "--env", $"SHARD_COUNT={cluster.Definition.Log.EsShards}",
-                "--env", $"REPLICA_COUNT={cluster.Definition.Log.EsReplicas}",
                 "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
                 Program.ResolveDockerImage(cluster.Definition.Log.CollectorImage));
 
             steps.Add(command);
             steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NeonHostFolders.Scripts, "neon-log-collector.sh"), command.ToBash()));
 
-            // Configure a private cluster proxy TCP route so the [neon-log-host] containers
-            // will be able to reach the collectors.
+            // Deploy the [neon-log-collector] load balancer rule.
 
-            var rule = new LoadBalancerTcpRule()
-            {
-                Name   = "neon-log-collector",
-                System = true,
-                Log    = false    // This is important: we don't want to SPAM the log database with its own traffic.
-            };
-
-            rule.Frontends.Add(
-                new LoadBalancerTcpFrontend()
+            steps.Add(ActionStep.Create(cluster.FirstManager.Name, "setup-neon-log-collection-lbrule",
+                node =>
                 {
-                    ProxyPort = NeonHostPorts.ProxyPrivateTcpLogCollector
-                });
+                    node.Status = "set neon-log-collector load balancer rule";
 
-            rule.Backends.Add(
-                new LoadBalancerTcpBackend()
-                {
-                    Server = "neon-log-collector",
-                    Port   = NetworkPorts.TDAgentForward
-                });
+                    // Configure a private cluster proxy TCP route so the [neon-log-host] containers
+                    // will be able to reach the collectors.
 
-            cluster.PrivateLoadBalancer.SetRule(rule);
+                    var rule = new LoadBalancerTcpRule()
+                    {
+                        Name   = "neon-log-collector",
+                        System = true,
+                        Log    = false    // This is important: we don't want to SPAM the log database with its own traffic.
+                    };
+
+                    rule.Frontends.Add(
+                        new LoadBalancerTcpFrontend()
+                        {
+                            ProxyPort = NeonHostPorts.ProxyPrivateTcpLogCollector
+                        });
+
+                    rule.Backends.Add(
+                        new LoadBalancerTcpBackend()
+                        {
+                            Server = "neon-log-collector",
+                            Port   = NetworkPorts.TDAgentForward
+                        });
+
+                    cluster.PrivateLoadBalancer.SetRule(rule);
+                }));
         }
 
         /// <summary>
