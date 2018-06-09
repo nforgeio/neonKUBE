@@ -329,6 +329,7 @@ MODULES:
     neon_docker_secret      - Manages Docker secrets
     neon_docker_service     - Manages Docker services
     neon_dns_hosts          - Manages cluster DNS host overrides
+    neon-globals            - Manages cluster global settings
     neon_load_balancer      - Manager cluster load balancers  
 ";
 
