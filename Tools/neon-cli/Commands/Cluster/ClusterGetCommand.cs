@@ -140,7 +140,9 @@ NODE IDENTIFIERS:
             {
                 // Cluster expression.
 
-                switch (valueExpr.ToLowerInvariant())
+                valueExpr = valueExpr.ToLowerInvariant();
+
+                switch (valueExpr)
                 {
                     case NeonClusterGlobals.UserAllowUnitTesting:
 
@@ -277,8 +279,18 @@ NODE IDENTIFIERS:
 
                     default:
 
-                        Console.Error.WriteLine($"*** ERROR: Unknown value [{valueExpr}].");
-                        Program.Exit(1);
+                        try
+                        {
+                            if (cluster.Globals.TryGetString(valueExpr, out var value))
+                            {
+                                Console.Write(value);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.Error.WriteLine($"*** ERROR: {e.Message}].");
+                            Program.Exit(1);
+                        }
                         break;
                 }
             }

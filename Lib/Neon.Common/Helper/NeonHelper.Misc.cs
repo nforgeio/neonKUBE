@@ -1602,7 +1602,7 @@ namespace Neon.Common
             }
             else
             {
-                throw new FormatException($"[{input}] is not a valid boolean literal.");
+                throw new FormatException($"[{input}] is not a valid boolean literal (1/0, on/off, yes/no, true/false, enabled/disabled).");
             }
         }
     }
