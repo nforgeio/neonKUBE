@@ -82,6 +82,9 @@ namespace NeonCli.Ansible
         //      allow-unit-testing  - indicates whether ClusterFixture based unit tests are
         //                            allowed for the cluster.  (yes/no/true/false/on/off/1/0)
         //
+        //      disable-auto-unseal - controls whether [neon-cluster-manager] will automatically
+        //                            unseal the cluster Vault.
+        //
         //      log-retention-days  - specifies the number of days of cluster logs to be 
         //                            maintained in the Elasticsearch cluster.  This must
         //                            be a positive integer.

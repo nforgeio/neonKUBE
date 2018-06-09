@@ -278,6 +278,11 @@ namespace Neon.Cluster
                     Set(name, NeonHelper.ParseBool(value));
                     break;
 
+                case NeonClusterGlobals.UserDisableAutoUnseal:
+
+                    Set(name, NeonHelper.ParseBool(value));
+                    break;
+
                 case NeonClusterGlobals.UserLogRetentionDays:
 
                     if (!int.TryParse(value, out var logRetentionDays) || logRetentionDays <= 0)

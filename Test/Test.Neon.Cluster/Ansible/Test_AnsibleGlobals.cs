@@ -42,7 +42,7 @@ namespace TestNeonCluster
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void SetUser()
         {
-            // Verify that we can set a valid user modifiable setting.
+            // Verify that we can set a valid user modifiable settings.
 
             var playbook =
 $@"
@@ -57,6 +57,22 @@ $@"
 ";
             var results = AnsiblePlayer.PlayNoGather(playbook);
             var taskResult = results.GetTaskResult("globals");
+
+            Assert.True(taskResult.Success);
+
+            playbook =
+$@"
+- name: test
+  hosts: localhost
+  tasks:
+    - name: globals
+      neon_globals:
+        state: set
+        name: disable-auto-unseal
+        value: false
+";
+            results = AnsiblePlayer.PlayNoGather(playbook);
+            taskResult = results.GetTaskResult("globals");
 
             Assert.True(taskResult.Success);
 

@@ -31,12 +31,16 @@ Modifies a global cluster setting.
 
 USAGE:
 
-    neon cluster set SETTING=VALUE
+    neon cluster set [--no-verify] SETTING=VALUE
 
 ARGUMENTS:
 
-    SETTING     - identifies the setting
-    VALUE       - the value to set
+    SETTING         - identifies the setting
+    VALUE           - the value to set
+
+OPTIONS:
+
+    --no-verify     - 
 
 SETTINGS:
 
@@ -97,9 +101,9 @@ SETTINGS:
                     cluster.Globals.Set(NeonClusterGlobals.UserAllowUnitTesting, NeonHelper.ParseBool(value));
                     break;
 
-                case NeonClusterGlobals.DisableAutoUnseal:
+                case NeonClusterGlobals.UserDisableAutoUnseal:
 
-                    cluster.Globals.Set(NeonClusterGlobals.DisableAutoUnseal, NeonHelper.ParseBool(value));
+                    cluster.Globals.Set(NeonClusterGlobals.UserDisableAutoUnseal, NeonHelper.ParseBool(value));
                     break;
 
                 case NeonClusterGlobals.UserLogRetentionDays:

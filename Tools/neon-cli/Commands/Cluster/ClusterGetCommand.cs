@@ -168,9 +168,9 @@ NODE IDENTIFIERS:
                         }
                         break;
 
-                    case NeonClusterGlobals.DisableAutoUnseal:
+                    case NeonClusterGlobals.UserDisableAutoUnseal:
 
-                        if (cluster.Globals.TryGetBool(NeonClusterGlobals.DisableAutoUnseal, out var disableAutoUnseal))
+                        if (cluster.Globals.TryGetBool(NeonClusterGlobals.UserDisableAutoUnseal, out var disableAutoUnseal))
                         {
                             Console.Write(disableAutoUnseal ? "true" : "false");
                         }
@@ -183,7 +183,7 @@ NODE IDENTIFIERS:
 
                     case NeonClusterGlobals.UserLogRetentionDays:
 
-                        if (cluster.Globals.TryGetInt(NeonClusterGlobals.DisableAutoUnseal, out var logRetentionDays))
+                        if (cluster.Globals.TryGetInt(NeonClusterGlobals.UserDisableAutoUnseal, out var logRetentionDays))
                         {
                             Console.Write(logRetentionDays);
                         }

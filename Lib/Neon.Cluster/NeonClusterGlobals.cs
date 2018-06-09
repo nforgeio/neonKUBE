@@ -35,11 +35,6 @@ namespace Neon.Cluster
         public const string DefinitionHash = "definition-hash";
 
         /// <summary>
-        /// Disables automatic Vault unsealing (bool).
-        /// </summary>
-        public const string DisableAutoUnseal = "disable-auto-unseal";
-
-        /// <summary>
         /// Version of the <b>neon-cli</b> that created or last upgraded the cluster.
         /// </summary>
         public const string NeonCliVersion = "neon-cli-version";
@@ -66,6 +61,11 @@ namespace Neon.Cluster
         /// Enables unit testing on the cluster via <b>ClusterFixture</b> (bool).
         /// </summary>
         public const string UserAllowUnitTesting = "allow-unit-testing";
+
+        /// <summary>
+        /// Disables automatic Vault unsealing (bool).
+        /// </summary>
+        public const string UserDisableAutoUnseal = "disable-auto-unseal";
 
         /// <summary>
         /// Specifies the number of days to retain <b>logstash</b> and

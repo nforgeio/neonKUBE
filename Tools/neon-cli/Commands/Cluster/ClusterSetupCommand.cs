@@ -3158,7 +3158,7 @@ systemctl start neon-volume-plugin
 
                     cluster.Globals.Set(NeonClusterGlobals.UserAllowUnitTesting, cluster.Definition.AllowUnitTesting);
                     cluster.Globals.Set(NeonClusterGlobals.CreateDateUtc, DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ, CultureInfo.InvariantCulture));
-                    cluster.Globals.Set(NeonClusterGlobals.DisableAutoUnseal, false);
+                    cluster.Globals.Set(NeonClusterGlobals.UserDisableAutoUnseal, false);
                     cluster.Globals.Set(NeonClusterGlobals.UserLogRetentionDays, cluster.Definition.Log.RetentionDays);
                     cluster.Globals.Set(NeonClusterGlobals.NeonCliVersion, Program.Version);
                     cluster.Globals.Set(NeonClusterGlobals.NeonCliVersionMinimum, Program.MinimumVersion);
