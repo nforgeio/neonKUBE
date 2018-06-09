@@ -316,8 +316,8 @@ namespace Neon.Cluster
                     if (!string.IsNullOrEmpty(clientVersion) && clusterLogin.Definition.Summary != null)
                     {
                         // Client versions may include suffixes like: "-rc0", "-beta" or "-preview", etc.
-                        // We're going to ignore these, strip off anything after the dash and just compare
-                        // the version numbers.
+                        // We're going to ignore these, strip off the dash and anything after and just 
+                        // compare the version numbers.
 
                         var curVersion = clientVersion;
                         var minVersion = clusterLogin.Definition.Summary.NeonCliVersionMinimum;
