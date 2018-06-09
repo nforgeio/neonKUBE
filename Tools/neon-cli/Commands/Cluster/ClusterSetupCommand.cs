@@ -3156,13 +3156,13 @@ systemctl start neon-volume-plugin
 
                     firstManager.Status = "saving cluster globals";
 
-                    cluster.SetGlobal(NeonClusterGlobals.UserAllowUnitTesting, cluster.Definition.AllowUnitTesting);
-                    cluster.SetGlobal(NeonClusterGlobals.CreateDateUtc, DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ, CultureInfo.InvariantCulture));
-                    cluster.SetGlobal(NeonClusterGlobals.DisableAutoUnseal, false);
-                    cluster.SetGlobal(NeonClusterGlobals.UserLogRetentionDays, cluster.Definition.Log.RetentionDays);
-                    cluster.SetGlobal(NeonClusterGlobals.NeonCliVersion, Program.Version);
-                    cluster.SetGlobal(NeonClusterGlobals.NeonCliVersionMinimum, Program.MinimumVersion);
-                    cluster.SetGlobal(NeonClusterGlobals.Uuid, Guid.NewGuid().ToString("D").ToLowerInvariant());
+                    cluster.Globals.Set(NeonClusterGlobals.UserAllowUnitTesting, cluster.Definition.AllowUnitTesting);
+                    cluster.Globals.Set(NeonClusterGlobals.CreateDateUtc, DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ, CultureInfo.InvariantCulture));
+                    cluster.Globals.Set(NeonClusterGlobals.DisableAutoUnseal, false);
+                    cluster.Globals.Set(NeonClusterGlobals.UserLogRetentionDays, cluster.Definition.Log.RetentionDays);
+                    cluster.Globals.Set(NeonClusterGlobals.NeonCliVersion, Program.Version);
+                    cluster.Globals.Set(NeonClusterGlobals.NeonCliVersionMinimum, Program.MinimumVersion);
+                    cluster.Globals.Set(NeonClusterGlobals.Uuid, Guid.NewGuid().ToString("D").ToLowerInvariant());
                 });
         }
 

@@ -671,7 +671,7 @@ namespace NeonClusterManager
                         //
                         // The date is simply encodes the day covered by the index.
 
-                        if (!cluster.TryGetGlobalInt(NeonClusterGlobals.UserLogRetentionDays, out var retentionDays))
+                        if (!cluster.Globals.TryGetInt(NeonClusterGlobals.UserLogRetentionDays, out var retentionDays))
                         {
                             retentionDays = 14;
                         }

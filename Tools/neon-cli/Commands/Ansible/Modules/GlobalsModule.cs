@@ -195,7 +195,7 @@ namespace NeonCli.Ansible
             {
                 case "get":
 
-                    if (cluster.TryGetGlobalString(name, out var output))
+                    if (cluster.Globals.TryGetString(name, out var output))
                     {
                         context.WriteLine(AnsibleVerbosity.Important, output);
                     }
@@ -209,11 +209,11 @@ namespace NeonCli.Ansible
 
                     if (validate.Value)
                     {
-                        cluster.SetUserGlobal(name, value).Wait();
+                        cluster.Globals.SetUser(name, value);
                     }
                     else
                     {
-                        cluster.SetGlobal(name, value).Wait();
+                        cluster.Globals.Set(name, value);
                     }
                     break;
 

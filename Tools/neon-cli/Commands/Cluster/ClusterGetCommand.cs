@@ -144,7 +144,7 @@ NODE IDENTIFIERS:
                 {
                     case NeonClusterGlobals.UserAllowUnitTesting:
 
-                        if (cluster.TryGetGlobalBool(NeonClusterGlobals.UserAllowUnitTesting, out var allowUnitTesting))
+                        if (cluster.Globals.TryGetBool(NeonClusterGlobals.UserAllowUnitTesting, out var allowUnitTesting))
                         {
                             Console.Write(allowUnitTesting ? "true" : "false");
                         }
@@ -157,7 +157,7 @@ NODE IDENTIFIERS:
 
                     case NeonClusterGlobals.CreateDateUtc:
 
-                        if (cluster.TryGetGlobalString(NeonClusterGlobals.CreateDateUtc, out var createDate))
+                        if (cluster.Globals.TryGetString(NeonClusterGlobals.CreateDateUtc, out var createDate))
                         {
                             Console.Write(createDate);
                         }
@@ -170,7 +170,7 @@ NODE IDENTIFIERS:
 
                     case NeonClusterGlobals.DisableAutoUnseal:
 
-                        if (cluster.TryGetGlobalBool(NeonClusterGlobals.DisableAutoUnseal, out var disableAutoUnseal))
+                        if (cluster.Globals.TryGetBool(NeonClusterGlobals.DisableAutoUnseal, out var disableAutoUnseal))
                         {
                             Console.Write(disableAutoUnseal ? "true" : "false");
                         }
@@ -183,7 +183,7 @@ NODE IDENTIFIERS:
 
                     case NeonClusterGlobals.UserLogRetentionDays:
 
-                        if (cluster.TryGetGlobalInt(NeonClusterGlobals.DisableAutoUnseal, out var logRetentionDays))
+                        if (cluster.Globals.TryGetInt(NeonClusterGlobals.DisableAutoUnseal, out var logRetentionDays))
                         {
                             Console.Write(logRetentionDays);
                         }
@@ -253,7 +253,7 @@ NODE IDENTIFIERS:
 
                     case NeonClusterGlobals.Uuid:
 
-                        if (cluster.TryGetGlobalString(NeonClusterGlobals.Uuid, out var uuid))
+                        if (cluster.Globals.TryGetString(NeonClusterGlobals.Uuid, out var uuid))
                         {
                             Console.Write(uuid);
                         }
