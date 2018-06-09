@@ -900,7 +900,7 @@ namespace Neon.Cluster
 
             // Don't include any hosting related secrets in the clone.
 
-            clone.Hosting.ClearSecrets();
+            clone.Hosting?.ClearSecrets();
 
             // We need to ensure that JSON.NET serializes the nodes in a consistent
             // order (e.g. ascending order by name) so we'll compute the same hash
