@@ -92,9 +92,9 @@ SETTINGS:
 
             switch (setting)
             {
-                case NeonClusterGlobals.AllowUnitTesting:
+                case NeonClusterGlobals.UserAllowUnitTesting:
 
-                    cluster.SetGlobal(NeonClusterGlobals.AllowUnitTesting, NeonHelper.ParseBool(value));
+                    cluster.SetGlobal(NeonClusterGlobals.UserAllowUnitTesting, NeonHelper.ParseBool(value));
                     break;
 
                 case NeonClusterGlobals.DisableAutoUnseal:
@@ -102,7 +102,7 @@ SETTINGS:
                     cluster.SetGlobal(NeonClusterGlobals.DisableAutoUnseal, NeonHelper.ParseBool(value));
                     break;
 
-                case NeonClusterGlobals.LogRetentionDays:
+                case NeonClusterGlobals.UserLogRetentionDays:
 
                     if (int.TryParse(value, out var logRetentionDays) || logRetentionDays <= 0)
                     {
@@ -110,7 +110,7 @@ SETTINGS:
                         Program.Exit(1);
                     }
 
-                    cluster.SetGlobal(NeonClusterGlobals.LogRetentionDays, NeonHelper.ParseBool(value));
+                    cluster.SetGlobal(NeonClusterGlobals.UserLogRetentionDays, NeonHelper.ParseBool(value));
                     break;
 
                 default:

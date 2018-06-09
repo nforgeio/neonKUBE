@@ -13,15 +13,12 @@ namespace Neon.Cluster
 {
     /// <summary>
     /// Identifies the global cluster Consul globals and settings.  These are located
-    /// under <b>neon/cluster</b>.
+    /// under <b>neon/cluster</b>.  Settings with constant names prefixed by <b>User</b>
+    /// are considered to be user-modifiable.  The other settings are generally managed
+    /// only by the cluster and its tools.
     /// </summary>
     public static class NeonClusterGlobals
     {
-        /// <summary>
-        /// Enables unit testing on the cluster via <b>ClusterFixture</b> (bool).
-        /// </summary>
-        public const string AllowUnitTesting = "allow-unit-testing";
-
         /// <summary>
         /// Cluster creation date (UTC).
         /// </summary>
@@ -43,12 +40,6 @@ namespace Neon.Cluster
         public const string DisableAutoUnseal = "disable-auto-unseal";
 
         /// <summary>
-        /// Specifies the number of days to retain <b>logstash</b> and
-        /// <b>metricbeat</b> logs.
-        /// </summary>
-        public const string LogRetentionDays = "log-rentention-days";
-
-        /// <summary>
         /// Version of the <b>neon-cli</b> that created or last upgraded the cluster.
         /// </summary>
         public const string NeonCliVersion = "neon-cli-version";
@@ -67,5 +58,19 @@ namespace Neon.Cluster
         /// Cluster globally unique ID assigned during cluster setup.
         /// </summary>
         public const string Uuid = "uuid";
+
+        //---------------------------------------------------------------------
+        // These settings are considered to be user modifiable.
+
+        /// <summary>
+        /// Enables unit testing on the cluster via <b>ClusterFixture</b> (bool).
+        /// </summary>
+        public const string UserAllowUnitTesting = "allow-unit-testing";
+
+        /// <summary>
+        /// Specifies the number of days to retain <b>logstash</b> and
+        /// <b>metricbeat</b> logs.
+        /// </summary>
+        public const string UserLogRetentionDays = "log-rentention-days";
     }
 }

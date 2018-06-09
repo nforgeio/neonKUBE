@@ -142,9 +142,9 @@ NODE IDENTIFIERS:
 
                 switch (valueExpr.ToLowerInvariant())
                 {
-                    case NeonClusterGlobals.AllowUnitTesting:
+                    case NeonClusterGlobals.UserAllowUnitTesting:
 
-                        if (cluster.TryGetGlobalBool(NeonClusterGlobals.AllowUnitTesting, out var allowUnitTesting))
+                        if (cluster.TryGetGlobalBool(NeonClusterGlobals.UserAllowUnitTesting, out var allowUnitTesting))
                         {
                             Console.Write(allowUnitTesting ? "true" : "false");
                         }
@@ -181,7 +181,7 @@ NODE IDENTIFIERS:
                         }
                         break;
 
-                    case NeonClusterGlobals.LogRetentionDays:
+                    case NeonClusterGlobals.UserLogRetentionDays:
 
                         if (cluster.TryGetGlobalInt(NeonClusterGlobals.DisableAutoUnseal, out var logRetentionDays))
                         {

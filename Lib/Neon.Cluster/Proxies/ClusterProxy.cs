@@ -1046,16 +1046,79 @@ vault policy-write {policy.Name} policy.hcl
         }
 
         /// <summary>
+        /// Sets or removes a cluster global setting, verifying that the setting 
+        /// is intended to be modified by end users, that it is allowed to be
+        /// removed and that the value is reasonable.
+        /// </summary>
+        /// <param name="name">The setting name.</param>
+        /// <param name="value">The setting value.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
+        /// <exception cref="ArgumentNullException">Thrown if either the <paramref name="name"/> or <paramref name="value"/> are <c>null</c>.</exception>
+        /// <exception cref="FormatException">Thrown if the name or value are invalid.</exception>
+        /// <remarks>
+        /// <para>
+        /// This method works much like the various <see cref="SetGlobal(string, string)"/>
+        /// methods except that it is restricted to modifying only 
+        /// settings that most end-users will consider modifying:
+        /// </para>
+        /// <list type="table">
+        /// <item>
+        ///     <term><b>allow-unit-testing</b></term>
+        ///     <description>
+        ///     Indicates whether unit testing via <c>ClusterFixture</c> is to be 
+        ///     allowed.  Possible values are: <b>true</b>, <b>false</b>, <b>yes</b>,
+        ///     <b>no</b>, <b>on</b>, <b>off</b>, <b>1</b>, or <b>0</b>.
+        ///     </description>
+        /// </item>
+        /// <item>
+        ///     <term><b>log-rentention-days</b></term>
+        ///     <description>
+        ///     Specifies the number of days the cluster should retain <b>logstash</b>
+        ///     and <b>metricbeat</b> logs.  This must be a positive integer.
+        ///     </description>
+        /// </item>
+        /// </list>
+        /// </remarks>
+        public async Task SetUserGlobal(string name, string value)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(name));
+            Covenant.Requires<ArgumentNullException>(value != null);
+
+            switch (name)
+            {
+                case NeonClusterGlobals.UserAllowUnitTesting:
+
+                    await SetGlobal(name, NeonHelper.ParseBool(value));
+                    break;
+
+                case NeonClusterGlobals.UserLogRetentionDays:
+
+                    if (!int.TryParse(value, out var logRetentionDays) || logRetentionDays <= 0)
+                    {
+                        throw new FormatException($"[log-rentention-days={value}] is invalid because it's not an integer or not >= 0.");
+                    }
+
+                    await SetGlobal(name, logRetentionDays);
+                    break;
+
+                default:
+
+                    throw new ArgumentException($"[name={name}] is not a user modifiable global cluster setting.");
+            }
+        }
+
+        /// <summary>
         /// Sets or removes a named <c>string</c> cluster global setting.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public async void SetGlobal(string name, string value)
+        public async Task SetGlobal(string name, string value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -1077,12 +1140,13 @@ vault policy-write {policy.Name} policy.hcl
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public async void SetGlobal(string name, bool? value)
+        public async Task SetGlobal(string name, bool? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -1104,12 +1168,13 @@ vault policy-write {policy.Name} policy.hcl
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public async void SetGlobal(string name, int? value)
+        public async Task SetGlobal(string name, int? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -1131,12 +1196,13 @@ vault policy-write {policy.Name} policy.hcl
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public async void SetGlobal(string name, long? value)
+        public async Task SetGlobal(string name, long? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -1158,12 +1224,13 @@ vault policy-write {policy.Name} policy.hcl
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public async void SetGlobal(string name, double? value)
+        public async Task SetGlobal(string name, double? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));
@@ -1185,12 +1252,13 @@ vault policy-write {policy.Name} policy.hcl
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
+        /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
         /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
         /// </note>
         /// </remarks>
-        public async void SetGlobal(string name, TimeSpan? value)
+        public async Task SetGlobal(string name, TimeSpan? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
             Covenant.Requires(ClusterDefinition.IsValidName(name));

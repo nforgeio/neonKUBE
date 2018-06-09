@@ -409,7 +409,7 @@ namespace Neon.Xunit.Cluster
 
             // Ensure that the target cluster allows unit testing.
 
-            if (!cluster.TryGetGlobalBool(NeonClusterGlobals.AllowUnitTesting, out var allowUnitTesting))
+            if (!cluster.TryGetGlobalBool(NeonClusterGlobals.UserAllowUnitTesting, out var allowUnitTesting))
             {
                 allowUnitTesting = false;
             }
