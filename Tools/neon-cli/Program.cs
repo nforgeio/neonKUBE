@@ -35,7 +35,7 @@ namespace NeonCli
         /// <summary>
         /// The <b>neon-cli</b> version.
         /// </summary>
-        public const string Version = "1.2.96";
+        public const string Version = "1.2.97";
 
         /// <summary>
         /// The minimum <b>neon-cli</b> version capable of managing a cluster created
