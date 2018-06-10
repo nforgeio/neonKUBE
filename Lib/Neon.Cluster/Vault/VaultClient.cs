@@ -273,7 +273,7 @@ namespace Neon.Cluster
 
                     default:
 
-                        throw new NeonClusterException($"Vault status returned unexpected HTTP [status={(int)jsonResponse.StatusCode}].");
+                        throw new ClusterException($"Vault status returned unexpected HTTP [status={(int)jsonResponse.StatusCode}].");
                 }
 
                 return status;

@@ -1623,7 +1623,7 @@ retries = 4
             {
                 swarmManager = cluster.GetHealthyManager();
             }
-            catch (NeonClusterException)
+            catch (ClusterException)
             {
                 // We didn't find a healthy manager so we'll just fallback
                 // to the first manager as initialized above.

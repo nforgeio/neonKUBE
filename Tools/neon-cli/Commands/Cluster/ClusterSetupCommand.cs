@@ -1365,12 +1365,12 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
 
             if (startPos == -1)
             {
-                throw new NeonClusterException(errorMsg);
+                throw new ClusterException(errorMsg);
             }
 
             if (startPos == -1)
             {
-                throw new NeonClusterException(errorMsg);
+                throw new ClusterException(errorMsg);
             }
 
             startPos += tokenOpt.Length;
@@ -1389,7 +1389,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
 
             if (endPos == -1)
             {
-                throw new NeonClusterException($"Cannot extract swarm token from:\r\n\r\n{commandResponse}");
+                throw new ClusterException($"Cannot extract swarm token from:\r\n\r\n{commandResponse}");
             }
 
             return commandResponse.Substring(startPos, endPos - startPos).Trim();
@@ -1599,7 +1599,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                             // These seem to be transient, so we're going to retry a few times before
                             // actually giving up.
 
-                            var retry = new LinearRetryPolicy(e => e is NeonClusterException, maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(5));
+                            var retry = new LinearRetryPolicy(e => e is ClusterException, maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(5));
 
                             retry.InvokeAsync(
                                 async () =>

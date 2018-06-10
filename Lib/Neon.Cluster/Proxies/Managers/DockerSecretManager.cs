@@ -43,7 +43,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="secretName">The secret name.</param>
         /// <returns><c>true</c> if the secret exists.</returns>
-        /// <exception cref="NeonClusterException">Thrown if the operation failed.</exception>
+        /// <exception cref="ClusterException">Thrown if the operation failed.</exception>
         public bool Exists(string secretName)
         {
             var manager  = cluster.GetHealthyManager();
@@ -68,7 +68,7 @@ namespace Neon.Cluster
                 }
                 else
                 {
-                    throw new NeonClusterException(response.ErrorSummary);
+                    throw new ClusterException(response.ErrorSummary);
                 }
             }
         }
@@ -79,7 +79,7 @@ namespace Neon.Cluster
         /// <param name="secretName">The secret name.</param>
         /// <param name="value">The secret value.</param>
         /// <param name="options">Optional command run options.</param>
-        /// <exception cref="NeonClusterException">Thrown if the operation failed.</exception>
+        /// <exception cref="ClusterException">Thrown if the operation failed.</exception>
         public void Set(string secretName, string value, RunOptions options = RunOptions.None)
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(secretName));
@@ -94,7 +94,7 @@ namespace Neon.Cluster
         /// <param name="secretName">The secret name.</param>
         /// <param name="value">The secret value.</param>
         /// <param name="options">Optional command run options.</param>
-        /// <exception cref="NeonClusterException">Thrown if the operation failed.</exception>
+        /// <exception cref="ClusterException">Thrown if the operation failed.</exception>
         public void Set(string secretName, byte[] value, RunOptions options = RunOptions.None)
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(secretName));
@@ -137,7 +137,7 @@ fi
 
             if (response.ExitCode != 0)
             {
-                throw new NeonClusterException(response.ErrorSummary);
+                throw new ClusterException(response.ErrorSummary);
             }
         }
 
@@ -146,7 +146,7 @@ fi
         /// </summary>
         /// <param name="secretName">The secret name.</param>
         /// <param name="options">Optional command run options.</param>
-        /// <exception cref="NeonClusterException">Thrown if the operation failed.</exception>
+        /// <exception cref="ClusterException">Thrown if the operation failed.</exception>
         public void Remove(string secretName, RunOptions options = RunOptions.None)
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(secretName));
@@ -168,7 +168,7 @@ fi
 
             if (response.ExitCode != 0)
             {
-                throw new NeonClusterException(response.ErrorSummary);
+                throw new ClusterException(response.ErrorSummary);
             }
         }
     }

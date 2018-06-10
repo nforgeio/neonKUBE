@@ -395,7 +395,7 @@ namespace Neon.Xunit.Cluster
 
                 if (result.ExitCode != 0)
                 {
-                    throw new NeonClusterException($"[neon login {login}] command failed: {result.AllText}");
+                    throw new ClusterException($"[neon login {login}] command failed: {result.AllText}");
                 }
             }
             finally

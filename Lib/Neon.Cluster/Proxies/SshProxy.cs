@@ -846,7 +846,7 @@ namespace Neon.Cluster
             }
             catch (Exception e)
             {
-                throw new NeonClusterException($"Unable to connect to the cluster within [{timeout}].", e);
+                throw new ClusterException($"Unable to connect to the cluster within [{timeout}].", e);
             }
         }
 
@@ -2932,7 +2932,7 @@ echo $? > {cmdFolder}/exit
         /// </summary>
         /// <param name="address">The target IP address.</param>
         /// <returns>The network interface name.</returns>
-        /// <exception cref="NeonClusterException">Thrown if the interface was not found.</exception>
+        /// <exception cref="ClusterException">Thrown if the interface was not found.</exception>
         /// <remarks>
         /// <para>
         /// In the olden days, network devices were assigned names like <b>eth0</b>,
@@ -2992,7 +2992,7 @@ echo $? > {cmdFolder}/exit
                 }
             }
 
-            throw new NeonClusterException($"Cannot find network interface for [address={address}].");
+            throw new ClusterException($"Cannot find network interface for [address={address}].");
         }
 
         /// <summary>

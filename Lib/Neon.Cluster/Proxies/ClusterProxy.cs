@@ -402,7 +402,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="failureMode">Specifies what should happen when there are no healthy managers.</param>
         /// <returns>The healthy manager node.</returns>
-        /// <exception cref="NeonClusterException">
+        /// <exception cref="ClusterException">
         /// Thrown if no healthy managers are present and
         /// <paramref name="failureMode"/>=<see cref="HealthyManagerMode.Throw"/>.
         /// </exception>
@@ -458,7 +458,7 @@ namespace Neon.Cluster
 
                 case HealthyManagerMode.Throw:
 
-                    throw new NeonClusterException("Could not locate a healthy cluster manager node.");
+                    throw new ClusterException("Could not locate a healthy cluster manager node.");
 
                 default:
 
@@ -593,7 +593,7 @@ namespace Neon.Cluster
                         sbNotReadyManagers.AppendWithSeparator(manager.Name, ", ");
                     }
 
-                    throw new NeonClusterException($"Vault not unsealed after waiting [{timeout}] on: {sbNotReadyManagers}");
+                    throw new ClusterException($"Vault not unsealed after waiting [{timeout}] on: {sbNotReadyManagers}");
                 }
 
                 foreach (var manager in Managers.Where(m => !readyManagers.Contains(m.Name)))
@@ -633,7 +633,7 @@ namespace Neon.Cluster
                         sbNotReadyManagers.AppendWithSeparator(manager.Name, ", ");
                     }
 
-                    throw new NeonClusterException($"Vault not ready after waiting [{timeout}] on: {sbNotReadyManagers}");
+                    throw new ClusterException($"Vault not ready after waiting [{timeout}] on: {sbNotReadyManagers}");
                 }
 
                 foreach (var manager in Managers.Where(m => !readyManagers.Contains(m.Name)))

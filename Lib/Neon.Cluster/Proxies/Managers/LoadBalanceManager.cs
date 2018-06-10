@@ -85,7 +85,7 @@ namespace Neon.Cluster
         /// Returns the load balancer definition including its settings and rules.
         /// </summary>
         /// <returns>The <see cref="LoadBalancerDefinition"/>.</returns>
-        /// <exception cref="NeonClusterException">Thrown if the load balancer definition could not be loaded.</exception>
+        /// <exception cref="ClusterException">Thrown if the load balancer definition could not be loaded.</exception>
         public LoadBalancerDefinition GetDefinition()
         {
             // Fetch the proxy settings and all of its rules to create a full [LoadBalancerDefinition].
@@ -99,7 +99,7 @@ namespace Neon.Cluster
             }
             else
             {
-                throw new NeonClusterException($"Settings for load balancer [{Name}] do not exist or could not be loaded.");
+                throw new ClusterException($"Settings for load balancer [{Name}] do not exist or could not be loaded.");
             }
 
             foreach (var rule in ListRules())

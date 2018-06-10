@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonVersionException.cs
+// FILE:	    VersionException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -23,12 +23,12 @@ namespace Neon.Cluster
     /// <summary>
     /// Indicates a client or other version incompatiblity.
     /// </summary>
-    public class NeonVersionException : Exception
+    public class VersionException : Exception
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public NeonVersionException()
+        public VersionException()
         {
         }
 
@@ -37,7 +37,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="message">The message.</param>
         /// <param name="innerException">The optional inner exception.</param>
-        public NeonVersionException(string message, Exception innerException = null)
+        public VersionException(string message, Exception innerException = null)
             : base(message, innerException)
         {
         }

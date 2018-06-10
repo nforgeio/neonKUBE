@@ -789,7 +789,7 @@ namespace Neon.Cluster
         {
             if (error)
             {
-                throw new NeonClusterException($"[{nodes.Count(n => n.IsFaulted)}] nodes are faulted.");
+                throw new ClusterException($"[{nodes.Count(n => n.IsFaulted)}] nodes are faulted.");
             }
         }
     }

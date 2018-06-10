@@ -1030,7 +1030,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
             {
                 clusterLogin = NeonClusterHelper.GetLogin(!isRequired, Program.Version);
             }
-            catch (NeonVersionException e)
+            catch (VersionException e)
             {
                 Console.Error.WriteLine($"*** ERROR: {e.Message}");
                 Program.Exit(1);

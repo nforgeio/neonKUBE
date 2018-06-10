@@ -257,7 +257,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="login">The target cluster login.</param>
         /// <param name="clientVersion">The optional client version string.</param>
-        /// <exception cref="NeonVersionException">Thrown if the client is not capable of managing the cluster.</exception>
+        /// <exception cref="VersionException">Thrown if the client is not capable of managing the cluster.</exception>
         /// <remarks>
         /// <note>
         /// No compatiblility check is performed if <paramref name="clientVersion"/> is passed
@@ -295,7 +295,7 @@ namespace Neon.Cluster
 
                 if (new Version(curVersion) < new Version(minVersion))
                 {
-                    throw new NeonClusterException($"neon-cli v{clientVersion} cannot manage cluster [{login.Definition.Name}].  Use neon-cli v{login.Definition.Summary.NeonCliVersionMinimum} or greater.");
+                    throw new ClusterException($"neon-cli v{clientVersion} cannot manage cluster [{login.Definition.Name}].  Use neon-cli v{login.Definition.Summary.NeonCliVersionMinimum} or greater.");
                 }
             }
         }
@@ -312,7 +312,7 @@ namespace Neon.Cluster
         /// Optionally specifies the current <b>neon-cli</b> version to be checked
         /// against the cluster's minimum required client.
         /// </param>
-        /// <exception cref="NeonVersionException">Thrown if the client is not capable of managing the cluster.</exception>
+        /// <exception cref="VersionException">Thrown if the client is not capable of managing the cluster.</exception>
         /// <returns>The current cluster login or <c>null</c>.</returns>
         /// <remarks>
         /// <note>
@@ -1232,7 +1232,7 @@ namespace Neon.Cluster
                         }
                         else
                         {
-                            throw new NeonClusterException(NeonHelper.ExceptionError(e));
+                            throw new ClusterException(NeonHelper.ExceptionError(e));
                         }
                     }
                 }
@@ -1248,10 +1248,10 @@ namespace Neon.Cluster
                     }
                     catch (Exception e2)
                     {
-                        throw new NeonClusterException($"[{e2.GetType().Name}]: Cannot deserialize remote cluster definition.", e2);
+                        throw new ClusterException($"[{e2.GetType().Name}]: Cannot deserialize remote cluster definition.", e2);
                     }
                 }
-                catch (NeonClusterException)
+                catch (ClusterException)
                 {
                     throw;
                 }
@@ -1268,7 +1268,7 @@ namespace Neon.Cluster
                     }
                     else
                     {
-                        throw new NeonClusterException(NeonHelper.ExceptionError(e));
+                        throw new ClusterException(NeonHelper.ExceptionError(e));
                     }
                 }
             }

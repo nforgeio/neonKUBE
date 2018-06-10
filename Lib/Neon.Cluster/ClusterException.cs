@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    NeonClusterException.cs
+// FILE:	    ClusterException.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -23,12 +23,12 @@ namespace Neon.Cluster
     /// <summary>
     /// Describes a neonCLUSTER management related error.
     /// </summary>
-    public class NeonClusterException : Exception
+    public class ClusterException : Exception
     {
         /// <summary>
         /// Default constructor.
         /// </summary>
-        public NeonClusterException()
+        public ClusterException()
         {
         }
 
@@ -37,7 +37,7 @@ namespace Neon.Cluster
         /// </summary>
         /// <param name="message">The message.</param>
         /// <param name="innerException">The optional inner exception.</param>
-        public NeonClusterException(string message, Exception innerException = null)
+        public ClusterException(string message, Exception innerException = null)
             : base(message, innerException)
         {
         }

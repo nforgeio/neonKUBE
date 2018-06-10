@@ -354,7 +354,7 @@ namespace Neon.Cluster
             {
                 if (show)
                 {
-                    throw new NeonClusterException("A VPN connection already exists for this cluster.");
+                    throw new ClusterException("A VPN connection already exists for this cluster.");
                 }
 
                 switch (vpnClient.State)

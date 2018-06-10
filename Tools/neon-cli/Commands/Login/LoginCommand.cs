@@ -109,7 +109,7 @@ ARGUMENTS:
                 {
                     NeonClusterHelper.ValidateClientVersion(clusterLogin, Program.Version);
                 }
-                catch (NeonVersionException e)
+                catch (VersionException e)
                 {
                     NeonClusterHelper.VpnClose(null);
                     CurrentClusterLogin.Delete();
@@ -227,7 +227,7 @@ ARGUMENTS:
                 {
                     NeonClusterHelper.GetLogin(clientVersion: Program.Version);
                 }
-                catch (NeonVersionException e)
+                catch (VersionException e)
                 {
                     NeonClusterHelper.VpnClose(null);
                     CurrentClusterLogin.Delete();

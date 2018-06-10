@@ -61,7 +61,7 @@ namespace Neon.Cluster
                 }
                 else
                 {
-                    throw new NeonClusterException($"Invalid credentials for the [{hostname}] registry.");
+                    throw new ClusterException($"Invalid credentials for the [{hostname}] registry.");
                 }
             }
 
@@ -75,7 +75,7 @@ namespace Neon.Cluster
         /// <param name="registry">The registry hostname or <c>null</c> to specify the Docker public registry.</param>
         /// <param name="username">The username.</param>
         /// <param name="password">The password.</param>
-        /// <exception cref="NeonClusterException">Thrown if one or more of the cluster nodes could not be logged in.</exception>
+        /// <exception cref="ClusterException">Thrown if one or more of the cluster nodes could not be logged in.</exception>
         public void Login(string registry, string username, string password)
         {
             Covenant.Requires<ArgumentNullException>(string.IsNullOrEmpty(registry) || ClusterDefinition.DnsHostRegex.IsMatch(registry));
@@ -126,7 +126,7 @@ namespace Neon.Cluster
                     sb.AppendLine(error);
                 }
 
-                throw new NeonClusterException(sb.ToString());
+                throw new ClusterException(sb.ToString());
             }
         }
 
@@ -134,7 +134,7 @@ namespace Neon.Cluster
         /// Logs the cluster out of a Docker registry.
         /// </summary>
         /// <param name="registry">The registry hostname.</param>
-        /// <exception cref="NeonClusterException">Thrown if one or more of the cluster nodes could not be logged out.</exception>
+        /// <exception cref="ClusterException">Thrown if one or more of the cluster nodes could not be logged out.</exception>
         public void Logout(string registry)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
@@ -183,7 +183,7 @@ namespace Neon.Cluster
                     sb.AppendLine(error);
                 }
 
-                throw new NeonClusterException(sb.ToString());
+                throw new ClusterException(sb.ToString());
             }
         }
 
@@ -216,7 +216,7 @@ namespace Neon.Cluster
             }
             else
             {
-                throw new NeonClusterException($"Invalid credentials for the [{registry}] registry.");
+                throw new ClusterException($"Invalid credentials for the [{registry}] registry.");
             }
         }
 
@@ -332,7 +332,7 @@ namespace Neon.Cluster
         /// <param name="certificate">The certificate used to secure the registry.</param>
         /// <param name="image">Optionally specifies the Docker image to be deployed (defaults to <b>neoncluster/neon-registry</b>).</param>
         /// <param name="progress">Optional action that will be called with a progress message.</param>
-        /// <exception cref="NeonClusterException">Thrown if a registry is already deployed or deployment failed.</exception>
+        /// <exception cref="ClusterException">Thrown if a registry is already deployed or deployment failed.</exception>
         /// <exception cref="NotSupportedException">Thrown if the cluster does not support local registries.</exception>
         public void CreateLocalRegistry(
             string          hostname, 
@@ -357,7 +357,7 @@ namespace Neon.Cluster
 
             if (HasLocalRegistry)
             {
-                throw new NeonClusterException("The [neon-registry] service is already deployed.");
+                throw new ClusterException("The [neon-registry] service is already deployed.");
             }
 
             progress?.Invoke($"Setting certificate.");
@@ -394,7 +394,7 @@ namespace Neon.Cluster
 
             if (createResponse.ExitCode != 0)
             {
-                throw new NeonClusterException($"[neon-registry] service create failed: {createResponse.ErrorText}");
+                throw new ClusterException($"[neon-registry] service create failed: {createResponse.ErrorText}");
             }
 
             progress?.Invoke($"Service created.");
@@ -406,12 +406,12 @@ namespace Neon.Cluster
         /// Removes then local Docker registry from the cluster.
         /// </summary>
         /// <param name="progress">Optional action that will be called with a progress message.</param>
-        /// <exception cref="NeonClusterException">Thrown if no registry is deployed or there was an error removing it.</exception>
+        /// <exception cref="ClusterException">Thrown if no registry is deployed or there was an error removing it.</exception>
         public void RemoveLocalRegistry(Action<string> progress = null)
         {
             if (!HasLocalRegistry)
             {
-                throw new NeonClusterException("The [neon-registry] service is not deployed.");
+                throw new ClusterException("The [neon-registry] service is not deployed.");
             }
 
             var syncLock = new object();
@@ -509,7 +509,7 @@ namespace Neon.Cluster
         /// Removes then local Docker registry from the cluster.
         /// </summary>
         /// <param name="progress">Optional action that will be called with a progress message.</param>
-        /// <exception cref="NeonClusterException">Thrown if no registry is deployed or there was an error removing it.</exception>
+        /// <exception cref="ClusterException">Thrown if no registry is deployed or there was an error removing it.</exception>
         public void PruneLocalRegistry(Action<string> progress = null)
         {
             // We're going to upload a script to one of the managers that handles
@@ -549,7 +549,7 @@ docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
 
             if (pruneResponse.ExitCode != 0)
             {
-                throw new NeonClusterException($"The prune operation failed.  The registry may be running in READ-ONLY mode: {pruneResponse.ErrorText}");
+                throw new ClusterException($"The prune operation failed.  The registry may be running in READ-ONLY mode: {pruneResponse.ErrorText}");
             }
 
             progress?.Invoke("Registry prune completed.");
