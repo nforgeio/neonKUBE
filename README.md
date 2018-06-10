@@ -138,6 +138,8 @@ Follow steps below to configure a development or test workstation.
   * Run Cmdr and configure settings.
   * Consider removing the alias definitions in `$\config\user-aliases.cmd` file so that commands like `ls` will work properly.  I deleted all lines beneath the first `@echo off`.
 
+24. *Optional*: Install **XenCenter** via `$\External\XenCenter.msi` if you'll need to manage the production Virtual Machines.
+
 # Git Branches and Docker Image Tagging Conventions
 
 We're going to standardize on some conventions for managing source control branches and published Docker image tags.
