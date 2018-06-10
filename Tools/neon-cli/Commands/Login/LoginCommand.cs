@@ -103,6 +103,21 @@ ARGUMENTS:
                 string.Equals(clusterLogin.ClusterName, clusterName, StringComparison.OrdinalIgnoreCase) &&
                 string.Equals(clusterLogin.Username, username, StringComparison.OrdinalIgnoreCase))
             {
+                // Ensure that the client is compatible with the cluster.
+
+                try
+                {
+                    NeonClusterHelper.ValidateClientVersion(clusterLogin, Program.Version);
+                }
+                catch (NeonVersionException e)
+                {
+                    NeonClusterHelper.VpnClose(null);
+                    CurrentClusterLogin.Delete();
+
+                    Console.Error.WriteLine($"*** ERROR: {e.Message}");
+                    Program.Exit(0);
+                }
+
                 Console.Error.WriteLine($"*** You are already logged into [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
                 Program.Exit(0);
             }
@@ -203,6 +218,23 @@ ARGUMENTS:
                     };
 
                 currentLogin.Save();
+
+                // Call GetLogin() with the client version so that the current cluster
+                // definition will be downloaded and so we'll also verify that the 
+                // current client is capable of managing the cluster.
+
+                try
+                {
+                    NeonClusterHelper.GetLogin(clientVersion: Program.Version);
+                }
+                catch (NeonVersionException e)
+                {
+                    NeonClusterHelper.VpnClose(null);
+                    CurrentClusterLogin.Delete();
+
+                    Console.Error.WriteLine($"*** ERROR: {e.Message}");
+                    Program.Exit(1);
+                }
 
                 Console.Error.WriteLine($"Logged into [{clusterLogin.LoginName}]{viaVpn}.");
                 Console.Error.WriteLine("");

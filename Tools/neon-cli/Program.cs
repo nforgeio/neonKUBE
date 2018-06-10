@@ -35,7 +35,7 @@ namespace NeonCli
         /// <summary>
         /// The <b>neon-cli</b> version.
         /// </summary>
-        public const string Version = "1.2.97";
+        public const string Version = "1.0.0";  //"1.2.97";
 
         /// <summary>
         /// The minimum <b>neon-cli</b> version capable of managing a cluster created
@@ -46,7 +46,7 @@ namespace NeonCli
         public const string MinimumVersion = "1.2.95";
 
         /// <summary>
-        /// Host node opewrating system properties or <c>null</c>.
+        /// Host node operating system properties or <c>null</c>.
         /// </summary>
         private static OSProperties osProperties;
 
@@ -1024,7 +1024,18 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
         /// <returns>The current cluster login or <c>null</c>.</returns>
         public static ClusterLogin GetClusterLogin(bool isRequired = false)
         {
-            var clusterLogin = NeonClusterHelper.GetLogin(!isRequired);
+            ClusterLogin clusterLogin;
+
+            try
+            {
+                clusterLogin = NeonClusterHelper.GetLogin(!isRequired, Program.Version);
+            }
+            catch (NeonVersionException e)
+            {
+                Console.Error.WriteLine($"*** ERROR: {e.Message}");
+                Program.Exit(1);
+                return null;
+            }
 
             if (isRequired && clusterLogin == null)
             {

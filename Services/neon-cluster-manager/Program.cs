@@ -90,11 +90,11 @@ namespace NeonClusterManager
                     secrets.Add("neon-cluster-manager-vaultkeys",
                         new VaultCredentials()
                         {
-                            RootToken    = "f76dd54d-8360-41fe-77e4-83ef0892d55a",
+                            RootToken    = "cd5831fa-86ec-cc22-b1f3-051f88147382",
                             KeyThreshold = 1,
                             UnsealKeys   = new List<string>()
                             {
-                                "80xFR2EeuqjivCisC8lR+Epb2z4S4RH0BU7svQUiNmU="
+                                "8SgwdO/GwqJ7nyxT2tK2n1CCR3084kQVh7gEy8jNQh8="
                             }
                         });
 
@@ -106,6 +106,17 @@ namespace NeonClusterManager
                 }
 
                 cluster = NeonClusterHelper.Cluster;
+
+                // $todo(jeff.lill): DELETE THIS!
+
+                if (cluster == null)
+                {
+                    log.LogInfo(() => "*** CLUSTER IS NULL ***");
+                }
+                else
+                {
+                    log.LogInfo(() => "CLUSTER IS NOT NULL");
+                }
 
                 // Ensure that we're running on a manager node.  We won't be able
                 // to query swarm status otherwise.
@@ -356,6 +367,7 @@ namespace NeonClusterManager
 
                     log.LogDebug(() => $"STATE-POLLER: Querying [{docker.Settings.Uri}]");
 
+#if TODO // $todo(jeff.lill): DELETE THIS!
                     var swarmNodes = await docker.NodeListAsync();
 
                     // Parse the node definitions from the swarm nodes and build a new definition with
@@ -376,6 +388,16 @@ namespace NeonClusterManager
                     }
 
                     log.LogDebug(() => $"STATE-POLLER: [{currentClusterDefinition.Managers.Count()}] managers and [{currentClusterDefinition.Workers.Count()}] workers in current cluster definition.");
+#else
+                    var currentClusterDefinition = NeonHelper.JsonClone<ClusterDefinition>(cachedClusterDefinition);
+
+                    var pets = currentClusterDefinition.NodeDefinitions.Where(n => n.Value.Role == NodeRole.Pet).ToList();
+
+                    foreach (var pet in pets)
+                    {
+                        currentClusterDefinition.NodeDefinitions.Remove(pet.Key);
+                    }
+#endif
 
                     // Cluster pets are not part of the Swarm, so Docker won't return any information
                     // about them.  We'll read the pet definitions from [neon/cluster/pets-definition] in 

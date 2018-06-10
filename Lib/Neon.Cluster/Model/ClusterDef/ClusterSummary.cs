@@ -24,6 +24,7 @@ using Newtonsoft.Json.Serialization;
 
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Diagnostics;
 using Neon.IO;
 using Neon.Net;
 
@@ -42,9 +43,6 @@ namespace Neon.Cluster
     public class ClusterSummary
     {
         //---------------------------------------------------------------------
-        // Local types
-
-        //---------------------------------------------------------------------
         // Static members
 
         /// <summary>
@@ -57,9 +55,27 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(cluster != null);
 
+            // $todo(jeff.lill): DELETE THIS!
+
+            var log = LogManager.Default.GetLogger("test");
+
+            log.LogInfo(() => "*** 1");
+
+            //------------------------------------------
+
+            Covenant.Requires<ArgumentNullException>(cluster != null);
+
+log.LogInfo(() => "*** 2");
+
             if (definition == null)
             {
+log.LogInfo(() => "*** 3");
+if (cluster == null)
+{
+    log.LogInfo(() => "*** 3 cluster is NULL");
+}
                 definition = cluster.Definition;
+log.LogInfo(() => "*** 4");
             }
 
             var summary = new ClusterSummary();

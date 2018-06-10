@@ -253,6 +253,54 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Ensures that the client version specified is capable of managing a cluster.
+        /// </summary>
+        /// <param name="login">The target cluster login.</param>
+        /// <param name="clientVersion">The optional client version string.</param>
+        /// <exception cref="NeonVersionException">Thrown if the client is not capable of managing the cluster.</exception>
+        /// <remarks>
+        /// <note>
+        /// No compatiblility check is performed if <paramref name="clientVersion"/> is passed
+        /// as <c>null</c> or empty.
+        /// </note>
+        /// </remarks>
+        public static void ValidateClientVersion(ClusterLogin login, string clientVersion = null)
+        {
+            Covenant.Requires<ArgumentNullException>(login != null);
+
+            // Ensure that the current version of the client is compatible with
+            // the connected cluster.
+
+            if (!string.IsNullOrEmpty(clientVersion) && login.Definition.Summary != null)
+            {
+                // Client versions may include suffixes like: "-rc0", "-beta" or "-preview", etc.
+                // We're going to ignore these, strip off the dash and anything after and just 
+                // compare the version numbers.
+
+                var curVersion = clientVersion;
+                var minVersion = login.Definition.Summary.NeonCliVersionMinimum;
+                var dashPos    = curVersion.IndexOf('-');
+
+                if (dashPos != -1)
+                {
+                    curVersion = curVersion.Substring(0, dashPos);
+                }
+
+                dashPos = minVersion.IndexOf('-');
+
+                if (dashPos != -1)
+                {
+                    minVersion = minVersion.Substring(0, dashPos);
+                }
+
+                if (new Version(curVersion) < new Version(minVersion))
+                {
+                    throw new NeonClusterException($"neon-cli v{clientVersion} cannot manage cluster [{login.Definition.Name}].  Use neon-cli v{login.Definition.Summary.NeonCliVersionMinimum} or greater.");
+                }
+            }
+        }
+
+        /// <summary>
         /// Returns the cluster login for the currently logged in cluster and
         /// establishes a cluster connection.
         /// </summary>
@@ -264,7 +312,7 @@ namespace Neon.Cluster
         /// Optionally specifies the current <b>neon-cli</b> version to be checked
         /// against the cluster's minimum required client.
         /// </param>
-        /// <exception cref="NeonClusterException">Thrown if the current client does not satisfy the minimum version.</exception>
+        /// <exception cref="NeonVersionException">Thrown if the client is not capable of managing the cluster.</exception>
         /// <returns>The current cluster login or <c>null</c>.</returns>
         /// <remarks>
         /// <note>
@@ -308,39 +356,7 @@ namespace Neon.Cluster
                     clusterLogin.Definition.NodeDefinitions = liveDefinition.NodeDefinitions;
                     clusterLogin.Definition.Summary         = liveDefinition.Summary;
 
-                    // $todo(jeff.lill): Where should this check happen?????
-#if TODO
-                    // Ensure that the current version of the client is compatible with
-                    // the connected cluster.
-
-                    if (!string.IsNullOrEmpty(clientVersion) && clusterLogin.Definition.Summary != null)
-                    {
-                        // Client versions may include suffixes like: "-rc0", "-beta" or "-preview", etc.
-                        // We're going to ignore these, strip off the dash and anything after and just 
-                        // compare the version numbers.
-
-                        var curVersion = clientVersion;
-                        var minVersion = clusterLogin.Definition.Summary.NeonCliVersionMinimum;
-                        var dashPos    = curVersion.IndexOf('-');
-
-                        if (dashPos != -1)
-                        {
-                            curVersion = curVersion.Substring(0, dashPos);
-                        }
-
-                        dashPos = minVersion.IndexOf('-');
-
-                        if (dashPos != -1)
-                        {
-                            minVersion = minVersion.Substring(0, dashPos);
-                        }
-
-                        if (new Version(curVersion) < new Version(minVersion))
-                        {
-                            throw new NeonClusterException($"neon-cli v{clientVersion} cannot manage cluster [{clusterLogin.Definition.Name}].  Use neon-cli v{clusterLogin.Definition.Summary.NeonCliVersionMinimum} or greater.");
-                        }
-                    }
-#endif
+                    ValidateClientVersion(clusterLogin, clientVersion);
 
                     return clusterLogin;
                 }
@@ -698,7 +714,6 @@ namespace Neon.Cluster
                         return proxy;
                     }));
 
-
             return NeonClusterHelper.Cluster;
         }
 
@@ -734,6 +749,10 @@ namespace Neon.Cluster
 
             IsConnected      = true;
             remoteConnection = false;
+
+            // Load the cluster definition from Consul and initialize the [Cluster] property.
+
+            // $todo(jeff.lill): IMPLEMENT THIS!
         }
 
         /// <summary>
