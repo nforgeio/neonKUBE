@@ -727,11 +727,19 @@ namespace Neon.Cluster
         /// and host DNS mappings from <b>/etc/neoncluster/env-host</b>.
         /// </note>
         /// </summary>
+        /// <param name="sshCredentialsSecret">Optionally identifies the Docker secret the cluster SSH credentials.</param>
         /// <exception cref="InvalidOperationException">
         /// Thrown if the current process does not appear to be running as a cluster container
         /// with the node environment variables mapped in.
         /// </exception>
-        public static void OpenCluster()
+        /// <remarks>
+        /// <para>
+        /// The <paramref name="sshCredentialsSecret"/> parameter optionally specifies the name
+        /// of the Docker secret containing the cluster's SSH credentials formatted as: <b>username/password</b>.  
+        /// These credentials are required to be able to open SSH/SCP connections to cluster nodes.
+        /// </para>
+        /// </remarks>
+        public static void OpenCluster(string sshCredentialsSecret = null)
         {
             log.LogInfo(() => "Connecting to cluster.");
 
@@ -752,7 +760,40 @@ namespace Neon.Cluster
 
             // Load the cluster definition from Consul and initialize the [Cluster] property.
 
-            // $todo(jeff.lill): IMPLEMENT THIS!
+            var definition = GetDefinitionAsync().Result;
+
+            log.LogInfo(() => $"Connecting to [{definition.Name}].");
+
+            ClusterLogin = new ClusterLogin()
+            {
+                Definition = definition
+            };
+
+            var sshCredentials = SshCredentials.None;
+
+            if (!string.IsNullOrEmpty(sshCredentialsSecret))
+            {
+                var credentials = GetSecret(sshCredentialsSecret);
+
+                if (!string.IsNullOrEmpty(credentials))
+                {
+                    var fields = credentials.Trim().Split(new char[] { '/' }, 2);
+
+                    sshCredentials = SshCredentials.FromUserPassword(fields[0], fields[1]);
+                }
+            }
+
+            OpenCluster(
+                new Cluster.ClusterProxy(ClusterLogin,
+                    (name, publicAddress, privateAddress) =>
+                    {
+                        var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, sshCredentials, null);
+
+                        proxy.RemotePath += $":{NeonHostFolders.Setup}";
+                        proxy.RemotePath += $":{NeonHostFolders.Tools}";
+
+                        return proxy;
+                    }));
         }
 
         /// <summary>

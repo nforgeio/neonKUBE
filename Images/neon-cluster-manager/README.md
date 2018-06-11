@@ -44,6 +44,21 @@ Many (perhaps most) clusters don't need this level of security and operators may
 
 * **LOG_LEVEL** (*optional*) - logging level: `CRITICAL`, `SERROR`, `ERROR`, `WARN`, `INFO`, `SINFO`, `DEBUG`, or `NONE` (defaults to `INFO`).
 
+# Secrets
+
+* **neon-ssh-credentials** - (*Required*) The service requires the SSH credentials to be mapped into the service as **neon-ssh-credentials**.  These credentials are formatted as **username/password**.
+
+* **neon-cluster-manager-vaultkeys** - (*Optional*) Pass this to enable automatic Vault unsealing.  This can be obtained from the root cluster credentials and is a JSON object that will looks something like:
+````
+{
+    "UnsealKeys": [
+        "nNobx5u5q3JeQM6d/kGkJflUwbg7QSQyEnMGf9wgzdE="
+    ],
+    "KeyThreshold": 1
+}
+````
+&nbsp;
+
 # Consul Settings
 
 This service reads configuration settings from Consul:
@@ -59,19 +74,6 @@ This service reads configuration settings from Consul:
 
 You'll need to restart the containers to pick up any changes.
 
-# Secrets
-
-To enable automatic Vault unsealing, you'll need to persist the Vault unseal keys as the Docker secret named **neon-cluster-manager-vaultkeys**.  This can be obtained from the root cluster credentials and is a JSON object that will looks something like:
-
-````
-{
-    "UnsealKeys": [
-        "nNobx5u5q3JeQM6d/kGkJflUwbg7QSQyEnMGf9wgzdE="
-    ],
-    "KeyThreshold": 1
-}
-````
-&nbsp;
 
 # Deployment
 
@@ -86,6 +88,7 @@ docker service create \
     --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
     --env LOG_LEVEL=INFO \
     --secret=neon-cluster-manager-vaultkeys \
+    --secret=neon-ssh-credentials \
     --constraint node.role==manager \
     --replicas 1 \
     --restart-delay 10s \

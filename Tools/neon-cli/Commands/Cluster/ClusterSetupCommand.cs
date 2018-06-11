@@ -495,7 +495,7 @@ OPTIONS:
             // SSH username/password authentication which may block
             // connection attempts.
             //
-            // It's also good to do this last so it'll be possible to 
+            // It's also handy to do this last so it'll be possible to 
             // manually login with the original credentials to diagnose
             // setup issues.
 
@@ -3382,6 +3382,24 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         private void ConfigureSsh(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
+            // Create the [neon-ssh-credentials] Docker secret using the first manager.
+
+            if (node == cluster.FirstManager)
+            {
+                node.InvokeIdempotentAction("setup-ssh-secret",
+                    () =>
+                    {
+                        node.Status = "SSH credentials secret.";
+
+                        var bundle = new CommandBundle("cat credentials.txt | docker secret create neon-ssh-credentials -");
+
+                        bundle.AddFile("credentials.txt", $"{clusterLogin.SshUsername}/{clusterLogin.SshPassword}");
+                        node.SudoCommand(bundle, cluster.SecureRunOptions);
+                    });
+            }
+
+            // Configure the SSH credentials on all cluster nodes.
+
             node.InvokeIdempotentAction("setup-ssh",
                 () =>
                 {

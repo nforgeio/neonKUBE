@@ -118,7 +118,7 @@ namespace NeonDns
 
                 if (string.IsNullOrEmpty(nodeRole))
                 {
-                    log.LogCritical(() => "Container does not appear to be running on a neonCLUSTER.");
+                    log.LogCritical(() => "Service does not appear to be running on a neonCLUSTER.");
                     Program.Exit(1);
                 }
 

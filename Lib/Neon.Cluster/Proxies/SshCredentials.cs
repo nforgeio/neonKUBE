@@ -62,8 +62,19 @@ namespace Neon.Cluster
             }
         }
 
+        /// <summary>
+        /// Returns an instance indicating that there are no available credentials.
+        /// </summary>
+        /// <returns></returns>
+        public static SshCredentials None
+        {
+            get { return new SshCredentials(); }
+        }
+
         //---------------------------------------------------------------------
         // Instance members
+
+        private AuthenticationMethod authenticationMethod;
 
         /// <summary>
         /// Returns the user name.
@@ -73,6 +84,20 @@ namespace Neon.Cluster
         /// <summary>
         /// Returns the authentication method to be used to establish an SSH.NET session.
         /// </summary>
-        internal AuthenticationMethod AuthenticationMethod { get; private set; }
+        /// <exception cref="ClusterException">Thrown if the SSH credentials are not available.</exception>
+        internal AuthenticationMethod AuthenticationMethod
+        {
+            get
+            {
+                if (authenticationMethod == null)
+                {
+                    throw new ClusterException("Cluster SSH credentials are not available.");
+                }
+
+                return authenticationMethod;
+            }
+
+            set { authenticationMethod = value; }
+        }
     }
 }

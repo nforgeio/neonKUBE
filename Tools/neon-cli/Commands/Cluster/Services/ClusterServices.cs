@@ -160,6 +160,7 @@ namespace NeonCli
                         "--mount", "type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true",
                         "--mount", "type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock",
                         "--env", "LOG_LEVEL=INFO",
+                        "--secret", "neon-ssh-credentials",
                         unsealSecretOption,
                         "--constraint", "node.role==manager",
                         "--replicas", 1,
