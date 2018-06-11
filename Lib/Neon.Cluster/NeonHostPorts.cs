@@ -221,6 +221,11 @@ namespace Neon.Cluster
         public const int ProxyPrivateHttpCephDashboard = 5304;
 
         /// <summary>
+        /// The port assigned to the Kibana dashboard.
+        /// </summary>
+        public const int ProxyPrivateHttpKibana = 5305;
+
+        /// <summary>
         /// The first <b>neon-proxy-private</b> port available for routing custom
         /// HTTP/S or TCP services.
         /// </summary>

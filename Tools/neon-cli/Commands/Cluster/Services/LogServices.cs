@@ -144,7 +144,7 @@ namespace NeonCli
                         var baseLogEsDataUri = $"http://{NeonHosts.LogEsData}:{NeonHostPorts.ProxyPrivateHttpLogEsData}";
                         var baseKibanaUri    = $"http://{firstManager.PrivateAddress}:{NeonHostPorts.Kibana}";
                         var timeout          = TimeSpan.FromMinutes(5);
-                        var retry            = new LinearRetryPolicy(TransientDetector.Http, maxAttempts: 30, retryInterval: TimeSpan.FromSeconds(1));
+                        var retry             = new LinearRetryPolicy(TransientDetector.Http, maxAttempts: 30, retryInterval: TimeSpan.FromSeconds(1));
 
                         // The Kibana API calls below require the [kbn-xsrf] header.
 
@@ -189,7 +189,7 @@ namespace NeonCli
                             async () =>
                             {
                                 dynamic indexPattern = new ExpandoObject();
-                                dynamic attributes = new ExpandoObject();
+                                dynamic attributes   = new ExpandoObject();
 
                                 attributes.title = "logstash-*";
                                 attributes.timeFieldName = "@timestamp";
@@ -221,9 +221,36 @@ namespace NeonCli
                                 await jsonClient.PostAsync($"{baseKibanaUri}/api/kibana/settings/dateFormat:tz", setting);
 
                             }).Wait();
-                    }
 
-                    firstManager.Status = string.Empty;
+                        // Set the Kibana load balancer rule.
+
+                        firstManager.Status = "kibana load balancer rule";
+
+                        var rule = new LoadBalancerHttpRule()
+                        {
+                            Name     = "neon-log-kibana",
+                            System   = true,
+                            Log      = true,
+                            Resolver = null
+                        };
+
+                        rule.Frontends.Add(
+                            new LoadBalancerHttpFrontend()
+                            {
+                                ProxyPort = NeonHostPorts.ProxyPrivateHttpKibana
+                            });
+
+                        rule.Backends.Add(
+                            new LoadBalancerHttpBackend()
+                            {
+                                Server = "neon-log-kibana",
+                                Port   = NetworkPorts.Kibana
+                            });
+
+                        cluster.PrivateLoadBalancer.SetRule(rule);
+
+                        firstManager.Status = string.Empty;
+                    }
                 });
         }
 

@@ -317,6 +317,9 @@ export NeonHostPorts_ProxyPrivateHttpLogEsData=5303
 # The port assigned to the cluster Ceph web dashboard.
 export NeonHostPorts_ProxyPrivateHttpCephDashboard=5304
 
+# The port assigned to the Kibana dashboard.
+export NeonHostPorts_ProxyPrivateHttpKibana=5305
+
 # The first [neon-proxy-private] port available for routing custom
 # HTTP/S or TCP services.
 export NeonHostPorts_ProxyPrivatecFirstUser=5320

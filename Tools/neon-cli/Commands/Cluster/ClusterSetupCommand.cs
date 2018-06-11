@@ -3180,7 +3180,7 @@ systemctl start neon-volume-plugin
                 {
                     // Create the [neon-ssh-credentials] Docker secret using the first manager.
 
-                    firstManager.Status = "SSH credentials secret.";
+                    firstManager.Status = "SSH credentials secret";
 
                     var bundle = new CommandBundle("cat credentials.txt | docker secret create neon-ssh-credentials -");
 
@@ -3325,7 +3325,7 @@ chmod 666 /run/ssh-key*
                 {
                     Thread.Sleep(stepDelay);
 
-                    node.Status = "set strong password";
+                    node.Status = "strong password";
 
                     var script =
 $@"
@@ -3561,7 +3561,7 @@ systemctl restart sshd
                             Name        = "kibana",
                             Title       = "Kibana",
                             Folder      = NeonClusterConst.DashboardSystemFolder,
-                            Url         = $"http://healthy-manager:{NeonHostPorts.Kibana}",
+                            Url         = $"http://healthy-manager:{NeonHostPorts.ProxyPrivateHttpKibana}",
                             Description = "Cluster Kibana status and event logs"
                         };
 
