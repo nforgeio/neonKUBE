@@ -27,7 +27,7 @@ namespace NeonCli
     public class VersionCommand : CommandBase
     {
         private const string usage = @"
-Prints the program version.
+Prints the actual [neon-cli] version, ignoring any [--version] option.
 
 USAGE:
 
@@ -67,11 +67,11 @@ OPTIONS:
 
             if (commandLine.HasOption("--git"))
             {
-                Console.Write($"{Program.Version}/{Program.GitVersion}");
+                Console.Write($"{Program.ActualVersion}/{Program.GitVersion}");
             }
             else
             {
-                Console.Write(Program.Version);
+                Console.Write(Program.ActualVersion);
             }
 
             if (!commandLine.HasOption("-n"))

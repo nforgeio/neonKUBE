@@ -51,9 +51,10 @@ OPTIONS:
     --package-cache=CACHE-URI   - Optionally specifies an APT Package cache
                                   server to improve setup performance.
 
-    --unredacted                - Runs Vault commands without redacting logs.
-                                  This is useful for debugging cluster setup 
-                                  issues.  Do not use for production clusters.
+    --unredacted                - Runs Vault and other commands with potential
+                                  secrets without redacting logs.  This is useful 
+                                  for debugging cluster setup  issues.  
+                                  Do not use for production clusters.
 
     --remove-templates          - Removes any cached local virtual machine 
                                   templates without actually setting up a 

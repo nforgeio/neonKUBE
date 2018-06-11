@@ -672,6 +672,7 @@ namespace Neon.Cluster
                         return proxy;
                     }));
 
+            NeonClusterHelper.IsConnected      = true;
             NeonClusterHelper.remoteConnection = true;
 
             // Support emulated secrets and configs too.
@@ -732,6 +733,7 @@ namespace Neon.Cluster
         /// Thrown if the current process does not appear to be running as a cluster container
         /// with the node environment variables mapped in.
         /// </exception>
+        /// <returns>The <see cref="ClusterProxy"/>.</returns>
         /// <remarks>
         /// <para>
         /// The <paramref name="sshCredentialsSecret"/> parameter optionally specifies the name
@@ -739,9 +741,14 @@ namespace Neon.Cluster
         /// These credentials are required to be able to open SSH/SCP connections to cluster nodes.
         /// </para>
         /// </remarks>
-        public static void OpenCluster(string sshCredentialsSecret = null)
+        public static ClusterProxy OpenCluster(string sshCredentialsSecret = null)
         {
             log.LogInfo(() => "Connecting to cluster.");
+
+            if (IsConnected)
+            {
+                return Cluster;
+            }
 
             if (Environment.GetEnvironmentVariable("NEON_CLUSTER") == null)
             {
@@ -755,19 +762,7 @@ namespace Neon.Cluster
                 Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{NeonHosts.Consul}:{NetworkPorts.Consul}");
             }
 
-            IsConnected      = true;
             remoteConnection = false;
-
-            // Load the cluster definition from Consul and initialize the [Cluster] property.
-
-            var definition = GetDefinitionAsync().Result;
-
-            log.LogInfo(() => $"Connecting to [{definition.Name}].");
-
-            ClusterLogin = new ClusterLogin()
-            {
-                Definition = definition
-            };
 
             var sshCredentials = SshCredentials.None;
 
@@ -783,7 +778,30 @@ namespace Neon.Cluster
                 }
             }
 
-            OpenCluster(
+            // Load the cluster definition from Consul and initialize the [Cluster] property.
+            // Note that we need to hack [GetDefinitionAsync()] into believing that the cluster
+            // is already connected for this to work.
+
+            ClusterDefinition definition;
+
+            try
+            {
+                IsConnected = true;
+                definition = GetDefinitionAsync().Result;
+            }
+            finally
+            {
+                IsConnected = false;
+            }
+
+            log.LogInfo(() => $"Connecting to [{definition.Name}].");
+
+            ClusterLogin = new ClusterLogin()
+            {
+                Definition = definition
+            };
+
+            var cluster = OpenCluster(
                 new Cluster.ClusterProxy(ClusterLogin,
                     (name, publicAddress, privateAddress) =>
                     {
@@ -794,53 +812,8 @@ namespace Neon.Cluster
 
                         return proxy;
                     }));
-        }
 
-        /// <summary>
-        /// Returns the APT package proxy references for a cluster definition as a space separated list.
-        /// </summary>
-        /// <returns>The space separated list of package proxy references formatted as HOST_OR_IP:PORT.</returns>
-        public static string GetPackageProxyReferences(ClusterDefinition clusterDefinition)
-        {
-            // Convert the package cache URIs from a list of comma separated HTTP URIs to
-            // a space separated list of hostname/ports.  Note that we'll use the proxy
-            // caches on the manager nodes if no cache URIs are specified.
-
-            var packageProxy     = clusterDefinition.PackageProxy ?? string.Empty;
-            var packageCacheRefs = string.Empty;
-
-            foreach (var uriString in packageProxy.Split(','))
-            {
-                if (!string.IsNullOrEmpty(uriString))
-                {
-                    if (packageCacheRefs.Length > 0)
-                    {
-                        packageCacheRefs += "\\ ";  // Bash needs us to escape the space
-                    }
-
-                    var uri = new Uri(uriString, UriKind.Absolute);
-
-                    packageCacheRefs += $"{uri.Host}:{uri.Port}";
-                }
-            }
-
-            if (string.IsNullOrEmpty(packageCacheRefs))
-            {
-                // Configure the managers as proxy caches if no other
-                // proxies are specified.
-
-                foreach (var manager in clusterDefinition.Managers)
-                {
-                    if (packageCacheRefs.Length > 0)
-                    {
-                        packageCacheRefs += "\\ ";  // Bash needs us to escape the space
-                    }
-
-                    packageCacheRefs += $"{manager.PrivateAddress}:{NetworkPorts.AppCacherNg}";
-                }
-            }
-
-            return packageCacheRefs;
+            return cluster;
         }
 
         /// <summary>
@@ -861,7 +834,7 @@ namespace Neon.Cluster
             IsConnected = true;
             Cluster     = cluster;
 
-            if (ClusterLogin == null)
+           if (ClusterLogin == null)
             {
                 ClusterLogin =
                     new ClusterLogin()
@@ -946,6 +919,53 @@ namespace Neon.Cluster
             {
                 throw new InvalidOperationException("Cluster is not connected.");
             }
+        }
+
+        /// <summary>
+        /// Returns the APT package proxy references for a cluster definition as a space separated list.
+        /// </summary>
+        /// <returns>The space separated list of package proxy references formatted as HOST_OR_IP:PORT.</returns>
+        public static string GetPackageProxyReferences(ClusterDefinition clusterDefinition)
+        {
+            // Convert the package cache URIs from a list of comma separated HTTP URIs to
+            // a space separated list of hostname/ports.  Note that we'll use the proxy
+            // caches on the manager nodes if no cache URIs are specified.
+
+            var packageProxy     = clusterDefinition.PackageProxy ?? string.Empty;
+            var packageCacheRefs = string.Empty;
+
+            foreach (var uriString in packageProxy.Split(','))
+            {
+                if (!string.IsNullOrEmpty(uriString))
+                {
+                    if (packageCacheRefs.Length > 0)
+                    {
+                        packageCacheRefs += "\\ ";  // Bash needs us to escape the space
+                    }
+
+                    var uri = new Uri(uriString, UriKind.Absolute);
+
+                    packageCacheRefs += $"{uri.Host}:{uri.Port}";
+                }
+            }
+
+            if (string.IsNullOrEmpty(packageCacheRefs))
+            {
+                // Configure the managers as proxy caches if no other
+                // proxies are specified.
+
+                foreach (var manager in clusterDefinition.Managers)
+                {
+                    if (packageCacheRefs.Length > 0)
+                    {
+                        packageCacheRefs += "\\ ";  // Bash needs us to escape the space
+                    }
+
+                    packageCacheRefs += $"{manager.PrivateAddress}:{NetworkPorts.AppCacherNg}";
+                }
+            }
+
+            return packageCacheRefs;
         }
 
         /// <summary>
@@ -1212,7 +1232,7 @@ namespace Neon.Cluster
         {
             VerifyConnected();
 
-            // For bare clusters, just return the local definition because there
+            // For bare clusters, just return the cached definition because there
             // is no Consul service running.
 
             if (cachedDefinition != null && cachedDefinition.BareDocker)

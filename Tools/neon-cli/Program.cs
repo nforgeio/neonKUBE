@@ -33,9 +33,17 @@ namespace NeonCli
     public static class Program
     {
         /// <summary>
-        /// The <b>neon-cli</b> version.
+        /// The actual program version.  This may be different from <see cref="Version"/>
+        /// if the <b>--version=VERSION</b> option was specified to force a specific
+        /// version.
         /// </summary>
-        public const string Version = "1.0.0";  //"1.2.97";
+        public const string ActualVersion  = "1.2.97";
+
+        /// <summary>
+        /// Returns the <b>neon-cli</b> version.  This may be different from <see cref="ActualVersion"/>
+        /// if the <b>--version=VERSION</b> option was specified to force a specific
+        /// </summary>
+        public static string Version { get; private set; } = ActualVersion;
 
         /// <summary>
         /// The minimum <b>neon-cli</b> version capable of managing a cluster created
@@ -154,6 +162,7 @@ OPTIONS:
     --noshim                            - See note below.
     -q, --quiet                         - Disables operation progress
     --noterminal                        - Disables the shimmed interactive terminal
+    --version=VERSION                   - Overrides the neon-cli version
     -w=SECONDS, --wait=SECONDS          - Seconds to delay for cluster
                                           stablization (defaults to 60s).
 
@@ -219,6 +228,7 @@ Note that the tool may require admin privileges for [--noshim] mode.
                 validOptions.Add("--noshim");
                 validOptions.Add("--image-tag");
                 validOptions.Add("--noterminal");
+                validOptions.Add("--version");
 
                 if (CommandLine.Arguments.Length == 0)
                 {
@@ -272,6 +282,28 @@ Note that the tool may require admin privileges for [--noshim] mode.
                     new VpnCommand(),
                     new ZipCommand()
                 };
+
+                // Parse the [--version=VERSION] option.
+
+                Version = CommandLine.GetOption("--version", ActualVersion);
+
+                var dashPos   = Version.IndexOf('-');
+                var versionOK = true;
+
+                if (dashPos != -1)
+                {
+                    versionOK = System.Version.TryParse(Version.Substring(0, dashPos), out var version);
+                }
+                else
+                {
+                    versionOK = System.Version.TryParse(Version, out var version);
+                }
+
+                if (!versionOK)
+                {
+                    Console.Error.WriteLine($"*** ERROR: [{Version}] is not a valid program version.");
+                    Program.Exit(1);
+                }
 
                 // Determine whether we're running in direct mode or shimming to a Docker container.
 

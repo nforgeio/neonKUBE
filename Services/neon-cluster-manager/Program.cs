@@ -419,7 +419,7 @@ namespace NeonClusterManager
 
                     if (currentClusterDefinition.Hash != cachedClusterDefinition.Hash)
                     {
-                        log.LogInfo(() => "STATE-POLLER: Changed cluster definition.  Updating Consul.");
+                        log.LogInfo(() => "STATE-POLLER: Cluster definition has CHANGED.  Updating Consul.");
 
                         await NeonClusterHelper.PutDefinitionAsync(currentClusterDefinition, cancellationToken: terminator.CancellationToken);
 
@@ -427,7 +427,7 @@ namespace NeonClusterManager
                     }
                     else
                     {
-                        log.LogDebug(() => "STATE-POLLER: Unchanged cluster definition.");
+                        log.LogDebug(() => "STATE-POLLER: Cluster definition is UNCHANGED.");
                     }
                 }
                 catch (OperationCanceledException)

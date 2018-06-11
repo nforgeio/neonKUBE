@@ -2245,7 +2245,7 @@ echo $? > {cmdFolder}/exit
 
                         var message = redact ? "**REDACTED COMMAND**" : bashCommand;
 
-                        throw new RemoteCommandException($"[exitcode={response.ExitCode}: {message}");
+                        throw new RemoteCommandException($"[exitcode={response.ExitCode}]: {message}");
                     }
                 }
             }

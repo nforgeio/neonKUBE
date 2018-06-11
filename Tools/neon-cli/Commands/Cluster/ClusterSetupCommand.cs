@@ -53,8 +53,9 @@ ARGUMENTS:
 
 OPTIONS:
 
-    --unredacted        - Runs Vault related commands without redacting logs.
-                          This is useful for debugging cluster setup issues.
+    --unredacted        - Runs Vault and other commands with potential
+                          secrets without redacting logs.  This is useful 
+                          for debugging cluster setup  issues.  
                           Do not use for production clusters.
 ";
         private string              clusterLoginPath;
@@ -399,8 +400,9 @@ OPTIONS:
                         NeonClusterHelper.OpenCluster(cluster);
 
                         VaultProxy();
-                        VaultInitialize();
-                        ConsulInitialize();
+                        InitializeVault();
+                        InitializeConsul();
+                        InitializeSecrets();
                     });
 
                 var clusterServices = new ClusterServices(cluster);
@@ -2970,7 +2972,7 @@ systemctl start neon-volume-plugin
         /// <summary>
         /// Initializes the cluster's HashiCorp Vault.
         /// </summary>
-        private void VaultInitialize()
+        private void InitializeVault()
         {
             var firstManager = cluster.FirstManager;
 
@@ -3134,7 +3136,7 @@ systemctl start neon-volume-plugin
         /// <summary>
         /// Initializes Consul values.
         /// </summary>
-        private void ConsulInitialize()
+        private void InitializeConsul()
         {
             var firstManager = cluster.FirstManager;
 
@@ -3163,6 +3165,27 @@ systemctl start neon-volume-plugin
                     cluster.Globals.Set(NeonClusterGlobals.NeonCliVersion, Program.Version);
                     cluster.Globals.Set(NeonClusterGlobals.NeonCliVersionMinimum, Program.MinimumVersion);
                     cluster.Globals.Set(NeonClusterGlobals.Uuid, Guid.NewGuid().ToString("D").ToLowerInvariant());
+                });
+        }
+
+        /// <summary>
+        /// Initialize any cluster Docker secrets.
+        /// </summary>
+        public void InitializeSecrets()
+        {
+            var firstManager = cluster.FirstManager;
+
+            firstManager.InvokeIdempotentAction("setup-ssh-secret",
+                () =>
+                {
+                    // Create the [neon-ssh-credentials] Docker secret using the first manager.
+
+                    firstManager.Status = "SSH credentials secret.";
+
+                    var bundle = new CommandBundle("cat credentials.txt | docker secret create neon-ssh-credentials -");
+
+                    bundle.AddFile("credentials.txt", $"{clusterLogin.SshUsername}/{clusterLogin.SshPassword}");
+                    firstManager.SudoCommand(bundle, cluster.SecureRunOptions | RunOptions.Defaults);
                 });
         }
 
@@ -3382,22 +3405,6 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         private void ConfigureSsh(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            // Create the [neon-ssh-credentials] Docker secret using the first manager.
-
-            if (node == cluster.FirstManager)
-            {
-                node.InvokeIdempotentAction("setup-ssh-secret",
-                    () =>
-                    {
-                        node.Status = "SSH credentials secret.";
-
-                        var bundle = new CommandBundle("cat credentials.txt | docker secret create neon-ssh-credentials -");
-
-                        bundle.AddFile("credentials.txt", $"{clusterLogin.SshUsername}/{clusterLogin.SshPassword}");
-                        node.SudoCommand(bundle, cluster.SecureRunOptions);
-                    });
-            }
-
             // Configure the SSH credentials on all cluster nodes.
 
             node.InvokeIdempotentAction("setup-ssh",
