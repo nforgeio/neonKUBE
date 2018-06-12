@@ -299,7 +299,7 @@ namespace NeonCli
         /// <param name="clusterDefinition">The cluster definition.</param>
         private static void CheckDocker(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
-            node.Status = "checking: Docker";
+            node.Status = "checking: docker";
 
             // This is a super simple ping to verify that Docker appears to be running.
 
@@ -318,7 +318,7 @@ namespace NeonCli
         /// <param name="clusterDefinition">The cluster definition.</param>
         private static void CheckConsul(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
         {
-            node.Status = "checking: Consul";
+            node.Status = "checking: consul";
 
             // Verify that the daemon is running.
 
@@ -354,7 +354,7 @@ namespace NeonCli
 
             return;
 
-            node.Status = "checking: Vault";
+            node.Status = "checking: vault";
 
             // This is a minimal health test that just verifies that Vault
             // is listening for requests.  We're going to ping the local
