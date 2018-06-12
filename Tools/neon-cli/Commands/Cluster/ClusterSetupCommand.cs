@@ -1595,28 +1595,38 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                             labelDefinitions.Add($"{item.Key.ToLowerInvariant()}={value}");
                         }
 
+                        // Generate a script that add the required labels to all nodes in one shot.
+
+                        var sbLabelScript = new StringBuilder();
+
                         foreach (var labelDefinition in labelDefinitions)
                         {
-                            // We occasionaly see [update out of sequence] errors from labeling operations.
-                            // These seem to be transient, so we're going to retry a few times before
-                            // actually giving up.
-
-                            var retry = new LinearRetryPolicy(e => e is ClusterException, maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(5));
-
-                            retry.InvokeAsync(
-                                async () =>
-                                {
-                                    var response = manager.DockerCommand(RunOptions.Defaults & ~RunOptions.FaultOnError, "docker node update --label-add", labelDefinition, node.Name);
-
-                                    if (response.ExitCode != 0)
-                                    {
-                                        throw new TransientException(response.ErrorSummary);
-                                    }
-
-                                    await Task.CompletedTask;
-
-                                }).Wait();
+                            sbLabelScript.AppendLine($"docker node update --label-add \"{labelDefinition}\" \"{node.Name}\"");
                         }
+
+                        // We occasionaly see [update out of sequence] errors from labeling operations.
+                        // These seem to be transient, so we're going to retry a few times before
+                        // actually giving up.
+
+                        var retry = new LinearRetryPolicy(e => e is ClusterException, maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(5));
+
+                        retry.InvokeAsync(
+                            async () =>
+                            {
+                                var bundle = new CommandBundle("./set-labels.sh");
+
+                                bundle.AddFile("set-labels.sh", sbLabelScript.ToString(), isExecutable: true);
+
+                                var response = manager.SudoCommand(bundle, RunOptions.Defaults & ~RunOptions.FaultOnError);
+
+                                if (response.ExitCode != 0)
+                                {
+                                    throw new TransientException(response.ErrorSummary);
+                                }
+
+                                await Task.CompletedTask;
+
+                            }).Wait();
                     }
                 });
         }
