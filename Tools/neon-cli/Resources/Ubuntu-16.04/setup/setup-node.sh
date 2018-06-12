@@ -35,13 +35,13 @@ echo "**********************************************" 1>&2
 
 # Verify that the node has been prepared.
 
-if [ ! -f ${NEON_STATE_FOLDER}/finished-setup-prep-node ] ; then
+if [ ! -f ${NEON_STATE_FOLDER}/setup/setup-prep-node ] ; then
     echo "*** ERROR: This node has not been prepared." 1>&2
 fi
 
 # Ensure that setup is idempotent.
 
-startsetup setup-node
+startsetup node
 
 # Remove unncessary home folders that might be present on older prepped OS images.
 
@@ -1358,4 +1358,4 @@ chmod 644 /etc/cron.d/neon-host-maintenance
 
 # Indicate that the script has completed.
 
-endsetup setup-node
+endsetup node

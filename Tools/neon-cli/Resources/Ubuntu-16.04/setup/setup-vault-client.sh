@@ -28,7 +28,7 @@ echo "**********************************************" 1>&2
 
 # Ensure that setup is idempotent.
 
-startsetup setup-vault
+startsetup vault
 
 echo "*** BEGIN: Install Vault Client" 1>&2
 
@@ -71,6 +71,6 @@ echo "*** END: Install Vault Client" 1>&2
 
 # Indicate that the script has completed.
 
-endsetup setup-vault
+endsetup vault
 
 

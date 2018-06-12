@@ -110,9 +110,9 @@ function startsetup
 {
     echo "*** START: ${1}" 1>&2
 
-    mkdir -p ${NEON_STATE_FOLDER}
+    mkdir -p ${NEON_STATE_FOLDER}/setup
 
-    if [ -f "${NEON_STATE_FOLDER}/finished-$1" ] ; then
+    if [ -f "${NEON_STATE_FOLDER}/setup/$1" ] ; then
         echo "*** INFO: [$1] already completed." >&2
         exit 0
     fi
@@ -128,8 +128,8 @@ function endsetup
 {
     echo "*** END: ${1}" 1>&2
 
-    mkdir -p ${NEON_STATE_FOLDER}
-    touch "${NEON_STATE_FOLDER}/finished-$1"
+    mkdir -p ${NEON_STATE_FOLDER}/setup
+    touch "${NEON_STATE_FOLDER}/setup/$1"
 }
 
 #------------------------------------------------------------------------------

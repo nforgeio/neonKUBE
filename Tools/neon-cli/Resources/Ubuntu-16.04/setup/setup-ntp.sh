@@ -32,7 +32,7 @@ echo "**********************************************" 1>&2
 
 # Ensure that setup is idempotent.
 
-startsetup setup-ntp
+startsetup ntp
 
 # Install NTP and configure.
 
@@ -303,4 +303,4 @@ service ntp restart
 
 # Indicate that the script has completed.
 
-endsetup setup-ntp
+endsetup ntp

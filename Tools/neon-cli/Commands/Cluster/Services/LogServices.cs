@@ -106,7 +106,7 @@ namespace NeonCli
                 return;
             }
 
-            firstManager.InvokeIdempotentAction("setup-log-services",
+            firstManager.InvokeIdempotentAction("setup/log-services",
                 () =>
                 {
                     var steps = new ConfigStepList();
@@ -136,7 +136,7 @@ namespace NeonCli
                 return;
             }
 
-            firstManager.InvokeIdempotentAction("setup-log-kibana",
+            firstManager.InvokeIdempotentAction("setup/log-kibana",
                 () =>
                 {
                     using (var jsonClient = new JsonClient())
@@ -334,7 +334,7 @@ namespace NeonCli
 
                 steps.Add(volumeCommand);
 
-                var command = CommandStep.CreateIdempotentDocker(esNode.Name, "setup-neon-log-esdata",
+                var command = CommandStep.CreateIdempotentDocker(esNode.Name, "setup/neon-log-esdata",
                     "docker run",
                     "--name", containerName,
                     "--detach",
@@ -370,7 +370,7 @@ $@"
 
             // Configure a private cluster proxy route to the Elasticsearch nodes.
 
-            steps.Add(ActionStep.Create(cluster.FirstManager.Name, "setup-elasticsearch-lbrule",
+            steps.Add(ActionStep.Create(cluster.FirstManager.Name, "setup/elasticsearch-lbrule",
                 node =>
                 {
                     var rule = new LoadBalancerHttpRule()
@@ -482,7 +482,7 @@ $@"
             // This is super simple: All we need to do is to launch the Kibana 
             // service on the cluster managers.
 
-            var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-log-kibana",
+            var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup/neon-log-kibana",
                 "docker service create",
                 "--name", "neon-log-kibana",
                 "--detach=false",
@@ -510,7 +510,7 @@ $@"
         {
             // Create the service and upload the script.
 
-            var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-log-collector",
+            var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup/neon-log-collector",
                 "docker service create",
                 "--name", "neon-log-collector",
                 "--detach=false",
@@ -528,7 +528,7 @@ $@"
 
             // Deploy the [neon-log-collector] load balancer rule.
 
-            steps.Add(ActionStep.Create(cluster.FirstManager.Name, "setup-neon-log-collection-lbrule",
+            steps.Add(ActionStep.Create(cluster.FirstManager.Name, "setup/neon-log-collection-lbrule",
                 node =>
                 {
                     node.Status = "set neon-log-collector load balancer rule";
@@ -567,7 +567,7 @@ $@"
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         public void DeployContainers(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            node.InvokeIdempotentAction("setup-neon-log-host",
+            node.InvokeIdempotentAction("setup/neon-log-host",
                 () =>
                 {
                     Thread.Sleep(stepDelay);
@@ -588,7 +588,7 @@ $@"
                     node.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-log-host.sh"), response.BashCommand);
                 });
 
-            node.InvokeIdempotentAction("setup-metricbeat",
+            node.InvokeIdempotentAction("setup/metricbeat",
                 () =>
                 {
                     node.Status = "start: neon-log-metricbeat";

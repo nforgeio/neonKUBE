@@ -47,7 +47,7 @@ echo "**********************************************" 1>&2
 
 # Ensure that setup is idempotent.
 
-startsetup setup-consul-proxy
+startsetup consul-proxy
 
 #------------------------------------------------------------------------------
 # Stop the service if it's running.
@@ -137,4 +137,4 @@ systemctl daemon-reload
 
 # Indicate that the script has completed.
 
-endsetup setup-consul-proxy
+endsetup consul-proxy

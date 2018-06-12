@@ -339,7 +339,7 @@ TCPKeepAlive yes
         {
             var waitedForPackageManager = false;
 
-            if (node.FileExists($"{NeonHostFolders.State}/finished-prepared"))
+            if (node.FileExists($"{NeonHostFolders.State}/setup/prepared"))
             {
                 return waitedForPackageManager; // Already prepared
             }
@@ -379,7 +379,7 @@ TCPKeepAlive yes
 
             node.SudoCommand("apt-get update");
 
-            node.InvokeIdempotentAction("setup-prep-node",
+            node.InvokeIdempotentAction("setup/prep-node",
                 () =>
                 {
                     node.Status = "run: setup-prep-node.sh";
@@ -417,7 +417,7 @@ TCPKeepAlive yes
 
             // Indicate that the node has been fully prepared.
 
-            node.SudoCommand($"touch {NeonHostFolders.State}/finished-prepared");
+            node.SudoCommand($"touch {NeonHostFolders.State}/setup/prepared");
 
             // Shutdown the node if requested.
 

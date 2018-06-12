@@ -30,7 +30,7 @@ echo "**********************************************" 1>&2
 
 # Ensure that setup is idempotent.
 
-startsetup setup-docker
+startsetup docker
 
 #--------------------------------------------------------------------------
 # Note we're going to delete the docker unique key file if present.  Docker will
@@ -206,4 +206,4 @@ addgroup $<cluster.rootuser> docker
 
 # Indicate that the script has completed.
 
-endsetup setup-docker
+endsetup docker

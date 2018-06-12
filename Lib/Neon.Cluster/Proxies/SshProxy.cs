@@ -73,6 +73,8 @@ namespace Neon.Cluster
 
         private static Dictionary<string, object> connectLocks = new Dictionary<string, object>(StringComparer.InvariantCultureIgnoreCase);
 
+        private static Regex idempotentRegex = new Regex(@"[a-z0-9\.-/]+", RegexOptions.IgnoreCase);
+
         /// <summary>
         /// Returns the object to be used to when establishing connections to
         /// a target server.
@@ -175,7 +177,6 @@ namespace Neon.Cluster
         private bool            isReady;
         private string          status;
         private bool            hasUploadFolder;
-        private bool            hasStateFolder;
         private string          faultMessage;
 
         /// <summary>
@@ -2780,11 +2781,13 @@ echo $? > {cmdFolder}/exit
         /// <remarks>
         /// <para>
         /// <paramref name="actionId"/> must uniquely identify the action on the node.
-        /// This name may include letters, digits, and dashes.
+        /// This may include letters, digits, dashes and periods as well as one or
+        /// more forward slashes that can be used to organize idempotent status files
+        /// into folders.
         /// </para>
         /// <para>
         /// This method tracks successful action completion by creating a file
-        /// on the node at <see cref="NeonHostFolders.State"/><b>/finished-NAME</b>.
+        /// on the node at <see cref="NeonHostFolders.State"/><b>/ACTION-ID</b>.
         /// To ensure idempotency, this method first checks for the existance of
         /// this file and returns immediately without invoking the action if it is 
         /// present.
@@ -2793,23 +2796,26 @@ echo $? > {cmdFolder}/exit
         public void InvokeIdempotentAction(string actionId, Action action)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(actionId));
+            Covenant.Requires<ArgumentException>(idempotentRegex.IsMatch(actionId));
             Covenant.Requires<ArgumentNullException>(action != null);
 
-            foreach (var ch in actionId)
+            var stateFolder = NeonHostFolders.State;
+            var slashPos    = actionId.LastIndexOf('/');
+
+            if (slashPos != -1)
             {
-                if (!char.IsLetterOrDigit(ch) && ch != '-')
-                {
-                    throw new ArgumentException($"Idempotent action name [{actionId}] is invalid because it includes a character that's not a letter, digit, or dash.");
-                }
+                // Extract any folder path from the activity ID and add it to
+                // the state folder path.
+
+                stateFolder = LinuxPath.Combine(stateFolder, actionId.Substring(0, slashPos));
+                actionId    = actionId.Substring(slashPos + 1);
+
+                Covenant.Assert(actionId.Length > 0);
             }
 
-            var statePath = LinuxPath.Combine(NeonHostFolders.State, $"finished-{actionId}");
+            var statePath = LinuxPath.Combine(stateFolder, actionId);
 
-            if (!hasStateFolder)
-            {
-                SudoCommand($"mkdir -p {NeonHostFolders.State}");
-                hasStateFolder = true;
-            }
+            SudoCommand($"mkdir -p {stateFolder}");
 
             if (FileExists(statePath))
             {

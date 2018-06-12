@@ -37,7 +37,7 @@ echo "**********************************************" 1>&2
 
 # Ensure that setup is idempotent.
 
-startsetup setup-ssd
+startsetup ssd
 
 if ${NEON_NODE_SSD} ; then
 
@@ -110,4 +110,4 @@ fi
 
 # Indicate that the script has completed.
 
-endsetup setup-ssd
+endsetup ssd

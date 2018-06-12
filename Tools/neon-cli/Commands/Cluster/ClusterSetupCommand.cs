@@ -241,7 +241,7 @@ OPTIONS:
             controller.AddStep("manager restart",
                 (node, stepDelay) =>
                 {
-                    node.InvokeIdempotentAction("setup-common-restart",
+                    node.InvokeIdempotentAction("setup/common-restart",
                         () =>
                         {
                             Thread.Sleep(stepDelay);
@@ -278,7 +278,7 @@ OPTIONS:
                     (node, stepDelay) =>
                     {
                         ConfigureCommon(node, stepDelay);
-                        node.InvokeIdempotentAction("setup-common-restart", () => RebootAndWait(node));
+                        node.InvokeIdempotentAction("setup/common-restart", () => RebootAndWait(node));
                         ConfigureNonManager(node);
                     },
                     node => node.Metadata.IsWorker || node.Metadata.IsPet,
@@ -748,7 +748,7 @@ OPTIONS:
             //-----------------------------------------------------------------
             // Ensure the following steps are executed only once.
 
-            node.InvokeIdempotentAction("setup-common",
+            node.InvokeIdempotentAction("setup/common",
                 () =>
                 {
                     Thread.Sleep(stepDelay);
@@ -1200,7 +1200,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         private void ConfigureManager(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            node.InvokeIdempotentAction("setup-manager",
+            node.InvokeIdempotentAction("setup/manager",
                 () =>
                 {
                     Thread.Sleep(stepDelay);
@@ -1273,7 +1273,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                     {
                         // Bootstrap Consul cluster discovery.
 
-                        node.InvokeIdempotentAction("setup-consul-bootstrap",
+                        node.InvokeIdempotentAction("setup/consul-bootstrap",
                             () =>
                             {
                                 var discoveryTimer = new PolledTimer(TimeSpan.FromMinutes(2));
@@ -1403,7 +1403,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
         /// <param name="node">The target cluster node.</param>
         private void ConfigureNonManager(SshProxy<NodeDefinition> node)
         {
-            node.InvokeIdempotentAction($"setup-{node.Metadata.Role}",
+            node.InvokeIdempotentAction($"setup/{node.Metadata.Role}",
                 () =>
                 {
                     // Configure the APT package proxy on the managers
@@ -1464,7 +1464,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
 
                         // Join this node's Consul agent with the master(s).
 
-                        node.InvokeIdempotentAction("setup-consul-join",
+                        node.InvokeIdempotentAction("setup/consul-join",
                             () =>
                             {
                                 var discoveryTimer = new PolledTimer(TimeSpan.FromMinutes(5));
@@ -1522,7 +1522,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         private void CreateClusterNetworks(SshProxy<NodeDefinition> manager, TimeSpan stepDelay)
         {
-            manager.InvokeIdempotentAction("setup-docker-networks",
+            manager.InvokeIdempotentAction("setup/docker-networks",
                 () =>
                 {
                     Thread.Sleep(stepDelay);
@@ -1551,7 +1551,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
         /// <param name="manager">The manager node.</param>
         private void AddNodeLabels(SshProxy<NodeDefinition> manager)
         {
-            manager.InvokeIdempotentAction("setup-node-labels",
+            manager.InvokeIdempotentAction("setup/node-labels",
                 () =>
                 {
                     manager.Status = "labeling";
@@ -1642,7 +1642,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
         /// </param>
         private void PullImages(SshProxy<NodeDefinition> node, bool pullAll = false)
         {
-            node.InvokeIdempotentAction("setup-pull-images",
+            node.InvokeIdempotentAction("setup/pull-images",
                 () =>
                 {
                     var images = new List<string>()
@@ -1708,7 +1708,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                 return;
             }
 
-            node.InvokeIdempotentAction("setup-swarm-join",
+            node.InvokeIdempotentAction("setup/swarm-join",
                 () =>
                 {
                     Thread.Sleep(stepDelay);
@@ -1781,7 +1781,7 @@ StartLimitBurst=1051200";
             // $todo(jeff.lill): Consider allowing customization of which Ceph components are installed.
             // $todo(jeff.lill): We're currently ignoring the Ceph version number.
 
-            node.InvokeIdempotentAction("setup-ceph-packages",
+            node.InvokeIdempotentAction("setup/ceph-packages",
                 () =>
                 {
                     Thread.Sleep(stepDelay);
@@ -2193,7 +2193,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         private void CephBootstrap(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            node.InvokeIdempotentAction("setup-ceph-bootstrap",
+            node.InvokeIdempotentAction("setup/ceph-bootstrap",
                 () =>
                 {
                     Thread.Sleep(stepDelay);
@@ -2448,7 +2448,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         private void CephCluster(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            node.InvokeIdempotentAction("setup-ceph-osd",
+            node.InvokeIdempotentAction("setup/ceph-osd",
                 () =>
                 {
                     Thread.Sleep(stepDelay);
@@ -2515,7 +2515,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
             if (node.Metadata.Labels.CephMDS)
             {
-                node.InvokeIdempotentAction("setup-ceph-mds",
+                node.InvokeIdempotentAction("setup/ceph-mds",
                     () =>
                     {
                         node.Status = "ceph-msd";
@@ -2580,7 +2580,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
             if (node == cluster.FirstManager)
             {
-                node.InvokeIdempotentAction("setup-ceph-fs",
+                node.InvokeIdempotentAction("setup/ceph-fs",
                     () =>
                     {
                         node.Status = "create file system";
@@ -2609,7 +2609,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
 
             // We're going to use the FUSE client to mount the file system at [/mnt/neonfs].
 
-            node.InvokeIdempotentAction("setup-ceph-mount",
+            node.InvokeIdempotentAction("setup/ceph-mount",
                 () =>
                 {
                     var monNode = cluster.Definition.SortedNodes.First(n => n.Labels.CephMON);
@@ -2629,7 +2629,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
             // I was seeing an "Invalid argument" error.  I'm going to workaround
             // this by creating and enabling my own service.
 
-            node.InvokeIdempotentAction("setup-ceph-fuse-service",
+            node.InvokeIdempotentAction("setup/ceph-fuse-service",
                 () =>
                 {
                     node.Status = "create fuse service";
@@ -2659,7 +2659,7 @@ WantedBy=docker.service
 
             if (node == cluster.FirstManager)
             {
-                node.InvokeIdempotentAction("setup-ceph-fs-init",
+                node.InvokeIdempotentAction("setup/ceph-fs-init",
                     () =>
                     {
                         // Initialize [/mnt/neonfs]:
@@ -2677,7 +2677,7 @@ WantedBy=docker.service
 
             // Download and install the [neon-volume-plugin].
 
-            node.InvokeIdempotentAction("setup-neon-volume-plugin",
+            node.InvokeIdempotentAction("setup/neon-volume-plugin",
                 () =>
                 {
                     node.Status = "neon-volume-plugin: install";
@@ -2702,7 +2702,7 @@ systemctl start neon-volume-plugin
                     node.SudoCommand(installCommand);
                 });
 
-            node.InvokeIdempotentAction("setup-neon-volume",
+            node.InvokeIdempotentAction("setup/neon-volume",
                 () =>
                 {
                     // $hack(jeff.lill):
@@ -2737,7 +2737,7 @@ systemctl start neon-volume-plugin
                 sbEndpoints.AppendWithSeparator($"{manager.Name}:{manager.PrivateAddress}:{NetworkPorts.Vault}", ",");
             }
 
-            cluster.FirstManager.InvokeIdempotentAction("setup-proxy-vault",
+            cluster.FirstManager.InvokeIdempotentAction("setup/proxy-vault",
                 () =>
                 {
                     // Docker mesh routing seemed unstable on versions [17.03.0-ce]
@@ -2770,7 +2770,7 @@ systemctl start neon-volume-plugin
                     // Deploy [neon-proxy-vault].
 
                     var steps   = new ConfigStepList();
-                    var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup-neon-proxy-vault",
+                    var command = CommandStep.CreateIdempotentDocker(cluster.FirstManager.Name, "setup/neon-proxy-vault",
                         "docker service create",
                         "--name", "neon-proxy-vault",
                         "--detach=false",
@@ -2802,7 +2802,7 @@ systemctl start neon-volume-plugin
                 var task = Task.Run(
                     () =>
                     {
-                        pet.InvokeIdempotentAction("setup-proxy-vault",
+                        pet.InvokeIdempotentAction("setup/proxy-vault",
                             () =>
                             {
                                 var steps   = new ConfigStepList();
@@ -3022,7 +3022,7 @@ systemctl start neon-volume-plugin
 
                 // Configure the audit backend so that it sends events to syslog.
 
-                firstManager.InvokeIdempotentAction("setup-vault-audit",
+                firstManager.InvokeIdempotentAction("setup/vault-audit",
                     () =>
                     {
                         // $todo(jeff.lill):
@@ -3040,7 +3040,7 @@ systemctl start neon-volume-plugin
 
                 // Mount a [generic] backend dedicated to neonCLUSTER related secrets.
 
-                firstManager.InvokeIdempotentAction("setup-vault-enable-neon-secret",
+                firstManager.InvokeIdempotentAction("setup/vault-enable-neon-secret",
                     () =>
                     {
                         firstManager.Status = "vault: enable neon-secret backend";
@@ -3049,7 +3049,7 @@ systemctl start neon-volume-plugin
 
                 // Mount the [transit] backend and create the cluster key.
 
-                firstManager.InvokeIdempotentAction("setup-vault-enable-transit",
+                firstManager.InvokeIdempotentAction("setup/vault-enable-transit",
                     () =>
                     {
                         firstManager.Status = "vault: transit backend";
@@ -3059,7 +3059,7 @@ systemctl start neon-volume-plugin
 
                 // Mount the [approle] backend.
 
-                firstManager.InvokeIdempotentAction("setup-vault-enable-approle",
+                firstManager.InvokeIdempotentAction("setup/vault-enable-approle",
                     () =>
                     {
                         firstManager.Status = "vault: approle backend";
@@ -3068,7 +3068,7 @@ systemctl start neon-volume-plugin
 
                 // Initialize the standard policies.
 
-                firstManager.InvokeIdempotentAction("setup-vault-policies",
+                firstManager.InvokeIdempotentAction("setup/vault-policies",
                     () =>
                     {
                         firstManager.Status = "vault: policies";
@@ -3092,7 +3092,7 @@ systemctl start neon-volume-plugin
                 // need read access to the TLS certificates and [neon-proxy-manager] also needs
                 // read access to the hosting options.
 
-                firstManager.InvokeIdempotentAction("setup-vault-roles",
+                firstManager.InvokeIdempotentAction("setup/vault-roles",
                     () =>
                     {
                         firstManager.Status = "vault: roles";
@@ -3108,7 +3108,7 @@ systemctl start neon-volume-plugin
                 // service needs to be able to update the worker load balancer rules so they match
                 // the current PUBLIC routes.
 
-                firstManager.InvokeIdempotentAction("setup-vault-hostingoptions",
+                firstManager.InvokeIdempotentAction("setup/vault-hostingoptions",
                     () =>
                     {
                         firstManager.Status = "vault: hosting options";
@@ -3150,7 +3150,7 @@ systemctl start neon-volume-plugin
         {
             var firstManager = cluster.FirstManager;
 
-            firstManager.InvokeIdempotentAction("setup-consul-initialize",
+            firstManager.InvokeIdempotentAction("setup/consul-initialize",
                 () =>
                 {
                     firstManager.Status = "consul initialize";
@@ -3185,7 +3185,7 @@ systemctl start neon-volume-plugin
         {
             var firstManager = cluster.FirstManager;
 
-            firstManager.InvokeIdempotentAction("setup-ssh-secret",
+            firstManager.InvokeIdempotentAction("setup/ssh-secret",
                 () =>
                 {
                     // Create the [neon-ssh-credentials] Docker secret using the first manager.
@@ -3330,7 +3330,7 @@ chmod 666 /run/ssh-key*
         /// <param name="stepDelay">The step delay if the operation hasn't already been completed.</param>
         private void SetStrongPassword(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
         {
-            node.InvokeIdempotentAction("setup-strong-password",
+            node.InvokeIdempotentAction("setup/strong-password",
                 () =>
                 {
                     Thread.Sleep(stepDelay);
@@ -3362,7 +3362,7 @@ echo '{Program.MachineUsername}:{clusterLogin.SshPassword}' | chpasswd
         /// </summary>
         private void ConfigureSshCerts()
         {
-            cluster.FirstManager.InvokeIdempotentAction("setup-ssh-server-key",
+            cluster.FirstManager.InvokeIdempotentAction("setup/ssh-server-key",
                 () =>
                 {
                     cluster.FirstManager.Status = "generate server SSH key";
@@ -3417,7 +3417,7 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
         {
             // Configure the SSH credentials on all cluster nodes.
 
-            node.InvokeIdempotentAction("setup-ssh",
+            node.InvokeIdempotentAction("setup/ssh",
                 () =>
                 {
                     Thread.Sleep(stepDelay);
@@ -3495,7 +3495,7 @@ systemctl restart sshd
         {
             var firstManager = cluster.FirstManager;
 
-            firstManager.InvokeIdempotentAction("setup-dashboards",
+            firstManager.InvokeIdempotentAction("setup/dashboards",
                 () =>
                 {
                     // Create the [neon-fs] dashboard and related route.

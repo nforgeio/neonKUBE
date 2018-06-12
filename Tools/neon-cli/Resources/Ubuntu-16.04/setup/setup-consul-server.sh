@@ -47,7 +47,7 @@ echo "**********************************************" 1>&2
 
 # Ensure that setup is idempotent.
 
-startsetup setup-consul-server
+startsetup consul-server
 
 # Configure Consul.
 
@@ -152,4 +152,4 @@ systemctl daemon-reload
 
 # Indicate that the script has completed.
 
-endsetup setup-consul-server
+endsetup consul-server

@@ -89,6 +89,7 @@ COMMAND SUMMARY:
     neon cluster set        SETTING=VALUE
     neon cluster setup      [CLUSTER-DEF]
     neon cluster verify     [CLUSTER-DEF]
+    neon cluster update     ARGS
     neon couchbase          CMD...
     neon certificate|cert   CMD...
     neon consul             ARGS
@@ -248,6 +249,7 @@ Note that the tool may require admin privileges for [--noshim] mode.
                     new ClusterRegistryCommand(),
                     new ClusterSetCommand(),
                     new ClusterSetupCommand(),
+                    new ClusterUpdateCommand(),
                     new ClusterVerifyCommand(),
                     new CouchbaseCommand(),
                     new CertificateCommand(),

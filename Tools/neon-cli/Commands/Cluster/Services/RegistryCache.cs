@@ -110,7 +110,7 @@ namespace NeonCli
 
             if (node.Metadata.IsManager)
             {
-                node.InvokeIdempotentAction("setup-registrycache",
+                node.InvokeIdempotentAction("setup/registrycache",
                     () =>
                     {
                         // Copy the cert and key.
@@ -205,7 +205,7 @@ namespace NeonCli
             //
             // and then have Linux update its known certificates.
 
-            node.InvokeIdempotentAction("setup-registrycache-cert",
+            node.InvokeIdempotentAction("setup/registrycache-cert",
                 () =>
                 {
                     node.Status = "upload: registry cache certs";

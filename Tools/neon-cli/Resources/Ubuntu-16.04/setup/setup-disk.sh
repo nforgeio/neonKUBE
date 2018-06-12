@@ -70,7 +70,7 @@ echo "**********************************************" 1>&2
 
 # Ensure that setup is idempotent.
 
-startsetup setup-disk
+startsetup disk
 
 echo
 echo "**********************************************"
@@ -249,4 +249,4 @@ fi
 
 # Indicate that the script has completed.
 
-endsetup setup-disk
+endsetup disk

@@ -59,7 +59,7 @@ namespace NeonCli
         /// <param name="firstManager">The first cluster proxy manager.</param>
         public void Configure(SshProxy<NodeDefinition> firstManager)
         {
-            firstManager.InvokeIdempotentAction("setup-cluster-services",
+            firstManager.InvokeIdempotentAction("setup/cluster-services",
                 () =>
                 {
                     // Ensure that Vault has been initialized.
@@ -74,7 +74,7 @@ namespace NeonCli
 
                     firstManager.Status = "start: neon-dns";
 
-                    firstManager.IdempotentDockerCommand("setup-neon-dns",
+                    firstManager.IdempotentDockerCommand("setup/neon-dns",
                         response =>
                         {
                             foreach (var manager in cluster.Managers)
@@ -103,7 +103,7 @@ namespace NeonCli
 
                     firstManager.Status = "start: neon-dns-mon";
 
-                    firstManager.IdempotentDockerCommand("setup-neon-dns-mon",
+                    firstManager.IdempotentDockerCommand("setup/neon-dns-mon",
                         response =>
                         {
                             foreach (var manager in cluster.Managers)
@@ -144,7 +144,7 @@ namespace NeonCli
 
                     cluster.FirstManager.Status = "start: neon-cluster-manager";
 
-                    cluster.FirstManager.IdempotentDockerCommand("setup-neon-cluster-manager",
+                    cluster.FirstManager.IdempotentDockerCommand("setup/neon-cluster-manager",
                         response =>
                         {
                             foreach (var manager in cluster.Managers)
@@ -199,7 +199,7 @@ namespace NeonCli
 
                     firstManager.Status = "start: neon-proxy-manager";
 
-                    firstManager.IdempotentDockerCommand("setup-neon-proxy-manager",
+                    firstManager.IdempotentDockerCommand("setup/neon-proxy-manager",
                         response =>
                         {
                             foreach (var manager in cluster.Managers)
@@ -281,7 +281,7 @@ namespace NeonCli
 
                     firstManager.Status = "start: neon-proxy-public";
 
-                    firstManager.IdempotentDockerCommand("setup-neon-proxy-public",
+                    firstManager.IdempotentDockerCommand("setup/neon-proxy-public",
                         response =>
                         {
                             foreach (var manager in cluster.Managers)
@@ -315,7 +315,7 @@ namespace NeonCli
 
                     firstManager.Status = "start: neon-proxy-private";
 
-                    firstManager.IdempotentDockerCommand("setup-neon-proxy-private",
+                    firstManager.IdempotentDockerCommand("setup/neon-proxy-private",
                         response =>
                         {
                             foreach (var manager in cluster.Managers)
@@ -348,7 +348,7 @@ namespace NeonCli
 
             // Log the cluster into any Docker registries with credentials.
 
-            firstManager.InvokeIdempotentAction("setup-registry-login",
+            firstManager.InvokeIdempotentAction("setup/registry-login",
                 () =>
                 {
                     foreach (var credential in cluster.Definition.Docker.Registries
@@ -375,7 +375,7 @@ namespace NeonCli
                 return;
             }
 
-            node.InvokeIdempotentAction("setup-neon-proxy-public-bridge",
+            node.InvokeIdempotentAction("setup/neon-proxy-public-bridge",
                 () =>
                 {
                     Thread.Sleep(stepDelay);
@@ -403,7 +403,7 @@ namespace NeonCli
                     node.Status = string.Empty;
                 });
 
-            node.InvokeIdempotentAction("setup-neon-proxy-private-bridge",
+            node.InvokeIdempotentAction("setup/neon-proxy-private-bridge",
                 () =>
                 {
                     node.Status = "start: neon-proxy-private-bridge";
