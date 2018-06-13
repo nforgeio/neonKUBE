@@ -45,12 +45,12 @@ namespace NeonCli
         /// Performs the updates returning information about the changes made.
         /// </summary>
         /// <param name="cluster">The target cluster.</param>
-        /// <param name="args">Specifies the update details.</param>
+        /// <param name="context">Specifies the update context.</param>
         /// <returns>Strings describing the changes.</returns>
         /// <remarks>
-        /// <paramref name="args"/> specifies which components are to be updated
+        /// <paramref name="context"/> specifies which components are to be updated
         /// also whether a dry-run is to be performed.
         /// </remarks>
-        IEnumerable<string> Update(ClusterProxy cluster, ClusterUpdateArgs args);
+        IEnumerable<string> Update(ClusterProxy cluster, ClusterUpdateContext context);
     }
 }
