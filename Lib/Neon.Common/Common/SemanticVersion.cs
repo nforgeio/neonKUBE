@@ -1,0 +1,433 @@
+﻿//-----------------------------------------------------------------------------
+// FILE:        SemanticVersion.cs
+// CONTRIBUTOR: Jeff Lill
+// COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
+
+using System;
+using System.Collections.Generic;
+using System.Diagnostics.Contracts;
+using System.IO;
+using System.Linq;
+using System.Text;
+using System.Threading.Tasks;
+
+using Neon.Common;
+
+namespace Neon.Common
+{
+    /// <summary>
+    /// Implements a semantic version as defined by the <a href="https://semver.org/spec/v2.0.0.html">Semantic Versioning 2.0.0</a>
+    /// specification.  This is similar to the base <see cref="Version"/> class but includes support for pre-release identifiers
+    /// as well as build information.
+    /// </summary>
+    public class SemanticVersion
+    {
+        //---------------------------------------------------------------------
+        // Static members
+
+        /// <summary>
+        /// Attempts to parse a semantic version string.
+        /// </summary>
+        /// <param name="versionText">The version text.</param>
+        /// <param name="version">Returns as the parsed version on success.</param>
+        /// <returns><c>true</c> if the version was parsed successfully.</returns>
+        public static bool TryParse(string versionText, out SemanticVersion version)
+        {
+            version = null;
+
+            if (string.IsNullOrEmpty(versionText))
+            {
+                return false;
+            }
+
+            version = new SemanticVersion();
+
+            // Extract the prerelease and build information if present.
+
+            var buildPos = versionText.IndexOf('+');
+
+            if (buildPos != -1)
+            {
+                version.Build = versionText.Substring(buildPos + 1).Trim();
+
+                if (version.Build.Length == 0)
+                {
+                    return false;   // Build cannot be empty.
+                }
+
+                versionText = versionText.Substring(0, buildPos);
+            }
+
+            var prereleasePos = versionText.IndexOf('-');
+
+            if (prereleasePos != -1)
+            {
+                version.Prerelease = versionText.Substring(prereleasePos + 1).Trim();
+
+                if (version.Prerelease.Length == 0)
+                {
+                    return false;   // Prerelease cannot be empty
+                }
+
+                versionText = versionText.Substring(0, prereleasePos);
+
+                // Ensure that the prerelease consists of only letters, digits, and periods.
+
+                foreach (var ch in version.Prerelease)
+                {
+                    var lower = char.ToLowerInvariant(ch);
+
+                    if ('a' <= lower && lower <= 'z')
+                    {
+                        continue;
+                    }
+                    else if ('0' <= lower && lower <= '9')
+                    {
+                        continue;
+                    }
+                    else if (ch == '.' || ch == '-')
+                    {
+                        continue;
+                    }
+                    else
+                    {
+                        return false;
+                    }
+                }
+
+                // Split the prerelease into parts and verify.
+
+                var parts = version.Prerelease.Split('.');
+
+                // Ensure that no part is empty and that that contain only digits 
+                // don't have a leading '0'.
+
+                foreach (var part in parts)
+                {
+                    if (part.Length == 0)
+                    {
+                        return false;
+                    }
+                    else if (uint.TryParse(part, out var v) && part.Length > 1 && part.StartsWith("0"))
+                    {
+                        return false;
+                    }
+                }
+            }
+
+            // Parse the major, minor, and patch version numbers.
+
+            var verParts = versionText.Split('.');
+
+            if (verParts.Length > 3)
+            {
+                return false;
+            }
+
+            for (int i = 0; i < verParts.Length; i++)
+            {
+                if (!uint.TryParse(verParts[i], out var v))
+                {
+                    return false;
+                }
+
+                switch (i)
+                {
+                    case 0:
+
+                        version.Major = (int)v;
+                        break;
+
+                    case 1:
+
+                        version.Minor = (int)v;
+                        break;
+
+                    case 2:
+
+                        version.Patch = (int)v;
+                        break;
+                }
+            }
+
+            return true;
+        }
+
+        /// <summary>
+        /// Parses a semantic version string.
+        /// </summary>
+        /// <param name="versionText">The version text.</param>
+        /// <returns>The parsed <see cref="SemanticVersion"/>.</returns>
+        /// <exception cref="FormatException">Thrown if the version could not be parsed.</exception>
+        public static SemanticVersion Parse(string versionText)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(versionText));
+
+            if (!TryParse(versionText, out var version))
+            {
+                throw new FormatException($"Invalid semantic version [{versionText}].");
+            }
+
+            return version;
+        }
+
+        /// <summary>
+        /// Compares two non-null semantic versions.
+        /// </summary>
+        /// <param name="v1">The first version.</param>
+        /// <param name="v2">The second version.</param>
+        /// <returns>
+        /// <b>-1</b> if <paramref name="v1"/> is less than <paramref name="v2"/><br/>
+        /// <b>0</b> if <paramref name="v1"/> equals <paramref name="v2"/><br/>
+        /// <b>+1</b> if <paramref name="v1"/> is greater than <paramref name="v2"/>
+        /// </returns>
+        /// <exception cref="ArgumentNullException">Thrown if either of the parameters is <c>null</c>.</exception>
+        public static int Compare(SemanticVersion v1, SemanticVersion v2)
+        {
+            Covenant.Requires<ArgumentNullException>(!object.ReferenceEquals(v1, null));
+            Covenant.Requires<ArgumentNullException>(!object.ReferenceEquals(v2, null));
+
+            if (v1.Major < v2.Major)
+            {
+                return -1;
+            }
+            else if (v1.Major > v2.Major)
+            {
+                return 1;
+            }
+
+            if (v1.Minor < v2.Minor)
+            {
+                return -1;
+            }
+            else if (v1.Minor > v2.Minor)
+            {
+                return 1;
+            }
+
+            if (v1.Patch < v2.Patch)
+            {
+                return -1;
+            }
+            else if (v1.Patch > v2.Patch)
+            {
+                return 1;
+            }
+
+            if (v1.Prerelease == null && v2.Prerelease == null)
+            {
+                return 0;
+            }
+            if (v1.Prerelease == null && v2.Prerelease != null)
+            {
+                return 1;
+            }
+            else if (v1.Prerelease != null && v2.Prerelease == null)
+            {
+                return -1;
+            }
+
+            // We need to compare the prerelease string parts.
+
+            var v1Parts = v1.Prerelease.Split('.');
+            var v2Parts = v2.Prerelease.Split('.');
+
+            for (int i = 0; i < Math.Min(v1Parts.Length, v2Parts.Length); i++)
+            {
+                var v1Part = v1Parts[i];
+                var v2Part = v2Parts[i];
+                var v1Num  = uint.TryParse(v1Part, out var v1PartValue);
+                var v2Num  = uint.TryParse(v2Part, out var v2PartValue);
+
+                if (v1Num && v2Num)
+                {
+                    if (v1PartValue < v2PartValue)
+                    {
+                        return -1;
+                    }
+                    else if (v1PartValue > v2PartValue)
+                    {
+                        return 1;
+                    }
+                }
+                else if (v1Num && !v2Num)
+                {
+                    return -1;
+                }
+                else if (!v1Num && v2Num)
+                {
+                    return 1;
+                }
+                else
+                {
+                    var comp = string.Compare(v1Part, v2Part, StringComparison.InvariantCultureIgnoreCase);
+
+                    if (comp != 0)
+                    {
+                        return comp;
+                    }
+                }
+            }
+
+            if (v1Parts.Length > v2Parts.Length)
+            {
+                return 1;
+            }
+            else if (v1Parts.Length < v2Parts.Length)
+            {
+                return -1;
+            }
+            else
+            {
+                return 0;
+            }
+        }
+
+        /// <summary>
+        /// Compares two <see cref="SemanticVersion"/> instances for equality.
+        /// </summary>
+        /// <param name="v1">Version #1.</param>
+        /// <param name="v2">Version #2.</param>
+        /// <returns><c>true</c> if the versions have the same precedence.</returns>
+        /// <exception cref="ArgumentNullException">Throw if either parameter is <c>null</c>.</exception>
+        public static bool operator ==(SemanticVersion v1, SemanticVersion v2)
+        {
+            return Compare(v1, v2) == 0;
+        }
+
+        /// <summary>
+        /// Compares two <see cref="SemanticVersion"/> instances for inequality.
+        /// </summary>
+        /// <param name="v1">Version #1.</param>
+        /// <param name="v2">Version #2.</param>
+        /// <returns><c>true</c> if the versions have the different precedences.</returns>
+        /// <exception cref="ArgumentNullException">Throw if either parameter is <c>null</c>.</exception>
+        public static bool operator !=(SemanticVersion v1, SemanticVersion v2)
+        {
+            return Compare(v1, v2) != 0;
+        }
+
+        /// <summary>
+        /// Compares two <see cref="SemanticVersion"/> instances to see if the first is greater.
+        /// </summary>
+        /// <param name="v1">Version #1.</param>
+        /// <param name="v2">Version #2.</param>
+        /// <returns><c>true</c> <paramref name="v1"/> has greater precedence.</returns>
+        /// <exception cref="ArgumentNullException">Throw if either parameter is <c>null</c>.</exception>
+        public static bool operator >(SemanticVersion v1, SemanticVersion v2)
+        {
+            return Compare(v1, v2) > 0;
+        }
+
+        /// <summary>
+        /// Compares two <see cref="SemanticVersion"/> instances to see if the first is greater or equal.
+        /// </summary>
+        /// <param name="v1">Version #1.</param>
+        /// <param name="v2">Version #2.</param>
+        /// <returns><c>true</c> <paramref name="v1"/> has the same or greater precedence.</returns>
+        /// <exception cref="ArgumentNullException">Throw if either parameter is <c>null</c>.</exception>
+        public static bool operator >=(SemanticVersion v1, SemanticVersion v2)
+        {
+            return Compare(v1, v2) >= 0;
+        }
+
+        /// <summary>
+        /// Compares two <see cref="SemanticVersion"/> instances to see if the first is less.
+        /// </summary>
+        /// <param name="v1">Version #1.</param>
+        /// <param name="v2">Version #2.</param>
+        /// <returns><c>true</c> <paramref name="v1"/> has lower precedence.</returns>
+        /// <exception cref="ArgumentNullException">Throw if either parameter is <c>null</c>.</exception>
+        public static bool operator <(SemanticVersion v1, SemanticVersion v2)
+        {
+            return Compare(v1, v2) < 0;
+        }
+
+        /// <summary>
+        /// Compares two <see cref="SemanticVersion"/> instances to see if the first is less or equal.
+        /// </summary>
+        /// <param name="v1">Version #1.</param>
+        /// <param name="v2">Version #2.</param>
+        /// <returns><c>true</c> <paramref name="v1"/> has the same or lower precedence.</returns>
+        /// <exception cref="ArgumentNullException">Throw if either parameter is <c>null</c>.</exception>
+        public static bool operator <=(SemanticVersion v1, SemanticVersion v2)
+        {
+            return Compare(v1, v2) <= 0;
+        }
+
+        //---------------------------------------------------------------------
+        // Instance members
+
+        /// <summary>
+        /// Private constructor.
+        /// </summary>
+        private SemanticVersion()
+        {
+        }
+
+        /// <summary>
+        /// Returns the major version number.
+        /// </summary>
+        public int Major { get; private set; }
+
+        /// <summary>
+        /// Returns the minor version number.
+        /// </summary>
+        public int Minor { get; private set; }
+
+        /// <summary>
+        /// Returns the patch version number.
+        /// </summary>
+        public int Patch { get; private set; }
+
+        /// <summary>
+        /// Returns the prerelease identifer or <c>null</c>.
+        /// </summary>
+        public string Prerelease { get; private set; }
+
+        /// <summary>
+        /// Returns the build information or <c>null</c>.
+        /// </summary>
+        public string Build { get; private set; }
+
+        /// <inheritdoc/>
+        public override string ToString()
+        {
+            if (Prerelease == null && Build == null)
+            {
+                return $"{Major}.{Minor}.{Patch}";
+            }
+            else if (Prerelease != null && Build == null)
+            {
+                return $"{Major}.{Minor}.{Patch}-{Prerelease}";
+            }
+            else if (Prerelease == null && Build != null)
+            {
+                return $"{Major}.{Minor}.{Patch}+{Build}";
+            }
+            else
+            {
+                return $"{Major}.{Minor}.{Patch}-{Prerelease}+{Build}";
+            }
+        }
+
+        /// <inheritdoc/>
+        public override int GetHashCode()
+        {
+            return ToString().GetHashCode();
+        }
+
+        /// <inheritdoc/>
+        public override bool Equals(object obj)
+        {
+            var other = obj as SemanticVersion;
+
+            if (object.ReferenceEquals(other, null))
+            {
+                return false;
+            }
+
+            return this.ToString().Equals(other.ToString(), StringComparison.InvariantCultureIgnoreCase);
+        }
+    }
+}
