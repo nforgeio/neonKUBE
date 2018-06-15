@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    IClusterUpdate.cs
+// FILE:	    Update_010297_010298.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -19,20 +19,19 @@ using Neon.IO;
 namespace NeonCli
 {
     /// <summary>
-    /// Updates an Ubuntu cluster from <b>1.2.97</b> to <b>1.2.98</b>.
+    /// Updates a cluster from version <b>1.2.97</b> to <b>1.2.98</b>.
     /// </summary>
-    public class Ubuntu_1604_1_2_98 : IClusterUpdate
+    public class Update_010297_010298 : ClusterUpdate
     {
         /// <inheritdoc/>
-        public string FromVersion => "1.2.97";
+        public override SemanticVersion FromVersion { get; protected set; } = SemanticVersion.Parse("1.2.97");
 
         /// <inheritdoc/>
-        public string ToVersion => "1.2.98";
+        public override SemanticVersion ToVersion { get; protected set; } = SemanticVersion.Parse("1.2.98");
 
         /// <inheritdoc/>
-        public IEnumerable<string> Update(ClusterProxy cluster, ClusterUpdateContext context)
+        public override void AddUpdateSteps(SetupController<NodeDefinition> controller)
         {
-            return context.Output;
         }
 
         /// <inheritdoc/>
