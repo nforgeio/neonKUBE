@@ -134,6 +134,27 @@ namespace TestCommon
         }
 
         [Fact]
+        public void CompareNull()
+        {
+            Assert.True((SemanticVersion)null == (SemanticVersion)null);
+            Assert.False((SemanticVersion)null != (SemanticVersion)null);
+
+            Assert.False((SemanticVersion)"1.2" == (SemanticVersion)null);
+            Assert.True((SemanticVersion)"1.2" != (SemanticVersion)null);
+            Assert.True((SemanticVersion)"1.2" > (SemanticVersion)null);
+            Assert.True((SemanticVersion)"1.2" >= (SemanticVersion)null);
+            Assert.False((SemanticVersion)"1.2" < (SemanticVersion)null);
+            Assert.False((SemanticVersion)"1.2" <= (SemanticVersion)null);
+
+            Assert.False((SemanticVersion)null == (SemanticVersion)"1.2");
+            Assert.True((SemanticVersion)null != (SemanticVersion)"1.2");
+            Assert.False((SemanticVersion)null > (SemanticVersion)"1.2");
+            Assert.False((SemanticVersion)null >= (SemanticVersion)"1.2");
+            Assert.True((SemanticVersion)null < (SemanticVersion)"1.2");
+            Assert.True((SemanticVersion)null <= (SemanticVersion)"1.2");
+        }
+
+        [Fact]
         public void CompareSimpleSame()
         {
             var v1 = SemanticVersion.Parse("1");
@@ -603,6 +624,45 @@ namespace TestCommon
             Assert.True(v1 != v2);
             Assert.True(v1 < v2);
             Assert.True(v2 > v1);
+        }
+
+        [Fact]
+        public void Cast()
+        {
+            Assert.Null((string)(SemanticVersion)null);
+            Assert.Null((SemanticVersion)(string)null);
+
+            Assert.Equal("1.2.3-alpha+build", (string)SemanticVersion.Parse("1.2.3-alpha+build"));
+            Assert.Equal(SemanticVersion.Parse("1.2.3-alpha+build"), (SemanticVersion)"1.2.3-alpha+build");
+        }
+
+        [Fact]
+        public void Comparable()
+        {
+            // Test IComparaible by sorting a list of versions.
+
+            var list = new List<SemanticVersion>()
+            {
+                (SemanticVersion)"1.0.0",
+                (SemanticVersion)"2.0.0",
+                (SemanticVersion)"10.0.0",
+                (SemanticVersion)"3.0.0",
+                (SemanticVersion)"4.0.0",
+                (SemanticVersion)"5.0.0",
+                (SemanticVersion)"9.0.0",
+                (SemanticVersion)"8.0.0",
+                (SemanticVersion)"7.0.0",
+                (SemanticVersion)"6.0.0"
+            };
+
+            list = list.OrderBy(item => item).ToList();
+
+            Assert.Equal(10, list.Count);
+
+            for (int i = 0; i < list.Count; i++)
+            {
+                Assert.Equal($"{i + 1}.0.0", (string)list[i]);
+            }
         }
     }
 }

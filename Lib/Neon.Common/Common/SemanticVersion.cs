@@ -20,7 +20,7 @@ namespace Neon.Common
     /// specification.  This is similar to the base <see cref="Version"/> class but includes support for pre-release identifiers
     /// as well as build information.
     /// </summary>
-    public class SemanticVersion
+    public class SemanticVersion : IComparable
     {
         //---------------------------------------------------------------------
         // Static members
@@ -181,11 +181,28 @@ namespace Neon.Common
         /// <b>0</b> if <paramref name="v1"/> equals <paramref name="v2"/><br/>
         /// <b>+1</b> if <paramref name="v1"/> is greater than <paramref name="v2"/>
         /// </returns>
-        /// <exception cref="ArgumentNullException">Thrown if either of the parameters is <c>null</c>.</exception>
+        /// <remarks>
+        /// <note>
+        /// A <c>null</c> version is considered to be less than a non-null version.
+        /// </note>
+        /// </remarks>
         public static int Compare(SemanticVersion v1, SemanticVersion v2)
         {
-            Covenant.Requires<ArgumentNullException>(!object.ReferenceEquals(v1, null));
-            Covenant.Requires<ArgumentNullException>(!object.ReferenceEquals(v2, null));
+            var v1IsNull = object.ReferenceEquals(v1, null);
+            var v2IsNull = object.ReferenceEquals(v2, null);
+
+            if (v1IsNull && v2IsNull)
+            {
+                return 0;
+            }
+            else if (v1IsNull && !v2IsNull)
+            {
+                return -1;
+            }
+            else if (!v1IsNull && v2IsNull)
+            {
+                return 1;
+            }
 
             if (v1.Major < v2.Major)
             {
@@ -355,6 +372,35 @@ namespace Neon.Common
             return Compare(v1, v2) <= 0;
         }
 
+        /// <summary>
+        /// Explicitly casts a <see cref="SemanticVersion"/> into a string.
+        /// </summary>
+        /// <param name="version">The version input.</param>
+        public static explicit operator string(SemanticVersion version)
+        {
+            if (object.ReferenceEquals(version, null))
+            {
+                return null;
+            }
+
+            return version.ToString();
+        }
+
+        /// <summary>
+        /// Explicitly casts a string into a <see cref="SemanticVersion"/>.
+        /// </summary>
+        /// <param name="version">The version input.</param>
+        /// <exception cref="ArgumentNullException">Thrown if <paramref name="version"/> is <c>null</c>.</exception>
+        public static explicit operator SemanticVersion(string version)
+        {
+            if (version == null)
+            {
+                return null;
+            }
+
+            return Parse(version);
+        }
+
         //---------------------------------------------------------------------
         // Instance members
 
@@ -428,6 +474,19 @@ namespace Neon.Common
             }
 
             return this.ToString().Equals(other.ToString(), StringComparison.InvariantCultureIgnoreCase);
+        }
+
+        /// <inheritdoc/>
+        public int CompareTo(object obj)
+        {
+            var other = obj as SemanticVersion;
+
+            if (other  == null)
+            {
+                throw new InvalidOperationException($"[{nameof(SemanticVersion)}] can only be compared to another non-null [{nameof(SemanticVersion)}] instance.");
+            }
+
+            return Compare(this, other);
         }
     }
 }
