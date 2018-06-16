@@ -37,5 +37,20 @@ namespace NeonCli
         {
             return $"Update [{FromVersion}] --> [{ToVersion}]";
         }
+
+        /// <inheritdoc/>
+        public ClusterProxy Cluster { get; set; }
+
+        /// <inheritdoc/>
+        public ClusterLogin ClusterLogin => Cluster?.ClusterLogin;
+
+        /// <inheritdoc/>
+        public virtual string IdempotentPrefix => $"{ToVersion}-";
+
+        /// <inheritdoc/>
+        public string GetItempotentTag(string operation)
+        {
+            return $"update/{ToVersion}/{IdempotentPrefix}{operation}";
+        }
     }
 }

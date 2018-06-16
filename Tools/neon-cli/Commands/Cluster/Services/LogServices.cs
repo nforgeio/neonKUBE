@@ -477,7 +477,7 @@ $@"
         /// Adds the steps required to configure the Kibana Elasticsearch/log user interface.
         /// </summary>
         /// <param name="steps">The configuration step list.</param>
-            private void AddKibanaSteps(ConfigStepList steps)
+        private void AddKibanaSteps(ConfigStepList steps)
         {
             // This is super simple: All we need to do is to launch the Kibana 
             // service on the cluster managers.

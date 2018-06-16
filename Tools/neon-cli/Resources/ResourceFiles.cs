@@ -286,7 +286,7 @@ namespace NeonCli
                             new Folder("update",
                                 files: new List<File>()
                                 {
-                                    new File("1.2.98.zip", hasVariables: false)
+                                    new File("010297_0102988.zip", hasVariables: false)
                                 })
                         })
                 });

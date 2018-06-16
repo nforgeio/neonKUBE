@@ -3191,11 +3191,7 @@ systemctl start neon-volume-plugin
                     // Create the [neon-ssh-credentials] Docker secret using the first manager.
 
                     firstManager.Status = "SSH credentials secret";
-
-                    var bundle = new CommandBundle("cat credentials.txt | docker secret create neon-ssh-credentials -");
-
-                    bundle.AddFile("credentials.txt", $"{clusterLogin.SshUsername}/{clusterLogin.SshPassword}");
-                    firstManager.SudoCommand(bundle, cluster.SecureRunOptions | RunOptions.Defaults);
+                    cluster.DockerSecret.Set("neon-ssh-credentials", $"{clusterLogin.SshUsername}/{clusterLogin.SshPassword}");
                 });
         }
 
@@ -3572,7 +3568,7 @@ systemctl restart sshd
                             Title       = "Kibana",
                             Folder      = NeonClusterConst.DashboardSystemFolder,
                             Url         = $"http://healthy-manager:{NeonHostPorts.ProxyPrivateHttpKibana}",
-                            Description = "Cluster Kibana status and event logs"
+                            Description = "Kibana cluster monitoring dashboard"
                         };
 
                         cluster.Dashboard.Set(kibanaDashboard);

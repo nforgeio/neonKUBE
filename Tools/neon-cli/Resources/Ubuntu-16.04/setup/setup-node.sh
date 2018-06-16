@@ -54,9 +54,10 @@ fi
 #	jq			JSON parser (useful for shell scripts)
 #	aptitude	Apt related utilities
 #	gdebi-core	Installs .deb package files AND their dependencies
+#   mmv         Easy multiple file renaming
 
 apt-get update
-apt-get install -yq jq aptitude gdebi-core
+apt-get install -yq jq aptitude gdebi-core mmv
 
 # Configure the hostname.
 #

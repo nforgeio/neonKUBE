@@ -92,7 +92,9 @@ namespace NeonCli
             {
                 if (update.FromVersion >= nextVersion)
                 {
+                    update.Cluster = cluster;
                     updates.Add(update);
+
                     nextVersion = update.ToVersion;
                 }
             }

@@ -151,13 +151,9 @@
     <None Update="Linux\Ubuntu-16.04\tools\docker-volume-rm.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-    <None Update="Resources\Ubuntu-16.04\update\1.2.98.zip">
+    <None Update="Resources\Ubuntu-16.04\updates\010297_010298.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
-  </ItemGroup>
-
-  <ItemGroup>
-    <Folder Include="Resources\Ubuntu-16.04\update\" />
   </ItemGroup>
 
   <Target Name="PostBuild" AfterTargets="PostBuildEvent">
