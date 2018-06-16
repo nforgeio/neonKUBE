@@ -90,6 +90,7 @@ COMMAND SUMMARY:
     neon cluster setup      [CLUSTER-DEF]
     neon cluster verify     [CLUSTER-DEF]
     neon cluster update     ARGS
+    neon cluster upgrade    ARGS
     neon couchbase          CMD...
     neon certificate|cert   CMD...
     neon consul             ARGS
@@ -250,6 +251,7 @@ Note that the tool may require admin privileges for [--noshim] mode.
                     new ClusterSetCommand(),
                     new ClusterSetupCommand(),
                     new ClusterUpdateCommand(),
+                    new ClusterUpgradeCommand(),
                     new ClusterVerifyCommand(),
                     new CouchbaseCommand(),
                     new CertificateCommand(),

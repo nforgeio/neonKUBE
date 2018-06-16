@@ -126,6 +126,11 @@ namespace Neon.Cluster
         public int MaxParallel { get; set; } = int.MaxValue;
 
         /// <summary>
+        /// Returns the number of setup steps.
+        /// </summary>
+        public int StepCount => steps.Count;
+
+        /// <summary>
         /// Appends a configuration step.
         /// </summary>
         /// <param name="stepLabel">Brief step summary.</param>

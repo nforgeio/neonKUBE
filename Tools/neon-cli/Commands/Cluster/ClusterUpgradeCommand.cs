@@ -22,16 +22,23 @@ using Neon.Common;
 namespace NeonCli
 {
     /// <summary>
-    /// Implements the <b>cluster update</b> command.
+    /// Implements the <b>cluster upgrade</b> command.
     /// </summary>
-    public class ClusterUpdateCommand : CommandBase
+    public class ClusterUpgradeCommand : CommandBase
     {
         private const string usage = @"
-Updates a neonCLUSTER hosts, services, and containers.
+Upgrades low-level cluster components such as HashiCorp Consul and Vault,
+the Docker engine, and Linux packages.
 
 USAGE:
 
-    neon cluster update [OPTIONS]
+    neon cluster upgrade [OPTIONS] consul VERSION
+    neon cluster upgrade [OPTIONS] linux
+    neon cluster upgrade [OPTIONS] vault VERSION
+
+ARGUMENTS:
+
+    VERSION     - The desired version for the component
 
 OPTIONS:
 
@@ -42,7 +49,7 @@ OPTIONS:
 REMARKS:
 
 This command updates neonCLUSTER infrastructure related components including
-the services, containers, and cluster state.
+the host node operating system, services, and packages.
 
 You can use [--max-parallel=#] to specify the number of cluster host nodes
 to be updated in parallel.  This defaults to 1.  For clusters with multiple
@@ -80,28 +87,14 @@ the cost of potentially impacting your workloads.
 
             Console.WriteLine();
 
-            if (!commandLine.HasOption("--force") && !Program.PromptYesNo($"*** Are you sure you want to UPDATE this cluster?"))
+            if (!commandLine.HasOption("--force") && !Program.PromptYesNo($"*** Are you sure you want to UPGRADE this cluster?"))
             {
                 Program.Exit(0);
             }
 
             var clusterLogin = Program.ConnectCluster();
             var cluster      = new ClusterProxy(clusterLogin);
-            var controller   = new SetupController<NodeDefinition>("cluster update", cluster.Nodes);
 
-            ClusterUpdateManager.AddUpdateSteps(cluster, controller);
-
-            if (controller.StepCount == 0)
-            {
-                Console.WriteLine("The cluster is already up-to-date.");
-                Program.Exit(0);
-            }
-
-            if (!controller.Run())
-            {
-                Console.Error.WriteLine("*** ERROR: One or more UPDATE steps failed.");
-                Program.Exit(1);
-            }
         }
 
         /// <inheritdoc/>

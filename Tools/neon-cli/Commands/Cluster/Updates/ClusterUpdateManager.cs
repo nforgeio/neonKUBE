@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    UpdateManager.cs
+// FILE:	    ClusterUpdateManager.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -22,12 +22,12 @@ namespace NeonCli
     /// <summary>
     /// Manages the available cluster updates.
     /// </summary>
-    public static class UpdateManager
+    public static class ClusterUpdateManager
     {
         /// <summary>
         /// Static constuctor.
         /// </summary>
-        static UpdateManager()
+        static ClusterUpdateManager()
         {
             Updates = new List<IClusterUpdate>()
             {
