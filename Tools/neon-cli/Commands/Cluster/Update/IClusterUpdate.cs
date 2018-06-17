@@ -105,5 +105,13 @@ namespace NeonCli
         /// <b>TO-VERSION</b> is the post update version, and PREFIX is <see cref="IdempotentPrefix"/>.
         /// </remarks>
         string GetItempotentTag(string operation);
+
+        /// <summary>
+        /// Annotates the <paramref name="stepLabel"/> passed by prefixing it with the 
+        /// update versions.
+        /// </summary>
+        /// <param name="stepLabel">The update step label.</param>
+        /// <returns>Thr annotated label.</returns>
+        string GetStepLabel(string stepLabel);
     }
 }

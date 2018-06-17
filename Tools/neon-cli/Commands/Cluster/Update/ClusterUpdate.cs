@@ -35,7 +35,7 @@ namespace NeonCli
         /// <inheritdoc/>
         public override string ToString()
         {
-            return $"Update [{FromVersion}] --> [{ToVersion}]";
+            return $"update [{FromVersion}] --> [{ToVersion}]";
         }
 
         /// <inheritdoc/>
@@ -51,6 +51,14 @@ namespace NeonCli
         public string GetItempotentTag(string operation)
         {
             return $"update/{ToVersion}/{IdempotentPrefix}{operation}";
+        }
+
+        /// <inheritdoc/>
+        public string GetStepLabel(string stepLabel)
+        {
+            stepLabel = stepLabel ?? string.Empty;
+
+            return $"{this}: {stepLabel}";
         }
     }
 }

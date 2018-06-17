@@ -28,12 +28,14 @@ namespace NeonCli
     {
         private const string usage = @"
 Upgrades low-level cluster components such as HashiCorp Consul and Vault,
-the Docker engine, and Linux packages.
+PowerDNS, the Docker engine, or Linux packages.
 
 USAGE:
 
     neon cluster upgrade [OPTIONS] consul VERSION
+    neon cluster upgrade [OPTIONS] docker VERSION
     neon cluster upgrade [OPTIONS] linux
+    neon cluster upgrade [OPTIONS] powerdns VERSION
     neon cluster upgrade [OPTIONS] vault VERSION
 
 ARGUMENTS:
@@ -61,7 +63,7 @@ the cost of potentially impacting your workloads.
         /// <inheritdoc/>
         public override string[] Words
         {
-            get { return new string[] { "cluster", "update" }; }
+            get { return new string[] { "cluster", "upgrade" }; }
         }
 
         /// <inheritdoc/>
@@ -95,6 +97,9 @@ the cost of potentially impacting your workloads.
             var clusterLogin = Program.ConnectCluster();
             var cluster      = new ClusterProxy(clusterLogin);
 
+            // $todo(jeff.lill): Implement this
+
+            throw new NotImplementedException();
         }
 
         /// <inheritdoc/>

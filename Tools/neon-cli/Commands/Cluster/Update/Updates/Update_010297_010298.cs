@@ -35,15 +35,15 @@ namespace NeonCli
         /// <inheritdoc/>
         public override void AddUpdateSteps(SetupController<NodeDefinition> controller)
         {
-            controller.AddStep("update: nodes", (node, stepDelay) => UpdateNode(node, stepDelay));
-            controller.AddGlobalStep("update: neon-cluster-manager", () => UpdateClusterManager());
+            controller.AddStep(GetStepLabel("nodes"), (node, stepDelay) => UpdateNode(node, stepDelay));
+            controller.AddGlobalStep(GetStepLabel("neon-cluster-manager"), () => UpdateClusterManager());
 
             if (Cluster.Definition.Log.Enabled)
             {
-                controller.AddGlobalStep("update: kibana dashboard", () => UpdateKibanaDashboard());
+                controller.AddGlobalStep(GetStepLabel("kibana dashboard"), () => UpdateKibanaDashboard());
             }
 
-            controller.AddGlobalStep("update: cluster version", () => UpdateClusterVersion());
+            controller.AddGlobalStep(GetStepLabel("cluster version"), () => UpdateClusterVersion());
         }
 
         /// <inheritdoc/>
@@ -120,7 +120,7 @@ namespace NeonCli
 
         /// <summary>
         /// Creates the [neon-ssh-credentials] secret and then updates [neon-cluster-manager] and
-        /// its create script on the managers to use the secret.
+        /// its creation script on the managers to use the secret.
         /// </summary>
         private void UpdateClusterManager()
         {
