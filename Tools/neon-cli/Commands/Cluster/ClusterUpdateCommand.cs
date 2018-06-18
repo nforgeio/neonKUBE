@@ -86,6 +86,10 @@ The current login must have ROOT PERMISSIONS to update the cluster.
             var force       = commandLine.HasOption("--force");
             var maxParallel = Program.MaxParallel;
 
+            // $todo(jeff.lill):
+            //
+            // We're eventually going to need a command to update Ceph services.
+
             switch (command)
             {
                 case null:
@@ -257,8 +261,8 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                     node.Status = "run: apt-get update";
                     node.SudoCommand("apt-get update");
 
-                    node.Status = "run: apt-get upgrade -yq";
-                    node.SudoCommand("apt-get upgrade -yq");
+                    node.Status = "run: apt-get dist-upgrade -yq";
+                    node.SudoCommand("apt-get dist-upgrade -yq");
                 });
 
             controller.AddStep("reboot nodes",
