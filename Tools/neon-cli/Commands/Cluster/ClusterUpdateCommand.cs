@@ -32,8 +32,10 @@ infrastructure related services and containers.
 
 USAGE:
 
-    neon cluster update [OPTIONS]
-    neon cluster update images [OPTIONS]
+    neon cluster update [OPTIONS]           - updates cluster and containers/services
+
+    neon cluster update check               - checks for available updates 
+    neon cluster update images [OPTIONS]    - updates neon containers/services
 
 OPTIONS:
 
@@ -43,14 +45,14 @@ OPTIONS:
 
 REMARKS:
 
-neon cluster update [OPTIONS]
------------------------------
+neon cluster update [OPTIONS]:
+
 Updates the cluster to the latest configuration supported by the current
 [neon-cli] including updating any neonCLUSTER related Docker services and 
 containers.
 
-neon cluster update images [OPTIONS]
-------------------------------------
+neon cluster update images [OPTIONS]:
+
 Updates only the neonCLUSTER related Docker services and container images.
 
 You can use [--max-parallel=#] to specify the number of cluster host nodes
@@ -100,13 +102,7 @@ NOTE: The current login must have ROOT PERMISSIONS to update the cluster.
             clusterLogin = Program.ConnectCluster();
             cluster      = new ClusterProxy(clusterLogin);
 
-            if (!clusterLogin.IsRoot)
-            {
-                Console.Error.WriteLine("*** ERROR: You must have root privileges to update a cluster.");
-                Program.Exit(1);
-            }
-
-            var command     = commandLine.Arguments.ElementAtOrDefault(1);
+            var command     = commandLine.Arguments.ElementAtOrDefault(0);
             var force       = commandLine.HasOption("--force");
             var maxParallel = Program.MaxParallel;
 
@@ -115,6 +111,11 @@ NOTE: The current login must have ROOT PERMISSIONS to update the cluster.
                 case null:
 
                     UpdateCluster(force, maxParallel);
+                    break;
+
+                case "check":
+
+                    UpdateCluster(force, maxParallel, checkOnly: true);
                     break;
 
                 case "images":
@@ -137,13 +138,26 @@ NOTE: The current login must have ROOT PERMISSIONS to update the cluster.
         }
 
         /// <summary>
+        /// Ensures that the current login has root cluster privileges.
+        /// </summary>
+        private void EnsureRootPivileges()
+        {
+            if (!clusterLogin.IsRoot)
+            {
+                Console.Error.WriteLine("*** ERROR: You must have root privileges to update a cluster.");
+                Program.Exit(1);
+            }
+        }
+
+        /// <summary>
         /// Updates the cluster.
         /// </summary>
         /// <param name="force"><c>true</c> to disable the update prompt.</param>
         /// <param name="maxParallel">Maximum number of parallel operations.</param>
-        private void UpdateCluster(bool force, int maxParallel)
+        /// <param name="checkOnly">Optionally just check for available updates.</param>
+        private void UpdateCluster(bool force, int maxParallel, bool checkOnly = false)
         {
-            if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE cluster [{cluster.Name}]?"))
+            if (!checkOnly && !force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE cluster [{cluster.Name}]?"))
             {
                 Program.Exit(0);
             }
@@ -155,7 +169,23 @@ NOTE: The current login must have ROOT PERMISSIONS to update the cluster.
 
             controller.MaxParallel = maxParallel;
 
-            ClusterUpdateManager.AddUpdateSteps(cluster, controller, serviceUpdateParallism: Program.MaxParallel);
+            var pendingUpdateCount = ClusterUpdateManager.AddUpdateSteps(cluster, controller, serviceUpdateParallism: Program.MaxParallel);
+
+            if (checkOnly)
+            {
+                if (pendingUpdateCount == 0)
+                {
+                    Console.WriteLine($"*** [{cluster.Name}] cluster is up to date.");
+                }
+                else
+                {
+                    Console.WriteLine($"*** [{cluster.Name}] cluster has [{pendingUpdateCount}] pending neonCLUSTER updates.");
+                }
+
+                Program.Exit(0);
+            }
+
+            EnsureRootPivileges();
 
             if (controller.StepCount == 0)
             {
@@ -168,6 +198,9 @@ NOTE: The current login must have ROOT PERMISSIONS to update the cluster.
                 Console.Error.WriteLine("*** ERROR: One or more UPDATE steps failed.");
                 Program.Exit(1);
             }
+
+            Console.WriteLine();
+            Console.WriteLine("*** Cluster was updated successfully.");
         }
 
         /// <summary>
@@ -177,6 +210,8 @@ NOTE: The current login must have ROOT PERMISSIONS to update the cluster.
         /// <param name="maxParallel">Maximum number of parallel operations.</param>
         private void UpdateImages(bool force, int maxParallel)
         {
+            EnsureRootPivileges();
+
             if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE this cluster's images?"))
             {
                 Program.Exit(0);
@@ -199,6 +234,9 @@ NOTE: The current login must have ROOT PERMISSIONS to update the cluster.
                 Console.Error.WriteLine("*** ERROR: One or more UPDATE steps failed.");
                 Program.Exit(1);
             }
+
+            Console.WriteLine();
+            Console.WriteLine("*** Cluster service and container images were updated successfully.");
         }
     }
 }

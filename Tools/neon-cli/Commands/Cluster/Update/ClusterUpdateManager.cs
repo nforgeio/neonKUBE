@@ -48,10 +48,13 @@ namespace NeonCli
         /// <param name="controller">The setup controller.</param>
         /// <param name="imagesOnly">Optionally indicate that only cluster service and container images should be updated.</param>
         /// <param name="serviceUpdateParallism">Optionally specifies the parallism to use when updating services.</param>
+        /// <returns>The number of pending updates.</returns>
         /// <exception cref="ClusterException">Thrown if there was an error selecting the updates.</exception>
-        public static void AddUpdateSteps(ClusterProxy cluster, SetupController<NodeDefinition> controller, bool imagesOnly = false, int serviceUpdateParallism = 1)
+        public static int AddUpdateSteps(ClusterProxy cluster, SetupController<NodeDefinition> controller, bool imagesOnly = false, int serviceUpdateParallism = 1)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null);
+
+            var pendingUpdateCount = 0;
 
             // Obtain and parse the current cluster version.
 
@@ -84,10 +87,15 @@ namespace NeonCli
                     {
                         if (update.FromVersion >= nextVersion)
                         {
+                            pendingUpdateCount++;
+
                             update.Cluster = cluster;
                             nextVersion    = update.ToVersion;
 
-                            update.AddUpdateSteps(controller);
+                            if (!imagesOnly)
+                            {
+                                update.AddUpdateSteps(controller);
+                            }
                         }
                     }
                 }
@@ -247,6 +255,8 @@ namespace NeonCli
                     }
                 },
                 noParallelLimit: cluster.Definition.Docker.RegistryCache);
+
+            return pendingUpdateCount;
         }
     }
 }
