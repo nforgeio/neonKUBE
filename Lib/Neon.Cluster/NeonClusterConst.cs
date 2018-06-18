@@ -179,5 +179,38 @@ namespace Neon.Cluster
         /// Identifies the dashboard folder where built-in cluster dashboards will reside.
         /// </summary>
         public const string DashboardSystemFolder = "system";
+
+        /// <summary>
+        /// Enumerates the Docker containers that may be deployed to a neonCLUSTER by name.
+        /// </summary>
+        public static IEnumerable<string> DockerContainers =>
+            new List<string>()
+            {
+                "neon-log-host",
+                "neon-log-metricbeat",
+                "neon-registry-cache"
+            };
+
+        /// <summary>
+        /// Enumerates the Docker services that may be deployed to a neonCLUSTER by name.
+        /// </summary>
+        public static IEnumerable<string> DockerServices =>
+            new List<string>()
+            {
+                "neon-cluster-manager",
+                "neon-dns",
+                "neon-dns-mon",
+                "neon-log-collector",
+                "neon-log-kibana",
+                "neon-proxy-manager",
+                "neon-proxy-private",
+                "neon-proxy-public",
+                "neon-proxy-vault"
+            };
+
+        /// <summary>
+        /// Identifies the neonCLUSTER public Docker registry.
+        /// </summary>
+        public const string NeonPublicRegistry = "neoncluster";
     }
 }

@@ -67,7 +67,7 @@ impacting your workloads.
         /// <inheritdoc/>
         public override string[] ExtendedOptions
         {
-            get { return new string[] { "--force"" }; }
+            get { return new string[] { "--force" }; }
         }
 
         /// <inheritdoc/>

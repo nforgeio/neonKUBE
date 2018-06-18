@@ -29,12 +29,12 @@ namespace Neon.Cluster
     public class LogOptions
     {
         private const bool      defaultEnabled         = true;
-        private const string    defaultHostImage       = "neoncluster/neon-log-host:latest";
-        private const string    defaultCollectorImage  = "neoncluster/neon-log-collector:latest";
-        private const string    defaultEsImage         = "neoncluster/elasticsearch:latest";
+        private const string    defaultHostImage       = NeonClusterConst.NeonPublicRegistry + "/neon-log-host:latest";
+        private const string    defaultCollectorImage  = NeonClusterConst.NeonPublicRegistry + "/neon-log-collector:latest";
+        private const string    defaultEsImage         = NeonClusterConst.NeonPublicRegistry + "/elasticsearch:latest";
         private const string    defaultEsMemory        = "2GB";
-        private const string    defaultKibanaImage     = "neoncluster/kibana:latest";
-        private const string    defaultMetricbeatImage = "neoncluster/metricbeat:latest";
+        private const string    defaultKibanaImage     = NeonClusterConst.NeonPublicRegistry + "/kibana:latest";
+        private const string    defaultMetricbeatImage = NeonClusterConst.NeonPublicRegistry + "/metricbeat:latest";
         private const int       defaultRetentionDays   = 14;
         
         /// <summary>

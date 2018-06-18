@@ -90,7 +90,6 @@ COMMAND SUMMARY:
     neon cluster setup      [CLUSTER-DEF]
     neon cluster verify     [CLUSTER-DEF]
     neon cluster update     ARGS
-    neon cluster upgrade    ARGS
     neon couchbase          CMD...
     neon certificate|cert   CMD...
     neon consul             ARGS
@@ -251,7 +250,6 @@ Note that the tool may require admin privileges for [--noshim] mode.
                     new ClusterSetCommand(),
                     new ClusterSetupCommand(),
                     new ClusterUpdateCommand(),
-                    new ClusterUpgradeCommand(),
                     new ClusterVerifyCommand(),
                     new CouchbaseCommand(),
                     new CertificateCommand(),
@@ -541,7 +539,7 @@ $@"*** ERROR: Cannot list Docker images.
                                     var fields = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
                                     return fields.Length >= 2 &&
-                                        fields[0] == "neoncluster/neon-cli" &&
+                                        fields[0] == $"{NeonClusterConst.NeonPublicRegistry}/neon-cli" &&
                                         fields[1] == imageTag;
                                 });
 
@@ -554,7 +552,7 @@ $@"*** ERROR: Cannot list Docker images.
                                 {
                                     "image",
                                     "pull",
-                                    $"neoncluster/neon-cli:{imageTag}"
+                                    $"{NeonClusterConst.NeonPublicRegistry}/neon-cli:{imageTag}"
                                 });
 
                             if (result.ExitCode != 0)
@@ -573,7 +571,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
 
                         try
                         {
-                            process = Process.Start("docker", $"run {options} --name neon-{Guid.NewGuid().ToString("D")} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} {sbEnvOptions} --network host neoncluster/neon-cli:{imageTag}");
+                            process = Process.Start("docker", $"run {options} --name neon-{Guid.NewGuid().ToString("D")} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} {sbEnvOptions} --network host {NeonClusterConst.NeonPublicRegistry}/neon-cli:{imageTag}");
                         }
                         catch (Win32Exception)
                         {

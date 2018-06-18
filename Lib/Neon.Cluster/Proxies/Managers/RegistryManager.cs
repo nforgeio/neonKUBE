@@ -340,7 +340,7 @@ namespace Neon.Cluster
             string          password, 
             string          secret, 
             TlsCertificate  certificate, 
-            string          image    = "neoncluster/neon-registry", 
+            string          image    = NeonClusterConst.NeonPublicRegistry + "/neon-registry", 
             Action<string>  progress = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));

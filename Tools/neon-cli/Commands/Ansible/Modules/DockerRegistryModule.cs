@@ -512,7 +512,7 @@ namespace NeonCli.Ansible
 
                     if (!context.Arguments.TryGetValue<string>("image", out var image))
                     {
-                        image = "neoncluster/neon-registry:latest";
+                        image = NeonClusterConst.NeonPublicRegistry + "/neon-registry:latest";
                     }
 
                     // Detect service changes.
@@ -738,7 +738,7 @@ namespace NeonCli.Ansible
                     // completion on the manager node even if we lose the SSH connection.
 
                     var updateScript =
-@"#!/bin/bash
+$@"#!/bin/bash
 # Update [neon-registry] to READ-ONLY mode:
 
 docker service update --env-rm READ_ONLY --env-add READ_ONLY=true neon-registry
@@ -749,7 +749,7 @@ docker run \
    --name neon-registry-prune \
    --restart-condition=none \
    --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
-   neoncluster/neon-registry garbage-collect
+   {NeonClusterConst.NeonPublicRegistry}/neon-registry garbage-collect
 
 # Restore [neon-registry] to READ/WRITE mode:
 

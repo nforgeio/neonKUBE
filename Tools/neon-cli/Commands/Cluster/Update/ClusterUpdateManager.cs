@@ -129,39 +129,21 @@ namespace NeonCli
             //         script as is to relaunch the container.  This assumes that the
             //         container script uses the [:latest] tag.
 
-            var knownContainers = new List<string>()
-            {
-                "neon-log-host",
-                "neon-log-metricbeat",
-                "neon-registry-cache"
-            };
-
-            var knownServices = new List<string>()
-            {
-                "neon-cluster-manager",
-                "neon-dns",
-                "neon-dns-mon",
-                "neon-log-collector",
-                "neon-log-kibana",
-                "neon-proxy-manager",
-                "neon-proxy-private",
-                "neon-proxy-public",
-                "neon-proxy-vault"
-            };
-
-            var firstManager = cluster.FirstManager;
+            var systemContainers = NeonClusterConst.DockerContainers;
+            var systemServices   = NeonClusterConst.DockerServices;
+            var firstManager     = cluster.FirstManager;
 
             if (cluster.Definition.Docker.RegistryCache)
             {
                 controller.AddGlobalStep("pull images to cache",
                     () =>
                     {
-                        foreach (var container in knownContainers)
+                        foreach (var container in systemContainers)
                         {
                             firstManager.SudoCommand($"docker pull {container}:latest");
                         }
 
-                        foreach (var service in knownServices)
+                        foreach (var service in systemServices)
                         {
                             firstManager.SudoCommand($"docker pull {service}:latest");
                         }
@@ -170,12 +152,12 @@ namespace NeonCli
                 controller.AddStep("pull images to node", 
                     (node, stepDelay) =>
                     {
-                        foreach (var container in knownContainers)
+                        foreach (var container in systemContainers)
                         {
                             node.SudoCommand($"docker pull {container}:latest");
                         }
 
-                        foreach (var service in knownServices)
+                        foreach (var service in systemServices)
                         {
                             node.SudoCommand($"docker pull {service}:latest");
                         }
@@ -187,12 +169,12 @@ namespace NeonCli
                 controller.AddStep("pull images to node", 
                     (node, stepDelay) =>
                     {
-                        foreach (var container in knownContainers)
+                        foreach (var container in systemContainers)
                         {
                             node.SudoCommand($"docker pull {container}:latest");
                         }
 
-                        foreach (var service in knownServices)
+                        foreach (var service in systemServices)
                         {
                             node.SudoCommand($"docker pull {service}:latest");
                         }
@@ -204,7 +186,18 @@ namespace NeonCli
                 {
                     // List the neonCLUSTER services actually running and only update those.
 
-                    foreach (var service in knownServices)
+                    var services = new HashSet<string>();
+                    var response = node.SudoCommand("docker service ls --format \"{{.Name}}\"");
+
+                    using (var reader = new StringReader(response.OutputText))
+                    {
+                        foreach (var service in reader.Lines())
+                        {
+                            services.Add(service);
+                        }
+                    }
+
+                    foreach (var service in systemServices.Where(s => services.Contains(s)))
                     {
                         node.SudoCommand($"docker service update --image {service}:latest --max-parallelism {serviceUpdateParallism} {service}");
                     }
@@ -215,7 +208,62 @@ namespace NeonCli
                 (node, stepDelay) =>
                 {
                     // List the neonCLUSTER containers actually running and only update those.
-                });
+                    // Note that we're going to use the local script to start the container
+                    // so we don't need to hardcode the Docker options here.  We won't restart
+                    // the container if the script doesn't exist.
+                    //
+                    // Note that we'll update and restart the containers in parallel if the
+                    // cluster has a local registry, otherwise we'll just go with the user
+                    // specified parallelism to avoid overwhelming the network with image
+                    // downloads.
+
+                    // $todo(jeff.lill):
+                    //
+                    // A case could be made for having a central place for generating container
+                    // (and service) scripts for cluster setup as well as situations like this.
+                    // It could also be possible then to be able to scan for and repair missing
+                    // or incorrect scripts.
+
+                    var containers = new HashSet<string>();
+                    var response   = node.SudoCommand("docker ps --format\"{{.Names}}\"");
+
+                    using (var reader = new StringReader(response.OutputText))
+                    {
+                        foreach (var container in reader.Lines())
+                        {
+                            containers.Add(container);
+                        }
+                    }
+
+                    foreach (var container in systemContainers.Where(s => containers.Contains(s)))
+                    {
+                        var containerStartScriptPath = LinuxPath.Combine(NeonHostFolders.Scripts, $"{container}.sh");
+
+                        if (node.FileExists(containerStartScriptPath))
+                        {
+                            // The container has a creation script, so pull the image and then
+                            // restart the container.
+
+                            // $hack(jeff.lill): I'm baking in the image tag here as ":latest"
+
+                            node.Status = $"pull: {NeonClusterConst.NeonPublicRegistry}/{container}:latest";
+                            node.DockerCommand("docker", "pull", $"{NeonClusterConst.NeonPublicRegistry}/{container}:latest");
+
+                            node.Status = $"stop: {container}";
+                            node.DockerCommand("docker", "rm", "--force", container);
+
+                            node.Status = $"restart: {container}";
+                            node.SudoCommand("bash", containerStartScriptPath);
+                        }
+                        else
+                        {
+                            node.Status = $"WARNING: Container script [{containerStartScriptPath}] is not present so we can't update the [{container}] container.";
+                            node.Log($"WARNING: Container script [{containerStartScriptPath}] is not present on this node so we can't update the [{container}] container.");
+                            Thread.Sleep(TimeSpan.FromSeconds(5));
+                        }
+                    }
+                },
+                noParallelLimit: cluster.Definition.Docker.RegistryCache);
         }
     }
 }

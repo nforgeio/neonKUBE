@@ -31,7 +31,7 @@ namespace Neon.Cluster
     {
         private const string    defaultLogOptions         = "--log-driver=fluentd --log-opt tag= --log-opt fluentd-async-connect=true";
         private const bool      defaultRegistryCache      = true;
-        private const string    defaultRegistryCacheImage = "neoncluster/neon-registry-cache:latest";
+        private const string    defaultRegistryCacheImage = NeonClusterConst.NeonPublicRegistry + "/neon-registry-cache:latest";
         private const bool      defaultExperimental       = false;
 
         /// <summary>
