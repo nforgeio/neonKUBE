@@ -157,17 +157,28 @@ namespace Neon.Cluster
         /// the Internet at the same time, potentially causing the remote
         /// endpoint to start throttling access.
         /// </param>
+        /// <param name="position">
+        /// The optional zero-based index of the position where the step is
+        /// to be inserted into the step list.
+        /// </param>
         public void AddStep(string stepLabel,
                             Action<SshProxy<NodeMetadata>, TimeSpan> nodeAction,
                             Func<SshProxy<NodeMetadata>, bool> nodePredicate = null,
                             bool quiet = false,
                             bool noParallelLimit = false,
-                            int stepStaggerSeconds = 0)
+                            int stepStaggerSeconds = 0,
+                            int position = -1)
         {
             nodeAction    = nodeAction ?? new Action<SshProxy<NodeMetadata>, TimeSpan>((n, d) => { });
             nodePredicate = nodePredicate ?? new Func<SshProxy<NodeMetadata>, bool>(n => true);
 
-            steps.Add(
+            if (position < 0)
+            {
+                position = steps.Count;
+            }
+
+            steps.Insert(
+                position,
                 new Step()
                 {
                     Label           = stepLabel,
@@ -185,9 +196,19 @@ namespace Neon.Cluster
         /// <param name="stepLabel">Brief step summary.</param>
         /// <param name="action">The global action to be performed.</param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
-        public void AddGlobalStep(string stepLabel, Action action, bool quiet = false)
+        /// <param name="position">
+        /// The optional zero-based index of the position where the step is
+        /// to be inserted into the step list.
+        /// </param>
+        public void AddGlobalStep(string stepLabel, Action action, bool quiet = false, int position = -1)
         {
-            steps.Add(
+            if (position < 0)
+            {
+                position = steps.Count;
+            }
+
+            steps.Insert(
+                position,
                 new Step()
                 {
                     Label        = stepLabel,
@@ -208,11 +229,25 @@ namespace Neon.Cluster
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
         /// <param name="timeout">Optionally specifies the maximum time to wait (defaults to <b>10 minutes</b>).</param>
-        public void AddWaitUntilOnlineStep(string stepLabel = "connect", string status = null, Func<SshProxy<NodeMetadata>, bool> nodePredicate = null, bool quiet = false, TimeSpan? timeout = null)
+        /// <param name="position">
+        /// The optional zero-based index of the position where the step is
+        /// to be inserted into the step list.
+        /// </param>
+        public void AddWaitUntilOnlineStep(
+            string                              stepLabel = "connect", 
+            string                              status = null, 
+            Func<SshProxy<NodeMetadata>, bool>  nodePredicate = null, 
+            bool                                quiet = false, 
+            TimeSpan?                           timeout = null, 
+            int                                 position = -1)
         {
             if (timeout == null)
             {
                 timeout = TimeSpan.FromMinutes(10);
+            }
+            if (position < 0)
+            {
+                position = steps.Count;
             }
 
             AddStep(stepLabel,
@@ -224,7 +259,8 @@ namespace Neon.Cluster
                 },
                 nodePredicate,
                 quiet,
-                noParallelLimit: true);
+                noParallelLimit: true,
+                position: position);
         }
 
         /// <summary>
@@ -238,7 +274,17 @@ namespace Neon.Cluster
         /// or <c>null</c> to select all nodes.
         /// </param>
         /// <param name="quiet">Optionally specifies that the step is not to be reported in the progress.</param>
-        public void AddDelayStep(string stepLabel, TimeSpan delay, string status = null, Func<SshProxy<NodeMetadata>, bool> nodePredicate = null, bool quiet = false)
+        /// <param name="position">
+        /// The optional zero-based index of the position where the step is
+        /// to be inserted into the step list.
+        /// </param>
+        public void AddDelayStep(
+            string                              stepLabel, 
+            TimeSpan                            delay, 
+            string                              status = null,
+            Func<SshProxy<NodeMetadata>, bool>  nodePredicate = null, 
+            bool                                quiet = false, 
+            int                                 position = -1)
         {
             AddStep(stepLabel,
                 (node, stepDeley) =>
@@ -249,7 +295,8 @@ namespace Neon.Cluster
                 },
                 nodePredicate, 
                 quiet,
-                noParallelLimit: true);
+                noParallelLimit: true,
+                position: position);
         }
 
         /// <summary>

@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Text;
@@ -35,7 +36,7 @@ namespace NeonCli
         /// <inheritdoc/>
         public override string ToString()
         {
-            return $"update [{FromVersion}] --> [{ToVersion}]";
+            return $"[{FromVersion}-->{ToVersion}]";
         }
 
         /// <inheritdoc/>
@@ -45,12 +46,9 @@ namespace NeonCli
         public ClusterLogin ClusterLogin => Cluster?.ClusterLogin;
 
         /// <inheritdoc/>
-        public virtual string IdempotentPrefix => $"{ToVersion}-";
-
-        /// <inheritdoc/>
-        public string GetItempotentTag(string operation)
+        public string GetIdempotentTag(string operation)
         {
-            return $"update/{ToVersion}/{IdempotentPrefix}{operation}";
+            return $"update/{ToVersion}/{operation}";
         }
 
         /// <inheritdoc/>
@@ -59,6 +57,29 @@ namespace NeonCli
             stepLabel = stepLabel ?? string.Empty;
 
             return $"{this}: {stepLabel}";
+        }
+
+        /// <summary>
+        /// Prepends any required generic cluster updates initialization steps 
+        /// to a setup controller.
+        /// </summary>
+        /// <param name="controller">The setup controller.</param>
+        protected void Initialize(SetupController<NodeDefinition> controller)
+        {
+            Covenant.Requires<ArgumentNullException>(controller != null);
+
+            controller.AddStep(GetStepLabel("initialize"),
+                (node, stepDelay) =>
+                {
+                    node.Status = "update state";
+
+                    var updateFolder = LinuxPath.Combine(NeonHostFolders.State, "update", ToVersion.ToString());
+
+                    node.SudoCommand("mkdir -p", updateFolder);
+                    node.SudoCommand("chmod 770", updateFolder);
+                },
+                noParallelLimit: true,
+                position: 0);
         }
     }
 }

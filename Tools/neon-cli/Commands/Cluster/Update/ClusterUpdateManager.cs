@@ -140,43 +140,16 @@ namespace NeonCli
                     {
                         foreach (var container in systemContainers)
                         {
-                            firstManager.SudoCommand($"docker pull {container}:latest");
+                            firstManager.Status = $"pull: {container}:latest";
+                            firstManager.SudoCommand($"docker pull {NeonClusterConst.NeonPublicRegistry}/{container}:latest");
+                            firstManager.Status = string.Empty;
                         }
 
                         foreach (var service in systemServices)
                         {
-                            firstManager.SudoCommand($"docker pull {service}:latest");
-                        }
-                    });
-
-                controller.AddStep("pull images to node", 
-                    (node, stepDelay) =>
-                    {
-                        foreach (var container in systemContainers)
-                        {
-                            node.SudoCommand($"docker pull {container}:latest");
-                        }
-
-                        foreach (var service in systemServices)
-                        {
-                            node.SudoCommand($"docker pull {service}:latest");
-                        }
-                    },
-                    node => node != firstManager);
-            }
-            else
-            {
-                controller.AddStep("pull images to node", 
-                    (node, stepDelay) =>
-                    {
-                        foreach (var container in systemContainers)
-                        {
-                            node.SudoCommand($"docker pull {container}:latest");
-                        }
-
-                        foreach (var service in systemServices)
-                        {
-                            node.SudoCommand($"docker pull {service}:latest");
+                            firstManager.Status = $"pull: {service}:latest";
+                            firstManager.SudoCommand($"docker pull {NeonClusterConst.NeonPublicRegistry}/{service}:latest");
+                            firstManager.Status = string.Empty;
                         }
                     });
             }
@@ -199,7 +172,9 @@ namespace NeonCli
 
                     foreach (var service in systemServices.Where(s => services.Contains(s)))
                     {
+                        firstManager.Status = $"update: {service}:latest";
                         node.SudoCommand($"docker service update --image {service}:latest --max-parallelism {serviceUpdateParallism} {service}");
+                        firstManager.Status = string.Empty;
                     }
                 },
                 node => node == firstManager);
@@ -207,6 +182,14 @@ namespace NeonCli
             controller.AddStep("update containers",
                 (node, stepDelay) =>
                 {
+                    // We'll honor the step delay if the cluster doesn't have a registry cache
+                    // so we don't overwhelm the network when pulling images to the nodes.
+
+                    if (!cluster.Definition.Docker.RegistryCache)
+                    {
+                        Thread.Sleep(stepDelay);
+                    }
+
                     // List the neonCLUSTER containers actually running and only update those.
                     // Note that we're going to use the local script to start the container
                     // so we don't need to hardcode the Docker options here.  We won't restart
@@ -225,7 +208,7 @@ namespace NeonCli
                     // or incorrect scripts.
 
                     var containers = new HashSet<string>();
-                    var response   = node.SudoCommand("docker ps --format\"{{.Names}}\"");
+                    var response   = node.SudoCommand("docker ps --format \"{{.Names}}\"");
 
                     using (var reader = new StringReader(response.OutputText))
                     {
@@ -246,13 +229,13 @@ namespace NeonCli
 
                             // $hack(jeff.lill): I'm baking in the image tag here as ":latest"
 
-                            node.Status = $"pull: {NeonClusterConst.NeonPublicRegistry}/{container}:latest";
+                            node.Status = $"pull: {container}:latest";
                             node.DockerCommand("docker", "pull", $"{NeonClusterConst.NeonPublicRegistry}/{container}:latest");
 
                             node.Status = $"stop: {container}";
                             node.DockerCommand("docker", "rm", "--force", container);
 
-                            node.Status = $"restart: {container}";
+                            node.Status = $"restart: {container}:latest";
                             node.SudoCommand("bash", containerStartScriptPath);
                         }
                         else

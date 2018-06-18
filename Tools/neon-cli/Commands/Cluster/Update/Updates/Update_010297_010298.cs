@@ -35,7 +35,9 @@ namespace NeonCli
         /// <inheritdoc/>
         public override void AddUpdateSteps(SetupController<NodeDefinition> controller)
         {
-            controller.AddStep(GetStepLabel("nodes"), (node, stepDelay) => UpdateNode(node, stepDelay));
+            base.Initialize(controller);
+
+            controller.AddStep(GetStepLabel("node config"), (node, stepDelay) => UpdateNode(node, stepDelay));
             controller.AddGlobalStep(GetStepLabel("neon-cluster-manager"), () => UpdateClusterManager());
 
             if (Cluster.Definition.Log.Enabled)
@@ -44,12 +46,6 @@ namespace NeonCli
             }
 
             controller.AddGlobalStep(GetStepLabel("cluster version"), () => UpdateClusterVersion());
-        }
-
-        /// <inheritdoc/>
-        public override string ToString()
-        {
-            return $"Update [{FromVersion}] --> [{ToVersion}]";
         }
 
         /// <summary>
@@ -65,16 +61,15 @@ namespace NeonCli
             // rename files.  We've also added this to the [setup-node] script
             // so it will be available for all new clusters going forward.
 
-            node.InvokeIdempotentAction("install-mmv",
+            node.InvokeIdempotentAction(GetIdempotentTag("install-mmv"),
                 () =>
                 {
                     node.Status = "install mmv";
-
                     node.SudoCommand("apt-get update");
                     node.SudoCommand("apt-get install -yq mmv");
                 });
 
-            // Version 1.2.98 reorganizes the cluster nodes itempotent status directories.
+            // Version 1.2.98 reorganizes the cluster nodes idempotent status directories.
             // Before this, we only tracked idempotency for cluster setup.  Starting
             // with 1.2.98, we're also allow for tracking cluster updates and perhaps
             // other types of operations in the future.
@@ -83,7 +78,7 @@ namespace NeonCli
             // the setup idempotent files names like [finished-*] there, and then
             // strip off the "finished-" prefix because we're no longer including that.
 
-            node.InvokeIdempotentAction(GetItempotentTag("relocate-setup-state"),
+            node.InvokeIdempotentAction(GetIdempotentTag("relocate-setup-state"),
                 () =>
                 {
                     node.Status = "relocate setup state";
@@ -96,26 +91,30 @@ namespace NeonCli
             // the updated cluster setup scripts that need to be uploaded to all 
             // nodes.
 
-            node.Status = "update setup scripts";
-
-            using (var zip = new ZipFile(ResourceFiles.Root.GetFolder("Ubuntu-16.04").GetFolder("updates").GetFile("010297_010298.zip").Path))
-            {
-                foreach (ZipEntry entry in zip)
+            node.InvokeIdempotentAction(GetIdempotentTag("setup-files"),
+                () =>
                 {
-                    if (!entry.IsFile)
+                    node.Status = "update setup scripts";
+
+                    using (var zip = new ZipFile(ResourceFiles.Root.GetFolder("Ubuntu-16.04").GetFolder("updates").GetFile("010297_010298.zip").Path))
                     {
-                        continue;   // Not expecting any subdirectories, etc.
+                        foreach (ZipEntry entry in zip)
+                        {
+                            if (!entry.IsFile)
+                            {
+                                continue;   // Not expecting any subdirectories, etc.
+                            }
+
+                            using (var input = zip.GetInputStream(entry))
+                            {
+                                node.Status = $"update: {entry.Name}";
+                                node.UploadText(LinuxPath.Combine(NeonHostFolders.Setup, entry.Name), Encoding.UTF8.GetString(input.ReadToEnd()));
+                            }
+                        }
                     }
 
-                    using (var input = zip.GetInputStream(entry))
-                    {
-                        node.Status = $"update: {entry.Name}";
-                        node.UploadText(LinuxPath.Combine(NeonHostFolders.Setup, entry.Name), Encoding.UTF8.GetString(input.ReadToEnd()));
-                    }
-                }
-            }
-
-            node.Status = string.Empty;
+                    node.Status = string.Empty;
+                });
         }
 
         /// <summary>
@@ -129,17 +128,17 @@ namespace NeonCli
             // Create the [neon-ssh-credentials] secret because the new [neon-cluster-manager]
             // requires it.
 
-            firstManager.InvokeIdempotentAction(GetItempotentTag("neon-ssh-credentials"),
+            firstManager.InvokeIdempotentAction(GetIdempotentTag("neon-ssh-credentials"),
                 () =>
                 {
-                    firstManager.Status = "SSH credentials secret";
+                    firstManager.Status = "secret: SSH credentials";
                     Cluster.DockerSecret.Set("neon-ssh-credentials", $"{ClusterLogin.SshUsername}/{ClusterLogin.SshPassword}");
                 });
 
             // Update the [neon-cluster-manager] service to the latest image and pass it the
             // new [neon-ssh-credentials] secret.
 
-            firstManager.InvokeIdempotentAction(GetItempotentTag("neon-cluster-manager"),
+            firstManager.InvokeIdempotentAction(GetIdempotentTag("neon-cluster-manager"),
                 () =>
                 {
                     firstManager.Status = "update: neon-cluster-manager";
@@ -149,7 +148,7 @@ namespace NeonCli
 
             // Upload the new [neon-cluster-manager] service creation script to the managers.
 
-            firstManager.InvokeIdempotentAction(GetItempotentTag("neon-cluster-manager-script"),
+            firstManager.InvokeIdempotentAction(GetIdempotentTag("neon-cluster-manager-script"),
                 () =>
                 {
                     string unsealSecretOption = null;
@@ -195,7 +194,7 @@ namespace NeonCli
             // Create the [neon-ssh-credentials] secret because the new [neon-cluster-manager]
             // requires it.
 
-            firstManager.InvokeIdempotentAction(GetItempotentTag("kibana-lb-rule"),
+            firstManager.InvokeIdempotentAction(GetIdempotentTag("kibana-lb-rule"),
                 () =>
                 {
                     firstManager.Status = "kibana load balancer rule";
@@ -228,7 +227,7 @@ namespace NeonCli
 
             // Update the Kibana dashboard to use the new load balancer rule.
 
-            firstManager.InvokeIdempotentAction(GetItempotentTag("kibana-dashboard"),
+            firstManager.InvokeIdempotentAction(GetIdempotentTag("kibana-dashboard"),
                 () =>
                 {
                     firstManager.Status = "kibana dashboard";
@@ -254,10 +253,12 @@ namespace NeonCli
         {
             var firstManager = Cluster.FirstManager;
 
-            firstManager.InvokeIdempotentAction(GetItempotentTag("cluster-version"),
+            firstManager.InvokeIdempotentAction(GetIdempotentTag("cluster-version"),
                 () =>
                 {
+                    firstManager.Status = "update: cluster version";
                     Cluster.Globals.Set(NeonClusterGlobals.NeonCliVersion,(string)ToVersion);
+                    firstManager.Status = string.Empty;
                 });
         }
     }

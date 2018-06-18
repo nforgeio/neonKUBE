@@ -32,7 +32,7 @@ infrastructure related services and containers.
 
 USAGE:
 
-    neon cluster update cluster [OPTIONS]
+    neon cluster update [OPTIONS]
     neon cluster update images [OPTIONS]
 
 OPTIONS:
@@ -43,11 +43,15 @@ OPTIONS:
 
 REMARKS:
 
-[update cluster] updates the cluster configuration including any neonCLUSTER
-related Docker services and containers.
+neon cluster update [OPTIONS]
+-----------------------------
+Updates the cluster to the latest configuration supported by the current
+[neon-cli] including updating any neonCLUSTER related Docker services and 
+containers.
 
-[update images] updates only the neonCLUSTER related Docker services and 
-container images.
+neon cluster update images [OPTIONS]
+------------------------------------
+Updates only the neonCLUSTER related Docker services and container images.
 
 You can use [--max-parallel=#] to specify the number of cluster host nodes
 or service instances to be updated in parallel.  This defaults to 1.
@@ -57,7 +61,13 @@ replicas, the update should have limited or no impact on the cluster
 workloads.  This will take some time though for very large clusters.  
 You can use [--max-parallel] to speed this up at the cost of potentially
 impacting your workloads.
+
+NOTE: The current login must have ROOT PERMISSIONS to update the cluster.
 ";
+
+        private ClusterLogin    clusterLogin;
+        private ClusterProxy    cluster;
+
         /// <inheritdoc/>
         public override string[] Words
         {
@@ -87,19 +97,22 @@ impacting your workloads.
 
             Console.WriteLine();
 
+            clusterLogin = Program.ConnectCluster();
+            cluster      = new ClusterProxy(clusterLogin);
+
+            if (!clusterLogin.IsRoot)
+            {
+                Console.Error.WriteLine("*** ERROR: You must have root privileges to update a cluster.");
+                Program.Exit(1);
+            }
+
             var command     = commandLine.Arguments.ElementAtOrDefault(1);
             var force       = commandLine.HasOption("--force");
             var maxParallel = Program.MaxParallel;
 
-            if (command == null)
-            {
-                Console.Error.WriteLine(usage);
-                Program.Exit(1);
-            }
-
             switch (command)
             {
-                case "cluster":
+                case null:
 
                     UpdateCluster(force, maxParallel);
                     break;
@@ -130,14 +143,15 @@ impacting your workloads.
         /// <param name="maxParallel">Maximum number of parallel operations.</param>
         private void UpdateCluster(bool force, int maxParallel)
         {
-            if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE this cluster?"))
+            if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE cluster [{cluster.Name}]?"))
             {
                 Program.Exit(0);
             }
 
-            var clusterLogin = Program.ConnectCluster();
-            var cluster      = new ClusterProxy(clusterLogin);
-            var controller   = new SetupController<NodeDefinition>("cluster update", cluster.Nodes);
+            var controller = new SetupController<NodeDefinition>("cluster update", cluster.Nodes)
+            {
+                ShowStatus = !Program.Quiet
+            };
 
             controller.MaxParallel = maxParallel;
 
@@ -168,9 +182,7 @@ impacting your workloads.
                 Program.Exit(0);
             }
 
-            var clusterLogin = Program.ConnectCluster();
-            var cluster      = new ClusterProxy(clusterLogin);
-            var controller   = new SetupController<NodeDefinition>("cluster images", cluster.Nodes);
+            var controller = new SetupController<NodeDefinition>("cluster images", cluster.Nodes);
 
             controller.MaxParallel = maxParallel;
 

@@ -88,14 +88,6 @@ namespace NeonCli
         void AddUpdateSteps(SetupController<NodeDefinition> controller);
 
         /// <summary>
-        /// Returns the string used to prefix the idempotent indicator files
-        /// persisted to the cluster for the update.  This should generally 
-        /// be the <see cref="ToVersion"/> with a dash but may differ for
-        /// special circumstances.
-        /// </summary>
-        string IdempotentPrefix { get; }
-
-        /// <summary>
         /// Returns the idempotency tag to use for the named update operation.
         /// </summary>
         /// <param name="operation">The operation name consisting of letters, digits, and dashes.</param>
@@ -104,7 +96,7 @@ namespace NeonCli
         /// The value returned must be look like <b>update/TO-VERSION/PREFIX</b> where
         /// <b>TO-VERSION</b> is the post update version, and PREFIX is <see cref="IdempotentPrefix"/>.
         /// </remarks>
-        string GetItempotentTag(string operation);
+        string GetIdempotentTag(string operation);
 
         /// <summary>
         /// Annotates the <paramref name="stepLabel"/> passed by prefixing it with the 

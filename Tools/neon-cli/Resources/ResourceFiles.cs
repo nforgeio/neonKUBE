@@ -283,10 +283,10 @@ namespace NeonCli
                                     new File("docker-volume-exists.sh", hasVariables: true),
                                     new File("docker-volume-rm.sh", hasVariables: true)
                                 }),
-                            new Folder("update",
+                            new Folder("updates",
                                 files: new List<File>()
                                 {
-                                    new File("010297_0102988.zip", hasVariables: false)
+                                    new File("010297_010298.zip", hasVariables: false)
                                 })
                         })
                 });
