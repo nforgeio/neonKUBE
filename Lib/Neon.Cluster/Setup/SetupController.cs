@@ -46,12 +46,14 @@ namespace Neon.Cluster
             public Action<SshProxy<NodeMetadata>, TimeSpan>     NodeAction;
             public Func<SshProxy<NodeMetadata>, bool>           Predicate;
             public StepStatus                                   Status;
-            public bool                                         NoParallelLimit;
+            public int                                          ParallelLimit;
             public TimeSpan                                     StepStagger;
         }
 
         //---------------------------------------------------------------------
         // Implementation
+
+        private const int UnlimitedParallel = 500;  // Treat this as "unlimited"
 
         private string                                          operationTitle;
         private string                                          operationStatus;
@@ -158,8 +160,12 @@ namespace Neon.Cluster
         /// endpoint to start throttling access.
         /// </param>
         /// <param name="position">
-        /// The optional zero-based index of the position where the step is
+        /// Optionally specifies the zero-based index of the position where the step is
         /// to be inserted into the step list.
+        /// </param>
+        /// <param name="parallelLimit">
+        /// Optionally specifies the maximum number of operations to be performed
+        /// in parallel for this step, overriding the controller default.
         /// </param>
         public void AddStep(string stepLabel,
                             Action<SshProxy<NodeMetadata>, TimeSpan> nodeAction,
@@ -167,7 +173,8 @@ namespace Neon.Cluster
                             bool quiet = false,
                             bool noParallelLimit = false,
                             int stepStaggerSeconds = 0,
-                            int position = -1)
+                            int position = -1,
+                            int parallelLimit = 0)
         {
             nodeAction    = nodeAction ?? new Action<SshProxy<NodeMetadata>, TimeSpan>((n, d) => { });
             nodePredicate = nodePredicate ?? new Func<SshProxy<NodeMetadata>, bool>(n => true);
@@ -177,17 +184,22 @@ namespace Neon.Cluster
                 position = steps.Count;
             }
 
-            steps.Insert(
-                position,
-                new Step()
-                {
-                    Label           = stepLabel,
-                    Quiet           = quiet,
-                    NodeAction      = nodeAction,
-                    Predicate       = nodePredicate,
-                    NoParallelLimit = noParallelLimit,
-                    StepStagger     = TimeSpan.FromSeconds(stepStaggerSeconds)
-                });
+            var step = new Step()
+            {
+                Label = stepLabel,
+                Quiet = quiet,
+                NodeAction = nodeAction,
+                Predicate = nodePredicate,
+                ParallelLimit = noParallelLimit ? UnlimitedParallel : 0,
+                StepStagger = TimeSpan.FromSeconds(stepStaggerSeconds)
+            };
+
+            if (parallelLimit > 0)
+            {
+                step.ParallelLimit = parallelLimit;
+            }
+
+            steps.Insert(position, step);
         }
 
         /// <summary>
@@ -443,7 +455,7 @@ namespace Neon.Cluster
 
             var parallelOptions = new ParallelOptions()
             {
-                MaxDegreeOfParallelism = step.NoParallelLimit ? 500 : MaxParallel
+                MaxDegreeOfParallelism = step.ParallelLimit > 0 ? step.ParallelLimit : MaxParallel
             };
 
             NeonHelper.ThreadRun(

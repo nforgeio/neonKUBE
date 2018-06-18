@@ -36,35 +36,15 @@ USAGE:
 
     neon cluster update check               - checks for available updates 
     neon cluster update images [OPTIONS]    - updates neon containers/services
+    neon cluster update linux [OPTIONS]     - updates linux on cluster nodes
 
 OPTIONS:
 
     --force             - performs the update without prompting
-    --max-parallel=#    - maximum number of host nodes or service instances
-                          to be updated in parallel (defaults to 1)
 
 REMARKS:
 
-neon cluster update [OPTIONS]:
-
-Updates the cluster to the latest configuration supported by the current
-[neon-cli] including updating any neonCLUSTER related Docker services and 
-containers.
-
-neon cluster update images [OPTIONS]:
-
-Updates only the neonCLUSTER related Docker services and container images.
-
-You can use [--max-parallel=#] to specify the number of cluster host nodes
-or service instances to be updated in parallel.  This defaults to 1.
-
-For clusters with multiple cluster managers and enough nodes and service
-replicas, the update should have limited or no impact on the cluster 
-workloads.  This will take some time though for very large clusters.  
-You can use [--max-parallel] to speed this up at the cost of potentially
-impacting your workloads.
-
-NOTE: The current login must have ROOT PERMISSIONS to update the cluster.
+The current login must have ROOT PERMISSIONS to update the cluster.
 ";
 
         private ClusterLogin    clusterLogin;
@@ -115,12 +95,17 @@ NOTE: The current login must have ROOT PERMISSIONS to update the cluster.
 
                 case "check":
 
-                    UpdateCluster(force, maxParallel, checkOnly: true);
+                    CheckCluster(maxParallel);
                     break;
 
                 case "images":
 
                     UpdateImages(force, maxParallel);
+                    break;
+
+                case "linux":
+
+                    UpdateLinux(force, maxParallel);
                     break;
 
                 default:
@@ -150,14 +135,161 @@ NOTE: The current login must have ROOT PERMISSIONS to update the cluster.
         }
 
         /// <summary>
+        /// Checks the cluster for pending updates.
+        /// </summary>
+        /// <param name="maxParallel">Maximum number of parallel operations.</param>
+        private void CheckCluster(int maxParallel)
+        {
+            EnsureRootPivileges();
+
+            // Use a temporary controller to determine how  many cluster
+            // updates are pending.
+
+            var controller = new SetupController<NodeDefinition>("cluster status", cluster.Nodes)
+            {
+                MaxParallel = maxParallel,
+                ShowStatus  = !Program.Quiet
+            };
+
+            var pendingUpdateCount = ClusterUpdateManager.AddUpdateSteps(cluster, controller, serviceUpdateParallism: Program.MaxParallel);
+
+            // Create another controller to actually scan the cluster nodes to
+            // count the pending Linux updates as well as the system containers
+            // and services that need to be updated.
+
+            // $todo(jeff.lill):
+            //
+            // We need to query a new image lookup service to get the images 
+            // compatible with the cluster and then determine whether any of 
+            // these need updating on any node.  Right now, we're just checking
+            // the Linux package updates.
+            //
+            // We should do something similar for the host services like:
+            // consul, docker, powerdns, and vault.
+
+            controller = new SetupController<NodeDefinition>("cluster status", cluster.Nodes)
+            {
+                MaxParallel = maxParallel,
+                ShowStatus  = !Program.Quiet
+            };
+
+            var pendingLinuxPackages = new HashSet<string>();
+
+            controller.AddStep("get pending linux updates",
+                (node, stepDelay) =>
+                {
+                    Thread.Sleep(stepDelay);
+
+                    node.Status = "run: apt-get update";
+                    node.SudoCommand("apt-get update");
+
+                    node.Status  = "run: apt-get list --upgradable";
+                    var response = node.SudoCommand("apt-get update");
+
+                    using (var reader = new StringReader(response.OutputText))
+                    {
+                        foreach (var line in reader.Lines().Where(l => l.Trim().Length > 0))
+                        {
+                            lock (pendingLinuxPackages)
+                            {
+                                if (!pendingLinuxPackages.Contains(line))
+                                {
+                                    pendingLinuxPackages.Add(line);
+                                }
+                            }
+                        }
+                    }
+                });
+
+            if (!controller.Run())
+            {
+                Console.Error.WriteLine("*** ERROR: One or more CHECK steps failed.");
+                Program.Exit(1);
+            }
+
+            // Output the results.
+
+            var title = $"[{cluster.Name}] cluster";
+
+            Console.WriteLine(title);
+            Console.WriteLine(new string('-', title.Length));
+
+            if (pendingUpdateCount == 0 && pendingLinuxPackages.Count == 0)
+            {
+                Console.WriteLine("Cluster is up to date.");
+            }
+            else
+            {
+                Console.WriteLine($"Pending neonCLUSTER updates: [{pendingUpdateCount}]");
+                Console.WriteLine($"Pending Linux updates:       [{pendingLinuxPackages.Count}]");
+            }
+
+            Program.Exit(0);
+        }
+
+        /// <summary>
+        /// Updates the Linux distribution on all cluster nodes and then reboots them
+        /// one at a time, giving each of them some time to stabilize before rebooting
+        /// the next node.
+        /// </summary>
+        /// <param name="force"><c>true</c> to disable the update prompt.</param>
+        /// <param name="maxParallel">Maximum number of parallel operations.</param>
+        private void UpdateLinux(bool force, int maxParallel)
+        {
+            EnsureRootPivileges();
+
+            if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE Linux on [{cluster.Name}] cluster nodes?"))
+            {
+                Program.Exit(0);
+            }
+
+            var controller = new SetupController<NodeDefinition>("cluster linux update", cluster.Nodes)
+            {
+                MaxParallel = maxParallel,
+                ShowStatus  = !Program.Quiet
+            };
+
+            controller.AddStep("update nodes",
+                (node, stepDelay) =>
+                {
+                    Thread.Sleep(stepDelay);
+
+                    node.Status = "run: apt-get update";
+                    node.SudoCommand("apt-get update");
+
+                    node.Status = "run: apt-get upgrade -yq";
+                    node.SudoCommand("apt-get upgrade -yq");
+                });
+
+            controller.AddStep("reboot nodes",
+                (node, stepDelay) =>
+                {
+                    node.Reboot();
+
+                    node.Status = $"stabilizing for ({Program.WaitSeconds}s)";
+                    Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
+                },
+                parallelLimit: 1);  // Reboot the nodes one at a time.
+
+            if (!controller.Run())
+            {
+                Console.Error.WriteLine("*** ERROR: One or more UPDATE steps failed.");
+                Program.Exit(1);
+            }
+
+            Program.Exit(0);
+        }
+
+        /// <summary>
         /// Updates the cluster.
         /// </summary>
         /// <param name="force"><c>true</c> to disable the update prompt.</param>
         /// <param name="maxParallel">Maximum number of parallel operations.</param>
-        /// <param name="checkOnly">Optionally just check for available updates.</param>
-        private void UpdateCluster(bool force, int maxParallel, bool checkOnly = false)
+        private void UpdateCluster(bool force, int maxParallel)
         {
-            if (!checkOnly && !force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE cluster [{cluster.Name}]?"))
+            EnsureRootPivileges();
+
+            if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE cluster [{cluster.Name}]?"))
             {
                 Program.Exit(0);
             }
@@ -170,22 +302,6 @@ NOTE: The current login must have ROOT PERMISSIONS to update the cluster.
             controller.MaxParallel = maxParallel;
 
             var pendingUpdateCount = ClusterUpdateManager.AddUpdateSteps(cluster, controller, serviceUpdateParallism: Program.MaxParallel);
-
-            if (checkOnly)
-            {
-                if (pendingUpdateCount == 0)
-                {
-                    Console.WriteLine($"*** [{cluster.Name}] cluster is up to date.");
-                }
-                else
-                {
-                    Console.WriteLine($"*** [{cluster.Name}] cluster has [{pendingUpdateCount}] pending neonCLUSTER updates.");
-                }
-
-                Program.Exit(0);
-            }
-
-            EnsureRootPivileges();
 
             if (controller.StepCount == 0)
             {
