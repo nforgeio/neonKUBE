@@ -925,7 +925,7 @@ nsCertType              = server
                 // Retrieve the VPN certificate authority ZIP archive from Vault and extract
                 // its contents to a temporary folder.
 
-                var caZipBytes = cluster.Vault.ReadBytesAsync("neon-secret/vpn/ca.zip.encrypted").Result;
+                var caZipBytes = cluster.Vault.Client.ReadBytesAsync("neon-secret/vpn/ca.zip.encrypted").Result;
                 var vpnCaFiles = VpnCaFiles.LoadZip(caZipBytes, clusterLogin.VpnCredentials.CaZipKey);
 
                 vpnCaFiles.Extract(caFolder);
@@ -993,7 +993,7 @@ nsCertType              = server
                 vpnCaFiles = VpnCaFiles.LoadFolder(caFolder);
 
                 vpnCaFiles.Clean();
-                cluster.Vault.WriteBytesAsync("neon-secret/vpn/ca.zip.encrypted", vpnCaFiles.ToZipBytes()).Wait();
+                cluster.Vault.Client.WriteBytesAsync("neon-secret/vpn/ca.zip.encrypted", vpnCaFiles.ToZipBytes()).Wait();
             }
             finally
             {
@@ -1139,7 +1139,7 @@ nsCertType              = server
 
                 vpnCaFiles = VpnCaFiles.LoadFolder(caFolder);
 
-                cluster.Vault.WriteBytesAsync("neon-secret/vpn/ca.zip.encrypted", vpnCaFiles.ToZipBytes()).Wait();
+                cluster.Vault.Client.WriteBytesAsync("neon-secret/vpn/ca.zip.encrypted", vpnCaFiles.ToZipBytes()).Wait();
 
                 // Write the updated CRL to each manager.
 

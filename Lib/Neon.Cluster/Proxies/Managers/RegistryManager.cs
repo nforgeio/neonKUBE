@@ -44,9 +44,9 @@ namespace Neon.Cluster
         {
             var credentials = new List<RegistryCredentials>();
 
-            foreach (var hostname in cluster.Vault.ListAsync(NeonClusterConst.VaultRegistryCredentialsKey).Result)
+            foreach (var hostname in cluster.Vault.Client.ListAsync(NeonClusterConst.VaultRegistryCredentialsKey).Result)
             {
-                var usernamePassword = cluster.Vault.ReadStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{hostname}").Result;
+                var usernamePassword = cluster.Vault.Client.ReadStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{hostname}").Result;
                 var fields = usernamePassword.Split(new char[] { '/' }, 2);
 
                 if (fields.Length == 2)
@@ -84,7 +84,7 @@ namespace Neon.Cluster
 
             // Update the registry credentials in Vault.
 
-            cluster.Vault.WriteStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}", $"{username}/{password}").Wait();
+            cluster.Vault.Client.WriteStringAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}", $"{username}/{password}").Wait();
 
             // Login all of the cluster nodes in parallel.
 
@@ -141,7 +141,7 @@ namespace Neon.Cluster
 
             // Remove the registry credentials from Vault.
 
-            cluster.Vault.DeleteAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}").Wait();
+            cluster.Vault.Client.DeleteAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}").Wait();
 
             // Logout of all of the cluster nodes in parallel.
 
@@ -196,7 +196,7 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
 
-            var usernamePassword = cluster.Vault.ReadStringOrDefaultAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}").Result;
+            var usernamePassword = cluster.Vault.Client.ReadStringOrDefaultAsync($"{NeonClusterConst.VaultRegistryCredentialsKey}/{registry}").Result;
 
             if (usernamePassword == null)
             {

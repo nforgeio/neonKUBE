@@ -2976,7 +2976,7 @@ systemctl start neon-volume-plugin
 
             // Be really sure that vault is ready on all managers.
 
-            cluster.VaultWaitUntilReady();
+            cluster.Vault.WaitUntilReady();
         }
 
         /// <summary>
@@ -3044,7 +3044,7 @@ systemctl start neon-volume-plugin
                     () =>
                     {
                         firstManager.Status = "vault: enable neon-secret backend";
-                        cluster.VaultCommand("vault secrets enable", "-path=neon-secret", "generic");
+                        cluster.Vault.Command("vault secrets enable", "-path=neon-secret", "generic");
                     });
 
                 // Mount the [transit] backend and create the cluster key.
@@ -3053,8 +3053,8 @@ systemctl start neon-volume-plugin
                     () =>
                     {
                         firstManager.Status = "vault: transit backend";
-                        cluster.VaultCommand("vault secrets enable transit");
-                        cluster.VaultCommand($"vault write -f transit/keys/{NeonClusterConst.VaultTransitKey}");
+                        cluster.Vault.Command("vault secrets enable transit");
+                        cluster.Vault.Command($"vault write -f transit/keys/{NeonClusterConst.VaultTransitKey}");
                     });
 
                 // Mount the [approle] backend.
@@ -3063,7 +3063,7 @@ systemctl start neon-volume-plugin
                     () =>
                     {
                         firstManager.Status = "vault: approle backend";
-                        cluster.VaultCommand("vault auth enable approle");
+                        cluster.Vault.Command("vault auth enable approle");
                     });
 
                 // Initialize the standard policies.
@@ -3076,16 +3076,16 @@ systemctl start neon-volume-plugin
                         var writeCapabilities = VaultCapabilies.Create | VaultCapabilies.Read | VaultCapabilies.Update | VaultCapabilies.Delete | VaultCapabilies.List;
                         var readCapabilities  = VaultCapabilies.Read | VaultCapabilies.List;
 
-                        cluster.CreateVaultPolicy(new VaultPolicy("neon-reader", "neon-secret/*", readCapabilities));
-                        cluster.CreateVaultPolicy(new VaultPolicy("neon-writer", "neon-secret/*", writeCapabilities));
-                        cluster.CreateVaultPolicy(new VaultPolicy("neon-cert-reader", "neon-secret/cert/*", readCapabilities));
-                        cluster.CreateVaultPolicy(new VaultPolicy("neon-cert-writer", "neon-secret/cert/*", writeCapabilities));
-                        cluster.CreateVaultPolicy(new VaultPolicy("neon-hosting-reader", "neon-secret/hosting/*", readCapabilities));
-                        cluster.CreateVaultPolicy(new VaultPolicy("neon-hosting-writer", "neon-secret/hosting/*", writeCapabilities));
-                        cluster.CreateVaultPolicy(new VaultPolicy("neon-service-reader", "neon-secret/service/*", readCapabilities));
-                        cluster.CreateVaultPolicy(new VaultPolicy("neon-service-writer", "neon-secret/service/*", writeCapabilities));
-                        cluster.CreateVaultPolicy(new VaultPolicy("neon-global-reader", "neon-secret/global/*", readCapabilities));
-                        cluster.CreateVaultPolicy(new VaultPolicy("neon-global-writer", "neon-secret/global/*", writeCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-reader", "neon-secret/*", readCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-writer", "neon-secret/*", writeCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-cert-reader", "neon-secret/cert/*", readCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-cert-writer", "neon-secret/cert/*", writeCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-hosting-reader", "neon-secret/hosting/*", readCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-hosting-writer", "neon-secret/hosting/*", writeCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-service-reader", "neon-secret/service/*", readCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-service-writer", "neon-secret/service/*", writeCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-global-reader", "neon-secret/global/*", readCapabilities));
+                        cluster.Vault.SetPolicy(new VaultPolicy("neon-global-writer", "neon-secret/global/*", writeCapabilities));
                     });
 
                 // Initialize the [neon-proxy-*] related service roles.  Each of these services 
@@ -3097,9 +3097,9 @@ systemctl start neon-volume-plugin
                     {
                         firstManager.Status = "vault: roles";
 
-                        cluster.CreateVaultAppRole("neon-proxy-manager", "neon-cert-reader", "neon-hosting-reader");
-                        cluster.CreateVaultAppRole("neon-proxy-public", "neon-cert-reader");
-                        cluster.CreateVaultAppRole("neon-proxy-private", "neon-cert-reader");
+                        cluster.Vault.SetAppRole("neon-proxy-manager", "neon-cert-reader", "neon-hosting-reader");
+                        cluster.Vault.SetAppRole("neon-proxy-public", "neon-cert-reader");
+                        cluster.Vault.SetAppRole("neon-proxy-private", "neon-cert-reader");
                     });
 
                 // Store the the cluster hosting options in the Vault so services that need to

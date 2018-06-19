@@ -49,7 +49,7 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
 
-            cluster.Vault.DeleteAsync(NeonClusterHelper.GetVaultCertificateKey(name)).Wait();
+            cluster.Vault.Client.DeleteAsync(NeonClusterHelper.GetVaultCertificateKey(name)).Wait();
             cluster.SignalLoadBalancerUpdate();
         }
 
@@ -62,7 +62,7 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
 
-            return cluster.Vault.ReadJsonOrDefaultAsync<TlsCertificate>(NeonClusterHelper.GetVaultCertificateKey(name)).Result;
+            return cluster.Vault.Client.ReadJsonOrDefaultAsync<TlsCertificate>(NeonClusterHelper.GetVaultCertificateKey(name)).Result;
         }
 
         /// <summary>
@@ -71,7 +71,7 @@ namespace Neon.Cluster
         /// <returns>The certificate names.</returns>
         public IEnumerable<string> List()
         {
-            return cluster.Vault.ListAsync(vaultCertPrefix).Result;
+            return cluster.Vault.Client.ListAsync(vaultCertPrefix).Result;
         }
 
         /// <summary>
@@ -94,7 +94,7 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
             Covenant.Requires<ArgumentNullException>(certificate != null);
 
-            cluster.Vault.WriteJsonAsync(NeonClusterHelper.GetVaultCertificateKey(name), certificate).Wait();
+            cluster.Vault.Client.WriteJsonAsync(NeonClusterHelper.GetVaultCertificateKey(name), certificate).Wait();
             cluster.SignalLoadBalancerUpdate();
         }
 
@@ -106,9 +106,9 @@ namespace Neon.Cluster
         {
             var certificates = new Dictionary<string, TlsCertificate>();
 
-            foreach (var certName in cluster.Vault.ListAsync(vaultCertPrefix).Result)
+            foreach (var certName in cluster.Vault.Client.ListAsync(vaultCertPrefix).Result)
             {
-                var certJson    = cluster.Vault.ReadDynamicAsync($"{vaultCertPrefix}/{certName}").Result.ToString();
+                var certJson    = cluster.Vault.Client.ReadDynamicAsync($"{vaultCertPrefix}/{certName}").Result.ToString();
                 var certificate = NeonHelper.JsonDeserialize<TlsCertificate>(certJson);
 
                 certificates.Add(certName, certificate);
