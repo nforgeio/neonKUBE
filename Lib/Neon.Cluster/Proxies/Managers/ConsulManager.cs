@@ -76,8 +76,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Returns a Consul client.
         /// </summary>
-        /// <returns>The <see cref="VaultClient"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if <see cref="ClusterLogin"/> has not yet been initialized with the Vault root token.</exception>
+        /// <returns>The <see cref="ConsulClient"/>.</returns>
         public ConsulClient Client
         {
             get
