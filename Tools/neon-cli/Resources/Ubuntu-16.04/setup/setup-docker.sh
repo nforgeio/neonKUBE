@@ -204,6 +204,11 @@ fi
 
 addgroup $<cluster.rootuser> docker
 
+# Prevent the package manager from automatically upgrading the Docker engine.
+
+set +e      # Don't exit if the next command fails
+apt-mark hold docker
+
 # Indicate that the script has completed.
 
 endsetup docker
