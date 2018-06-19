@@ -148,14 +148,14 @@ namespace NeonCli
                     {
                         foreach (var container in systemContainers)
                         {
-                            firstManager.Status = $"pull: {container}:latest";
+                            firstManager.Status = $"run: docker pull {NeonClusterConst.NeonPublicRegistry}/{container}:latest";
                             firstManager.SudoCommand($"docker pull {NeonClusterConst.NeonPublicRegistry}/{container}:latest");
                             firstManager.Status = string.Empty;
                         }
 
                         foreach (var service in systemServices)
                         {
-                            firstManager.Status = $"pull: {service}:latest";
+                            firstManager.Status = $"run: docker pull {NeonClusterConst.NeonPublicRegistry}/{service}:latest";
                             firstManager.SudoCommand($"docker pull {NeonClusterConst.NeonPublicRegistry}/{service}:latest");
                             firstManager.Status = string.Empty;
                         }
@@ -237,7 +237,7 @@ namespace NeonCli
 
                             // $hack(jeff.lill): I'm baking in the image tag here as ":latest"
 
-                            node.Status = $"pull: {container}:latest";
+                            node.Status = $"run: {NeonClusterConst.NeonPublicRegistry}/{container}:latest";
                             node.DockerCommand("docker", "pull", $"{NeonClusterConst.NeonPublicRegistry}/{container}:latest");
 
                             node.Status = $"stop: {container}";
