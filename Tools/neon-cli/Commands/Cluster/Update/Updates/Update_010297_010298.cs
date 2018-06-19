@@ -132,7 +132,7 @@ namespace NeonCli
                 () =>
                 {
                     firstManager.Status = "secret: SSH credentials";
-                    Cluster.DockerSecret.Set("neon-ssh-credentials", $"{ClusterLogin.SshUsername}/{ClusterLogin.SshPassword}");
+                    Cluster.Docker.Secret.Set("neon-ssh-credentials", $"{ClusterLogin.SshUsername}/{ClusterLogin.SshPassword}");
                 });
 
             // Update the [neon-cluster-manager] service to the latest image and pass it the

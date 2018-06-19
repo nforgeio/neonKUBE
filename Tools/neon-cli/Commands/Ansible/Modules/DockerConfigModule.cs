@@ -170,7 +170,7 @@ namespace NeonCli.Ansible
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting [{configName}] config.");
 
             var manager = cluster.GetHealthyManager();
-            var exists  = cluster.DockerConfig.Exists(configName);
+            var exists  = cluster.Docker.Config.Exists(configName);
             var bytes   = (byte[])null;
 
             if (exists)
@@ -199,7 +199,7 @@ namespace NeonCli.Ansible
                             context.Changed = true;
                             context.WriteLine(AnsibleVerbosity.Trace, $"Removing config [{configName}].");
 
-                            cluster.DockerConfig.Remove(configName);
+                            cluster.Docker.Config.Remove(configName);
                         }
                     }
                     else
@@ -251,11 +251,11 @@ namespace NeonCli.Ansible
 
                             if (bytes != null)
                             {
-                                cluster.DockerConfig.Set(configName, bytes);
+                                cluster.Docker.Config.Set(configName, bytes);
                             }
                             else
                             {
-                                cluster.DockerConfig.Set(configName, configText);
+                                cluster.Docker.Config.Set(configName, configText);
                             }
                         }
                     }

@@ -294,7 +294,7 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting the [neon-registry] service.");
 
-            var currentService = cluster.InspectService("neon-registry");
+            var currentService = cluster.Docker.InspectService("neon-registry");
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Getting current registry hostname from Consul.");
 

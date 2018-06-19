@@ -170,7 +170,7 @@ namespace NeonCli.Ansible
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting [{secretName}] secret.");
 
             var manager = cluster.GetHealthyManager();
-            var exists  = cluster.DockerSecret.Exists(secretName);
+            var exists  = cluster.Docker.Secret.Exists(secretName);
             var bytes   = (byte[])null;
 
             if (exists)
@@ -199,7 +199,7 @@ namespace NeonCli.Ansible
                             context.Changed = true;
                             context.WriteLine(AnsibleVerbosity.Trace, $"Removing secret [{secretName}].");
 
-                            cluster.DockerSecret.Remove(secretName);
+                            cluster.Docker.Secret.Remove(secretName);
                         }
                     }
                     else
@@ -251,11 +251,11 @@ namespace NeonCli.Ansible
 
                             if (bytes != null)
                             {
-                                cluster.DockerSecret.Set(secretName, bytes);
+                                cluster.Docker.Secret.Set(secretName, bytes);
                             }
                             else
                             {
-                                cluster.DockerSecret.Set(secretName, secretText);
+                                cluster.Docker.Secret.Set(secretName, secretText);
                             }
                         }
                     }

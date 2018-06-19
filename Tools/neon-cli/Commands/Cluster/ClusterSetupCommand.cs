@@ -3191,7 +3191,7 @@ systemctl start neon-volume-plugin
                     // Create the [neon-ssh-credentials] Docker secret using the first manager.
 
                     firstManager.Status = "SSH credentials secret";
-                    cluster.DockerSecret.Set("neon-ssh-credentials", $"{clusterLogin.SshUsername}/{clusterLogin.SshPassword}");
+                    cluster.Docker.Secret.Set("neon-ssh-credentials", $"{clusterLogin.SshUsername}/{clusterLogin.SshPassword}");
                 });
         }
 

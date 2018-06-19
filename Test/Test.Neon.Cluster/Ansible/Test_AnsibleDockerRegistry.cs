@@ -51,7 +51,7 @@ namespace TestNeonCluster
 
             var manager = this.cluster.GetHealthyManager();
 
-            if (this.cluster.InspectService("neon-registry") != null)
+            if (this.cluster.Docker.InspectService("neon-registry") != null)
             {
                 manager.DockerCommand(RunOptions.None, "docker service rm neon-registry");
             }

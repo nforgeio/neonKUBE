@@ -319,7 +319,7 @@ namespace Neon.Cluster
         /// </summary>
         public bool HasLocalRegistry
         {
-            get { return cluster.InspectService("neon-registry") != null;  }
+            get { return cluster.Docker.InspectService("neon-registry") != null;  }
         }
 
         /// <summary>

@@ -61,11 +61,11 @@ namespace Neon.Cluster
         //---------------------------------------------------------------------
         // Implementation
 
-        private object syncRoot = new object();
-        private VaultClient vaultClient;
-        private ConsulClient consulClient;
-        private RunOptions defaultRunOptions;
-        private Func<string, string, IPAddress, SshProxy<NodeDefinition>> nodeProxyCreator;
+        private object                                                      syncRoot = new object();
+        private VaultClient                                                 vaultClient;
+        private ConsulClient                                                consulClient;
+        private RunOptions                                                  defaultRunOptions;
+        private Func<string, string, IPAddress, SshProxy<NodeDefinition>>   nodeProxyCreator;
 
         /// <summary>
         /// Constructs a cluster proxy from a cluster login.
@@ -147,8 +147,7 @@ namespace Neon.Cluster
             this.defaultRunOptions = defaultRunOptions;
             this.nodeProxyCreator  = nodeProxyCreator;
 
-            this.DockerConfig        = new DockerConfigManager(this);
-            this.DockerSecret        = new DockerSecretManager(this);
+            this.Docker              = new DockerManager(this);
             this.Certificate         = new CertificateManager(this);
             this.Dashboard           = new DashboardManager(this);
             this.DnsHosts            = new DnsHostsManager(this);
@@ -246,14 +245,9 @@ namespace Neon.Cluster
         public SshProxy<NodeDefinition> FirstManager { get; private set; }
 
         /// <summary>
-        /// Manages cluster Docker configs.
+        /// Manages Docker components.
         /// </summary>
-        public DockerConfigManager DockerConfig { get; private set; }
-
-        /// <summary>
-        /// Manages cluster Docker secrets.
-        /// </summary>
-        public DockerSecretManager DockerSecret { get; private set; }
+        public DockerManager Docker { get; private set; }
 
         /// <summary>
         /// Manages the cluster TLS certificates.
@@ -858,39 +852,6 @@ vault policy-write {policy.Name} policy.hcl
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(roleName));
 
             return VaultCommand($"vault delete auth/approle/role/{roleName}");
-        }
-
-        /// <summary>
-        /// Inspects a service, returning details about its current state.
-        /// </summary>
-        /// <param name="name">The service name.</param>
-        /// <param name="strict">Optionally specify strict JSON parsing.</param>
-        /// <returns>The <see cref="ServiceDetails"/> or <c>null</c> if the service doesn't exist.</returns>
-        public ServiceDetails InspectService(string name, bool strict = false)
-        {
-            var response = GetHealthyManager().DockerCommand(RunOptions.None, "docker", "service", "inspect", name);
-
-            if (response.ExitCode != 0)
-            {
-                if (response.AllText.Contains("Status: Error: no such service:"))
-                {
-                    return null;
-                }
-
-                throw new Exception($"Cannot inspect service [{name}]: {response.AllText}");
-            }
-
-            // The inspection response is actually an array with a single
-            // service details element, so we'll need to extract that element
-            // and then parse it.
-
-            var jArray      = JArray.Parse(response.OutputText);
-            var jsonDetails = jArray[0].ToString(Formatting.Indented);
-            var details     = NeonHelper.JsonDeserialize<ServiceDetails>(jsonDetails, strict);
-
-            details.Normalize();
-
-            return details;
         }
 
         /// <summary>

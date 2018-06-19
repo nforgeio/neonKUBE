@@ -58,6 +58,7 @@ USAGE:
             var clusterLogin = Program.ConnectCluster();
             var cluster      = new ClusterProxy(clusterLogin);
 
+            // $todo(jeff.lill): Implement this
         }
 
         /// <inheritdoc/>

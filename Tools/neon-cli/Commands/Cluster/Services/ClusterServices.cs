@@ -137,7 +137,7 @@ namespace NeonCli
 
                         vaultCredentials.RootToken = null;
 
-                        cluster.DockerSecret.Set("neon-cluster-manager-vaultkeys", Encoding.UTF8.GetBytes(NeonHelper.JsonSerialize(vaultCredentials, Formatting.Indented)));
+                        cluster.Docker.Secret.Set("neon-cluster-manager-vaultkeys", Encoding.UTF8.GetBytes(NeonHelper.JsonSerialize(vaultCredentials, Formatting.Indented)));
 
                         unsealSecretOption = "--secret=neon-cluster-manager-vaultkeys";
                     }
@@ -175,9 +175,9 @@ namespace NeonCli
 
                     firstManager.Status = "secrets: proxy services";
 
-                    cluster.DockerSecret.Set("neon-proxy-manager-credentials", NeonHelper.JsonSerialize(cluster.Vault.GetAppRoleCredentialsAsync("neon-proxy-manager").Result, Formatting.Indented));
-                    cluster.DockerSecret.Set("neon-proxy-public-credentials", NeonHelper.JsonSerialize(cluster.Vault.GetAppRoleCredentialsAsync("neon-proxy-public").Result, Formatting.Indented));
-                    cluster.DockerSecret.Set("neon-proxy-private-credentials", NeonHelper.JsonSerialize(cluster.Vault.GetAppRoleCredentialsAsync("neon-proxy-private").Result, Formatting.Indented));
+                    cluster.Docker.Secret.Set("neon-proxy-manager-credentials", NeonHelper.JsonSerialize(cluster.Vault.GetAppRoleCredentialsAsync("neon-proxy-manager").Result, Formatting.Indented));
+                    cluster.Docker.Secret.Set("neon-proxy-public-credentials", NeonHelper.JsonSerialize(cluster.Vault.GetAppRoleCredentialsAsync("neon-proxy-public").Result, Formatting.Indented));
+                    cluster.Docker.Secret.Set("neon-proxy-private-credentials", NeonHelper.JsonSerialize(cluster.Vault.GetAppRoleCredentialsAsync("neon-proxy-private").Result, Formatting.Indented));
 
                     // Initialize the public and private proxies.
 
