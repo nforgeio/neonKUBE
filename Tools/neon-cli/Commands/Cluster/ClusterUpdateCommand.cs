@@ -32,15 +32,18 @@ infrastructure related services and containers.
 
 USAGE:
 
-    neon cluster update [OPTIONS]           - updates cluster and containers/services
+    neon cluster update [OPTIONS]                   - updates cluster and containers/services
 
-    neon cluster update check               - checks for available updates 
-    neon cluster update images [OPTIONS]    - updates neon containers/services
-    neon cluster update linux [OPTIONS]     - updates linux on cluster nodes
+    neon cluster update check                       - checks for available updates 
+    neon cluster update consul [OPTIONS] VERSION    - updates HashiCorp Consul
+    neon cluster update docker [OPTIONS] VERSION    - updates the Docker engine
+    neon cluster update images [OPTIONS]            - updates neon containers/services
+    neon cluster update linux [OPTIONS]             - updates linux on cluster nodes
+    neon cluster update vault [OPTIONS] VERSION     - updates HashiCorp Vault
 
 OPTIONS:
 
-    --force             - performs the update without prompting
+    --force     - performs the update without prompting
 
 REMARKS:
 
@@ -88,7 +91,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
             // $todo(jeff.lill):
             //
-            // We're eventually going to need a command to update Ceph services.
+            // We're eventually going to need a command to update Ceph services too.
 
             switch (command)
             {
@@ -102,6 +105,14 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                     CheckCluster(maxParallel);
                     break;
 
+                case "consul":
+
+                    throw new NotImplementedException("$todo(jeff.lill): Implement this");
+
+                case "docker":
+
+                    throw new NotImplementedException("$todo(jeff.lill): Implement this");
+
                 case "images":
 
                     UpdateImages(force, maxParallel);
@@ -111,6 +122,10 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
                     UpdateLinux(force, maxParallel);
                     break;
+
+                case "vault":
+
+                    throw new NotImplementedException("$todo(jeff.lill): Implement this");
 
                 default:
 
@@ -268,9 +283,39 @@ The current login must have ROOT PERMISSIONS to update the cluster.
             controller.AddStep("reboot nodes",
                 (node, stepDelay) =>
                 {
+                    if (node.Metadata.InSwarm)
+                    {
+                        // Give Swarm the chance to DRAIN any service tasks running
+                        // on this node.  Ideally, we'd wait for all of the service 
+                        // tasks to stop but it appears that there's no easy way to
+                        // check for this other than listing all of the cluster services
+                        // and then doing a [docker service ps SERVICE] for each until
+                        // none report running on this node.
+                        //
+                        // We're just going to hardcode a wait for 30 seconds which
+                        // should be OK since it'll take some time to actually install
+                        // the updates before we reboot and task draining can proceed
+                        // during the update.
+
+                        node.Status = "swarm: drain service tasks";
+                        node.SudoCommand($"docker node update --availability drain {node.Name}");
+                        Thread.Sleep(TimeSpan.FromSeconds(30));
+                    }
+
                     node.Reboot();
 
-                    node.Status = $"stabilizing for ({Program.WaitSeconds}s)";
+                    if (node.Metadata.InSwarm)
+                    {
+                        // Put the node back into ACTIVE mode (from DRAIN).
+
+                        node.Status = "swarm: activate";
+                        node.SudoCommand($"docker node update --availability active {node.Name}");
+                    }
+
+                    // Give the node a chance to become active again in the swarm 
+                    // for containers to restart and for service tasks to redeploy 
+
+                    node.Status = $"stabilizing ({Program.WaitSeconds}s)";
                     Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
                 },
                 parallelLimit: 1);  // Reboot the nodes one at a time.
