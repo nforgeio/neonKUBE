@@ -367,6 +367,9 @@ namespace TestCommon
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCommon)]
         public void EnumSerialization()
         {
+            //-----------------------------------------------------------------
+            // Verify enum deserialization
+
             Assert.Throws<ArgumentNullException>(() => NeonHelper.ParseEnum<TestEnum>(null));
             Assert.Throws<ArgumentException>(() => NeonHelper.ParseEnum<TestEnum>("foo"));
 
@@ -394,6 +397,15 @@ namespace TestCommon
 
             Assert.False(NeonHelper.TryParse<TestEnum>("BAD", out parsed));
 
+            Assert.Equal(TestEnum.Value1, NeonHelper.ParseEnum<TestEnum>(null, TestEnum.Value1));
+            Assert.Equal(TestEnum.Value1, NeonHelper.ParseEnum<TestEnum>(string.Empty, TestEnum.Value1));
+            Assert.Equal(TestEnum.Value1, NeonHelper.ParseEnum<TestEnum>("UNKNOWN", TestEnum.Value1));
+
+            Assert.Equal(TestEnum.Value2, NeonHelper.ParseEnum<TestEnum>(null, TestEnum.Value2));
+            Assert.Equal(TestEnum.Value2, NeonHelper.ParseEnum<TestEnum>(string.Empty, TestEnum.Value2));
+            Assert.Equal(TestEnum.Value2, NeonHelper.ParseEnum<TestEnum>("UNKNOWN", TestEnum.Value2));
+
+            //-----------------------------------------------------------------
             // Verify enum serialization too.
 
             Assert.Equal("Value1", NeonHelper.EnumToString(TestEnum.Value1));

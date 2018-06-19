@@ -1143,12 +1143,21 @@ namespace Neon.Common
         /// </summary>
         /// <typeparam name="TEnum">The enumeration type.</typeparam>
         /// <param name="input">The input string.</param>
+        /// <param name="defaultValue">
+        /// Optionally specifies the value to be returned if the input cannot
+        /// be parsed instead of throwing an exception.
+        /// </param>
         /// <returns>The parsed value.</returns>
         /// <exception cref="ArgumentNullException">Thrown if <paramref name="input"/> is <c>null</c>.</exception>
         /// <exception cref="ArgumentException">Thrown if <paramref name="input"/> is not valid.</exception>
-        public static TEnum ParseEnum<TEnum>(string input)
+        public static TEnum ParseEnum<TEnum>(string input, TEnum? defaultValue = null)
             where TEnum : struct
         {
+            if (defaultValue.HasValue && string.IsNullOrEmpty(input))
+            {
+                return defaultValue.Value;
+            }
+
             // Try parsing the enumeration using the standard mechanism.
             // Note that this does not honor any [EnumMember] attributes.
 
@@ -1168,6 +1177,11 @@ namespace Neon.Common
             }
             else
             {
+                if (defaultValue.HasValue)
+                {
+                    return defaultValue.Value;
+                }
+
                 throw new ArgumentException($"[{input}] is not a valid [{typeof(TEnum).Name}] value.");
             }
         }
