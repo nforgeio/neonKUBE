@@ -60,7 +60,7 @@ namespace Neon.Cluster
             output = null;
 
             var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
-            var value = cluster.Consul.KV.GetStringOrDefault(key).Result;
+            var value = cluster.Consul.Client.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
             {
@@ -92,7 +92,7 @@ namespace Neon.Cluster
             output = default(bool);
 
             var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
-            var value = cluster.Consul.KV.GetStringOrDefault(key).Result;
+            var value = cluster.Consul.Client.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
             {
@@ -124,7 +124,7 @@ namespace Neon.Cluster
             output = default(int);
 
             var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
-            var value = cluster.Consul.KV.GetStringOrDefault(key).Result;
+            var value = cluster.Consul.Client.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
             {
@@ -156,7 +156,7 @@ namespace Neon.Cluster
             output = default(int);
 
             var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
-            var value = cluster.Consul.KV.GetStringOrDefault(key).Result;
+            var value = cluster.Consul.Client.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
             {
@@ -188,7 +188,7 @@ namespace Neon.Cluster
             output = default(double);
 
             var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
-            var value = cluster.Consul.KV.GetStringOrDefault(key).Result;
+            var value = cluster.Consul.Client.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
             {
@@ -220,7 +220,7 @@ namespace Neon.Cluster
             output = default(TimeSpan);
 
             var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
-            var value = cluster.Consul.KV.GetStringOrDefault(key).Result;
+            var value = cluster.Consul.Client.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
             {
@@ -319,11 +319,11 @@ namespace Neon.Cluster
 
             if (value == null)
             {
-                cluster.Consul.KV.Delete(key).Wait();
+                cluster.Consul.Client.KV.Delete(key).Wait();
             }
             else
             {
-                cluster.Consul.KV.PutString(key, value).Wait();
+                cluster.Consul.Client.KV.PutString(key, value).Wait();
             }
         }
 
@@ -347,11 +347,11 @@ namespace Neon.Cluster
 
             if (value == null)
             {
-                cluster.Consul.KV.Delete(key).Wait();
+                cluster.Consul.Client.KV.Delete(key).Wait();
             }
             else
             {
-                cluster.Consul.KV.PutString(key, value.Value ? "true" : "false").Wait();
+                cluster.Consul.Client.KV.PutString(key, value.Value ? "true" : "false").Wait();
             }
         }
 
@@ -375,11 +375,11 @@ namespace Neon.Cluster
 
             if (value == null)
             {
-                cluster.Consul.KV.Delete(key).Wait();
+                cluster.Consul.Client.KV.Delete(key).Wait();
             }
             else
             {
-                cluster.Consul.KV.PutString(key, value.Value.ToString()).Wait();
+                cluster.Consul.Client.KV.PutString(key, value.Value.ToString()).Wait();
             }
         }
 
@@ -403,11 +403,11 @@ namespace Neon.Cluster
 
             if (value == null)
             {
-                cluster.Consul.KV.Delete(key).Wait();
+                cluster.Consul.Client.KV.Delete(key).Wait();
             }
             else
             {
-                cluster.Consul.KV.PutString(key, value.Value.ToString()).Wait();
+                cluster.Consul.Client.KV.PutString(key, value.Value.ToString()).Wait();
             }
         }
 
@@ -431,11 +431,11 @@ namespace Neon.Cluster
 
             if (value == null)
             {
-                cluster.Consul.KV.Delete(key).Wait();
+                cluster.Consul.Client.KV.Delete(key).Wait();
             }
             else
             {
-                cluster.Consul.KV.PutString(key, value.Value.ToString()).Wait();
+                cluster.Consul.Client.KV.PutString(key, value.Value.ToString()).Wait();
             }
         }
 
@@ -459,11 +459,11 @@ namespace Neon.Cluster
 
             if (value == null)
             {
-                cluster.Consul.KV.Delete(key).Wait();
+                cluster.Consul.Client.KV.Delete(key).Wait();
             }
             else
             {
-                cluster.Consul.KV.PutString(key, value.Value.ToString()).Wait();
+                cluster.Consul.Client.KV.PutString(key, value.Value.ToString()).Wait();
             }
         }
     }

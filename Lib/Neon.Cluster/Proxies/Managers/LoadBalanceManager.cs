@@ -66,7 +66,7 @@ namespace Neon.Cluster
         /// <returns>The <see cref="LoadBalancerSettings"/>.</returns>
         public LoadBalancerSettings GetSettings()
         {
-            return cluster.Consul.KV.GetObject<LoadBalancerSettings>(GetProxySettingsKey()).Result;
+            return cluster.Consul.Client.KV.GetObject<LoadBalancerSettings>(GetProxySettingsKey()).Result;
         }
 
         /// <summary>
@@ -77,7 +77,7 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
 
-            cluster.Consul.KV.PutObject(GetProxySettingsKey(), settings, Formatting.Indented).Wait();
+            cluster.Consul.Client.KV.PutObject(GetProxySettingsKey(), settings, Formatting.Indented).Wait();
             cluster.SignalLoadBalancerUpdate();
         }
 
@@ -93,9 +93,9 @@ namespace Neon.Cluster
             var proxyDefinition  = new LoadBalancerDefinition() { Name = this.Name };
             var proxySettingsKey = GetProxySettingsKey();
 
-            if (cluster.Consul.KV.Exists(proxySettingsKey).Result)
+            if (cluster.Consul.Client.KV.Exists(proxySettingsKey).Result)
             {
-                proxyDefinition.Settings = LoadBalancerSettings.ParseJson(cluster.Consul.KV.GetString(proxySettingsKey).Result);
+                proxyDefinition.Settings = LoadBalancerSettings.ParseJson(cluster.Consul.Client.KV.GetString(proxySettingsKey).Result);
             }
             else
             {
@@ -115,8 +115,8 @@ namespace Neon.Cluster
         /// </summary>
         public void Build()
         {
-            cluster.Consul.KV.PutString($"{proxyManagerPrefix}/proxies/{Name}/hash", Convert.ToBase64String(new byte[16])).Wait();
-            cluster.Consul.KV.PutString($"{proxyManagerPrefix}/conf/reload", DateTime.UtcNow).Wait();
+            cluster.Consul.Client.KV.PutString($"{proxyManagerPrefix}/proxies/{Name}/hash", Convert.ToBase64String(new byte[16])).Wait();
+            cluster.Consul.Client.KV.PutString($"{proxyManagerPrefix}/conf/reload", DateTime.UtcNow).Wait();
         }
 
         /// <summary>
@@ -130,9 +130,9 @@ namespace Neon.Cluster
 
             var ruleKey = GetProxyRuleKey(ruleName);
 
-            if (cluster.Consul.KV.Exists(ruleKey).Result)
+            if (cluster.Consul.Client.KV.Exists(ruleKey).Result)
             {
-                cluster.Consul.KV.Delete(ruleKey);
+                cluster.Consul.Client.KV.Delete(ruleKey);
                 cluster.SignalLoadBalancerUpdate();
 
                 return true;
@@ -154,9 +154,9 @@ namespace Neon.Cluster
 
             var ruleKey = GetProxyRuleKey(ruleName);
 
-            if (cluster.Consul.KV.Exists(ruleKey).Result)
+            if (cluster.Consul.Client.KV.Exists(ruleKey).Result)
             {
-                return LoadBalancerRule.ParseJson(cluster.Consul.KV.GetString(ruleKey).Result);
+                return LoadBalancerRule.ParseJson(cluster.Consul.Client.KV.GetString(ruleKey).Result);
             }
             else
             {
@@ -179,7 +179,7 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(ClusterDefinition.IsValidName(rule.Name));
 
             var ruleKey = GetProxyRuleKey(rule.Name);
-            var update  = cluster.Consul.KV.Exists(ruleKey).Result;
+            var update  = cluster.Consul.Client.KV.Exists(ruleKey).Result;
 
             // Load the the full proxy definition and cluster certificates, add/replace
             // the rule being set and then verify that the rule is OK.
@@ -197,7 +197,7 @@ namespace Neon.Cluster
             // Save the rule to the cluster and signal that the
             // load balancers need to be updated.
 
-            cluster.Consul.KV.PutObject(ruleKey, rule, Formatting.Indented).Wait();
+            cluster.Consul.Client.KV.PutObject(ruleKey, rule, Formatting.Indented).Wait();
             cluster.SignalLoadBalancerUpdate();
 
             return update;
@@ -210,7 +210,7 @@ namespace Neon.Cluster
         /// <returns>The <see cref="IEnumerable{T}"/> of load balancer rules.</returns>
         public IEnumerable<LoadBalancerRule> ListRules(Func<LoadBalancerRule, bool> predicate = null)
         {
-            var rulesResponse = cluster.Consul.KV.ListOrDefault<JObject>($"{proxyManagerPrefix}/conf/{Name}/rules/").Result;
+            var rulesResponse = cluster.Consul.Client.KV.ListOrDefault<JObject>($"{proxyManagerPrefix}/conf/{Name}/rules/").Result;
 
             if (rulesResponse != null)
             {

@@ -50,7 +50,7 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
 
-            cluster.Consul.KV.Delete(GetDashboardConsulKey(name)).Wait();
+            cluster.Consul.Client.KV.Delete(GetDashboardConsulKey(name)).Wait();
         }
 
         /// <summary>
@@ -62,7 +62,7 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
 
-            return cluster.Consul.KV.GetObjectOrDefault<ClusterDashboard>(GetDashboardConsulKey(name)).Result;
+            return cluster.Consul.Client.KV.GetObjectOrDefault<ClusterDashboard>(GetDashboardConsulKey(name)).Result;
 
         }
 
@@ -72,7 +72,7 @@ namespace Neon.Cluster
         /// <returns>The cluster dashboards.</returns>
         public List<ClusterDashboard> List()
         {
-            var result = cluster.Consul.KV.ListOrDefault<ClusterDashboard>(NeonClusterConst.ConsulDashboardsKey).Result;
+            var result = cluster.Consul.Client.KV.ListOrDefault<ClusterDashboard>(NeonClusterConst.ConsulDashboardsKey).Result;
 
             if (result == null)
             {
@@ -100,7 +100,7 @@ namespace Neon.Cluster
                 throw new ClusterDefinitionException($"Invalid dashboard: {errors.First()}");
             }
 
-            cluster.Consul.KV.PutObject(GetDashboardConsulKey(dashboard.Name), dashboard, Formatting.Indented).Wait();
+            cluster.Consul.Client.KV.PutObject(GetDashboardConsulKey(dashboard.Name), dashboard, Formatting.Indented).Wait();
         }
 
         /// <summary>

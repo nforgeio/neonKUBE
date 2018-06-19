@@ -15,9 +15,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
+using Consul;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
-using Consul;
 
 using Neon.Common;
 using Neon.Docker;
@@ -61,8 +61,6 @@ namespace Neon.Cluster
         //---------------------------------------------------------------------
         // Implementation
 
-        private object                                                      syncRoot = new object();
-        private ConsulClient                                                consulClient;
         private RunOptions                                                  defaultRunOptions;
         private Func<string, string, IPAddress, SshProxy<NodeDefinition>>   nodeProxyCreator;
 
@@ -154,6 +152,7 @@ namespace Neon.Cluster
             this.PrivateLoadBalancer = new LoadBalanceManager(this, "private");
             this.Registry            = new RegistryManager(this);
             this.Globals             = new GlobalsManager(this);
+            this.Consul              = new ConsulManager(this);
             this.Vault               = new VaultManager(this);
 
             CreateNodes();
@@ -174,16 +173,8 @@ namespace Neon.Cluster
         /// <param name="disposing">Pass <c>true</c> if we're disposing, <c>false</c> if we're finalizing.</param>
         protected virtual void Dispose(bool disposing)
         {
-            lock (syncRoot)
-            {
-                if (consulClient != null)
-                {
-                    consulClient.Dispose();
-                    consulClient = null;
-                }
-
-                Vault.Dispose();
-            }
+            Consul.Dispose();
+            Vault.Dispose();
         }
 
         /// <summary>
@@ -276,9 +267,14 @@ namespace Neon.Cluster
         public RegistryManager Registry { get; private set; }
 
         /// <summary>
-        /// Manages the cluster's global settings.
+        /// Manages the cluster's global setting manager.
         /// </summary>
         public GlobalsManager Globals { get; private set; }
+
+        /// <summary>
+        /// Returns the cluster's Consul manager.
+        /// </summary>
+        public ConsulManager Consul { get; private set; }
 
         /// <summary>
         /// Manages the cluster Vault.
@@ -497,35 +493,13 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Returns a Consul client.
-        /// </summary>
-        /// <returns>The <see cref="ConsulClient"/>.</returns>
-        public ConsulClient Consul
-        {
-            get
-            {
-                lock (syncRoot)
-                {
-                    if (consulClient != null)
-                    {
-                        return consulClient;
-                    }
-
-                    consulClient = NeonClusterHelper.OpenConsul();
-                }
-
-                return consulClient;
-            }
-        }
-
-        /// <summary>
         /// Indicates that the cluster certificates and or load balancer rules may have been changed.
         /// This has the effect of signalling <b>neon-proxy-manager</b> to to regenerate the proxy 
         /// definitions and update all of the load balancers when changes are detected.
         /// </summary>
         public void SignalLoadBalancerUpdate()
         {
-            Consul.KV.PutString("neon/service/neon-proxy-manager/conf/reload", Guid.NewGuid().ToString("D")).Wait();
+            Consul.Client.KV.PutString("neon/service/neon-proxy-manager/conf/reload", Guid.NewGuid().ToString("D")).Wait();
         }
     }
 }

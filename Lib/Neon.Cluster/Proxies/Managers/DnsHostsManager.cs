@@ -129,7 +129,7 @@ namespace Neon.Cluster
 
             hostname = hostname.ToLowerInvariant();
 
-            return cluster.Consul.KV.GetObjectOrDefault<DnsEntry>($"{NeonClusterConst.ConsulDnsEntriesKey}/{hostname}").Result;
+            return cluster.Consul.Client.KV.GetObjectOrDefault<DnsEntry>($"{NeonClusterConst.ConsulDnsEntriesKey}/{hostname}").Result;
         }
 
         /// <summary>
@@ -141,9 +141,9 @@ namespace Neon.Cluster
         {
             var list = new List<DnsEntry>();
 
-            foreach (var key in cluster.Consul.KV.ListKeys(NeonClusterConst.ConsulDnsEntriesKey, ConsulListMode.PartialKey).Result)
+            foreach (var key in cluster.Consul.Client.KV.ListKeys(NeonClusterConst.ConsulDnsEntriesKey, ConsulListMode.PartialKey).Result)
             {
-                var entry = cluster.Consul.KV.GetObjectOrDefault<DnsEntry>($"{NeonClusterConst.ConsulDnsEntriesKey}/{key}").Result;
+                var entry = cluster.Consul.Client.KV.GetObjectOrDefault<DnsEntry>($"{NeonClusterConst.ConsulDnsEntriesKey}/{key}").Result;
 
                 if (entry == null)
                 {
@@ -174,7 +174,7 @@ namespace Neon.Cluster
 
             hostname = hostname.ToLowerInvariant();
 
-            cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulDnsEntriesKey}/{hostname}").Wait();
+            cluster.Consul.Client.KV.Delete($"{NeonClusterConst.ConsulDnsEntriesKey}/{hostname}").Wait();
 
             if (waitUntilPropagated)
             {
@@ -227,7 +227,7 @@ namespace Neon.Cluster
 
             var hostname = entry.Hostname.ToLowerInvariant();
 
-            cluster.Consul.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{hostname}", entry).Wait();
+            cluster.Consul.Client.KV.PutObject($"{NeonClusterConst.ConsulDnsEntriesKey}/{hostname}", entry).Wait();
 
             if (waitUntilPropagated)
             {
@@ -241,7 +241,7 @@ namespace Neon.Cluster
         /// <returns>The answers dictionary.</returns>
         public Dictionary<string, List<string>> GetAnswers()
         {
-            var hosts  = cluster.Consul.KV.GetStringOrDefault(NeonClusterConst.ConsulDnsHostsKey).Result;
+            var hosts  = cluster.Consul.Client.KV.GetStringOrDefault(NeonClusterConst.ConsulDnsHostsKey).Result;
             var answers = new Dictionary<string, List<string>>(StringComparer.InvariantCultureIgnoreCase);
 
             if (hosts == null)

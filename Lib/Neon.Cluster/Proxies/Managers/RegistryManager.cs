@@ -267,7 +267,7 @@ namespace Neon.Cluster
         /// <returns>The hostname or <c>null</c>.</returns>
         public string GetLocalHostname()
         {
-            return cluster.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Result;
+            return cluster.Consul.Client.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Result;
         }
 
         /// <summary>
@@ -280,11 +280,11 @@ namespace Neon.Cluster
 
             if (string.IsNullOrEmpty(hostname))
             {
-                cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Wait();
+                cluster.Consul.Client.KV.Delete($"{NeonClusterConst.ConsulRegistryRootKey}/hostname").Wait();
             }
             else
             {
-                cluster.Consul.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/hostname", hostname).Wait();
+                cluster.Consul.Client.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/hostname", hostname).Wait();
             }
         }
 
@@ -295,7 +295,7 @@ namespace Neon.Cluster
         /// <returns>The hostname or <c>null</c>.</returns>
         public string GetLocalSecret()
         {
-            return cluster.Consul.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Result;
+            return cluster.Consul.Client.KV.GetStringOrDefault($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Result;
         }
 
         /// <summary>
@@ -306,11 +306,11 @@ namespace Neon.Cluster
         {
             if (string.IsNullOrEmpty(secret))
             {
-                cluster.Consul.KV.Delete($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Wait();
+                cluster.Consul.Client.KV.Delete($"{NeonClusterConst.ConsulRegistryRootKey}/secret").Wait();
             }
             else
             {
-                cluster.Consul.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/secret", secret).Wait();
+                cluster.Consul.Client.KV.PutString($"{NeonClusterConst.ConsulRegistryRootKey}/secret", secret).Wait();
             }
         }
 

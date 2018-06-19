@@ -59,7 +59,7 @@ namespace Neon.Cluster
 
             // Load the cluster globals.
 
-            var globals   = cluster.Consul.KV.DictionaryOrEmpty(NeonClusterConst.ClusterGlobalsKey).Result;
+            var globals   = cluster.Consul.Client.KV.DictionaryOrEmpty(NeonClusterConst.ClusterGlobalsKey).Result;
             var internals = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
             {
                 // We don't include these internal globals in the summary.
