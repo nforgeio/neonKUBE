@@ -46,6 +46,7 @@ namespace Neon.Cluster
         /// </summary>
         [JsonProperty(PropertyName = "Debug", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.Include)]
         [DefaultValue(false)]
+        [Obsolete("Deprecated: Use the [neon-cli --debug] option instead.", error:true)]
         public bool Debug { get; set; } = false;
 
         /// <summary>

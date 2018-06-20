@@ -148,6 +148,7 @@ ARGUMENTS:
 OPTIONS:
 
     --help                              - Display help
+    --debug                             - Set debug mode
     --image-tag=TAG                     - Replaces any [:latest] Docker image
                                           tags when deploying a cluster (usually
                                           for development/testing purposes)
@@ -230,6 +231,7 @@ Note that the tool may require admin privileges for [--noshim] mode.
                 validOptions.Add("--image-tag");
                 validOptions.Add("--noterminal");
                 validOptions.Add("--version");
+                validOptions.Add("--debug");
 
                 if (CommandLine.Arguments.Length == 0)
                 {
@@ -363,6 +365,10 @@ Note that the tool may require admin privileges for [--noshim] mode.
 
                     Directory.CreateDirectory(LogPath);
                 }
+
+                // Handle other options.
+
+                Debug = CommandLine.HasOption("--debug");
 
                 // Locate the command.
 
@@ -1160,6 +1166,11 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
         /// Indicates whether operation progress output is to be suppressed.
         /// </summary>
         public static bool Quiet { get; set; }
+
+        /// <summary>
+        /// Runs the command in DEBUG mode.
+        /// </summary>
+        public static bool Debug { get; set; }
 
         /// <summary>
         /// Indicates whether the tool executes the command directly (when <c>true</c>) or
