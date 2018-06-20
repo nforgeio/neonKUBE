@@ -740,7 +740,7 @@ OPTIONS:
             // completed.  These steps are implicitly idempotent and
             // complete pretty quickly.
 
-            if (cluster.Definition.Setup.Debug)
+            if (Program.Debug)
             {
                 ConfigureBasic(node);
             }
@@ -753,7 +753,7 @@ OPTIONS:
                 {
                     Thread.Sleep(stepDelay);
 
-                    if (!cluster.Definition.Setup.Debug)
+                    if (!Program.Debug)
                     {
                         ConfigureBasic(node);
                     }
