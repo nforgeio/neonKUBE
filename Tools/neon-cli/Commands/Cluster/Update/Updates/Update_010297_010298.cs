@@ -57,6 +57,15 @@ namespace NeonCli
         {
             Thread.Sleep(stepDelay);
 
+            // Prevent the package manager from automatically updating Docker.
+
+            node.InvokeIdempotentAction(GetIdempotentTag("disable-docker-auto-update"),
+                () =>
+                {
+                    node.Status = "disable docker auto update";
+                    node.SudoCommand("apt-mark hold docker");
+                });
+
             // We need to install the [mmv] package so we can use it to easily
             // rename files.  We've also added this to the [setup-node] script
             // so it will be available for all new clusters going forward.
@@ -114,6 +123,37 @@ namespace NeonCli
                     }
 
                     node.Status = string.Empty;
+                });
+
+            // We need to copy some systemd unit files into the drop-in folder so that
+            // updating packages on the host won't blow away any customizations.  This
+            // was really impacting Docker, which would restart outside of the swarm
+            // with no containers after an update.  We'd probably see the same behavior
+            // for other customized services.
+
+            node.InvokeIdempotentAction(GetIdempotentTag("systemd-drop-ins"),
+                () =>
+                {
+                    var unitFiles = new string[]
+                    {
+                        "ceph-mds@.service",
+                        "ceph-mgr@.service",
+                        "ceph-mgrs@.service",
+                        "ceph-mon@.service",
+                        "ceph-osd@.service",
+                        "docker.service",
+                        "openvpn@.service"
+                    };
+
+                    foreach (var unitFile in unitFiles)
+                    {
+                        node.SudoCommand($"cp /lib/systemd/system/{unitFile} /etc/systemd/system{unitFile}");
+                        node.SudoCommand($"chmod 644 /etc/systemd/system{unitFile}");
+                    }
+
+                    // Update systemd
+
+                    node.SudoCommand("systemctl daemon-reload");
                 });
         }
 
