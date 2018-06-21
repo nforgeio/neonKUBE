@@ -15,7 +15,9 @@
 #
 # OPTIONS:
 #
-#	-noshim	            - Optionally prevents [neon-cli] from shimming into Docker.
+#   -noshim             - Run [neon-cli] in [--noshim] mode.
+#
+#	-debugsetup			- Run cluster prepare and setup in DEBUG mode.
 #
 #	-skipPrepare		- Skip the cluster prepare step.
 #
@@ -31,6 +33,7 @@ param
     [parameter(Mandatory=$True,Position=1)][string] $clusterName,
 	[parameter(Mandatory=$False, Position=2)]  [string] $imageTag = "",
     [switch] $noshim           = $False,
+	[switch] $debugsetup       = $False,
     [switch] $skipPrepare      = $False,
     [switch] $skipSetup        = $False,
     [switch] $skipCoreServices = $False,
@@ -47,6 +50,11 @@ cd "$env:NF_ROOT\Devops\test"
 if ($noshim)
 {
 	$env:SETUP_NOSHIM = "--noshim"
+}
+
+if ($debugsetup)
+{
+    $env:SETUP_DEBUG = "--debug"
 }
 
 if ($imageTag -ne "")

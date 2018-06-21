@@ -29,6 +29,7 @@ if ($env:SETUP_SKIP_PREPARE -ne "true")
 {
 	neon cluster prepare `
 		$env:SETUP_NOSHIM `
+	    $env:SETUP_DEBUG `
 		--machine-username="$env:CLUSTER_NODE_TEMPLATE_USERNAME" `
 		--machine-password="$env:CLUSTER_NODE_TEMPLATE_PASSWORD" `
 		--log-folder="$env:CLUSTER_LOG_FOLDER" `
@@ -47,6 +48,7 @@ if ($env:SETUP_SKIP_SETUP -ne "true")
 {
 	neon cluster setup `
 		$env:SETUP_NOSHIM `
+	    $env:SETUP_DEBUG `
 		$env:SETUP_IMAGE_TAG `
 		--machine-username="$env:CLUSTER_NODE_TEMPLATE_USERNAME" `
 		--machine-password="$env:CLUSTER_NODE_TEMPLATE_PASSWORD" `
