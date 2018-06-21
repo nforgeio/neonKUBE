@@ -1817,14 +1817,14 @@ StartLimitBurst=1051200";
 
                     //---------------------------------------------------------
                     // The default Ceph service systemd unit files don't try very
-                    // hard to restart after failures so we're going to overwrite 
-                    // them with our own versions.
+                    // hard to restart after failures so we're going to upload
+                    // systemd unit drop-in files with our changes.
 
                     string unitPath;
 
                     // Ceph-MDS
 
-                    unitPath = "/lib/systemd/system/ceph-mds@.service";
+                    unitPath = "/etc/systemd/system/ceph-mds@.service";
 
                     node.UploadText(unitPath,
 $@"[Unit]
@@ -1855,7 +1855,7 @@ WantedBy=ceph-mds.target
 
                     // Ceph-MGR
 
-                    unitPath = "/lib/systemd/system/ceph-mgr@.service";
+                    unitPath = "/etc/systemd/system/ceph-mgr@.service";
 
                     node.UploadText(unitPath,
 $@"[Unit]
@@ -1882,7 +1882,7 @@ WantedBy=ceph-mgr.target
 
                     // Ceph-MGRS
 
-                    unitPath = "/lib/systemd/system/ceph-mgrs@.service";
+                    unitPath = "/etc/systemd/system/ceph-mgrs@.service";
 
                     node.UploadText(unitPath,
 $@"[Unit]
@@ -1910,7 +1910,7 @@ WantedBy=ceph-mgr.target
 
                     // Ceph-MON
 
-                    unitPath = "/lib/systemd/system/ceph-mon@.service";
+                    unitPath = "/etc/systemd/system/ceph-mon@.service";
 
                     node.UploadText(unitPath,
 $@"[Unit]
@@ -1947,7 +1947,7 @@ WantedBy=ceph-mon.target
 
                     // Ceph-OSD
 
-                    unitPath = "/lib/systemd/system/ceph-osd@.service";
+                    unitPath = "/etc/systemd/system/ceph-osd@.service";
 
                     node.UploadText(unitPath,
 $@"[Unit]
@@ -2633,7 +2633,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
                 () =>
                 {
                     node.Status = "create fuse service";
-                    node.UploadText("/lib/systemd/system/ceph-fuse-neonfs.service",
+                    node.UploadText("/etc/systemd/system/ceph-fuse-neonfs.service",
 $@"[Unit]
 Description=Ceph FUSE client (for /mnt/neonfs)
 After=network-online.target local-fs.target time-sync.target
@@ -2653,7 +2653,7 @@ TasksMax=infinity
 WantedBy=ceph-fuse.target
 WantedBy=docker.service
 ");
-                    node.SudoCommand("chmod 644 /lib/systemd/system/ceph-fuse-neonfs.service");
+                    node.SudoCommand("chmod 644 /etc/systemd/system/ceph-fuse-neonfs.service");
                     node.SudoCommand($"systemctl enable ceph-fuse-neonfs.service");
                 });
 

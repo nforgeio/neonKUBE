@@ -708,7 +708,7 @@ verb 4
                 };
 
             // Upload the initial (empty) Certificate Revocation List (CRL) file and then 
-            // overwrite the OpenVPN systemd file so that it will recognize revoked certificates.
+            // upload a OpenVPN systemd unit drop-in so that it will recognize revoked certificates.
 
             manager.UploadText("/etc/openvpn/crl.pem", vpnCaFiles.GetFile("crl.pem"));
             manager.SudoCommand("chmod 664", "/etc/openvpn/crl.pem");    // OpenVPN needs to be able to read this after having its privileges downgraded.
@@ -740,8 +740,13 @@ DeviceAllow=/dev/net/tun rw
 [Install]
 WantedBy=multi-user.target
 ";
-            manager.UploadText("/lib/systemd/system/openvpn@.service", openVpnUnit);
-            manager.SudoCommand("chmod 644 /lib/systemd/system/openvpn@.service");
+            manager.UploadText("/etc/systemd/system/openvpn@.service", openVpnUnit);
+            manager.SudoCommand("chmod 644 /etc/systemd/system/openvpn@.service");
+
+            // Do a daemon-reload so systemd will be aware of the new drop-in.
+
+            manager.SudoCommand("systemctl disable openvpn");
+            manager.SudoCommand("systemctl daemon-reload");
 
             // Enable and restart OpenVPN.
 
