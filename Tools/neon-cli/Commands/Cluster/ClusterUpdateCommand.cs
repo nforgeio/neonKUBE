@@ -192,7 +192,9 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                 ShowStatus  = !Program.Quiet
             };
 
-            var pendingLinuxPackages = new HashSet<string>();
+            var syncLock           = new object();
+            var maxUpdates         = 0;
+            var maxSecurityUpdates = 0;
 
             controller.AddStep("get pending linux updates",
                 (node, stepDelay) =>
@@ -202,21 +204,24 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                     node.Status = "run: apt-get update";
                     node.SudoCommand("apt-get update");
 
-                    node.Status  = "run: apt-get list --upgradable";
-                    var response = node.SudoCommand("apt-get update");
+                    node.Status  = "run: apt-check";
+                    var response = node.SudoCommand("/usr/lib/update-notifier/apt-check");
 
-                    using (var reader = new StringReader(response.OutputText))
+                    // This command returns the total number of updates and
+                    // the security updates like: TOTAL;SECURITY.
+
+                    var fields = response.ErrorText.Trim().Split(';');
+
+                    if (fields.Length < 2 || !int.TryParse(fields[0], out var updates) || !int.TryParse(fields[1], out var securityUpdates))
                     {
-                        foreach (var line in reader.Lines().Where(l => l.Trim().Length > 0))
-                        {
-                            lock (pendingLinuxPackages)
-                            {
-                                if (!pendingLinuxPackages.Contains(line))
-                                {
-                                    pendingLinuxPackages.Add(line);
-                                }
-                            }
-                        }
+                        node.Fault($"Unexpected update response: {response.OutputText}");
+                        return;
+                    }
+
+                    lock (syncLock)
+                    {
+                        maxUpdates         = Math.Max(maxUpdates, updates);
+                        maxSecurityUpdates = Math.Max(maxSecurityUpdates, securityUpdates);
                     }
                 });
 
@@ -230,17 +235,19 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
             var title = $"[{cluster.Name}] cluster";
 
+            Console.WriteLine();
             Console.WriteLine(title);
             Console.WriteLine(new string('-', title.Length));
 
-            if (pendingUpdateCount == 0 && pendingLinuxPackages.Count == 0)
+            if (pendingUpdateCount == 0 && maxUpdates == 0)
             {
                 Console.WriteLine("Cluster is up to date.");
             }
             else
             {
-                Console.WriteLine($"Pending neonCLUSTER updates: [{pendingUpdateCount}]");
-                Console.WriteLine($"Pending Linux updates:       [{pendingLinuxPackages.Count}]");
+                Console.WriteLine($"neonCLUSTER updates:    {pendingUpdateCount}");
+                Console.WriteLine($"Linux total updates:    {maxUpdates}");
+                Console.WriteLine($"Linux security updates: {maxSecurityUpdates}");
             }
 
             Program.Exit(0);
