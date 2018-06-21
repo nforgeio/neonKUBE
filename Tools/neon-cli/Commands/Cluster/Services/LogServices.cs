@@ -411,7 +411,7 @@ $@"
             steps.Add(ActionStep.Create(cluster.FirstManager.Name, operationName: null,
                 node =>
                 {
-                    node.Status = "waiting for elasticsearch cluster";
+                    node.Status = "wait for elasticsearch cluster";
 
                     using (var jsonClient = new JsonClient())
                     {

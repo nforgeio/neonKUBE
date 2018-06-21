@@ -3427,7 +3427,7 @@ chmod 666 /dev/shm/ssh/ssh.fingerprint
 
                     if (sshTlsAuth)
                     {
-                        node.Status = "set client SSH key";
+                        node.Status = "client SSH key";
 
                         // Enable the public key by appending it to [$HOME/.ssh/authorized_keys],
                         // creating the file if necessary.  Note that we're allowing only a single
