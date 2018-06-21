@@ -125,7 +125,7 @@ chmod 700 /usr/local/bin/vault-server
 
 echo "***     Generating Vault systemd unit" 1>&2
 
-cat <<EOF > /lib/systemd/system/vault.service
+cat <<EOF > /etc/systemd/system/vault.service
 # HashiCorp Vault systemd unit file.
 
 [Unit]

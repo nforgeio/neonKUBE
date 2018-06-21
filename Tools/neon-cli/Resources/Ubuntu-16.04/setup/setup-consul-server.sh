@@ -79,7 +79,7 @@ chmod 770 /mnt-data/consul
 
 echo "*** Generating Consul Server systemd service unit" 1>&2
 
-cat <<EOF > /lib/systemd/system/consul.service
+cat <<EOF > /etc/systemd/system/consul.service
 [Unit]
 Description=Consul Server service
 Documentation=
@@ -95,8 +95,6 @@ ExecReload=/bin/kill -s HUP \$MAINPID
 [Install]
 WantedBy=multi-user.target
 EOF
-
-cp /lib/systemd/system/consul.service /lib/systemd/system/consul.service.org
 
 #------------------------------------------------------------------------------
 # Generate a small script that we'll use to start Consul.  We're doing this so
@@ -127,7 +125,7 @@ safeinvoke systemctl start consul
 # to prevent problems with key ring conflicts after the Consul cluster has
 # been formed and Consul is restarted.
 
-cat <<EOF > /lib/systemd/system/consul.service
+cat <<EOF > /etc/systemd/system/consul.service
 [Unit]
 Description=Consul Proxy service
 Documentation=

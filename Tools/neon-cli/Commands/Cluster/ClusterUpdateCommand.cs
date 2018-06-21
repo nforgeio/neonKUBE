@@ -91,7 +91,11 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
             // $todo(jeff.lill):
             //
-            // We're eventually going to need a command to update Ceph services too.
+            // We're eventually going to need a command to update Ceph 
+            // service for major releases (revision updates are handled
+            // by the Linux package manager).
+
+            Console.WriteLine();
 
             switch (command)
             {

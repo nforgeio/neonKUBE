@@ -96,7 +96,7 @@ EOF
 
 # Restrict this to ROOT because it may include an encryption key.
 
-chmod 700 /lib/systemd/system/consul.service
+chmod 700 /etc/systemd/system/consul.service
 
 #------------------------------------------------------------------------------
 # Configure and then start the Consul service for the first time.  This will
@@ -112,7 +112,7 @@ safeinvoke systemctl start consul
 # to prevent problems with key ring conflicts after the Consul cluster has
 # been formed and Consul is restarted.
 
-cat <<EOF > /lib/systemd/system/consul.service
+cat <<EOF > /etc/systemd/system/consul.service
 [Unit]
 Description=Consul Proxy service
 Documentation=

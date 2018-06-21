@@ -142,7 +142,8 @@ namespace NeonCli
                         "ceph-mon@.service",
                         "ceph-osd@.service",
                         "docker.service",
-                        "openvpn@.service"
+                        "openvpn@.service",
+                        "vault.service"
                     };
 
                     foreach (var unitFile in unitFiles)
