@@ -77,7 +77,7 @@ chmod 770 /mnt-data/consul
 
 echo "*** Generating Consul Proxy systemd service unit" 1>&2
 
-cat <<EOF > /lib/systemd/system/consul.service
+cat <<EOF > /etc/systemd/system/consul.service
 [Unit]
 Description=Consul Proxy service
 Documentation=
