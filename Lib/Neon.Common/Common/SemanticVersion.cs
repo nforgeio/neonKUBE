@@ -135,17 +135,20 @@ namespace Neon.Common
                 {
                     case 0:
 
-                        version.Major = (int)v;
+                        version.Major      = (int)v;
+                        version.majorValue = verParts[i];
                         break;
 
                     case 1:
 
-                        version.Minor = (int)v;
+                        version.Minor      = (int)v;
+                        version.minorValue = verParts[i];
                         break;
 
                     case 2:
 
-                        version.Patch = (int)v;
+                        version.Patch      = (int)v;
+                        version.patchValue = verParts[i];
                         break;
                 }
             }
@@ -404,6 +407,15 @@ namespace Neon.Common
         //---------------------------------------------------------------------
         // Instance members
 
+        // We need to retain the original version strings so we can serialize
+        // the version into the same format the we parsed originally.  For example,
+        // we want to retain the leading 0 in the minor version of "1.01.0" and
+        // also render "1.1" back as "1.0" rather than "1.0.0".
+
+        private string majorValue;
+        private string minorValue;
+        private string patchValue;
+
         /// <summary>
         /// Private constructor.
         /// </summary>
@@ -441,19 +453,63 @@ namespace Neon.Common
         {
             if (Prerelease == null && Build == null)
             {
-                return $"{Major}.{Minor}.{Patch}";
+                if (majorValue != null && minorValue != null && patchValue != null)
+                {
+                    return $"{majorValue}.{minorValue}.{patchValue}";
+                }
+                else if (minorValue != null)
+                {
+                    return $"{majorValue}.{minorValue}";
+                }
+                else
+                {
+                    return $"{majorValue}";
+                }
             }
             else if (Prerelease != null && Build == null)
             {
-                return $"{Major}.{Minor}.{Patch}-{Prerelease}";
+                if (majorValue != null && minorValue != null && patchValue != null)
+                {
+                    return $"{majorValue}.{minorValue}.{patchValue}-{Prerelease}";
+                }
+                else if (minorValue != null)
+                {
+                    return $"{majorValue}.{minorValue}-{Prerelease}";
+                }
+                else
+                {
+                    return $"{majorValue}-{Prerelease}";
+                }
             }
             else if (Prerelease == null && Build != null)
             {
-                return $"{Major}.{Minor}.{Patch}+{Build}";
+                if (majorValue != null && minorValue != null && patchValue != null)
+                {
+                    return $"{majorValue}.{minorValue}.{patchValue}+{Build}";
+                }
+                else if (minorValue != null)
+                {
+                    return $"{majorValue}.{minorValue}+{Build}";
+                }
+                else
+                {
+                    return $"{majorValue}+{Build}";
+                }
             }
             else
             {
-                return $"{Major}.{Minor}.{Patch}-{Prerelease}+{Build}";
+                if (majorValue != null && minorValue != null && patchValue != null)
+                {
+                    return $"{majorValue}.{minorValue}.{patchValue}-{Prerelease}+{Build}";
+                }
+                else if (minorValue != null)
+                {
+                    return $"{majorValue}.{minorValue}-{Prerelease}+{Build}";
+                }
+                else
+                {
+                    return $"{majorValue}-{Prerelease}+{Build}";
+                }
             }
         }
 

@@ -637,6 +637,33 @@ namespace TestCommon
         }
 
         [Fact]
+        public void RoundTrip()
+        {
+            Assert.Equal("1", (string)SemanticVersion.Parse("1"));
+            Assert.Equal("1-alpha", (string)SemanticVersion.Parse("1-alpha"));
+            Assert.Equal("1+build", (string)SemanticVersion.Parse("1+build"));
+            Assert.Equal("1-alpha+build", (string)SemanticVersion.Parse("1-alpha+build"));
+
+            Assert.Equal("1.2", (string)SemanticVersion.Parse("1.2"));
+            Assert.Equal("1.02", (string)SemanticVersion.Parse("1.02"));
+            Assert.Equal("1.2-alpha", (string)SemanticVersion.Parse("1.2-alpha"));
+            Assert.Equal("1.02-alpha", (string)SemanticVersion.Parse("1.02-alpha"));
+            Assert.Equal("1.2+build", (string)SemanticVersion.Parse("1.2+build"));
+            Assert.Equal("1.02+build", (string)SemanticVersion.Parse("1.02+build"));
+            Assert.Equal("1.2-alpha+build", (string)SemanticVersion.Parse("1.2-alpha+build"));
+            Assert.Equal("1.02-alpha+build", (string)SemanticVersion.Parse("1.02-alpha+build"));
+
+            Assert.Equal("1.2.3", (string)SemanticVersion.Parse("1.2.3"));
+            Assert.Equal("1.02.03", (string)SemanticVersion.Parse("1.02.03"));
+            Assert.Equal("1.2.3-alpha", (string)SemanticVersion.Parse("1.2.3-alpha"));
+            Assert.Equal("1.02.03-alpha", (string)SemanticVersion.Parse("1.02.03-alpha"));
+            Assert.Equal("1.2.3+build", (string)SemanticVersion.Parse("1.2.3+build"));
+            Assert.Equal("1.02.03+build", (string)SemanticVersion.Parse("1.02.03+build"));
+            Assert.Equal("1.2.3-alpha+build", (string)SemanticVersion.Parse("1.2.3-alpha+build"));
+            Assert.Equal("1.02.03-alpha+build", (string)SemanticVersion.Parse("1.02.03-alpha+build"));
+        }
+
+        [Fact]
         public void Comparable()
         {
             // Test IComparaible by sorting a list of versions.
