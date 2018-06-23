@@ -3260,5 +3260,181 @@ echo $? > {cmdFolder}/exit
                 throw new TimeoutException($"Unable to resolve [{hostname}] within [{timeout}].");
             }
         }
+
+        /// <summary>
+        /// Returns the version of Docker installed on the node.
+        /// </summary>
+        /// <param name="faultIfNotInstalled">
+        /// Optionally signal a node fault if the compontent is 
+        /// not installed.
+        /// </param>
+        /// <returns>The Docker version or <c>null</c> if Docker is not installed.</returns>
+        public SemanticVersion GetDockerVersion(bool faultIfNotInstalled = false)
+        {
+            // We're going execute this command:
+            //
+            //      docker version
+            //
+            // to obtain the version information.  This will return something like:
+            //
+            //      Client:
+            //       Version:       18.03.0-ce
+            //       API version:   1.37
+            //       Go version:    go1.9.4
+            //       Git commit:    0520e24
+            //       Built: Wed Mar 21 23:10:01 2018
+            //       OS/Arch:       linux/amd64
+            //       Experimental:  false
+            //       Orchestrator:  swarm
+            //
+            //      Server:
+            //       Engine:
+            //        Version:      18.03.0-ce
+            //        API version:  1.37 (minimum version 1.12)
+            //        Go version:   go1.9.4
+            //        Git commit:   0520e24
+            //        Built:        Wed Mar 21 23:08:31 2018
+            //        OS/Arch:      linux/amd64
+            //        Experimental: false
+            //
+            // We're going to extract the client version.
+
+            var response = SudoCommand("docker version", RunOptions.None);
+
+            if (response.ExitCode != 0)
+            {
+                return null;
+            }
+
+            var pattern = "Version:";
+            var pos     = response.OutputText.IndexOf(pattern);
+
+            if (pos == -1)
+            {
+                if (faultIfNotInstalled)
+                {
+                    Fault("DOCKER is not installed");
+                }
+
+                return null;
+            }
+
+            pos += pattern.Length;
+
+            var posEnd = response.OutputText.IndexOf('\n', pos);
+
+            if (posEnd == -1)
+            {
+                posEnd = response.OutputText.Length;
+            }
+
+            var version = response.OutputText.Substring(pos, posEnd - pos).Trim();
+
+            return SemanticVersion.Parse(version);
+        }
+
+        /// <summary>
+        /// Returns the version of HashiCorp Consul installed on the node.
+        /// </summary>
+        /// <returns>The Consul version or <c>null</c> if Consul is not installed.</returns>
+        /// <param name="faultIfNotInstalled">
+        /// Optionally signal a node fault if the compontent is 
+        /// not installed.
+        /// </param>
+        public SemanticVersion GetConsulVersion(bool faultIfNotInstalled = false)
+        {
+            // We're going execute this command:
+            //
+            //      consul version
+            //
+            // to obtain the version information.  This will return something like:
+            //
+            //      Consul v1.1.0
+
+            var response = SudoCommand("consul version", RunOptions.None);
+
+            if (response.ExitCode != 0)
+            {
+                return null;
+            }
+
+            var pattern = "Consul v";
+            var pos     = response.OutputText.IndexOf(pattern);
+
+            if (pos == -1)
+            {
+                if (faultIfNotInstalled)
+                {
+                    Fault("CONSUL is not installed");
+                }
+
+                return null;
+            }
+
+            pos += pattern.Length;
+
+            var posEnd = response.OutputText.IndexOf('\n', pos);
+
+            if (posEnd == -1)
+            {
+                posEnd = response.OutputText.Length;
+            }
+
+            var version = response.OutputText.Substring(pos, posEnd - pos).Trim();
+
+            return SemanticVersion.Parse(version);
+        }
+
+        /// <summary>
+        /// Returns the version of HashiCorp Vault installed on the node.
+        /// </summary>
+        /// <param name="faultIfNotInstalled">
+        /// Optionally signal a node fault if the compontent is 
+        /// not installed.
+        /// </param>
+        /// <returns>The Vault version or <c>null</c> if Vault is not installed.</returns>
+        public SemanticVersion GetVaultVersion(bool faultIfNotInstalled = false)
+        {
+            // We're going execute this command:
+            //
+            //      vault version
+            //
+            // to obtain the version information.  This will return something like:
+            //
+            //      Vault v0.10.1 ('756fdc4587350daf1c65b93647b2cc31a6f119cd')
+
+            var response = SudoCommand("vault version", RunOptions.None);
+
+            if (response.ExitCode != 0)
+            {
+                return null;
+            }
+
+            var pattern = "Vault v";
+            var pos     = response.OutputText.IndexOf(pattern);
+
+            if (pos == -1)
+            {
+                if (faultIfNotInstalled)
+                {
+                    Fault("VAULT is not installed");
+                }
+
+                return null;
+            }
+
+            pos += pattern.Length;
+
+            var posEnd = response.OutputText.IndexOf(' ', pos);
+
+            if (posEnd == -1)
+            {
+                posEnd = response.OutputText.Length;
+            }
+
+            var version = response.OutputText.Substring(pos, posEnd - pos).Trim();
+
+            return SemanticVersion.Parse(version);
+        }
     }
 }

@@ -28,7 +28,7 @@ namespace Neon.Cluster
     /// </summary>
     public sealed class GlobalsManager
     {
-        private ClusterProxy cluster;
+        private ClusterProxy    cluster;
 
         /// <summary>
         /// Internal constructor.
@@ -39,6 +39,22 @@ namespace Neon.Cluster
             Covenant.Requires<ArgumentNullException>(cluster != null);
 
             this.cluster = cluster;
+        }
+
+        /// <summary>
+        /// Returns the current version of the neonHIVE deployment.
+        /// </summary>
+        public string Version
+        {
+            get
+            {
+                if (!TryGetString(NeonClusterGlobals.NeonCliVersion, out var version))
+                {
+                    throw new KeyNotFoundException(NeonClusterGlobals.NeonCliVersion);
+                }
+
+                return version;
+            }
         }
 
         /// <summary>

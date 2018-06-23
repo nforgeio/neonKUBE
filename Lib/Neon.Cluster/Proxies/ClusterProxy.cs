@@ -154,6 +154,7 @@ namespace Neon.Cluster
             this.Globals             = new GlobalsManager(this);
             this.Consul              = new ConsulManager(this);
             this.Vault               = new VaultManager(this);
+            this.Headend             = new HeadendClient();
 
             CreateNodes();
         }
@@ -175,6 +176,7 @@ namespace Neon.Cluster
         {
             Consul.Dispose();
             Vault.Dispose();
+            Headend.Dispose();
         }
 
         /// <summary>
@@ -282,6 +284,11 @@ namespace Neon.Cluster
         public VaultManager Vault { get; private set; }
 
         /// <summary>
+        /// Provides access to neonHIVE headend services.
+        /// </summary>
+        public HeadendClient Headend { get; private set; }
+
+        /// <summary>
         /// Returns the named load balancer manager.
         /// </summary>
         /// <param name="name">The load balancer name (one of <b>public</b> or <b>private</b>).</param>
@@ -335,6 +342,18 @@ namespace Neon.Cluster
         public IEnumerable<SshProxy<NodeDefinition>> Pets
         {
             get { return Nodes.Where(n => n.Metadata.IsPet).OrderBy(n => n.Name); }
+        }
+
+        /// <summary>
+        /// Ensures that the current login has root privileges.
+        /// </summary>
+        /// <exception cref="ClusterException">Thrown if the current login doesn't have root privileges</exception>
+        public void EnsureRootPrivileges()
+        {
+            if (!ClusterLogin.IsRoot)
+            {
+                throw new ClusterException("Access Denied: Login doesn't have root privileges.");
+            }
         }
 
         /// <summary>

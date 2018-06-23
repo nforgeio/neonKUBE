@@ -6,6 +6,7 @@
 using System;
 using System.Collections.Generic;
 using System.Diagnostics;
+using System.Diagnostics.Contracts;
 using System.IO;
 using System.Linq;
 using System.Net;
@@ -32,14 +33,13 @@ infrastructure related services and containers.
 
 USAGE:
 
-    neon cluster update [OPTIONS]                   - updates cluster and containers/services
-
     neon cluster update check                       - checks for available updates 
-    neon cluster update consul [OPTIONS] VERSION    - updates HashiCorp Consul
-    neon cluster update docker [OPTIONS] VERSION    - updates the Docker engine
-    neon cluster update images [OPTIONS]            - updates neon containers/services
-    neon cluster update linux [OPTIONS]             - updates linux on cluster nodes
-    neon cluster update vault [OPTIONS] VERSION     - updates HashiCorp Vault
+    neon cluster update consul   [OPTIONS] VERSION  - updates HashiCorp Consul
+    neon cluster update docker   [OPTIONS] VERSION  - updates the Docker engine
+    neon cluster update hive     [OPTIONS]          - updates neonHIVE and containers/services
+    neon cluster update services [OPTIONS]          - updates neonHIVE containers/services
+    neon cluster update linux    [OPTIONS]          - updates linux on cluster nodes
+    neon cluster update vault    [OPTIONS] VERSION  - updates HashiCorp Vault
 
 OPTIONS:
 
@@ -80,6 +80,12 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                 Program.Exit(0);
             }
 
+            if (commandLine.Arguments.Length == 0)
+            {
+                Console.WriteLine(usage);
+                Program.Exit(1);
+            }
+
             Console.WriteLine();
 
             clusterLogin = Program.ConnectCluster();
@@ -88,6 +94,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
             var command     = commandLine.Arguments.ElementAtOrDefault(0);
             var force       = commandLine.HasOption("--force");
             var maxParallel = Program.MaxParallel;
+            var version     = (string)null;
 
             // $todo(jeff.lill):
             //
@@ -99,11 +106,6 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
             switch (command)
             {
-                case null:
-
-                    UpdateCluster(force, maxParallel);
-                    break;
-
                 case "check":
 
                     CheckCluster(maxParallel);
@@ -111,15 +113,38 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
                 case "consul":
 
-                    throw new NotImplementedException("$todo(jeff.lill): Implement this");
+                    version = commandLine.Arguments.ElementAtOrDefault(1);
+
+                    if (string.IsNullOrEmpty(version))
+                    {
+                        Console.Error.WriteLine("*** ERROR: VERSON argument is required.");
+                        Program.Exit(1);
+                    }
+
+                    UpdateConsul(force, version, maxParallel);
+                    break;
 
                 case "docker":
 
-                    throw new NotImplementedException("$todo(jeff.lill): Implement this");
+                    version = commandLine.Arguments.ElementAtOrDefault(1);
 
-                case "images":
+                    if (string.IsNullOrEmpty(version))
+                    {
+                        Console.Error.WriteLine("*** ERROR: VERSON argument is required.");
+                        Program.Exit(1);
+                    }
 
-                    UpdateImages(force, maxParallel);
+                    UpdateDocker(force, version, maxParallel);
+                    break;
+
+                case "hive":
+
+                    UpdateHive(force, maxParallel);
+                    break;
+
+                case "services":
+
+                    UpdateServices(force, maxParallel);
                     break;
 
                 case "linux":
@@ -129,7 +154,16 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
                 case "vault":
 
-                    throw new NotImplementedException("$todo(jeff.lill): Implement this");
+                    version = commandLine.Arguments.ElementAtOrDefault(1);
+
+                    if (string.IsNullOrEmpty(version))
+                    {
+                        Console.Error.WriteLine("*** ERROR: VERSON argument is required.");
+                        Program.Exit(1);
+                    }
+
+                    UpdateVault(force, version, maxParallel);
+                    break;
 
                 default:
 
@@ -174,7 +208,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                 ShowStatus  = !Program.Quiet
             };
 
-            var pendingUpdateCount = ClusterUpdateManager.AddUpdateSteps(cluster, controller, serviceUpdateParallism: Program.MaxParallel);
+            var pendingUpdateCount = ClusterUpdateManager.AddHiveUpdateSteps(cluster, controller, serviceUpdateParallism: Program.MaxParallel);
 
             // Create another controller to actually scan the cluster nodes to
             // count the pending Linux updates as well as the system containers
@@ -199,11 +233,18 @@ The current login must have ROOT PERMISSIONS to update the cluster.
             var syncLock           = new object();
             var maxUpdates         = 0;
             var maxSecurityUpdates = 0;
+            var componentVersions  = cluster.Headend.GetComponentVersions(cluster.Globals.Version);
+            var dockerVersions     = new Dictionary<SemanticVersion, int>();    // Counts the numbers versions installed
+            var consulVersions     = new Dictionary<SemanticVersion, int>();    // on cluster nodes.
+            var vaultVersions      = new Dictionary<SemanticVersion, int>();
 
-            controller.AddStep("get pending linux updates",
+            controller.AddStep("scan cluster nodes",
                 (node, stepDelay) =>
                 {
                     Thread.Sleep(stepDelay);
+
+                    //---------------------------------------------------------
+                    // Look for Linux package updates.
 
                     node.Status = "run: apt-get update";
                     node.SudoCommand("apt-get update");
@@ -227,6 +268,51 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                         maxUpdates         = Math.Max(maxUpdates, updates);
                         maxSecurityUpdates = Math.Max(maxSecurityUpdates, securityUpdates);
                     }
+
+                    //---------------------------------------------------------
+                    // Determine the versions of Docker, Consul, and Vault installed
+                    // on this node and tally the versions for the cluster.  Note that
+                    // it's possible for multiple versions of a compontent to be
+                    // installed on different nodes if a previous update did not
+                    // run until completion.
+
+                    node.Status       = "docker version";
+                    var dockerVersion = node.GetDockerVersion(faultIfNotInstalled: true);
+
+                    node.Status       = "consul version";
+                    var consulVersion = node.GetConsulVersion(faultIfNotInstalled: true);
+
+                    node.Status       = "vault version";
+                    var vaultVersion  = node.GetVaultVersion(faultIfNotInstalled: true);
+
+                    if (!node.IsFaulted)
+                    {
+                        lock (syncLock)
+                        {
+                            int count;
+
+                            if (!dockerVersions.TryGetValue(dockerVersion, out count))
+                            {
+                                count = 0;
+                            }
+
+                            dockerVersions[dockerVersion] = count + 1;
+
+                            if (!consulVersions.TryGetValue(consulVersion, out count))
+                            {
+                                count = 0;
+                            }
+
+                            consulVersions[consulVersion] = count + 1;
+
+                            if (!vaultVersions.TryGetValue(vaultVersion, out count))
+                            {
+                                count = 0;
+                            }
+
+                            vaultVersions[vaultVersion] = count + 1;
+                        }
+                    }
                 });
 
             if (!controller.Run())
@@ -249,9 +335,156 @@ The current login must have ROOT PERMISSIONS to update the cluster.
             }
             else
             {
-                Console.WriteLine($"neonCLUSTER updates:    {pendingUpdateCount}");
+                Console.WriteLine($"neonHIVE updates:       {pendingUpdateCount}");
                 Console.WriteLine($"Linux total updates:    {maxUpdates}");
                 Console.WriteLine($"Linux security updates: {maxSecurityUpdates}");
+
+                //-------------------------------------------------------------
+                // Docker status
+
+                string dockerVersionInfo;
+
+                if (dockerVersions.Count == 0)
+                {
+                    dockerVersionInfo = "*** ERROR: Docker is not installed.";
+                }
+                else if (dockerVersions.Count == 1)
+                {
+                    dockerVersionInfo = (string)dockerVersions.Keys.First();
+                }
+                else
+                {
+                    var sb = new StringBuilder();
+
+                    foreach (var version in dockerVersions.Keys.OrderBy(v => v))
+                    {
+                        sb.AppendWithSeparator((string)version, ", ");
+                    }
+
+                    dockerVersionInfo = sb.ToString();
+                }
+
+                var dockerStatus = "CURRENT";
+
+                if (dockerVersions.Count == 0)
+                {
+                    dockerStatus = "ERROR: cannot detect version";
+                }
+                else if (dockerVersions.Count > 1)
+                {
+                    dockerStatus = "WARNING: multiple versions installed";
+                }
+                else if (dockerVersions.Keys.Min(v => v) < (SemanticVersion)componentVersions.Docker)
+                {
+                    dockerStatus = "UPDATE AVAILABLE";
+                }
+
+                var dockerTitle = $"Docker Engine: {dockerStatus}";
+
+                Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine(dockerTitle);
+                Console.WriteLine(new string('-', dockerTitle.Length));
+                Console.WriteLine($"Current: {dockerVersionInfo}");
+                Console.WriteLine($"Latest:  {componentVersions.Docker}");
+
+                //-------------------------------------------------------------
+                // Consul status
+
+                string consulVersionInfo;
+
+                if (consulVersions.Count == 0)
+                {
+                    consulVersionInfo = "*** ERROR: Consul is not installed.";
+                }
+                else if (consulVersions.Count == 1)
+                {
+                    consulVersionInfo = (string)consulVersions.Keys.First();
+                }
+                else
+                {
+                    var sb = new StringBuilder();
+
+                    foreach (var version in consulVersions.Keys.OrderBy(v => v))
+                    {
+                        sb.AppendWithSeparator((string)version, ", ");
+                    }
+
+                    consulVersionInfo = sb.ToString();
+                }
+
+                var consulStatus = "CURRENT";
+
+                if (consulVersions.Count == 0)
+                {
+                    consulStatus = "ERROR: cannot detect version";
+                }
+                else if (consulVersions.Count > 1)
+                {
+                    consulStatus = "WARNING: multiple versions installed";
+                }
+                else if (consulVersions.Keys.Min(v => v) < (SemanticVersion)componentVersions.Consul)
+                {
+                    consulStatus = "UPDATE AVAILABLE";
+                }
+
+                var consulTitle = $"HashiCorp Consul: {consulStatus}";
+
+                Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine(consulTitle);
+                Console.WriteLine(new string('-', consulTitle.Length));
+                Console.WriteLine($"Current: {consulVersionInfo}");
+                Console.WriteLine($"Latest:  {componentVersions.Consul}");
+
+                //-------------------------------------------------------------
+                // Vault status
+
+                string vaultVersionInfo;
+
+                if (consulVersions.Count == 0)
+                {
+                    vaultVersionInfo = "*** ERROR: Vault is not installed.";
+                }
+                else if (consulVersions.Count == 1)
+                {
+                    vaultVersionInfo = (string)vaultVersions.Keys.First();
+                }
+                else
+                {
+                    var sb = new StringBuilder();
+
+                    foreach (var version in vaultVersions.Keys.OrderBy(v => v))
+                    {
+                        sb.AppendWithSeparator((string)version, ", ");
+                    }
+
+                    vaultVersionInfo = sb.ToString();
+                }
+
+                var vaultStatus = "CURRENT";
+
+                if (vaultVersions.Count == 0)
+                {
+                    vaultStatus = "ERROR: cannot detect version";
+                }
+                else if (vaultVersions.Count > 1)
+                {
+                    vaultStatus = "WARNING: multiple versions installed";
+                }
+                else if (vaultVersions.Keys.Min(v => v) < (SemanticVersion)componentVersions.Vault)
+                {
+                    vaultStatus = "UPDATE AVAILABLE";
+                }
+
+                var vaultTitle = $"HashiCorp Vault: {vaultStatus}";
+
+                Console.WriteLine();
+                Console.WriteLine();
+                Console.WriteLine(vaultTitle);
+                Console.WriteLine(new string('-', vaultTitle.Length));
+                Console.WriteLine($"Current: {vaultVersionInfo}");
+                Console.WriteLine($"Latest:  {componentVersions.Vault}");
             }
 
             Program.Exit(0);
@@ -268,11 +501,13 @@ The current login must have ROOT PERMISSIONS to update the cluster.
         {
             EnsureRootPivileges();
 
-            if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE Linux on [{cluster.Name}] cluster nodes?"))
+            if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE LINUX on [{cluster.Name}] cluster nodes?"))
             {
                 Program.Exit(0);
             }
 
+            var firstManager = cluster.FirstManager;
+            
             var controller = new SetupController<NodeDefinition>("cluster linux update", cluster.Nodes)
             {
                 MaxParallel = maxParallel,
@@ -285,10 +520,10 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                     Thread.Sleep(stepDelay);
 
                     node.Status = "run: apt-get update";
-                    node.SudoCommand("apt-get update");
+                    node.SudoCommand("apt-get update", RunOptions.FaultOnError);
 
                     node.Status = "run: apt-get dist-upgrade -yq";
-                    node.SudoCommand("apt-get dist-upgrade -yq");
+                    node.SudoCommand("apt-get dist-upgrade -yq", RunOptions.FaultOnError);
                 });
 
             controller.AddStep("reboot nodes",
@@ -308,8 +543,8 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                         // the updates before we reboot and task draining can proceed
                         // during the update.
 
-                        node.Status = "swarm: drain service tasks";
-                        node.SudoCommand($"docker node update --availability drain {node.Name}");
+                        node.Status = "swarm: drain services";
+                        firstManager.SudoCommand($"docker node update --availability drain {node.Name}", RunOptions.FaultOnError);
                         Thread.Sleep(TimeSpan.FromSeconds(30));
                     }
 
@@ -320,7 +555,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                         // Put the node back into ACTIVE mode (from DRAIN).
 
                         node.Status = "swarm: activate";
-                        node.SudoCommand($"docker node update --availability active {node.Name}");
+                        firstManager.SudoCommand($"docker node update --availability active {node.Name}", RunOptions.FaultOnError);
                     }
 
                     // Give the node a chance to become active again in the swarm 
@@ -345,11 +580,11 @@ The current login must have ROOT PERMISSIONS to update the cluster.
         /// </summary>
         /// <param name="force"><c>true</c> to disable the update prompt.</param>
         /// <param name="maxParallel">Maximum number of parallel operations.</param>
-        private void UpdateCluster(bool force, int maxParallel)
+        private void UpdateHive(bool force, int maxParallel)
         {
             EnsureRootPivileges();
 
-            if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE cluster [{cluster.Name}]?"))
+            if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE HIVE components and services on [{cluster.Name}]?"))
             {
                 Program.Exit(0);
             }
@@ -361,7 +596,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
             controller.MaxParallel = maxParallel;
 
-            var pendingUpdateCount = ClusterUpdateManager.AddUpdateSteps(cluster, controller, serviceUpdateParallism: Program.MaxParallel);
+            var pendingUpdateCount = ClusterUpdateManager.AddHiveUpdateSteps(cluster, controller, serviceUpdateParallism: Program.MaxParallel);
 
             if (controller.StepCount == 0)
             {
@@ -384,11 +619,11 @@ The current login must have ROOT PERMISSIONS to update the cluster.
         /// </summary>
         /// <param name="force"><c>true</c> to disable the update prompt.</param>
         /// <param name="maxParallel">Maximum number of parallel operations.</param>
-        private void UpdateImages(bool force, int maxParallel)
+        private void UpdateServices(bool force, int maxParallel)
         {
             EnsureRootPivileges();
 
-            if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE this cluster's images?"))
+            if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE HIVE services on [{cluster.Name}]?"))
             {
                 Program.Exit(0);
             }
@@ -397,7 +632,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
             controller.MaxParallel = maxParallel;
 
-            ClusterUpdateManager.AddUpdateSteps(cluster, controller, imagesOnly: true, serviceUpdateParallism: Program.MaxParallel);
+            ClusterUpdateManager.AddHiveUpdateSteps(cluster, controller, imagesOnly: true, serviceUpdateParallism: Program.MaxParallel);
 
             if (controller.StepCount == 0)
             {
@@ -413,6 +648,267 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
             Console.WriteLine();
             Console.WriteLine("*** Cluster service and container images were updated successfully.");
+        }
+
+        /// <summary>
+        /// Updates the Docker engine on all cluster nodes and then restarts them
+        /// one at a time, giving each of them some time to stabilize before 
+        /// updating the next node.
+        /// </summary>
+        /// <param name="force"><c>true</c> to disable the update prompt.</param>
+        /// <param name="version">The Docker version to install.</param>
+        /// <param name="maxParallel">Maximum number of parallel operations.</param>
+        private void UpdateDocker(bool force, string version, int maxParallel)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version));
+
+            EnsureRootPivileges();
+
+            if (!cluster.Headend.IsDockerCompatible(cluster.Globals.Version, version, out var message))
+            {
+                Console.Error.WriteLine($"*** ERROR: {message}");
+                Program.Exit(1);
+            }
+
+            if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE DOCKER on [{cluster.Name}] cluster nodes?"))
+            {
+                Program.Exit(0);
+            }
+
+            var firstManager = cluster.FirstManager;
+            var package      = cluster.Headend.GetDockerPackage(version, out message);
+
+            var controller = new SetupController<NodeDefinition>($"cluster docker update: {version}", cluster.Nodes)
+            {
+                MaxParallel = maxParallel,
+                ShowStatus  = !Program.Quiet
+            };
+
+            controller.AddStep("update docker",
+                (node, stepDelay) =>
+                {
+                    if (node.GetDockerVersion() >= (SemanticVersion)version)
+                    {
+                        return;     // Already updated
+                    }
+
+                    if (node.Metadata.InSwarm)
+                    {
+                        // Give Swarm the chance to DRAIN any service tasks running
+                        // on this node.  Ideally, we'd wait for all of the service 
+                        // tasks to stop but it appears that there's no easy way to
+                        // check for this other than listing all of the cluster services
+                        // and then doing a [docker service ps SERVICE] for each until
+                        // none report running on this node.
+                        //
+                        // We're just going to hardcode a wait for 30 seconds which
+                        // should be OK since it'll take some time to actually install
+                        // the updates before we reboot and task draining can proceed
+                        // during the update.
+
+                        node.Status = "swarm: drain services";
+                        firstManager.SudoCommand($"docker node update --availability drain {node.Name}", RunOptions.FaultOnError);
+                        Thread.Sleep(TimeSpan.FromSeconds(30));
+                    }
+
+                    node.Status = "run: apt-get update";
+                    node.SudoCommand("apt-get update", RunOptions.FaultOnError);
+
+                    node.Status = $"run: apt-get install -yq {package}";
+                    node.SudoCommand($"apt-get install -yq {package}", RunOptions.FaultOnError);
+
+                    node.Status = $"restart: docker";
+                    node.SudoCommand("systemctl restart docker", RunOptions.FaultOnError);
+
+                    if (node.Metadata.InSwarm)
+                    {
+                        // Put the node back into ACTIVE mode (from DRAIN).
+
+                        node.Status = "swarm: activate";
+                        firstManager.SudoCommand($"docker node update --availability active {node.Name}", RunOptions.FaultOnError);
+                    }
+
+                    node.Status = $"stabilizing ({Program.WaitSeconds}s)";
+                    Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
+                },
+                parallelLimit: 1);  // Update the nodes one at a time.
+
+            if (!controller.Run())
+            {
+                Console.Error.WriteLine("*** ERROR: One or more DOCKER UPDATE steps failed.");
+                Program.Exit(1);
+            }
+
+            Program.Exit(0);
+        }
+
+        /// <summary>
+        /// Updates HashiCorp Consul on all cluster nodes and then restarts them
+        /// one at a time, giving each of them some time to stabilize before 
+        /// updating the next node.
+        /// </summary>
+        /// <param name="force"><c>true</c> to disable the update prompt.</param>
+        /// <param name="version">The Docker version to install.</param>
+        /// <param name="maxParallel">Maximum number of parallel operations.</param>
+        private void UpdateConsul(bool force, string version, int maxParallel)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version));
+
+            EnsureRootPivileges();
+
+            if (!cluster.Headend.IsConsulCompatible(cluster.Globals.Version, version, out var message))
+            {
+                Console.Error.WriteLine($"*** ERROR: {message}");
+                Program.Exit(1);
+            }
+
+            if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE CONSUL on [{cluster.Name}] cluster nodes?"))
+            {
+                Program.Exit(0);
+            }
+
+            var firstManager = cluster.FirstManager;
+
+            var controller = new SetupController<NodeDefinition>($"cluster consul update: {version}", cluster.Nodes)
+            {
+                MaxParallel = maxParallel,
+                ShowStatus  = !Program.Quiet
+            };
+
+            controller.AddStep("update consul",
+                (node, stepDelay) =>
+                {
+                    if (node.GetConsulVersion() >= (SemanticVersion)version)
+                    {
+                        return;     // Already updated
+                    }
+
+                    node.Status = $"stop: consul";
+                    node.SudoCommand("systemctl stop consul", RunOptions.FaultOnError);
+
+                    node.Status = $"update: consul";
+
+                    var bundle = new CommandBundle("./install.sh", version);
+
+                    bundle.AddFile("install.sh",
+@"#!/bin/bash
+
+set -euo pipefail
+
+curl -4fsSLv --retry 10 --retry-delay 30 https://releases.hashicorp.com/consul/${1}/consul_${1}_linux_amd64.zip -o /tmp/consul.zip 1>&2
+unzip -u /tmp/consul.zip -d /tmp
+cp /tmp/consul /usr/local/bin
+chmod 770 /usr/local/bin/consul
+
+rm /tmp/consul.zip
+rm /tmp/consul 
+",
+                        isExecutable: true);
+
+                    node.SudoCommand(bundle, RunOptions.FaultOnError);
+
+                    node.Status = $"restart: consul";
+                    node.SudoCommand("systemctl restart consul", RunOptions.FaultOnError);
+
+                    if (node.Metadata.IsManager)
+                    {
+                        node.Status = $"stabilizing ({Program.WaitSeconds}s)";
+                        Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
+                    }
+                },
+                parallelLimit: 1);  // Update the nodes one at a time.
+
+            if (!controller.Run())
+            {
+                Console.Error.WriteLine("*** ERROR: One or more CONSUL UPDATE steps failed.");
+                Program.Exit(1);
+            }
+
+            Program.Exit(0);
+        }
+
+        /// <summary>
+        /// Updates HashiCorp Vault on all cluster nodes and then restarts them
+        /// one at a time, giving each of them some time to stabilize before 
+        /// updating the next node.
+        /// </summary>
+        /// <param name="force"><c>true</c> to disable the update prompt.</param>
+        /// <param name="version">The Docker version to install.</param>
+        /// <param name="maxParallel">Maximum number of parallel operations.</param>
+        private void UpdateVault(bool force, string version, int maxParallel)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(version));
+
+            EnsureRootPivileges();
+
+            if (!cluster.Headend.IsVaultCompatible(cluster.Globals.Version, version, out var message))
+            {
+                Console.Error.WriteLine($"*** ERROR: {message}");
+                Program.Exit(1);
+            }
+
+            if (!force && !Program.PromptYesNo($"*** Are you sure you want to UPDATE VAULT on [{cluster.Name}] cluster node?"))
+            {
+                Program.Exit(0);
+            }
+
+            var firstManager = cluster.FirstManager;
+
+            var controller = new SetupController<NodeDefinition>($"cluster vault update: {version}", cluster.Nodes)
+            {
+                MaxParallel = maxParallel,
+                ShowStatus  = !Program.Quiet
+            };
+
+            controller.AddStep("update vault",
+                (node, stepDelay) =>
+                {
+                    if (node.GetVaultVersion() >= (SemanticVersion)version)
+                    {
+                        return;     // Already updated
+                    }
+
+                    node.Status = $"update: vault";
+
+                    var bundle = new CommandBundle("./install.sh", version);
+
+                    bundle.AddFile("install.sh",
+@"#!/bin/bash
+
+set -euo pipefail
+
+curl -4fsSLv --retry 10 --retry-delay 30 https://releases.hashicorp.com/vault/${1}/vault_${1}_linux_amd64.zip -o /tmp/vault.zip 1>&2
+unzip -o /tmp/vault.zip -d /tmp
+rm /tmp/vault.zip
+
+mv /tmp/vault /usr/local/bin/vault
+chmod 700 /usr/local/bin/vault
+",
+                    isExecutable: true);
+
+                    node.SudoCommand(bundle, RunOptions.FaultOnError);
+
+                    if (node.Metadata.IsManager)
+                    {
+                        node.Status = $"restart: vault";
+                        node.SudoCommand("systemctl restart vault", RunOptions.FaultOnError);
+
+                        node.Status = $"unseal: vault";
+                        cluster.Vault.Unseal();
+
+                        node.Status = $"stabilizing ({Program.WaitSeconds}s)";
+                        Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
+                    }
+                },
+                parallelLimit: 1);  // Update the nodes one at a time.
+
+            if (!controller.Run())
+            {
+                Console.Error.WriteLine("*** ERROR: One or more VAULT UPDATE steps failed.");
+                Program.Exit(1);
+            }
+
+            Program.Exit(0);
         }
     }
 }

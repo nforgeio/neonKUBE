@@ -1786,7 +1786,7 @@ StartLimitBurst=1051200";
                 {
                     Thread.Sleep(stepDelay);
 
-                    node.Status = "ceph package install";
+                    node.Status = "ceph package";
 
                     // Extract the Ceph release and version from the configuration.
                     // Note that the version is optional and is currently ignored.

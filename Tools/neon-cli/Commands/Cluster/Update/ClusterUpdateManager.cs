@@ -50,7 +50,7 @@ namespace NeonCli
         /// <param name="serviceUpdateParallism">Optionally specifies the parallism to use when updating services.</param>
         /// <returns>The number of pending updates.</returns>
         /// <exception cref="ClusterException">Thrown if there was an error selecting the updates.</exception>
-        public static int AddUpdateSteps(ClusterProxy cluster, SetupController<NodeDefinition> controller, bool imagesOnly = false, int serviceUpdateParallism = 1)
+        public static int AddHiveUpdateSteps(ClusterProxy cluster, SetupController<NodeDefinition> controller, bool imagesOnly = false, int serviceUpdateParallism = 1)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null);
 
@@ -58,8 +58,7 @@ namespace NeonCli
 
             // Obtain and parse the current cluster version.
 
-            if (!cluster.Globals.TryGetString(NeonClusterGlobals.NeonCliVersion, out var versionString) ||
-                !SemanticVersion.TryParse(versionString, out var clusterVersion))
+            if (!SemanticVersion.TryParse(cluster.Globals.Version, out var clusterVersion))
             {
                 throw new ClusterException($"Unable to retrieve or parse the cluster version global [{NeonClusterGlobals.NeonCliVersion}].");
             }
@@ -90,7 +89,7 @@ namespace NeonCli
                             pendingUpdateCount++;
 
                             update.Cluster = cluster;
-                            nextVersion    = update.ToVersion;
+                            nextVersion = update.ToVersion;
 
                             if (!imagesOnly)
                             {
@@ -136,7 +135,11 @@ namespace NeonCli
             //         then we'll pull the new image and then use the container setup 
             //         script as is to relaunch the container.  This assumes that the
             //         container script uses the [:latest] tag.
+            //
+            // We're currently using a stubbed implementation of neonHIVE headend
+            // services to implement some of this.
 
+            var versions         = cluster.Headend.GetComponentVersions(cluster.Globals.Version);
             var systemContainers = NeonClusterConst.DockerContainers;
             var systemServices   = NeonClusterConst.DockerServices;
             var firstManager     = cluster.FirstManager;
@@ -148,15 +151,27 @@ namespace NeonCli
                     {
                         foreach (var container in systemContainers)
                         {
-                            firstManager.Status = $"run: docker pull {NeonClusterConst.NeonPublicRegistry}/{container}:latest";
-                            firstManager.SudoCommand($"docker pull {NeonClusterConst.NeonPublicRegistry}/{container}:latest");
+                            if (!versions.Images.TryGetValue(container, out var image))
+                            {
+                                firstManager.LogLine($"WARNING: Could not resolve [{container}] to a specific image.");
+                                continue;
+                            }
+
+                            firstManager.Status = $"run: docker pull {image}";
+                            firstManager.SudoCommand($"docker pull {image}");
                             firstManager.Status = string.Empty;
                         }
 
                         foreach (var service in systemServices)
                         {
-                            firstManager.Status = $"run: docker pull {NeonClusterConst.NeonPublicRegistry}/{service}:latest";
-                            firstManager.SudoCommand($"docker pull {NeonClusterConst.NeonPublicRegistry}/{service}:latest");
+                            if (!versions.Images.TryGetValue(service, out var image))
+                            {
+                                firstManager.LogLine($"WARNING: Could not resolve [{service}] to a specific image.");
+                                continue;
+                            }
+
+                            firstManager.Status = $"run: docker pull {image}";
+                            firstManager.SudoCommand($"docker pull {image}");
                             firstManager.Status = string.Empty;
                         }
                     });
@@ -180,8 +195,14 @@ namespace NeonCli
 
                     foreach (var service in systemServices.Where(s => services.Contains(s)))
                     {
-                        firstManager.Status = $"update: {service}:latest";
-                        node.SudoCommand($"docker service update --image {service}:latest --max-parallelism {serviceUpdateParallism} {service}");
+                        if (!versions.Images.TryGetValue(service, out var image))
+                        {
+                            firstManager.LogLine($"WARNING: Could not resolve [{service}] to a specific image.");
+                            continue;
+                        }
+
+                        firstManager.Status = $"update: {image}";
+                        node.SudoCommand($"docker service update --image {image} --max-parallelism {serviceUpdateParallism} {service}");
                         firstManager.Status = string.Empty;
                     }
                 },
@@ -228,6 +249,12 @@ namespace NeonCli
 
                     foreach (var container in systemContainers.Where(s => containers.Contains(s)))
                     {
+                        if (!versions.Images.TryGetValue(container, out var image))
+                        {
+                            firstManager.LogLine($"WARNING: Could not resolve [{container}] to a specific image.");
+                            continue;
+                        }
+
                         var containerStartScriptPath = LinuxPath.Combine(NeonHostFolders.Scripts, $"{container}.sh");
 
                         if (node.FileExists(containerStartScriptPath))
@@ -237,13 +264,13 @@ namespace NeonCli
 
                             // $hack(jeff.lill): I'm baking in the image tag here as ":latest"
 
-                            node.Status = $"run: {NeonClusterConst.NeonPublicRegistry}/{container}:latest";
-                            node.DockerCommand("docker", "pull", $"{NeonClusterConst.NeonPublicRegistry}/{container}:latest");
+                            node.Status = $"pull: {image}";
+                            node.DockerCommand("docker", "pull", image);
 
                             node.Status = $"stop: {container}";
                             node.DockerCommand("docker", "rm", "--force", container);
 
-                            node.Status = $"restart: {container}:latest";
+                            node.Status = $"restart: {container}";
                             node.SudoCommand("bash", containerStartScriptPath);
                         }
                         else
@@ -257,6 +284,138 @@ namespace NeonCli
                 noParallelLimit: cluster.Definition.Docker.RegistryCache);
 
             return pendingUpdateCount;
+        }
+
+        /// <summary>
+        /// Scans the cluster and adds the steps to a <see cref="SetupController"/> required
+        /// to update the cluster to the most recent version.
+        /// </summary>
+        /// <param name="cluster">The target cluster proxy.</param>
+        /// <param name="controller">The setup controller.</param>
+        /// <param name="dockerVersion">The version of Docker required.</param>
+        /// <returns>The number of pending updates.</returns>
+        /// <exception cref="ClusterException">Thrown if there was an error selecting the updates.</exception>
+        /// <remarks>
+        /// <note>
+        /// This method does not allow an older version of the component to be installed.
+        /// In this case, the current version will remain.
+        /// </note>
+        /// </remarks>
+        public static void AddDockerUpdateSteps(ClusterProxy cluster, SetupController<NodeDefinition> controller, string dockerVersion)
+        {
+            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(dockerVersion));
+
+            var newVersion   = (SemanticVersion)dockerVersion;
+            var pendingNodes = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
+            var package      = cluster.Headend.GetDockerPackage(dockerVersion, out var message);
+
+            // Update the managers first.
+
+            pendingNodes.Clear();
+            foreach (var node in cluster.Managers)
+            {
+                if ((SemanticVersion)node.GetDockerVersion() < newVersion)
+                {
+                    pendingNodes.Add(node.Name);
+                }
+            }
+
+            if (pendingNodes.Count > 0)
+            {
+                controller.AddStep("managers: update docker",
+                    (node, stepDelay) =>
+                    {
+                        Thread.Sleep(stepDelay);
+                        UpdateDocker(cluster, node, package);
+                    },
+                    n => pendingNodes.Contains(n.Name),
+                    parallelLimit: 1);
+            }
+
+            // Update the workers.
+
+            pendingNodes.Clear();
+            foreach (var node in cluster.Workers)
+            {
+                if ((SemanticVersion)node.GetDockerVersion() < newVersion)
+                {
+                    pendingNodes.Add(node.Name);
+                }
+            }
+
+            if (pendingNodes.Count > 0)
+            {
+                controller.AddStep("workers: update docker",
+                    (node, stepDelay) =>
+                    {
+                        Thread.Sleep(stepDelay);
+                        UpdateDocker(cluster, node, package);
+                    },
+                    n => pendingNodes.Contains(n.Name),
+                    parallelLimit: 1);
+            }
+
+            // Update the pets.
+
+            pendingNodes.Clear();
+            foreach (var node in cluster.Pets)
+            {
+                if ((SemanticVersion)node.GetDockerVersion() < newVersion)
+                {
+                    pendingNodes.Add(node.Name);
+                }
+            }
+
+            if (pendingNodes.Count > 0)
+            {
+                controller.AddStep("workers: update docker",
+                    (node, stepDelay) =>
+                    {
+                        Thread.Sleep(stepDelay);
+                        UpdateDocker(cluster, node, package);
+                    },
+                    n => pendingNodes.Contains(n.Name),
+                    parallelLimit: 1);
+            }
+        }
+
+        /// <summary>
+        /// Updates docker on a cluster node.
+        /// </summary>
+        /// <param name="cluster">The target cluster.</param>
+        /// <param name="node">The target node.</param>
+        /// <param name="package">The fully qualified Docker Debian poackage name.</param>
+        private static void UpdateDocker(ClusterProxy cluster, SshProxy<NodeDefinition> node, string package)
+        {
+            if (node.Metadata.InSwarm)
+            {
+                node.Status = "swarm: drain services";
+                cluster.FirstManager.SudoCommand($"docker node update --availability drain {node.Name}");
+                Thread.Sleep(TimeSpan.FromSeconds(30));
+            }
+
+            node.Status = "stop: docker";
+            node.SudoCommand("systemctl stop docker");
+
+            node.Status = "update: docker";
+            node.SudoCommand("apt-get update");
+
+            var failed = node.SudoCommand($"apt-get install -yq {package}", RunOptions.LogOutput).ExitCode != 0;
+
+            node.Status = "restart: docker";
+            node.SudoCommand("systemctl start docker");
+
+            if (node.Metadata.InSwarm)
+            {
+                node.Status = "swarm: activate";
+                cluster.FirstManager.SudoCommand($"docker node update --availability active {node.Name}");
+            }
+
+            if (failed)
+            {
+                node.Fault("[docker] update failed.");
+            }
         }
     }
 }

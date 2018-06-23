@@ -193,7 +193,7 @@ NOTE: The following Vault commands are not supported:
                             {
                                 Console.WriteLine($"[{node.Name}] sealing...");
 
-                                response = node.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && vault-direct operator seal", RunOptions.None);
+                                response = node.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && vault-direct operator seal", RunOptions.Redact);
 
                                 if (response.ExitCode == 0)
                                 {
@@ -251,7 +251,7 @@ NOTE: The following Vault commands are not supported:
                                 {
                                     Console.WriteLine($"[{manager.Name}] sealing...");
 
-                                    response = manager.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && vault-direct operator seal", RunOptions.None);
+                                    response = manager.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && vault-direct operator seal", RunOptions.Redact);
 
                                     if (response.ExitCode == 0)
                                     {
@@ -502,7 +502,7 @@ NOTE: The following Vault commands are not supported:
                             bundle.Add(file);
                         }
 
-                        response = node.SudoCommand(bundle, RunOptions.IgnoreRemotePath);
+                        response = node.SudoCommand(bundle, RunOptions.IgnoreRemotePath | RunOptions.Redact);
 
                         Console.WriteLine(response.AllText);
                         Program.Exit(response.ExitCode);
@@ -519,7 +519,7 @@ NOTE: The following Vault commands are not supported:
 
                     if (rightCommandLine.Items.Length < 2)
                     {
-                        response = node.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && {remoteVaultPath} {rightCommandLine}", RunOptions.IgnoreRemotePath);
+                        response = node.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && {remoteVaultPath} {rightCommandLine}", RunOptions.IgnoreRemotePath | RunOptions.Redact);
 
                         Console.WriteLine(response.AllText);
                         Program.Exit(response.ExitCode);
@@ -563,7 +563,7 @@ NOTE: The following Vault commands are not supported:
                     bundle.AddFile("set-vault-policy.sh", sbScript.ToString(), isExecutable: true);
                     bundle.AddFile("policy", policyText);
 
-                    response = node.SudoCommand(bundle, RunOptions.IgnoreRemotePath);
+                    response = node.SudoCommand(bundle, RunOptions.IgnoreRemotePath | RunOptions.Redact);
 
                     Console.WriteLine(response.AllText);
                     Program.Exit(response.ExitCode);
@@ -642,7 +642,7 @@ NOTE: The following Vault commands are not supported:
         /// <param name="commandLine">The Vault command.</param>
         private void ExecuteOnNode(SshProxy<NodeDefinition> node, CommandLine commandLine)
         {
-            var response = node.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && {remoteVaultPath} {commandLine}", RunOptions.IgnoreRemotePath);
+            var response = node.SudoCommand($"export VAULT_TOKEN={vaultCredentials.RootToken} && {remoteVaultPath} {commandLine}", RunOptions.IgnoreRemotePath | RunOptions.Redact);
 
             Console.WriteLine(response.AllText);
             Program.Exit(response.ExitCode);

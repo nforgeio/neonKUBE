@@ -749,7 +749,7 @@ nsCertType              = server
         private VpnCaFiles GetVpnCaFiles()
         {
             var manager  = cluster.GetHealthyManager();
-            var response = manager.SudoCommand($"export VAULT_TOKEN={clusterLogin.VaultCredentials.RootToken} && vault read -format=json /neon-secret/vpn/ca.zip.encrypted");
+            var response = manager.SudoCommand($"export VAULT_TOKEN={clusterLogin.VaultCredentials.RootToken} && vault read -format=json /neon-secret/vpn/ca.zip.encrypted", RunOptions.Redact);
 
             if (response.ExitCode != 0)
             {

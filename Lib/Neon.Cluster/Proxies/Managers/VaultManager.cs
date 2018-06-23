@@ -408,5 +408,102 @@ vault policy-write {policy.Name} policy.hcl
 
             return Command($"vault delete auth/approle/role/{roleName}");
         }
+
+        /// <summary>
+        /// Seals all Vault instances.
+        /// </summary>
+        /// <returns><c>true</c> if all instances were sealed.</returns>
+        /// <exception cref="ClusterException">Thrown if the current login doesn't have root privileges</exception>
+        public bool Seal()
+        {
+            var failed = false;
+
+            cluster.EnsureRootPrivileges();
+
+            foreach (var manager in cluster.Managers)
+            {
+                var response = manager.SudoCommand($"vault-direct status");
+
+                if (response.ExitCode != 0)
+                {
+                    continue;   // Already sealed
+                }
+
+                var vaultStatus = new VaultStatus(response.OutputText);
+
+                if (vaultStatus.HAMode == "standby")
+                {
+                    // Restart to seal standby node
+
+                    response = manager.SudoCommand($"systemctl restart vault");
+
+                    if (response.ExitCode != 0)
+                    {
+                        failed = true;
+                    }
+                }
+                else
+                {
+                    response = manager.SudoCommand($"export VAULT_TOKEN={cluster.ClusterLogin.VaultCredentials.RootToken} && vault-direct operator seal", RunOptions.Redact);
+
+                    if (response.ExitCode != 0)
+                    {
+                        failed = true;
+                    }
+                }
+            }
+
+            return !failed;
+        }
+
+        /// <summary>
+        /// Unseals all Vault instances.
+        /// </summary>
+        /// <returns><c>true</c> if all instances were unsealed.</returns>
+        /// <exception cref="ClusterException">Thrown if the current login doesn't have root privileges</exception>
+        public bool Unseal()
+        {
+            var failed = false;
+
+            cluster.EnsureRootPrivileges();
+
+            foreach (var manager in cluster.Managers)
+            {
+                // Verify that the instance isn't already unsealed.
+
+                var response = manager.SudoCommand($"vault-direct status");
+
+                if (response.ExitCode == 0)
+                {
+                    continue;   // Already unsealed
+                }
+                else if (response.ExitCode != 2)
+                {
+                    failed = true;
+                    continue;
+                }
+
+                // ExitCode==2 means the instance is sealed.
+
+                // Note that we're passing the [-reset] option to ensure that 
+                // any keys from previous attempts have been cleared.
+
+                manager.SudoCommand($"vault-direct operator unseal -reset");
+
+                foreach (var key in cluster.ClusterLogin.VaultCredentials.UnsealKeys)
+                {
+                    response = manager.SudoCommand($"vault-direct operator unseal {key}", RunOptions.None);
+
+                    if (response.ExitCode != 0)
+                    {
+                        failed = true;
+
+                        Console.WriteLine($"[{manager.Name}] unseal failed");
+                    }
+                }
+            }
+
+            return !failed;
+        }
     }
 }
