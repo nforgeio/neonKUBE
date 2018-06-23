@@ -795,11 +795,11 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                     var bundle = new CommandBundle("./install.sh", version);
 
                     bundle.AddFile("install.sh",
-@"#!/bin/bash
+$@"#!/bin/bash
 
 set -euo pipefail
 
-curl -4fsSLv --retry 10 --retry-delay 30 https://releases.hashicorp.com/consul/${1}/consul_${1}_linux_amd64.zip -o /tmp/consul.zip 1>&2
+curl {Program.CurlOptions} https://releases.hashicorp.com/consul/$1/consul_$1_linux_amd64.zip -o /tmp/consul.zip 1>&2
 unzip -u /tmp/consul.zip -d /tmp
 cp /tmp/consul /usr/local/bin
 chmod 770 /usr/local/bin/consul
@@ -878,11 +878,11 @@ rm /tmp/consul
                     var bundle = new CommandBundle("./install.sh", version);
 
                     bundle.AddFile("install.sh",
-@"#!/bin/bash
+$@"#!/bin/bash
 
 set -euo pipefail
 
-curl -4fsSLv --retry 10 --retry-delay 30 https://releases.hashicorp.com/vault/${1}/vault_${1}_linux_amd64.zip -o /tmp/vault.zip 1>&2
+curl {Program.CurlOptions} https://releases.hashicorp.com/vault/$1/vault_$1_linux_amd64.zip -o /tmp/vault.zip 1>&2
 unzip -o /tmp/vault.zip -d /tmp
 rm /tmp/vault.zip
 

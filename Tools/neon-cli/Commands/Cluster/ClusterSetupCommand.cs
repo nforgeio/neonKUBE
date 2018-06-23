@@ -2687,7 +2687,7 @@ WantedBy=docker.service
                     installCommand.AddFile("install.sh",
 $@"# Download and install the plugin.
 
-curl -4fsSLv --retry 10 --retry-delay 30 {cluster.Definition.Ceph.VolumePluginPackage} -o /tmp/neon-volume-plugin-deb 1>&2
+curl {Program.CurlOptions} {cluster.Definition.Ceph.VolumePluginPackage} -o /tmp/neon-volume-plugin-deb 1>&2
 dpkg --install /tmp/neon-volume-plugin-deb
 rm /tmp/neon-volume-plugin-deb
 

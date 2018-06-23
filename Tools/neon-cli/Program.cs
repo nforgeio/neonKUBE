@@ -54,6 +54,11 @@ namespace NeonCli
         public const string MinimumVersion = "1.2.95";
 
         /// <summary>
+        /// CURL command common options.
+        /// </summary>
+        public const string CurlOptions = "-4fsSLv --retry 10 --retry-delay 30"; 
+
+        /// <summary>
         /// Host node operating system properties or <c>null</c>.
         /// </summary>
         private static OSProperties osProperties;
