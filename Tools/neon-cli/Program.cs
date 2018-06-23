@@ -1275,7 +1275,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
         {
             while (true)
             {
-                Console.Write($"{prompt} [Y/N]: ");
+                Console.Write($"{prompt} [y/n]: ");
 
                 var key = Console.ReadKey().KeyChar;
 

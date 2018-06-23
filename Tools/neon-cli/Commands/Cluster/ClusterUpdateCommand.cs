@@ -615,7 +615,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
         }
 
         /// <summary>
-        /// Updates the cluster images.
+        /// Updates the cluster services and containers.
         /// </summary>
         /// <param name="force"><c>true</c> to disable the update prompt.</param>
         /// <param name="maxParallel">Maximum number of parallel operations.</param>
@@ -628,11 +628,13 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                 Program.Exit(0);
             }
 
-            var controller = new SetupController<NodeDefinition>("cluster images", cluster.Nodes);
+            var controller = new SetupController<NodeDefinition>("cluster images", cluster.Nodes)
+            {
+                MaxParallel = maxParallel,
+                ShowStatus  = true
+            };
 
-            controller.MaxParallel = maxParallel;
-
-            ClusterUpdateManager.AddHiveUpdateSteps(cluster, controller, imagesOnly: true, serviceUpdateParallism: Program.MaxParallel);
+            ClusterUpdateManager.AddHiveUpdateSteps(cluster, controller, servicesOnly: true, serviceUpdateParallism: Program.MaxParallel);
 
             if (controller.StepCount == 0)
             {

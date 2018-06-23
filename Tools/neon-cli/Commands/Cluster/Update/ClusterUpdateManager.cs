@@ -46,11 +46,11 @@ namespace NeonCli
         /// </summary>
         /// <param name="cluster">The target cluster proxy.</param>
         /// <param name="controller">The setup controller.</param>
-        /// <param name="imagesOnly">Optionally indicate that only cluster service and container images should be updated.</param>
+        /// <param name="servicesOnly">Optionally indicate that only cluster service and container images should be updated.</param>
         /// <param name="serviceUpdateParallism">Optionally specifies the parallism to use when updating services.</param>
         /// <returns>The number of pending updates.</returns>
         /// <exception cref="ClusterException">Thrown if there was an error selecting the updates.</exception>
-        public static int AddHiveUpdateSteps(ClusterProxy cluster, SetupController<NodeDefinition> controller, bool imagesOnly = false, int serviceUpdateParallism = 1)
+        public static int AddHiveUpdateSteps(ClusterProxy cluster, SetupController<NodeDefinition> controller, bool servicesOnly = false, int serviceUpdateParallism = 1)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null);
 
@@ -63,7 +63,7 @@ namespace NeonCli
                 throw new ClusterException($"Unable to retrieve or parse the cluster version global [{NeonClusterGlobals.NeonCliVersion}].");
             }
 
-            if (!imagesOnly)
+            if (!servicesOnly)
             {
                 // Scan for the first update that applies.
 
@@ -91,7 +91,7 @@ namespace NeonCli
                             update.Cluster = cluster;
                             nextVersion = update.ToVersion;
 
-                            if (!imagesOnly)
+                            if (!servicesOnly)
                             {
                                 update.AddUpdateSteps(controller);
                             }
