@@ -41,7 +41,7 @@ namespace NeonCli
 
         /// <summary>
         /// Returns the <b>neon-cli</b> version.  This may be different from <see cref="ActualVersion"/>
-        /// if the <b>--version=VERSION</b> option was specified to force a specific version.
+        /// if the <b>--version=VERSION</b> option was specified to force a specific
         /// </summary>
         public static string Version { get; private set; } = ActualVersion;
 

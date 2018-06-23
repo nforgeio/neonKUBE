@@ -172,11 +172,16 @@ namespace NeonCli
                 {
                     // Save the config file just in case installation overwrites it.
 
-                    node.Status = "powerdns: backup settings";
+                    node.Status = "backup settings";
                     node.SudoCommand("cp /etc/powerdns/recursor.conf /etc/powerdns/recursor.conf.bak");
                     node.SudoCommand("mv /etc/powerdns/recursor.conf.backup /etc/powerdns/recursor.conf.org");
 
-                    // Install and configure the PowerDNS package repo.
+                    // Remove the old PDNS Recursor.
+
+                    node.Status = "remove old version";
+                    node.SudoCommand("apt-get remove -yq pdns-recursor");
+
+                    // Configure anmd install the PowerDNS package repo.
 
                     var bundle = new CommandBundle("./install.sh");
 
@@ -200,16 +205,16 @@ curl {Program.CurlOptions} https://repo.powerdns.com/FD380FBB-pub.asc | sudo apt
 # Install PDNS Recursor
 
 apt-get update
-apt-get install -yq pdns-recursor
+apt-get install pdns-recursor
 
-# Ensure that it uses the correct settings.
+# Ensure that it's using the correct settings.
 
 cp /etc/powerdns/recursor.conf.bak /etc/powerdns/recursor.conf
 systemctl restart pdns-recursor
 ",
                         isExecutable: true);
 
-                    node.Status = "powerdns: install";
+                    node.Status = "install latest version";
                     node.SudoCommand(bundle);
                 });
         }
