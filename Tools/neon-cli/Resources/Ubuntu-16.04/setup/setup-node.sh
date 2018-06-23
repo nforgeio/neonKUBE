@@ -628,16 +628,27 @@ systemctl daemon-reload
 systemctl restart neon-cleaner
 
 #------------------------------------------------------------------------------
-# Configure the PowerDNS Recursor.
+# Install the PowerDNS Recursor.
 
-curl -4fsSLv ${CURL_RETRY} $<net.powerdns.recursor.package.uri> -o /tmp/pdns-recursor.deb
-gdebi --non-interactive /tmp/pdns-recursor.deb
-rm /tmp/pdns-recursor.deb
+cat <<EOF > /etc/apt/sources.list.d/pdns.list
+deb [arch=amd64] http://repo.powerdns.com/ubuntu xenial-rec-41 main
+EOF
+
+cat <<EOF > /etc/apt/preferences.d/pdns
+Package: pdns-*
+Pin: origin repo.powerdns.com
+Pin-Priority: 600
+EOF
+
+curl ${CURL_RETRY} https://repo.powerdns.com/FD380FBB-pub.asc | sudo apt-key add -
+apt-get update
+apt-get install pdns-recursor
+
 systemctl stop pdns-recursor
 
 # Backup the configuration file installed by the package.
 
-cp /etc/powerdns/recursor.conf /etc/powerdns/recursor.conf.backup
+cp /etc/powerdns/recursor.conf /etc/powerdns/recursor.conf.org
 
 # Generate [/etc/powerdns/hosts] file that the PowerDNS Recursor
 # will use to authoritatively answer local cluster questions.  Note

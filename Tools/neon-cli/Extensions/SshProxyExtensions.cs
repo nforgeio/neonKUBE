@@ -472,7 +472,6 @@ namespace NeonCli
                 preprocessReader.Set("net.nameservers", nameservers);
             }
 
-            SetBashVariable(preprocessReader, "net.powerdns.recursor.package.uri", clusterDefinition.Network.PdnsRecursorPackageUri);
             preprocessReader.Set("net.powerdns.recursor.hosts", GetPowerDnsHosts(clusterDefinition, nodeDefinition));
 
             SetBashVariable(preprocessReader, "docker.version", clusterDefinition.Docker.PackageVersion);
