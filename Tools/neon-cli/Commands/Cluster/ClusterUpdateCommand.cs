@@ -572,11 +572,12 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                 Program.Exit(1);
             }
 
-            Program.Exit(0);
+            Console.WriteLine();
+            Console.WriteLine("*** Linux packages was updated successfully.");
         }
 
         /// <summary>
-        /// Updates the cluster.
+        /// Updates the cluster hive configuration, services and containers.
         /// </summary>
         /// <param name="force"><c>true</c> to disable the update prompt.</param>
         /// <param name="maxParallel">Maximum number of parallel operations.</param>
@@ -611,7 +612,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
             }
 
             Console.WriteLine();
-            Console.WriteLine("*** Cluster was updated successfully.");
+            Console.WriteLine("*** Hive coponents, services, and containers were updated successfully.");
         }
 
         /// <summary>
@@ -649,7 +650,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
             }
 
             Console.WriteLine();
-            Console.WriteLine("*** Cluster service and container images were updated successfully.");
+            Console.WriteLine("*** Hive services and containers were updated successfully.");
         }
 
         /// <summary>
@@ -741,7 +742,8 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                 Program.Exit(1);
             }
 
-            Program.Exit(0);
+            Console.WriteLine();
+            Console.WriteLine("*** Docker Engine was updated successfully.");
         }
 
         /// <summary>
@@ -826,7 +828,8 @@ rm /tmp/consul
                 Program.Exit(1);
             }
 
-            Program.Exit(0);
+            Console.WriteLine();
+            Console.WriteLine("*** Consul was updated successfully.");
         }
 
         /// <summary>
@@ -910,7 +913,8 @@ chmod 700 /usr/local/bin/vault
                 Program.Exit(1);
             }
 
-            Program.Exit(0);
+            Console.WriteLine();
+            Console.WriteLine("*** Vault was updated successfully.");
         }
     }
 }
