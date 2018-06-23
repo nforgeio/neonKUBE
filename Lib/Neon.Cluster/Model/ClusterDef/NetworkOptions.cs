@@ -277,7 +277,6 @@ namespace Neon.Cluster
         /// URI for the <a href="https://www.powerdns.com/recursor.html">PowerDNS Recursor</a> package 
         /// to use for provisioning cluster DNS services.  This defaults to a known good release.
         /// </summary>
-        [Obsolete("This property will be ignored.")]
         [JsonProperty(PropertyName = "PdnsRecursorPackageUri", Required = Required.Default)]
         [DefaultValue(defaultPdnsRecursorPackagePackageUri)]
         public string PdnsRecursorPackageUri { get; set; } = defaultPdnsRecursorPackagePackageUri;
@@ -576,6 +575,13 @@ namespace Neon.Cluster
                 {
                     throw new ClusterDefinitionException($"[{nameserver}] is not a valid [{nameof(NetworkOptions)}.{nameof(Nameservers)}] IP address.");
                 }
+            }
+
+            PdnsRecursorPackageUri = PdnsRecursorPackageUri ?? defaultPdnsRecursorPackagePackageUri;
+
+            if (!Uri.TryCreate(PdnsRecursorPackageUri, UriKind.Absolute, out var uri3))
+            {
+                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PdnsRecursorPackageUri)}={PdnsRecursorPackageUri}] is not a valid URI.");
             }
 
             if (clusterDefinition.Hosting.IsCloudProvider)

@@ -156,67 +156,6 @@ namespace NeonCli
 
                     node.SudoCommand("systemctl daemon-reload");
                 });
-
-            // Older releases installed a specific PowerDNS Debian package downloaded
-            // from our GitHib site.  The original idea was that the operator would want
-            // to maintain control over the version deployed.  We're backing off on this
-            // requirement and are going to pin the service so a specific package repo
-            // and assume that the PowerDNS folks won't release anything really bad.
-            // We're not doing anything fancy so we probably won't be affected by any
-            // bugs that come up anyway.
-            //
-            // This change will make cluster updating quite a bit easier.
-
-            node.InvokeIdempotentAction(GetIdempotentTag("powerdns"),
-                () =>
-                {
-                    // Save the config file just in case installation overwrites it.
-
-                    node.Status = "backup settings";
-                    node.SudoCommand("cp /etc/powerdns/recursor.conf /etc/powerdns/recursor.conf.bak");
-                    node.SudoCommand("mv /etc/powerdns/recursor.conf.backup /etc/powerdns/recursor.conf.org");
-
-                    // Remove the old PDNS Recursor.
-
-                    node.Status = "remove old version";
-                    node.SudoCommand("apt-get remove -yq pdns-recursor");
-
-                    // Configure anmd install the PowerDNS package repo.
-
-                    var bundle = new CommandBundle("./install.sh");
-
-                    bundle.AddFile("install.sh",
-$@"#!/bin/bash
-
-# Configure the package repo.
-
-cat <<EOF > /etc/apt/sources.list.d/pdns.list
-deb [arch=amd64] http://repo.powerdns.com/ubuntu xenial-rec-41 main
-EOF
-
-cat <<EOF > /etc/apt/preferences.d/pdns
-Package: pdns-*
-Pin: origin repo.powerdns.com
-Pin-Priority: 600
-EOF
-
-curl {Program.CurlOptions} https://repo.powerdns.com/FD380FBB-pub.asc | sudo apt-key add -
-
-# Install PDNS Recursor
-
-apt-get update
-apt-get install pdns-recursor
-
-# Ensure that it's using the correct settings.
-
-cp /etc/powerdns/recursor.conf.bak /etc/powerdns/recursor.conf
-systemctl restart pdns-recursor
-",
-                        isExecutable: true);
-
-                    node.Status = "install latest version";
-                    node.SudoCommand(bundle);
-                });
         }
 
         /// <summary>
