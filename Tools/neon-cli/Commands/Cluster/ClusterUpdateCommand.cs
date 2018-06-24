@@ -202,7 +202,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
             // Use a temporary controller to determine how  many cluster
             // updates are pending.
 
-            var controller = new SetupController<NodeDefinition>("cluster status", cluster.Nodes)
+            var controller = new SetupController<NodeDefinition>("cluster check", cluster.Nodes)
             {
                 MaxParallel = maxParallel,
                 ShowStatus  = !Program.Quiet
@@ -224,7 +224,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
             // We should do something similar for the host services like:
             // consul, docker, powerdns, and vault.
 
-            controller = new SetupController<NodeDefinition>("cluster status", cluster.Nodes)
+            controller = new SetupController<NodeDefinition>("cluster check", cluster.Nodes)
             {
                 MaxParallel = maxParallel,
                 ShowStatus  = !Program.Quiet
@@ -238,7 +238,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
             var consulVersions     = new Dictionary<SemanticVersion, int>();    // on cluster nodes.
             var vaultVersions      = new Dictionary<SemanticVersion, int>();
 
-            controller.AddStep("scan cluster nodes",
+            controller.AddStep("scan cluster",
                 (node, stepDelay) =>
                 {
                     Thread.Sleep(stepDelay);
@@ -329,165 +329,160 @@ The current login must have ROOT PERMISSIONS to update the cluster.
             Console.WriteLine(title);
             Console.WriteLine(new string('-', title.Length));
 
-            if (pendingUpdateCount == 0 && maxUpdates == 0)
+            var hiveStatus          = (pendingUpdateCount == 0 && maxUpdates == 0) ? "CURRENT" : pendingUpdateCount.ToString();
+            var linuxPackageStatus  = (maxUpdates == 0) ? "CURRENT" : maxUpdates.ToString();
+            var linuxSecurityStatus = (maxSecurityUpdates == 0) ? "CURRENT" : maxSecurityUpdates.ToString();
+
+            Console.WriteLine($"neonHIVE updates:       {hiveStatus}");
+            Console.WriteLine($"Linux package updates:  {linuxPackageStatus}");
+            Console.WriteLine($"Linux security updates: {linuxSecurityStatus}");
+
+            //-------------------------------------------------------------
+            // Docker status
+
+            string dockerVersionInfo;
+
+            if (dockerVersions.Count == 0)
             {
-                Console.WriteLine("Cluster is up to date.");
+                dockerVersionInfo = "*** ERROR: Docker is not installed.";
+            }
+            else if (dockerVersions.Count == 1)
+            {
+                dockerVersionInfo = (string)dockerVersions.Keys.First();
             }
             else
             {
-                Console.WriteLine($"neonHIVE updates:       {pendingUpdateCount}");
-                Console.WriteLine($"Linux total updates:    {maxUpdates}");
-                Console.WriteLine($"Linux security updates: {maxSecurityUpdates}");
+                var sb = new StringBuilder();
 
-                //-------------------------------------------------------------
-                // Docker status
-
-                string dockerVersionInfo;
-
-                if (dockerVersions.Count == 0)
+                foreach (var version in dockerVersions.Keys.OrderBy(v => v))
                 {
-                    dockerVersionInfo = "*** ERROR: Docker is not installed.";
-                }
-                else if (dockerVersions.Count == 1)
-                {
-                    dockerVersionInfo = (string)dockerVersions.Keys.First();
-                }
-                else
-                {
-                    var sb = new StringBuilder();
-
-                    foreach (var version in dockerVersions.Keys.OrderBy(v => v))
-                    {
-                        sb.AppendWithSeparator((string)version, ", ");
-                    }
-
-                    dockerVersionInfo = sb.ToString();
+                    sb.AppendWithSeparator((string)version, ", ");
                 }
 
-                var dockerStatus = "CURRENT";
-
-                if (dockerVersions.Count == 0)
-                {
-                    dockerStatus = "ERROR: cannot detect version";
-                }
-                else if (dockerVersions.Count > 1)
-                {
-                    dockerStatus = "WARNING: multiple versions installed";
-                }
-                else if (dockerVersions.Keys.Min(v => v) < (SemanticVersion)componentVersions.Docker)
-                {
-                    dockerStatus = "UPDATE AVAILABLE";
-                }
-
-                var dockerTitle = $"Docker Engine: {dockerStatus}";
-
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.WriteLine(dockerTitle);
-                Console.WriteLine(new string('-', dockerTitle.Length));
-                Console.WriteLine($"Current: {dockerVersionInfo}");
-                Console.WriteLine($"Latest:  {componentVersions.Docker}");
-
-                //-------------------------------------------------------------
-                // Consul status
-
-                string consulVersionInfo;
-
-                if (consulVersions.Count == 0)
-                {
-                    consulVersionInfo = "*** ERROR: Consul is not installed.";
-                }
-                else if (consulVersions.Count == 1)
-                {
-                    consulVersionInfo = (string)consulVersions.Keys.First();
-                }
-                else
-                {
-                    var sb = new StringBuilder();
-
-                    foreach (var version in consulVersions.Keys.OrderBy(v => v))
-                    {
-                        sb.AppendWithSeparator((string)version, ", ");
-                    }
-
-                    consulVersionInfo = sb.ToString();
-                }
-
-                var consulStatus = "CURRENT";
-
-                if (consulVersions.Count == 0)
-                {
-                    consulStatus = "ERROR: cannot detect version";
-                }
-                else if (consulVersions.Count > 1)
-                {
-                    consulStatus = "WARNING: multiple versions installed";
-                }
-                else if (consulVersions.Keys.Min(v => v) < (SemanticVersion)componentVersions.Consul)
-                {
-                    consulStatus = "UPDATE AVAILABLE";
-                }
-
-                var consulTitle = $"HashiCorp Consul: {consulStatus}";
-
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.WriteLine(consulTitle);
-                Console.WriteLine(new string('-', consulTitle.Length));
-                Console.WriteLine($"Current: {consulVersionInfo}");
-                Console.WriteLine($"Latest:  {componentVersions.Consul}");
-
-                //-------------------------------------------------------------
-                // Vault status
-
-                string vaultVersionInfo;
-
-                if (consulVersions.Count == 0)
-                {
-                    vaultVersionInfo = "*** ERROR: Vault is not installed.";
-                }
-                else if (consulVersions.Count == 1)
-                {
-                    vaultVersionInfo = (string)vaultVersions.Keys.First();
-                }
-                else
-                {
-                    var sb = new StringBuilder();
-
-                    foreach (var version in vaultVersions.Keys.OrderBy(v => v))
-                    {
-                        sb.AppendWithSeparator((string)version, ", ");
-                    }
-
-                    vaultVersionInfo = sb.ToString();
-                }
-
-                var vaultStatus = "CURRENT";
-
-                if (vaultVersions.Count == 0)
-                {
-                    vaultStatus = "ERROR: cannot detect version";
-                }
-                else if (vaultVersions.Count > 1)
-                {
-                    vaultStatus = "WARNING: multiple versions installed";
-                }
-                else if (vaultVersions.Keys.Min(v => v) < (SemanticVersion)componentVersions.Vault)
-                {
-                    vaultStatus = "UPDATE AVAILABLE";
-                }
-
-                var vaultTitle = $"HashiCorp Vault: {vaultStatus}";
-
-                Console.WriteLine();
-                Console.WriteLine();
-                Console.WriteLine(vaultTitle);
-                Console.WriteLine(new string('-', vaultTitle.Length));
-                Console.WriteLine($"Current: {vaultVersionInfo}");
-                Console.WriteLine($"Latest:  {componentVersions.Vault}");
+                dockerVersionInfo = sb.ToString();
             }
 
-            Program.Exit(0);
+            var dockerStatus = "CURRENT";
+
+            if (dockerVersions.Count == 0)
+            {
+                dockerStatus = "ERROR: cannot detect version";
+            }
+            else if (dockerVersions.Count > 1)
+            {
+                dockerStatus = "WARNING: multiple versions installed";
+            }
+            else if (dockerVersions.Keys.Min(v => v) < (SemanticVersion)componentVersions.Docker)
+            {
+                dockerStatus = "UPDATE AVAILABLE";
+            }
+
+            var dockerTitle = $"Docker Engine: {dockerStatus}";
+
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine(dockerTitle);
+            Console.WriteLine(new string('-', dockerTitle.Length));
+            Console.WriteLine($"Current: {dockerVersionInfo}");
+            Console.WriteLine($"Latest:  {componentVersions.Docker}");
+
+            //-------------------------------------------------------------
+            // Consul status
+
+            string consulVersionInfo;
+
+            if (consulVersions.Count == 0)
+            {
+                consulVersionInfo = "*** ERROR: Consul is not installed.";
+            }
+            else if (consulVersions.Count == 1)
+            {
+                consulVersionInfo = (string)consulVersions.Keys.First();
+            }
+            else
+            {
+                var sb = new StringBuilder();
+
+                foreach (var version in consulVersions.Keys.OrderBy(v => v))
+                {
+                    sb.AppendWithSeparator((string)version, ", ");
+                }
+
+                consulVersionInfo = sb.ToString();
+            }
+
+            var consulStatus = "CURRENT";
+
+            if (consulVersions.Count == 0)
+            {
+                consulStatus = "ERROR: cannot detect version";
+            }
+            else if (consulVersions.Count > 1)
+            {
+                consulStatus = "WARNING: multiple versions installed";
+            }
+            else if (consulVersions.Keys.Min(v => v) < (SemanticVersion)componentVersions.Consul)
+            {
+                consulStatus = "UPDATE AVAILABLE";
+            }
+
+            var consulTitle = $"HashiCorp Consul: {consulStatus}";
+
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine(consulTitle);
+            Console.WriteLine(new string('-', consulTitle.Length));
+            Console.WriteLine($"Current: {consulVersionInfo}");
+            Console.WriteLine($"Latest:  {componentVersions.Consul}");
+
+            //-------------------------------------------------------------
+            // Vault status
+
+            string vaultVersionInfo;
+
+            if (consulVersions.Count == 0)
+            {
+                vaultVersionInfo = "*** ERROR: Vault is not installed.";
+            }
+            else if (consulVersions.Count == 1)
+            {
+                vaultVersionInfo = (string)vaultVersions.Keys.First();
+            }
+            else
+            {
+                var sb = new StringBuilder();
+
+                foreach (var version in vaultVersions.Keys.OrderBy(v => v))
+                {
+                    sb.AppendWithSeparator((string)version, ", ");
+                }
+
+                vaultVersionInfo = sb.ToString();
+            }
+
+            var vaultStatus = "CURRENT";
+
+            if (vaultVersions.Count == 0)
+            {
+                vaultStatus = "ERROR: cannot detect version";
+            }
+            else if (vaultVersions.Count > 1)
+            {
+                vaultStatus = "WARNING: multiple versions installed";
+            }
+            else if (vaultVersions.Keys.Min(v => v) < (SemanticVersion)componentVersions.Vault)
+            {
+                vaultStatus = "UPDATE AVAILABLE";
+            }
+
+            var vaultTitle = $"HashiCorp Vault: {vaultStatus}";
+
+            Console.WriteLine();
+            Console.WriteLine();
+            Console.WriteLine(vaultTitle);
+            Console.WriteLine(new string('-', vaultTitle.Length));
+            Console.WriteLine($"Current: {vaultVersionInfo}");
+            Console.WriteLine($"Latest:  {componentVersions.Vault}");
         }
 
         /// <summary>
