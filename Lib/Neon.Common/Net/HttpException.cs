@@ -95,7 +95,7 @@ namespace Neon.Net
         /// <param name="innerException">The inner exception.</param>
         /// <param name="requestUri">The optional request URL.</param>
         public HttpException(Exception innerException, string requestUri = null)
-            : base($"[exception={innerException.GetType().Name}{GetUriString(requestUri)}]")
+            : base($"[exception={innerException.GetType().Name}({innerException.Message}){GetUriString(requestUri)}]")
         {
             this.StatusCode   = (HttpStatusCode)0;
             this.RequestUri   = requestUri;
