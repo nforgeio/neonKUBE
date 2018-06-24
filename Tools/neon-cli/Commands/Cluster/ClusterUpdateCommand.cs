@@ -520,10 +520,10 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                     Thread.Sleep(stepDelay);
 
                     node.Status = "run: safe-apt-get update";
-                    node.SudoCommand("safe-apt-get update", RunOptions.FaultOnError);
+                    node.SudoCommand("safe-apt-get update");
 
                     node.Status = "run: safe-apt-get dist-upgrade -yq";
-                    node.SudoCommand("safe-apt-get dist-upgrade -yq", RunOptions.FaultOnError);
+                    node.SudoCommand("safe-apt-get dist-upgrade -yq");
                 });
 
             controller.AddStep("reboot nodes",
@@ -544,7 +544,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                         // during the update.
 
                         node.Status = "swarm: drain services";
-                        firstManager.SudoCommand($"docker node update --availability drain {node.Name}", RunOptions.FaultOnError);
+                        cluster.Docker.DrainNode(node.Name);
                         Thread.Sleep(TimeSpan.FromSeconds(30));
                     }
 
@@ -555,7 +555,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                         // Put the node back into ACTIVE mode (from DRAIN).
 
                         node.Status = "swarm: activate";
-                        firstManager.SudoCommand($"docker node update --availability active {node.Name}", RunOptions.FaultOnError);
+                        cluster.Docker.ActivateNode(node.Name);
                     }
 
                     // Give the node a chance to become active again in the swarm 
@@ -710,25 +710,25 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                         // during the update.
 
                         node.Status = "swarm: drain services";
-                        firstManager.SudoCommand($"docker node update --availability drain {node.Name}", RunOptions.FaultOnError);
+                        cluster.Docker.DrainNode(node.Name);
                         Thread.Sleep(TimeSpan.FromSeconds(30));
                     }
 
                     node.Status = "run: safe-apt-get update";
-                    node.SudoCommand("safe-apt-get update", RunOptions.FaultOnError);
+                    node.SudoCommand("safe-apt-get update");
 
                     node.Status = $"run: safe-apt-get install -yq {package}";
-                    node.SudoCommand($"safe-apt-get install -yq {package}", RunOptions.FaultOnError);
+                    node.SudoCommand($"safe-apt-get install -yq {package}");
 
                     node.Status = $"restart: docker";
-                    node.SudoCommand("systemctl restart docker", RunOptions.FaultOnError);
+                    node.SudoCommand("systemctl restart docker");
 
                     if (node.Metadata.InSwarm)
                     {
                         // Put the node back into ACTIVE mode (from DRAIN).
 
                         node.Status = "swarm: activate";
-                        firstManager.SudoCommand($"docker node update --availability active {node.Name}", RunOptions.FaultOnError);
+                        cluster.Docker.ActivateNode(node.Name);
                     }
 
                     node.Status = $"stabilizing ({Program.WaitSeconds}s)";
@@ -788,7 +788,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                     }
 
                     node.Status = $"stop: consul";
-                    node.SudoCommand("systemctl stop consul", RunOptions.FaultOnError);
+                    node.SudoCommand("systemctl stop consul");
 
                     node.Status = $"update: consul";
 
@@ -809,10 +809,10 @@ rm /tmp/consul
 ",
                         isExecutable: true);
 
-                    node.SudoCommand(bundle, RunOptions.FaultOnError);
+                    node.SudoCommand(bundle);
 
                     node.Status = $"restart: consul";
-                    node.SudoCommand("systemctl restart consul", RunOptions.FaultOnError);
+                    node.SudoCommand("systemctl restart consul");
 
                     if (node.Metadata.IsManager)
                     {
@@ -891,12 +891,12 @@ chmod 700 /usr/local/bin/vault
 ",
                     isExecutable: true);
 
-                    node.SudoCommand(bundle, RunOptions.FaultOnError);
+                    node.SudoCommand(bundle);
 
                     if (node.Metadata.IsManager)
                     {
                         node.Status = $"restart: vault";
-                        node.SudoCommand("systemctl restart vault", RunOptions.FaultOnError);
+                        node.SudoCommand("systemctl restart vault");
 
                         node.Status = $"unseal: vault";
                         cluster.Vault.Unseal();

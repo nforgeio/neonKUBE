@@ -85,5 +85,79 @@ namespace Neon.Cluster
 
             return details;
         }
+
+        /// <summary>
+        /// Signals the Docker orchestrator to drain all service tasks from a node.
+        /// </summary>
+        /// <param name="nodeName">Identifies the target node.</param>
+        /// <exception cref="KeyNotFoundException">Thrown if the named node does not exist.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the node is not part of the swarm.</exception>
+        public void DrainNode(string nodeName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
+
+            var node = cluster.GetNode(nodeName);
+
+            if (!node.Metadata.InSwarm)
+            {
+                throw new InvalidOperationException($"Node [{nodeName}] is not part of the swarm.");
+            }
+
+            // I've see transient errors, so we'll retry a few times.
+            
+            var manager = cluster.GetHealthyManager();
+            var retry   = new LinearRetryPolicy(typeof(Exception), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
+
+            retry.InvokeAsync(
+                async () =>
+                {
+                    var response = manager.SudoCommand($"docker node update --availability drain {nodeName}");
+
+                    if (response.ExitCode != 0)
+                    {
+                        throw new Exception(response.ErrorSummary);
+                    }
+
+                    await Task.CompletedTask;
+
+                }).Wait();
+        }
+
+        /// <summary>
+        /// Signals the Docker orchestrator to begin scheduling service tasks on a node.
+        /// </summary>
+        /// <param name="nodeName">Identifies the target node.</param>
+        /// <exception cref="KeyNotFoundException">Thrown if the named node does not exist.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if the node is not part of the swarm.</exception>
+        public void ActivateNode(string nodeName)
+        {
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
+
+            var node = cluster.GetNode(nodeName);
+
+            if (!node.Metadata.InSwarm)
+            {
+                throw new InvalidOperationException($"Node [{nodeName}] is not part of the swarm.");
+            }
+
+            // I've see transient errors, so we'll retry a few times.
+
+            var manager = cluster.GetHealthyManager();
+            var retry   = new LinearRetryPolicy(typeof(Exception), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
+
+            retry.InvokeAsync(
+                async () =>
+                {
+                    var response = manager.SudoCommand($"docker node update --availability active {nodeName}");
+
+                    if (response.ExitCode != 0)
+                    {
+                        throw new Exception(response.ErrorSummary);
+                    }
+
+                    await Task.CompletedTask;
+
+                }).Wait();
+        }
     }
 }

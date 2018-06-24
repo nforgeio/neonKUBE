@@ -86,7 +86,7 @@ namespace NeonCli
             node.InvokeIdempotentAction(GetIdempotentTag("install-mmv"),
                 () =>
                 {
-                    node.Status = "install mmv";
+                    node.Status = "install: mmv";
                     node.SudoCommand("safe-apt-get update");
                     node.SudoCommand("safe-apt-get install -yq mmv");
                 });

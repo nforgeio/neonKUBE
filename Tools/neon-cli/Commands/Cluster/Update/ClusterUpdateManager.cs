@@ -391,7 +391,7 @@ namespace NeonCli
             if (node.Metadata.InSwarm)
             {
                 node.Status = "swarm: drain services";
-                cluster.FirstManager.SudoCommand($"docker node update --availability drain {node.Name}");
+                cluster.Docker.DrainNode(node.Name);
                 Thread.Sleep(TimeSpan.FromSeconds(30));
             }
 
@@ -409,7 +409,7 @@ namespace NeonCli
             if (node.Metadata.InSwarm)
             {
                 node.Status = "swarm: activate";
-                cluster.FirstManager.SudoCommand($"docker node update --availability active {node.Name}");
+                cluster.Docker.ActivateNode(node.Name);
             }
 
             if (failed)
