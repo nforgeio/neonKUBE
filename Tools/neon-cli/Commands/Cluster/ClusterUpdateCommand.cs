@@ -208,7 +208,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                 ShowStatus  = !Program.Quiet
             };
 
-            var pendingUpdateCount = ClusterUpdateManager.AddHiveUpdateSteps(cluster, controller, serviceUpdateParallism: Program.MaxParallel);
+            var hiveUpdateCount = ClusterUpdateManager.AddHiveUpdateSteps(cluster, controller, serviceUpdateParallism: Program.MaxParallel);
 
             // Create another controller to actually scan the cluster nodes to
             // count the pending Linux updates as well as the system containers
@@ -329,7 +329,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
             Console.WriteLine(title);
             Console.WriteLine(new string('-', title.Length));
 
-            var hiveStatus          = (pendingUpdateCount == 0 && maxUpdates == 0) ? "CURRENT" : pendingUpdateCount.ToString();
+            var hiveStatus          = (hiveUpdateCount == 0 && maxUpdates == 0) ? "CURRENT" : hiveUpdateCount.ToString();
             var linuxPackageStatus  = (maxUpdates == 0) ? "CURRENT" : maxUpdates.ToString();
             var linuxSecurityStatus = (maxSecurityUpdates == 0) ? "CURRENT" : maxSecurityUpdates.ToString();
 
@@ -592,7 +592,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
             controller.MaxParallel = maxParallel;
 
-            var pendingUpdateCount = ClusterUpdateManager.AddHiveUpdateSteps(cluster, controller, serviceUpdateParallism: Program.MaxParallel);
+            var hiveUpdateCount = ClusterUpdateManager.AddHiveUpdateSteps(cluster, controller, serviceUpdateParallism: Program.MaxParallel);
 
             if (controller.StepCount == 0)
             {
