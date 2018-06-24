@@ -151,6 +151,9 @@
     <None Update="Linux\Ubuntu-16.04\tools\docker-volume-rm.sh.txt">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>
+    <None Update="Resources\Ubuntu-16.04\tools\safe-apt-get.sh">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
     <None Update="Resources\Ubuntu-16.04\updates\010297_010298.zip">
       <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
     </None>

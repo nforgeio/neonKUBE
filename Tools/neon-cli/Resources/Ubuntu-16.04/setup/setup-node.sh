@@ -56,8 +56,8 @@ fi
 #	gdebi-core	Installs .deb package files AND their dependencies
 #   mmv         Easy multiple file renaming
 
-apt-get update
-apt-get install -yq jq aptitude gdebi-core mmv
+safe-apt-get update
+safe-apt-get install -yq jq aptitude gdebi-core mmv
 
 # Configure the hostname.
 #
@@ -1309,7 +1309,7 @@ systemctl restart neon-dns-loader
 # Install Ansible related packages so common playbooks (like Docker related ones)
 # will run out-of-the-box.
 
-apt-get install -yq python-pip
+safe-apt-get install -yq python-pip
 pip install docker
 pip install docker-py
 pip install docker-compose

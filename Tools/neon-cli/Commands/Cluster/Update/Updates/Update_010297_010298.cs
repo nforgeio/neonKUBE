@@ -57,6 +57,19 @@ namespace NeonCli
         {
             Thread.Sleep(stepDelay);
 
+            // [1.2.98] adds the [safe-apt-get] script that attempts to retry
+            // when there are network problems.
+
+            node.InvokeIdempotentAction(GetIdempotentTag("safe-apt-get"),
+                () =>
+                {
+                    var targetPath = LinuxPath.Combine(NeonHostFolders.Tools, "safe-apt-get");
+
+                    node.Status = "upload: safe-apt-get";
+                    node.UploadText(targetPath, ResourceFiles.Root.GetFolder("Ubuntu-16.04").GetFolder("tools").GetFile("safe-apt-get.sh").Contents);
+                    node.SudoCommand($"chmod 770 {targetPath}");
+                });
+
             // Prevent the package manager from automatically updating Docker.
 
             node.InvokeIdempotentAction(GetIdempotentTag("disable-docker-auto-update"),
@@ -74,8 +87,8 @@ namespace NeonCli
                 () =>
                 {
                     node.Status = "install mmv";
-                    node.SudoCommand("apt-get update");
-                    node.SudoCommand("apt-get install -yq mmv");
+                    node.SudoCommand("safe-apt-get update");
+                    node.SudoCommand("safe-apt-get install -yq mmv");
                 });
 
             // Version 1.2.98 reorganizes the cluster nodes idempotent status directories.

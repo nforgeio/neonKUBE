@@ -246,8 +246,8 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                     //---------------------------------------------------------
                     // Look for Linux package updates.
 
-                    node.Status = "run: apt-get update";
-                    node.SudoCommand("apt-get update");
+                    node.Status = "run: safe-apt-get update";
+                    node.SudoCommand("safe-apt-get update");
 
                     node.Status  = "run: apt-check";
                     var response = node.SudoCommand("/usr/lib/update-notifier/apt-check");
@@ -519,11 +519,11 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                 {
                     Thread.Sleep(stepDelay);
 
-                    node.Status = "run: apt-get update";
-                    node.SudoCommand("apt-get update", RunOptions.FaultOnError);
+                    node.Status = "run: safe-apt-get update";
+                    node.SudoCommand("safe-apt-get update", RunOptions.FaultOnError);
 
-                    node.Status = "run: apt-get dist-upgrade -yq";
-                    node.SudoCommand("apt-get dist-upgrade -yq", RunOptions.FaultOnError);
+                    node.Status = "run: safe-apt-get dist-upgrade -yq";
+                    node.SudoCommand("safe-apt-get dist-upgrade -yq", RunOptions.FaultOnError);
                 });
 
             controller.AddStep("reboot nodes",
@@ -714,11 +714,11 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                         Thread.Sleep(TimeSpan.FromSeconds(30));
                     }
 
-                    node.Status = "run: apt-get update";
-                    node.SudoCommand("apt-get update", RunOptions.FaultOnError);
+                    node.Status = "run: safe-apt-get update";
+                    node.SudoCommand("safe-apt-get update", RunOptions.FaultOnError);
 
-                    node.Status = $"run: apt-get install -yq {package}";
-                    node.SudoCommand($"apt-get install -yq {package}", RunOptions.FaultOnError);
+                    node.Status = $"run: safe-apt-get install -yq {package}";
+                    node.SudoCommand($"safe-apt-get install -yq {package}", RunOptions.FaultOnError);
 
                     node.Status = $"restart: docker";
                     node.SudoCommand("systemctl restart docker", RunOptions.FaultOnError);

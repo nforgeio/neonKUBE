@@ -399,9 +399,9 @@ namespace NeonCli
             node.SudoCommand("systemctl stop docker");
 
             node.Status = "update: docker";
-            node.SudoCommand("apt-get update");
+            node.SudoCommand("safe-apt-get update");
 
-            var failed = node.SudoCommand($"apt-get install -yq {package}", RunOptions.LogOutput).ExitCode != 0;
+            var failed = node.SudoCommand($"safe-apt-get install -yq {package}", RunOptions.LogOutput).ExitCode != 0;
 
             node.Status = "restart: docker";
             node.SudoCommand("systemctl start docker");

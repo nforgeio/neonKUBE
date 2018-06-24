@@ -281,7 +281,8 @@ namespace NeonCli
                                 {
                                     new File("docker-volume-create.sh", hasVariables: true),
                                     new File("docker-volume-exists.sh", hasVariables: true),
-                                    new File("docker-volume-rm.sh", hasVariables: true)
+                                    new File("docker-volume-rm.sh", hasVariables: true),
+                                    new File("safe-apt-get.sh", hasVariables: true)
                                 }),
                             new Folder("updates",
                                 files: new List<File>()

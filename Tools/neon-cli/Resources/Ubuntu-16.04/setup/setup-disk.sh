@@ -164,7 +164,7 @@ else
         
     # Install [mdadm]
 
-    apt-get -q -y install mdadm
+    safe-apt-get -q -y install mdadm
 
     # Create a partition on each disk and build up string including all of the
     # drive partitions (which we'll use below to create the RAID array).

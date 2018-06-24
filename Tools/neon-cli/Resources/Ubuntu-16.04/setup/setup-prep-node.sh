@@ -126,8 +126,8 @@ EOF
 #------------------------------------------------------------------------------
 # Update the APT package index and install some common packages.
 
-apt-get update -yq
-apt-get install -yq unzip curl nano sysstat dstat iotop iptraf apache2-utils daemon
+safe-apt-get update -yq
+safe-apt-get install -yq unzip curl nano sysstat dstat iotop iptraf apache2-utils daemon
 
 #------------------------------------------------------------------------------
 # Clean some things up.
@@ -136,7 +136,7 @@ echo "** Clean up" 1>&2
 
 # Clear any cached [apt-get] related files.
 
-apt-get clean -yq
+safe-apt-get clean -yq
 
 # Clear any DHCP leases to be super sure that cloned node
 # VMs will obtain fresh IP addresses.

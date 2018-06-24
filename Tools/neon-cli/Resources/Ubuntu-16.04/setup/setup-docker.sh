@@ -111,7 +111,7 @@ if [ "${docker_version}" != "" ] ; then
 
 	# Install prerequisites.
 
-	apt-get install -yq apt-transport-https ca-certificates curl software-properties-common
+	safe-apt-get install -yq apt-transport-https ca-certificates curl software-properties-common
 
     # Add any necessary APT keys.  It appears that sometimes Docker doesn't
     # keep the Ubuntu key server up-to-date.
@@ -123,7 +123,7 @@ if [ "${docker_version}" != "" ] ; then
 	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) stable"
 	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) edge"
 	add-apt-repository "deb [arch=amd64] https://download.docker.com/linux/ubuntu $(lsb_release -cs) testing"
-	apt-get update
+	safe-apt-get update
 
 	# Install a specific Docker version.
 	#
@@ -131,7 +131,7 @@ if [ "${docker_version}" != "" ] ; then
 	#
 	#		apt-cache madison docker-ce
 
-	apt-get install -yq docker-ce=${docker_version}
+	safe-apt-get install -yq docker-ce=${docker_version}
 fi
 
 #--------------------------------------------------------------------------

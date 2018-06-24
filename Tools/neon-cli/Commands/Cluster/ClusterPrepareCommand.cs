@@ -504,8 +504,8 @@ Server Requirements:
             // Install OpenVPN.
 
             manager.Status = "vpn install";
-            manager.SudoCommand("apt-get update");
-            manager.SudoCommand("apt-get install -yq openvpn");
+            manager.SudoCommand("safe-apt-get update");
+            manager.SudoCommand("safe-apt-get install -yq openvpn");
 
             // Configure OpenVPN.
 

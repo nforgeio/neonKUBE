@@ -1220,14 +1220,14 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
 
                             node.Status = "package upgrade (partial)";
 
-                            node.SudoCommand("apt-get upgrade -yq");
+                            node.SudoCommand("safe-apt-get upgrade -yq");
                             break;
 
                         case OsUpgrade.Full:
 
                             node.Status = "package upgrade (full)";
 
-                            node.SudoCommand("apt-get dist-upgrade -yq");
+                            node.SudoCommand("safe-apt-get dist-upgrade -yq");
                             break;
                     }
 
@@ -1315,7 +1315,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                     // Clean up any cached APT files.
 
                     node.Status = "clean up";
-                    node.SudoCommand("apt-get clean -yq");
+                    node.SudoCommand("safe-apt-get clean -yq");
                     node.SudoCommand("rm -rf /var/lib/apt/lists");
                 });
         }
@@ -1421,14 +1421,14 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
 
                             node.Status = "package upgrade (partial)";
 
-                            node.SudoCommand("apt-get upgrade -yq");
+                            node.SudoCommand("safe-apt-get upgrade -yq");
                             break;
 
                         case OsUpgrade.Full:
 
                             node.Status = "package upgrade (full)";
 
-                            node.SudoCommand("apt-get dist-upgrade -yq");
+                            node.SudoCommand("safe-apt-get dist-upgrade -yq");
                             break;
                     }
 
@@ -1510,7 +1510,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                     // Clean up any cached APT files.
 
                     node.Status = "clean up";
-                    node.SudoCommand("apt-get clean -yq");
+                    node.SudoCommand("safe-apt-get clean -yq");
                     node.SudoCommand("rm -rf /var/lib/apt/lists");
                 });
         }
@@ -1806,14 +1806,14 @@ StartLimitBurst=1051200";
 
                     node.SudoCommand($"wget -q -O- https://download.ceph.com/keys/release.asc | sudo apt-key add -");
                     node.SudoCommand($"apt-add-repository \"deb https://download.ceph.com/debian-{cephRelease}/ {linuxRelease} main\"");
-                    node.SudoCommand($"apt-get update");
-                    node.SudoCommand($"apt-get install -yq ceph");
+                    node.SudoCommand($"safe-apt-get update");
+                    node.SudoCommand($"safe-apt-get install -yq ceph");
 
                     // We also need need support for extended file system attributes
                     // so we can set the maximum size in bytes and/or maximum number
                     // files in a directory via [setfattr] and [getfattr].
 
-                    node.SudoCommand($"apt-get install -yq attr");
+                    node.SudoCommand($"safe-apt-get install -yq attr");
 
                     //---------------------------------------------------------
                     // The default Ceph service systemd unit files don't try very

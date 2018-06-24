@@ -33,8 +33,8 @@ if [ "${NEON_NODE_ROLE}" == "manager" ] ; then
 
 	set -eou pipefail	# Enable full failure detection
 
-	apt-get update
-	apt-get install -yq apt-cacher-ng
+	safe-apt-get update
+	safe-apt-get install -yq apt-cacher-ng
 
 	# Configure the cache to pass-thru SSL requests
 	# and then restart.

@@ -192,7 +192,7 @@ TCPKeepAlive yes
 
             while (true)
             {
-                if (node.SudoCommand("apt-get check", RunOptions.LogOnErrorOnly).ExitCode == 0)
+                if (node.SudoCommand("safe-apt-get check", RunOptions.LogOnErrorOnly).ExitCode == 0)
                 {
                     break;
                 }
@@ -377,7 +377,7 @@ TCPKeepAlive yes
                 ConfigureEnvironmentVariables(node, clusterDefinition);
             }
 
-            node.SudoCommand("apt-get update");
+            node.SudoCommand("safe-apt-get update");
 
             node.InvokeIdempotentAction("setup/prep-node",
                 () =>

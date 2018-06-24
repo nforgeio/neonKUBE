@@ -477,7 +477,7 @@ namespace Neon.Cluster
         /// <summary>
         /// The PATH to use on the remote server when executing commands in the
         /// session or <c>null</c>/empty to run commands without a path.  This
-        /// defaults to the standard Linux path.
+        /// defaults to the standard Linux path and <see cref="NeonHostFolders.Tools"/>.
         /// </summary>
         /// <remarks>
         /// <note>
