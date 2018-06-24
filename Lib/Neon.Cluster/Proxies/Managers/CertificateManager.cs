@@ -82,11 +82,11 @@ namespace Neon.Cluster
         /// <exception cref="ArgumentException">Thrown if the certificate is not valid.</exception>
         /// <remarks>
         /// <note>
-        /// The <paramref name="certificate"/> must be fully parsed (e.g. it's
+        /// The <paramref name="certificate"/> must be fully parsed (it's
         /// <see cref="TlsCertificate.Parse()"/> method must have been called at
         /// some point to load the <see cref="TlsCertificate.Hosts"/>, 
         /// <see cref="TlsCertificate.ValidFrom"/> and <see cref="TlsCertificate.ValidUntil"/> 
-        /// properties.
+        /// properties).
         /// </note>
         /// </remarks>
         public void Set(string name, TlsCertificate certificate)
