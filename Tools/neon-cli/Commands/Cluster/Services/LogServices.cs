@@ -358,14 +358,7 @@ namespace NeonCli
                     Program.ResolveDockerImage(cluster.Definition.Log.EsImage));
 
                 steps.Add(command);
-
-                var scriptText =
-$@"
-{volumeCommand.ToBash()}
-
-{command.ToBash()}
-";
-                steps.Add(UploadStep.Text(esNode.Name, LinuxPath.Combine(NeonHostFolders.Scripts, "neon-log-esdata.sh"), scriptText));
+                steps.Add(UploadStep.Text(esNode.Name, LinuxPath.Combine(NeonHostFolders.Scripts, "neon-log-esdata.sh"), command.ToBash()));
             }
 
             // Configure a private cluster proxy route to the Elasticsearch nodes.
