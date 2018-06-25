@@ -308,6 +308,10 @@ namespace NeonClusterManager
             // Vault runs on the cluster managers so add a URI for each manager.
             // Note that we also need to ensure that each Vault manager hostname
             // has an entry in [/etc/hosts].
+            //
+            // Note that we need to use the direct Vault port rather than the 
+            // Vault proxy port because we need to be able to address these
+            // individually.
 
             var clusterNodes = await docker.NodeListAsync();
             var hosts        = File.ReadAllText("/etc/hosts");
@@ -317,7 +321,7 @@ namespace NeonClusterManager
             {
                 var vaultHostname = $"{managerNode.Hostname}.neon-vault.cluster";
 
-                vaultUris.Add($"https://{vaultHostname}:{NeonHostPorts.ProxyVault}");
+                vaultUris.Add($"https://{vaultHostname}:{NetworkPorts.Vault}");
 
                 if (!hosts.Contains($"{vaultHostname} "))
                 {
