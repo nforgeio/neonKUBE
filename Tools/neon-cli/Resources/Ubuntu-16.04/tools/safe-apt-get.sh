@@ -49,6 +49,8 @@ do
     then
         EXIT_CODE=$?
 
+        # Scan STDOUT for (hopefully transient) fetch errors.
+
         if grep -q "^W: Failed to fetch" $STDERR_PATH
         then
             break       # Looks like there were no fetch problems.
@@ -58,14 +60,24 @@ do
             fi
 
             DELAY=$(shuf -i $RETRY_MIN_SECONDS-$RETRY_MAX_SECONDS -n 1)
-            echo "*** safe-apt-get: retrying after fetch failure (delay=${DELAY}s)." >&2
+            echo "*** WARNING: safe-apt-get: retrying after fetch failure (delay=${DELAY}s)." >&2
             sleep $DELAY
         fi
     else
-        # Looks like a hard failure.
+        # It looks like fetching the repo key from the key server can
+        # also fail.
 
-        EXIT_CODE=$?
-        break
+        if grep -q "^gpg: no valid OpenPGP data found" $STDERR_PATH
+        then
+            DELAY=$(shuf -i $RETRY_MIN_SECONDS-$RETRY_MAX_SECONDS -n 1)
+            echo "*** WARNING: safe-apt-get: retrying after keyserver fetch failure (delay=${DELAY}s)." >&2
+            sleep $DELAY
+        else
+            # Looks like a hard failure.
+
+            EXIT_CODE=$?
+            break
+        fi
     fi
 done
 
