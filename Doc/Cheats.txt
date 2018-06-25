@@ -32,7 +32,7 @@ neon cluster set allow-unit-testing=true
 # neon cluster setup --log-folder=c:\cluster-logs --max-parallel=10 --unredacted root@home-small --noshim
 
 neon logout
-neon login rm root@home2-small --force
+neon login rm root@home-small2 --force
 neon cluster prepare %NF_ROOT%\Devops\test\clusters\home2-small\cluster.json --log-folder=c:\cluster-logs --max-parallel=10 --force
 neon cluster setup --log-folder=c:\cluster-logs --max-parallel=10 --unredacted root@home2-small --image-tag=jeff-latest --noshim
 neon cluster set allow-unit-testing=true
