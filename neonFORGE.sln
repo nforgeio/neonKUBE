@@ -218,11 +218,11 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "neon-cli", "neon-cli", "{17
 		Releases\neon-cli\1.2.84.md = Releases\neon-cli\1.2.84.md
 	EndProjectSection
 EndProject
-Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home2-small", "home2-small", "{66CC2BD1-F9A7-4D4A-9B70-EDA3B23501E6}"
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-small2", "home-small2", "{18973726-A5D3-4706-8658-9ED658C631CE}"
 	ProjectSection(SolutionItems) = preProject
-		Devops\test\clusters\home2-small\cluster.json = Devops\test\clusters\home2-small\cluster.json
-		Devops\test\clusters\home2-small\secrets.yaml = Devops\test\clusters\home2-small\secrets.yaml
-		Devops\test\clusters\home2-small\vars.yaml = Devops\test\clusters\home2-small\vars.yaml
+		Devops\test\clusters\home-small2\cluster.json = Devops\test\clusters\home-small2\cluster.json
+		Devops\test\clusters\home-small2\secrets.yaml = Devops\test\clusters\home-small2\secrets.yaml
+		Devops\test\clusters\home-small2\vars.yaml = Devops\test\clusters\home-small2\vars.yaml
 	EndProjectSection
 EndProject
 Global
@@ -680,7 +680,7 @@ Global
 		{95CD429A-C7C0-41CE-89B6-DF20DB78B297} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{11EDBC14-0BF4-4C6B-86DD-3D292845C62A} = {83DC75D5-800D-42F7-9812-BD198A62DD0B}
 		{17B43B9A-131C-4722-BF67-86959E2E9F85} = {2BCF066C-588B-44A5-AF35-527E96C7B7B5}
-		{66CC2BD1-F9A7-4D4A-9B70-EDA3B23501E6} = {F035D81E-A73A-40D6-82EE-98C63FDFCE04}
+		{18973726-A5D3-4706-8658-9ED658C631CE} = {F035D81E-A73A-40D6-82EE-98C63FDFCE04}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {5F2E7334-FE9C-4C03-AF1E-BB3B7D5531D9}
