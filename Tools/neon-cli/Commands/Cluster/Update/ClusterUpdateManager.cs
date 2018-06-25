@@ -392,7 +392,6 @@ namespace NeonCli
             {
                 node.Status = "swarm: drain services";
                 cluster.Docker.DrainNode(node.Name);
-                Thread.Sleep(TimeSpan.FromSeconds(30));
             }
 
             node.Status = "stop: docker";

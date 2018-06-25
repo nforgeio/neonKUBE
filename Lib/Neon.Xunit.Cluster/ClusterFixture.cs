@@ -325,8 +325,8 @@ namespace Neon.Xunit.Cluster
         }
 
         /// <summary>
-        /// Initializes the fixture if it hasn't already been intialized
-        /// by connecting the specified including invoking the optional
+        /// Initializes the fixture if it hasn't already been intialized by
+        /// connecting to a cluster and invoking the optional initialization
         /// <see cref="Action"/>.
         /// </summary>
         /// <param name="login">

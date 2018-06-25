@@ -509,39 +509,26 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                 ShowStatus  = !Program.Quiet
             };
 
-            controller.AddStep("update nodes",
+            controller.AddStep("fetch updates",
                 (node, stepDelay) =>
                 {
                     Thread.Sleep(stepDelay);
 
                     node.Status = "run: safe-apt-get update";
                     node.SudoCommand("safe-apt-get update");
-
-                    node.Status = "run: safe-apt-get dist-upgrade -yq";
-                    node.SudoCommand("safe-apt-get dist-upgrade -yq");
                 });
 
-            controller.AddStep("reboot nodes",
+            controller.AddStep("update nodes",
                 (node, stepDelay) =>
                 {
                     if (node.Metadata.InSwarm)
                     {
-                        // Give Swarm the chance to DRAIN any service tasks running
-                        // on this node.  Ideally, we'd wait for all of the service 
-                        // tasks to stop but it appears that there's no easy way to
-                        // check for this other than listing all of the cluster services
-                        // and then doing a [docker service ps SERVICE] for each until
-                        // none report running on this node.
-                        //
-                        // We're just going to hardcode a wait for 30 seconds which
-                        // should be OK since it'll take some time to actually install
-                        // the updates before we reboot and task draining can proceed
-                        // during the update.
-
                         node.Status = "swarm: drain services";
                         cluster.Docker.DrainNode(node.Name);
-                        Thread.Sleep(TimeSpan.FromSeconds(30));
                     }
+
+                    node.Status = "run: safe-apt-get dist-upgrade -yq";
+                    node.SudoCommand("safe-apt-get dist-upgrade -yq");
 
                     node.Reboot();
 
@@ -692,21 +679,8 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
                     if (node.Metadata.InSwarm)
                     {
-                        // Give Swarm the chance to DRAIN any service tasks running
-                        // on this node.  Ideally, we'd wait for all of the service 
-                        // tasks to stop but it appears that there's no easy way to
-                        // check for this other than listing all of the cluster services
-                        // and then doing a [docker service ps SERVICE] for each until
-                        // none report running on this node.
-                        //
-                        // We're just going to hardcode a wait for 30 seconds which
-                        // should be OK since it'll take some time to actually install
-                        // the updates before we reboot and task draining can proceed
-                        // during the update.
-
                         node.Status = "swarm: drain services";
                         cluster.Docker.DrainNode(node.Name);
-                        Thread.Sleep(TimeSpan.FromSeconds(30));
                     }
 
                     node.Status = "run: safe-apt-get update";

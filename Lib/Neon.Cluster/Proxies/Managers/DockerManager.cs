@@ -121,6 +121,22 @@ namespace Neon.Cluster
                     await Task.CompletedTask;
 
                 }).Wait();
+
+            // $todo(jeff.lill): 
+            //
+            // Ideally, we'd wait for all of the service tasks to stop but it 
+            // appears that there's no easy way to check for this other than 
+            // listing all of the cluster services and then doing a 
+            //
+            //      docker service ps SERVICE]
+            //
+            // for each until none report running on this node.
+            //
+            // A hacky alternative would be to list local containers and try
+            // to determine which ones look liks service tasks by examining
+            // the container name.
+
+            Thread.Sleep(TimeSpan.FromSeconds(30));
         }
 
         /// <summary>
