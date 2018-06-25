@@ -320,7 +320,15 @@ NOTE: The following Vault commands are not supported:
                             if (response.ExitCode == 0)
                             {
                                 allSealed = false;
-                                Console.WriteLine($"[{manager.Name}] unsealed {vaultStatus.HAMode}");
+
+                                var status = vaultStatus.HAMode;
+
+                                if (status == "active")
+                                {
+                                    status += "  <-- LEADER";
+                                }
+
+                                Console.WriteLine($"[{manager.Name}] unsealed {status}");
                             }
                             else if (response.ExitCode == 2)
                             {
