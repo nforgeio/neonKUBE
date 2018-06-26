@@ -31,23 +31,39 @@ Modifies a global cluster setting.
 
 USAGE:
 
-    neon cluster set SETTING=VALUE
+    neon cluster set [--no-verify] SETTING=VALUE
 
 ARGUMENTS:
 
-    SETTING     - identifies the setting
-    VALUE       - the value to set
+    SETTING         - identifies the setting
+    VALUE           - the value to set
 
-SETTINGS:
+OPTIONS:
+
+    --no-verify     - don't validate the arguments
+
+REMARKS:
+
+This command sets a cluster global setting.  By default, only settings
+considered to be user modifiable can be changed:
 
     allow-unit-testing      - enable ClusterFixture unit testing (bool)
     disable-auto-unseal     - disables automatic Vault unsealing (bool)
-    log-retention-days      - number of days of logs to keep
+    log-retention-days      - number of days of logs to keep (int > 0)
+
+Use the [--no-verify] option to change any global without restrictions.
+Note that THIS CAN BE DANGEROUS, so be sure you know what you're doing.
 ";
         /// <inheritdoc/>
         public override string[] Words
         {
             get { return new string[] { "cluster", "set" }; }
+        }
+
+        /// <inheritdoc/>
+        public override string[] ExtendedOptions
+        {
+            get { return new string[] { "--no-verify" }; }
         }
 
         /// <inheritdoc/>
@@ -76,6 +92,7 @@ SETTINGS:
                 Program.Exit(1);
             }
 
+            var noVerify   = commandLine.HasOption("--no-verify");
             var assignment = commandLine.Arguments[0];
             var fields     = assignment.Split(new char[] { '=' }, 2);
 
@@ -90,34 +107,21 @@ SETTINGS:
             var setting = fields[0].ToLowerInvariant();
             var value   = fields[1];
 
-            switch (setting)
+            if (noVerify)
             {
-                case NeonClusterGlobals.AllowUnitTesting:
-
-                    cluster.SetGlobal(NeonClusterGlobals.AllowUnitTesting, NeonHelper.ParseBool(value));
-                    break;
-
-                case NeonClusterGlobals.DisableAutoUnseal:
-
-                    cluster.SetGlobal(NeonClusterGlobals.DisableAutoUnseal, NeonHelper.ParseBool(value));
-                    break;
-
-                case NeonClusterGlobals.LogRetentionDays:
-
-                    if (int.TryParse(value, out var logRetentionDays) || logRetentionDays <= 0)
-                    {
-                        Console.Error.WriteLine($"*** ERROR: [{value}] is not a positive number of days.");
-                        Program.Exit(1);
-                    }
-
-                    cluster.SetGlobal(NeonClusterGlobals.LogRetentionDays, NeonHelper.ParseBool(value));
-                    break;
-
-                default:
-
-                    Console.Error.WriteLine($"*** ERROR: [{setting}] is not a valid cluster setting.");
+                cluster.Globals.Set(setting, value);
+            }
+            else
+            {
+                try
+                {
+                    cluster.Globals.SetUser(setting, value);
+                }
+                catch (Exception e)
+                {
+                    Console.Error.WriteLine($"*** ERROR: {e.Message}");
                     Program.Exit(1);
-                    break;
+                }
             }
 
             Console.WriteLine();

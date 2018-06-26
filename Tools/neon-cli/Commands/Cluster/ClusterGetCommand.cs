@@ -140,11 +140,13 @@ NODE IDENTIFIERS:
             {
                 // Cluster expression.
 
-                switch (valueExpr.ToLowerInvariant())
-                {
-                    case NeonClusterGlobals.AllowUnitTesting:
+                valueExpr = valueExpr.ToLowerInvariant();
 
-                        if (cluster.TryGetGlobalBool(NeonClusterGlobals.AllowUnitTesting, out var allowUnitTesting))
+                switch (valueExpr)
+                {
+                    case NeonClusterGlobals.UserAllowUnitTesting:
+
+                        if (cluster.Globals.TryGetBool(NeonClusterGlobals.UserAllowUnitTesting, out var allowUnitTesting))
                         {
                             Console.Write(allowUnitTesting ? "true" : "false");
                         }
@@ -157,7 +159,7 @@ NODE IDENTIFIERS:
 
                     case NeonClusterGlobals.CreateDateUtc:
 
-                        if (cluster.TryGetGlobalString(NeonClusterGlobals.CreateDateUtc, out var createDate))
+                        if (cluster.Globals.TryGetString(NeonClusterGlobals.CreateDateUtc, out var createDate))
                         {
                             Console.Write(createDate);
                         }
@@ -168,9 +170,9 @@ NODE IDENTIFIERS:
                         }
                         break;
 
-                    case NeonClusterGlobals.DisableAutoUnseal:
+                    case NeonClusterGlobals.UserDisableAutoUnseal:
 
-                        if (cluster.TryGetGlobalBool(NeonClusterGlobals.DisableAutoUnseal, out var disableAutoUnseal))
+                        if (cluster.Globals.TryGetBool(NeonClusterGlobals.UserDisableAutoUnseal, out var disableAutoUnseal))
                         {
                             Console.Write(disableAutoUnseal ? "true" : "false");
                         }
@@ -181,9 +183,9 @@ NODE IDENTIFIERS:
                         }
                         break;
 
-                    case NeonClusterGlobals.LogRetentionDays:
+                    case NeonClusterGlobals.UserLogRetentionDays:
 
-                        if (cluster.TryGetGlobalInt(NeonClusterGlobals.DisableAutoUnseal, out var logRetentionDays))
+                        if (cluster.Globals.TryGetInt(NeonClusterGlobals.UserDisableAutoUnseal, out var logRetentionDays))
                         {
                             Console.Write(logRetentionDays);
                         }
@@ -253,7 +255,7 @@ NODE IDENTIFIERS:
 
                     case NeonClusterGlobals.Uuid:
 
-                        if (cluster.TryGetGlobalString(NeonClusterGlobals.Uuid, out var uuid))
+                        if (cluster.Globals.TryGetString(NeonClusterGlobals.Uuid, out var uuid))
                         {
                             Console.Write(uuid);
                         }
@@ -277,8 +279,18 @@ NODE IDENTIFIERS:
 
                     default:
 
-                        Console.Error.WriteLine($"*** ERROR: Unknown value [{valueExpr}].");
-                        Program.Exit(1);
+                        try
+                        {
+                            if (cluster.Globals.TryGetString(valueExpr, out var value))
+                            {
+                                Console.Write(value);
+                            }
+                        }
+                        catch (Exception e)
+                        {
+                            Console.Error.WriteLine($"*** ERROR: {e.Message}].");
+                            Program.Exit(1);
+                        }
                         break;
                 }
             }

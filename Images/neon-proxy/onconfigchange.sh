@@ -34,34 +34,6 @@ if [ "$?" != "0" ] ; then
     . report-error.sh "Cannot retrieve Consul path [${CONFIG_KEY}]"
 fi
 
-# It's possible to see spurious change notifications from the Consul client due to
-# timeouts and other reasons.  We don't want to restart HAProxy unnecessarily so
-# we're going to compare the current MD5 hash of the config archive with the hash
-# of the previous archive (if there is one).
-
-if [ "${RESTARTING}" == "true" ] ; then
-
-    if [ -f /tmp/conf-md5 ] ; then
-        
-        md5sum ${CONFIG_NEW_FOLDER}/haproxy.zip > /tmp/new-conf-md5
-
-        if diff /tmp/new-conf-md5 /tmp/conf-md5 &> /dev/nul ; then
-
-            . log-info.sh "No changes detected."
-
-            if [ "${DEBUG}" != "true" ] ; then
-                rm -rf ${CONFIG_NEW_FOLDER}/*
-            fi
-
-            exit 0
-        fi
-
-        . log-info.sh "Changes detected."
-    fi
-fi
-
-md5sum ${CONFIG_NEW_FOLDER}/haproxy.zip > /tmp/conf-md5
-
 # Handle the event. 
 
 if [ "${RESTARTING}" == "true" ] ; then

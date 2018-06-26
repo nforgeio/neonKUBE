@@ -83,6 +83,7 @@
     <None Include="neon-cli\modules\neon_couchbase_index.sh" />
     <None Include="neon-cli\modules\neon_couchbase_query.sh" />
     <None Include="neon-cli\modules\neon_dashboard.sh" />
+    <None Include="neon-cli\modules\neon_globals.sh" />
     <None Include="neon-cli\modules\neon_dns_hosts.sh" />
     <None Include="neon-cli\modules\neon_docker_registry.sh" />
     <None Include="neon-cli\modules\neon_docker_secret.sh" />

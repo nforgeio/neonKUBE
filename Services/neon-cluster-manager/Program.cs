@@ -490,7 +490,7 @@ namespace NeonClusterManager
                         log.LogDebug(() => $"VAULT-POLLER: Querying [{vaultUri}]");
 
                         var newVaultStatus     = await vault.GetHealthAsync(terminator.CancellationToken);
-                        var autoUnsealDisabled = consul.KV.GetBoolOrDefault($"{NeonClusterConst.ClusterGlobalsKey}/{NeonClusterGlobals.DisableAutoUnseal}").Result;
+                        var autoUnsealDisabled = consul.KV.GetBoolOrDefault($"{NeonClusterConst.ClusterGlobalsKey}/{NeonClusterGlobals.UserDisableAutoUnseal}").Result;
                         var changed            = false;
 
                         if (lastVaultStatus == null)
@@ -529,7 +529,7 @@ namespace NeonClusterManager
 
                             if (newVaultStatus.IsSealed && autoUnsealDisabled)
                             {
-                                log.LogInfo(() => $"VAULT-POLLER: AUTO-UNSEAL is temporarily DISABLED because Consul [{NeonClusterConst.ClusterGlobalsKey}/{NeonClusterGlobals.DisableAutoUnseal}=true].");
+                                log.LogInfo(() => $"VAULT-POLLER: AUTO-UNSEAL is temporarily DISABLED because Consul [{NeonClusterConst.ClusterGlobalsKey}/{NeonClusterGlobals.UserDisableAutoUnseal}=true].");
                             }
 
                             statusUpdateTimeUtc = DateTime.UtcNow + statusUpdateInterval;
@@ -671,7 +671,7 @@ namespace NeonClusterManager
                         //
                         // The date is simply encodes the day covered by the index.
 
-                        if (!cluster.TryGetGlobalInt(NeonClusterGlobals.LogRetentionDays, out var retentionDays))
+                        if (!cluster.Globals.TryGetInt(NeonClusterGlobals.UserLogRetentionDays, out var retentionDays))
                         {
                             retentionDays = 14;
                         }

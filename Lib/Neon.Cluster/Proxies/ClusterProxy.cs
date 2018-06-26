@@ -61,11 +61,11 @@ namespace Neon.Cluster
         //---------------------------------------------------------------------
         // Implementation
 
-        private object                                                      syncRoot = new object();
-        private VaultClient                                                 vaultClient;
-        private ConsulClient                                                consulClient;
-        private RunOptions                                                  defaultRunOptions;
-        private Func<string, string, IPAddress, SshProxy<NodeDefinition>>   nodeProxyCreator;
+        private object syncRoot = new object();
+        private VaultClient vaultClient;
+        private ConsulClient consulClient;
+        private RunOptions defaultRunOptions;
+        private Func<string, string, IPAddress, SshProxy<NodeDefinition>> nodeProxyCreator;
 
         /// <summary>
         /// Constructs a cluster proxy from a cluster login.
@@ -142,10 +142,10 @@ namespace Neon.Cluster
                     };
             }
 
-            this.Definition          = clusterDefinition;
-            this.ClusterLogin        = new ClusterLogin();
-            this.defaultRunOptions   = defaultRunOptions;
-            this.nodeProxyCreator    = nodeProxyCreator;
+            this.Definition        = clusterDefinition;
+            this.ClusterLogin      = new ClusterLogin();
+            this.defaultRunOptions = defaultRunOptions;
+            this.nodeProxyCreator  = nodeProxyCreator;
 
             this.DockerConfig        = new DockerConfigManager(this);
             this.DockerSecret        = new DockerSecretManager(this);
@@ -155,6 +155,7 @@ namespace Neon.Cluster
             this.PublicLoadBalancer  = new LoadBalanceManager(this, "public");
             this.PrivateLoadBalancer = new LoadBalanceManager(this, "private");
             this.Registry            = new RegistryManager(this);
+            this.Globals             = new GlobalsManager(this);
 
             CreateNodes();
         }
@@ -283,6 +284,11 @@ namespace Neon.Cluster
         /// Manages the cluster's Docker registry credentials and local registry.
         /// </summary>
         public RegistryManager Registry { get; private set; }
+
+        /// <summary>
+        /// Manages the cluster's global settings.
+        /// </summary>
+        public GlobalsManager Globals { get; private set; }
 
         /// <summary>
         /// Returns the named load balancer manager.
@@ -852,359 +858,6 @@ vault policy-write {policy.Name} policy.hcl
             Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(roleName));
 
             return VaultCommand($"vault delete auth/approle/role/{roleName}");
-        }
-
-        /// <summary>
-        /// Attempts to retrieve a named cluster global setting as a <c>string</c>.
-        /// </summary>
-        /// <param name="name">The setting name.</param>
-        /// <param name="output">Returns as the setting value.</param>
-        /// <returns><c>true</c> if the setting exists and was returned.</returns>
-        /// <remarks>
-        /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
-        /// </note>
-        /// </remarks>
-        public bool TryGetGlobalString(string name, out string output)
-        {
-            Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
-
-            output = null;
-
-            var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
-            var value = Consul.KV.GetStringOrDefault(key).Result;
-
-            if (value == null)
-            {
-                return false;
-            }
-
-            output = value;
-
-            return true;
-        }
-
-        /// <summary>
-        /// Attempts to retrieve a named cluster global setting as a <c>bool</c>.
-        /// </summary>
-        /// <param name="name">The setting name.</param>
-        /// <param name="output">Returns as the setting value.</param>
-        /// <returns><c>true</c> if the setting exists and was returned.</returns>
-        /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
-        /// <remarks>
-        /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
-        /// </note>
-        /// </remarks>
-        public bool TryGetGlobalBool(string name, out bool output)
-        {
-            Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
-
-            output = default(bool);
-
-            var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
-            var value = Consul.KV.GetStringOrDefault(key).Result;
-
-            if (value == null)
-            {
-                return false;
-            }
-
-            output = NeonHelper.ParseBool(value);
-
-            return true;
-        }
-
-        /// <summary>
-        /// Attempts to retrieve a named cluster global setting as an <c>int</c>.
-        /// </summary>
-        /// <param name="name">The setting name.</param>
-        /// <param name="output">Returns as the setting value.</param>
-        /// <returns><c>true</c> if the setting exists and was returned.</returns>
-        /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
-        /// <remarks>
-        /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
-        /// </note>
-        /// </remarks>
-        public bool TryGetGlobalInt(string name, out int output)
-        {
-            Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
-
-            output = default(int);
-
-            var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
-            var value = Consul.KV.GetStringOrDefault(key).Result;
-
-            if (value == null)
-            {
-                return false;
-            }
-
-            output = int.Parse(value);
-
-            return true;
-        }
-
-        /// <summary>
-        /// Attempts to retrieve a named cluster global setting as a <c>long</c>.
-        /// </summary>
-        /// <param name="name">The setting name.</param>
-        /// <param name="output">Returns as the setting value.</param>
-        /// <returns><c>true</c> if the setting exists and was returned.</returns>
-        /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
-        /// <remarks>
-        /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
-        /// </note>
-        /// </remarks>
-        public bool TryGetGlobalLong(string name, out long output)
-        {
-            Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
-
-            output = default(int);
-
-            var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
-            var value = Consul.KV.GetStringOrDefault(key).Result;
-
-            if (value == null)
-            {
-                return false;
-            }
-
-            output = long.Parse(value);
-
-            return true;
-        }
-
-        /// <summary>
-        /// Attempts to retrieve a named cluster global setting as a <c>double</c>.
-        /// </summary>
-        /// <param name="name">The setting name.</param>
-        /// <param name="output">Returns as the setting value.</param>
-        /// <returns><c>true</c> if the setting exists and was returned.</returns>
-        /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
-        /// <remarks>
-        /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
-        /// </note>
-        /// </remarks>
-        public bool TryGetGlobalDouble(string name, out double output)
-        {
-            Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
-
-            output = default(double);
-
-            var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
-            var value = Consul.KV.GetStringOrDefault(key).Result;
-
-            if (value == null)
-            {
-                return false;
-            }
-
-            output = double.Parse(value);
-
-            return true;
-        }
-
-        /// <summary>
-        /// Attempts to retrieve a named cluster global setting as a <see cref="TimeSpan"/>.
-        /// </summary>
-        /// <param name="name">The setting name.</param>
-        /// <param name="output">Returns as the setting value.</param>
-        /// <returns><c>true</c> if the setting exists and was returned.</returns>
-        /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
-        /// <remarks>
-        /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
-        /// </note>
-        /// </remarks>
-        public bool TryGetGlobalTimeSpan(string name, out TimeSpan output)
-        {
-            Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
-
-            output = default(TimeSpan);
-
-            var key   = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
-            var value = Consul.KV.GetStringOrDefault(key).Result;
-
-            if (value == null)
-            {
-                return false;
-            }
-
-            output = TimeSpan.Parse(value);
-
-            return true;
-        }
-
-        /// <summary>
-        /// Sets or removes a named <c>string</c> cluster global setting.
-        /// </summary>
-        /// <param name="name">The setting name.</param>
-        /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
-        /// <remarks>
-        /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
-        /// </note>
-        /// </remarks>
-        public async void SetGlobal(string name, string value)
-        {
-            Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
-
-            var key = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
-
-            if (value == null)
-            {
-                await Consul.KV.Delete(key);
-            }
-            else
-            {
-                await Consul.KV.PutString(key, value);
-            }
-        }
-
-        /// <summary>
-        /// Sets or removes a named <c>bool</c> cluster global setting.
-        /// </summary>
-        /// <param name="name">The setting name.</param>
-        /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
-        /// <remarks>
-        /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
-        /// </note>
-        /// </remarks>
-        public async void SetGlobal(string name, bool? value)
-        {
-            Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
-
-            var key = $"{NeonClusterConst.ClusterGlobalsKey}/{name}";
-
-            if (value == null)
-            {
-                await Consul.KV.Delete(key);
-            }
-            else
-            {
-                await Consul.KV.PutString(key, value.Value ? "true" : "false");
-            }
-        }
-
-        /// <summary>
-        /// Sets or removes a named <c>int</c> cluster global setting.
-        /// </summary>
-        /// <param name="name">The setting name.</param>
-        /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
-        /// <remarks>
-        /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
-        /// </note>
-        /// </remarks>
-        public async void SetGlobal(string name, int? value)
-        {
-            Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
-
-            var key = $"neon/cluster/{name}";
-
-            if (value == null)
-            {
-                await Consul.KV.Delete(key);
-            }
-            else
-            {
-                await Consul.KV.PutString(key, value.Value.ToString());
-            }
-        }
-
-        /// <summary>
-        /// Sets or removes a named <c>long</c> cluster global setting.
-        /// </summary>
-        /// <param name="name">The setting name.</param>
-        /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
-        /// <remarks>
-        /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
-        /// </note>
-        /// </remarks>
-        public async void SetGlobal(string name, long? value)
-        {
-            Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
-
-            var key = $"neon/cluster/{name}";
-
-            if (value == null)
-            {
-                await Consul.KV.Delete(key);
-            }
-            else
-            {
-                await Consul.KV.PutString(key, value.Value.ToString());
-            }
-        }
-
-        /// <summary>
-        /// Sets or removes a named <c>double</c> cluster global setting.
-        /// </summary>
-        /// <param name="name">The setting name.</param>
-        /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
-        /// <remarks>
-        /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
-        /// </note>
-        /// </remarks>
-        public async void SetGlobal(string name, double? value)
-        {
-            Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
-
-            var key = $"neon/cluster/{name}";
-
-            if (value == null)
-            {
-                await Consul.KV.Delete(key);
-            }
-            else
-            {
-                await Consul.KV.PutString(key, value.Value.ToString());
-            }
-        }
-
-        /// <summary>
-        /// Sets or removes a named <see cref="TimeSpan"/> cluster global setting.
-        /// </summary>
-        /// <param name="name">The setting name.</param>
-        /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
-        /// <remarks>
-        /// <note>
-        /// Well known cluster setting names are defined in <see cref="NeonClusterGlobals"/>.
-        /// </note>
-        /// </remarks>
-        public async void SetGlobal(string name, TimeSpan? value)
-        {
-            Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
-
-            var key = $"neon/cluster/{name}";
-
-            if (value == null)
-            {
-                await Consul.KV.Delete(key);
-            }
-            else
-            {
-                await Consul.KV.PutString(key, value.Value.ToString());
-            }
         }
 
         /// <summary>

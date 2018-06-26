@@ -253,6 +253,8 @@ namespace NeonCli.Ansible
                 throw new ArgumentException($"[endpoints] module argument is required when [state={state}].");
             }
 
+            context.WriteLine(AnsibleVerbosity.Trace, $"Parsing [wait]");
+
             var wait = context.ParseBool("wait");
 
             wait = wait ?? false;

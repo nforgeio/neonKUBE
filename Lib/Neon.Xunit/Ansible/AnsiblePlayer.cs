@@ -113,7 +113,7 @@ namespace Neon.Xunit
         /// </note>
         /// <para>
         /// This method will add <b>gather_facts: no</b> to the playbook when
-        /// this argument isnt already present.
+        /// this argument isn't already present.
         /// </para>
         /// </remarks>
         public static AnsiblePlayResults PlayInFolderNoGather(string workDir, string playbook, params string[] args)

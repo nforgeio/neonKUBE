@@ -58,7 +58,6 @@ REM smart enough to only add directories that actually exist.
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_BUILD%"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_TOOLBIN%"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%NF_TOOLBIN%\OpenSSL"
-%NF_TOOLBIN%\pathtool -dedup -system -add "%NF_ROOT%\.nuget"
 %NF_TOOLBIN%\pathtool -dedup -system -add "%DOTNETPATH%"
 %NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files\PuTTY"
 %NF_TOOLBIN%\pathtool -dedup -system -add "C:\Program Files (x86)\PuTTY"

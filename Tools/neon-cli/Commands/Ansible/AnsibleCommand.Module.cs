@@ -140,6 +140,11 @@ namespace NeonCli
                         new DnsHostsModule().Run(context);
                         break;
 
+                    case "neon_globals":
+
+                        new GlobalsModule().Run(context);
+                        break;
+
                     case "neon_load_balancer":
 
                         new LoadBalancerModule().Run(context);

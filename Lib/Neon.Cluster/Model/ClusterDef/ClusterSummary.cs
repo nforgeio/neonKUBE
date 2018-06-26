@@ -195,7 +195,7 @@ namespace Neon.Cluster
         {
             get
             {
-                if (!Globals.TryGetValue(NeonClusterGlobals.LogRetentionDays, out string value) ||
+                if (!Globals.TryGetValue(NeonClusterGlobals.UserLogRetentionDays, out string value) ||
                     !int.TryParse(value, out var logRetentionDays))
                 {
                     return -1;
