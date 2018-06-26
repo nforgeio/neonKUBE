@@ -301,7 +301,7 @@ namespace NeonCli
                         "--env", "POLL_SECONDS=15",
                         "--env", "START_SECONDS=10",
                         "--env", "LOG_LEVEL=INFO",
-                        "--env", "DEBUG=false",
+                        "--env", "DEBUG=true",          // $todo(jeff.lill): Revert this to FALSE
                         "--env", "VAULT_SKIP_VERIFY=true",
                         "--secret", "neon-proxy-public-credentials",
                         publicPublish,
@@ -335,7 +335,7 @@ namespace NeonCli
                         "--env", "POLL_SECONDS=15",
                         "--env", "START_SECONDS=10",
                         "--env", "LOG_LEVEL=INFO",
-                        "--env", "DEBUG=false",
+                        "--env", "DEBUG=true",          // $todo(jeff.lill): Revert this to FALSE
                         "--env", "VAULT_SKIP_VERIFY=true",
                         "--secret", "neon-proxy-private-credentials",
                         privatePublish,
