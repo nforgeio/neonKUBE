@@ -2632,7 +2632,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
             node.InvokeIdempotentAction("setup/ceph-fuse-service",
                 () =>
                 {
-                    node.Status = "create fuse service";
+                    node.Status = "ceph fuse service";
                     node.UploadText("/etc/systemd/system/ceph-fuse-neonfs.service",
 $@"[Unit]
 Description=Ceph FUSE client (for /mnt/neonfs)
