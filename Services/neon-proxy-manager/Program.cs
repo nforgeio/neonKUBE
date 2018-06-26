@@ -276,7 +276,7 @@ namespace NeonProxyManager
                     log.LogInfo("Starting [Monitor] task.");
 
                     var initialPoll    = true;
-                    var lastReloadHash = "0d3001e6-3031-444f-8529-7f58a4faf179";
+                    var lastReloadHash = "0d3001e6-3031-444f-8529-7f58a4faf179";    // Set this to something unique that won't match any computed hash.
                     var fallbackTimer  = new PolledTimer(fallbackPollInterval, autoReset: true);
 
                     while (true)
@@ -316,7 +316,6 @@ namespace NeonProxyManager
 
                                 await Task.Delay(pollInterval);
                             }
-
 
                             if (initialPoll)
                             {
