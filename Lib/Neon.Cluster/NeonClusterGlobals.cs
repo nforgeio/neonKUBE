@@ -35,14 +35,9 @@ namespace Neon.Cluster
         public const string DefinitionHash = "definition-hash";
 
         /// <summary>
-        /// Version of the <b>neon-cli</b> that created or last upgraded the cluster.
-        /// </summary>
-        public const string NeonCliVersion = "neon-cli-version";
-
-        /// <summary>
         /// Minimum <b>neon-cli</b> version allowed to manage the cluster.
         /// </summary>
-        public const string NeonCliVersionMinimum = "neon-cli-version-minimum";
+        public const string NeonCli = "neon-cli";
 
         /// <summary>
         /// Current cluster pets definition.
@@ -53,6 +48,12 @@ namespace Neon.Cluster
         /// Cluster globally unique ID assigned during cluster setup.
         /// </summary>
         public const string Uuid = "uuid";
+
+        /// <summary>
+        /// Version of the cluster.  This is actually the version of <b>neon-cli</b> 
+        /// that created or last upgraded the cluster.
+        /// </summary>
+        public const string Version = "version";
 
         //---------------------------------------------------------------------
         // These settings are considered to be user modifiable.

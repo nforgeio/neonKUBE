@@ -48,9 +48,9 @@ namespace Neon.Cluster
         {
             get
             {
-                if (!TryGetString(NeonClusterGlobals.NeonCliVersion, out var version))
+                if (!TryGetString(NeonClusterGlobals.Version, out var version))
                 {
-                    throw new KeyNotFoundException(NeonClusterGlobals.NeonCliVersion);
+                    throw new KeyNotFoundException(NeonClusterGlobals.Version);
                 }
 
                 return version;

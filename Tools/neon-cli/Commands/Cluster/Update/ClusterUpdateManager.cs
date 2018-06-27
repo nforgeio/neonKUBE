@@ -60,7 +60,7 @@ namespace NeonCli
 
             if (!SemanticVersion.TryParse(cluster.Globals.Version, out var clusterVersion))
             {
-                throw new ClusterException($"Unable to retrieve or parse the cluster version global [{NeonClusterGlobals.NeonCliVersion}].");
+                throw new ClusterException($"Unable to retrieve or parse the cluster version global [{NeonClusterGlobals.Version}].");
             }
 
             if (!servicesOnly)

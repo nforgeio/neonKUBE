@@ -311,7 +311,7 @@ namespace NeonCli
                 () =>
                 {
                     firstManager.Status = "update: cluster version";
-                    Cluster.Globals.Set(NeonClusterGlobals.NeonCliVersion,(string)ToVersion);
+                    Cluster.Globals.Set(NeonClusterGlobals.Version,(string)ToVersion);
                     firstManager.Status = string.Empty;
                 });
         }

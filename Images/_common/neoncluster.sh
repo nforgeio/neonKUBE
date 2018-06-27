@@ -399,17 +399,18 @@ export NeonClusterGlobals_DisableAutoUnseal=disable-auto-unseal
 # [metricbeat] logs.
 export NeonClusterGlobals_LogRetentionDays=log-rentention-days
 
-# Version of the <b>neon-cli</b> that created or last upgraded the cluster.
-export NeonClusterGlobals_NeonCliVersion=neon-cli-version
-
 # Minimum <b>neon-cli</b> version allowed to manage the cluster.
-export NeonClusterGlobals_NeonCliVersionMinimum=neon-cli-version-minimum
+export NeonClusterGlobals_NeonCli=neon-cli
 
 # Current cluster pets definition.
 export NeonClusterGlobals_PetsDefinition=pets-definition
 
 # Cluster globally unique ID assigned during cluster setup.
 export NeonClusterGlobals_Uuid=uuid
+
+# Version of the cluster.  This is actually the version of [neon-cli] 
+# that created or last upgraded the cluster.
+export NeonClusterGlobals_Version=version
 
 #------------------------------------------------------------------------------
 # LogSources:

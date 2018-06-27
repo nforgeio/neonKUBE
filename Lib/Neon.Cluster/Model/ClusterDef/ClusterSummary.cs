@@ -136,7 +136,7 @@ namespace Neon.Cluster
         {
             get
             {
-                if (!Globals.TryGetValue(NeonClusterGlobals.NeonCliVersion, out string value))
+                if (!Globals.TryGetValue(NeonClusterGlobals.Version, out string value))
                 {
                     value = null;
                 }
@@ -153,7 +153,7 @@ namespace Neon.Cluster
         {
             get
             {
-                if (!Globals.TryGetValue(NeonClusterGlobals.NeonCliVersionMinimum, out string value))
+                if (!Globals.TryGetValue(NeonClusterGlobals.NeonCli, out string value))
                 {
                     value = null;
                 }
