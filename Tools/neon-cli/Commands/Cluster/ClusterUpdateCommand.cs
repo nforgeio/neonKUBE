@@ -520,35 +520,26 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                     node.SudoCommand("safe-apt-get update");
                 });
 
-            controller.AddStep("update nodes",
-                (node, stepDelay) =>
-                {
-                    if (node.Metadata.InSwarm)
-                    {
-                        node.Status = "swarm: drain services";
-                        cluster.Docker.DrainNode(node.Name);
-                    }
+            controller.AddStep("update managers",
+                UpdateLinux,
+                n => n.Metadata.IsManager,
+                parallelLimit: 1);
 
-                    node.Status = "run: safe-apt-get dist-upgrade -yq";
-                    node.SudoCommand("safe-apt-get dist-upgrade -yq");
+            if (cluster.Workers.Count() > 0)
+            {
+                controller.AddStep("update workers",
+                    UpdateLinux,
+                    n => n.Metadata.IsWorker,
+                    parallelLimit: 1);
+            }
 
-                    node.Reboot();
-
-                    if (node.Metadata.InSwarm)
-                    {
-                        // Put the node back into ACTIVE mode (from DRAIN).
-
-                        node.Status = "swarm: activate";
-                        cluster.Docker.ActivateNode(node.Name);
-                    }
-
-                    // Give the node a chance to become active again in the swarm 
-                    // for containers to restart and for service tasks to redeploy 
-
-                    node.Status = $"stabilizing ({Program.WaitSeconds}s)";
-                    Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
-                },
-                parallelLimit: 1);  // Reboot the nodes one at a time.
+            if (cluster.Pets.Count() > 0)
+            {
+                controller.AddStep("update pets",
+                    UpdateLinux,
+                    n => n.Metadata.IsPet,
+                    parallelLimit: 1);
+            }
 
             if (!controller.Run())
             {
@@ -558,6 +549,39 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
             Console.WriteLine();
             Console.WriteLine("*** Linux packages was updated successfully.");
+        }
+
+        /// <summary>
+        /// Updates Linux on a specific node.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <param name="stepDelay">The step selay.</param>
+        private void UpdateLinux(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        {
+            if (node.Metadata.InSwarm)
+            {
+                node.Status = "swarm: drain services";
+                cluster.Docker.DrainNode(node.Name);
+            }
+
+            node.Status = "run: safe-apt-get dist-upgrade -yq";
+            node.SudoCommand("safe-apt-get dist-upgrade -yq");
+
+            node.Reboot();
+
+            if (node.Metadata.InSwarm)
+            {
+                // Put the node back into ACTIVE mode (from DRAIN).
+
+                node.Status = "swarm: activate";
+                cluster.Docker.ActivateNode(node.Name);
+            }
+
+            // Give the node a chance to become active again in the swarm 
+            // for containers to restart and for service tasks to redeploy 
+
+            node.Status = $"stabilizing ({Program.WaitSeconds}s)";
+            Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
         }
 
         /// <summary>
