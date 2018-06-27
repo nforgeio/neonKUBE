@@ -177,6 +177,7 @@ namespace Neon.Cluster
         private bool            isReady;
         private string          status;
         private bool            hasUploadFolder;
+        private bool            hasDownloadFolder;
         private string          faultMessage;
 
         /// <summary>
@@ -486,6 +487,11 @@ namespace Neon.Cluster
         /// </note>
         /// </remarks>
         public string RemotePath { get; set; } = "/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/opt/neontools";
+
+        /// <summary>
+        /// Returns the username used to log into the remote node.
+        /// </summary>
+        public string Username => credentials.Username;
 
         /// <summary>
         /// Updates the proxy credentials.  Call this whenever you change the the
@@ -1092,15 +1098,34 @@ namespace Neon.Cluster
         }
 
         /// <summary>
-        /// Ensures that the [~/upload] folder exists on the server.
+        /// Ensures that the [~/.upload] folder exists on the server.
         /// </summary>
         private void EnsureUploadFolder()
         {
             if (!hasUploadFolder)
             {
                 RunCommand($"mkdir -p {UploadFolderPath}", RunOptions.LogOnErrorOnly | RunOptions.IgnoreRemotePath);
-
                 hasUploadFolder = true;
+            }
+        }
+
+        /// <summary>
+        /// Returns the path to the user's download folder on the server.
+        /// </summary>
+        public string DownloadFolderPath
+        {
+            get { return $"{HomeFolderPath}/.download"; }
+        }
+
+        /// <summary>
+        /// Ensures that the [~/.download] folder exists on the server.
+        /// </summary>
+        private void EnsureDownloadFolder()
+        {
+            if (!hasDownloadFolder)
+            {
+                RunCommand($"mkdir -p {DownloadFolderPath}", RunOptions.LogOnErrorOnly | RunOptions.IgnoreRemotePath);
+                hasDownloadFolder = true;
             }
         }
 
@@ -1138,13 +1163,27 @@ namespace Neon.Cluster
         }
 
         /// <summary>
+        /// Removes a file on the server if it exists.
+        /// </summary>
+        /// <param name="target">The path to the target file.</param>
+        public void RemoveFile(string target)
+        {
+            var response = SudoCommand($"if [ -f \"{target}\" ] ; then rm \"{target}\" ; fi");
+
+            if (response.ExitCode != 0)
+            {
+                throw new ClusterException(response.ErrorSummary);
+            }
+        }
+
+        /// <summary>
         /// Downloads a file from the Linux server and writes it out a stream.
         /// </summary>
-        /// <param name="path">The source path of the file on the Linux server.</param>
+        /// <param name="source">The source path of the file on the Linux server.</param>
         /// <param name="output">The output stream.</param>
-        public void Download(string path, Stream output)
+        public void Download(string source, Stream output)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(source));
             Covenant.Requires<ArgumentNullException>(output != null);
 
             if (IsFaulted)
@@ -1152,31 +1191,58 @@ namespace Neon.Cluster
                 return;
             }
 
-            LogLine($"*** Downloading: {path}");
+            LogLine($"*** Downloading: {source}");
+
+            var downloadPath = $"{DownloadFolderPath}/{LinuxPath.GetFileName(source)}-{Guid.NewGuid().ToString("D")}";
+
+            // We're not able to download some files directly due to permission issues 
+            // so we'll make a temporary copy of the target file within the user's
+            // home folder and then download that.  This is similar to what we had
+            // to do for uploading.
 
             try
             {
-                SafeDownload(path, output);
+                EnsureDownloadFolder();
+
+                var response = SudoCommand("cp", source, downloadPath);
+
+                if (response.ExitCode != 0)
+                {
+                    throw new ClusterException(response.ErrorSummary);
+                }
+
+                response = SudoCommand("chmod", "444", downloadPath);
+
+                if (response.ExitCode != 0)
+                {
+                    throw new ClusterException(response.ErrorSummary);
+                }
+
+                SafeDownload(downloadPath, output);
             }
             catch (Exception e)
             {
                 LogException("*** ERROR Downloading", e);
                 throw;
             }
+            finally
+            {
+                RemoveFile(downloadPath);
+            }
         }
 
         /// <summary>
         /// Downloads a file as bytes from the Linux server .
         /// </summary>
-        /// <param name="path">The source path of the file on the Linux server.</param>
+        /// <param name="source">The source path of the file on the Linux server.</param>
         /// <returns>The file contents as UTF8 text.</returns>
-        public byte[] DownloadBytes(string path)
+        public byte[] DownloadBytes(string source)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(source));
 
             using (var ms = new MemoryStream())
             {
-                Download(path, ms);
+                Download(source, ms);
 
                 return ms.ToArray();
             }
@@ -1185,15 +1251,15 @@ namespace Neon.Cluster
         /// <summary>
         /// Downloads a file as text from the Linux server.
         /// </summary>
-        /// <param name="path">The source path of the file on the Linux server.</param>
+        /// <param name="source">The source path of the file on the Linux server.</param>
         /// <returns>The file contents as UTF8 text.</returns>
-        public string DownloadText(string path)
+        public string DownloadText(string source)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(source));
 
             using (var ms = new MemoryStream())
             {
-                Download(path, ms);
+                Download(source, ms);
 
                 return Encoding.UTF8.GetString(ms.ToArray());
             }
@@ -1228,7 +1294,7 @@ namespace Neon.Cluster
         /// <summary>
         /// Uploads a binary stream to the Linux server and then writes it to the file system.
         /// </summary>
-        /// <param name="path">The target path on the Linux server.</param>
+        /// <param name="target">The target path on the Linux server.</param>
         /// <param name="input">The input stream.</param>
         /// <param name="userPermissions">Optionally indicates that the operation should be performed with user-level permissions.</param>
         /// <remarks>
@@ -1246,52 +1312,68 @@ namespace Neon.Cluster
         /// </para>
         /// </note>
         /// </remarks>
-        public void Upload(string path, Stream input, bool userPermissions = false)
+        public void Upload(string target, Stream input, bool userPermissions = false)
         {
             Covenant.Requires<ArgumentNullException>(input != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
+Console.WriteLine("**** 0");
 
             if (IsFaulted)
             {
                 return;
             }
 
-            LogLine($"*** Uploading: {path}");
+Console.WriteLine("**** 1");
+            LogLine($"*** Uploading: {target}");
 
+            var uploadPath = $"{UploadFolderPath}/{LinuxPath.GetFileName(target)}-{Guid.NewGuid().ToString("D")}";
+
+Console.WriteLine("**** 2");
             try
             {
                 EnsureUploadFolder();
 
-                var uploadPath = $"{UploadFolderPath}/{LinuxPath.GetFileName(path)}-{Guid.NewGuid().ToString("D")}";
-
+Console.WriteLine("**** 3");
                 SafeUpload(input, uploadPath);
+Console.WriteLine("**** 4");
 
-                SudoCommand($"mkdir -p {LinuxPath.GetDirectoryName(path)}", RunOptions.LogOnErrorOnly);
+                SudoCommand($"mkdir -p {LinuxPath.GetDirectoryName(target)}", RunOptions.LogOnErrorOnly);
+Console.WriteLine("**** 5");
 
                 if (userPermissions)
                 {
-                    RunCommand($"if [ -f {uploadPath} ]; then mv {uploadPath} {path}; fi", RunOptions.LogOnErrorOnly);
+                    RunCommand($"if [ -f {uploadPath} ]; then mv {uploadPath} {target}; fi", RunOptions.LogOnErrorOnly);
                 }
                 else
                 {
-                    SudoCommand($"if [ -f {uploadPath} ]; then mv {uploadPath} {path}; fi", RunOptions.LogOnErrorOnly);
+                    SudoCommand($"if [ -f {uploadPath} ]; then mv {uploadPath} {target}; fi", RunOptions.LogOnErrorOnly);
                 }
+Console.WriteLine("**** 6");
             }
             catch (Exception e)
             {
+Console.WriteLine($"**** 7: {NeonHelper.ExceptionError(e)}");
                 LogException("*** ERROR Uploading", e);
                 throw;
+            }
+            finally
+            {
+                // Ensure that the temporary file no longer exists (in case the move failed).
+
+Console.WriteLine("**** 8");
+                RemoveFile(uploadPath);
+Console.WriteLine("**** 9");
             }
         }
 
         /// <summary>
         /// Uploads a byte array to a Linux server file.
         /// </summary>
-        /// <param name="path">The target path of the file on the Linux server.</param>
+        /// <param name="target">The target path of the file on the Linux server.</param>
         /// <param name="bytes">The bytes to be uploaded.</param>
-        public void UploadBytes(string path, byte[] bytes)
+        public void UploadBytes(string target, byte[] bytes)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
 
             if (bytes == null)
             {
@@ -1300,7 +1382,7 @@ namespace Neon.Cluster
 
             using (var ms = new MemoryStream(bytes))
             {
-                Upload(path, ms);
+                Upload(target, ms);
             }
         }
 
@@ -1308,7 +1390,7 @@ namespace Neon.Cluster
         /// Uploads a text stream to the Linux server and then writes it to the file system,
         /// converting any CR-LF line endings to the Unix-style LF.
         /// </summary>
-        /// <param name="path">The target path on the Linux server.</param>
+        /// <param name="target">The target path on the Linux server.</param>
         /// <param name="textStream">The input stream.</param>
         /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
         /// <param name="inputEncoding">Optionally specifies the input text encoding (defaults to UTF-8).</param>
@@ -1331,10 +1413,10 @@ namespace Neon.Cluster
         /// </para>
         /// </note>
         /// </remarks>
-        public void UploadText(string path, Stream textStream, int tabStop = 0, Encoding inputEncoding = null, Encoding outputEncoding = null)
+        public void UploadText(string target, Stream textStream, int tabStop = 0, Encoding inputEncoding = null, Encoding outputEncoding = null)
         {
             Covenant.Requires<ArgumentNullException>(textStream != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
 
             inputEncoding  = inputEncoding ?? Encoding.UTF8;
             outputEncoding = outputEncoding ?? Encoding.UTF8;
@@ -1357,7 +1439,7 @@ namespace Neon.Cluster
                     }
 
                     binaryStream.Position = 0;
-                    Upload(path, binaryStream);
+                    Upload(target, binaryStream);
                 }
             }
         }
@@ -1366,7 +1448,7 @@ namespace Neon.Cluster
         /// Uploads a text string to the Linux server and then writes it to the file system,
         /// converting any CR-LF line endings to the Unix-style LF.
         /// </summary>
-        /// <param name="path">The target path on the Linux server.</param>
+        /// <param name="target">The target path on the Linux server.</param>
         /// <param name="text">The input text.</param>
         /// <param name="tabStop">Optionally expands TABs into spaces when non-zero.</param>
         /// <param name="outputEncoding">Optionally specifies the output text encoding (defaults to UTF-8).</param>
@@ -1385,14 +1467,14 @@ namespace Neon.Cluster
         /// </para>
         /// </note>
         /// </remarks>
-        public void UploadText(string path, string text, int tabStop = 0, Encoding outputEncoding = null)
+        public void UploadText(string target, string text, int tabStop = 0, Encoding outputEncoding = null)
         {
             Covenant.Requires<ArgumentNullException>(text != null);
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(path));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
 
             using (var textStream = new MemoryStream(Encoding.UTF8.GetBytes(text)))
             {
-                UploadText(path, textStream, tabStop, Encoding.UTF8, outputEncoding);
+                UploadText(target, textStream, tabStop, Encoding.UTF8, outputEncoding);
             }
         }
 
@@ -2414,21 +2496,6 @@ echo $? > {cmdFolder}/exit
 
             return response;
         }
-
-        // $todo(jeff.lill):
-        //
-        // I couldn't get these commands to work.  [sudo -u USER] is trying to prompt
-        // for a password even though we're logged in as ROOT and it's not required
-        // to enter passwords.  I tried the [sudo -S] option to read the password
-        // from STDIN but that's not working either.
-        //
-        // Ideas:
-        //
-        //      * Try explicitly piping an empty line into STDIN.  Perhaps
-        //        sudo is waiting for a new line to be entered.
-        //
-        //      * Trying setting the SUDO_ASKPASS environment variable to
-        //        a simple script that returns an empty password.
 
         /// <summary>
         /// Runs a shell command on the Linux server under <b>sudo</b> as a specific user.

@@ -587,6 +587,13 @@ do
         find "${HOME}/.upload" ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
     fi
 
+    # Clean the [SshProxy] temporary download files.
+
+    if [ -d "${HOME}/.download" ] ; then
+        echo "[INFO] Cleaning: ${HOME}/.download"
+        find "${HOME}/.download" ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
+    fi
+
     # Clean the [SshProxy] temporary exec files.
 
     if [ -d /var/lib/neoncluster/exec ] ; then
