@@ -140,6 +140,7 @@ do
     echo ${NEW_HASH}  > ${SECRETS_TMP}/new-hash
 
     if [ "${NEW_HASH}" != "${LAST_HASH}" ] ; then
+        . log-info.sh "[${CONFIG_HASH_KEY}] hash changed to: [${NEW_HASH}]"
         . onconfigchange.sh
         LAST_HASH=${NEW_HASH}
     fi
