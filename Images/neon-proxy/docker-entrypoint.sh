@@ -136,10 +136,12 @@ do
         continue
     fi
 
+    echo ${LAST_HASH} > ${SECRETS_TMP}/last-hash
+    echo ${NEW_HASH}  > ${SECRETS_TMP}/new-hash
+
     if [ "${NEW_HASH}" != "${LAST_HASH}" ] ; then
         . onconfigchange.sh
         LAST_HASH=${NEW_HASH}
-        echo ${NEW_HASH} > ${SECRETS_TMP}/last-hash
     fi
 
     sleep ${POLL_SECONDS}
