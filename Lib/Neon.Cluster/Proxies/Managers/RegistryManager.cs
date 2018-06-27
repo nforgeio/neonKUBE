@@ -107,6 +107,10 @@ namespace Neon.Cluster
                                     errors.Add($"{clonedNode.Name}: {response.ErrorSummary}");
                                 }
                             }
+                            else
+                            {
+                                SyncDockerConf(node);
+                            }
                         }
                     });
             }
@@ -155,7 +159,18 @@ namespace Neon.Cluster
                     {
                         using (var clonedNode = node.Clone())
                         {
-                            var response = clonedNode.SudoCommand($"docker logout", RunOptions.None, registry);
+                            // We need to special case logging out of the Docker public registry
+                            // by not passing a registry hostname.
+
+                            var registryArg = registry;
+
+                            if (registryArg.Equals("docker.io", StringComparison.InvariantCultureIgnoreCase) ||
+                                registryArg.Equals("registry-1.docker.io", StringComparison.InvariantCultureIgnoreCase))
+                            {
+                                registryArg = null;
+                            }
+
+                            var response = clonedNode.SudoCommand($"docker logout", RunOptions.None, registryArg);
 
                             if (response.ExitCode != 0)
                             {
@@ -163,6 +178,10 @@ namespace Neon.Cluster
                                 {
                                     errors.Add($"{clonedNode.Name}: {response.ErrorSummary}");
                                 }
+                            }
+                            else
+                            {
+                                SyncDockerConf(node);
                             }
                         }
                     });
@@ -184,6 +203,54 @@ namespace Neon.Cluster
                 }
 
                 throw new ClusterException(sb.ToString());
+            }
+        }
+
+        /// <summary>
+        /// Ensures that the Docker <b>config.json</b> file for the node's root 
+        /// user matches that for the sysadmin user.
+        /// </summary>
+        private void SyncDockerConf(SshProxy<NodeDefinition> node)
+        {
+            // We also need to manage the login for the [root] account due
+            // to issue
+            //
+            //      https://github.com/jefflill/NeonForge/issues/265
+
+            // $hack(jeff.lill):
+            //
+            // We're simply going ensure that the [/root/.docker/config.json]
+            // file matches the equivalent file for the node sysadmin account,
+            // removing the root file if this was deleted for sysadmin.
+            //
+            // This is a bit of a hack because it assumes that the Docker config
+            // for the root and sysadmin account never diverge, which is probably
+            // a reasonable assumption given that these are managed hosts.
+
+            var bundle = new CommandBundle("./sync.sh");
+
+            bundle.AddFile("sync.sh",
+$@"#!/bin/bash
+
+if [ ! -d /root/.docker ] ; then
+    mkdir -p /root/.docker
+fi
+
+if [ -f /home/{node.Username}/.docker/config.json ] ; then
+    cp /home/{node.Username}/.docker/config.json /root/.docker/config.json
+else
+    if [ -f /root/.docker/config.json ] ; then
+        rm /root/.docker/config.json
+    fi
+fi
+",
+                isExecutable: true);
+
+            var response = node.SudoCommand(bundle);
+
+            if (response.ExitCode != 0)
+            {
+                throw new ClusterException(response.ErrorSummary);
             }
         }
 

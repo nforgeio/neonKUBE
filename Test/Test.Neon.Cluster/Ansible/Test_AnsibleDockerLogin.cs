@@ -57,13 +57,11 @@ namespace TestNeonCluster
         [Trait(TestCategory.CategoryTrait, TestCategory.NeonCli)]
         public void LoginAndOut()
         {
-            // $todo(jeff.lill): I'm not actually verifying the login status on the nodes.
-
-            // We're going to create a temporary Ansible working folder and copy 
-            // the test secrets file there so we can reference it from the playbooks.
-
             using (var folder = new TempFolder())
             {
+                // We're going to create a temporary Ansible working folder and copy 
+                // the test secrets file there so we can reference it from the playbooks.
+
                 File.Copy(TestHelper.AnsibleSecretsPath, Path.Combine(folder.Path, "secrets.yaml"));
 
                 //-----------------------------------------------------------------
@@ -88,8 +86,30 @@ namespace TestNeonCluster
 
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
-
                 Assert.NotNull(cluster.Registry.GetCredentials(NeonClusterConst.DockerPublicRegistry));
+
+                // Verify the login by examining the [/home/USER/.docker/conf.json] file on one
+                // of the nodes and then verifying that the file matches.
+
+                var userDockerConfPath   = $"/home/{cluster.ClusterLogin.SshUsername}/.docker/config.json";
+                var rootDockerConfFolder = "/root/.docker";
+                var rootDockerConfPath   = $"{rootDockerConfFolder}/config.json";
+                var firstManager         = cluster.FirstManager;
+                var dockerAuthId         = "https://index.docker.io/v1/";
+
+                Assert.True(firstManager.FileExists(userDockerConfPath));
+                Assert.True(firstManager.FileExists(rootDockerConfPath));
+
+                var userConfJson = firstManager.DownloadText(userDockerConfPath);
+                var userConf     = NeonHelper.JsonDeserialize<dynamic>(userConfJson);
+
+                Assert.True(!string.IsNullOrEmpty((string)userConf.auths[dockerAuthId].auth));
+
+                var rootConfJson = firstManager.DownloadText(rootDockerConfPath);
+                var rootConf     = NeonHelper.JsonDeserialize<dynamic>(rootConfJson);
+
+                Assert.True(!string.IsNullOrEmpty((string)rootConf.auths[dockerAuthId].auth));
+                Assert.Equal((string)userConf.auths[dockerAuthId].auth, (string)rootConf.auths[dockerAuthId].auth);
 
                 //-----------------------------------------------------------------
                 // Run the play again and verify that [changed=false].
@@ -116,6 +136,20 @@ namespace TestNeonCluster
 
                 Assert.NotNull(cluster.Registry.GetCredentials(NeonClusterConst.DockerPublicRegistry));
 
+                Assert.True(firstManager.FileExists(userDockerConfPath));
+                Assert.True(firstManager.FileExists(rootDockerConfPath));
+
+                userConfJson = firstManager.DownloadText(userDockerConfPath);
+                userConf     = NeonHelper.JsonDeserialize<dynamic>(userConfJson);
+
+                Assert.True(!string.IsNullOrEmpty((string)userConf.auths[dockerAuthId].auth));
+
+                rootConfJson = firstManager.DownloadText(rootDockerConfPath);
+                rootConf     = NeonHelper.JsonDeserialize<dynamic>(rootConfJson);
+
+                Assert.True(!string.IsNullOrEmpty((string)rootConf.auths[dockerAuthId].auth));
+                Assert.Equal((string)userConf.auths[dockerAuthId].auth, (string)rootConf.auths[dockerAuthId].auth);
+
                 //-----------------------------------------------------------------
                 // Verify that we log off the test Docker hub account.
 
@@ -139,6 +173,28 @@ namespace TestNeonCluster
 
                 Assert.Null(cluster.Registry.GetCredentials(NeonClusterConst.DockerPublicRegistry));
 
+                // Verify the logout by ensuring that either the [/home/USER/.docker/conf.json]
+                // and [/root/.docker.conf.json] files don't ecist on one of the nodes or that
+                // both of them lack credentials for [docker.io].
+
+                if (firstManager.FileExists(userDockerConfPath) || firstManager.FileExists(rootDockerConfPath))
+                {
+                    // Both config files should exist if one of them is present.
+
+                    Assert.True(firstManager.FileExists(userDockerConfPath));
+                    Assert.True(firstManager.FileExists(rootDockerConfPath));
+
+                    userConfJson = firstManager.DownloadText(userDockerConfPath);
+                    userConf     = NeonHelper.JsonDeserialize<dynamic>(userConfJson);
+
+                    Assert.Null(userConf.auths[dockerAuthId]);
+
+                    rootConfJson = firstManager.DownloadText(rootDockerConfPath);
+                    rootConf     = NeonHelper.JsonDeserialize<dynamic>(rootConfJson);
+
+                    Assert.Null(rootConf.auths[dockerAuthId]);
+                }
+
                 //-----------------------------------------------------------------
                 // Run the play again and verify that [changed=false].
 
@@ -161,6 +217,28 @@ namespace TestNeonCluster
                 Assert.False(taskResult.Changed);
 
                 Assert.Null(cluster.Registry.GetCredentials(NeonClusterConst.DockerPublicRegistry));
+
+                // Verify the logout by ensuring that either the [/home/USER/.docker/conf.json]
+                // and [/root/.docker.conf.json] files don't ecist on one of the nodes or that
+                // both of them lack credentials for [docker.io].
+
+                if (firstManager.FileExists(userDockerConfPath) || firstManager.FileExists(rootDockerConfPath))
+                {
+                    // Both config files should exist if one of them is present.
+
+                    Assert.True(firstManager.FileExists(userDockerConfPath));
+                    Assert.True(firstManager.FileExists(rootDockerConfPath));
+
+                    userConfJson = firstManager.DownloadText(userDockerConfPath);
+                    userConf     = NeonHelper.JsonDeserialize<dynamic>(userConfJson);
+
+                    Assert.Null(userConf.auths[dockerAuthId]);
+
+                    rootConfJson = firstManager.DownloadText(rootDockerConfPath);
+                    rootConf     = NeonHelper.JsonDeserialize<dynamic>(rootConfJson);
+
+                    Assert.Null(rootConf.auths[dockerAuthId]);
+                }
             }
         }
 
@@ -184,7 +262,7 @@ namespace TestNeonCluster
             //        the running cache containers before we restart them.
             //
             //      * Verify that we fall-back to a reasonable image if
-            //        cache containers arfen't running.
+            //        cache containers aren't running.
             //
             //      * Verify the correct behavior when there's no cache enabled.
         }
