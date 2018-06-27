@@ -166,7 +166,8 @@ OPTIONS:
                                           password: sysadmin0000
     --machine-username=USERNAME         - Overrides default initial machine
                                           username: sysadmin
-    --noshim                            - See note below.
+    --shim                              - See note below.
+    --noshim
     -q, --quiet                         - Disables operation progress
     --noterminal                        - Disables the shimmed interactive terminal
     --version=VERSION                   - Overrides the neon-cli version
@@ -175,15 +176,16 @@ OPTIONS:
 
 NOTES:
 
-By default, this tool runs a [neoncluster/neon-cli] image as a Docker
-container, passing the command line and any files into the container such
-that the command is actually executed there.  In this case, the tool
-is just acting as a shim.
+Optionally by specifying the [--shim] option, this tool may run a 
+[neoncluster/neon-cli] image as a Docker container, passing the 
+command line and any files into the container such that the command
+is actually executed there.  Ideally, this would be the default 
+option but this is disabled due to some Docker for Windows issues.
+This means that currently [--noshim] is currently the default option.
 
-For limited circumstances, it may be desirable to have the tool actually
-perform the command on the operator's workstation rather than within a
-Docker container.  You can accomplish this by using the [--noshim].
-Note that the tool may require admin privileges for [--noshim] mode.
+Note that some commands still need to be shimmed regardless and also
+that we may make [--shim] the default for a future release once the
+Docker issues are corrected.
 ";
             // Disable any logging that might be performed by library classes.
 
@@ -232,6 +234,7 @@ Note that the tool may require admin privileges for [--noshim] mode.
                 validOptions.Add("--max-parallel");
                 validOptions.Add("-w");
                 validOptions.Add("--wait");
+                validOptions.Add("--shim");
                 validOptions.Add("--noshim");
                 validOptions.Add("--image-tag");
                 validOptions.Add("--noterminal");
@@ -315,8 +318,17 @@ Note that the tool may require admin privileges for [--noshim] mode.
                 }
 
                 // Determine whether we're running in direct mode or shimming to a Docker container.
+                
+                // $todo(jeff.lill):
+                //
+                // We're currently defaulting to [--noshim] mode due to Docker on Windows issues:
+                //
+                //      * We're seeing a lot of issues with Docker complaining about [/mnt/c] issues.
+                //      * Docker container networking is often screwed up.
+                //
+                // Both of these issues require resetting or reinstalling Docker.
 
-                NoShimMode = NeonClusterHelper.InToolContainer || CommandLine.GetOption("--noshim") != null;
+                NoShimMode = NeonClusterHelper.InToolContainer || CommandLine.GetOption("--shim") != null;
 
                 // Short-circuit the help command.
 
@@ -447,6 +459,8 @@ Note that the tool may require admin privileges for [--noshim] mode.
                         //      /neoncluster    - the root folder for this workstation's cluster logins
                         //      /shim           - the generated shim files
                         //      /log            - the logging folder (if logging is enabled)
+                        //
+                        // See: https://github.com/jefflill/NeonForge/issues/266
 
                         var secretsMount = $"-v \"{secretsRoot}:/neoncluster\"";
                         var shimMount    = $"-v \"{shim.ShimExternalFolder}:/shim\"";
