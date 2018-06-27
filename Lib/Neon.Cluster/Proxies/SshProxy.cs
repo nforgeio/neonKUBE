@@ -1316,29 +1316,23 @@ namespace Neon.Cluster
         {
             Covenant.Requires<ArgumentNullException>(input != null);
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(target));
-Console.WriteLine("**** 0");
 
             if (IsFaulted)
             {
                 return;
             }
 
-Console.WriteLine("**** 1");
             LogLine($"*** Uploading: {target}");
 
             var uploadPath = $"{UploadFolderPath}/{LinuxPath.GetFileName(target)}-{Guid.NewGuid().ToString("D")}";
 
-Console.WriteLine("**** 2");
             try
             {
                 EnsureUploadFolder();
 
-Console.WriteLine("**** 3");
                 SafeUpload(input, uploadPath);
-Console.WriteLine("**** 4");
 
                 SudoCommand($"mkdir -p {LinuxPath.GetDirectoryName(target)}", RunOptions.LogOnErrorOnly);
-Console.WriteLine("**** 5");
 
                 if (userPermissions)
                 {
@@ -1348,11 +1342,9 @@ Console.WriteLine("**** 5");
                 {
                     SudoCommand($"if [ -f {uploadPath} ]; then mv {uploadPath} {target}; fi", RunOptions.LogOnErrorOnly);
                 }
-Console.WriteLine("**** 6");
             }
             catch (Exception e)
             {
-Console.WriteLine($"**** 7: {NeonHelper.ExceptionError(e)}");
                 LogException("*** ERROR Uploading", e);
                 throw;
             }
@@ -1360,9 +1352,7 @@ Console.WriteLine($"**** 7: {NeonHelper.ExceptionError(e)}");
             {
                 // Ensure that the temporary file no longer exists (in case the move failed).
 
-Console.WriteLine("**** 8");
                 RemoveFile(uploadPath);
-Console.WriteLine("**** 9");
             }
         }
 
