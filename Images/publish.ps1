@@ -98,7 +98,6 @@ if ($base)
 	Publish "$image_root\\td-agent"
 	Publish "$image_root\\node"
 	Publish "$image_root\\haproxy"
-	Publish "$image_root\\neon-proxy"
 	Publish "$image_root\\neon-registry"
 	Publish "$image_root\\neon-registry-cache"
 }
@@ -117,5 +116,6 @@ if ($other)
 {
 	Publish "$image_root\\neon-log-collector"
 	Publish "$image_root\\neon-log-host"
+	Publish "$image_root\\neon-proxy"
 	Publish "$image_root\\neon-proxy-vault"
 }
