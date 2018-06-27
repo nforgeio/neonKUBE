@@ -52,6 +52,8 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
         private ClusterLogin    clusterLogin;
         private ClusterProxy    cluster;
+        private string          version;
+        private string          package;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -660,8 +662,8 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                 Program.Exit(0);
             }
 
-            var firstManager = cluster.FirstManager;
-            var package      = cluster.Headend.GetDockerPackage(version, out message);
+            this.version = version;
+            this.package = cluster.Headend.GetDockerPackage(version, out message);
 
             var controller = new SetupController<NodeDefinition>($"cluster docker update: {version}", cluster.Nodes)
             {
@@ -669,41 +671,26 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                 ShowStatus  = !Program.Quiet
             };
 
-            controller.AddStep("update docker",
-                (node, stepDelay) =>
-                {
-                    if (node.GetDockerVersion() >= (SemanticVersion)version)
-                    {
-                        return;     // Already updated
-                    }
+            controller.AddStep("update managers",
+                UpdateDocker,
+                n => n.Metadata.IsManager,
+                parallelLimit: 1);
 
-                    if (node.Metadata.InSwarm)
-                    {
-                        node.Status = "swarm: drain services";
-                        cluster.Docker.DrainNode(node.Name);
-                    }
+            if (cluster.Workers.Count() > 0)
+            {
+                controller.AddStep("update workers",
+                    UpdateDocker,
+                    n => n.Metadata.IsWorker,
+                    parallelLimit: 1);
+            }
 
-                    node.Status = "run: safe-apt-get update";
-                    node.SudoCommand("safe-apt-get update");
-
-                    node.Status = $"run: safe-apt-get install -yq {package}";
-                    node.SudoCommand($"safe-apt-get install -yq {package}");
-
-                    node.Status = $"restart: docker";
-                    node.SudoCommand("systemctl restart docker");
-
-                    if (node.Metadata.InSwarm)
-                    {
-                        // Put the node back into ACTIVE mode (from DRAIN).
-
-                        node.Status = "swarm: activate";
-                        cluster.Docker.ActivateNode(node.Name);
-                    }
-
-                    node.Status = $"stabilizing ({Program.WaitSeconds}s)";
-                    Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
-                },
-                parallelLimit: 1);  // Update the nodes one at a time.
+            if (cluster.Pets.Count() > 0)
+            {
+                controller.AddStep("update pets",
+                    UpdateDocker,
+                    n => n.Metadata.IsPet,
+                    parallelLimit: 1);
+            }
 
             if (!controller.Run())
             {
@@ -713,6 +700,45 @@ The current login must have ROOT PERMISSIONS to update the cluster.
 
             Console.WriteLine();
             Console.WriteLine("*** Docker Engine was updated successfully.");
+        }
+
+        /// <summary>
+        /// Updates Docker on a specific node.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <param name="stepDelay">The step selay.</param>
+        private void UpdateDocker(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        {
+            if (node.GetDockerVersion() >= (SemanticVersion)version)
+            {
+                return;     // Already updated
+            }
+
+            if (node.Metadata.InSwarm)
+            {
+                node.Status = "swarm: drain services";
+                cluster.Docker.DrainNode(node.Name);
+            }
+
+            node.Status = "run: safe-apt-get update";
+            node.SudoCommand("safe-apt-get update");
+
+            node.Status = $"run: safe-apt-get install -yq {package}";
+            node.SudoCommand($"safe-apt-get install -yq {package}");
+
+            node.Status = $"restart: docker";
+            node.SudoCommand("systemctl restart docker");
+
+            if (node.Metadata.InSwarm)
+            {
+                // Put the node back into ACTIVE mode (from DRAIN).
+
+                node.Status = "swarm: activate";
+                cluster.Docker.ActivateNode(node.Name);
+            }
+
+            node.Status = $"stabilizing ({Program.WaitSeconds}s)";
+            Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
         }
 
         /// <summary>
@@ -740,7 +766,7 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                 Program.Exit(0);
             }
 
-            var firstManager = cluster.FirstManager;
+            this.version = version;
 
             var controller = new SetupController<NodeDefinition>($"cluster consul update: {version}", cluster.Nodes)
             {
@@ -748,22 +774,57 @@ The current login must have ROOT PERMISSIONS to update the cluster.
                 ShowStatus  = !Program.Quiet
             };
 
-            controller.AddStep("update consul",
-                (node, stepDelay) =>
-                {
-                    if (node.GetConsulVersion() >= (SemanticVersion)version)
-                    {
-                        return;     // Already updated
-                    }
+            controller.AddStep("update managers",
+                UpdateConsul,
+                n => n.Metadata.IsManager,
+                parallelLimit: 1);
 
-                    node.Status = $"stop: consul";
-                    node.SudoCommand("systemctl stop consul");
+            if (cluster.Workers.Count() > 0)
+            {
+                controller.AddStep("update workers",
+                    UpdateConsul,
+                    n => n.Metadata.IsWorker,
+                    parallelLimit: 1);
+            }
 
-                    node.Status = $"update: consul";
+            if (cluster.Pets.Count() > 0)
+            {
+                controller.AddStep("update pets",
+                    UpdateConsul,
+                    n => n.Metadata.IsPet,
+                    parallelLimit: 1);
+            }
 
-                    var bundle = new CommandBundle("./install.sh", version);
+            if (!controller.Run())
+            {
+                Console.Error.WriteLine("*** ERROR: One or more CONSUL UPDATE steps failed.");
+                Program.Exit(1);
+            }
 
-                    bundle.AddFile("install.sh",
+            Console.WriteLine();
+            Console.WriteLine("*** Consul was updated successfully.");
+        }
+
+        /// <summary>
+        /// Updates Consul on a specific node.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <param name="stepDelay">The step selay.</param>
+        private void UpdateConsul(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        {
+            if (node.GetConsulVersion() >= (SemanticVersion)version)
+            {
+                return;     // Already updated
+            }
+
+            node.Status = $"stop: consul";
+            node.SudoCommand("systemctl stop consul");
+
+            node.Status = $"update: consul";
+
+            var bundle = new CommandBundle("./install.sh", version);
+
+            bundle.AddFile("install.sh",
 $@"#!/bin/bash
 
 set -euo pipefail
@@ -776,29 +837,18 @@ chmod 770 /usr/local/bin/consul
 rm /tmp/consul.zip
 rm /tmp/consul 
 ",
-                        isExecutable: true);
+                isExecutable: true);
 
-                    node.SudoCommand(bundle);
+            node.SudoCommand(bundle);
 
-                    node.Status = $"restart: consul";
-                    node.SudoCommand("systemctl restart consul");
+            node.Status = $"restart: consul";
+            node.SudoCommand("systemctl restart consul");
 
-                    if (node.Metadata.IsManager)
-                    {
-                        node.Status = $"stabilizing ({Program.WaitSeconds}s)";
-                        Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
-                    }
-                },
-                parallelLimit: 1);  // Update the nodes one at a time.
-
-            if (!controller.Run())
+            if (node.Metadata.IsManager)
             {
-                Console.Error.WriteLine("*** ERROR: One or more CONSUL UPDATE steps failed.");
-                Program.Exit(1);
+                node.Status = $"stabilizing ({Program.WaitSeconds}s)";
+                Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
             }
-
-            Console.WriteLine();
-            Console.WriteLine("*** Consul was updated successfully.");
         }
 
         /// <summary>
@@ -826,7 +876,7 @@ rm /tmp/consul
                 Program.Exit(0);
             }
 
-            var firstManager = cluster.FirstManager;
+            this.version = version;
 
             var controller = new SetupController<NodeDefinition>($"cluster vault update: {version}", cluster.Nodes)
             {
@@ -834,19 +884,54 @@ rm /tmp/consul
                 ShowStatus  = !Program.Quiet
             };
 
-            controller.AddStep("update vault",
-                (node, stepDelay) =>
-                {
-                    if (node.GetVaultVersion() >= (SemanticVersion)version)
-                    {
-                        return;     // Already updated
-                    }
+            controller.AddStep("update managers",
+                UpdateVault,
+                n => n.Metadata.IsManager,
+                parallelLimit: 1);
 
-                    node.Status = $"update: vault";
+            if (cluster.Workers.Count() > 0)
+            {
+                controller.AddStep("update workers",
+                    UpdateVault,
+                    n => n.Metadata.IsWorker,
+                    parallelLimit: 1);
+            }
 
-                    var bundle = new CommandBundle("./install.sh", version);
+            if (cluster.Pets.Count() > 0)
+            {
+                controller.AddStep("update pets",
+                    UpdateVault,
+                    n => n.Metadata.IsPet,
+                    parallelLimit: 1);
+            }
 
-                    bundle.AddFile("install.sh",
+            if (!controller.Run())
+            {
+                Console.Error.WriteLine("*** ERROR: One or more VAULT UPDATE steps failed.");
+                Program.Exit(1);
+            }
+
+            Console.WriteLine();
+            Console.WriteLine("*** Vault was updated successfully.");
+        }
+
+        /// <summary>
+        /// Updates Vault on a specific node.
+        /// </summary>
+        /// <param name="node">The target node.</param>
+        /// <param name="stepDelay">The step selay.</param>
+        private void UpdateVault(SshProxy<NodeDefinition> node, TimeSpan stepDelay)
+        {
+            if (node.GetVaultVersion() >= (SemanticVersion)version)
+            {
+                return;     // Already updated
+            }
+
+            node.Status = $"update: vault";
+
+            var bundle = new CommandBundle("./install.sh", version);
+
+            bundle.AddFile("install.sh",
 $@"#!/bin/bash
 
 set -euo pipefail
@@ -858,32 +943,21 @@ rm /tmp/vault.zip
 mv /tmp/vault /usr/local/bin/vault
 chmod 700 /usr/local/bin/vault
 ",
-                    isExecutable: true);
+            isExecutable: true);
 
-                    node.SudoCommand(bundle);
+            node.SudoCommand(bundle);
 
-                    if (node.Metadata.IsManager)
-                    {
-                        node.Status = $"restart: vault";
-                        node.SudoCommand("systemctl restart vault");
-
-                        node.Status = $"unseal: vault";
-                        cluster.Vault.Unseal();
-
-                        node.Status = $"stabilizing ({Program.WaitSeconds}s)";
-                        Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
-                    }
-                },
-                parallelLimit: 1);  // Update the nodes one at a time.
-
-            if (!controller.Run())
+            if (node.Metadata.IsManager)
             {
-                Console.Error.WriteLine("*** ERROR: One or more VAULT UPDATE steps failed.");
-                Program.Exit(1);
-            }
+                node.Status = $"restart: vault";
+                node.SudoCommand("systemctl restart vault");
 
-            Console.WriteLine();
-            Console.WriteLine("*** Vault was updated successfully.");
+                node.Status = $"unseal: vault";
+                cluster.Vault.Unseal();
+
+                node.Status = $"stabilizing ({Program.WaitSeconds}s)";
+                Thread.Sleep(TimeSpan.FromSeconds(Program.WaitSeconds));
+            }
         }
     }
 }
