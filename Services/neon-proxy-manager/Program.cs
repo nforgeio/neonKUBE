@@ -240,7 +240,7 @@ namespace NeonProxyManager
             // every [fallbackPollInterval] regardless of whether the hash has changed
             // to ensure that the certificates are still valid and also as a failsafe
             // that ensures that proxies will be eventually converged even when there's
-            // been some problem with uploading the reload hash.
+            // been some problem with uploading the reload UUID.
 
             var cts  = new CancellationTokenSource();
             var ct   = cts.Token;
@@ -306,11 +306,11 @@ namespace NeonProxyManager
 
                                 if (newReloadHash != lastReloadHash)
                                 {
-                                    // The reload hash has changed so we're going to break to
+                                    // The reload UUID has changed so we're going to break to
                                     // process the load balancer configurations.
 
                                     lastReloadHash = newReloadHash;
-                                    log.LogInfo(() => "Detected reload hash change on PollTmer.");
+                                    log.LogInfo(() => "Detected reload UUID change on PollTmer.");
                                     break;
                                 }
 

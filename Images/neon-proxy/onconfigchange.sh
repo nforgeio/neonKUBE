@@ -53,7 +53,7 @@ fi
 
 . log-info.sh "Unzipping the configuration ZIP archive."
 
-if ! unzip -o -u ${CONFIG_NEW_FOLDER}/haproxy.zip -d ${CONFIG_NEW_FOLDER} &> /dev/nul ; then
+if ! unzip -o ${CONFIG_NEW_FOLDER}/haproxy.zip -d ${CONFIG_NEW_FOLDER} &> /dev/nul ; then
     . report-error.sh "Cannot unzip the configuration.  Is it a valid ZIP archive?"
 fi
 
