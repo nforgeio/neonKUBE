@@ -1790,7 +1790,7 @@ listen tcp:port-{port}
                 // to be out of sync if the operator modifies the security rules
                 // manually (e.g. via the cloud portal).  This code won't detect
                 // this situation and the security rules won't be brought back
-                // int sync until the public rules changes enough to actually 
+                // into sync until the public rules changes enough to actually 
                 // change the external load balanced port set.
                 //
                 // This could be considered a feature.  For example, this allows
