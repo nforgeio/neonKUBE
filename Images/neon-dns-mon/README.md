@@ -8,7 +8,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Description
 
-The **neon-dns-mon** service integrates with **neon-dns** and PowerDNS installed in a neonCLUSTER to provide dynamic DNS capabilities.
+The **neon-dns-mon** service integrates with **neon-dns** and PowerDNS installed in a neonHIVE to provide dynamic DNS capabilities.
 
 **neon-dns-mon** runs as a single replica, typically on one of the manager nodes.  It is responsible for monitoring the DNS entries located in Consul at **neon/dns/entries**, checking these endpoints for health and then updating the the cluster hosts file at **neon/dns/answers/hosts.txt**.
 

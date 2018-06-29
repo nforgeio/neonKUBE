@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -86,7 +86,7 @@ USAGE:
 
             if (clusterLogin.ViaVpn)
             {
-                var vpnClient = NeonClusterHelper.VpnGetClient(clusterLogin.ClusterName);
+                var vpnClient = HiveHelper.VpnGetClient(clusterLogin.ClusterName);
 
                 if (vpnClient == null)
                 {
@@ -96,17 +96,17 @@ USAGE:
                 {
                     switch (vpnClient.State)
                     {
-                        case NeonClusterHelper.VpnState.Connecting:
+                        case HiveHelper.VpnState.Connecting:
 
                             Console.Error.WriteLine("VPN is connecting");
                             break;
 
-                        case NeonClusterHelper.VpnState.Healthy:
+                        case HiveHelper.VpnState.Healthy:
 
                             Console.Error.WriteLine("VPN connection is healthy");
                             break;
 
-                        case NeonClusterHelper.VpnState.Unhealthy:
+                        case HiveHelper.VpnState.Unhealthy:
 
                             Console.Error.WriteLine("*** ERROR: VPN connection is not healthy");
                             verifyCredentials = false;

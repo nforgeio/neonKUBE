@@ -20,10 +20,10 @@ using Consul;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
+using Neon.Hive;
 
 namespace NeonProxyManager
 {

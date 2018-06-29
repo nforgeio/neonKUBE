@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Provision and setup the underlying neonCLUSTER.
+# Provision and setup the underlying neonHIVE.
 #
 # usage: powershell -file setup-cluster.ps1 clusterName [OPTIONS]
 #
@@ -23,7 +23,7 @@ if (-not $env:SETUP_ALL -eq "true")
 	exit 1
 }
 
-# Prepare the neonCLUSTER.
+# Prepare the neonHIVE.
 
 if ($env:SETUP_SKIP_PREPARE -ne "true")
 {
@@ -42,7 +42,7 @@ if ($env:SETUP_SKIP_PREPARE -ne "true")
 	}
 }
 
-# Setup the neonCLUSTER.
+# Setup the neonHIVE.
 
 if ($env:SETUP_SKIP_SETUP -ne "true")
 {

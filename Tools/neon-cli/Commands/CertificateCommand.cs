@@ -19,9 +19,9 @@ using Consul;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -98,7 +98,7 @@ ARGUMENTS:
 
 DETAILS:
 
-neonCLUSTER standardizes on HAProxy compatible PEM-encoded certificates.
+neonHIVE standardizes on HAProxy compatible PEM-encoded certificates.
 These include both the public certificate and private key into a single
 file.  The certificate appears first, followed by any intermediate
 certificates, and then finally the private key.
@@ -187,7 +187,7 @@ certificates, and then finally the private key.
                         Program.Exit(1);
                     }
 
-                    certificate = NeonClusterHelper.Cluster.Certificate.Get(certName);
+                    certificate = HiveHelper.Cluster.Certificate.Get(certName);
 
                     if (certificate == null)
                     {
@@ -235,9 +235,9 @@ certificates, and then finally the private key.
                     // to capture details like the expiration date and covered
                     // hostnames.
 
-                    foreach (var name in NeonClusterHelper.Cluster.Certificate.List())
+                    foreach (var name in HiveHelper.Cluster.Certificate.List())
                     {
-                        certificate = NeonClusterHelper.Cluster.Certificate.Get(name);
+                        certificate = HiveHelper.Cluster.Certificate.Get(name);
 
                         if (checkDate.HasValue && certificate.IsValidDate(checkDate))
                         {
@@ -300,9 +300,9 @@ certificates, and then finally the private key.
                         Program.Exit(1);
                     }
 
-                    if (NeonClusterHelper.Cluster.Certificate.Get(certName) != null)
+                    if (HiveHelper.Cluster.Certificate.Get(certName) != null)
                     {
-                        NeonClusterHelper.Cluster.Certificate.Remove(certName);
+                        HiveHelper.Cluster.Certificate.Remove(certName);
                         Console.WriteLine($"Certificate [{certName}] was removed.");
                     }
                     else
@@ -316,7 +316,7 @@ certificates, and then finally the private key.
 
                     Program.ConnectCluster();
 
-                    using (var vault = NeonClusterHelper.OpenVault(Program.ClusterLogin.VaultCredentials.RootToken))
+                    using (var vault = HiveHelper.OpenVault(Program.ClusterLogin.VaultCredentials.RootToken))
                     {
                         if (commandLine.Arguments.Length != 2)
                         {
@@ -342,14 +342,14 @@ certificates, and then finally the private key.
 
                         certificate.Parse();
 
-                        if (NeonClusterHelper.Cluster.Certificate.Get(certName) == null)
+                        if (HiveHelper.Cluster.Certificate.Get(certName) == null)
                         {
-                            NeonClusterHelper.Cluster.Certificate.Set(certName, certificate);
+                            HiveHelper.Cluster.Certificate.Set(certName, certificate);
                             Console.WriteLine($"Certificate [{certName}] was added.");
                         }
                         else
                         {
-                            NeonClusterHelper.Cluster.Certificate.Set(certName, certificate);
+                            HiveHelper.Cluster.Certificate.Set(certName, certificate);
                             Console.WriteLine($"Certificate [{certName}] was updated.");
                         }
                     }
@@ -459,7 +459,7 @@ certificates, and then finally the private key.
             var tempCaPath   = Path.GetTempFileName();
             var tool         = "openssl";
 
-            if (NeonHelper.IsLinux && NeonClusterHelper.InToolContainer)
+            if (NeonHelper.IsLinux && HiveHelper.InToolContainer)
             {
                 // Choose nicer looking temporary file names when we're running the
                 // tool container and don't need to worry about conflicting files.

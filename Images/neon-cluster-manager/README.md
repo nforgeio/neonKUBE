@@ -32,7 +32,7 @@ neon:
 
 # Vault Unsealing
 
-neonCLUSTER uses HashiCorp [Vault)(http://vaultproject.io) as a secure place to store cluster secrets like hosting environment credentials, certificate private keys and VPN certificate authority secrets.  Vault servers are deployed on manager nodes and use Consul as its backing store, encrypting the information stored there.
+neonHIVE uses HashiCorp [Vault)(http://vaultproject.io) as a secure place to store cluster secrets like hosting environment credentials, certificate private keys and VPN certificate authority secrets.  Vault servers are deployed on manager nodes and use Consul as its backing store, encrypting the information stored there.
 
 Vault is super secure by default, so secure that the keys required by Vault to decrypt its storage are not persisted anywhere in the cluster.  This means that after a Vault instance or its host manager node restarts, the instance is unable to decrypt its data.  This is called the **sealed** state.  Cluster operators will need to manually **unseal** Vault by providing keys returned when the Vault was first provisioned.  The **neon-cli** provides a command to accomplish this via the **neon-cli**:
 

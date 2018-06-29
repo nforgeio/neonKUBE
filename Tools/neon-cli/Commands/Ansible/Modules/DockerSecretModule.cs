@@ -23,10 +23,10 @@ using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-using Neon.Cluster;
 using Neon.Cryptography;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonCli.Ansible
@@ -129,7 +129,7 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var cluster = NeonClusterHelper.Cluster;
+            var cluster = HiveHelper.Cluster;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {

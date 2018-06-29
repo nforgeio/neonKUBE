@@ -32,9 +32,9 @@ if [ -f /etc/neoncluster/env-container ] ; then
     . /etc/neoncluster/env-container
 fi
 
-# Load the neonCLUSTER constants.
+# Load the neonHIVE constants.
 
-. /neoncluster.sh
+. /neonhive.sh
 
 # Verify that a CONFIG_KEY was passed.
 

@@ -22,10 +22,10 @@ using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-using Neon.Cluster;
 using Neon.Cryptography;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonCli.Ansible
@@ -41,7 +41,7 @@ namespace NeonCli.Ansible
         // Synopsis:
         // ---------
         //
-        // Manages neonCLUSTER DNS host entries which override DNS lookups much
+        // Manages neonHIVE DNS host entries which override DNS lookups much
         // like the [/etc/hosts] file does for individual nodes.
         //
         // Requirements:
@@ -161,7 +161,7 @@ namespace NeonCli.Ansible
         //          endpoints:
         //            - target: www.google.com
         //
-        // This example expands the neonCLUSTER [swarm] host group so that
+        // This example expands the neonHIVE [swarm] host group so that
         // FOO.COM will resolve to the IP addresses for all cluster Swarm
         // nodes.  Checking is now enabled, so the IP addresses for all Swarm
         // nodes will be returned, regardless of their health.
@@ -176,7 +176,7 @@ namespace NeonCli.Ansible
         //          endpoints:
         //            - target: group=swarm
         //
-        // This example expands the neonCLUSTER [swarm] host group so that
+        // This example expands the neonHIVE [swarm] host group so that
         // FOO.COM will resolve to the IP addresses for all cluster Swarm
         // nodes.  Checking is enabled this time, so the IP addresses for 
         // healthy Swarm nodes will be returned, regardless of their health.
@@ -210,8 +210,8 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var cluster = NeonClusterHelper.Cluster;
-            var consul  = NeonClusterHelper.Consul;
+            var cluster = HiveHelper.Cluster;
+            var consul  = HiveHelper.Consul;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {

@@ -22,9 +22,9 @@ if [ -f /etc/neoncluster/env-container ] ; then
     . /etc/neoncluster/env-container
 fi
 
-# Load the neonCLUSTER constants.
+# Load the neonHIVE constants.
 
-. /neoncluster.sh
+. /neonhive.sh
 
 # Initialize the configuration file check interval.
 

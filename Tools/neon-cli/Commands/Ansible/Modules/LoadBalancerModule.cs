@@ -23,10 +23,10 @@ using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-using Neon.Cluster;
 using Neon.Cryptography;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonCli.Ansible
@@ -37,7 +37,7 @@ namespace NeonCli.Ansible
     // Synopsis:
     // ---------
     //
-    // Manages neonCLUSTER load balancer rules.
+    // Manages neonHIVE load balancer rules.
     //
     // Requirements:
     // -------------
@@ -54,7 +54,7 @@ namespace NeonCli.Ansible
     // name          yes                    private     identifies the target load balancer
     //                                      public
     //
-    // rule_name    yes                                 neonCLUSTER rule name
+    // rule_name    yes                                 neonHIVE rule name
     //
     // rule         see comment                         load balancer rule description
     //                                                  required when [state=present]
@@ -209,12 +209,12 @@ namespace NeonCli.Ansible
             {
                 case "private":
 
-                    loadBalancer = NeonClusterHelper.Cluster.PrivateLoadBalancer;
+                    loadBalancer = HiveHelper.Cluster.PrivateLoadBalancer;
                     break;
 
                 case "public":
 
-                    loadBalancer = NeonClusterHelper.Cluster.PublicLoadBalancer;
+                    loadBalancer = HiveHelper.Cluster.PublicLoadBalancer;
                     break;
 
                 default:
@@ -272,7 +272,7 @@ namespace NeonCli.Ansible
                         if (force)
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{ruleName}] does not exist but since [force=true] we're going to update anyway.");
-                            NeonClusterHelper.Cluster.SignalLoadBalancerUpdate();
+                            HiveHelper.Cluster.SignalLoadBalancerUpdate();
                             context.Changed = true;
                         }
                         else
@@ -356,7 +356,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, "Reading cluster certificates.");
 
-                    using (var vault = NeonClusterHelper.OpenVault(Program.ClusterLogin.VaultCredentials.RootToken))
+                    using (var vault = HiveHelper.OpenVault(Program.ClusterLogin.VaultCredentials.RootToken))
                     {
                         // List the certificate key/names and then fetch each one
                         // to capture details like the expiration date and covered
@@ -366,7 +366,7 @@ namespace NeonCli.Ansible
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Reading: {certName}");
 
-                            var certificate = vault.ReadJsonAsync<TlsCertificate>(NeonClusterHelper.GetVaultCertificateKey(certName)).Result;
+                            var certificate = vault.ReadJsonAsync<TlsCertificate>(HiveHelper.GetVaultCertificateKey(certName)).Result;
 
                             validationContext.Certificates.Add(certName, certificate);
                         }
@@ -417,7 +417,7 @@ namespace NeonCli.Ansible
                             if (force)
                             {
                                 context.WriteLine(AnsibleVerbosity.Trace, $"Rules are the same but since [force=true] we're going to update anyway.");
-                                NeonClusterHelper.Cluster.SignalLoadBalancerUpdate();
+                                HiveHelper.Cluster.SignalLoadBalancerUpdate();
                                 changed = true;
                             }
                             else

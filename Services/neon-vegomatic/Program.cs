@@ -17,11 +17,11 @@ using Consul;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonVegomatic
@@ -59,11 +59,11 @@ namespace NeonVegomatic
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    NeonClusterHelper.OpenRemoteCluster();
+                    HiveHelper.OpenRemoteCluster();
                 }
                 else
                 {
-                    NeonClusterHelper.OpenCluster();
+                    HiveHelper.OpenCluster();
                 }
 
                 var commandLine = new CommandLine(args);
@@ -96,7 +96,7 @@ namespace NeonVegomatic
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
                 terminator.ReadyToExit();
             }
 

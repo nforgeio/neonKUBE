@@ -1,4 +1,4 @@
-This base image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a pull-thru registry cache for a neonCLUSTER.
+This base image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a pull-thru registry cache for a neonHIVE.
 
 # Image Tags
 
@@ -14,7 +14,7 @@ The following image tags identify archived images which will not be deleted but 
 
 # Description
 
-This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a pull-thru registry cache for a neonCLUSTER that can reduce the network traffic to upstream image registries.
+This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a pull-thru registry cache for a neonHIVE that can reduce the network traffic to upstream image registries.
 
 # Environment Variables
 
@@ -44,7 +44,7 @@ This configuration makes a NeonCluser self-bootstrapping where even this **neon-
 
 # Deployment
 
-The neonCLUSTER **neon-cli** handles the deployment of Docker pull-thru registry caches to the cluster manager nodes unless disabled in the cluster definition.  The tool performs the following steps (documented [here](https://docs.docker.com/registry/insecure/):
+The neonHIVE **neon-cli** handles the deployment of Docker pull-thru registry caches to the cluster manager nodes unless disabled in the cluster definition.  The tool performs the following steps (documented [here](https://docs.docker.com/registry/insecure/):
 
 1. Generates a self-signed certificate for each cluster manager with the certificate hosts matching **<MANAGER-NAME>.neon-registry-cache.cluster**, where *<MANAGER-NAME>* is the name of the manager node.
 

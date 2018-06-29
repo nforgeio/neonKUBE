@@ -23,7 +23,7 @@ Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined
 
 # Description
 
-[Kibana](https://www.elastic.co/guide/en/kibana/current/introduction.html) provides a dashboard interface over an Elasticsearch database.  This is typically deployed within a neonCLUSTER so that operators can examine events emitted by cluster nodes and services as well as monitor cluster status by analyzing the host and container information captured by Metricbeat.
+[Kibana](https://www.elastic.co/guide/en/kibana/current/introduction.html) provides a dashboard interface over an Elasticsearch database.  This is typically deployed within a neonHIVE so that operators can examine events emitted by cluster nodes and services as well as monitor cluster status by analyzing the host and container information captured by Metricbeat.
 
 # Configuration
 

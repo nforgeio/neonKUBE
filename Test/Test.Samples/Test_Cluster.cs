@@ -11,17 +11,17 @@ using System.Net.Http;
 using System.Text;
 using System.Threading.Tasks;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 using Neon.Xunit;
-using Neon.Xunit.Cluster;
+using Neon.Xunit.Hive;
 
 using Xunit;
 
 namespace TestSamples
 {
     // This sample demonstrates how to use the [ClusterFixture] to execute
-    // unit tests against a real neonCLUSTER.
+    // unit tests against a real neonHIVE.
     //
     // Prerequisites:
     //

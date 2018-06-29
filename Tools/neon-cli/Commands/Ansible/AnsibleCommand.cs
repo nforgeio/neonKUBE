@@ -18,9 +18,9 @@ using Newtonsoft.Json;
 
 using ICSharpCode.SharpZipLib.Zip;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonCli
@@ -32,7 +32,7 @@ namespace NeonCli
     /// <para>
     /// Ansible is not supported on Windows and although it's possible to deploy Ansible
     /// on Mac OSX, we don't want to require it as a dependency to make the experience
-    /// the same on Windows and Mac and also to simplify neonCLUSTER setup.  The <b>neon-cli</b>
+    /// the same on Windows and Mac and also to simplify neonHIVE setup.  The <b>neon-cli</b>
     /// implements the <b>neon ansible...</b> commands to map files from the host operating
     /// system into a <b>neoncluster/neon-cli</b> container where Ansible is installed so any
     /// operations can be executed there.
@@ -69,7 +69,7 @@ USAGE:
 
     neon ansible config   ZIP-PATH          - returns Ansible configuration files to ZIP archive
     neon ansible password CMD ...           - password management
-    neon ansible module   MODULE ARGS       - implements built-in neonCLUSTER Ansible modules
+    neon ansible module   MODULE ARGS       - implements built-in neonHIVE Ansible modules
 
 ARGUMENTS:
 
@@ -246,7 +246,7 @@ on your workstation and must be referenced without specifying a path:
 ";
 
         private const string passwordHelp = @"
-Manages Ansible Vault passwords for neonCLUSTER.
+Manages Ansible Vault passwords for neonHIVE.
 
 USAGE:
 
@@ -304,7 +304,7 @@ You can open the returned ZIP archive to inspect these file.
         private const string moduleHelp = @"
 WARNING: FOR INTERNAL USE ONLY
 
-Implements built-in neonCLUSTER Ansible modules that can be invoked via
+Implements built-in neonHIVE Ansible modules that can be invoked via
 [neon ansible exec -- ARGS] or [neon ansible play -- ARGS].  This command
 should never need to be called directly by cluster operators.
 
@@ -397,7 +397,7 @@ MODULES:
                     Program.Exit(0);
                 }
 
-                string  passwordsFolder = NeonClusterHelper.GetAnsiblePasswordsFolder();
+                string  passwordsFolder = HiveHelper.GetAnsiblePasswordsFolder();
                 string  passwordCommand = passwordCommandLine.Arguments.ElementAtOrDefault(0);
                 string  passwordName    = passwordCommandLine.Arguments.ElementAtOrDefault(1);
                 string  passwordValue   = passwordCommandLine.Arguments.ElementAtOrDefault(2);
@@ -659,7 +659,7 @@ MODULES:
 
             // Implement the rest of the commands.
 
-            if (!NeonClusterHelper.InToolContainer)
+            if (!HiveHelper.InToolContainer)
             {
                 Console.Error.WriteLine($"*** ERROR: [neon ansible {command}] does not support [--noshim] mode.");
                 Program.Exit(1);
@@ -978,8 +978,8 @@ MODULES:
 
             // ...and also map the external Ansible roles and vault folders into the container.
 
-            shim.AddMappedFolder(new DockerShimFolder(NeonClusterHelper.GetAnsibleRolesFolder(), mappedRolesPath, isReadOnly: false));
-            shim.AddMappedFolder(new DockerShimFolder(NeonClusterHelper.GetAnsiblePasswordsFolder(), mappedPasswordsPath, isReadOnly: false));
+            shim.AddMappedFolder(new DockerShimFolder(HiveHelper.GetAnsibleRolesFolder(), mappedRolesPath, isReadOnly: false));
+            shim.AddMappedFolder(new DockerShimFolder(HiveHelper.GetAnsiblePasswordsFolder(), mappedPasswordsPath, isReadOnly: false));
 
             // ...finally, we need to verify that any password files specified by [--vault-password-file PATH] 
             // actually exist in the [neon-cli] ansible passwords folder.
@@ -989,7 +989,7 @@ MODULES:
             //      --vault-password-file=NAME
             //      --vault-password-file NAME
 
-            var localPasswordFolder = NeonClusterHelper.GetAnsiblePasswordsFolder();
+            var localPasswordFolder = HiveHelper.GetAnsiblePasswordsFolder();
 
             for (int index = 0; index < shim.CommandLine.Items.Length; index++)
             {
@@ -1089,7 +1089,7 @@ MODULES:
                 Program.Exit(1);
             }
 
-            if (!File.Exists(Path.Combine(NeonClusterHelper.GetAnsiblePasswordsFolder(), passwordName)))
+            if (!File.Exists(Path.Combine(HiveHelper.GetAnsiblePasswordsFolder(), passwordName)))
             {
                 Console.Error.WriteLine($"*** ERROR: Password [{passwordName}] does not exist.");
                 Program.Exit(1);
@@ -1623,7 +1623,7 @@ retries = 4
             {
                 swarmManager = cluster.GetHealthyManager();
             }
-            catch (ClusterException)
+            catch (HiveException)
             {
                 // We didn't find a healthy manager so we'll just fallback
                 // to the first manager as initialized above.

@@ -13,9 +13,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -49,7 +49,7 @@ namespace NeonCli
         /// <param name="servicesOnly">Optionally indicate that only cluster service and container images should be updated.</param>
         /// <param name="serviceUpdateParallism">Optionally specifies the parallism to use when updating services.</param>
         /// <returns>The number of pending updates.</returns>
-        /// <exception cref="ClusterException">Thrown if there was an error selecting the updates.</exception>
+        /// <exception cref="HiveException">Thrown if there was an error selecting the updates.</exception>
         public static int AddHiveUpdateSteps(ClusterProxy cluster, SetupController<NodeDefinition> controller, bool servicesOnly = false, int serviceUpdateParallism = 1)
         {
             Covenant.Requires<ArgumentNullException>(cluster != null);
@@ -60,7 +60,7 @@ namespace NeonCli
 
             if (!SemanticVersion.TryParse(cluster.Globals.Version, out var clusterVersion))
             {
-                throw new ClusterException($"Unable to retrieve or parse the cluster version global [{NeonClusterGlobals.Version}].");
+                throw new HiveException($"Unable to retrieve or parse the cluster version global [{HiveGlobals.Version}].");
             }
 
             if (!servicesOnly)
@@ -102,7 +102,7 @@ namespace NeonCli
 
             // $todo(jeff.lill):
             //
-            // We're going to hack this for now by updating all known neonCLUSTER service
+            // We're going to hack this for now by updating all known neonHIVE service
             // and container images to the [:latest] tag.  This is not really correct for
             // these reasons:
             //
@@ -140,8 +140,8 @@ namespace NeonCli
             // services to implement some of this.
 
             var versions         = cluster.Headend.GetComponentVersions(cluster.Globals.Version);
-            var systemContainers = NeonClusterConst.DockerContainers;
-            var systemServices   = NeonClusterConst.DockerServices;
+            var systemContainers = HiveConst.DockerContainers;
+            var systemServices   = HiveConst.DockerServices;
             var firstManager     = cluster.FirstManager;
 
             if (cluster.Definition.Docker.RegistryCache)
@@ -180,7 +180,7 @@ namespace NeonCli
             controller.AddStep("update services",
                 (node, stepDelay) =>
                 {
-                    // List the neonCLUSTER services actually running and only update those.
+                    // List the neonHIVE services actually running and only update those.
 
                     var services = new HashSet<string>();
                     var response = node.SudoCommand("docker service ls --format \"{{.Name}}\"");
@@ -219,7 +219,7 @@ namespace NeonCli
                         Thread.Sleep(stepDelay);
                     }
 
-                    // List the neonCLUSTER containers actually running and only update those.
+                    // List the neonHIVE containers actually running and only update those.
                     // Note that we're going to use the local script to start the container
                     // so we don't need to hardcode the Docker options here.  We won't restart
                     // the container if the script doesn't exist.
@@ -255,7 +255,7 @@ namespace NeonCli
                             continue;
                         }
 
-                        var containerStartScriptPath = LinuxPath.Combine(NeonHostFolders.Scripts, $"{container}.sh");
+                        var containerStartScriptPath = LinuxPath.Combine(HiveHostFolders.Scripts, $"{container}.sh");
 
                         if (node.FileExists(containerStartScriptPath))
                         {
@@ -294,7 +294,7 @@ namespace NeonCli
         /// <param name="controller">The setup controller.</param>
         /// <param name="dockerVersion">The version of Docker required.</param>
         /// <returns>The number of pending updates.</returns>
-        /// <exception cref="ClusterException">Thrown if there was an error selecting the updates.</exception>
+        /// <exception cref="HiveException">Thrown if there was an error selecting the updates.</exception>
         /// <remarks>
         /// <note>
         /// This method does not allow an older version of the component to be installed.

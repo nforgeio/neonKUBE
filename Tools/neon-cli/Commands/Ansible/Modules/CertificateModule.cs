@@ -21,10 +21,10 @@ using Newtonsoft.Json.Linq;
 
 using ICSharpCode.SharpZipLib.Zip;
 
-using Neon.Cluster;
 using Neon.Cryptography;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonCli.Ansible
@@ -35,7 +35,7 @@ namespace NeonCli.Ansible
     // Synopsis:
     // ---------
     //
-    // Manages neonCLUSTER TLS certificates.
+    // Manages neonHIVE TLS certificates.
     //
     // Requirements:
     // -------------
@@ -49,7 +49,7 @@ namespace NeonCli.Ansible
     // parameter    required    default     choices     comments
     // --------------------------------------------------------------------
     //
-    // name         yes                                 neonCLUSTER certificate name
+    // name         yes                                 neonHIVE certificate name
     //
     // state        no          present     present     indicates whether the certificate should
     //                                      absent      be created or removed
@@ -125,7 +125,7 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var cluster = NeonClusterHelper.Cluster;
+            var cluster = HiveHelper.Cluster;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {

@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -66,7 +66,7 @@ ARGUMENTS:
 
             if (commandLine.Arguments.Length == 0)
             {
-                node = NeonClusterHelper.Cluster.GetHealthyManager().Metadata;
+                node = HiveHelper.Cluster.GetHealthyManager().Metadata;
             }
             else
             {

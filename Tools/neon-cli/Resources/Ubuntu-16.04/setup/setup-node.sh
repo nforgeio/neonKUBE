@@ -64,7 +64,7 @@ safe-apt-get install -yq jq aptitude gdebi-core mmv
 # NOTE: This assumes that the hostname was originally configured 
 #       configured to be "ubuntu" as described in:
 #
-#       [Ubuntu-16.04 neonCLUSTER Template.docx]
+#       [Ubuntu-16.04 neonHIVE Template.docx]
 
 hostname ${NEON_NODE_NAME}
 echo ${NEON_NODE_NAME} > /etc/hostname
@@ -223,7 +223,7 @@ net.ipv4.tcp_tw_reuse = 1
 net.ipv4.ip_forward=1
 
 ###################################################################
-# neonCLUSTER settings
+# neonHIVE settings
 
 # Disable the Linux OOM Killer 
 vm.oom-kill = 0
@@ -270,7 +270,7 @@ update-grub
 
 if ! ${NEON_NODE_SWAP} ; then
 
-    if ! grep neonCLUSTER /etc/sysctl.conf ; then
+    if ! grep neonHIVE /etc/sysctl.conf ; then
 
         cat <<EOF >> /etc/sysctl.conf
 
@@ -659,7 +659,7 @@ EOF
 
 cat <<EOF > /etc/powerdns/recursor.conf
 ###############################################################################
-# neonCLUSTER custom PowerDNS Recursor Server configuration.
+# neonHIVE custom PowerDNS Recursor Server configuration.
 
 #################################
 # Allow requests only from well-known Internet private subnets as well as
@@ -1354,7 +1354,7 @@ cat <<EOF > /etc/cron.d/neon-host-maintenance
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Daily neonCLUSTER related host maintenance scheduled for 9:15pm system time (UTC)
+# Daily neonHIVE related host maintenance scheduled for 9:15pm system time (UTC)
 # or the middle of the night Pacific time.
 
 PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin

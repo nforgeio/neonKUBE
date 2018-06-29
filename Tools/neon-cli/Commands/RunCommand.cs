@@ -18,8 +18,8 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using YamlDotNet.RepresentationModel;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 using Neon.IO;
 using System.Diagnostics.Contracts;
 
@@ -158,7 +158,7 @@ NOTE: The [neon run ...] command cannot be run recursively.  For example,
             }
 
             var orgDirectory = Directory.GetCurrentDirectory();
-            var runFolder    = Path.Combine(NeonClusterHelper.GetRunFolder(), Guid.NewGuid().ToString("D"));
+            var runFolder    = Path.Combine(HiveHelper.GetRunFolder(), Guid.NewGuid().ToString("D"));
             var runEnvPath   = Path.Combine(runFolder, "__runenv.txt");
             var exitCode     = 1;
 
@@ -191,7 +191,7 @@ NOTE: The [neon run ...] command cannot be run recursively.  For example,
                             // Ansible passwords folder so we can pass it to the
                             // [neon ansible decrypt -- ...] command.
 
-                            var passwordsFolder = NeonClusterHelper.GetAnsiblePasswordsFolder();
+                            var passwordsFolder = HiveHelper.GetAnsiblePasswordsFolder();
                             var guid            = Guid.NewGuid().ToString("D");
 
                             tempPasswordPath = Path.Combine(passwordsFolder, $"{guid}.tmp");

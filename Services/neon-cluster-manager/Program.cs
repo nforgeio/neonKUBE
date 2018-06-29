@@ -18,11 +18,11 @@ using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonClusterManager
@@ -40,7 +40,7 @@ namespace NeonClusterManager
         private static readonly string vaultPollSecondsKey   = $"{serviceRootKey}/vault_poll_seconds";
         private static readonly string managerPollSecondsKey = $"{serviceRootKey}/manager_poll_seconds";
         private static readonly string logPollSecondsKey     = $"{serviceRootKey}/log_poll_seconds";
-        private static readonly string clusterDefKey         = $"neon/cluster/{NeonClusterGlobals.DefinitionDeflate}";
+        private static readonly string clusterDefKey         = $"neon/cluster/{HiveGlobals.DefinitionDeflate}";
 
         private static ProcessTerminator        terminator;
         private static INeonLogger              log;
@@ -98,14 +98,14 @@ namespace NeonClusterManager
                             }
                         });
 
-                    NeonClusterHelper.OpenRemoteCluster(secrets);
+                    HiveHelper.OpenRemoteCluster(secrets);
                 }
                 else
                 {
-                    NeonClusterHelper.OpenCluster(sshCredentialsSecret: "neon-ssh-credentials");
+                    HiveHelper.OpenCluster(sshCredentialsSecret: "neon-ssh-credentials");
                 }
 
-                cluster = NeonClusterHelper.Cluster;
+                cluster = HiveHelper.Cluster;
 
                 // Ensure that we're running on a manager node.  We won't be able
                 // to query swarm status otherwise.
@@ -114,7 +114,7 @@ namespace NeonClusterManager
 
                 if (string.IsNullOrEmpty(nodeRole))
                 {
-                    log.LogCritical(() => "Service does not appear to be running on a neonCLUSTER.");
+                    log.LogCritical(() => "Service does not appear to be running on a neonHIVE.");
                     Program.Exit(1);
                 }
 
@@ -128,11 +128,11 @@ namespace NeonClusterManager
 
                 log.LogDebug(() => $"Connecting Consul");
 
-                using (consul = NeonClusterHelper.OpenConsul())
+                using (consul = HiveHelper.OpenConsul())
                 {
                     log.LogDebug(() => $"Connecting Docker");
 
-                    using (docker = NeonClusterHelper.OpenDocker())
+                    using (docker = HiveHelper.OpenDocker())
                     {
                         await RunAsync();
                     }
@@ -145,7 +145,7 @@ namespace NeonClusterManager
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
                 terminator.ReadyToExit();
             }
 
@@ -234,7 +234,7 @@ namespace NeonClusterManager
             // Parse the Vault credentials from the [neon-cluster-manager-vaultkeys] 
             // secret, if it exists.
 
-            var vaultCredentialsJson = NeonClusterHelper.GetSecret("neon-cluster-manager-vaultkeys");
+            var vaultCredentialsJson = HiveHelper.GetSecret("neon-cluster-manager-vaultkeys");
 
             if (string.IsNullOrWhiteSpace(vaultCredentialsJson))
             {
@@ -354,7 +354,7 @@ namespace NeonClusterManager
                     // Retrieve the current cluster definition from Consul if we don't already
                     // have it or if it's different from what we've cached.
 
-                    cachedClusterDefinition = await NeonClusterHelper.GetDefinitionAsync(cachedClusterDefinition, terminator.CancellationToken);
+                    cachedClusterDefinition = await HiveHelper.GetDefinitionAsync(cachedClusterDefinition, terminator.CancellationToken);
 
                     // Retrieve the swarm nodes from Docker.
 
@@ -386,11 +386,11 @@ namespace NeonClusterManager
                     // Consul.  We'll assume that there are no pets if this key doesn't exist for
                     // backwards compatibility and robustness.
 
-                    var petsJson = await NeonClusterHelper.Consul.KV.GetStringOrDefault($"neon/cluster/{NeonClusterGlobals.PetsDefinition}", terminator.CancellationToken);
+                    var petsJson = await HiveHelper.Consul.KV.GetStringOrDefault($"neon/cluster/{HiveGlobals.PetsDefinition}", terminator.CancellationToken);
 
                     if (petsJson == null)
                     {
-                        log.LogDebug(() => $"STATE-POLLER: [neon/cluster/{NeonClusterGlobals.PetsDefinition}] Consul key not found.  Assuming no pets.");
+                        log.LogDebug(() => $"STATE-POLLER: [neon/cluster/{HiveGlobals.PetsDefinition}] Consul key not found.  Assuming no pets.");
                     }
                     else
                     {
@@ -405,11 +405,11 @@ namespace NeonClusterManager
                                 currentClusterDefinition.NodeDefinitions.Add(item.Key, item.Value);
                             }
 
-                            log.LogDebug(() => $"STATE-POLLER: [neon/cluster/{NeonClusterGlobals.PetsDefinition}] defines [{petDefinitions.Count}] pets.");
+                            log.LogDebug(() => $"STATE-POLLER: [neon/cluster/{HiveGlobals.PetsDefinition}] defines [{petDefinitions.Count}] pets.");
                         }
                         else
                         {
-                            log.LogDebug(() => $"STATE-POLLER: [neon/cluster/{NeonClusterGlobals.PetsDefinition}] is empty.");
+                            log.LogDebug(() => $"STATE-POLLER: [neon/cluster/{HiveGlobals.PetsDefinition}] is empty.");
                         }
                     }
 
@@ -425,7 +425,7 @@ namespace NeonClusterManager
                     {
                         log.LogInfo(() => "STATE-POLLER: Cluster definition has CHANGED.  Updating Consul.");
 
-                        await NeonClusterHelper.PutDefinitionAsync(currentClusterDefinition, cancellationToken: terminator.CancellationToken);
+                        await HiveHelper.PutDefinitionAsync(currentClusterDefinition, cancellationToken: terminator.CancellationToken);
 
                         cachedClusterDefinition = currentClusterDefinition;
                     }
@@ -494,7 +494,7 @@ namespace NeonClusterManager
                         log.LogDebug(() => $"VAULT-POLLER: Querying [{vaultUri}]");
 
                         var newVaultStatus     = await vault.GetHealthAsync(terminator.CancellationToken);
-                        var autoUnsealDisabled = consul.KV.GetBoolOrDefault($"{NeonClusterConst.ClusterGlobalsKey}/{NeonClusterGlobals.UserDisableAutoUnseal}").Result;
+                        var autoUnsealDisabled = consul.KV.GetBoolOrDefault($"{HiveConst.ClusterGlobalsKey}/{HiveGlobals.UserDisableAutoUnseal}").Result;
                         var changed            = false;
 
                         if (lastVaultStatus == null)
@@ -533,7 +533,7 @@ namespace NeonClusterManager
 
                             if (newVaultStatus.IsSealed && autoUnsealDisabled)
                             {
-                                log.LogInfo(() => $"VAULT-POLLER: AUTO-UNSEAL is temporarily DISABLED because Consul [{NeonClusterConst.ClusterGlobalsKey}/{NeonClusterGlobals.UserDisableAutoUnseal}=true].");
+                                log.LogInfo(() => $"VAULT-POLLER: AUTO-UNSEAL is temporarily DISABLED because Consul [{HiveConst.ClusterGlobalsKey}/{HiveGlobals.UserDisableAutoUnseal}=true].");
                             }
 
                             statusUpdateTimeUtc = DateTime.UtcNow + statusUpdateInterval;
@@ -675,7 +675,7 @@ namespace NeonClusterManager
                         //
                         // The date is simply encodes the day covered by the index.
 
-                        if (!cluster.Globals.TryGetInt(NeonClusterGlobals.UserLogRetentionDays, out var retentionDays))
+                        if (!cluster.Globals.TryGetInt(HiveGlobals.UserLogRetentionDays, out var retentionDays))
                         {
                             retentionDays = 14;
                         }
@@ -683,7 +683,7 @@ namespace NeonClusterManager
                         var utcNow           = DateTime.UtcNow;
                         var deleteBeforeDate = new DateTime(utcNow.Year, utcNow.Month, utcNow.Day) - TimeSpan.FromDays(retentionDays);
 
-                        var indexList = await jsonClient.GetAsync<JObject>($"http://{manager.PrivateAddress}:{NeonHostPorts.ProxyPrivateHttpLogEsData}/_aliases");
+                        var indexList = await jsonClient.GetAsync<JObject>($"http://{manager.PrivateAddress}:{HiveHostPorts.ProxyPrivateHttpLogEsData}/_aliases");
 
                         foreach (var indexProperty in indexList.Properties())
                         {
@@ -723,7 +723,7 @@ namespace NeonClusterManager
                             if (indexDate < deleteBeforeDate)
                             {
                                 log.LogInfo(() => $"LOG-PURGER: Deleting index [{indexName}].");
-                                await jsonClient.DeleteAsync<JObject>($"http://{manager.PrivateAddress}:{NeonHostPorts.ProxyPrivateHttpLogEsData}/{indexName}");
+                                await jsonClient.DeleteAsync<JObject>($"http://{manager.PrivateAddress}:{HiveHostPorts.ProxyPrivateHttpLogEsData}/{indexName}");
                                 log.LogInfo(() => $"LOG-PURGER: [{indexName}] was deleted.");
                             }
                         }

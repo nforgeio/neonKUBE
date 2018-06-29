@@ -90,7 +90,7 @@ path.data: /mnt/esdata
 
 # Elasticsearch performs poorly when JVM starts swapping.  If we were running on
 # bare metal, we'd enable memory locking but I couldn't get this to work on
-# Docker.  Instead, we're going to rely on the fact that neonCLUSTER nodes are
+# Docker.  Instead, we're going to rely on the fact that neonHIVE nodes are
 # configured with [swappiness=0] and that we'll reserve memory for our
 # Elasticsearch service instance.
 

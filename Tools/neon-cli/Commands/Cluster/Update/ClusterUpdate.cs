@@ -13,9 +13,9 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -73,7 +73,7 @@ namespace NeonCli
                 {
                     node.Status = "update state";
 
-                    var updateFolder = LinuxPath.Combine(NeonHostFolders.State, "update", ToVersion.ToString());
+                    var updateFolder = LinuxPath.Combine(HiveHostFolders.State, "update", ToVersion.ToString());
 
                     node.SudoCommand("mkdir -p", updateFolder);
                     node.SudoCommand("chmod 770", updateFolder);

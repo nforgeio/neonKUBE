@@ -8,7 +8,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Description
 
-The **neon-dns** service integrates with **neon-dns-mon** and PowerDNS installed in a neonCLUSTER to provide dynamic DNS capabilities.
+The **neon-dns** service integrates with **neon-dns-mon** and PowerDNS installed in a neonHIVE to provide dynamic DNS capabilities.
 
 **neon-dns-mon** runs as a single replica, typically on one of the manager nodes.  It is responsible for monitoring the DNS entries located in Consul at **neon/dns/entries**, checking these endpoints for health and then updating the the cluster hosts file at **neon/dns/answers/hosts.txt**.
 
@@ -52,4 +52,4 @@ The three file system mounts are required for the cluster DNS to function proper
 
 * `/dev/shm/neon-dns` - is a folder on the RAM drive where the **neon-dns** service creates the `reload` file to signal that PowerDNS Recursor needs to reload the hosts file.
 
-**neon-dns** works in conjunction with a local systemd service called **neon-dns-loader**.  This service is a simple script that watches for the existence of a `/dev/shm/neon-dns\reload` file to signal PowerDNS Recursor to reload the hosts file.  *neon-dns-loader** is configured automatically during neonCLUSTER setup.
+**neon-dns** works in conjunction with a local systemd service called **neon-dns-loader**.  This service is a simple script that watches for the existence of a `/dev/shm/neon-dns\reload` file to signal PowerDNS Recursor to reload the hosts file.  *neon-dns-loader** is configured automatically during neonHIVE setup.

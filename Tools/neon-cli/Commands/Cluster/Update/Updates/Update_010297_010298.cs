@@ -14,9 +14,9 @@ using System.Threading.Tasks;
 
 using ICSharpCode.SharpZipLib.Zip;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonCli
@@ -63,7 +63,7 @@ namespace NeonCli
             node.InvokeIdempotentAction(GetIdempotentTag("safe-apt-get"),
                 () =>
                 {
-                    var targetPath = LinuxPath.Combine(NeonHostFolders.Tools, "safe-apt-get");
+                    var targetPath = LinuxPath.Combine(HiveHostFolders.Tools, "safe-apt-get");
 
                     node.Status = "upload: safe-apt-get";
                     node.UploadText(targetPath, ResourceFiles.Root.GetFolder("Ubuntu-16.04").GetFolder("tools").GetFile("safe-apt-get.sh").Contents);
@@ -105,8 +105,8 @@ namespace NeonCli
                 {
                     node.Status = "relocate setup state";
 
-                    node.SudoCommand($"mkdir -p {NeonHostFolders.State}/setup");
-                    node.SudoCommand($"mmv \"{NeonHostFolders.State}/finished-*\" \"{NeonHostFolders.State}/setup/#1*\"");
+                    node.SudoCommand($"mkdir -p {HiveHostFolders.State}/setup");
+                    node.SudoCommand($"mmv \"{HiveHostFolders.State}/finished-*\" \"{HiveHostFolders.State}/setup/#1*\"");
                 });
 
             // The [/Ubuntu-16.04/updates/010297_010298.zip] resource file includes
@@ -130,7 +130,7 @@ namespace NeonCli
                             using (var input = zip.GetInputStream(entry))
                             {
                                 node.Status = $"update: {entry.Name}";
-                                node.UploadText(LinuxPath.Combine(NeonHostFolders.Setup, entry.Name), Encoding.UTF8.GetString(input.ReadToEnd()));
+                                node.UploadText(LinuxPath.Combine(HiveHostFolders.Setup, entry.Name), Encoding.UTF8.GetString(input.ReadToEnd()));
                             }
                         }
                     }
@@ -232,7 +232,7 @@ namespace NeonCli
                     foreach (var manager in Cluster.Managers)
                     {
                         manager.Status = "update: neon-cluster-manager script";
-                        manager.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-cluster-manager.sh"), createScript);
+                        manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-cluster-manager.sh"), createScript);
                         manager.Status = string.Empty;
                     }
                 });
@@ -264,7 +264,7 @@ namespace NeonCli
                     rule.Frontends.Add(
                         new LoadBalancerHttpFrontend()
                         {
-                            ProxyPort = NeonHostPorts.ProxyPrivateHttpKibana
+                            ProxyPort = HiveHostPorts.ProxyPrivateHttpKibana
                         });
 
                     rule.Backends.Add(
@@ -290,8 +290,8 @@ namespace NeonCli
                     {
                         Name        = "kibana",
                         Title       = "Kibana",
-                        Folder      = NeonClusterConst.DashboardSystemFolder,
-                        Url         = $"http://healthy-manager:{NeonHostPorts.ProxyPrivateHttpKibana}",
+                        Folder      = HiveConst.DashboardSystemFolder,
+                        Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateHttpKibana}",
                         Description = "Kibana cluster monitoring dashboard"
                     };
 
@@ -311,7 +311,7 @@ namespace NeonCli
                 () =>
                 {
                     firstManager.Status = "update: cluster version";
-                    Cluster.Globals.Set(NeonClusterGlobals.Version,(string)ToVersion);
+                    Cluster.Globals.Set(HiveGlobals.Version,(string)ToVersion);
                     firstManager.Status = string.Empty;
                 });
         }

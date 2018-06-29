@@ -16,8 +16,8 @@ using Newtonsoft.Json.Linq;
 
 using Neon.Common;
 using Neon.Xunit;
-using Neon.Xunit.Cluster;
 using Neon.Xunit.Couchbase;
+using Neon.Xunit.Hive;
 
 using Xunit;
 

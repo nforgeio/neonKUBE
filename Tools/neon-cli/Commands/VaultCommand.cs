@@ -18,8 +18,8 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Renci.SshNet.Common;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -270,7 +270,7 @@ NOTE: The following Vault commands are not supported:
                         {
                             // Disable auto unseal until the operator explicitly unseals Vault again.
 
-                            cluster.Consul.Client.KV.PutBool($"{NeonClusterConst.ClusterGlobalsKey}/{NeonClusterGlobals.UserDisableAutoUnseal}", true).Wait();
+                            cluster.Consul.Client.KV.PutBool($"{HiveConst.ClusterGlobalsKey}/{HiveGlobals.UserDisableAutoUnseal}", true).Wait();
                         }
 
                         Program.Exit(failed ? 1 : 0);
@@ -467,7 +467,7 @@ NOTE: The following Vault commands are not supported:
                         {
                             // Reenable auto unseal.
 
-                            cluster.Consul.Client.KV.PutBool($"{NeonClusterConst.ClusterGlobalsKey}/{NeonClusterGlobals.UserDisableAutoUnseal}", false).Wait();
+                            cluster.Consul.Client.KV.PutBool($"{HiveConst.ClusterGlobalsKey}/{HiveGlobals.UserDisableAutoUnseal}", false).Wait();
                         }
 
                         Program.Exit(commandFailed ? 1 : 0);

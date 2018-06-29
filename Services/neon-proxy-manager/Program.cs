@@ -25,11 +25,11 @@ using Consul;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
+using Neon.Hive;
 using Neon.Time;
 
 namespace NeonProxyManager
@@ -91,12 +91,12 @@ namespace NeonProxyManager
 
                 Environment.SetEnvironmentVariable("VAULT_CREDENTIALS", vaultCredentialsSecret);
 
-                NeonClusterHelper.OpenRemoteCluster(
+                HiveHelper.OpenRemoteCluster(
                     new DebugSecrets().VaultAppRole(vaultCredentialsSecret, "neon-proxy-manager"));
             }
             else
             {
-                NeonClusterHelper.OpenCluster();
+                HiveHelper.OpenCluster();
             }
 
             try
@@ -111,7 +111,7 @@ namespace NeonProxyManager
                     Program.Exit(1);
                 }
 
-                var vaultCredentials = ClusterCredentials.ParseJson(NeonClusterHelper.GetSecret(vaultCredentialsSecret));
+                var vaultCredentials = ClusterCredentials.ParseJson(HiveHelper.GetSecret(vaultCredentialsSecret));
 
                 if (vaultCredentials == null)
                 {
@@ -123,13 +123,13 @@ namespace NeonProxyManager
 
                 log.LogInfo(() => $"Connecting Vault");
 
-                using (vault = NeonClusterHelper.OpenVault(vaultCredentials))
+                using (vault = HiveHelper.OpenVault(vaultCredentials))
                 {
                     log.LogInfo(() => $"Connecting Consul");
 
-                    using (consul = NeonClusterHelper.OpenConsul())
+                    using (consul = HiveHelper.OpenConsul())
                     {
-                        using (docker = NeonClusterHelper.OpenDocker())
+                        using (docker = HiveHelper.OpenDocker())
                         {
                             await RunAsync();
                             terminator.ReadyToExit();
@@ -144,7 +144,7 @@ namespace NeonProxyManager
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
                 terminator.ReadyToExit();
             }
 
@@ -364,7 +364,7 @@ namespace NeonProxyManager
                             // Fetch the cluster definition and detect whether it changed since the
                             // previous run.
 
-                            var currentClusterDefinition = await NeonClusterHelper.GetDefinitionAsync(clusterDefinition, cts.Token);
+                            var currentClusterDefinition = await HiveHelper.GetDefinitionAsync(clusterDefinition, cts.Token);
 
                             clusterDefinitionChanged = clusterDefinition == null || !NeonHelper.JsonEquals(clusterDefinition, currentClusterDefinition);
                             clusterDefinition        = currentClusterDefinition;
@@ -489,14 +489,14 @@ namespace NeonProxyManager
                     {
                         case "public":
 
-                            firstProxyPort = NeonHostPorts.ProxyPublicFirst;
-                            lastProxyPort  = NeonHostPorts.ProxyPublicLast;
+                            firstProxyPort = HiveHostPorts.ProxyPublicFirst;
+                            lastProxyPort  = HiveHostPorts.ProxyPublicLast;
                             break;
 
                         case "private":
 
-                            firstProxyPort = NeonHostPorts.ProxyPrivateFirst;
-                            lastProxyPort  = NeonHostPorts.ProxyPrivateLast;
+                            firstProxyPort = HiveHostPorts.ProxyPrivateFirst;
+                            lastProxyPort  = HiveHostPorts.ProxyPrivateLast;
                             break;
 
                         default:
@@ -659,9 +659,9 @@ global
     maxconn             {settings.MaxConnections}
 
 # Enable logging to syslog on the local Docker host under the
-# [NeonSysLogFacility_ProxyPublic] facility.
+# [HiveSysLogFacility_ProxyPublic] facility.
 
-    log                 ""${{NEON_NODE_IP}}:{NeonHostPorts.LogHostSysLog}"" len 65535 {NeonSysLogFacility.ProxyName}
+    log                 ""${{NEON_NODE_IP}}:{HiveHostPorts.LogHostSysLog}"" len 65535 {HiveSysLogFacility.ProxyName}
 
 # Certificate Authority and Certificate file locations:
 
@@ -712,7 +712,7 @@ resolvers {resolver.Name}
 # Enable HAProxy statistics pages.
 
 frontend haproxy_stats
-    bind                *:{NeonClusterConst.HAProxyStatsPort}
+    bind                *:{HiveConst.HAProxyStatsPort}
     mode                http
     log                 global
     option              httplog
@@ -723,7 +723,7 @@ backend haproxy_stats
     mode                http
     stats               enable
     stats               scope .
-    stats               uri {NeonClusterConst.HaProxyStatsUri}
+    stats               uri {HiveConst.HaProxyStatsUri}
     stats               refresh 5s
 ");
             //-----------------------------------------------------------------
@@ -981,7 +981,7 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
                     if (tcpRule.Log)
                     {
                         sbHaProxy.AppendLine($"    log                 global");
-                        sbHaProxy.AppendLine($"    log-format          {NeonClusterHelper.GetProxyLogFormat("neon-proxy-" + loadBalancerName, tcp: true)}");
+                        sbHaProxy.AppendLine($"    log-format          {HiveHelper.GetProxyLogFormat("neon-proxy-" + loadBalancerName, tcp: true)}");
                     }
 
                     if (tcpRule.LogChecks)
@@ -1011,10 +1011,10 @@ listen tcp:{tcpRule.Name}-port-{frontend.ProxyPort}
             //
             //      1. We need to generate an HAProxy frontend for each IP/port combination 
             //         and then use HOST header or SNI rules in addition to an optional path
-            //         prefix to map the correct backend.   This means that neonCLUSTER proxy
+            //         prefix to map the correct backend.   This means that neonHIVE proxy
             //         frontends don't map directly to HAProxy frontends.
             //
-            //      2. We need to generate an HAProxy backend for each neonCLUSTER proxy backend.
+            //      2. We need to generate an HAProxy backend for each neonHIVE proxy backend.
             //
             //      3. For TLS frontends, we're going to persist all of the referenced certificates 
             //         into frontend specific folders and then reference the folder in the bind
@@ -1150,7 +1150,7 @@ frontend {haProxyFrontend.Name}
     mode                http
     bind                *:{haProxyFrontend.Port}{certArg}
     unique-id-header    {LogActivity.HttpHeader}
-    unique-id-format    {NeonClusterConst.HAProxyUidFormat}
+    unique-id-format    {HiveConst.HAProxyUidFormat}
     option              forwardfor
     option              http-server-close
     http-request        set-header X-Forwarded-Proto https if {{ ssl_fc }}
@@ -1161,7 +1161,7 @@ frontend {haProxyFrontend.Name}
                         sbHaProxy.AppendLine($"    capture             request header Host len 255");
                         sbHaProxy.AppendLine($"    capture             request header User-Agent len 2048");
                         sbHaProxy.AppendLine($"    log                 global");
-                        sbHaProxy.AppendLine($"    log-format          {NeonClusterHelper.GetProxyLogFormat("neon-proxy-" + loadBalancerName, tcp: false)}");
+                        sbHaProxy.AppendLine($"    log-format          {HiveHelper.GetProxyLogFormat("neon-proxy-" + loadBalancerName, tcp: false)}");
                     }
 
                     // Generate the backend mappings for frontends without path prefixes first.
@@ -1566,7 +1566,7 @@ global
 # should probably specify a different SYSLOG facility so we can distinguish 
 # between problems with bridges and normal proxies. 
 
-#   log                 ""${{NEON_NODE_IP}}:{NeonHostPorts.LogHostSysLog}"" len 65535 {NeonSysLogFacility.ProxyName}
+#   log                 ""${{NEON_NODE_IP}}:{HiveHostPorts.LogHostSysLog}"" len 65535 {HiveSysLogFacility.ProxyName}
 
 # Certificate Authority and Certificate file locations:
 
@@ -1598,7 +1598,7 @@ defaults
 # Enable HAProxy statistics pages.
 
 frontend haproxy_stats
-    bind                *:{NeonClusterConst.HAProxyStatsPort}
+    bind                *:{HiveConst.HAProxyStatsPort}
     mode                http
     log                 global
     option              httplog
@@ -1609,7 +1609,7 @@ backend haproxy_stats
     mode                http
     stats               enable
     stats               scope .
-    stats               uri {NeonClusterConst.HaProxyStatsUri}
+    stats               uri {HiveConst.HaProxyStatsUri}
     stats               refresh 5s
 ");
             // Generate the TCP bridge rules.

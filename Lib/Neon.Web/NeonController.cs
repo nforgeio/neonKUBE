@@ -43,9 +43,9 @@ namespace Neon.Web
     /// logs with the activity across all systems and services to disgnose exactly what happened.
     /// </para>
     /// <para>
-    /// The Neon framework and <b>neonCLUSTER</b> have built-in mechanisms to make this easy.
+    /// The Neon framework and <b>neonHIVE</b> have built-in mechanisms to make this easy.
     /// <see cref="INeonLogger"/> logging methods include <b>activityId</b> as first class parameters
-    /// and the neonCLUSTER pipeline implicitly process and persist <b>activity-id</b> fields
+    /// and the neonHIVE pipeline implicitly process and persist <b>activity-id</b> fields
     /// from event streams.  
     /// </para>
     /// <para>

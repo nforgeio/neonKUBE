@@ -20,9 +20,9 @@ using System.Threading.Tasks;
 using Newtonsoft.Json;
 
 using Neon;
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Diagnostics;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -139,7 +139,7 @@ ARGUMENTS:
                           optional for some commands when logged in.
     CMD...              - Subcommand and arguments.
     DASHBOARD           - Identifies a cluster dashboard
-    FOLDER              - Identifies a neonCLUSTER folder
+    FOLDER              - Identifies a neonHIVE folder
     LOGIN-PATH          - Path to a cluster login file including the cluster
                           definition and user credentials.
     NODE                - Identifies a cluster node by name.
@@ -194,15 +194,15 @@ Docker issues are corrected.
             // Configure the encrypted user-specific application data folder and initialize
             // the subfolders.
 
-            ClusterRootFolder  = NeonClusterHelper.GetRootFolder();
-            ClusterLoginFolder = NeonClusterHelper.GetLoginFolder();
-            ClusterSetupFolder = NeonClusterHelper.GetVmTemplatesFolder();
-            CurrentClusterPath = NeonClusterHelper.CurrentPath;
+            ClusterRootFolder  = HiveHelper.GetRootFolder();
+            ClusterLoginFolder = HiveHelper.GetLoginFolder();
+            ClusterSetupFolder = HiveHelper.GetVmTemplatesFolder();
+            CurrentClusterPath = HiveHelper.CurrentPath;
 
             // We're going to special case the temp folder and locate this within the [/dev/shm] 
             // tmpfs based RAM drive if we're running in the tool container.
 
-            ClusterTempFolder  = NeonClusterHelper.InToolContainer ? "/dev/shm/temp" : Path.Combine(ClusterRootFolder, "temp");
+            ClusterTempFolder  = HiveHelper.InToolContainer ? "/dev/shm/temp" : Path.Combine(ClusterRootFolder, "temp");
 
             Directory.CreateDirectory(ClusterLoginFolder);
             Directory.CreateDirectory(ClusterTempFolder);
@@ -328,7 +328,7 @@ Docker issues are corrected.
                 //
                 // Both of these issues require resetting or reinstalling Docker.
 
-                NoShimMode = NeonClusterHelper.InToolContainer || CommandLine.GetOption("--shim") != null;
+                NoShimMode = HiveHelper.InToolContainer || CommandLine.GetOption("--shim") != null;
 
                 // Short-circuit the help command.
 
@@ -371,7 +371,7 @@ Docker issues are corrected.
 
                 if (!string.IsNullOrEmpty(LogPath))
                 {
-                    if (NeonClusterHelper.InToolContainer)
+                    if (HiveHelper.InToolContainer)
                     {
                         // We hardcode logging to [/log] inside [neon-cli] containers.
 
@@ -406,7 +406,7 @@ Docker issues are corrected.
 
                     using (var shim = new DockerShim(CommandLine))
                     {
-                        var secretsRoot = NeonClusterHelper.GetRootFolder(ignoreNeonToolContainerVar: true);
+                        var secretsRoot = HiveHelper.GetRootFolder(ignoreNeonToolContainerVar: true);
 
                         ClusterLogin = GetClusterLogin();
 
@@ -425,7 +425,7 @@ Docker issues are corrected.
 
                             if (ClusterLogin.ViaVpn)
                             {
-                                NeonClusterHelper.VpnOpen(ClusterLogin,
+                                HiveHelper.VpnOpen(ClusterLogin,
                                     onStatus: message => Console.Error.WriteLine(message),
                                     onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
                             }
@@ -510,7 +510,7 @@ Docker issues are corrected.
 
                         var imageTag = Program.Version;
 
-                        if (ThisAssembly.Git.Branch != NeonClusterConst.GitProdBranch)
+                        if (ThisAssembly.Git.Branch != HiveConst.GitProdBranch)
                         {
                             imageTag = $"{ThisAssembly.Git.Branch}-{Program.Version}";
                         }
@@ -564,7 +564,7 @@ $@"*** ERROR: Cannot list Docker images.
                                     var fields = line.Split(' ', StringSplitOptions.RemoveEmptyEntries);
 
                                     return fields.Length >= 2 &&
-                                        fields[0] == $"{NeonClusterConst.NeonPublicRegistry}/neon-cli" &&
+                                        fields[0] == $"{HiveConst.NeonPublicRegistry}/neon-cli" &&
                                         fields[1] == imageTag;
                                 });
 
@@ -577,7 +577,7 @@ $@"*** ERROR: Cannot list Docker images.
                                 {
                                     "image",
                                     "pull",
-                                    $"{NeonClusterConst.NeonPublicRegistry}/neon-cli:{imageTag}"
+                                    $"{HiveConst.NeonPublicRegistry}/neon-cli:{imageTag}"
                                 });
 
                             if (result.ExitCode != 0)
@@ -596,7 +596,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
 
                         try
                         {
-                            process = Process.Start("docker", $"run {options} --name neon-{Guid.NewGuid().ToString("D")} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} {sbEnvOptions} --network host {NeonClusterConst.NeonPublicRegistry}/neon-cli:{imageTag}");
+                            process = Process.Start("docker", $"run {options} --name neon-{Guid.NewGuid().ToString("D")} --rm {secretsMount} {shimMount} {logMount} {sbMappedMount} {sbEnvOptions} --network host {HiveConst.NeonPublicRegistry}/neon-cli:{imageTag}");
                         }
                         catch (Win32Exception)
                         {
@@ -783,7 +783,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
 
         /// <summary>
         /// Optionally set to the tag to be used to override any explicit or implicit <b>:latest</b>
-        /// image tags specified when deploying a neonCLUSTER.
+        /// image tags specified when deploying a neonHIVE.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -958,9 +958,9 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
         /// <param name="exitCode">The exit code.</param>
         public static void Exit(int exitCode)
         {
-            if (NeonClusterHelper.IsConnected)
+            if (HiveHelper.IsConnected)
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
             }
 
             Environment.Exit(exitCode);
@@ -1020,9 +1020,9 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                 {
                     return osProperties;
                 }
-                else if (NeonClusterHelper.Cluster != null)
+                else if (HiveHelper.Cluster != null)
                 {
-                    return OSProperties.For(NeonClusterHelper.Cluster.Definition.HostNode.OperatingSystem);
+                    return OSProperties.For(HiveHelper.Cluster.Definition.HostNode.OperatingSystem);
                 }
                 else
                 {
@@ -1087,7 +1087,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
 
             try
             {
-                clusterLogin = NeonClusterHelper.GetLogin(!isRequired, Program.Version);
+                clusterLogin = HiveHelper.GetLogin(!isRequired, Program.Version);
             }
             catch (VersionException e)
             {
@@ -1108,7 +1108,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
         }
 
         /// <summary>
-        /// Uses <see cref="NeonClusterHelper.OpenRemoteCluster(DebugSecrets, string)"/> to 
+        /// Uses <see cref="HiveHelper.OpenRemoteCluster(DebugSecrets, string)"/> to 
         /// ensure that there's a currently logged-in cluster and that the VPN connection
         /// is established if required.
         /// </summary>
@@ -1132,15 +1132,15 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                 throw new Exception($"Cluster login [{clusterLogin.LoginName}] does not reference a fully configured cluster.  Use the [neon cluster setup...] command to complete cluster configuration.");
             }
 
-            NeonClusterHelper.OpenRemoteCluster(loginPath: NeonClusterHelper.GetLoginPath(NeonClusterConst.RootUser, Program.ClusterLogin.ClusterName));
+            HiveHelper.OpenRemoteCluster(loginPath: HiveHelper.GetLoginPath(HiveConst.RootUser, Program.ClusterLogin.ClusterName));
 
             // Note that we never try to connect the VPN from within the
             // [neon-cli] container.  Its expected that the VPN is always
             // established on the operator's workstation.
 
-            if (!NeonClusterHelper.InToolContainer && clusterLogin.ViaVpn)
+            if (!HiveHelper.InToolContainer && clusterLogin.ViaVpn)
             {
-                NeonClusterHelper.VpnOpen(clusterLogin,
+                HiveHelper.VpnOpen(clusterLogin,
                     onStatus: message => Console.Error.WriteLine(message),
                     onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
             }
@@ -1150,13 +1150,13 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
 
         /// <summary>
         /// Returns the username used to secure the cluster nodes before they are setup.  This
-        /// defaults to <b>sysadmin</b> which is used for the neonCLUSTER machine templates.
+        /// defaults to <b>sysadmin</b> which is used for the neonHIVE machine templates.
         /// </summary>
         public static string MachineUsername { get; private set; }
 
         /// <summary>
         /// Returns the password used to secure the cluster nodes before they are setup.  This
-        /// defaults to <b>sysadmin0000</b> which is used for the neonCLUSTER machine templates.
+        /// defaults to <b>sysadmin0000</b> which is used for the neonHIVE machine templates.
         /// </summary>
         public static string MachinePassword { get; private set; }
 
@@ -1239,8 +1239,8 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
 
             var proxy = new SshProxy<TMetadata>(name, publicAddress, privateAddress, sshCredentials, logWriter);
 
-            proxy.RemotePath += $":{NeonHostFolders.Setup}";
-            proxy.RemotePath += $":{NeonHostFolders.Tools}";
+            proxy.RemotePath += $":{HiveHostFolders.Setup}";
+            proxy.RemotePath += $":{HiveHostFolders.Tools}";
 
             return proxy;
         }
@@ -1448,7 +1448,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                 }
             }
 
-            if (!NeonClusterHelper.InToolContainer)
+            if (!HiveHelper.InToolContainer)
             {
                 if (NeonHelper.IsWindows)
                 {

@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 using Neon.IO;
 
 // $todo(jeff.lill):
@@ -90,7 +90,7 @@ NOTES:
       command.
 
     * Use [--group=NAME] to run the command on the nodes in the named
-      node group.  neonCLUSTER builds-in the following node groups
+      node group.  neonHIVE builds-in the following node groups
       and it's possible to define custom groups in your cluster definition:
 
             cluster, swarm, managers, workers, pets, 
@@ -160,7 +160,7 @@ does this on the first manager node:
 
             Program.ConnectCluster();
 
-            var cluster = NeonClusterHelper.Cluster;
+            var cluster = HiveHelper.Cluster;
 
             // Process the nodes.
 

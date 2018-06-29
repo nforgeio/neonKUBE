@@ -29,7 +29,7 @@ namespace Neon
         /// <summary>
         /// The product statement to be included in all assemblies.
         /// </summary>
-        public const string Product = "neonCLUSTER";
+        public const string Product = "neonHIVE";
 
         /// <summary>
         /// The build configuration.

@@ -19,8 +19,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 using Neon.Net;
 
 // $todo(jeff.lill): Verify that there are no unexpected nodes in the cluster.

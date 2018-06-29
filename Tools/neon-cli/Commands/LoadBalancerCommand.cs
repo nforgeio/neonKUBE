@@ -19,9 +19,9 @@ using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -85,7 +85,7 @@ OPTIONS:
 
         private const string ruleHelp =
 @"
-neonCLUSTER proxies support two types of load balancer rules: HTTP/S and TCP.
+neonHIVE proxies support two types of load balancer rules: HTTP/S and TCP.
 Each rule defines one or more frontend and backends.
 
 HTTP/S frontends handle requests for a hostname for one or more hostname
@@ -213,12 +213,12 @@ See the documentation for more load balancer rule and setting details.
 
                 case "public":
 
-                    loadBalancer = NeonClusterHelper.Cluster.PublicLoadBalancer;
+                    loadBalancer = HiveHelper.Cluster.PublicLoadBalancer;
                     break;
 
                 case "private":
 
-                    loadBalancer = NeonClusterHelper.Cluster.PrivateLoadBalancer;
+                    loadBalancer = HiveHelper.Cluster.PrivateLoadBalancer;
                     break;
 
                 default:
@@ -278,7 +278,7 @@ See the documentation for more load balancer rule and setting details.
                     // We're going to download the load balancer's ZIP archive containing 
                     // the [haproxy.cfg] file, extract and write it to the console.
 
-                    using (var consul = NeonClusterHelper.OpenConsul())
+                    using (var consul = HiveHelper.OpenConsul())
                     {
                         var confKey      = $"neon/service/neon-proxy-manager/proxies/{loadBalancerName}/conf";
                         var confZipBytes = consul.KV.GetBytesOrDefault(confKey).Result;
@@ -504,7 +504,7 @@ See the documentation for more load balancer rule and setting details.
 
                 case "status":
 
-                    using (var consul = NeonClusterHelper.OpenConsul())
+                    using (var consul = HiveHelper.OpenConsul())
                     {
                         var statusJson  = consul.KV.GetStringOrDefault($"neon/service/neon-proxy-manager/status/{loadBalancerName}").Result;
 

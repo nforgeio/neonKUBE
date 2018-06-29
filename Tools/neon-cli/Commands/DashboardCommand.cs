@@ -17,8 +17,8 @@ using System.Threading.Tasks;
 using Consul;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonCli
@@ -289,7 +289,7 @@ dashboard names are reserved for use as commands:
         {
             var name = commandLine.Arguments.ElementAtOrDefault(0);
 
-            name = name ?? "cluster";   // Default to the neonCLUSTER dashboard
+            name = name ?? "cluster";   // Default to the neonHIVE dashboard
 
             var dashboard = cluster.Dashboard.Get(name);
 

@@ -25,10 +25,10 @@ using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-using Neon.Cluster;
 using Neon.Cryptography;
 using Neon.Common;
 using Neon.Data;
+using Neon.Hive;
 using Neon.IO;
 using Neon.Net;
 
@@ -49,7 +49,7 @@ namespace NeonCli.Ansible.Couchbase
         /// <returns>The <see cref="CouchbaseArgs"/> or <c>null</c> if there's an error.</returns>
         public static CouchbaseArgs Parse(ModuleContext context)
         {
-            var cluster       = NeonClusterHelper.Cluster;
+            var cluster       = HiveHelper.Cluster;
             var nodeGroups    = cluster.Definition.GetNodeGroups(excludeAllGroup: true);
             var couchbaseArgs = new CouchbaseArgs();
 

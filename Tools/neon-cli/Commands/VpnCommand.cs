@@ -18,8 +18,8 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 using Neon.IO;
 
 namespace NeonCli
@@ -55,7 +55,7 @@ USAGE:
     ---------------------------------
     Generates the certificate authority and server certificate 
     files as well as the root client certificate to be used 
-    for securing a neonCLUSTER VPN.  This command is generally
+    for securing a neonHIVE VPN.  This command is generally
     executed internally during cluster setup.
 
     CLUSTER-DEF - Path to the cluster definition file.
@@ -157,7 +157,7 @@ USAGE:
             // This command cannot run in [--noshim] mode because OpenSSL
             // has issues with Windows style file paths.
 
-            if (!NeonClusterHelper.InToolContainer)
+            if (!HiveHelper.InToolContainer)
             {
                 Console.Error.WriteLine("*** ERROR: This VPN command cannot be run in [--noshim] mode.");
                 Program.Exit(1);
@@ -449,10 +449,10 @@ subjectAltName          = email:nobody@nowhere.com
             var serverKeyPath = Path.Combine(caFolder, "server.key");
             var serverReqPath = Path.Combine(caFolder, "server.req");
             var serverCrtPath = Path.Combine(caFolder, "server.crt");
-            var rootCnfPath   = Path.Combine(caFolder, $"{NeonClusterConst.RootUser}.cnf");
-            var rootReqPath   = Path.Combine(caFolder, $"{NeonClusterConst.RootUser}.req");
-            var rootKeyPath   = Path.Combine(caFolder, $"{NeonClusterConst.RootUser}.key");
-            var rootCrtPath   = Path.Combine(caFolder, $"{NeonClusterConst.RootUser}.crt");
+            var rootCnfPath   = Path.Combine(caFolder, $"{HiveConst.RootUser}.cnf");
+            var rootReqPath   = Path.Combine(caFolder, $"{HiveConst.RootUser}.req");
+            var rootKeyPath   = Path.Combine(caFolder, $"{HiveConst.RootUser}.key");
+            var rootCrtPath   = Path.Combine(caFolder, $"{HiveConst.RootUser}.crt");
             var taKeyPath     = Path.Combine(caFolder, "ta.key");
             var crlnumberPath = Path.Combine(caFolder, "crlnumber");
             var crlPath       = Path.Combine(caFolder, "crl.pem");
@@ -671,7 +671,7 @@ nsCertType              = server
 
             try
             {
-                File.WriteAllText(rootCnfPath, GetClientConfig(clusterDefinition, NeonClusterConst.RootUser, rootPrivileges: true));
+                File.WriteAllText(rootCnfPath, GetClientConfig(clusterDefinition, HiveConst.RootUser, rootPrivileges: true));
 
                 Program.Execute("openssl", "req", "-new",
                     "-config", rootCnfPath,
@@ -739,7 +739,7 @@ nsCertType              = server
                 Program.Exit(1);
             }
 
-            cluster = NeonClusterHelper.OpenCluster(clusterLogin);
+            cluster = HiveHelper.OpenCluster(clusterLogin);
         }
 
         /// <summary>
@@ -900,7 +900,7 @@ nsCertType              = server
                 case "dhparam":
                 case "server":
 
-                    Console.WriteLine($"***ERROR: USER [{username}] is reserved by neonCLUSTER.  Please choose another name.");
+                    Console.WriteLine($"***ERROR: USER [{username}] is reserved by neonHIVE.  Please choose another name.");
                     Program.Exit(1);
                     break;
             }
@@ -998,7 +998,7 @@ nsCertType              = server
             finally
             {
                 Directory.Delete(caFolder, recursive: true);
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
             }
         }
 
@@ -1051,7 +1051,7 @@ nsCertType              = server
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
             }
         }
 
@@ -1170,7 +1170,7 @@ nsCertType              = server
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
             }
         }
 
@@ -1226,7 +1226,7 @@ nsCertType              = server
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
             }
         }
     }

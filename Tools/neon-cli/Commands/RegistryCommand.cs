@@ -17,9 +17,9 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -29,7 +29,7 @@ namespace NeonCli
     public class RegistryCommand : CommandBase
     {
         private const string usage = @"
-Manages the neonCLUSTER Docker registry configuration.
+Manages the neonHIVE Docker registry configuration.
 
 USAGE:
 
@@ -61,7 +61,7 @@ REMARKS:
 Login/Logout
 ------------
 The login/logout commands are used to manage the credentials for remote
-Docker registries.  A neonCLUSTER is typically logged into the Docker
+Docker registries.  A neonHIVE is typically logged into the Docker
 public registry without credentials by default.  You can use the 
 [neon registry login] command to log into the public registry with
 credentials or to log into other registries.
@@ -85,7 +85,7 @@ Registry Service
 NOTE: The cluster registry service requires that the cluster was 
       deployed with the Ceph file system enabled.
 
-A neonCLUSTER may deploy a locally hosted Docker registry.  This
+A neonHIVE may deploy a locally hosted Docker registry.  This
 runs as the [neon-registry] Docker service on the cluster manager
 nodes with the registry data persisted to a shared [neon] volume
 hosted on the cluster's Ceph file system.
@@ -147,7 +147,7 @@ is running or EXITCODE=1 if it's not.
 
             Program.ConnectCluster();
 
-            var cluster = NeonClusterHelper.Cluster;
+            var cluster = HiveHelper.Cluster;
 
             // Parse the arguments.
 

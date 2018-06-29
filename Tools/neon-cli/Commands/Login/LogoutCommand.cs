@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -60,7 +60,7 @@ USAGE:
             // to have to manage multiple disconnnected clusters that share the same
             // IP address space.
 
-            NeonClusterHelper.VpnClose(null); 
+            HiveHelper.VpnClose(null); 
 
             // Actually logout.
 

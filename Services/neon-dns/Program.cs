@@ -17,11 +17,11 @@ using Consul;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
+using Neon.Hive;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
@@ -72,7 +72,7 @@ namespace NeonDns
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    NeonClusterHelper.OpenRemoteCluster();
+                    HiveHelper.OpenRemoteCluster();
 
                     // For testing and development, we're going to write a test
                     // hosts file to [%NF_TEMP\neon-dns-hosts.txt] so we can see
@@ -107,7 +107,7 @@ namespace NeonDns
                 }
                 else
                 {
-                    NeonClusterHelper.OpenCluster();
+                    HiveHelper.OpenCluster();
                 }
 
                 // Ensure that we're running on a manager node.  This is required because
@@ -118,7 +118,7 @@ namespace NeonDns
 
                 if (string.IsNullOrEmpty(nodeRole))
                 {
-                    log.LogCritical(() => "Service does not appear to be running on a neonCLUSTER.");
+                    log.LogCritical(() => "Service does not appear to be running on a neonHIVE.");
                     Program.Exit(1);
                 }
 
@@ -140,7 +140,7 @@ namespace NeonDns
 
                 log.LogDebug(() => $"Connecting Consul");
 
-                using (consul = NeonClusterHelper.OpenConsul())
+                using (consul = HiveHelper.OpenConsul())
                 {
                     await RunAsync();
                 }
@@ -152,7 +152,7 @@ namespace NeonDns
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
                 terminator.ReadyToExit();
             }
 
@@ -217,7 +217,7 @@ namespace NeonDns
                 {
                     log.LogDebug(() => "Fetching DNS answers MD5 from Consul.");
 
-                    remoteMD5 = await consul.KV.GetStringOrDefault(NeonClusterConst.ConsulDnsHostsMd5Key, terminator.CancellationToken);
+                    remoteMD5 = await consul.KV.GetStringOrDefault(HiveConst.ConsulDnsHostsMd5Key, terminator.CancellationToken);
 
                     if (remoteMD5 == null)
                     {
@@ -259,7 +259,7 @@ namespace NeonDns
 
                         log.LogDebug(() => "Fetching DNS answers.");
 
-                        var hostsTxt = await consul.KV.GetStringOrDefault(NeonClusterConst.ConsulDnsHostsKey, terminator.CancellationToken);
+                        var hostsTxt = await consul.KV.GetStringOrDefault(HiveConst.ConsulDnsHostsKey, terminator.CancellationToken);
 
                         if (hostsTxt == null)
                         {

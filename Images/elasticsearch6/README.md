@@ -23,7 +23,7 @@ Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined
 
 # Description
 
-This image hosts [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html) which is typically deployed to a neonCLUSTER for holding the cluster node/container logs and metrics.  This database combined with Kibana form a powerful tool for cluster operators and developers.
+This image hosts [Elasticsearch](https://www.elastic.co/guide/en/elasticsearch/reference/current/getting-started.html) which is typically deployed to a neonHIVE for holding the cluster node/container logs and metrics.  This database combined with Kibana form a powerful tool for cluster operators and developers.
 
 # Configuration
 

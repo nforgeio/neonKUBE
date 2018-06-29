@@ -20,12 +20,12 @@ using Consul;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
 using Neon.DnsTools;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonDnsMon

@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -59,7 +59,7 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            var login = NeonClusterHelper.SplitLogin(commandLine.Arguments[0]);
+            var login = HiveHelper.SplitLogin(commandLine.Arguments[0]);
 
             if (!login.IsOK)
             {

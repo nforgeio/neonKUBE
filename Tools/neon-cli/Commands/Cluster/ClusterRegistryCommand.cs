@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -83,12 +83,12 @@ when these aren't specified.
                     // set explicitly.  All neonCLUSTERs implicitly reference
                     // the public registry.
 
-                    if (!registries.Exists(r => NeonClusterHelper.IsDockerPublicRegistry(r.Registry)))
+                    if (!registries.Exists(r => HiveHelper.IsDockerPublicRegistry(r.Registry)))
                     {
                         registries.Add(
                             new RegistryCredentials()
                             {
-                                Registry = NeonClusterConst.DockerPublicRegistry
+                                Registry = HiveConst.DockerPublicRegistry
                             });
                     }
 

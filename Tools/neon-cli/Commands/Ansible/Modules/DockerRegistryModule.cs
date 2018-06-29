@@ -23,10 +23,10 @@ using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-using Neon.Cluster;
 using Neon.Cryptography;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 using Neon.Retry;
 
@@ -95,7 +95,7 @@ namespace NeonCli.Ansible
         // Remarks:
         // --------
         //
-        // This module manages a Docker registry deployed within a neonCLUSTER.  This can be
+        // This module manages a Docker registry deployed within a neonHIVE.  This can be
         // useful for storing private images without having to pay extra on DockerHub or to
         // host images locally to avoid the overhead and unpredictability of pulling images
         // from a remote registry over the Internet.
@@ -104,7 +104,7 @@ namespace NeonCli.Ansible
         //
         //      1. A DNS hostname like: REGISTRY.MY-DOMAIN.COM
         //      2. A real certificate covering the domain.
-        //      3. A neonCLUSTER with CephFS.
+        //      3. A neonHIVE with CephFS.
         //
         // You'll need to configure your DNS hostname to resolve to your Internet facing
         // router or load balancer IP address if the registry is to reachable from the
@@ -116,7 +116,7 @@ namespace NeonCli.Ansible
         // cert and single domain certificates cost less than $10/year if you shop around,
         // so there's not much of a reason no to purchase one these days.
         //
-        // This module also requires that the neonCLUSTER have a CephFS distributed file
+        // This module also requires that the neonHIVE have a CephFS distributed file
         // system deployed.  This is installed by default, but you should make sure that
         // enough storage capacity will be available.  CephFS allows multiple registry
         // servers to share the same file storage so all instances will always have a
@@ -258,7 +258,7 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var         cluster = NeonClusterHelper.Cluster;
+            var         cluster = HiveHelper.Cluster;
             string      hostname;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
@@ -512,7 +512,7 @@ namespace NeonCli.Ansible
 
                     if (!context.Arguments.TryGetValue<string>("image", out var image))
                     {
-                        image = NeonClusterConst.NeonPublicRegistry + "/neon-registry:latest";
+                        image = HiveConst.NeonPublicRegistry + "/neon-registry:latest";
                     }
 
                     // Detect service changes.
@@ -749,7 +749,7 @@ docker run \
    --name neon-registry-prune \
    --restart-condition=none \
    --mount type=volume,src=neon-registry,volume-driver=neon,dst=/var/lib/neon-registry \
-   {NeonClusterConst.NeonPublicRegistry}/neon-registry garbage-collect
+   {HiveConst.NeonPublicRegistry}/neon-registry garbage-collect
 
 # Restore [neon-registry] to READ/WRITE mode:
 

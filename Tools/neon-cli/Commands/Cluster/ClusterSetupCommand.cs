@@ -25,10 +25,10 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
@@ -41,7 +41,7 @@ namespace NeonCli
     public class ClusterSetupCommand : CommandBase
     {
         private const string usage = @"
-Configures a neonCLUSTER as described in the cluster definition file.
+Configures a neonHIVE as described in the cluster definition file.
 
 USAGE: 
 
@@ -105,7 +105,7 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            var login = NeonClusterHelper.SplitLogin(commandLine.Arguments[0]);
+            var login = HiveHelper.SplitLogin(commandLine.Arguments[0]);
 
             if (!login.IsOK)
             {
@@ -139,16 +139,16 @@ OPTIONS:
 
             if (clusterLogin.Definition.Vpn.Enabled && 
                 clusterLogin.Definition.Hosting.IsCloudProvider && 
-                !NeonClusterHelper.InToolContainer)
+                !HiveHelper.InToolContainer)
             {
-                NeonClusterHelper.VpnOpen(clusterLogin,
+                HiveHelper.VpnOpen(clusterLogin,
                     onStatus: message => Console.WriteLine($"*** {message}"),
                     onError: message => Console.Error.WriteLine($"*** ERROR {message}"));
             }
 
             // Emulate a cluster connection so the [NeonClusterHelper] methods will work.
 
-            NeonClusterHelper.OpenCluster(clusterLogin);
+            HiveHelper.OpenCluster(clusterLogin);
 
             // Generate a string with the IP addresses of the management nodes separated
             // by spaces.  We'll need this when we initialize the management nodes.
@@ -397,7 +397,7 @@ OPTIONS:
                 controller.AddGlobalStep("cluster key/value",
                     () =>
                     {
-                        NeonClusterHelper.OpenCluster(cluster);
+                        HiveHelper.OpenCluster(cluster);
 
                         VaultProxy();
                         InitializeVault();
@@ -519,7 +519,7 @@ OPTIONS:
 
             clusterLogin.SetupPending = false;
             clusterLogin.IsRoot       = true;
-            clusterLogin.Username     = NeonClusterConst.RootUser;
+            clusterLogin.Username     = HiveConst.RootUser;
             clusterLogin.Definition   = cluster.Definition;
             clusterLogin.SshUsername  = Program.MachineUsername;
 
@@ -533,7 +533,7 @@ OPTIONS:
 
             clusterLogin.Save();
 
-            Console.WriteLine($"*** Logging into [{NeonClusterConst.RootUser}@{cluster.Definition.Name}].");
+            Console.WriteLine($"*** Logging into [{HiveConst.RootUser}@{cluster.Definition.Name}].");
 
             // Note that we're going to login via the VPN for cloud environments
             // but not for local hosting since the operator had to be on-premise
@@ -541,7 +541,7 @@ OPTIONS:
             var currentLogin =
                 new CurrentClusterLogin()
                 {
-                    Login  = $"{NeonClusterConst.RootUser}@{cluster.Definition.Name}",
+                    Login  = $"{HiveConst.RootUser}@{cluster.Definition.Name}",
                     ViaVpn = clusterLogin.Definition.Hosting.Environment != HostingEnvironments.Machine
                 };
 
@@ -576,7 +576,7 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            var login = NeonClusterHelper.SplitLogin(commandLine.Arguments[0]);
+            var login = HiveHelper.SplitLogin(commandLine.Arguments[0]);
 
             if (!login.IsOK)
             {
@@ -614,7 +614,7 @@ OPTIONS:
             if (clusterLogin.Definition.Vpn.Enabled &&
                 clusterLogin.Definition.Hosting.IsCloudProvider)
             {
-                NeonClusterHelper.VpnOpen(clusterLogin,
+                HiveHelper.VpnOpen(clusterLogin,
                     onStatus: message => Console.WriteLine($"*** {message}"),
                     onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
             }
@@ -639,7 +639,7 @@ OPTIONS:
                     {
                         // Reload the login to pick up changes from the shimmed command.
 
-                        clusterLogin      = NeonClusterHelper.LoadClusterLogin(NeonClusterConst.RootUser, clusterLogin.Definition.Name);
+                        clusterLogin      = HiveHelper.LoadClusterLogin(HiveConst.RootUser, clusterLogin.Definition.Name);
                         clusterLogin.Path = clusterLoginPath;
 
                         // Update the the PuTTY/WinSCP key.
@@ -695,7 +695,7 @@ OPTIONS:
 
             if (clusterLogin.VaultCertificate == null)
             {
-                clusterLogin.VaultCertificate = TlsCertificate.CreateSelfSigned(NeonHosts.Vault, bitCount, validDays, Wildcard.RootAndSubdomains);
+                clusterLogin.VaultCertificate = TlsCertificate.CreateSelfSigned(HiveHostNames.Vault, bitCount, validDays, Wildcard.RootAndSubdomains);
             }
 
             // $todo(jeff.lill): Generate the Consul cert.
@@ -802,7 +802,7 @@ OPTIONS:
 
                     if (!node.Metadata.IsPet)
                     {
-                        node.UploadText($"/usr/local/share/ca-certificates/{NeonHosts.Vault}.crt", clusterLogin.VaultCertificate.CertPem);
+                        node.UploadText($"/usr/local/share/ca-certificates/{HiveHostNames.Vault}.crt", clusterLogin.VaultCertificate.CertPem);
                         node.SudoCommand("mkdir -p /etc/vault");
                         node.UploadText($"/etc/vault/vault.crt", clusterLogin.VaultCertificate.CertPem);
                         node.UploadText($"/etc/vault/vault.key", clusterLogin.VaultCertificate.KeyPem);
@@ -889,12 +889,12 @@ export NEON_NODE_NAME={node.Name}
 export NEON_NODE_ROLE={node.Metadata.Role}
 export NEON_NODE_IP={node.Metadata.PrivateAddress}
 export NEON_NODE_SSD={node.Metadata.Labels.StorageSSD.ToString().ToLowerInvariant()}
-export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Definition)}
+export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(cluster.Definition)}
 
 export VAULT_ADDR={cluster.Definition.Vault.Uri}
 {vaultDirectLine}
-export CONSUL_HTTP_ADDR={NeonHosts.Consul}:{cluster.Definition.Consul.Port}
-export CONSUL_HTTP_FULLADDR=http://{NeonHosts.Consul}:{cluster.Definition.Consul.Port}
+export CONSUL_HTTP_ADDR={HiveHostNames.Consul}:{cluster.Definition.Consul.Port}
+export CONSUL_HTTP_FULLADDR=http://{HiveHostNames.Consul}:{cluster.Definition.Consul.Port}
 ");
             }
             else
@@ -921,11 +921,11 @@ export NEON_NODE_NAME={node.Name}
 export NEON_NODE_ROLE={node.Metadata.Role}
 export NEON_NODE_IP={node.Metadata.PrivateAddress}
 export NEON_NODE_SSD={node.Metadata.Labels.StorageSSD.ToString().ToLowerInvariant()}
-export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Definition)}
+export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(cluster.Definition)}
 ");
             }
 
-            node.UploadText($"{NeonHostFolders.Config}/env-host", sbEnvHost.ToString(), 4, Encoding.UTF8);
+            node.UploadText($"{HiveHostFolders.Config}/env-host", sbEnvHost.ToString(), 4, Encoding.UTF8);
         }
 
         /// <summary>
@@ -1087,11 +1087,11 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
             {
                 foreach (var manager in cluster.Definition.SortedManagers)
                 {
-                    registries.Add($"https://{manager.Name}.{NeonHosts.RegistryCache}:{NeonHostPorts.DockerRegistryCache}");
+                    registries.Add($"https://{manager.Name}.{HiveHostNames.RegistryCache}:{HiveHostPorts.DockerRegistryCache}");
                 }
             }
 
-            registries.Add($"https://{NeonClusterConst.DockerPublicRegistry}");
+            registries.Add($"https://{HiveConst.DockerPublicRegistry}");
 
             settings.Add("registry-mirrors", registries);
 
@@ -1367,12 +1367,12 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
 
             if (startPos == -1)
             {
-                throw new ClusterException(errorMsg);
+                throw new HiveException(errorMsg);
             }
 
             if (startPos == -1)
             {
-                throw new ClusterException(errorMsg);
+                throw new HiveException(errorMsg);
             }
 
             startPos += tokenOpt.Length;
@@ -1391,7 +1391,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
 
             if (endPos == -1)
             {
-                throw new ClusterException($"Cannot extract swarm token from:\r\n\r\n{commandResponse}");
+                throw new HiveException($"Cannot extract swarm token from:\r\n\r\n{commandResponse}");
             }
 
             return commandResponse.Substring(startPos, endPos - startPos).Trim();
@@ -1533,7 +1533,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                         "--opt", "encrypt",
                         "--subnet", cluster.Definition.Network.PublicSubnet,
                         cluster.Definition.Network.PublicAttachable ? "--attachable" : null,
-                        NeonClusterConst.PublicNetwork);
+                        HiveConst.PublicNetwork);
 
                     manager.DockerCommand(
                         "docker network create",
@@ -1541,7 +1541,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                         "--opt", "encrypt",
                         "--subnet", cluster.Definition.Network.PrivateSubnet,
                         cluster.Definition.Network.PrivateAttachable ? "--attachable" : null,
-                        NeonClusterConst.PrivateNetwork);
+                        HiveConst.PrivateNetwork);
                 });
         }
 
@@ -1608,7 +1608,7 @@ export NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(cluster.Defin
                         // These seem to be transient, so we're going to retry a few times before
                         // actually giving up.
 
-                        var retry = new LinearRetryPolicy(e => e is ClusterException, maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(5));
+                        var retry = new LinearRetryPolicy(e => e is HiveException, maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(5));
 
                         retry.InvokeAsync(
                             async () =>
@@ -2292,7 +2292,7 @@ bluestore_cache_size = {(int)(node.Metadata.GetCephOSDCacheSize(cluster.Definiti
         private class CephClusterStatus
         {
             /// <summary>
-            /// Indicates that the neonCLUSTER includes a Caph cluster.
+            /// Indicates that the neonHIVE includes a Caph cluster.
             /// </summary>
             public bool IsEnabled { get; set; }
 
@@ -2666,7 +2666,7 @@ WantedBy=docker.service
                         //
                         //      /mnt/neonfs/READY   - Read-only file whose presence indicates that the file system is mounted
                         //      /mnt/neonfs/docker  - Holds mapped Docker volumes
-                        //      /mnt/neonfs/neon    - Reserved for neonCLUSTER
+                        //      /mnt/neonfs/neon    - Reserved for neonHIVE
 
                         node.Status = "populate file system";
                         node.SudoCommand($"touch /mnt/neonfs/READY && chmod 444 /mnt/neonfs/READY");
@@ -2756,7 +2756,7 @@ systemctl start neon-volume-plugin
                     if (cluster.Definition.Docker.AvoidIngressNetwork)
                     {
                         options.Add("--publish");
-                        options.Add($"mode=host,published={NeonHostPorts.ProxyVault},target={NetworkPorts.Vault}");
+                        options.Add($"mode=host,published={HiveHostPorts.ProxyVault},target={NetworkPorts.Vault}");
                     }
                     else
                     {
@@ -2764,7 +2764,7 @@ systemctl start neon-volume-plugin
                         options.Add($"node.role==manager");
 
                         options.Add("--publish");
-                        options.Add($"{NeonHostPorts.ProxyVault}:{NetworkPorts.Vault}");
+                        options.Add($"{HiveHostPorts.ProxyVault}:{NetworkPorts.Vault}");
                     }
 
                     // Deploy [neon-proxy-vault].
@@ -2776,7 +2776,7 @@ systemctl start neon-volume-plugin
                         "--detach=false",
                         "--mode", "global",
                         "--endpoint-mode", "vip",
-                        "--network", NeonClusterConst.PrivateNetwork,
+                        "--network", HiveConst.PrivateNetwork,
                         options,
                         "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
                         "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
@@ -2785,7 +2785,7 @@ systemctl start neon-volume-plugin
                         Program.ResolveDockerImage(cluster.Definition.ProxyVaultImage));
 
                     steps.Add(command);
-                    steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NeonHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
+                    steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
 
                     cluster.Configure(steps);
                 });
@@ -2810,7 +2810,7 @@ systemctl start neon-volume-plugin
                                     "docker run",
                                     "--name", "neon-proxy-vault",
                                     "--detach",
-                                    "--publish", $"{NeonHostPorts.ProxyVault}:{NetworkPorts.Vault}",
+                                    "--publish", $"{HiveHostPorts.ProxyVault}:{NetworkPorts.Vault}",
                                     "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
                                     "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                                     "--env", $"LOG_LEVEL=INFO",
@@ -2818,7 +2818,7 @@ systemctl start neon-volume-plugin
                                     Program.ResolveDockerImage(cluster.Definition.ProxyVaultImage));
 
                                 steps.Add(command);
-                                steps.Add(cluster.GetFileUploadSteps(new[] { pet }, LinuxPath.Combine(NeonHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
+                                steps.Add(cluster.GetFileUploadSteps(new[] { pet }, LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-vault.sh"), command.ToBash()));
 
                                 cluster.Configure(steps);
                             });
@@ -3038,7 +3038,7 @@ systemctl start neon-volume-plugin
                         //cluster.VaultCommand("vault audit enable syslog tag=\"vault\" facility=\"AUTH\"");
                     });
 
-                // Mount a [generic] backend dedicated to neonCLUSTER related secrets.
+                // Mount a [generic] backend dedicated to neonHIVE related secrets.
 
                 firstManager.InvokeIdempotentAction("setup/vault-enable-neon-secret",
                     () =>
@@ -3054,7 +3054,7 @@ systemctl start neon-volume-plugin
                     {
                         firstManager.Status = "vault: transit backend";
                         cluster.Vault.Command("vault secrets enable transit");
-                        cluster.Vault.Command($"vault write -f transit/keys/{NeonClusterConst.VaultTransitKey}");
+                        cluster.Vault.Command($"vault write -f transit/keys/{HiveConst.VaultTransitKey}");
                     });
 
                 // Mount the [approle] backend.
@@ -3113,7 +3113,7 @@ systemctl start neon-volume-plugin
                     {
                         firstManager.Status = "vault: hosting options";
 
-                        using (var vault = NeonClusterHelper.OpenVault(ClusterCredentials.FromVaultToken(clusterLogin.VaultCredentials.RootToken)))
+                        using (var vault = HiveHelper.OpenVault(ClusterCredentials.FromVaultToken(clusterLogin.VaultCredentials.RootToken)))
                         {
                             // Store the the cluster hosting options in the Vault so services that need to
                             // perform hosting level operations will have the credentials and other information
@@ -3164,17 +3164,17 @@ systemctl start neon-volume-plugin
                     loginClone.ClearRootSecrets();
                     loginClone.Definition.Hosting.ClearSecrets();
 
-                    NeonClusterHelper.PutDefinitionAsync(loginClone.Definition, savePets: true).Wait();
+                    HiveHelper.PutDefinitionAsync(loginClone.Definition, savePets: true).Wait();
 
                     firstManager.Status = "saving cluster globals";
 
-                    cluster.Globals.Set(NeonClusterGlobals.UserAllowUnitTesting, cluster.Definition.AllowUnitTesting);
-                    cluster.Globals.Set(NeonClusterGlobals.CreateDateUtc, DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ, CultureInfo.InvariantCulture));
-                    cluster.Globals.Set(NeonClusterGlobals.UserDisableAutoUnseal, false);
-                    cluster.Globals.Set(NeonClusterGlobals.UserLogRetentionDays, cluster.Definition.Log.RetentionDays);
-                    cluster.Globals.Set(NeonClusterGlobals.Version, Program.Version);
-                    cluster.Globals.Set(NeonClusterGlobals.NeonCli, Program.MinimumVersion);
-                    cluster.Globals.Set(NeonClusterGlobals.Uuid, Guid.NewGuid().ToString("D").ToLowerInvariant());
+                    cluster.Globals.Set(HiveGlobals.UserAllowUnitTesting, cluster.Definition.AllowUnitTesting);
+                    cluster.Globals.Set(HiveGlobals.CreateDateUtc, DateTime.UtcNow.ToString(NeonHelper.DateFormatTZ, CultureInfo.InvariantCulture));
+                    cluster.Globals.Set(HiveGlobals.UserDisableAutoUnseal, false);
+                    cluster.Globals.Set(HiveGlobals.UserLogRetentionDays, cluster.Definition.Log.RetentionDays);
+                    cluster.Globals.Set(HiveGlobals.Version, Program.Version);
+                    cluster.Globals.Set(HiveGlobals.NeonCli, Program.MinimumVersion);
+                    cluster.Globals.Set(HiveGlobals.Uuid, Guid.NewGuid().ToString("D").ToLowerInvariant());
                 });
         }
 
@@ -3504,8 +3504,8 @@ systemctl restart sshd
                         {
                             Name        = "ceph",
                             Title       = "Ceph File System",
-                            Folder      = NeonClusterConst.DashboardSystemFolder,
-                            Url         = $"http://healthy-manager:{NeonHostPorts.ProxyPrivateHttpCephDashboard}",
+                            Folder      = HiveConst.DashboardSystemFolder,
+                            Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateHttpCephDashboard}",
                             Description = "Ceph distributed file system"
                         };
 
@@ -3539,7 +3539,7 @@ systemctl restart sshd
                         rule.Frontends.Add(
                             new LoadBalancerHttpFrontend()
                             {
-                                ProxyPort = NeonHostPorts.ProxyPrivateHttpCephDashboard
+                                ProxyPort = HiveHostPorts.ProxyPrivateHttpCephDashboard
                             });
 
                         foreach (var monNode in cluster.Nodes.Where(n => n.Metadata.Labels.CephMON))
@@ -3566,8 +3566,8 @@ systemctl restart sshd
                         {
                             Name        = "kibana",
                             Title       = "Kibana",
-                            Folder      = NeonClusterConst.DashboardSystemFolder,
-                            Url         = $"http://healthy-manager:{NeonHostPorts.ProxyPrivateHttpKibana}",
+                            Folder      = HiveConst.DashboardSystemFolder,
+                            Url         = $"http://healthy-manager:{HiveHostPorts.ProxyPrivateHttpKibana}",
                             Description = "Kibana cluster monitoring dashboard"
                         };
 
@@ -3585,7 +3585,7 @@ systemctl restart sshd
                         {
                             Name        = "consul",
                             Title       = "Consul",
-                            Folder      = NeonClusterConst.DashboardSystemFolder,
+                            Folder      = HiveConst.DashboardSystemFolder,
                             Url         = $"http://healthy-manager:{NetworkPorts.Consul}/ui",
                             Description = "Cluster Consul key/value store"
                         };

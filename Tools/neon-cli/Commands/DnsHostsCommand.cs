@@ -15,8 +15,8 @@ using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 using Neon.Net;
 using System.Diagnostics.Contracts;
 
@@ -67,7 +67,7 @@ OPTIONS:
 ";
         private const string help =
 @"
-neonCLUSTER can load DNS entries specified by JSON or YAML files.  Each DNS
+neonHIVE can load DNS entries specified by JSON or YAML files.  Each DNS
 entry specifies the hostname for the entry as well as the endpoints to be 
 registered for the hostname.  Each endpoint can be an IP address, another
 hostname that will be resolved into an IP address or a cluster node group.
@@ -98,8 +98,8 @@ Here is how this will look as YAML:
     - target: api.backend.net
       check: true
 
-Targeting a neonCLUSTER host group is a powerful way to register a hostname
-that maps to cluster nodes.  neonCLUSTER defines several built-in groups
+Targeting a neonHIVE host group is a powerful way to register a hostname
+that maps to cluster nodes.  neonHIVE defines several built-in groups
 like: manager, workers, pets, swarm,... and it's possible to define custom
 groups during cluster setup.
 

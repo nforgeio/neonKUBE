@@ -22,10 +22,10 @@ using Newtonsoft.Json.Linq;
 
 using ICSharpCode.SharpZipLib.Zip;
 
-using Neon.Cluster;
 using Neon.Cryptography;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 
 using NeonCli.Ansible;
@@ -35,7 +35,7 @@ namespace NeonCli
     public partial class AnsibleCommand : CommandBase
     {
         /// <summary>
-        /// Executes a built-in neonCLUSTER Ansible module. 
+        /// Executes a built-in neonHIVE Ansible module. 
         /// </summary>
         /// <param name="login">The cluster login.</param>
         /// <param name="commandLine">The module command line: MODULE ARGS...</param>
@@ -61,7 +61,7 @@ namespace NeonCli
 
                 if (Environment.GetEnvironmentVariable("IN_NEON_ANSIBLE_COMMAND") == null)
                 {
-                    throw new NotSupportedException("Built-in neonCLUSTER Ansible modules can run only within [neon ansible exec] or [play].");
+                    throw new NotSupportedException("Built-in neonHIVE Ansible modules can run only within [neon ansible exec] or [play].");
                 }
 
                 // Read the Ansible module arguments.
@@ -79,7 +79,7 @@ namespace NeonCli
 
                 // Connect to the cluster so the NeonClusterHelper methods will work.
 
-                NeonClusterHelper.OpenCluster(login);
+                HiveHelper.OpenCluster(login);
 
                 // Run the module.
 
@@ -152,7 +152,7 @@ namespace NeonCli
 
                     default:
 
-                        throw new ArgumentException($"[{module}] is not a recognized neonCLUSTER Ansible module.");
+                        throw new ArgumentException($"[{module}] is not a recognized neonHIVE Ansible module.");
                 }
             }
             catch (Exception e)

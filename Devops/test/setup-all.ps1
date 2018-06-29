@@ -1,5 +1,5 @@
 #------------------------------------------------------------------------------
-# Configures the TEST workload neonCLUSTER cluster from scratch including provisioning
+# Configures the TEST workload neonHIVE cluster from scratch including provisioning
 # the XenServer virtual machines and intializing the pets, databases, and services.
 #
 # usage: powershell -file setup.ps1 clusterName [imageTag] [OPTIONS]
@@ -84,7 +84,7 @@ if ($skipServices)
 }
 
 #------------------------------------------------------------------------------
-# Provision and setup the base neonCLUSTER.
+# Provision and setup the base neonHIVE.
 
 $env:SETUP_ALL = "true"
 

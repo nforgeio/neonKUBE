@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonCli
@@ -29,7 +29,7 @@ namespace NeonCli
     {
         private const string usage = @"
 Configures cloud platform virtual machines so that they are prepared 
-to host a neonCLUSTER.
+to host a neonHIVE.
 
 USAGE:
 
@@ -111,7 +111,7 @@ Server Requirements:
             {
                 Console.WriteLine("Removing cached virtual machine templates.");
 
-                foreach (var fileName in Directory.GetFiles(NeonClusterHelper.GetVmTemplatesFolder(), "*.*", SearchOption.TopDirectoryOnly))
+                foreach (var fileName in Directory.GetFiles(HiveHelper.GetVmTemplatesFolder(), "*.*", SearchOption.TopDirectoryOnly))
                 {
                     File.Delete(fileName);
                 }
@@ -146,9 +146,9 @@ Server Requirements:
 
             cluster = new ClusterProxy(clusterDefinition, Program.CreateNodeProxy<NodeDefinition>, RunOptions.LogOutput | RunOptions.FaultOnError);
 
-            if (File.Exists(Program.GetClusterLoginPath(NeonClusterConst.RootUser, cluster.Definition.Name)))
+            if (File.Exists(Program.GetClusterLoginPath(HiveConst.RootUser, cluster.Definition.Name)))
             {
-                Console.Error.WriteLine($"*** ERROR: A cluster login named [{NeonClusterConst.RootUser}@{cluster.Definition.Name}] already exists.");
+                Console.Error.WriteLine($"*** ERROR: A cluster login named [{HiveConst.RootUser}@{cluster.Definition.Name}] already exists.");
                 Program.Exit(1);
             }
 
@@ -389,11 +389,11 @@ Server Requirements:
 
                             // Ensure that we don't have an old VPN client for the cluster running.
 
-                            NeonClusterHelper.VpnClose(vpnLogin.Definition.Name);
+                            HiveHelper.VpnClose(vpnLogin.Definition.Name);
 
                             // ...and then start a new one.
 
-                            NeonClusterHelper.VpnOpen(vpnLogin,
+                            HiveHelper.VpnOpen(vpnLogin,
                                     onStatus: message => manager.Status = $"{message}",
                                     onError: message => manager.Status = $"ERROR: {message}");
                         },
@@ -413,11 +413,11 @@ Server Requirements:
 
             // Write the cluster login file.
 
-            var clusterLoginPath = Program.GetClusterLoginPath(NeonClusterConst.RootUser, cluster.Definition.Name);
+            var clusterLoginPath = Program.GetClusterLoginPath(HiveConst.RootUser, cluster.Definition.Name);
             var clusterLogin     = new ClusterLogin()
             {
                 Path         = clusterLoginPath,
-                Username     = NeonClusterConst.RootUser,
+                Username     = HiveConst.RootUser,
                 Definition   = cluster.Definition,
                 SshUsername  = Program.MachineUsername,
                 SshPassword  = Program.MachinePassword,
@@ -444,7 +444,7 @@ Server Requirements:
 
             string tempCaFolder;
 
-            if (NeonClusterHelper.InToolContainer)
+            if (HiveHelper.InToolContainer)
             {
                 tempCaFolder = "/shim/ca";
             }
@@ -463,7 +463,7 @@ Server Requirements:
 
                 var neonExecutable = NeonHelper.IsWindows ? "neon.cmd" : "neon";
 
-                if (NeonClusterHelper.InToolContainer)
+                if (HiveHelper.InToolContainer)
                 {
                     Program.Execute(neonExecutable, "--noshim", "vpn", "ca", clusterDefPath, tempCaFolder);
                 }
@@ -516,7 +516,7 @@ Server Requirements:
 
             var serverConf =
 $@"#------------------------------------------------------------------------------
-# OpenVPN config file customized for the [{manager.Name}] neonCLUSTER manager node.
+# OpenVPN config file customized for the [{manager.Name}] neonHIVE manager node.
 
 # OpenVPN listening port.
 port {NetworkPorts.OpenVPN}
@@ -700,8 +700,8 @@ verb 4
                 new VpnCredentials()
                 {
                     CaCert   = vpnCaFiles.GetCert("ca"),
-                    UserCert = vpnCaFiles.GetCert(NeonClusterConst.RootUser),
-                    UserKey  = vpnCaFiles.GetKey(NeonClusterConst.RootUser),
+                    UserCert = vpnCaFiles.GetCert(HiveConst.RootUser),
+                    UserKey  = vpnCaFiles.GetKey(HiveConst.RootUser),
                     TaKey    = vpnCaFiles.GetTaKey(),
                     CaZipKey = VpnCaFiles.GenerateKey(),
                     CaZip    = vpnCaFiles.ToZipBytes()

@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds a neonCLUSTER Metricbear image with the specified version.
+# Builds a neonHIVE Metricbear image with the specified version.
 #
 # Usage: powershell -file build.ps1 REGISTRY VERSION TAG
 

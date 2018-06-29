@@ -22,10 +22,10 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
@@ -141,9 +141,9 @@ namespace NeonCli
                         // Start the registry cache using the required Docker public registry
                         // credentials, if any.
 
-                        var publicRegistryCredentials = cluster.Definition.Docker.Registries.SingleOrDefault(r => NeonClusterHelper.IsDockerPublicRegistry(r.Registry));
+                        var publicRegistryCredentials = cluster.Definition.Docker.Registries.SingleOrDefault(r => HiveHelper.IsDockerPublicRegistry(r.Registry));
 
-                        publicRegistryCredentials          = publicRegistryCredentials ?? new RegistryCredentials() { Registry = NeonClusterConst.DockerPublicRegistry };
+                        publicRegistryCredentials          = publicRegistryCredentials ?? new RegistryCredentials() { Registry = HiveConst.DockerPublicRegistry };
                         publicRegistryCredentials.Username = publicRegistryCredentials.Username ?? string.Empty;
                         publicRegistryCredentials.Password = publicRegistryCredentials.Password ?? string.Empty;
 
@@ -161,10 +161,10 @@ namespace NeonCli
                             "--name", "neon-registry-cache",
                             "--detach",
                             "--restart", "always",
-                            "--publish", $"{NeonHostPorts.DockerRegistryCache}:5000",
+                            "--publish", $"{HiveHostPorts.DockerRegistryCache}:5000",
                             "--volume", "/etc/neon-registry-cache:/etc/neon-registry-cache:ro",
                             "--volume", "neon-registry-cache:/var/lib/neon-registry-cache",
-                            "--env", $"HOSTNAME={node.Name}.{NeonHosts.RegistryCache}",
+                            "--env", $"HOSTNAME={node.Name}.{HiveHostNames.RegistryCache}",
                             "--env", $"REGISTRY=https://{registry}",
                             "--env", $"USERNAME={publicRegistryCredentials.Username}",
                             "--env", $"PASSWORD={publicRegistryCredentials.Password}",
@@ -192,7 +192,7 @@ namespace NeonCli
                         // can deploy a custom registry (whose crdentials will be 
                         // persisted to Vault).
 
-                        node.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-registry-cache.sh"), runCommand.ToBash());
+                        node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-registry-cache.sh"), runCommand.ToBash());
                     });
 
                 node.Status = string.Empty;
@@ -222,8 +222,8 @@ namespace NeonCli
 
                         var cacheHostName = GetCacheHost(manager);
 
-                        sbScript.AppendLine($"mkdir -p /etc/docker/certs.d/{cacheHostName}:{NeonHostPorts.DockerRegistryCache}");
-                        sbScript.AppendLine($"cp {manager.Name}.crt /etc/docker/certs.d/{cacheHostName}:{NeonHostPorts.DockerRegistryCache}/ca.crt");
+                        sbScript.AppendLine($"mkdir -p /etc/docker/certs.d/{cacheHostName}:{HiveHostPorts.DockerRegistryCache}");
+                        sbScript.AppendLine($"cp {manager.Name}.crt /etc/docker/certs.d/{cacheHostName}:{HiveHostPorts.DockerRegistryCache}/ca.crt");
                         sbScript.AppendLine($"cp {manager.Name}.crt /usr/local/share/ca-certificates/{cacheHostName}.crt");
                     }
 
@@ -243,7 +243,7 @@ namespace NeonCli
         /// <returns>The hostname.</returns>
         private string GetCacheHost(NodeDefinition manager)
         {
-            return $"{manager.Name}.{NeonHosts.RegistryCache}";
+            return $"{manager.Name}.{HiveHostNames.RegistryCache}";
         }
     }
 }

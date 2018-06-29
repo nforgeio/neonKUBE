@@ -22,9 +22,9 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 using Neon.Retry;
 using Neon.Time;
@@ -36,8 +36,8 @@ namespace NeonCli
     /// </summary>
     /// <remarks>
     /// <para>
-    /// neonCLUSTER logging is implemented by deploying <b>Elasticsearch</b>, <b>TD-Agent</b>, and 
-    /// <b>Kibana</b>, <b>Metricbeat</b> as well as the neonCLUSTER <b>neon-log-collector</b> service
+    /// neonHIVE logging is implemented by deploying <b>Elasticsearch</b>, <b>TD-Agent</b>, and 
+    /// <b>Kibana</b>, <b>Metricbeat</b> as well as the neonHIVE <b>neon-log-collector</b> service
     /// and <b>neon-log-host</b> containers.
     /// </para>
     /// <para>
@@ -48,8 +48,8 @@ namespace NeonCli
     /// </para>
     /// <para>
     /// Each Elasticsearch container joins the Docker host network and listens on two ports: 
-    /// <see cref="NeonHostPorts.LogEsDataTcp"/> handles internal intra-node Elasticsearch 
-    /// traffic and <see cref="NeonHostPorts.LogEsDataHttp"/> exposes the public Elasticsearch
+    /// <see cref="HiveHostPorts.LogEsDataTcp"/> handles internal intra-node Elasticsearch 
+    /// traffic and <see cref="HiveHostPorts.LogEsDataHttp"/> exposes the public Elasticsearch
     /// HTTP API.  This class provides enough information to each of the instances so they can 
     /// discover each other and establish a cluster.  Attaching to the host network is required
     /// so that ZEN cluster discovery will work properly. 
@@ -57,12 +57,12 @@ namespace NeonCli
     /// <para>
     /// The <b>neon-log-esdata</b> containers are deployed behind the cluster's <b>private</b>
     /// proxy, with a route defined for each Elasticsearch container.  Cluster TD-Agents and Kibana 
-    /// use the built-in <see cref="NeonHosts.LogEsData"/> DNS name to submit HTTP requests on
-    /// port <see cref="NeonHostPorts.ProxyPrivateHttpLogEsData"/> to Elasticsearch via the proxy.
+    /// use the built-in <see cref="HiveHostNames.LogEsData"/> DNS name to submit HTTP requests on
+    /// port <see cref="HiveHostPorts.ProxyPrivateHttpLogEsData"/> to Elasticsearch via the proxy.
     /// </para>
     /// <para>
     /// <b>TD-Agent</b> is the community version of <b>Fluend</b> and is the foundation of the
-    /// neonCLUSTER logging pipeline.  This is deployed as the <b>neon-log-host</b> local container
+    /// neonHIVE logging pipeline.  This is deployed as the <b>neon-log-host</b> local container
     /// to every cluster node to capture the host systemd journal and syslog events as well
     /// as any container events forwarded by the local Docker daemon via the <b>fluent</b>
     /// log driver.  The appropriate events will be forwarded to the cluster's <b>neon-log-collector</b>
@@ -72,7 +72,7 @@ namespace NeonCli
     /// <b>neon-log-collector</b> is the cluster Docker service responsible for receiving events from
     /// hosts, filtering and normalizing them and then persisting them to Elasticsearch.  The <b>neon-log-collector</b>
     /// service is deployed behind the cluster's <b>private</b> proxy.  Cluster <b>neon-log-host</b> 
-    /// containers will forward events to TCP port <see cref="NeonHostPorts.ProxyPrivateTcpLogCollector"/>
+    /// containers will forward events to TCP port <see cref="HiveHostPorts.ProxyPrivateTcpLogCollector"/>
     /// to this service via  the proxy.
     /// </para>
     /// <para>
@@ -141,8 +141,8 @@ namespace NeonCli
                 {
                     using (var jsonClient = new JsonClient())
                     {
-                        var baseLogEsDataUri = $"http://{NeonHosts.LogEsData}:{NeonHostPorts.ProxyPrivateHttpLogEsData}";
-                        var baseKibanaUri    = $"http://{firstManager.PrivateAddress}:{NeonHostPorts.Kibana}";
+                        var baseLogEsDataUri = $"http://{HiveHostNames.LogEsData}:{HiveHostPorts.ProxyPrivateHttpLogEsData}";
+                        var baseKibanaUri    = $"http://{firstManager.PrivateAddress}:{HiveHostPorts.Kibana}";
                         var timeout          = TimeSpan.FromMinutes(5);
                         var retry             = new LinearRetryPolicy(TransientDetector.Http, maxAttempts: 30, retryInterval: TimeSpan.FromSeconds(1));
 
@@ -176,7 +176,7 @@ namespace NeonCli
 
                                 if (response.status.overall.state != "green")
                                 {
-                                    throw new ClusterException($"Kibana [state={response.status.overall.state}]");
+                                    throw new HiveException($"Kibana [state={response.status.overall.state}]");
                                 }
 
                             }).Wait();
@@ -237,7 +237,7 @@ namespace NeonCli
                         rule.Frontends.Add(
                             new LoadBalancerHttpFrontend()
                             {
-                                ProxyPort = NeonHostPorts.ProxyPrivateHttpKibana
+                                ProxyPort = HiveHostPorts.ProxyPrivateHttpKibana
                             });
 
                         rule.Backends.Add(
@@ -320,7 +320,7 @@ namespace NeonCli
 
             foreach (var esMasterNode in managerEsNodes)
             {
-                esBootstrapNodes.AppendWithSeparator($"{esMasterNode.PrivateAddress}:{NeonHostPorts.LogEsDataTcp}", ",");
+                esBootstrapNodes.AppendWithSeparator($"{esMasterNode.PrivateAddress}:{HiveHostPorts.LogEsDataTcp}", ",");
             }
 
             // Create a data volume for each Elasticsearch node and then start the node container.
@@ -345,8 +345,8 @@ namespace NeonCli
                     "--env", $"ELASTICSEARCH_NODE_MASTER={isMaster}",
                     "--env", $"ELASTICSEARCH_NODE_DATA=true",
                     "--env", $"ELASTICSEARCH_NODE_COUNT={esNodes.Count}",
-                    "--env", $"ELASTICSEARCH_HTTP_PORT={NeonHostPorts.LogEsDataHttp}",
-                    "--env", $"ELASTICSEARCH_TCP_PORT={NeonHostPorts.LogEsDataTcp}",
+                    "--env", $"ELASTICSEARCH_HTTP_PORT={HiveHostPorts.LogEsDataHttp}",
+                    "--env", $"ELASTICSEARCH_TCP_PORT={HiveHostPorts.LogEsDataTcp}",
                     "--env", $"ELASTICSEARCH_QUORUM={quorumCount}",
                     "--env", $"ELASTICSEARCH_BOOTSTRAP_NODES={esBootstrapNodes}",
                     "--env", $"ES_JAVA_OPTS=-Xms{esHeapBytes / NeonHelper.Mega}M -Xmx{esHeapBytes / NeonHelper.Mega}M",
@@ -358,7 +358,7 @@ namespace NeonCli
                     Program.ResolveDockerImage(cluster.Definition.Log.EsImage));
 
                 steps.Add(command);
-                steps.Add(UploadStep.Text(esNode.Name, LinuxPath.Combine(NeonHostFolders.Scripts, "neon-log-esdata.sh"), command.ToBash()));
+                steps.Add(UploadStep.Text(esNode.Name, LinuxPath.Combine(HiveHostFolders.Scripts, "neon-log-esdata.sh"), command.ToBash()));
             }
 
             // Configure a private cluster proxy route to the Elasticsearch nodes.
@@ -377,7 +377,7 @@ namespace NeonCli
                     rule.Frontends.Add(
                         new LoadBalancerHttpFrontend()
                         {
-                            ProxyPort = NeonHostPorts.ProxyPrivateHttpLogEsData
+                            ProxyPort = HiveHostPorts.ProxyPrivateHttpLogEsData
                         });
 
                     foreach (var esNode in esNodes)
@@ -386,7 +386,7 @@ namespace NeonCli
                             new LoadBalancerHttpBackend()
                             {
                                 Server = esNode.Metadata.PrivateAddress.ToString(),
-                                Port = NeonHostPorts.LogEsDataHttp
+                                Port = HiveHostPorts.LogEsDataHttp
                             });
                     }
 
@@ -408,7 +408,7 @@ namespace NeonCli
 
                     using (var jsonClient = new JsonClient())
                     {
-                        var baseLogEsDataUri = $"http://{NeonHosts.LogEsData}:{NeonHostPorts.ProxyPrivateHttpLogEsData}";
+                        var baseLogEsDataUri = $"http://{HiveHostNames.LogEsData}:{HiveHostPorts.ProxyPrivateHttpLogEsData}";
                         var timeout          = TimeSpan.FromMinutes(5);
                         var timeoutTime      = DateTime.UtcNow + timeout;
                         var esNodeCount      = cluster.Definition.Nodes.Count(n => n.Labels.LogEsData);
@@ -482,16 +482,16 @@ namespace NeonCli
                 "--mode", "global",
                 "--endpoint-mode", "vip",
                 "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                "--network", NeonClusterConst.PrivateNetwork,
+                "--network", HiveConst.PrivateNetwork,
                 "--constraint", $"node.role==manager",
-                "--publish", $"{NeonHostPorts.Kibana}:{NetworkPorts.Kibana}",
+                "--publish", $"{HiveHostPorts.Kibana}:{NetworkPorts.Kibana}",
                 "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
-                "--env", $"ELASTICSEARCH_URL=http://{NeonHosts.LogEsData}:{NeonHostPorts.ProxyPrivateHttpLogEsData}",
+                "--env", $"ELASTICSEARCH_URL=http://{HiveHostNames.LogEsData}:{HiveHostPorts.ProxyPrivateHttpLogEsData}",
                 "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
                 Program.ResolveDockerImage(cluster.Definition.Log.KibanaImage));
 
             steps.Add(command);
-            steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NeonHostFolders.Scripts, "neon-log-kibana.sh"), command.ToBash()));
+            steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(HiveHostFolders.Scripts, "neon-log-kibana.sh"), command.ToBash()));
         }
 
         /// <summary>
@@ -510,14 +510,14 @@ namespace NeonCli
                 "--mode", "global",
                 "--restart-delay", cluster.Definition.Docker.RestartDelay,
                 "--endpoint-mode", "vip",
-                "--network", $"{NeonClusterConst.PrivateNetwork}",
+                "--network", $"{HiveConst.PrivateNetwork}",
                 "--constraint", $"node.role==manager",
                 "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
                 "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
                 Program.ResolveDockerImage(cluster.Definition.Log.CollectorImage));
 
             steps.Add(command);
-            steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(NeonHostFolders.Scripts, "neon-log-collector.sh"), command.ToBash()));
+            steps.Add(cluster.GetFileUploadSteps(cluster.Managers, LinuxPath.Combine(HiveHostFolders.Scripts, "neon-log-collector.sh"), command.ToBash()));
 
             // Deploy the [neon-log-collector] load balancer rule.
 
@@ -539,7 +539,7 @@ namespace NeonCli
                     rule.Frontends.Add(
                         new LoadBalancerTcpFrontend()
                         {
-                            ProxyPort = NeonHostPorts.ProxyPrivateTcpLogCollector
+                            ProxyPort = HiveHostPorts.ProxyPrivateTcpLogCollector
                         });
 
                     rule.Backends.Add(
@@ -578,7 +578,7 @@ namespace NeonCli
                         "--log-driver", "json-file",        // Ensure that we don't log to the pipeline to avoid cascading events.
                         Program.ResolveDockerImage(cluster.Definition.Log.HostImage));
 
-                    node.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-log-host.sh"), response.BashCommand);
+                    node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-log-host.sh"), response.BashCommand);
                 });
 
             node.InvokeIdempotentAction("setup/metricbeat",
@@ -598,7 +598,7 @@ namespace NeonCli
                         "--log-driver", "json-file",
                         Program.ResolveDockerImage(cluster.Definition.Log.MetricbeatImage));
 
-                    node.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-log-metricbeat.sh"), response.BashCommand);
+                    node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-log-metricbeat.sh"), response.BashCommand);
                 });
         }
     }

@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -77,7 +77,7 @@ OPTIONS:
                 Program.Exit(1);
             }
 
-            var login = NeonClusterHelper.SplitLogin(commandLine.Arguments[0]);
+            var login = HiveHelper.SplitLogin(commandLine.Arguments[0]);
 
             if (!login.IsOK)
             {
@@ -101,7 +101,7 @@ OPTIONS:
                 // Delete the backup and cached cluster definition files if present.
 
                 var backupPath     = clusterLoginPath + ".bak";
-                var definitionPath = NeonClusterHelper.GetCachedDefinitionPath(username, clusterName);
+                var definitionPath = HiveHelper.GetCachedDefinitionPath(username, clusterName);
 
                 if (File.Exists(backupPath))
                 {
@@ -120,7 +120,7 @@ OPTIONS:
                     string.Equals(Program.ClusterLogin.ClusterName, clusterName, StringComparison.OrdinalIgnoreCase))
                 {
                     CurrentClusterLogin.Delete();
-                    NeonClusterHelper.VpnClose(clusterName);
+                    HiveHelper.VpnClose(clusterName);
                 }
 
                 Console.WriteLine($"Removed [{username}@{clusterName}]");

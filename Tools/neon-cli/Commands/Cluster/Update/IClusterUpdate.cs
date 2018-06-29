@@ -12,14 +12,14 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 
 namespace NeonCli
 {
     /// <summary>
-    /// Describes the behavior of an update that can be used to upgrade a neonCLUSTER.
+    /// Describes the behavior of an update that can be used to upgrade a neonHIVE.
     /// </summary>
     /// <remarks>
     /// <para>

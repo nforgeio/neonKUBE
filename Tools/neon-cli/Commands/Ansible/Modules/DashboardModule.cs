@@ -23,10 +23,10 @@ using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-using Neon.Cluster;
 using Neon.Cryptography;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonCli.Ansible
@@ -37,7 +37,7 @@ namespace NeonCli.Ansible
     // Synopsis:
     // ---------
     //
-    // Manages neonCLUSTER dashboards.
+    // Manages neonHIVE dashboards.
     //
     // Requirements:
     // -------------
@@ -116,8 +116,8 @@ namespace NeonCli.Ansible
         /// <param name="context">The module context.</param>
         public void Run(ModuleContext context)
         {
-            var cluster = NeonClusterHelper.Cluster;
-            var consul  = NeonClusterHelper.Consul;
+            var cluster = HiveHelper.Cluster;
+            var consul  = HiveHelper.Consul;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {

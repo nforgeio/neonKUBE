@@ -33,7 +33,7 @@ The **neon-log-host** image is deployed as local containers on every cluster nod
 
 * [record-modifier (filter)](https://github.com/repeatedly/fluent-plugin-record-modifier) This plug-in provides some extended record manipulation capabilities.
 
-* Custom neonCLUSTER filter plugins: **neon-docker**, **neon-logfields**, **neon-loglevel**, **neon-proxy**, **neon-proxy-geoip**, and **neon-timestamp**.
+* Custom neonHIVE filter plugins: **neon-docker**, **neon-logfields**, **neon-loglevel**, **neon-proxy**, **neon-proxy-geoip**, and **neon-timestamp**.
 
 # Deployment
 
@@ -80,7 +80,7 @@ You'll probably need to modify the configuration file located here: `/etc/td-age
 
 **Installing a Premium MaxMind Database**
 
-The **neon-log-collector** includes the free [MaxMind.com](http://maxmind.com) GeoLite2-City database.  This is used to map client IP addresses logged for network traffic captured by the neonCLUSTER proxies into geographical location information, including the latitute, longitude, continent, country, and city.  This database is provided under the [Creative Commons License](https://creativecommons.org/licenses/by-sa/4.0/) and is a reasonable first start for many clusters.
+The **neon-log-collector** includes the free [MaxMind.com](http://maxmind.com) GeoLite2-City database.  This is used to map client IP addresses logged for network traffic captured by the neonHIVE proxies into geographical location information, including the latitute, longitude, continent, country, and city.  This database is provided under the [Creative Commons License](https://creativecommons.org/licenses/by-sa/4.0/) and is a reasonable first start for many clusters.
 
 MaxMind licenses much more accurate databases at a very reasonable cost, so you may wish to upgrade to one of their premium products.  To do this, you first the [MaxMind.com](http://maxmind.com) site to purchase your license.  Then modify your new image's Dockerfile to add your compressed database here:
 

@@ -20,14 +20,14 @@ if [ -f /etc/neoncluster/env-container ] ; then
     . /etc/neoncluster/env-container
 fi
 
-# Load the neonCLUSTER constants.
+# Load the neonHIVE constants.
 
-. /neoncluster.sh
+. /neonhive.sh
 
 # Initialize the configuration defaults.
 
 if [ "${ELASTICSEARCH_URL}" == "" ] ; then
-    export ELASTICSEARCH_URL=http://${NeonHosts_LogEsData}:${NeonHostPorts_ProxyPrivateHttpLogEsData}
+    export ELASTICSEARCH_URL=http://${HiveHostnames_LogEsData}:${HiveHostPorts_ProxyPrivateHttpLogEsData}
 fi
 
 if [ "${PERIOD}" == "" ] ; then

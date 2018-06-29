@@ -17,8 +17,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -28,7 +28,7 @@ namespace NeonCli
     public class ClusterUpdateCommand : CommandBase
     {
         private const string usage = @"
-Updates neonCLUSTER including host configuration, as well as neonCLUSTER
+Updates neonHIVE including host configuration, as well as neonHIVE
 infrastructure related services and containers.
 
 USAGE:

@@ -22,10 +22,10 @@ using Newtonsoft.Json.Linq;
 using YamlDotNet.Serialization;
 using YamlDotNet.Serialization.NamingConventions;
 
-using Neon.Cluster;
 using Neon.Cryptography;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 
 namespace NeonCli.Ansible
@@ -76,7 +76,7 @@ namespace NeonCli.Ansible
         // Remarks:
         // --------
         //
-        // This module is used to have a neonCLUSTER log into or out from a Docker registry.
+        // This module is used to have a neonHIVE log into or out from a Docker registry.
         // All cluster nodes including managers, workers, and pets, will be logged in or out
         // and registry credentials will be persisted to to the cluster Vault so they will
         // be available if new nodes are added to the cluster at a later time.
@@ -119,7 +119,7 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var cluster = NeonClusterHelper.Cluster;
+            var cluster = HiveHelper.Cluster;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {
@@ -229,7 +229,7 @@ namespace NeonCli.Ansible
                     // configuration, only the registry cache needs the upstream credentials.
                     // The nodes don't authenticate against the local registry cache.
 
-                    if (!cluster.Definition.Docker.RegistryCache || !NeonClusterHelper.IsDockerPublicRegistry(registry))
+                    if (!cluster.Definition.Docker.RegistryCache || !HiveHelper.IsDockerPublicRegistry(registry))
                     {
                         context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster into the [{registry}] registry.");
                         cluster.Registry.Login(registry, username, password);

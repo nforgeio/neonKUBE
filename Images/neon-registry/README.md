@@ -1,4 +1,4 @@
-This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonCLUSTER.
+This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonHIVE.
 
 # Image Tags
 
@@ -10,11 +10,11 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Description
 
-This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonCLUSTER.
+This image derives from the offical [registry](https://hub.docker.com/_/registry/) and is intended to operate as a Docker registry for a neonHIVE.
 
-**neon-registry** is intended to be deployed as a Docker service or container on a neonCLUSTER with the **Ceph Filesystem** enabled.  **CephFS** implements a shared file system that is available on all cluster nodes as well as to Docker services and containers using the **neon volume driver**.  Registry service instances or containers will all mount the same shared **neon** volume to store the Docker images.  CephFS ensures that all registry instances see the same data and it also provides for data redundancy.
+**neon-registry** is intended to be deployed as a Docker service or container on a neonHIVE with the **Ceph Filesystem** enabled.  **CephFS** implements a shared file system that is available on all cluster nodes as well as to Docker services and containers using the **neon volume driver**.  Registry service instances or containers will all mount the same shared **neon** volume to store the Docker images.  CephFS ensures that all registry instances see the same data and it also provides for data redundancy.
 
-**neon-registry** is provisioned without integrated TLS support as it expects to be deployed behind a neonCLUSTER HTTPS proxy route using a TLS certificate to encrypt traffic.
+**neon-registry** is provisioned without integrated TLS support as it expects to be deployed behind a neonHIVE HTTPS proxy route using a TLS certificate to encrypt traffic.
 
 # Environment Variables
 
@@ -46,7 +46,7 @@ In either case, you'll generally need the following:
 
 4. A crytographically generated secret.  You can generate one using `neon create password`.  Note that you'll need to retain this secret somewhere in case you'll need to redeploy the registry container or service in the future.
 
-You'll typically want to have the registry listen on the default port **5000** which is reserved for this purpose on neonCLUSTER hosts.
+You'll typically want to have the registry listen on the default port **5000** which is reserved for this purpose on neonHIVE hosts.
 
 ## Deploy as a Service
 
@@ -71,7 +71,7 @@ docker service create \
     neoncluster/neon-registry
 ```
 &nbsp;
-Next, you'll need to save your TLS certificate to neonCLUSTER:
+Next, you'll need to save your TLS certificate to neonHIVE:
 
 ```
 neon proxy public put MY-CERT-NAME PATH-TO-CERT
@@ -116,7 +116,7 @@ docker run \
     neoncluster/neon-registry
 ```
 &nbsp;
-Next, you'll need to save your TLS certificate to neonCLUSTER:
+Next, you'll need to save your TLS certificate to neonHIVE:
 
 ```
 neon proxy public put MY-CERT-NAME PATH-TO-CERT

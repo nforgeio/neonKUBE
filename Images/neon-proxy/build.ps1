@@ -3,7 +3,7 @@
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
-# Builds the neonCLUSTER [neon-proxy] image.
+# Builds the neonHIVE [neon-proxy] image.
 #
 # Usage: powershell -file build.ps1REGISTRY VERSION TAG
 

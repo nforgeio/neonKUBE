@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -144,9 +144,9 @@ NODE IDENTIFIERS:
 
                 switch (valueExpr)
                 {
-                    case NeonClusterGlobals.UserAllowUnitTesting:
+                    case HiveGlobals.UserAllowUnitTesting:
 
-                        if (cluster.Globals.TryGetBool(NeonClusterGlobals.UserAllowUnitTesting, out var allowUnitTesting))
+                        if (cluster.Globals.TryGetBool(HiveGlobals.UserAllowUnitTesting, out var allowUnitTesting))
                         {
                             Console.Write(allowUnitTesting ? "true" : "false");
                         }
@@ -157,9 +157,9 @@ NODE IDENTIFIERS:
                         }
                         break;
 
-                    case NeonClusterGlobals.CreateDateUtc:
+                    case HiveGlobals.CreateDateUtc:
 
-                        if (cluster.Globals.TryGetString(NeonClusterGlobals.CreateDateUtc, out var createDate))
+                        if (cluster.Globals.TryGetString(HiveGlobals.CreateDateUtc, out var createDate))
                         {
                             Console.Write(createDate);
                         }
@@ -170,9 +170,9 @@ NODE IDENTIFIERS:
                         }
                         break;
 
-                    case NeonClusterGlobals.UserDisableAutoUnseal:
+                    case HiveGlobals.UserDisableAutoUnseal:
 
-                        if (cluster.Globals.TryGetBool(NeonClusterGlobals.UserDisableAutoUnseal, out var disableAutoUnseal))
+                        if (cluster.Globals.TryGetBool(HiveGlobals.UserDisableAutoUnseal, out var disableAutoUnseal))
                         {
                             Console.Write(disableAutoUnseal ? "true" : "false");
                         }
@@ -183,9 +183,9 @@ NODE IDENTIFIERS:
                         }
                         break;
 
-                    case NeonClusterGlobals.UserLogRetentionDays:
+                    case HiveGlobals.UserLogRetentionDays:
 
-                        if (cluster.Globals.TryGetInt(NeonClusterGlobals.UserDisableAutoUnseal, out var logRetentionDays))
+                        if (cluster.Globals.TryGetInt(HiveGlobals.UserDisableAutoUnseal, out var logRetentionDays))
                         {
                             Console.Write(logRetentionDays);
                         }
@@ -208,12 +208,12 @@ NODE IDENTIFIERS:
                         // Special-case the Docker public registry if it's not
                         // set explicitly.
 
-                        if (!registries.Exists(r => NeonClusterHelper.IsDockerPublicRegistry(r.Registry)))
+                        if (!registries.Exists(r => HiveHelper.IsDockerPublicRegistry(r.Registry)))
                         {
                             registries.Add(
                                 new RegistryCredentials()
                                 {
-                                    Registry = NeonClusterConst.DockerPublicRegistry
+                                    Registry = HiveConst.DockerPublicRegistry
                                 });
                         }
 
@@ -253,9 +253,9 @@ NODE IDENTIFIERS:
                         Console.Write(clusterLogin.SshUsername);
                         break;
 
-                    case NeonClusterGlobals.Uuid:
+                    case HiveGlobals.Uuid:
 
-                        if (cluster.Globals.TryGetString(NeonClusterGlobals.Uuid, out var uuid))
+                        if (cluster.Globals.TryGetString(HiveGlobals.Uuid, out var uuid))
                         {
                             Console.Write(uuid);
                         }

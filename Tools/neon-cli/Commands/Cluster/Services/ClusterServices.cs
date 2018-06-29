@@ -22,9 +22,9 @@ using Newtonsoft;
 using Newtonsoft.Json;
 using Newtonsoft.Json.Linq;
 
-using Neon.Cluster;
 using Neon.Common;
 using Neon.IO;
+using Neon.Hive;
 using Neon.Net;
 using Neon.Time;
 
@@ -79,7 +79,7 @@ namespace NeonCli
                         {
                             foreach (var manager in cluster.Managers)
                             {
-                                manager.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-dns.sh"), response.BashCommand);
+                                manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-dns.sh"), response.BashCommand);
                             }
                         },
                         "docker service create",
@@ -108,7 +108,7 @@ namespace NeonCli
                         {
                             foreach (var manager in cluster.Managers)
                             {
-                                manager.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-dns-mon.sh"), response.BashCommand);
+                                manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-dns-mon.sh"), response.BashCommand);
                             }
                         },
                         "docker service create",
@@ -149,7 +149,7 @@ namespace NeonCli
                         {
                             foreach (var manager in cluster.Managers)
                             {
-                                manager.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-cluster-manager.sh"), response.BashCommand);
+                                manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-cluster-manager.sh"), response.BashCommand);
                             }
                         },
                         cluster.SecureRunOptions | RunOptions.FaultOnError,
@@ -184,15 +184,15 @@ namespace NeonCli
                     cluster.PublicLoadBalancer.UpdateSettings(
                         new LoadBalancerSettings()
                         {
-                            FirstPort = NeonHostPorts.ProxyPublicFirst,
-                            LastPort  = NeonHostPorts.ProxyPublicLast
+                            FirstPort = HiveHostPorts.ProxyPublicFirst,
+                            LastPort  = HiveHostPorts.ProxyPublicLast
                         });
 
                     cluster.PrivateLoadBalancer.UpdateSettings(
                         new LoadBalancerSettings()
                         {
-                            FirstPort = NeonHostPorts.ProxyPrivateFirst,
-                            LastPort  = NeonHostPorts.ProxyPrivateLast
+                            FirstPort = HiveHostPorts.ProxyPrivateFirst,
+                            LastPort  = HiveHostPorts.ProxyPrivateLast
                         });
 
                     // Deploy the proxy manager service.
@@ -204,7 +204,7 @@ namespace NeonCli
                         {
                             foreach (var manager in cluster.Managers)
                             {
-                                manager.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-proxy-manager.sh"), response.BashCommand);
+                                manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-manager.sh"), response.BashCommand);
                             }
                         },
                         "docker service create",
@@ -241,13 +241,13 @@ namespace NeonCli
                         // The parameterized [service create --publish] option doesn't handle port ranges so we need to 
                         // specify multiple publish options.
 
-                        for (int port = NeonHostPorts.ProxyPublicFirst; port <= NeonHostPorts.ProxyPublicLast; port++)
+                        for (int port = HiveHostPorts.ProxyPublicFirst; port <= HiveHostPorts.ProxyPublicLast; port++)
                         {
                             publicPublish.Add($"--publish");
                             publicPublish.Add($"mode=host,published={port},target={port}");
                         }
 
-                        for (int port = NeonHostPorts.ProxyPrivateFirst; port <= NeonHostPorts.ProxyPrivateLast; port++)
+                        for (int port = HiveHostPorts.ProxyPrivateFirst; port <= HiveHostPorts.ProxyPrivateLast; port++)
                         {
                             privatePublish.Add($"--publish");
                             privatePublish.Add($"mode=host,published={port},target={port}");
@@ -256,10 +256,10 @@ namespace NeonCli
                     else
                     {
                         publicPublish.Add($"--publish");
-                        publicPublish.Add($"{NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}:{NeonHostPorts.ProxyPublicFirst}-{NeonHostPorts.ProxyPublicLast}");
+                        publicPublish.Add($"{HiveHostPorts.ProxyPublicFirst}-{HiveHostPorts.ProxyPublicLast}:{HiveHostPorts.ProxyPublicFirst}-{HiveHostPorts.ProxyPublicLast}");
 
                         privatePublish.Add($"--publish");
-                        privatePublish.Add($"{NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}:{NeonHostPorts.ProxyPrivateFirst}-{NeonHostPorts.ProxyPrivateLast}");
+                        privatePublish.Add($"{HiveHostPorts.ProxyPrivateFirst}-{HiveHostPorts.ProxyPrivateLast}:{HiveHostPorts.ProxyPrivateFirst}-{HiveHostPorts.ProxyPrivateLast}");
 
                         proxyConstraint.Add($"--constraint");
 
@@ -286,7 +286,7 @@ namespace NeonCli
                         {
                             foreach (var manager in cluster.Managers)
                             {
-                                manager.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-proxy-public.sh"), response.BashCommand);
+                                manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-public.sh"), response.BashCommand);
                             }
                         },
                         "docker service create",
@@ -308,7 +308,7 @@ namespace NeonCli
                         proxyConstraint,
                         "--mode", "global",
                         "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                        "--network", NeonClusterConst.PublicNetwork,
+                        "--network", HiveConst.PublicNetwork,
                         Program.ResolveDockerImage(cluster.Definition.ProxyImage));
 
                     // Deploy: neon-proxy-private
@@ -320,7 +320,7 @@ namespace NeonCli
                         {
                             foreach (var manager in cluster.Managers)
                             {
-                                manager.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-proxy-private.sh"), response.BashCommand);
+                                manager.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-private.sh"), response.BashCommand);
                             }
                         },
                         "docker service create",
@@ -342,7 +342,7 @@ namespace NeonCli
                         proxyConstraint,
                         "--mode", "global",
                         "--restart-delay", cluster.Definition.Docker.RestartDelay,
-                        "--network", NeonClusterConst.PrivateNetwork,
+                        "--network", HiveConst.PrivateNetwork,
                         Program.ResolveDockerImage(cluster.Definition.ProxyImage));
                 });
 
@@ -399,7 +399,7 @@ namespace NeonCli
                         "--restart", "always",
                         Program.ResolveDockerImage(cluster.Definition.ProxyImage));
 
-                    node.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-proxy-public-bridge.sh"), response.BashCommand);
+                    node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-public-bridge.sh"), response.BashCommand);
                     node.Status = string.Empty;
                 });
 
@@ -425,7 +425,7 @@ namespace NeonCli
                         "--restart", "always",
                         Program.ResolveDockerImage(cluster.Definition.ProxyImage));
 
-                    node.UploadText(LinuxPath.Combine(NeonHostFolders.Scripts, "neon-proxy-private-bridge.sh"), response.BashCommand);
+                    node.UploadText(LinuxPath.Combine(HiveHostFolders.Scripts, "neon-proxy-private-bridge.sh"), response.BashCommand);
                     node.Status = string.Empty;
                 });
         }

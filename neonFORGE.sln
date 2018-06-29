@@ -8,14 +8,16 @@ Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "Doc", "Doc", "{2CFE7466-98C
 		Doc\Architecture.vsdx = Doc\Architecture.vsdx
 		Doc\Azure Network.vsdx = Doc\Azure Network.vsdx
 		Doc\Cheats.txt = Doc\Cheats.txt
+		Doc\Cluster Load Balancers.docx = Doc\Cluster Load Balancers.docx
 		Doc\Cluster Notes.docx = Doc\Cluster Notes.docx
-		Doc\Cluster Proxies.docx = Doc\Cluster Proxies.docx
-		Doc\neon-cluster-manager.docx = Doc\neon-cluster-manager.docx
+		Doc\neon-hive-manager.docx = Doc\neon-hive-manager.docx
 		Doc\PUBLISH.md = Doc\PUBLISH.md
 		Doc\Secrets.docx = Doc\Secrets.docx
-		Doc\Ubuntu-16.04 neonCLUSTER Deploy.docx = Doc\Ubuntu-16.04 neonCLUSTER Deploy.docx
-		Doc\Ubuntu-16.04 neonCLUSTER Template.docx = Doc\Ubuntu-16.04 neonCLUSTER Template.docx
-		Doc\Vault & Neon Clusters.docx = Doc\Vault & Neon Clusters.docx
+		Doc\SUDO and WinSCP.docx = Doc\SUDO and WinSCP.docx
+		Doc\Thumbs.db = Doc\Thumbs.db
+		Doc\Ubuntu-16.04 neonHIVE Deploy.docx = Doc\Ubuntu-16.04 neonHIVE Deploy.docx
+		Doc\Ubuntu-16.04 neonHIVE Template.docx = Doc\Ubuntu-16.04 neonHIVE Template.docx
+		Doc\Vault & neonHIVE.docx = Doc\Vault & neonHIVE.docx
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "GitHub", "GitHub", "{4442F115-52D3-4E88-BE9B-9E4B32AD33A0}"
@@ -35,7 +37,7 @@ Project("{D954291E-2A0B-460D-934E-DC6B0785DB48}") = "Neon.Global", "Lib\Neon.Glo
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Common", "Lib\Neon.Common\Neon.Common.csproj", "{8D3BD5BA-AAF6-4233-879F-69A63EB6CDA1}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Cluster", "Lib\Neon.Cluster\Neon.Cluster.csproj", "{C23307A1-4E5A-4B83-A8EB-90DE334868C6}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Hive", "Lib\Neon.Hive\Neon.Hive.csproj", "{C23307A1-4E5A-4B83-A8EB-90DE334868C6}"
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Docker", "Lib\Neon.Docker\Neon.Docker.csproj", "{893C943F-C1A7-448B-AACF-825DB9560AB4}"
 EndProject
@@ -200,9 +202,9 @@ Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "neon-dns-mon", "Services\ne
 EndProject
 Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Couchbase", "Lib\Neon.Xunit.Couchbase\Neon.Xunit.Couchbase.csproj", "{EE0DFEF2-EC42-4E49-857D-48BAAE14BBE6}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Cluster", "Lib\Neon.Xunit.Cluster\Neon.Xunit.Cluster.csproj", "{167C080E-3F81-4EB7-93BD-1D8671B51835}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Neon.Xunit.Hive", "Lib\Neon.Xunit.Hive\Neon.Xunit.Hive.csproj", "{167C080E-3F81-4EB7-93BD-1D8671B51835}"
 EndProject
-Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Cluster", "Test\Test.Neon.Cluster\Test.Neon.Cluster.csproj", "{5443E291-C0F4-4EC6-97CF-999E4B8F28BE}"
+Project("{9A19103F-16F7-4668-BE54-9A1E7A4F7556}") = "Test.Neon.Hive", "Test\Test.Neon.Hive\Test.Neon.Hive.csproj", "{5443E291-C0F4-4EC6-97CF-999E4B8F28BE}"
 	ProjectSection(ProjectDependencies) = postProject
 		{7EC9D996-B464-4493-BF68-8A4A95AA3C83} = {7EC9D996-B464-4493-BF68-8A4A95AA3C83}
 	EndProjectSection

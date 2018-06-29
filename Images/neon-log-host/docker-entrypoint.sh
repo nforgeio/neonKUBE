@@ -30,9 +30,9 @@ fi
 
 mkdir -p /hostfs/var/log/neon-log-host
 
-# Load the neonCLUSTER constants.
+# Load the neonHIVE constants.
 
-. /neoncluster.sh
+. /neonhive.sh
 
 # Launch TD-Agent.
 

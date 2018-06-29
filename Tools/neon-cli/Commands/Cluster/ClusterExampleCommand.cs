@@ -15,8 +15,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -84,7 +84,7 @@ USAGE:
     //                    or empty (the default).
     //
     //  BareDocker        Optionally indicates that a basic Docker cluster without
-    //                    most of the extra neonCLUSTER features should be deployed.
+    //                    most of the extra neonHIVE features should be deployed.
     //                    This defaults to [false].
     //
     //  AllowUnitTesting  Optionally enable unit testing on this cluster.  
@@ -133,7 +133,7 @@ USAGE:
         // and [xenserver].
 
         // Describes the hypervisor host machines for [hyper-v] and [xenserver]
-        // based environments so that the neonCLUSTER tooling will be able to
+        // based environments so that the neonHIVE tooling will be able to
         // connect to and manage the hypervisor host machines.  Cluster node
         // definitions will set [node.VmHost=Name] to the name of the host below
         // where the node should be provisioned for these environments.
@@ -347,7 +347,7 @@ USAGE:
 
             ""PremiseSubnet"": ""10.0.0.0/24"",
             
-            //  NodesSubnet                 Specifies where the neonCLUSTER Docker host node IP addresses
+            //  NodesSubnet                 Specifies where the neonHIVE Docker host node IP addresses
             //                              will be located.  This may be any valid subnet for on-premise 
             //                              deployments but will typically a <b>/24</b> or larger.
             //                              This is determined automatically for cloud environments.
@@ -590,7 +590,7 @@ USAGE:
         //
         // NOTE: The Ceph documentation states that MDS may tend to underestimate the 
         //       RAM it's  using by up to 1.5 times.  To avoid potential memory issues, 
-        //       neonCLUSTER will adjust this value by dividing it  by 1.5 to when 
+        //       neonHIVE will adjust this value by dividing it  by 1.5 to when 
         //       actually configuring the  MDS services.
         //
         // NOTE: You should also take care to leave 1-2GB of RAM for the host Linux 
@@ -612,11 +612,11 @@ USAGE:
     //
     // Manager and Worker form the Docker Swarm with the manager nodes handling
     // nodes handle the cluster management tasks.  Both Managers and Workers
-    // can host Swarm services.  Pet nodes are part of the neonCLUSTER but are
+    // can host Swarm services.  Pet nodes are part of the neonHIVE but are
     // not part of the Docker Swarm.
     //
     // Pet nodes are configured with Docker (non-Swarm) and also take advantage 
-    // of many neonCLUSTER services such as logging, DNS, the apt-cache, Consul,
+    // of many neonHIVE services such as logging, DNS, the apt-cache, Consul,
     // Vault and the Docker registry cache.  Pet nodes are generally used to
     // host things you really care about on an individual basis like databases 
     // and other services that aren't really appropriate for a Docker Swarm.
@@ -683,7 +683,7 @@ USAGE:
     // will be available for Swarm filtering operations.  Some labels
     // are also used during cluster configuration.
     //
-    // You'll use the [Labels] property to specify labels.  neonCLUSTER
+    // You'll use the [Labels] property to specify labels.  neonHIVE
     // predefines several labels.  You may extend these using [Labels.Custom].
     //
     // The following reserved labels are currently supported (see the documentation
@@ -731,7 +731,7 @@ USAGE:
     //                  node.labels[custom name (lowercase)]
     //
     //            Note that the prefix The [node.labels.io.neoncluster] prefix
-    //            is reserved for neonCLUSTER related labels.
+    //            is reserved for neonHIVE related labels.
 
     ""Nodes"": {
 
@@ -807,7 +807,7 @@ USAGE:
 
         //---------------------------------------------------------------------
         // Define the pet cluster nodes by setting [Role=pet].  Individual nodes 
-        // are part of the neonCLUSTER but not the Docker Swarm.
+        // are part of the neonHIVE but not the Docker Swarm.
 
         ""pet-0"": {
             ""Role"": ""pet"",

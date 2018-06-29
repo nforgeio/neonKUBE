@@ -12,8 +12,8 @@ using System.Text;
 using System.Threading;
 using System.Threading.Tasks;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 using Neon.IO;
 
 namespace NeonCli
@@ -236,9 +236,9 @@ TCPKeepAlive yes
                     {
                         if (line.StartsWith("PATH="))
                         {
-                            if (!line.Contains(NeonHostFolders.Tools))
+                            if (!line.Contains(HiveHostFolders.Tools))
                             {
-                                sb.AppendLine(line + $":{NeonHostFolders.Tools}");
+                                sb.AppendLine(line + $":{HiveHostFolders.Tools}");
                             }
                             else
                             {
@@ -284,7 +284,7 @@ TCPKeepAlive yes
             }
 
             sb.AppendLine($"NEON_UPSTREAM_DNS=\"{sbNameservers}\"");
-            sb.AppendLine($"NEON_APT_PROXY={NeonClusterHelper.GetPackageProxyReferences(clusterDefinition)}");
+            sb.AppendLine($"NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(clusterDefinition)}");
 
             // Append Consul and Vault addresses.
 
@@ -292,8 +292,8 @@ TCPKeepAlive yes
             // CLI will access the Consul cluster via local Consul instance.  This will be a 
             // server for manager nodes and a proxy for workers.
 
-            sb.AppendLine($"CONSUL_HTTP_ADDR=" + $"{NeonHosts.Consul}:{clusterDefinition.Consul.Port}");
-            sb.AppendLine($"CONSUL_HTTP_FULLADDR=" + $"http://{NeonHosts.Consul}:{clusterDefinition.Consul.Port}");
+            sb.AppendLine($"CONSUL_HTTP_ADDR=" + $"{HiveHostNames.Consul}:{clusterDefinition.Consul.Port}");
+            sb.AppendLine($"CONSUL_HTTP_FULLADDR=" + $"http://{HiveHostNames.Consul}:{clusterDefinition.Consul.Port}");
 
             // All nodes will be configured such that host processes using the HashiCorp Vault 
             // CLI will access the Vault cluster via the [neon-proxy-vault] proxy service
@@ -326,7 +326,7 @@ TCPKeepAlive yes
 
         /// <summary>
         /// Initializes a near virgin server with the basic capabilities required
-        /// for a neonCLUSTER host node.
+        /// for a neonHIVE host node.
         /// </summary>
         /// <param name="node">The target cluster node.</param>
         /// <param name="clusterDefinition">The cluster definition.</param>
@@ -339,7 +339,7 @@ TCPKeepAlive yes
         {
             var waitedForPackageManager = false;
 
-            if (node.FileExists($"{NeonHostFolders.State}/setup/prepared"))
+            if (node.FileExists($"{HiveHostFolders.State}/setup/prepared"))
             {
                 return waitedForPackageManager; // Already prepared
             }
@@ -417,7 +417,7 @@ TCPKeepAlive yes
 
             // Indicate that the node has been fully prepared.
 
-            node.SudoCommand($"touch {NeonHostFolders.State}/setup/prepared");
+            node.SudoCommand($"touch {HiveHostFolders.State}/setup/prepared");
 
             // Shutdown the node if requested.
 

@@ -22,11 +22,11 @@ param
 
 # NOTE: This script configures the following environment variables:
 #	
-#	CLUSTER_NODE_TEMPLATE_USERNAME	- SSH username for the neonCLUSTER node template (like: [sysadmin])
-#	CLUSTER_NODE_TEMPLATE_PASSWORD  - SSH password for the neonCLUSTER node template (like: [sysadmin0000])
+#	CLUSTER_NODE_TEMPLATE_USERNAME	- SSH username for the neonHIVE node template (like: [sysadmin])
+#	CLUSTER_NODE_TEMPLATE_PASSWORD  - SSH password for the neonHIVE node template (like: [sysadmin0000])
 #	CLUSTER_LOG_FOLDER				- Path to the setup log folder
 #	CLUSTER_MAX_PARALLEL			- Maximum setup steps to perform in parallel (like: 10)
-#	CLUSTER_LOGIN					- neonCLUSTER login name (like: root@home-small)
+#	CLUSTER_LOGIN					- neonHIVE login name (like: root@home-small)
 
 # Initialize environment variables.
 

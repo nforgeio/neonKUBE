@@ -1,4 +1,4 @@
-This is the standard neonCLUSTER network proxy service based on **HAProxy**, **Consul**, and **Vault**.  This is typically deployed alongside the **neon-proxy-manager** service that monitors changes to proxy routes and TLS certificates to regenerate the HAProxy configuration.  This can be deployed as a Docker container or service.
+This is the standard neonHIVE network proxy service based on **HAProxy**, **Consul**, and **Vault**.  This is typically deployed alongside the **neon-proxy-manager** service that monitors changes to proxy routes and TLS certificates to regenerate the HAProxy configuration.  This can be deployed as a Docker container or service.
 
 # Image Tags
 
@@ -64,10 +64,10 @@ For example, the configuration fragment below specifies that certificate authori
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`ca-base "${HAPROXY_CONFIG_FOLDER}"`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`crt-base "${HAPROXY_CONFIG_FOLDER}"`
 
-You should also specify a DNS resolvers section that points to the embedded Docker DNS server so you'll be able to resolve Docker service names.  You can use the **NeonClusterConst_DockerDnsEndpoint** environment variable for this (which is set to `127.0.0.11:53`), like:
+You should also specify a DNS resolvers section that points to the embedded Docker DNS server so you'll be able to resolve Docker service names.  You can use the **HiveConst_DockerDnsEndpoint** environment variable for this (which is set to `127.0.0.11:53`), like:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`resolvers docker`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`nameserver docker "${NeonClusterConst_DockerDnsEndpoint}"`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`nameserver docker "${HiveConst_DockerDnsEndpoint}"`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`resolve_retries 3`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`timeout retry 1s`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`hold valid 10s`

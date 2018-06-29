@@ -20,12 +20,12 @@ using DNS.Client;
 using ICSharpCode.SharpZipLib.Zip;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.DnsTools;
 using Neon.Common;
 using Neon.Cryptography;
 using Neon.Diagnostics;
 using Neon.Docker;
+using Neon.Hive;
 using Neon.Net;
 using Neon.Time;
 
@@ -91,18 +91,18 @@ namespace NeonDnsMon
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    NeonClusterHelper.OpenRemoteCluster();
+                    HiveHelper.OpenRemoteCluster();
                 }
                 else
                 {
-                    NeonClusterHelper.OpenCluster();
+                    HiveHelper.OpenCluster();
                 }
 
                 // Open Consul and then start the main service task.
 
                 log.LogDebug(() => $"Connecting Consul");
 
-                using (consul = NeonClusterHelper.OpenConsul())
+                using (consul = HiveHelper.OpenConsul())
                 {
                     await RunAsync();
                 }
@@ -114,7 +114,7 @@ namespace NeonDnsMon
             }
             finally
             {
-                NeonClusterHelper.CloseCluster();
+                HiveHelper.CloseCluster();
                 terminator.ReadyToExit();
             }
 
@@ -181,7 +181,7 @@ namespace NeonDnsMon
                     // Retrieve the current cluster definition from Consul if we don't already
                     // have it or if it's different from what we've cached.
 
-                    clusterDefinition = await NeonClusterHelper.GetDefinitionAsync(clusterDefinition, terminator.CancellationToken);
+                    clusterDefinition = await HiveHelper.GetDefinitionAsync(clusterDefinition, terminator.CancellationToken);
 
                     log.LogDebug(() => $"Cluster has [{clusterDefinition.NodeDefinitions.Count}] nodes.");
 
@@ -195,7 +195,7 @@ namespace NeonDnsMon
                     // Read the DNS entry definitions from Consul and add the appropriate 
                     // host/addresses based on health checks, etc.
 
-                    var targetsResult = (await consul.KV.ListOrDefault<DnsEntry>(NeonClusterConst.ConsulDnsEntriesKey + "/", terminator.CancellationToken));
+                    var targetsResult = (await consul.KV.ListOrDefault<DnsEntry>(HiveConst.ConsulDnsEntriesKey + "/", terminator.CancellationToken));
 
                     List<DnsEntry> targets;
 
@@ -254,7 +254,7 @@ namespace NeonDnsMon
 
                     var hostsTxt   = sbHosts.ToString();
                     var hostsMD5   = NeonHelper.ComputeMD5(hostsTxt);
-                    var currentMD5 = await consul.KV.GetStringOrDefault(NeonClusterConst.ConsulDnsHostsMd5Key, terminator.CancellationToken);
+                    var currentMD5 = await consul.KV.GetStringOrDefault(HiveConst.ConsulDnsHostsMd5Key, terminator.CancellationToken);
 
                     if (currentMD5 == null)
                     {
@@ -270,8 +270,8 @@ namespace NeonDnsMon
 
                         var operations = new List<KVTxnOp>()
                     {
-                        new KVTxnOp(NeonClusterConst.ConsulDnsHostsMd5Key, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsMD5) },
-                        new KVTxnOp(NeonClusterConst.ConsulDnsHostsKey, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsTxt) }
+                        new KVTxnOp(HiveConst.ConsulDnsHostsMd5Key, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsMD5) },
+                        new KVTxnOp(HiveConst.ConsulDnsHostsKey, KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(hostsTxt) }
                     };
 
                         await consul.KV.Txn(operations, terminator.CancellationToken);

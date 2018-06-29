@@ -16,8 +16,8 @@ using System.Threading.Tasks;
 using Newtonsoft;
 using Newtonsoft.Json;
 
-using Neon.Cluster;
 using Neon.Common;
+using Neon.Hive;
 
 namespace NeonCli
 {
@@ -86,7 +86,7 @@ ARGUMENTS:
             Console.Error.WriteLine();
 
             var clusterLogin = Program.ClusterLogin;
-            var login        = NeonClusterHelper.SplitLogin(commandLine.Arguments[0]);
+            var login        = HiveHelper.SplitLogin(commandLine.Arguments[0]);
 
             if (!login.IsOK)
             {
@@ -107,11 +107,11 @@ ARGUMENTS:
 
                 try
                 {
-                    NeonClusterHelper.ValidateClientVersion(clusterLogin, Program.Version);
+                    HiveHelper.ValidateClientVersion(clusterLogin, Program.Version);
                 }
                 catch (VersionException e)
                 {
-                    NeonClusterHelper.VpnClose(null);
+                    HiveHelper.VpnClose(null);
                     CurrentClusterLogin.Delete();
 
                     Console.Error.WriteLine($"*** ERROR: {e.Message}");
@@ -135,7 +135,7 @@ ARGUMENTS:
             // to have to manage multiple disconnnected clusters that share the same
             // IP address space.
 
-            NeonClusterHelper.VpnClose(null);
+            HiveHelper.VpnClose(null);
 
             // Fetch the new cluster login.
 
@@ -188,7 +188,7 @@ ARGUMENTS:
 
             if (useVpn)
             {
-                NeonClusterHelper.VpnOpen(clusterLogin,
+                HiveHelper.VpnOpen(clusterLogin,
                     onStatus: message => Console.Error.WriteLine($"{message}"),
                     onError: message => Console.Error.WriteLine($"*** ERROR {message}"),
                     show: showVpn);
@@ -225,11 +225,11 @@ ARGUMENTS:
 
                 try
                 {
-                    NeonClusterHelper.GetLogin(clientVersion: Program.Version);
+                    HiveHelper.GetLogin(clientVersion: Program.Version);
                 }
                 catch (VersionException e)
                 {
-                    NeonClusterHelper.VpnClose(null);
+                    HiveHelper.VpnClose(null);
                     CurrentClusterLogin.Delete();
 
                     Console.Error.WriteLine($"*** ERROR: {e.Message}");
