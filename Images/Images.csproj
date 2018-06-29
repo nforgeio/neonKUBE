@@ -233,6 +233,16 @@
     </None>
     <None Include="ubuntu-16.04-dotnet\publish.ps1" />
     <None Include="ubuntu-16.04-dotnet\README.md" />
+    <Content Include="varnish\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="varnish\build.ps1" />
+    <None Include="varnish\docker-entrypoint.sh" />
+    <None Include="varnish\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="varnish\publish.ps1" />
+    <None Include="varnish\README.md" />
     <None Include="_common\log-debug.sh" />
     <None Include="_common\log-critical.sh" />
     <None Include="_common\log-info.sh" />

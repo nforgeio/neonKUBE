@@ -100,6 +100,7 @@ if ($base)
 	Publish "$image_root\\haproxy"
 	Publish "$image_root\\neon-registry"
 	Publish "$image_root\\neon-registry-cache"
+	Publish "$image_root\\varnish"
 }
 
 if ($dotnet)
