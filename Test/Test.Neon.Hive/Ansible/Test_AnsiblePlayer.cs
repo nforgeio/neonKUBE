@@ -18,13 +18,13 @@ using Xunit;
 
 namespace TestNeonCluster
 {
-    public class Test_AnsiblePlayer : IClassFixture<ClusterFixture>
+    public class Test_AnsiblePlayer : IClassFixture<HiveFixture>
     {
-        private ClusterFixture fixture;
+        private HiveFixture hive;
 
-        public Test_AnsiblePlayer(ClusterFixture fixture)
+        public Test_AnsiblePlayer(HiveFixture fixture)
         {
-            this.fixture = fixture;
+            this.hive = fixture;
 
             // NOTE: These tests do not require a cluster reset every time.
 

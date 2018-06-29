@@ -29,19 +29,19 @@ using Xunit;
 
 namespace TestNeonCluster
 {
-    public class Test_AnsibleLoadBalancer : IClassFixture<ClusterFixture>
+    public class Test_AnsibleLoadBalancer : IClassFixture<HiveFixture>
     {
-        private ClusterFixture  fixture;
+        private HiveFixture     hive;
         private ClusterProxy    cluster;
 
-        public Test_AnsibleLoadBalancer(ClusterFixture fixture)
+        public Test_AnsibleLoadBalancer(HiveFixture fixture)
         {
             if (!fixture.LoginAndInitialize())
             {
                 fixture.ClearLoadBalancers();
             }
 
-            this.fixture = fixture;
+            this.hive    = fixture;
             this.cluster = fixture.Cluster;
         }
 

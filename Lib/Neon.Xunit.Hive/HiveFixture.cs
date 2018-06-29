@@ -1,5 +1,5 @@
 ﻿//-----------------------------------------------------------------------------
-// FILE:	    ClusterFixture.cs
+// FILE:	    HiveFixture.cs
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
@@ -57,7 +57,7 @@ namespace Neon.Xunit.Hive
     /// neonHIVE.
     /// </para>
     /// <para>
-    /// neonCLUSTERs do not allow the <see cref="ClusterFixture"/> to perform unit
+    /// neonCLUSTERs do not allow the <see cref="HiveFixture"/> to perform unit
     /// tests by default, as a safety measure.  You can enable this before cluster
     /// deployment by setting <see cref="ClusterDefinition.AllowUnitTesting"/><c>=true</c>
     /// or by manually invoking this command for an existing cluster:
@@ -68,7 +68,7 @@ namespace Neon.Xunit.Hive
     /// <para>
     /// This fixture is pretty easy to use.  Simply have your test class inherit
     /// from <see cref="IClassFixture{ClusterFixture}"/> and add a public constructor
-    /// that accepts a <see cref="ClusterFixture"/> as the only argument.  Then
+    /// that accepts a <see cref="HiveFixture"/> as the only argument.  Then
     /// you can call it's <see cref="LoginAndInitialize(string, Action)"/> method within
     /// the constructor passing the cluster login name as well as an <see cref="Action"/>.
     /// You may also use the fixture to initialize cluster services, networks, secrets,
@@ -223,7 +223,7 @@ namespace Neon.Xunit.Hive
     /// </item>
     /// </list>
     /// <note>
-    /// <see cref="ClusterFixture"/> derives from <see cref="TestFixtureSet"/> so you can
+    /// <see cref="HiveFixture"/> derives from <see cref="TestFixtureSet"/> so you can
     /// use <see cref="TestFixtureSet.AddFixture{TFixture}(string, TFixture, Action{TFixture})"/> 
     /// to add additional fixtures within your custom initialization action for advanced scenarios.
     /// </note>
@@ -257,7 +257,7 @@ namespace Neon.Xunit.Hive
     /// </list>
     /// </remarks>
     /// <threadsafety instance="true"/>
-    public class ClusterFixture : DockerFixture
+    public class HiveFixture : DockerFixture
     {
         /// <summary>
         /// Used to track how many fixture instances for the current test run
@@ -276,7 +276,7 @@ namespace Neon.Xunit.Hive
         /// <summary>
         /// Constructs the fixture.
         /// </summary>
-        public ClusterFixture()
+        public HiveFixture()
             : base(reset: false)
         {
             if (RefCount++ == 0)
@@ -291,7 +291,7 @@ namespace Neon.Xunit.Hive
         /// <summary>
         /// Finalizer.
         /// </summary>
-        ~ClusterFixture()
+        ~HiveFixture()
         {
             Dispose(false);
         }
@@ -314,14 +314,14 @@ namespace Neon.Xunit.Hive
         }
 
         /// <summary>
-        /// <b>DO NOT USE:</b> This method is not supported by <see cref="ClusterFixture"/>.
+        /// <b>DO NOT USE:</b> This method is not supported by <see cref="HiveFixture"/>.
         /// Use <see cref="LoginAndInitialize(string, Action)"/> instead.
         /// </summary>
         /// <param name="action">The optional custom initialization action.</param>
         /// <exception cref="NotSupportedException">Thrown always.</exception>
         public new void Initialize(Action action = null)
         {
-            throw new NotSupportedException($"[{nameof(ClusterFixture)}.Initialize(Action)] is not supported.  Use {nameof(ClusterFixture)}.Initialize(string, Action)] instead.");
+            throw new NotSupportedException($"[{nameof(HiveFixture)}.Initialize(Action)] is not supported.  Use {nameof(HiveFixture)}.Initialize(string, Action)] instead.");
         }
 
         /// <summary>
@@ -726,7 +726,7 @@ namespace Neon.Xunit.Hive
             base.CheckDisposed();
             this.CheckCluster();
 
-            throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not currently support container deployment.");
+            throw new InvalidOperationException($"[{nameof(HiveFixture)}] does not currently support container deployment.");
         }
 
         /// <summary>
@@ -741,7 +741,7 @@ namespace Neon.Xunit.Hive
             base.CheckDisposed();
             this.CheckCluster();
 
-            throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not support this method.");
+            throw new InvalidOperationException($"[{nameof(HiveFixture)}] does not support this method.");
         }
 
         /// <summary>
@@ -755,7 +755,7 @@ namespace Neon.Xunit.Hive
             base.CheckDisposed();
             this.CheckCluster();
 
-            throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not support this method.");
+            throw new InvalidOperationException($"[{nameof(HiveFixture)}] does not support this method.");
         }
 
         /// <summary>
@@ -770,7 +770,7 @@ namespace Neon.Xunit.Hive
         /// </remarks>
         public new void ClearContainers(bool removeSystem = false)
         {
-            throw new InvalidOperationException($"[{nameof(ClusterFixture)}] does not support this method.");
+            throw new InvalidOperationException($"[{nameof(HiveFixture)}] does not support this method.");
         }
 
         //---------------------------------------------------------------------

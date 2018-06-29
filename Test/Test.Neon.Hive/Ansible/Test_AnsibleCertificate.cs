@@ -19,13 +19,13 @@ using Xunit;
 
 namespace TestNeonCluster
 {
-    public class Test_AnsibleCertificate : IClassFixture<ClusterFixture>
+    public class Test_AnsibleCertificate : IClassFixture<HiveFixture>
     {
-        private ClusterFixture fixture;
+        private HiveFixture hive;
 
-        public Test_AnsibleCertificate(ClusterFixture fixture)
+        public Test_AnsibleCertificate(HiveFixture fixture)
         {
-            this.fixture = fixture;
+            this.hive = fixture;
 
             // We're going to use unique certificate names for each
             // test so we only need to reset the test fixture once 
@@ -139,11 +139,11 @@ $@"
             Assert.Equal("create cert", taskResult.TaskName);
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListCertificates().Where(c => c == name));
+            Assert.Single(hive.ListCertificates().Where(c => c == name));
 
             // Verify that the certificate was persisted correctly.
 
-            var response = fixture.NeonExecute("cert", "get", name);
+            var response = hive.NeonExecute("cert", "get", name);
 
             Assert.Equal(0, response.ExitCode);
 
@@ -165,7 +165,7 @@ $@"
             Assert.Equal("create cert", taskResult.TaskName);
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Single(fixture.ListCertificates().Where(c => c == name));
+            Assert.Single(hive.ListCertificates().Where(c => c == name));
 
             // Generate a new certificate and verify that we can update
             // an existing cert.
@@ -194,11 +194,11 @@ $@"
             Assert.Equal("create cert", taskResult.TaskName);
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListCertificates().Where(c => c == name));
+            Assert.Single(hive.ListCertificates().Where(c => c == name));
 
             // Verify that the certificate was persisted correctly.
 
-            response = fixture.NeonExecute("cert", "get", name);
+            response = hive.NeonExecute("cert", "get", name);
 
             Assert.Equal(0, response.ExitCode);
 
@@ -238,7 +238,7 @@ $@"
             Assert.Equal("create cert", taskResult.TaskName);
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListCertificates().Where(c => c == name));
+            Assert.Single(hive.ListCertificates().Where(c => c == name));
 
             // Now remove it.
 
@@ -262,7 +262,7 @@ $@"
             Assert.Equal("remove cert", taskResult.TaskName);
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Empty(fixture.ListCertificates().Where(c => c == name));
+            Assert.Empty(hive.ListCertificates().Where(c => c == name));
 
             // Remove it again to verify that nothing changes.
 
@@ -276,7 +276,7 @@ $@"
             Assert.Equal("remove cert", taskResult.TaskName);
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Empty(fixture.ListCertificates().Where(c => c == name));
+            Assert.Empty(hive.ListCertificates().Where(c => c == name));
         }
 
         [Fact]
@@ -309,7 +309,7 @@ $@"
             Assert.Equal("create cert", taskResult.TaskName);
             Assert.False(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Empty(fixture.ListCertificates().Where(c => c == name));
+            Assert.Empty(hive.ListCertificates().Where(c => c == name));
         }
 
         [Fact]
@@ -343,7 +343,7 @@ $@"
             Assert.Equal("create cert", taskResult.TaskName);
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Empty(fixture.ListCertificates().Where(c => c == name));
+            Assert.Empty(hive.ListCertificates().Where(c => c == name));
         }
     }
 }

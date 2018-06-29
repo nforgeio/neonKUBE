@@ -19,14 +19,14 @@ using Xunit;
 
 namespace TestNeonCluster
 {
-    public partial class Test_AnsibleDockerService : IClassFixture<ClusterFixture>
+    public partial class Test_AnsibleDockerService : IClassFixture<HiveFixture>
     {
         /// <summary>
         /// Deploys <b>neoncluster/test:0</b> with default options.
         /// </summary>
         private void DeployTestService()
         {
-            fixture.DockerExecute($"service create --name {serviceName} --update-monitor 1s {serviceImage}");
+            hive.DockerExecute($"service create --name {serviceName} --update-monitor 1s {serviceImage}");
         }
 
         [Fact]
@@ -53,9 +53,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
 
             Assert.Equal(serviceName, details.Spec.Name);
             Assert.Equal("neoncluster/test:1", details.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA);
@@ -98,9 +98,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
 
             Assert.Equal(new string[] { "one", "two" }, details.Spec.TaskTemplate.ContainerSpec.Args);
 
@@ -145,9 +145,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var config = details.Spec.TaskTemplate.ContainerSpec.Configs.FirstOrDefault();
 
             Assert.NotNull(config);
@@ -166,7 +166,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             config = details.Spec.TaskTemplate.ContainerSpec.Configs.FirstOrDefault();
 
             Assert.NotNull(config);
@@ -196,7 +196,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
 
             Assert.Empty(details.Spec.TaskTemplate.ContainerSpec.Configs);
 
@@ -238,9 +238,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var constraints = details.Spec.TaskTemplate.Placement.Constraints;
 
             Assert.NotNull(constraints);
@@ -278,9 +278,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             constraints = details.Spec.TaskTemplate.Placement.Constraints;
 
             Assert.NotNull(constraints);
@@ -325,9 +325,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var labels = details.Spec.TaskTemplate.ContainerSpec.Labels;
 
             Assert.NotNull(labels);
@@ -365,9 +365,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             labels = details.Spec.TaskTemplate.ContainerSpec.Labels;
 
             Assert.NotNull(labels);
@@ -404,9 +404,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             labels = details.Spec.TaskTemplate.ContainerSpec.Labels;
 
             Assert.NotNull(labels);
@@ -446,9 +446,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var dnsConfig = details.Spec.TaskTemplate.ContainerSpec.DNSConfig;
 
             Assert.Equal(2, dnsConfig.Nameservers.Count);
@@ -486,9 +486,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             dnsConfig = details.Spec.TaskTemplate.ContainerSpec.DNSConfig;
 
             Assert.Empty(dnsConfig.Options);
@@ -521,9 +521,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
 
             Assert.Equal(ServiceEndpointMode.DnsRR, details.Spec.EndpointSpec.Mode);
 
@@ -564,9 +564,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
 
             Assert.Equal(new string[] { "sleep", "7777777" }, details.Spec.TaskTemplate.ContainerSpec.Command);
 
@@ -607,9 +607,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var env = details.Spec.TaskTemplate.ContainerSpec.Env;
 
             Assert.Equal(2, env.Count);
@@ -633,9 +633,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             env = details.Spec.TaskTemplate.ContainerSpec.Env;
 
             Assert.Equal(2, env.Count);
@@ -663,9 +663,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             env = details.Spec.TaskTemplate.ContainerSpec.Env;
 
             Assert.Single(env);
@@ -701,9 +701,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             env = details.Spec.TaskTemplate.ContainerSpec.Env;
 
             Assert.Single(env);
@@ -735,9 +735,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
 
             Assert.Equal(2, details.Spec.Mode.Replicated.Replicas);
 
@@ -780,9 +780,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
 
             Assert.Equal(new string[] { "CMD-SHELL", "echo OK" }, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Test);
             Assert.Equal(1000000000L, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Interval);
@@ -819,9 +819,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
 
             Assert.Equal(new string[] { "NONE" }, details.Spec.TaskTemplate.ContainerSpec.HealthCheck.Test);
         }
@@ -853,9 +853,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var hosts = details.Spec.TaskTemplate.ContainerSpec.Hosts;
 
             Assert.Equal(2, hosts.Count);
@@ -892,9 +892,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             hosts = details.Spec.TaskTemplate.ContainerSpec.Hosts;
 
             // This fails due to Docker bug: https://github.com/moby/moby/issues/37035
@@ -969,9 +969,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var labels = details.Spec.Labels;
 
             Assert.NotNull(labels);
@@ -1009,9 +1009,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             labels = details.Spec.Labels;
 
             Assert.NotNull(labels);
@@ -1048,9 +1048,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             labels = details.Spec.Labels;
 
             Assert.NotNull(labels);
@@ -1084,9 +1084,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var limits = details.Spec.TaskTemplate.Resources.Limits;
 
             Assert.Equal(1500000000L, limits.NanoCPUs);
@@ -1100,7 +1100,7 @@ $@"
 
             Assert.True(taskResult.Success);
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             limits = details.Spec.TaskTemplate.Resources.Limits;
 
             Assert.Equal(1500000000L, limits.NanoCPUs);
@@ -1134,9 +1134,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var reservations = details.Spec.TaskTemplate.Resources.Reservations;
 
             Assert.Equal(1500000000L, reservations.NanoCPUs);
@@ -1150,7 +1150,7 @@ $@"
 
             Assert.True(taskResult.Success);
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             reservations = details.Spec.TaskTemplate.Resources.Reservations;
 
             Assert.Equal(1500000000L, reservations.NanoCPUs);
@@ -1191,9 +1191,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var mounts = details.Spec.TaskTemplate.ContainerSpec.Mounts;
 
             Assert.Single(mounts);
@@ -1236,9 +1236,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             mounts = details.Spec.TaskTemplate.ContainerSpec.Mounts;
 
             Assert.Single(mounts);
@@ -1285,9 +1285,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             mounts = details.Spec.TaskTemplate.ContainerSpec.Mounts;
 
             Assert.Single(mounts);
@@ -1307,9 +1307,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             mounts = details.Spec.TaskTemplate.ContainerSpec.Mounts;
 
             Assert.Single(mounts);
@@ -1350,9 +1350,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var ports = details.Spec.EndpointSpec.Ports;
 
             Assert.Single(ports);
@@ -1388,9 +1388,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             ports = details.Spec.EndpointSpec.Ports;
 
             Assert.Single(ports);
@@ -1428,9 +1428,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             ports = details.Spec.EndpointSpec.Ports;
 
             Assert.Single(ports);
@@ -1450,9 +1450,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             ports = details.Spec.EndpointSpec.Ports;
 
             Assert.Single(ports);
@@ -1483,9 +1483,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             ports = details.Spec.EndpointSpec.Ports;
 
             Assert.Empty(ports);
@@ -1516,9 +1516,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
 
             Assert.True(details.Spec.TaskTemplate.ContainerSpec.ReadOnly);
 
@@ -1530,9 +1530,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
 
             Assert.True(details.Spec.TaskTemplate.ContainerSpec.ReadOnly);
         }
@@ -1574,9 +1574,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var config = details.Spec.RollbackConfig;
 
             Assert.Equal(2000000000, config.Delay);
@@ -1594,9 +1594,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             config = details.Spec.RollbackConfig;
 
             Assert.Equal(2000000000, config.Delay);
@@ -1634,9 +1634,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var networks = details.Spec.TaskTemplate.Networks;
 
             Assert.NotNull(networks);
@@ -1650,9 +1650,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             networks = details.Spec.TaskTemplate.Networks;
 
             Assert.NotNull(networks);
@@ -1679,9 +1679,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             networks = details.Spec.TaskTemplate.Networks;
 
             Assert.NotNull(networks);
@@ -1706,9 +1706,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             networks = details.Spec.TaskTemplate.Networks;
 
             Assert.NotNull(networks);
@@ -1746,9 +1746,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var secret = details.Spec.TaskTemplate.ContainerSpec.Secrets.FirstOrDefault();
 
             Assert.NotNull(secret);
@@ -1767,7 +1767,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             secret = details.Spec.TaskTemplate.ContainerSpec.Secrets.FirstOrDefault();
 
             Assert.NotNull(secret);
@@ -1797,7 +1797,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
 
             Assert.Empty(details.Spec.TaskTemplate.ContainerSpec.Secrets);
 
@@ -1836,9 +1836,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
 
             Assert.Equal(5000000000L, details.Spec.TaskTemplate.ContainerSpec.StopGracePeriod);
 
@@ -1850,9 +1850,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
 
             Assert.Equal(5000000000L, details.Spec.TaskTemplate.ContainerSpec.StopGracePeriod);
         }
@@ -1882,9 +1882,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
 
             Assert.Equal("SIGTERM", details.Spec.TaskTemplate.ContainerSpec.StopSignal);
 
@@ -1896,9 +1896,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
 
             Assert.Equal("SIGTERM", details.Spec.TaskTemplate.ContainerSpec.StopSignal);
         }
@@ -1933,9 +1933,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
             var config = details.Spec.UpdateConfig;
 
             Assert.Equal(2000000000, config.Delay);
@@ -1953,9 +1953,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            details = fixture.InspectService(serviceName);
+            details = hive.InspectService(serviceName);
             config = details.Spec.UpdateConfig;
 
             Assert.Equal(2000000000, config.Delay);
@@ -1993,9 +1993,9 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Single(fixture.ListServices().Where(s => s.Name == serviceName));
+            Assert.Single(hive.ListServices().Where(s => s.Name == serviceName));
 
-            var details = fixture.InspectService(serviceName);
+            var details = hive.InspectService(serviceName);
 
             Assert.Equal(TestHelper.TestUID, details.Spec.TaskTemplate.ContainerSpec.User);
             Assert.Equal(new string[] { TestHelper.TestGID }, details.Spec.TaskTemplate.ContainerSpec.Groups);

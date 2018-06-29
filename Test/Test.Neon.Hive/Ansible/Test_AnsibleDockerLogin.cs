@@ -35,16 +35,16 @@ using Xunit;
 
 namespace TestNeonCluster
 {
-    public class Test_AnsibleDockerLogin : IClassFixture<ClusterFixture>
+    public class Test_AnsibleDockerLogin : IClassFixture<HiveFixture>
     {
-        private ClusterFixture  fixture;
+        private HiveFixture     hive;
         private ClusterProxy    cluster;
 
-        public Test_AnsibleDockerLogin(ClusterFixture fixture)
+        public Test_AnsibleDockerLogin(HiveFixture fixture)
         {
             fixture.LoginAndInitialize();
 
-            this.fixture = fixture;
+            this.hive = fixture;
             this.cluster = fixture.Cluster;
 
             // Ensure that we're not already logged into Docker Hub.

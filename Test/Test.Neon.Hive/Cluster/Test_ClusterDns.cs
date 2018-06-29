@@ -19,19 +19,19 @@ using Xunit;
 
 namespace TestNeonCluster
 {
-    public class Test_ClusterDns : IClassFixture<ClusterFixture>
+    public class Test_ClusterDns : IClassFixture<HiveFixture>
     {
-        private ClusterFixture  fixture;
+        private HiveFixture     hive;
         private ClusterProxy    cluster;
 
-        public Test_ClusterDns(ClusterFixture fixture)
+        public Test_ClusterDns(HiveFixture fixture)
         {
             if (!fixture.LoginAndInitialize())
             {
                 fixture.Reset();
             }
 
-            this.fixture = fixture;
+            this.hive = fixture;
             this.cluster = fixture.Cluster;
 
             // Wait for the cluster DNS and all node resolvers to be in
@@ -47,14 +47,14 @@ namespace TestNeonCluster
             //-----------------------------------------------------------------
             // Verify that the cluster starts out without any non-system DNS entries.
 
-            Assert.Empty(fixture.ListDnsEntries());
+            Assert.Empty(hive.ListDnsEntries());
 
             //-----------------------------------------------------------------
             // Add a DNS entry and then verify that it can be listed and also
             // that it actually resolves correctly on a manager, worker, and
             // pet (if the cluster includes workers and pets).
 
-            fixture.SetDnsEntry(
+            hive.SetDnsEntry(
                 new DnsEntry()
                 {
                     Hostname  = "foo.test.com",
@@ -68,7 +68,7 @@ namespace TestNeonCluster
                     }
                 });
 
-            var item = fixture.ListDnsEntries().SingleOrDefault(i => i.Hostname == "foo.test.com");
+            var item = hive.ListDnsEntries().SingleOrDefault(i => i.Hostname == "foo.test.com");
 
             Assert.NotNull(item);
             Assert.Equal("foo.test.com", item.Hostname);
@@ -81,7 +81,7 @@ namespace TestNeonCluster
 
             // Test a DNS entry marked as belonging to the system.
 
-            fixture.SetDnsEntry(
+            hive.SetDnsEntry(
                 new DnsEntry()
                 {
                     Hostname  = "bar.test.com",
@@ -101,14 +101,14 @@ namespace TestNeonCluster
             // Verify that the system DNS entry DOES NOT appear in the normal listing
             // and DOES appear when we include system entries.
 
-            Assert.Single(fixture.ListDnsEntries());
-            Assert.Equal(2, fixture.ListDnsEntries(includeSystem: true).Count);
-            Assert.True(fixture.ListDnsEntries(includeSystem: true).Single(i => i.Hostname == "bar.test.com").IsSystem);
+            Assert.Single(hive.ListDnsEntries());
+            Assert.Equal(2, hive.ListDnsEntries(includeSystem: true).Count);
+            Assert.True(hive.ListDnsEntries(includeSystem: true).Single(i => i.Hostname == "bar.test.com").IsSystem);
 
             //-----------------------------------------------------------------
             // Verify the new system entry.
 
-            item = fixture.ListDnsEntries(includeSystem: true).SingleOrDefault(i => i.Hostname == "bar.test.com");
+            item = hive.ListDnsEntries(includeSystem: true).SingleOrDefault(i => i.Hostname == "bar.test.com");
 
             Assert.NotNull(item);
             Assert.Equal("bar.test.com", item.Hostname);

@@ -20,19 +20,19 @@ using Xunit;
 
 namespace TestNeonCluster
 {
-    public class Test_ClusterLoadBalancer : IClassFixture<ClusterFixture>
+    public class Test_ClusterLoadBalancer : IClassFixture<HiveFixture>
     {
-        private ClusterFixture  fixture;
+        private HiveFixture     hive;
         private ClusterProxy    cluster;
 
-        public Test_ClusterLoadBalancer(ClusterFixture fixture)
+        public Test_ClusterLoadBalancer(HiveFixture fixture)
         {
             if (!fixture.LoginAndInitialize())
             {
                 fixture.Reset();
             }
 
-            this.fixture = fixture;
+            this.hive    = fixture;
             this.cluster = fixture.Cluster;
         }
 
@@ -47,14 +47,14 @@ namespace TestNeonCluster
 
             // Confirm that the cluster starts out with no running stacks or services.
 
-            Assert.Empty(fixture.ListStacks());
-            Assert.Empty(fixture.ListServices());
+            Assert.Empty(hive.ListStacks());
+            Assert.Empty(hive.ListServices());
 
             // Spin up a couple of NodeJS as stacks configuring them to return
             // different text using the OUTPUT environment variable.
 
-            fixture.CreateService("foo", "neoncluster/node", dockerArgs: new string[] { "--publish", "8080:80" }, env: new string[] { "OUTPUT=FOO" });
-            fixture.CreateService("bar", "neoncluster/node", dockerArgs: new string[] { "--publish", "8081:80" }, env: new string[] { "OUTPUT=BAR" });
+            hive.CreateService("foo", "neoncluster/node", dockerArgs: new string[] { "--publish", "8080:80" }, env: new string[] { "OUTPUT=FOO" });
+            hive.CreateService("bar", "neoncluster/node", dockerArgs: new string[] { "--publish", "8081:80" }, env: new string[] { "OUTPUT=BAR" });
 
             // Verify that each of the services are returning the expected output.
 
@@ -66,8 +66,8 @@ namespace TestNeonCluster
 
             // Remove one of the services and verify.
 
-            fixture.RemoveStack("foo-service");
-            Assert.Empty(fixture.ListServices().Where(s => s.Name == "foo-service"));
+            hive.RemoveStack("foo-service");
+            Assert.Empty(hive.ListServices().Where(s => s.Name == "foo-service"));
         }
     }
 }

@@ -21,12 +21,12 @@ using Xunit;
 
 namespace TestNeonCluster
 {
-    public class Test_AnsibleGlobals : IClassFixture<ClusterFixture>
+    public class Test_AnsibleGlobals : IClassFixture<HiveFixture>
     {
-        private ClusterFixture  fixture;
+        private HiveFixture     hive;
         private ClusterProxy    cluster;
 
-        public Test_AnsibleGlobals(ClusterFixture fixture)
+        public Test_AnsibleGlobals(HiveFixture fixture)
         {
             // We're going to use unique dashboard name for each test
             // so we only need to reset the test fixture once for
@@ -34,7 +34,7 @@ namespace TestNeonCluster
 
             fixture.LoginAndInitialize(login: null);
 
-            this.fixture = fixture;
+            this.hive    = fixture;
             this.cluster = fixture.Cluster;
         }
 

@@ -34,13 +34,13 @@ namespace TestSamples
     //
     //      NEON_TEST_CLUSTER=root@mycluster
 
-    public class Test_Cluster : IClassFixture<ClusterFixture>
+    public class Test_Cluster : IClassFixture<HiveFixture>
     {
-        private ClusterFixture  fixture;
+        private HiveFixture     hive;
         private ClusterProxy    cluster;
         private HostsFixture    hosts;
 
-        public Test_Cluster(ClusterFixture fixture)
+        public Test_Cluster(HiveFixture fixture)
         {
             if (!fixture.LoginAndInitialize(action:
                 () =>
@@ -63,7 +63,7 @@ namespace TestSamples
                 hosts.Reset();
             }
 
-            this.fixture = fixture;
+            this.hive = fixture;
             this.cluster = fixture.Cluster;
         }
 
@@ -78,8 +78,8 @@ namespace TestSamples
 
             // Confirm that the cluster starts out with no running stacks or services.
 
-            Assert.Empty(fixture.ListStacks());
-            Assert.Empty(fixture.ListServices());
+            Assert.Empty(hive.ListStacks());
+            Assert.Empty(hive.ListServices());
 
             // Add the local DNS entries for the services we'll deploy.  We're
             // publishing these on host ports, so we'll use map the DNS entries
@@ -92,8 +92,8 @@ namespace TestSamples
             // Spin up a couple of NodeJS as stacks configuring them to return
             // different text using the OUTPUT environment variable.
 
-            fixture.CreateService("foo", "neoncluster/node", dockerArgs: new string[] { "--publish", "8080:80" }, env: new string[] { "OUTPUT=FOO" });
-            fixture.CreateService("bar", "neoncluster/node", dockerArgs: new string[] { "--publish", "8081:80" }, env: new string[] { "OUTPUT=BAR" });
+            hive.CreateService("foo", "neoncluster/node", dockerArgs: new string[] { "--publish", "8080:80" }, env: new string[] { "OUTPUT=FOO" });
+            hive.CreateService("bar", "neoncluster/node", dockerArgs: new string[] { "--publish", "8081:80" }, env: new string[] { "OUTPUT=BAR" });
 
             // Verify that each of the services are returning the expected output.
 
@@ -105,8 +105,8 @@ namespace TestSamples
 
             // Remove one of the services and verify.
 
-            fixture.RemoveStack("foo-service");
-            Assert.Empty(fixture.ListServices().Where(s => s.Name == "foo-service"));
+            hive.RemoveStack("foo-service");
+            Assert.Empty(hive.ListServices().Where(s => s.Name == "foo-service"));
         }
     }
 }

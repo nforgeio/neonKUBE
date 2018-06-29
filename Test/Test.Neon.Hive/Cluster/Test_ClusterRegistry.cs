@@ -19,19 +19,19 @@ using Xunit;
 
 namespace TestNeonCluster
 {
-    public class Test_ClusterRegistry : IClassFixture<ClusterFixture>
+    public class Test_ClusterRegistry : IClassFixture<HiveFixture>
     {
-        private ClusterFixture  fixture;
+        private HiveFixture     hive;
         private ClusterProxy    cluster;
 
-        public Test_ClusterRegistry(ClusterFixture fixture)
+        public Test_ClusterRegistry(HiveFixture fixture)
         {
             if (!fixture.LoginAndInitialize())
             {
                 fixture.Reset();
             }
 
-            this.fixture = fixture;
+            this.hive    = fixture;
             this.cluster = fixture.Cluster;
         }
 
