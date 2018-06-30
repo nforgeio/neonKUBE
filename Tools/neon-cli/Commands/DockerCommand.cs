@@ -375,7 +375,7 @@ the [neon exec] command.
                 return new DockerShimInfo(isShimmed: true);
             }
 
-            var arg1 = rightCommandLine.Arguments.FirstOrDefault();
+            var arg1 = rightCommandLine.Arguments.ElementAtOrDefault(0);
             var arg2 = rightCommandLine.Arguments.ElementAtOrDefault(1);
 
             switch (arg1)
