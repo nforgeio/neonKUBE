@@ -3,6 +3,8 @@
 // CONTRIBUTOR: Jeff Lill
 // COPYRIGHT:	Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 
+#define NOSHIM      // Undefine this to default to [--shim] mode.
+
 using System;
 using System.Collections.Generic;
 using System.ComponentModel;
@@ -318,7 +320,7 @@ Docker issues are corrected.
                 }
 
                 // Determine whether we're running in direct mode or shimming to a Docker container.
-                
+
                 // $todo(jeff.lill):
                 //
                 // We're currently defaulting to [--noshim] mode due to Docker on Windows issues:
@@ -326,10 +328,12 @@ Docker issues are corrected.
                 //      * We're seeing a lot of issues with Docker complaining about [/mnt/c] issues.
                 //      * Docker container networking is often screwed up.
                 //
-                // Both of these issues require resetting or reinstalling Docker.
-
-                NoShimMode = HiveHelper.InToolContainer || CommandLine.GetOption("--shim") != null;
-
+                // Both of these issues may require resetting or reinstalling Docker.d
+#if NOSHIM
+                NoShimMode = HiveHelper.InToolContainer || CommandLine.GetOption("--shim") == null;
+#else
+                NoShimMode = HiveHelper.InToolContainer || CommandLine.GetOption("--noshim") != null;
+#endif
                 // Short-circuit the help command.
 
                 if (!NoShimMode && CommandLine.Arguments[0] == "help")
