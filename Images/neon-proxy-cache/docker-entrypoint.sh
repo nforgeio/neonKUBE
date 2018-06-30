@@ -29,29 +29,13 @@ if [ "${MEMORY_LIMIT}" == "" ] ; then
     export MEMORY_LIMIT=100M
 fi
 
-. log-info.sh "Setting: BACKEND_SERVER=${BACKEND_SERVER}"
-. log-info.sh "Setting: BACKEND_PORT=${BACKEND_PORT}"
-. log-info.sh "Setting: MEMORY_LIMIT=${MEMORY_LIMIT}"
-
-# Start Varnish
+# Start varnish
 
 . log-info.sh "Starting: Varnish"
-varnishd -a :80 -b ${BACKEND_SERVER}:${BACKEND_PORT} -s malloc,${MEMORY_LIMIT}
-EXIT_CODE=$?
+varnish -b ${BACKEND_SERVER}:${BACKEND_PORT} -s malloc,${MEMORY_LIMIT}
 
-if [ "${EXIT_CODE}" != "0" ] ; then
-    . log-error.sh "[varnishd] failed with [exit-code={${EXIT_CODE}]."
+if [ "$?" != "=" ] ; then
+    EXIT_CODE = $?
+    . log-error.sh "[varnishd] failed with [exit-code={$?}]."
     exit ${EXIT_CODE}
 fi
-
-# Varnishd starts a background process that actually does the 
-# proxying.  We'll spin quietly until that process exits.
-
-while true
-do
-    if ! pidof varnishd > /dev/nul ; then
-        break;
-    fi
-
-    sleep 5
-done

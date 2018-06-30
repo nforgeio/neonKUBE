@@ -126,6 +126,16 @@
     <None Include="neon-dns\publish.ps1" />
     <None Include="neon-dns\README.md" />
     <None Include="neon-log-collector\geoip\MaxMind.readme" />
+    <Content Include="neon-proxy-cache\.dockerignore">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </Content>
+    <None Include="neon-proxy-cache\build.ps1" />
+    <None Include="neon-proxy-cache\docker-entrypoint.sh" />
+    <None Include="neon-proxy-cache\Dockerfile">
+      <CopyToOutputDirectory>PreserveNewest</CopyToOutputDirectory>
+    </None>
+    <None Include="neon-proxy-cache\publish.ps1" />
+    <None Include="neon-proxy-cache\README.md" />
     <None Include="test\docker-entrypoint.sh" />
     <None Include="test\Dockerfile" />
     <Content Include="_artifacts\README.txt" />

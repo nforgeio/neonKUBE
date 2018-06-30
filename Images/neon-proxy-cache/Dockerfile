@@ -16,19 +16,10 @@ MAINTAINER  jeff@lilltek.com
 STOPSIGNAL  SIGTERM
 ARG         VARNISH_VERSION
 
-# Install Varnish.
-
-# $todo(jeff.lill):
-#
-# Note that we're currently ignoring VARNISH_VERSION and are
-# just installing the latest version available for Alpine.
-# At some point, I'd like to actually build download a 
-# specific source TAR and build it.
-
 COPY docker-entrypoint.sh   /
 COPY _common/*.sh           /
 
 RUN chmod 700 /*.sh \
-    && apk add --update tini varnish
+    && apk add --update varnish
 
 ENTRYPOINT ["tini", "-g", "--", "/docker-entrypoint.sh"]
