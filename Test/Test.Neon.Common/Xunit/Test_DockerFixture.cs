@@ -69,11 +69,11 @@ services:
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void ClearVolumes()
         {
             //-----------------------------------------------------------------
-            // Create a test volume on the cluster node and then verify
+            // Create a test volume on the hive node and then verify
             // that ClearVolumes() removes them.
 
             fixture.DockerExecute("docker volume create test-volume");

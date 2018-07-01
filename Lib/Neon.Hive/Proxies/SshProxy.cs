@@ -51,13 +51,13 @@ namespace Neon.Hive
     /// </typeparam>
     /// <remarks>
     /// <para>
-    /// Construct an instance to connect to a specific cluster node.  You may specify
+    /// Construct an instance to connect to a specific hive node.  You may specify
     /// <typeparamref name="TMetadata"/> to associate application specific information
     /// or state with the instance.
     /// </para>
     /// <para>
     /// This class includes methods to invoke Linux commands on the node as well as
-    /// methods to issue Docker commands against the local node or the Swarm cluster.
+    /// methods to issue Docker commands against the local node or the Swarm hive.
     /// Methods are also provided to upload and download files.
     /// </para>
     /// <para>
@@ -90,8 +90,8 @@ namespace Neon.Hive
             // the past because we were only using SshProxy to establish single connections
             // to any given server.
             //
-            // This changed with thre [ClusterFixture] implementation that attempts to
-            // parallelize cluster reset operations for better test execution performance.
+            // This changed with thre [HiveFixture] implementation that attempts to
+            // parallelize hive reset operations for better test execution performance.
             //
             // The symptom is that we see:
             //
@@ -185,7 +185,7 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="name">The display name for the server.</param>
         /// <param name="publicAddress">The public IP address or FQDN of the server or <c>null.</c></param>
-        /// <param name="privateAddress">The private cluster IP address for the server.</param>
+        /// <param name="privateAddress">The private hive IP address for the server.</param>
         /// <param name="credentials">The credentials to be used for establishing SSH connections.</param>
         /// <param name="logWriter">The optional <see cref="TextWriter"/> where operation logs will be written.</param>
         /// <exception cref="ArgumentNullException">
@@ -424,9 +424,9 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// The associated <see cref="ClusterProxy"/> or <c>null</c>.
+        /// The associated <see cref="HiveProxy"/> or <c>null</c>.
         /// </summary>
-        public ClusterProxy Cluster { get; internal set; }
+        public HiveProxy Hive { get; internal set; }
 
         /// <summary>
         /// Returns the display name for the server.
@@ -434,13 +434,13 @@ namespace Neon.Hive
         public string Name { get; private set; }
 
         /// <summary>
-        /// Returns the cluster public IP address, FQDN, or <c>null</c> for the
+        /// Returns the hive public IP address, FQDN, or <c>null</c> for the
         /// server.
         /// </summary>
         public string PublicAddress { get; private set; }
 
         /// <summary>
-        /// Returns the cluster private IP address to used for connecting to the server.
+        /// Returns the hive private IP address to used for connecting to the server.
         /// </summary>
         public IPAddress PrivateAddress { get; set; }
 
@@ -793,14 +793,14 @@ namespace Neon.Hive
             var isPrivate = true;
             var port      = SshPort;
 
-            if (Cluster?.HostingManager != null)
+            if (Hive?.HostingManager != null)
             {
-                var ep = Cluster.HostingManager.GetSshEndpoint(this.Name);
+                var ep = Hive.HostingManager.GetSshEndpoint(this.Name);
 
                 address = ep.Address;
                 port    = ep.Port;
             }
-            else if (Cluster != null && Cluster.UseNodePublicAddress)
+            else if (Hive != null && Hive.UseNodePublicAddress)
             {
                 address   = PublicAddress;
                 isPrivate = false;
@@ -853,7 +853,7 @@ namespace Neon.Hive
             }
             catch (Exception e)
             {
-                throw new HiveException($"Unable to connect to the cluster within [{timeout}].", e);
+                throw new HiveException($"Unable to connect to the hive within [{timeout}].", e);
             }
         }
 
@@ -2149,7 +2149,7 @@ echo $? > {cmdFolder}/exit
                     Command        = command,
                     ExitCode       = 1,
                     ProxyIsFaulted = true,
-                    ErrorText      = "** Cluster node is faulted **"
+                    ErrorText      = "** Hive node is faulted **"
                 };
             }
 
@@ -2343,7 +2343,7 @@ echo $? > {cmdFolder}/exit
         /// and then be used when a command is executed.
         /// </para>
         /// <para>
-        /// A good example of this is performing a <b>docker stack</b> command on the cluster.  In this case, we need to
+        /// A good example of this is performing a <b>docker stack</b> command on the hive.  In this case, we need to
         /// upload the DAB file along with any files it references and then we we'll want to execute the the Docker client.
         /// </para>
         /// <para>
@@ -2592,7 +2592,7 @@ echo $? > {cmdFolder}/exit
         /// and then be used when a command is executed.
         /// </para>
         /// <para>
-        /// A good example of this is performing a <b>docker stack</b> command on the cluster.  In this case, we need to
+        /// A good example of this is performing a <b>docker stack</b> command on the hive.  In this case, we need to
         /// upload the DAB file along with any files it references and then we we'll want to execute the the Docker 
         /// client.
         /// </para>
@@ -3068,13 +3068,13 @@ echo $? > {cmdFolder}/exit
         /// <remarks>
         /// <note>
         /// This does nothing but return <c>true</c> if the Docker public registry is 
-        /// specified and the cluster has registry caches deployed because the 
+        /// specified and the hive has registry caches deployed because the 
         /// caches handle authentication with the upstream registry in this case.
         /// </note>
         /// </remarks>
         public bool RegistryLogin(string registry, string username = null, string password = null)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
+            Covenant.Requires<ArgumentException>(HiveDefinition.DnsHostRegex.IsMatch(registry));
 
             if (HiveHelper.IsDockerPublicRegistry(registry))
             {
@@ -3131,13 +3131,13 @@ echo $? > {cmdFolder}/exit
         /// <remarks>
         /// <note>
         /// This does nothing but return <c>true</c> if the Docker public registry is 
-        /// specified and the cluster has registry caches deployed because the 
+        /// specified and the hive has registry caches deployed because the 
         /// caches handle authentication with the upstream registry in this case.
         /// </note>
         /// </remarks>
         public bool RegistryLogout(string registry)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
+            Covenant.Requires<ArgumentException>(HiveDefinition.DnsHostRegex.IsMatch(registry));
 
             if (HiveHelper.IsDockerPublicRegistry(registry))
             {
@@ -3169,19 +3169,19 @@ echo $? > {cmdFolder}/exit
         /// This method currently does nothing but return <c>true</c> for non-manager
         /// nodes or if the registry specified is not the Docker public registry
         /// because cache supports only the public registry or if the registry
-        /// cache is not enabled for this cluster.
+        /// cache is not enabled for this hive.
         /// </note>
         /// </remarks>
         public bool RestartRegistryCache(string registry, string username = null, string password = null)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(registry));
+            Covenant.Requires<ArgumentException>(HiveDefinition.DnsHostRegex.IsMatch(registry));
 
             username = username ?? string.Empty;
             password = password ?? string.Empty;
 
             // Return immediately if this is a NOP for the current node and environment.
 
-            if (!HiveHelper.IsDockerPublicRegistry(registry) || !Cluster.Definition.Docker.RegistryCache)
+            if (!HiveHelper.IsDockerPublicRegistry(registry) || !Hive.Definition.Docker.RegistryCache)
             {
                 return true;
             }
@@ -3197,9 +3197,9 @@ echo $? > {cmdFolder}/exit
 
             // Stop any existing registry cache container.  Note that we'll
             // also determine Docker image being used so we can restart with
-            // the same one (if it has been changed since cluster deployment).
+            // the same one (if it has been changed since hive deployment).
 
-            var image    = Cluster.Definition.Docker.RegistryCacheImage;   // Default to this if there's no container.
+            var image    = Hive.Definition.Docker.RegistryCacheImage;   // Default to this if there's no container.
             var response = DockerCommand(RunOptions.None, "docker", "ps", "-a", "--filter", "name=neon-registry-cache", "--format", "{{.Image}}");
 
             if (response.ExitCode != 0)
@@ -3269,7 +3269,7 @@ echo $? > {cmdFolder}/exit
 
         /// <summary>
         /// Waits for a specific hostname to resolve on the connected node.
-        /// This is useful for ensuring that cluster DNS host entry changes
+        /// This is useful for ensuring that hive DNS host entry changes
         /// have been propagated by the [neon-dns-mon], [neon-dns], and
         /// PowerDNS services and are ready for use.
         /// </summary>
@@ -3277,7 +3277,7 @@ echo $? > {cmdFolder}/exit
         /// <param name="timeout">
         /// Optional timeout.  This defaults to a reasonable value 
         /// (<see cref="DnsHostsManager.PropagationTimeout"/>) that is appropriate 
-        /// for the cluster DNS host services.  You may customize this if
+        /// for the hive DNS host services.  You may customize this if
         /// you're checking DNS entries served from another source.
         /// </param>
         /// <exception cref="TimeoutException">Thrown if the hostname didn't resolve in time.</exception>
@@ -3291,7 +3291,7 @@ echo $? > {cmdFolder}/exit
         public void WaitForDnsHost(string hostname, TimeSpan timeout = default(TimeSpan))
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
-            Covenant.Requires<ArgumentNullException>(ClusterDefinition.DnsHostRegex.IsMatch(hostname));
+            Covenant.Requires<ArgumentNullException>(HiveDefinition.DnsHostRegex.IsMatch(hostname));
 
             if (timeout <= TimeSpan.Zero)
             {

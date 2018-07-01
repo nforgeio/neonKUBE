@@ -40,7 +40,7 @@ namespace TestNeonCluster
             // then start, modify, and remove services.
             //
             // We're going to initialize these assets once and then
-            // only the cluster services between test methods for
+            // only the hive services between test methods for
             // (hopefully) a bit better test execution performance.
 
             if (fixture.LoginAndInitialize(login: null))

@@ -33,8 +33,8 @@ namespace NeonCli
     {
         private const string usage =
 @"
-Manages cluster DNS local hosts records.  This works much like the Linux
-[/etc/hosts] file except that it manages DNS records for the entire cluster.
+Manages hive DNS local hosts records.  This works much like the Linux
+[/etc/hosts] file except that it manages DNS records for the entire hive.
 
 USAGE:
 
@@ -61,7 +61,7 @@ OPTIONS:
                   verified by sending ICMP pings.
 
     --wait      - Wait 60 seconds for the change to propagate across
-                  the cluster.
+                  the hive.
 
     --yaml      - Output YAML instead of JSON.
 ";
@@ -70,7 +70,7 @@ OPTIONS:
 neonHIVE can load DNS entries specified by JSON or YAML files.  Each DNS
 entry specifies the hostname for the entry as well as the endpoints to be 
 registered for the hostname.  Each endpoint can be an IP address, another
-hostname that will be resolved into an IP address or a cluster node group.
+hostname that will be resolved into an IP address or a hive node group.
 Endpoint health may optionally be ensured.
 
 Here's a JSON example that specifies that [api.test.com] should resolve to
@@ -99,9 +99,9 @@ Here is how this will look as YAML:
       check: true
 
 Targeting a neonHIVE host group is a powerful way to register a hostname
-that maps to cluster nodes.  neonHIVE defines several built-in groups
+that maps to hive nodes.  neonHIVE defines several built-in groups
 like: manager, workers, pets, swarm,... and it's possible to define custom
-groups during cluster setup.
+groups during hive setup.
 
 The YAML example below defines [my-managers] using the [managers] group:
 
@@ -110,12 +110,12 @@ The YAML example below defines [my-managers] using the [managers] group:
     - target: group=managers
       check: true
 
-Note that [neon-dns-mon] automatically creates DNS entries for all cluster 
+Note that [neon-dns-mon] automatically creates DNS entries for all hive 
 host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 ";
 
-        private ClusterLogin    clusterLogin;
-        private ClusterProxy    cluster;
+        private HiveLogin    hiveLogin;
+        private HiveProxy    hive;
 
         /// <inheritdoc/>
         public override string[] Words
@@ -144,8 +144,8 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                 Program.Exit(1);
             }
 
-            clusterLogin = Program.ConnectCluster();
-            cluster      = new ClusterProxy(clusterLogin);
+            hiveLogin = Program.ConnectHive();
+            hive      = new HiveProxy(hiveLogin);
 
             var command  = commandLine.Arguments.ElementAt(0);
             var yaml     = commandLine.HasOption("--yaml");
@@ -210,7 +210,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         {
             // We're simply going to download and parse [neon/dns/answers/hosts.txt].
 
-            var answers   = cluster.DnsHosts.GetAnswers();
+            var answers   = hive.DnsHosts.GetAnswers();
             var entryHost = commandLine.Arguments.ElementAtOrDefault(1);
 
             Console.WriteLine();
@@ -306,7 +306,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
             host = host.ToLowerInvariant();
 
-            var entry = cluster.DnsHosts.Get(host);
+            var entry = hive.DnsHosts.Get(host);
 
             if (entry == null)
             {
@@ -330,7 +330,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         /// <param name="commandLine">The command line.</param>
         private void ListEntries(CommandLine commandLine)
         {
-            var entries = cluster.DnsHosts.List();
+            var entries = hive.DnsHosts.List();
 
             Console.WriteLine();
 
@@ -341,7 +341,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
             }
 
             var maxHostWidth = entries.Max(item => item.Hostname.Length);
-            var answers      = cluster.DnsHosts.GetAnswers();
+            var answers      = hive.DnsHosts.GetAnswers();
 
             foreach (var entry in entries)
             {
@@ -376,7 +376,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
                 Program.Exit(1);
             }
 
-            cluster.DnsHosts.Remove(entryHost, waitUntilPropagated: wait);
+            hive.DnsHosts.Remove(entryHost, waitUntilPropagated: wait);
             Console.WriteLine($"Removed [{entryHost}] (if it existed).");
         }
 
@@ -440,7 +440,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
             // Check for errors.
 
-            var errors = dnsEntry.Validate(cluster.Definition, cluster.Definition.GetNodeGroups(excludeAllGroup: true));
+            var errors = dnsEntry.Validate(hive.Definition, hive.Definition.GetNodeGroups(excludeAllGroup: true));
 
             if (errors.Count > 0)
             {
@@ -454,7 +454,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
 
             // Persist the entry.
 
-            cluster.DnsHosts.Set(dnsEntry, waitUntilPropagated: wait);
+            hive.DnsHosts.Set(dnsEntry, waitUntilPropagated: wait);
 
             Console.WriteLine();
             Console.WriteLine($"Saved [{dnsEntry.Hostname}] DNS host entry.");
@@ -468,7 +468,7 @@ host groups if they don't already exist (named like: [GROUPNAME.cluster]).
         {
             Covenant.Requires<ArgumentNullException>(hostname == null);
 
-            if (!ClusterDefinition.DnsHostRegex.IsMatch(hostname))
+            if (!HiveDefinition.DnsHostRegex.IsMatch(hostname))
             {
                 Console.Error.WriteLine($"*** ERROR: [{hostname}] is not a valid DNS hostname.");
                 Program.Exit(1);

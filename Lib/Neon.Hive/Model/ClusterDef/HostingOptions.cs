@@ -135,14 +135,14 @@ namespace Neon.Hive
         public string VmHostPassword { get; set; }
 
         /// <summary>
-        /// The default number of virtual processors to assign to each cluster virtual machine.
+        /// The default number of virtual processors to assign to each hive virtual machine.
         /// </summary>
         [JsonProperty(PropertyName = "VmProcessors", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(4)]
         public int VmProcessors { get; set; } = 4;
 
         /// <summary>
-        /// Specifies the default maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
+        /// Specifies the default maximum amount of memory to allocate to each hive virtual machine.  This is specified as a string
         /// that can be a long byte count or a long with units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>4GB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VmMemory", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -151,7 +151,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// Specifies the minimum amount of memory to allocate to each cluster virtual machine.  This is specified as a string that
+        /// Specifies the minimum amount of memory to allocate to each hive virtual machine.  This is specified as a string that
         /// can be a a long byte count or a long with units like <b>512MB</b> or <b>2GB</b> or may be set to <c>null</c> to set
         /// the same value as <see cref="VmMemory"/>.  This defaults to <c>2GB</c>, which is half of the default value of <see cref="VmMemory"/>
         /// which is <b>4GB</b>.
@@ -166,7 +166,7 @@ namespace Neon.Hive
         public string VmMinimumMemory { get; set; } = DefaultVmMinimumMemory;
 
         /// <summary>
-        /// Specifies the maximum amount of memory to allocate to each cluster virtual machine.  This is specified as a string
+        /// Specifies the maximum amount of memory to allocate to each hive virtual machine.  This is specified as a string
         /// that can be a long byte count or a long with units like <b>512MB</b> or <b>2GB</b>.  This defaults to <b>64GB</b>.
         /// </summary>
         [JsonProperty(PropertyName = "VmDisk", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -195,7 +195,7 @@ namespace Neon.Hive
         /// and <see cref="HostingEnvironments.XenServer"/> environments.
         /// </para>
         /// <para>
-        /// When this is <c>null</c> (the default), the cluster name followed by a dash will 
+        /// When this is <c>null</c> (the default), the hive name followed by a dash will 
         /// prefix the provisioned virtual machine names.  When this is a non-empty string, the
         /// value followed by a dash will be used.  If this is empty or whitespace, machine
         /// names will not be prefixed.
@@ -211,13 +211,13 @@ namespace Neon.Hive
         /// <summary>
         /// Returns the prefix to be used when provisioning virtual machines in hypervisor environments.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="hiveDefinition">The hive definition.</param>
         /// <returns>The prefix.</returns>
-        internal string GetVmNamePrefix(ClusterDefinition clusterDefinition)
+        internal string GetVmNamePrefix(HiveDefinition hiveDefinition)
         {
             if (VmNamePrefix == null)
             {
-                return $"{clusterDefinition.Name}-".ToLowerInvariant();
+                return $"{hiveDefinition.Name}-".ToLowerInvariant();
             }
             else if (string.IsNullOrWhiteSpace(VmNamePrefix))
             {
@@ -230,7 +230,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the cluster will be hosted by a cloud provider like AWS, Azure or Google.
+        /// Returns <c>true</c> if the hive will be hosted by a cloud provider like AWS, Azure or Google.
         /// </summary>
         [JsonIgnore]
         public bool IsCloudProvider
@@ -260,7 +260,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the cluster will be hosted by an on-premise (non-cloud) provider.
+        /// Returns <c>true</c> if the hive will be hosted by an on-premise (non-cloud) provider.
         /// </summary>
         [JsonIgnore]
         public bool IsOnPremiseProvider
@@ -269,7 +269,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns <c>true</c> if the cluster will be hosted by a hypervisor provider
+        /// Returns <c>true</c> if the hive will be hosted by a hypervisor provider
         /// that supports remote hosts.
         /// </summary>
         [JsonIgnore]
@@ -303,12 +303,12 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition)
+        public void Validate(HiveDefinition hiveDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             switch (Environment)
             {
@@ -316,58 +316,58 @@ namespace Neon.Hive
 
                     if (Aws == null)
                     {
-                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Aws)}] must be initialized when cloud provider is [{Environment}].");
+                        throw new HiveDefinitionException($"[{nameof(HostingOptions)}.{nameof(Aws)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
-                    Aws.Validate(clusterDefinition);
+                    Aws.Validate(hiveDefinition);
                     break;
 
                 case HostingEnvironments.Azure:
 
                     if (Azure == null)
                     {
-                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Azure)}] must be initialized when cloud provider is [{Environment}].");
+                        throw new HiveDefinitionException($"[{nameof(HostingOptions)}.{nameof(Azure)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
-                    Azure.Validate(clusterDefinition);
+                    Azure.Validate(hiveDefinition);
                     break;
 
                 case HostingEnvironments.Google:
 
                     if (Google == null)
                     {
-                        throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(Google)}] must be initialized when cloud provider is [{Environment}].");
+                        throw new HiveDefinitionException($"[{nameof(HostingOptions)}.{nameof(Google)}] must be initialized when cloud provider is [{Environment}].");
                     }
 
-                    Google.Validate(clusterDefinition);
+                    Google.Validate(hiveDefinition);
                     break;
 
                 case HostingEnvironments.HyperV:
 
                     HyperV = HyperV ?? new HyperVOptions();
 
-                    HyperV.Validate(clusterDefinition);
+                    HyperV.Validate(hiveDefinition);
                     break;
 
                 case HostingEnvironments.LocalHyperV:
 
                     LocalHyperV = LocalHyperV ?? new LocalHyperVOptions();
 
-                    LocalHyperV.Validate(clusterDefinition);
+                    LocalHyperV.Validate(hiveDefinition);
                     break;
 
                 case HostingEnvironments.Machine:
 
                     Machine = Machine ?? new MachineOptions();
 
-                    Machine.Validate(clusterDefinition);
+                    Machine.Validate(hiveDefinition);
                     break;
 
                 case HostingEnvironments.XenServer:
 
                     XenServer = XenServer ?? new XenServerOptions();
 
-                    XenServer.Validate(clusterDefinition);
+                    XenServer.Validate(hiveDefinition);
                     break;
 
                 default:
@@ -375,18 +375,18 @@ namespace Neon.Hive
                     throw new NotImplementedException();
             }
 
-            if (IsCloudProvider && !clusterDefinition.Vpn.Enabled)
+            if (IsCloudProvider && !hiveDefinition.Vpn.Enabled)
             {
                 // VPN is implicitly enabled when hosting on a cloud.
 
-                clusterDefinition.Vpn.Enabled = true;
+                hiveDefinition.Vpn.Enabled = true;
             }
 
             if (!string.IsNullOrWhiteSpace(VmNamePrefix))
             {
-                if (!ClusterDefinition.IsValidName(VmNamePrefix))
+                if (!HiveDefinition.IsValidName(VmNamePrefix))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(HostingOptions)}.{nameof(VmNamePrefix)}={VmNamePrefix}] must include only letters, digits, underscores, or periods.");
+                    throw new HiveDefinitionException($"[{nameof(HostingOptions)}.{nameof(VmNamePrefix)}={VmNamePrefix}] must include only letters, digits, underscores, or periods.");
                 }
             }
         }
@@ -394,20 +394,20 @@ namespace Neon.Hive
         /// <summary>
         /// Validates the Hypervisor related options.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="hiveDefinition">The hive definition.</param>
         /// <param name="remoteHypervisors">
         /// Indicates that we're going to be deploying to remote hypervisor
         /// host machines as opposed to the local workstation.
         /// </param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        internal void ValidateHypervisor(ClusterDefinition clusterDefinition, bool remoteHypervisors)
+        internal void ValidateHypervisor(HiveDefinition hiveDefinition, bool remoteHypervisors)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             if (VmProcessors <= 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(LocalHyperVOptions)}.{nameof(VmProcessors)}={VmProcessors}] must be positive.");
+                throw new HiveDefinitionException($"[{nameof(LocalHyperVOptions)}.{nameof(VmProcessors)}={VmProcessors}] must be positive.");
             }
 
             VmMemory        = VmMemory ?? DefaultVmMemory;
@@ -415,27 +415,27 @@ namespace Neon.Hive
             VmDisk          = VmDisk ?? DefaultVmMinimumMemory;
             VmHosts         = VmHosts ?? new List<VmHost>();
 
-            ClusterDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
-            ClusterDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
-            ClusterDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
+            HiveDefinition.ValidateSize(VmMemory, this.GetType(), nameof(VmMemory));
+            HiveDefinition.ValidateSize(VmMinimumMemory, this.GetType(), nameof(VmMinimumMemory));
+            HiveDefinition.ValidateSize(VmDisk, this.GetType(), nameof(VmDisk));
 
             // Verify that the hypervisor host machines have unique names and addresses.
 
             var hostNameSet    = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
             var hostAddressSet = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase);
 
-            foreach (var vmHost in clusterDefinition.Hosting.VmHosts)
+            foreach (var vmHost in hiveDefinition.Hosting.VmHosts)
             {
                 if (hostNameSet.Contains(vmHost.Name))
                 {
-                    throw new ClusterDefinitionException($"One or more hypervisor hosts are assigned the [{vmHost.Name}] name.");
+                    throw new HiveDefinitionException($"One or more hypervisor hosts are assigned the [{vmHost.Name}] name.");
                 }
 
                 hostNameSet.Add(vmHost.Name);
 
                 if (hostAddressSet.Contains(vmHost.Address))
                 {
-                    throw new ClusterDefinitionException($"One or more hypervisor hosts are assigned the [{vmHost.Address}] address.");
+                    throw new HiveDefinitionException($"One or more hypervisor hosts are assigned the [{vmHost.Address}] address.");
                 }
 
                 hostAddressSet.Add(vmHost.Address);
@@ -446,26 +446,26 @@ namespace Neon.Hive
 
             if (remoteHypervisors)
             {
-                if (clusterDefinition.Hosting.VmHosts.Count == 0)
+                if (hiveDefinition.Hosting.VmHosts.Count == 0)
                 {
-                    throw new ClusterDefinitionException($"At least one host XenServer must be specified in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
+                    throw new HiveDefinitionException($"At least one host XenServer must be specified in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
                 }
 
                 foreach (var vmHost in VmHosts)
                 {
-                    vmHost.Validate(clusterDefinition);
+                    vmHost.Validate(hiveDefinition);
                 }
 
-                foreach (var node in clusterDefinition.NodeDefinitions.Values)
+                foreach (var node in hiveDefinition.NodeDefinitions.Values)
                 {
                     if (string.IsNullOrEmpty(node.VmHost))
                     {
-                        throw new ClusterDefinitionException($"Node [{node.Name}] does not specify a host hypervisor with [{nameof(NodeDefinition.VmHost)}].");
+                        throw new HiveDefinitionException($"Node [{node.Name}] does not specify a host hypervisor with [{nameof(NodeDefinition.VmHost)}].");
                     }
 
                     if (!hostNameSet.Contains(node.VmHost))
                     {
-                        throw new ClusterDefinitionException($"Node [{node.Name}] has [{nameof(VmHost)}={node.VmHost}] which specifies a hypervisor host that was not found in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
+                        throw new HiveDefinitionException($"Node [{node.Name}] has [{nameof(VmHost)}={node.VmHost}] which specifies a hypervisor host that was not found in [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHosts)}].");
                     }
                 }
             }

@@ -42,9 +42,9 @@ namespace TestNeonCluster
         {
             this.fixture = fixture;
 
-            // We're passing [login=null] below to connect to the cluster specified
+            // We're passing [login=null] below to connect to the hive specified
             // by the NEON_TEST_CLUSTER environment variable.  This needs to be 
-            // initialized with the login for a deployed cluster.
+            // initialized with the login for a deployed hive.
 
             if (this.fixture.Initialize())
             {
@@ -69,7 +69,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Simple()
         {
             // Deploy a very simple service and then verify that the
@@ -175,7 +175,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Labels()
         {
             // Verify that we can deploy and parse service labels.
@@ -197,7 +197,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Env()
         {
             // Verify that we can specify environment variables.
@@ -221,7 +221,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void DNSConfig()
         {
             // Verify that we can specify DNS configuration.
@@ -244,7 +244,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Command()
         {
             // Verify that we can specify the container command and arguments.
@@ -269,7 +269,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Misc()
         {
             // Verify that we can specify misc container properties.
@@ -302,7 +302,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Health()
         {
             // Verify that we can customize health checks.
@@ -345,7 +345,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Secrets()
         {
             // Verify that we can specify service secrets.
@@ -373,7 +373,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Configs()
         {
             // Verify that we can specify service configs.
@@ -401,7 +401,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Global()
         {
             // Deploy a service in GLOBAL (not replicated mode) and verify.
@@ -421,7 +421,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void DNSRR()
         {
             // Deploy a service in DNSRR mode and verify.
@@ -441,7 +441,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Ports()
         {
             // Deploy a service with port mappings and verify.
@@ -495,7 +495,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Mounts()
         {
             // Deploy a service with various mounts and verify.
@@ -608,7 +608,7 @@ namespace TestNeonCluster
         }
 
         [Fact]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Rollback()
         {
             // $note(jeff.lill):
@@ -671,14 +671,14 @@ namespace TestNeonCluster
         }
 
         [Fact(Skip = "Not supporting SELinux services yet.")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void SELinux()
         {
             // $todo(jeff.lill): Not supporting SELinux yet.
         }
 
         [Fact(Skip = "Not supporting Windows services yet.")]
-        [Trait(TestCategory.CategoryTrait, TestCategory.NeonCluster)]
+        [Trait(TestCategory.CategoryTrait, TestCategory.NeonHive)]
         public void Windows()
         {
             // $todo(jeff.lill):

@@ -168,17 +168,17 @@ export NetworkPorts_CephDashboard=7000
 # NeonClusterConst:
 #
 # Important neonHIVE constants.  These must match the definitions in
-# [Neon.Cluster.NeonClusterConst].
+# [Neon.Hive.NeonHiveConst].
 
-# The local endpoint exposed by cluster docker instances to be monitored by the 
+# The local endpoint exposed by hive docker instances to be monitored by the 
 # [neon-log-metricbeat] container to capture Docker metrics.
 export HiveConst_DockerApiInternalEndpoint=tcp://127.0.0.1:${NetworkPorts_Docker}
 
-# Name of the standard cluster public overlay network.
-export HiveConst_ClusterPublicNetwork="neon-public"
+# Name of the standard hive public overlay network.
+export HiveConst_PublicNetwork="neon-public"
 
-# Name of the standard cluster private overlay network.
-export HiveConst_ClusterPrivateNetwork="neon-private"
+# Name of the standard hive private overlay network.
+export HiveConst_PrivateNetwork="neon-private"
 
 # IP endpoint of the Docker embedded DNS server.
 export HiveConst_DockerDnsEndpoint="127.0.0.11:53"
@@ -212,9 +212,9 @@ export HiveConst_HAProxyUidFormat="%{+X}o%ci:%cp_%fi:%fp_%Ts_%rt"
 # by neonHIVE used by local services, containters and services on the
 # ingress betwork.
 #
-# These must match the definitions in [Neon.Cluster.NeonHostPorts].
+# These must match the definitions in [Neon.Hive.NeonHostPorts].
 
-# The local cluster Docker registry port.
+# The local hive Docker registry port.
 export HiveHostPorts_DockerRegistryLocal=5000;
 
 # The HTTP port exposed by the manager [neon-registry-cache] containers.
@@ -250,7 +250,7 @@ export HiveHostPorts_ReservedUnused=5099
 
 #----------------------------------------------------------
 # Ports [5100-5299] are reserved for the public proxy that routes
-# external traffic into the cluster.
+# external traffic into the hive.
 #
 # [5100-5102] are used to route general purpose HTTP/S traffic
 #             to both neonHIVE and application services.
@@ -265,11 +265,11 @@ export HiveHostPorts_ProxyPublicFirst=5100
 export HiveHostPorts_ProxyPublicLast=5299
 
 # The [neon-proxy-public] service port for routing external HTTP
-# (aka Internet) requests to services within the cluster.
+# (aka Internet) requests to services within the hive.
 export HiveHostPorts_ProxyPublicHttp=5100
 
 # The [neon-proxy-public] service port for routing external HTTPS
-# (aka Internet) requests to services within the cluster.
+# (aka Internet) requests to services within the hive.
 export HiveHostPorts_ProxyPublicHttps=5101
 
 # The first [neon-proxy-public] port available for routing custom
@@ -281,7 +281,7 @@ export HiveHostPorts_ProxyPublicFirstUser=5120
 export HiveHostPorts_ProxyPublicLastUser=5299
 
 #----------------------------------------------------------
-# Ports [5300-5499] are reserved for the private cluster proxy.
+# Ports [5300-5499] are reserved for the private hive proxy.
 #
 # [5300-5301] are used to route general purpose HTTP/S traffic
 #             to both neonHIVE and application services.
@@ -314,7 +314,7 @@ export HiveHostPorts_ProxyPrivateTcpLogCollector=5302
 # to the logging Elasticsearch cluster.
 export HiveHostPorts_ProxyPrivateHttpLogEsData=5303
 
-# The port assigned to the cluster Ceph web dashboard.
+# The port assigned to the hive Ceph web dashboard.
 export HiveHostPorts_ProxyPrivateHttpCephDashboard=5304
 
 # The port assigned to the Kibana dashboard.
@@ -332,7 +332,7 @@ export HiveHostPorts_ProxyPrivateLastUser=5499
 # NeonSysLogFacility:
 #
 # Define the local SysLog facilities reserved for neonHIVE purposes.  These
-# must match the definitions in [Neon.Cluster.NeonSysLogFacility].
+# must match the definitions in [Neon.Hive.NeonSysLogFacility].
 
 # The syslog facility name used for traffic logs from the neonHIVE HAProxy based proxy
 # services such as [neon-proxy-vault], [neon-proxy-public], and [neon-proxy-private].
@@ -349,13 +349,13 @@ export HiveSysLogFacility_ProxyNumbe=23
 # Defines the DNS hostnames used by built-in node level applications as well
 # as Docker containers and services.
 
-# The base DNS name for the internal cluster Docker registry cache instances deployed on the manager nodes.
+# The base DNS name for the internal hive Docker registry cache instances deployed on the manager nodes.
 export HiveHostnames_RegistryCache=neon-registry-cache.cluster
 
-# The DNS name for the Elasticsearch containers used to store the cluster logs.
+# The DNS name for the Elasticsearch containers used to store the hive logs.
 #
 # These are individual containers that attached to the [neon-private] network,
-# forming an Elasticsearch cluster that is deployed behind the cluster's [private] proxy.  A DNS entry
+# forming an Elasticsearch cluster that is deployed behind the hive's [private] proxy.  A DNS entry
 # is configured in the each Docker node's [hosts] file to reference the node's IP address as well 
 # as in the [/etc/neoncluster/env-host] file that may be mounted into Docker containers and services.
 #
@@ -363,12 +363,12 @@ export HiveHostnames_RegistryCache=neon-registry-cache.cluster
 # routed to the [neon-proxy-private] service via the Docker ingress network.
 export HiveHostnames_LogEsData=neon-log-esdata.cluster
 
-# The DNS name used to access for the cluster's HashiCorp Consul service.
+# The DNS name used to access for the hive's HashiCorp Consul service.
 export HiveHostnames_Vault=neon-consul.cluster
 
-# The DNS name for the cluster's HashiCorp Vault proxy.
+# The DNS name for the hive's HashiCorp Vault proxy.
 #
-# Cluster services access Vault using this hostname to take advantage of the [neon-proxy-vault]
+# Hive services access Vault using this hostname to take advantage of the [neon-proxy-vault]
 # which provides for failover.
 #
 # This is also the base name for the manager node specific endpoints like
@@ -377,19 +377,19 @@ export HiveHostnames_Vault=neon-consul.cluster
 export HiveHostnames_Vault=neon-vault.cluster
 
 #------------------------------------------------------------------------------
-# Identifies the global cluster Consul globals and settings.  These are located
-# under [neon/cluster].
+# Identifies the hive Consul globals and settings.  These are located
+# under [neon/global].
 
-# Enables unit testing on the cluster via <b>ClusterFixture</b> (bool).
+# Enables unit testing on the hive via <b>HiveFixture</b> (bool).
 export HiveGlobals_AllowUnitTesting=allow-unit-testing
 
-# Cluster creation date (UTC).
+# Hive creation date (UTC).
 export HiveGlobals_CreateDateUtc=create-date-utc
 
-# Current cluster definition as compressed JSON.
+# Current hive definition as compressed JSON.
 export HiveGlobals_DefinitionDeflate=definition-deflated
 
-# MD5 hash of the current cluster definition.
+# MD5 hash of the current hive definition.
 export HiveGlobals_DefinitionHash=definition-hash
 
 # Disables automatic Vault unsealing (bool).
@@ -399,17 +399,17 @@ export HiveGlobals_DisableAutoUnseal=disable-auto-unseal
 # [metricbeat] logs.
 export HiveGlobals_LogRetentionDays=log-rentention-days
 
-# Minimum <b>neon-cli</b> version allowed to manage the cluster.
+# Minimum <b>neon-cli</b> version allowed to manage the hive.
 export HiveGlobals_NeonCli=neon-cli
 
-# Current cluster pets definition.
+# Current hive pets definition.
 export HiveGlobals_PetsDefinition=pets-definition
 
-# Cluster globally unique ID assigned during cluster setup.
+# Hive globally unique ID assigned during hive setup.
 export HiveGlobals_Uuid=uuid
 
-# Version of the cluster.  This is actually the version of [neon-cli] 
-# that created or last upgraded the cluster.
+# Version of the hive.  This is actually the version of [neon-cli] 
+# that created or last upgraded the hive.
 export HiveGlobals_Version=version
 
 #------------------------------------------------------------------------------
@@ -417,7 +417,7 @@ export HiveGlobals_Version=version
 #
 # Identifies some common applications that may emit logs to be processed
 # by the neonHIVE log pipeline.  These must match the definitions in
-# [Neon.Cluster.LogSources].
+# [Neon.Hive.LogSources].
 
 # Many NeonResearch applications emit a common log message format that
 # include an optional timestamp, optional log-level, and optional module

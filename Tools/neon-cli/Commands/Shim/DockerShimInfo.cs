@@ -29,7 +29,7 @@ namespace NeonCli
         /// </summary>
         /// <param name="isShimmed">Indicates whether the command needs to be shimmed.</param>
         /// <param name="ensureConnection">
-        /// Indicates that the command requires a cluster login and VPN connection
+        /// Indicates that the command requires a hive login and VPN connection
         /// (if enabled) before the command is executed in a <b>neon-cli</b>
         /// container.  This defaults to <c>false</c>.
         /// </param>
@@ -45,7 +45,7 @@ namespace NeonCli
         public bool IsShimmed { get; set; }
 
         /// <summary>
-        /// Indicates that the command requires a cluster login and VPN connection
+        /// Indicates that the command requires a hive login and VPN connection
         /// (if enabled) before the command is executed in a <b>neon-cli</b>
         /// container.
         /// </summary>

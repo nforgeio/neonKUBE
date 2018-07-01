@@ -27,14 +27,14 @@ namespace Neon.Hive
 {
     /// <summary>
     /// Describes the location and credentials required to connect to
-    /// a specific Hyper-V or XenServer hypervisor instance for cluster 
+    /// a specific Hyper-V or XenServer hypervisor instance for hive 
     /// provisioning.
     /// </summary>
     public class VmHost
     {
         /// <summary>
         /// The XenServer hostname.  This is used to by <see cref="NodeDefinition"/> instances
-        /// to specify where a cluster node is to be provisioned.
+        /// to specify where a hive node is to be provisioned.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -66,29 +66,29 @@ namespace Neon.Hive
         /// <summary>
         /// Validates the options.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        internal void Validate(ClusterDefinition clusterDefinition)
+        internal void Validate(HiveDefinition hiveDefinition)
         {
             if (string.IsNullOrEmpty(Name))
             {
-                throw new ClusterDefinitionException($"[{nameof(VmHost)}.{nameof(Name)}] is required when specifying a hypervisor host.");
+                throw new HiveDefinitionException($"[{nameof(VmHost)}.{nameof(Name)}] is required when specifying a hypervisor host.");
             }
 
             if (string.IsNullOrEmpty(Address))
             {
-                throw new ClusterDefinitionException($"[{nameof(VmHost)}.{nameof(Address)}] is required when specifying a hypervisor host.");
+                throw new HiveDefinitionException($"[{nameof(VmHost)}.{nameof(Address)}] is required when specifying a hypervisor host.");
             }
 
-            if (string.IsNullOrEmpty(Username) && string.IsNullOrEmpty(clusterDefinition.Hosting.VmHostUsername))
+            if (string.IsNullOrEmpty(Username) && string.IsNullOrEmpty(hiveDefinition.Hosting.VmHostUsername))
             {
-                throw new ClusterDefinitionException($"[{nameof(VmHost)}.{nameof(Username)}] is required when specifying a hypervisor host and no default username is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHostUsername)}].");
+                throw new HiveDefinitionException($"[{nameof(VmHost)}.{nameof(Username)}] is required when specifying a hypervisor host and no default username is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHostUsername)}].");
             }
 
-            if (string.IsNullOrEmpty(Password) && string.IsNullOrEmpty(clusterDefinition.Hosting.VmHostPassword))
+            if (string.IsNullOrEmpty(Password) && string.IsNullOrEmpty(hiveDefinition.Hosting.VmHostPassword))
             {
-                throw new ClusterDefinitionException($"[{nameof(VmHost)}.{nameof(Password)}] is required when specifying a hypervisor host and no default password is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHostPassword)}].");
+                throw new HiveDefinitionException($"[{nameof(VmHost)}.{nameof(Password)}] is required when specifying a hypervisor host and no default password is specified by [{nameof(HostingOptions)}.{nameof(HostingOptions.VmHostPassword)}].");
             }
         }
     }

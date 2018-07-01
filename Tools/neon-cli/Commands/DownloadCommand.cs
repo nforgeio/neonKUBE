@@ -28,7 +28,7 @@ namespace NeonCli
     public class DownloadCommand : CommandBase
     {
         private const string usage = @"
-Downloads a file from a cluster node and writes it to standard output.
+Downloads a file from a hive node and writes it to standard output.
 
 USAGE:
 
@@ -75,16 +75,16 @@ ARGUMENTS:
 
             source = commandLine.Arguments[0];
 
-            var clusterLogin = Program.ConnectCluster();
-            var cluster      = new ClusterProxy(clusterLogin);
+            var hiveLogin = Program.ConnectHive();
+            var hive      = new HiveProxy(hiveLogin);
 
             if (commandLine.Arguments.Length == 1)
             {
-                node = cluster.GetHealthyManager();
+                node = hive.GetHealthyManager();
             }
             else if (commandLine.Arguments.Length == 2)
             {
-                node = cluster.GetNode(commandLine.Arguments[1]);
+                node = hive.GetNode(commandLine.Arguments[1]);
             }
             else
             {

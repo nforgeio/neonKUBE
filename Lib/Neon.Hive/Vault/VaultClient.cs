@@ -689,11 +689,11 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="roleName">The role name.</param>
         /// <param name="cancellationToken">The optional <see cref="CancellationToken"/>.</param>
-        /// <returns>The <see cref="ClusterCredentials"/>.</returns>
+        /// <returns>The <see cref="HiveCredentials"/>.</returns>
         /// <exception cref="HttpException">Thrown for Vault communication problems.</exception>
-        public async Task<ClusterCredentials> GetAppRoleCredentialsAsync(string roleName, CancellationToken cancellationToken = default)
+        public async Task<HiveCredentials> GetAppRoleCredentialsAsync(string roleName, CancellationToken cancellationToken = default)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(roleName));
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(roleName));
 
             string roleId;
             string secretId;
@@ -737,7 +737,7 @@ namespace Neon.Hive
 
             // Return the credentials.
 
-            return ClusterCredentials.FromVaultRole(roleId, secretId);
+            return HiveCredentials.FromVaultRole(roleId, secretId);
         }
     }
 }

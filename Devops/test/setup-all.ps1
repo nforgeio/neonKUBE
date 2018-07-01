@@ -1,36 +1,36 @@
 #------------------------------------------------------------------------------
-# Configures the TEST workload neonHIVE cluster from scratch including provisioning
+# Configures the TEST workload neonHIVE hive from scratch including provisioning
 # the XenServer virtual machines and intializing the pets, databases, and services.
 #
-# usage: powershell -file setup.ps1 clusterName [imageTag] [OPTIONS]
+# usage: powershell -file setup.ps1 hiveName [imageTag] [OPTIONS]
 #
 # ARGUMENTS:
 #
-#   clusterName		    - Identifies the target cluster definition in the [clusters]
+#   hiveName		    - Identifies the target hive definition in the [clusters]
 #	    				  subfolder.  Note that this DOES NOT include the [.json]
 #						  file extension).  Example: "wrt-00-prod"
 #
 #	imageTag   	    	- Optionally specifies the Docker image tag to use instead
-#						  of [latest] when deploying images to the cluster.
+#						  of [latest] when deploying images to the hive.
 #
 # OPTIONS:
 #
 #   -noshim             - Run [neon-cli] in [--noshim] mode.
 #
-#	-debugsetup			- Run cluster prepare and setup in DEBUG mode.
+#	-debugsetup			- Run hive prepare and setup in DEBUG mode.
 #
-#	-skipPrepare		- Skip the cluster prepare step.
+#	-skipPrepare		- Skip the hive prepare step.
 #
-#	-skipSetup			- Skip the cluster setup step.
+#	-skipSetup			- Skip the hive setup step.
 #
 #	-skipCoreServices	- Skip deploying core services (like databases).
 #						  This implies setting [-skipServices].
 #
-#	-skipServices		- Skip deploying cluster services.
+#	-skipServices		- Skip deploying hive services.
 
 param 
 (
-    [parameter(Mandatory=$True,Position=1)][string] $clusterName,
+    [parameter(Mandatory=$True,Position=1)][string] $hiveName,
 	[parameter(Mandatory=$False, Position=2)]  [string] $imageTag = "",
     [switch] $noshim           = $False,
 	[switch] $debugsetup       = $False,
@@ -43,7 +43,7 @@ param
 # Initialize the environment.
 
 cd "$env:NF_ROOT\Devops\test"
-./env.ps1 $clusterName -nologin
+./env.ps1 $hiveName -nologin
 
 # Convert the optional parameters into environment variables.
 
@@ -101,7 +101,7 @@ if (-not $?)
 
 if (-not $skipCoreServices)
 {
-	./setup-core-services.ps1 $clusterName
+	./setup-core-services.ps1 $hiveName
 
 	if (-not $?)
 	{

@@ -19,7 +19,7 @@ namespace Neon.Hive
     /// <note>
     /// <b>IMPORTANT:</b> Do not change any of these values without really knowing what
     /// you're doing.  It's likely that these values have been literally embedded
-    /// in cluster configuration scripts as well as Docker images.  Any change is likely
+    /// in hive configuration scripts as well as Docker images.  Any change is likely
     /// to break things.
     /// </note>
     /// <para>

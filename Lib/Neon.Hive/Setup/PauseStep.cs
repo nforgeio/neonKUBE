@@ -17,7 +17,7 @@ using Neon.Common;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Pauses cluster configuration for a period of time.
+    /// Pauses hive configuration for a period of time.
     /// </summary>
     public class PauseStep : ConfigStep
     {
@@ -36,18 +36,18 @@ namespace Neon.Hive
         }
 
         /// <inheritdoc/>
-        public override void Run(ClusterProxy cluster)
+        public override void Run(HiveProxy hive)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
 
-            foreach (var node in cluster.Nodes)
+            foreach (var node in hive.Nodes)
             {
                 node.Status = $"pause {delay}";
             }
 
             Thread.Sleep(delay);
 
-            foreach (var node in cluster.Nodes)
+            foreach (var node in hive.Nodes)
             {
                 node.Status = string.Empty;
             }

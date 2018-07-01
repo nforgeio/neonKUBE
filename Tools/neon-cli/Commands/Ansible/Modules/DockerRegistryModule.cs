@@ -49,7 +49,7 @@ namespace NeonCli.Ansible
         // Synopsis:
         // ---------
         //
-        // Manages a cluster local Docker registry.
+        // Manages a hive local Docker registry.
         //
         // Requirements:
         // -------------
@@ -109,7 +109,7 @@ namespace NeonCli.Ansible
         // You'll need to configure your DNS hostname to resolve to your Internet facing
         // router or load balancer IP address if the registry is to reachable from the
         // public Internet and then you'll need to configure external TLS port 443 traffic
-        // to be directed to port 443 on one or more of the cluster nodes.
+        // to be directed to port 443 on one or more of the hive nodes.
         //
         // You'll also need a TLS certificate the covers the domain name.  Note that this
         // must be a real certificate, not a self-signed one.  Docker really wants a real
@@ -146,10 +146,10 @@ namespace NeonCli.Ansible
         //
         //      present         - Deploys the registry and related things like the
         //                        certificate, CephFS volume, DNS override and load
-        //                        balancer rule to the cluster.  This also ensures 
-        //                        that all cluster nodes are logged into the registry.
+        //                        balancer rule to the hive.  This also ensures 
+        //                        that all hive nodes are logged into the registry.
         //
-        //      absent          - Logs the cluster nodes off the registry, removes
+        //      absent          - Logs the hive nodes off the registry, removes
         //                        the registry service along with all related items.
         //
         //      prune           - Temporarily limits the registry service to a single
@@ -172,8 +172,8 @@ namespace NeonCli.Ansible
         // ---------
         //
         // This example deploys a local Docker registry at REGISTRY.TEST.COM with
-        // the specified certificate and credentials and then has all cluster
-        // nodes login into the registry using the credentials.
+        // the specified certificate and credentials and then has all hive nodes
+        // login into the registry using the credentials.
         //
         //  - name: test
         //    hosts: localhost
@@ -187,7 +187,7 @@ namespace NeonCli.Ansible
         //          password: bob
         //          secret: QKDa79aeVYd5t5W4rOHB
         //
-        // This example changes the registry credentials and has all cluster nodes
+        // This example changes the registry credentials and has all hive nodes
         // log back in with them.
         //
         //  - name: test
@@ -258,7 +258,7 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var         cluster = HiveHelper.Cluster;
+            var         hive = HiveHelper.Hive;
             string      hostname;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
@@ -283,7 +283,7 @@ namespace NeonCli.Ansible
                 return;
             }
 
-            var manager      = cluster.GetHealthyManager();
+            var manager      = hive.GetHealthyManager();
             var sbErrorNodes = new StringBuilder();
 
             // Determine whether the registry service is already deployed and 
@@ -294,12 +294,12 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting the [neon-registry] service.");
 
-            var currentService = cluster.Docker.InspectService("neon-registry");
+            var currentService = hive.Docker.InspectService("neon-registry");
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Getting current registry hostname from Consul.");
 
-            var currentHostname = cluster.Registry.GetLocalHostname();
-            var currentSecret   = cluster.Registry.GetLocalSecret();
+            var currentHostname = hive.Registry.GetLocalHostname();
+            var currentSecret   = hive.Registry.GetLocalSecret();
             var currentImage    = currentService?.Spec.TaskTemplate.ContainerSpec.ImageWithoutSHA;
 
             var currentCredentials =        // Set blank properties for the change detection below.
@@ -314,7 +314,7 @@ namespace NeonCli.Ansible
             {
                 context.WriteLine(AnsibleVerbosity.Trace, $"Reading existing registry credentials for [{currentHostname}].");
 
-                currentCredentials = cluster.Registry.GetCredentials(currentHostname);
+                currentCredentials = hive.Registry.GetCredentials(currentHostname);
 
                 if (currentCredentials != null)
                 {
@@ -328,7 +328,7 @@ namespace NeonCli.Ansible
 
             // Obtain the current registry TLS certificate (if any).
 
-            var currentCertificate = cluster.Certificate.Get("neon-registry");
+            var currentCertificate = hive.Certificate.Get("neon-registry");
 
             // Perform the operation.
 
@@ -365,8 +365,8 @@ namespace NeonCli.Ansible
 
                     if (currentCredentials != null)
                     {
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster out of the [{currentHostname}] registry.");
-                        cluster.Registry.Logout(currentHostname);
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging the hive out of the [{currentHostname}] registry.");
+                        hive.Registry.Logout(currentHostname);
                     }
 
                     // Delete the [neon-registry] service and volume.  Note that
@@ -380,7 +380,7 @@ namespace NeonCli.Ansible
                     var volumeRemoveActions = new List<Action>();
                     var volumeRetryPolicy   = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(2));
 
-                    foreach (var node in cluster.Managers)
+                    foreach (var node in hive.Managers)
                     {
                         volumeRemoveActions.Add(
                             () =>
@@ -437,32 +437,32 @@ namespace NeonCli.Ansible
                     // Remove the load balancer rule and certificate.
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] load balancer rule.");
-                    cluster.PublicLoadBalancer.RemoveRule("neon-registry");
+                    hive.PublicLoadBalancer.RemoveRule("neon-registry");
                     context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] load balancer certificate.");
-                    cluster.Certificate.Remove("neon-registry");
+                    hive.Certificate.Remove("neon-registry");
 
                     // Remove any related Consul state.
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [neon-registry] Consul [hostname] and [secret].");
-                    cluster.Registry.SetLocalHostname(null);
-                    cluster.Registry.SetLocalSecret(null);
+                    hive.Registry.SetLocalHostname(null);
+                    hive.Registry.SetLocalSecret(null);
 
-                    // Logout the cluster from the registry.
+                    // Logout the hive from the registry.
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster out of the [{currentHostname}] registry.");
-                    cluster.Registry.Logout(currentHostname);
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Logging the hive out of the [{currentHostname}] registry.");
+                    hive.Registry.Logout(currentHostname);
 
-                    // Remove the cluster DNS host entry.
+                    // Remove the hive DNS host entry.
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Removing the [{currentHostname}] registry DNS hosts entry.");
-                    cluster.DnsHosts.Remove(hostname);
+                    hive.DnsHosts.Remove(hostname);
                     break;
 
                 case "present":
 
-                    if (!cluster.Definition.Ceph.Enabled)
+                    if (!hive.Definition.Ceph.Enabled)
                     {
-                        context.WriteErrorLine("The local registry service required cluster CephhFS.");
+                        context.WriteErrorLine("The local registry service requires hive CephFS.");
                         return;
                     }
 
@@ -581,14 +581,14 @@ namespace NeonCli.Ansible
                         return;
                     }
 
-                    // Create the cluster DNS host entry we'll use to redirect traffic targeting the registry
-                    // hostname to the cluster managers.  We need to do this because registry IP addresses
+                    // Create the hive DNS host entry we'll use to redirect traffic targeting the registry
+                    // hostname to the hive managers.  We need to do this because registry IP addresses
                     // are typically public, typically targeting the external firewall or load balancer
                     // interface.
                     //
-                    // The problem is that cluster nodes will generally be unable to connect to the
+                    // The problem is that hive nodes will generally be unable to connect to the
                     // local managers through the firewall/load balancer because most network routers
-                    // block network traffic that originates from inside the cluster, then leaves
+                    // block network traffic that originates from inside the hive, then leaves
                     // to hit the external router interface with the expectation of being routed
                     // back inside.  I believe this is an anti-spoofing security measure.
 
@@ -604,17 +604,17 @@ namespace NeonCli.Ansible
                         // The registry service isn't running, so we'll do a full deployment.
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Setting certificate.");
-                        cluster.Certificate.Set("neon-registry", certificate);
+                        hive.Certificate.Set("neon-registry", certificate);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Updating Consul settings.");
-                        cluster.Registry.SetLocalHostname(hostname);
-                        cluster.Registry.SetLocalSecret(secret);
+                        hive.Registry.SetLocalHostname(hostname);
+                        hive.Registry.SetLocalSecret(secret);
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Adding cluster DNS host entry for [{hostname}] (60 seconds).");
-                        cluster.DnsHosts.Set(dnsRedirect, waitUntilPropagated: true);
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Adding hive DNS host entry for [{hostname}] (60 seconds).");
+                        hive.DnsHosts.Set(dnsRedirect, waitUntilPropagated: true);
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Writing load balancer rule.");
-                        cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
+                        hive.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Creating the [neon-registry] service.");
 
@@ -641,8 +641,8 @@ namespace NeonCli.Ansible
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Service created.");
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster into the [{hostname}] registry.");
-                        cluster.Registry.Login(hostname, username, password);
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging the hive into the [{hostname}] registry.");
+                        hive.Registry.Login(hostname, username, password);
                     }
                     else if (updateRequired)
                     {
@@ -654,31 +654,31 @@ namespace NeonCli.Ansible
                         if (certificateChanged)
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating certificate.");
-                            cluster.Certificate.Set("neon-registry", certificate);
+                            hive.Certificate.Set("neon-registry", certificate);
                         }
 
                         if (hostnameChanged)
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating load balancer rule.");
-                            cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
+                            hive.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
 
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating cluster DNS host entry for [{hostname}] (60 seconds).");
-                            cluster.DnsHosts.Set(dnsRedirect, waitUntilPropagated: true);
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating hive DNS host entry for [{hostname}] (60 seconds).");
+                            hive.DnsHosts.Set(dnsRedirect, waitUntilPropagated: true);
 
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster hostname [{hostname}].");
-                            cluster.Registry.SetLocalHostname(hostname);
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating local hive hostname [{hostname}].");
+                            hive.Registry.SetLocalHostname(hostname);
 
                             if (!string.IsNullOrEmpty(currentHostname))
                             {
-                                context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster out of the [{currentHostname}] registry.");
-                                cluster.Registry.Logout(currentHostname);
+                                context.WriteLine(AnsibleVerbosity.Trace, $"Logging the hive out of the [{currentHostname}] registry.");
+                                hive.Registry.Logout(currentHostname);
                             }
                         }
 
                         if (secretChanged)
                         {
-                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating local cluster secret.");
-                            cluster.Registry.SetLocalSecret(secret);
+                            context.WriteLine(AnsibleVerbosity.Trace, $"Updating local hive secret.");
+                            hive.Registry.SetLocalSecret(secret);
                         }
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Updating service.");
@@ -701,13 +701,13 @@ namespace NeonCli.Ansible
 
                         context.WriteLine(AnsibleVerbosity.Trace, $"Service updated.");
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster into the [{hostname}] registry.");
-                        cluster.Registry.Login(hostname, username, password);
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging the hive into the [{hostname}] registry.");
+                        hive.Registry.Login(hostname, username, password);
                     }
                     else
                     {
-                        context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service update is not required but we're logging all nodes into [{hostname}] to ensure cluster consistency.");
-                        cluster.Registry.Login(hostname, username, password);
+                        context.WriteLine(AnsibleVerbosity.Important, $"[neon-registry] service update is not required but we're logging all nodes into [{hostname}] to ensure hive consistency.");
+                        hive.Registry.Login(hostname, username, password);
 
                         context.Changed = false;
                     }
@@ -809,7 +809,7 @@ docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
         }
 
         /// <summary>
-        /// Returns the local cluster DNS override for the registry.
+        /// Returns the local hive DNS override for the registry.
         /// </summary>
         /// <param name="hostname">The registry hostname.</param>
         /// <returns>The <see cref="DnsEntry"/>.</returns>

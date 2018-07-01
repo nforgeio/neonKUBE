@@ -72,13 +72,13 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="hiveDefinition">The hive definition.</param>
         /// <param name="parentOptionName">Identifies the parent option type (used in error messages).</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition, string parentOptionName)
+        public void Validate(HiveDefinition hiveDefinition, string parentOptionName)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             parentOptionName = parentOptionName ?? string.Empty;
 

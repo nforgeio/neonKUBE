@@ -30,7 +30,7 @@ echo "**********************************************" 1>&2
 echo "** SETUP-SSD                                **" 1>&2
 echo "**********************************************" 1>&2
 
-# Load the cluster configuration and setup utilities.
+# Load the hive configuration and setup utilities.
 
 . $<load-cluster-config>
 . setup-utility.sh
@@ -66,7 +66,7 @@ if ${NEON_NODE_SSD} ; then
 
 	# Note that $<node.driveprefix> will be replaced with something
 	# like [sd] or [xvd].  This comes from the hosting manager used to
-	# provision the cluster.
+	# provision the hive.
 
     for DEVICE in $<node.driveprefix>a $<node.driveprefix>b $<node.driveprefix>c $<node.driveprefix>d $<node.driveprefix>e $<node.driveprefix>f $<node.driveprefix>g $<node.driveprefix>h $<node.driveprefix>i $<node.driveprefix>j
     do

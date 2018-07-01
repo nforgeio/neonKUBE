@@ -22,60 +22,60 @@ using Neon.Time;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Handles TLS certificate related operations for a <see cref="ClusterProxy"/>.
+    /// Handles TLS certificate related operations for a <see cref="HiveProxy"/>.
     /// </summary>
     public sealed class CertificateManager
     {
         private const string vaultCertPrefix = "neon-secret/cert";
 
-        private ClusterProxy cluster;
+        private HiveProxy hive;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="cluster">The parent <see cref="ClusterProxy"/>.</param>
-        internal CertificateManager(ClusterProxy cluster)
+        /// <param name="hive">The parent <see cref="HiveProxy"/>.</param>
+        internal CertificateManager(HiveProxy hive)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
 
-            this.cluster = cluster;
+            this.hive = hive;
         }
 
         /// <summary>
-        /// Removes a cluster certificate if it exists.
+        /// Removes a hive certificate if it exists.
         /// </summary>
         /// <param name="name">The certificate name.</param>
         public void Remove(string name)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(name));
 
-            cluster.Vault.Client.DeleteAsync(HiveHelper.GetVaultCertificateKey(name)).Wait();
-            cluster.SignalLoadBalancerUpdate();
+            hive.Vault.Client.DeleteAsync(HiveHelper.GetVaultCertificateKey(name)).Wait();
+            hive.SignalLoadBalancerUpdate();
         }
 
         /// <summary>
-        /// Retrieves a cluster certificate.
+        /// Retrieves a hive certificate.
         /// </summary>
         /// <param name="name">The certificate name.</param>
         /// <returns>The certificate if present or <c>null</c> if it doesn't exist.</returns>
         public TlsCertificate Get(string name)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(name));
 
-            return cluster.Vault.Client.ReadJsonOrDefaultAsync<TlsCertificate>(HiveHelper.GetVaultCertificateKey(name)).Result;
+            return hive.Vault.Client.ReadJsonOrDefaultAsync<TlsCertificate>(HiveHelper.GetVaultCertificateKey(name)).Result;
         }
 
         /// <summary>
-        /// Lists the names of the cluster certificates.
+        /// Lists the names of the hive certificates.
         /// </summary>
         /// <returns>The certificate names.</returns>
         public IEnumerable<string> List()
         {
-            return cluster.Vault.Client.ListAsync(vaultCertPrefix).Result;
+            return hive.Vault.Client.ListAsync(vaultCertPrefix).Result;
         }
 
         /// <summary>
-        /// Adds or updates a cluster certificate.
+        /// Adds or updates a hive certificate.
         /// </summary>
         /// <param name="name">The certificate name.</param>
         /// <param name="certificate">The certificate.</param>
@@ -91,24 +91,24 @@ namespace Neon.Hive
         /// </remarks>
         public void Set(string name, TlsCertificate certificate)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(name));
             Covenant.Requires<ArgumentNullException>(certificate != null);
 
-            cluster.Vault.Client.WriteJsonAsync(HiveHelper.GetVaultCertificateKey(name), certificate).Wait();
-            cluster.SignalLoadBalancerUpdate();
+            hive.Vault.Client.WriteJsonAsync(HiveHelper.GetVaultCertificateKey(name), certificate).Wait();
+            hive.SignalLoadBalancerUpdate();
         }
 
         /// <summary>
-        /// Loads the cluster certificates from Vault.
+        /// Loads the hive certificates from Vault.
         /// </summary>
-        /// <returns>A dictionary of cluster certificates keyed by name.</returns>
+        /// <returns>A dictionary of hive certificates keyed by name.</returns>
         public Dictionary<string, TlsCertificate> GetAll()
         {
             var certificates = new Dictionary<string, TlsCertificate>();
 
-            foreach (var certName in cluster.Vault.Client.ListAsync(vaultCertPrefix).Result)
+            foreach (var certName in hive.Vault.Client.ListAsync(vaultCertPrefix).Result)
             {
-                var certJson    = cluster.Vault.Client.ReadDynamicAsync($"{vaultCertPrefix}/{certName}").Result.ToString();
+                var certJson    = hive.Vault.Client.ReadDynamicAsync($"{vaultCertPrefix}/{certName}").Result.ToString();
                 var certificate = NeonHelper.JsonDeserialize<TlsCertificate>(certJson);
 
                 certificates.Add(certName, certificate);

@@ -24,23 +24,23 @@ using Neon.Time;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Handles Docker related operations for a <see cref="ClusterProxy"/>.
+    /// Handles Docker related operations for a <see cref="HiveProxy"/>.
     /// </summary>
     public sealed class DockerManager
     {
-        private ClusterProxy cluster;
+        private HiveProxy hive;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="cluster">The parent <see cref="ClusterProxy"/>.</param>
-        internal DockerManager(ClusterProxy cluster)
+        /// <param name="hive">The parent <see cref="HiveProxy"/>.</param>
+        internal DockerManager(HiveProxy hive)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
 
-            this.cluster = cluster;
-            this.Config  = new DockerConfigManager(cluster);
-            this.Secret  = new DockerSecretManager(cluster);
+            this.hive    = hive;
+            this.Config  = new DockerConfigManager(hive);
+            this.Secret  = new DockerSecretManager(hive);
         }
 
         /// <summary>
@@ -61,7 +61,7 @@ namespace Neon.Hive
         /// <returns>The <see cref="ServiceDetails"/> or <c>null</c> if the service doesn't exist.</returns>
         public ServiceDetails InspectService(string name, bool strict = false)
         {
-            var response = cluster.GetHealthyManager().DockerCommand(RunOptions.None, "docker", "service", "inspect", name);
+            var response = hive.GetHealthyManager().DockerCommand(RunOptions.None, "docker", "service", "inspect", name);
 
             if (response.ExitCode != 0)
             {
@@ -96,7 +96,7 @@ namespace Neon.Hive
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
 
-            var node = cluster.GetNode(nodeName);
+            var node = hive.GetNode(nodeName);
 
             if (!node.Metadata.InSwarm)
             {
@@ -105,7 +105,7 @@ namespace Neon.Hive
 
             // I've see transient errors, so we'll retry a few times.
             
-            var manager = cluster.GetHealthyManager();
+            var manager = hive.GetHealthyManager();
             var retry   = new LinearRetryPolicy(typeof(Exception), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
 
             retry.InvokeAsync(
@@ -126,7 +126,7 @@ namespace Neon.Hive
             //
             // Ideally, we'd wait for all of the service tasks to stop but it 
             // appears that there's no easy way to check for this other than 
-            // listing all of the cluster services and then doing a 
+            // listing all of the hive services and then doing a 
             //
             //      docker service ps SERVICE]
             //
@@ -149,7 +149,7 @@ namespace Neon.Hive
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
 
-            var node = cluster.GetNode(nodeName);
+            var node = hive.GetNode(nodeName);
 
             if (!node.Metadata.InSwarm)
             {
@@ -158,7 +158,7 @@ namespace Neon.Hive
 
             // I've see transient errors, so we'll retry a few times.
 
-            var manager = cluster.GetHealthyManager();
+            var manager = hive.GetHealthyManager();
             var retry   = new LinearRetryPolicy(typeof(Exception), maxAttempts: 5, retryInterval: TimeSpan.FromSeconds(5));
 
             retry.InvokeAsync(

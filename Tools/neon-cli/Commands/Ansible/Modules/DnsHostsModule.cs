@@ -65,7 +65,7 @@ namespace NeonCli.Ansible
         //                                                  required when [state=present]
         //
         // wait         no          no          yes/no      wait about 60s for the DNS change 
-        //                                                  to be propagated to all cluster nodes
+        //                                                  to be propagated to all hive nodes
         //
         // Check Mode:
         // -----------
@@ -129,7 +129,7 @@ namespace NeonCli.Ansible
         //
         // This example associates multiple addresses, some with health
         // checks and others without and also waits 60 seconds for the
-        // changes to be propagated to all cluster nodes:
+        // changes to be propagated to all hive nodes:
         //
         //  - name: test
         //    hosts: localhost
@@ -162,7 +162,7 @@ namespace NeonCli.Ansible
         //            - target: www.google.com
         //
         // This example expands the neonHIVE [swarm] host group so that
-        // FOO.COM will resolve to the IP addresses for all cluster Swarm
+        // FOO.COM will resolve to the IP addresses for all hive Swarm
         // nodes.  Checking is now enabled, so the IP addresses for all Swarm
         // nodes will be returned, regardless of their health.
         //
@@ -177,7 +177,7 @@ namespace NeonCli.Ansible
         //            - target: group=swarm
         //
         // This example expands the neonHIVE [swarm] host group so that
-        // FOO.COM will resolve to the IP addresses for all cluster Swarm
+        // FOO.COM will resolve to the IP addresses for all hive Swarm
         // nodes.  Checking is enabled this time, so the IP addresses for 
         // healthy Swarm nodes will be returned, regardless of their health.
         //
@@ -210,8 +210,8 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var cluster = HiveHelper.Cluster;
-            var consul  = HiveHelper.Consul;
+            var hive   = HiveHelper.Hive;
+            var consul = HiveHelper.Consul;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {
@@ -228,7 +228,7 @@ namespace NeonCli.Ansible
                 throw new ArgumentException($"[hostname] module argument is required.");
             }
 
-            if (!ClusterDefinition.DnsHostRegex.IsMatch(hostname))
+            if (!HiveDefinition.DnsHostRegex.IsMatch(hostname))
             {
                 throw new ArgumentException($"[hostname={hostname}] is not a valid DNS hostname.");
             }
@@ -272,7 +272,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Check if DNS entry [{hostname}] exists.");
 
-                    if (cluster.DnsHosts.Get(hostname) != null)
+                    if (hive.DnsHosts.Get(hostname) != null)
                     {
                         context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry [{hostname}] does exist.");
                         context.WriteLine(AnsibleVerbosity.Info, $"Deleting DNS entry [{hostname}].");
@@ -283,7 +283,7 @@ namespace NeonCli.Ansible
                         }
                         else
                         {
-                            cluster.DnsHosts.Remove(hostname, waitUntilPropagated: wait.Value);
+                            hive.DnsHosts.Remove(hostname, waitUntilPropagated: wait.Value);
                             context.WriteLine(AnsibleVerbosity.Trace, $"DNS entry [{hostname}] deleted.");
                         }
 
@@ -341,7 +341,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, "Validating DNS entry.");
 
-                    var errors = newEntry.Validate(cluster.Definition, cluster.Definition.GetNodeGroups(excludeAllGroup: true));
+                    var errors = newEntry.Validate(hive.Definition, hive.Definition.GetNodeGroups(excludeAllGroup: true));
 
                     if (errors.Count > 0)
                     {
@@ -364,7 +364,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Look up existing DNS entry for [{hostname}].");
 
-                    var existingEntry = cluster.DnsHosts.Get(hostname);
+                    var existingEntry = hive.DnsHosts.Get(hostname);
                     var changed       = false;
 
                     if (existingEntry != null)
@@ -397,7 +397,7 @@ namespace NeonCli.Ansible
                         else
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating DNS entry.");
-                            cluster.DnsHosts.Set(newEntry, waitUntilPropagated: wait.Value);
+                            hive.DnsHosts.Set(newEntry, waitUntilPropagated: wait.Value);
                             context.WriteLine(AnsibleVerbosity.Info, $"DNS entry updated.");
                         }
 

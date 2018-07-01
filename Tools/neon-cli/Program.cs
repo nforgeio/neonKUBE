@@ -29,8 +29,8 @@ using Neon.Hive;
 namespace NeonCli
 {
     /// <summary>
-    /// This tool is used to configure the nodes of a Neon Docker Swarm cluster.
-    /// See <b>$/Doc/Ubuntu-16.04 Cluster Deploy.docx</b> for more information.
+    /// This tool is used to configure the nodes of a Neon Docker Swarm hive.
+    /// See <b>$/Doc/Ubuntu-16.04 Hive Deploy.docx</b> for more information.
     /// </summary>
     public static class Program
     {
@@ -48,10 +48,10 @@ namespace NeonCli
         public static string Version { get; private set; } = ActualVersion;
 
         /// <summary>
-        /// The minimum <b>neon-cli</b> version capable of managing a cluster created
+        /// The minimum <b>neon-cli</b> version capable of managing a hive created
         /// or updated by the current version of the tool.  This is persisted to the
-        /// cluster.  <b>neon-cli</b> checks this to ensure that it is capable of
-        /// managing a cluster or if it is too old.
+        /// hive.  <b>neon-cli</b> checks this to ensure that it is capable of
+        /// managing a hive or if it is too old.
         /// </summary>
         public const string MinimumVersion = "1.2.95";
 
@@ -72,7 +72,7 @@ namespace NeonCli
         public static void Main(string[] args)
         {
             string usage = $@"
-Neon Cluster Configuration Tool: neon [v{Program.Version}]
+Neon Hive Configuration Tool: neon [v{Program.Version}]
 {Build.Copyright}
 
 USAGE:
@@ -87,16 +87,6 @@ COMMAND SUMMARY:
     neon ansible galaxy     ARGS
     neon ansible play       ARGS
     neon ansible vault      ARGS
-    neon cluster example
-    neon cluster get        VALUE-EXPR
-    neon cluster info
-    neon cluster node       ARGS
-    neon cluster prepare    [CLUSTER-DEF]
-    neon cluster registry   ARGS
-    neon cluster set        SETTING=VALUE
-    neon cluster setup      [CLUSTER-DEF]
-    neon cluster verify     [CLUSTER-DEF]
-    neon cluster update     ARGS
     neon couchbase          CMD...
     neon certificate|cert   CMD...
     neon consul             ARGS
@@ -110,21 +100,31 @@ COMMAND SUMMARY:
     neon exec               BASH-CMD
     neon file               create|decrypt|edit|encrypt|view PATH PASSWORD-NAME
     neon folder             FOLDER
+    neon hive example
+    neon hive get           VALUE-EXPR
+    neon hive info
+    neon hive node          ARGS
+    neon hive prepare       [HIVE-DEF]
+    neon hive registry      ARGS
+    neon hive set           SETTING=VALUE
+    neon hive setup         [HIVE-DEF]
+    neon hive verify        [HIVE-DEF]
+    neon hive update        ARGS
     neon load-balancer|lb   CMD...
-    neon login              [--no-vpn] USER@CLUSTER
-    neon login export       USER@CLUSTER
+    neon login              [--no-vpn] USER@HIVE
+    neon login export       USER@HIVE
     neon login import       PATH
     neon login list
     neon login ls
-    neon login remove       USER@CLUSTER
-    neon login rm           USER@CLUSTER
+    neon login remove       USER@HIVE
+    neon login rm           USER@HIVE
     neon login status
     neon reboot             NODE...
     neon registry           CMD...
     neon run                -- CMD...
     neon scp                [NODE]
     neon ssh                [NODE]
-    neon validate           CLUSTER-DEF
+    neon validate           HIVE-DEF
     neon version            [-n] [-git]
     neon upload             SOURCE TARGET [NODE...]
     neon vault              ARGS
@@ -135,29 +135,29 @@ ARGUMENTS:
 
     ARGS                - Command pass-thru arguments.
     BASH-CMD            - Bash command.
-    CLUSTER             - Names the cluster to be selected for subsequent
+    CLUSTER             - Names the hive to be selected for subsequent
                           operations.
-    CLUSTER-DEF         - Path to a cluster definition file.  This is
-                          optional for some commands when logged in.
     CMD...              - Subcommand and arguments.
-    DASHBOARD           - Identifies a cluster dashboard
+    DASHBOARD           - Identifies a hive dashboard
     FOLDER              - Identifies a neonHIVE folder
-    LOGIN-PATH          - Path to a cluster login file including the cluster
+    HIVE-DEF            - Path to a hive definition file.  This is
+                          optional for some commands when logged in.
+    LOGIN-PATH          - Path to a hive login file including the hive
                           definition and user credentials.
-    NODE                - Identifies a cluster node by name.
-    VALUE-EXPR          - A cluster value expression.  See the command for
+    NODE                - Identifies a hive node by name.
+    VALUE-EXPR          - A hive value expression.  See the command for
                           more details.
     SERVER1...          - IP addresses or FQDNs of target servers
     SOURCE              - Path to a source file.
     TARGET              - Path to a destination file.
-    USER                - Cluster user name.
+    USER                - Hive user name.
 
 OPTIONS:
 
     --help                              - Display help
     --debug                             - Set debug mode
     --image-tag=TAG                     - Replaces any [:latest] Docker image
-                                          tags when deploying a cluster (usually
+                                          tags when deploying a hive (usually
                                           for development/testing purposes)
     --log-folder=LOG-FOLDER             - Optional log folder path
     -m=COUNT, --max-parallel=COUNT      - Maximum number of nodes to be 
@@ -173,7 +173,7 @@ OPTIONS:
     -q, --quiet                         - Disables operation progress
     --noterminal                        - Disables the shimmed interactive terminal
     --version=VERSION                   - Overrides the neon-cli version
-    -w=SECONDS, --wait=SECONDS          - Seconds to delay for cluster
+    -w=SECONDS, --wait=SECONDS          - Seconds to delay for hive
                                           stablization (defaults to 60s).
 
 NOTES:
@@ -196,17 +196,17 @@ Docker issues are corrected.
             // Configure the encrypted user-specific application data folder and initialize
             // the subfolders.
 
-            ClusterRootFolder  = HiveHelper.GetRootFolder();
-            ClusterLoginFolder = HiveHelper.GetLoginFolder();
-            ClusterSetupFolder = HiveHelper.GetVmTemplatesFolder();
-            CurrentClusterPath = HiveHelper.CurrentPath;
+            HiveRootFolder  = HiveHelper.GetRootFolder();
+            HiveLoginFolder = HiveHelper.GetLoginFolder();
+            HiveSetupFolder = HiveHelper.GetVmTemplatesFolder();
+            CurrentHivePath = HiveHelper.CurrentPath;
 
             // We're going to special case the temp folder and locate this within the [/dev/shm] 
             // tmpfs based RAM drive if we're running in the tool container.
 
-            ClusterTempFolder  = HiveHelper.InToolContainer ? "/dev/shm/temp" : Path.Combine(ClusterRootFolder, "temp");
+            ClusterTempFolder  = HiveHelper.InToolContainer ? "/dev/shm/temp" : Path.Combine(HiveRootFolder, "temp");
 
-            Directory.CreateDirectory(ClusterLoginFolder);
+            Directory.CreateDirectory(HiveLoginFolder);
             Directory.CreateDirectory(ClusterTempFolder);
 
             // Process the command line.
@@ -252,17 +252,6 @@ Docker issues are corrected.
                 var commands = new List<ICommand>()
                 {
                     new AnsibleCommand(),
-                    new ClusterCommand(),
-                    new ClusterExampleCommand(),
-                    new ClusterGetCommand(),
-                    new ClusterInfoCommand(),
-                    new ClusterNodeCommand(),
-                    new ClusterPrepareCommand(),
-                    new ClusterRegistryCommand(),
-                    new ClusterSetCommand(),
-                    new ClusterSetupCommand(),
-                    new ClusterUpdateCommand(),
-                    new ClusterVerifyCommand(),
                     new CouchbaseCommand(),
                     new CertificateCommand(),
                     new ConsulCommand(),
@@ -278,6 +267,17 @@ Docker issues are corrected.
                     new FileCommand(),
                     new FolderCommand(),
                     new LoginCommand(),
+                    new HiveCommand(),
+                    new HiveExampleCommand(),
+                    new HiveGetCommand(),
+                    new HiveInfoCommand(),
+                    new HiveNodeCommand(),
+                    new HivePrepareCommand(),
+                    new HiveRegistryCommand(),
+                    new HiveSetCommand(),
+                    new HiveSetupCommand(),
+                    new HiveUpdateCommand(),
+                    new HiveVerifyCommand(),
                     new LoadBalancerCommand(),
                     new LoginExportCommand(),
                     new LoginImportCommand(),
@@ -412,7 +412,7 @@ Docker issues are corrected.
                     {
                         var secretsRoot = HiveHelper.GetRootFolder(ignoreNeonToolContainerVar: true);
 
-                        ClusterLogin = GetClusterLogin();
+                        HiveLogin = GetHiveLogin();
 
                         // Give the command a chance to modify the shimmed command line and also
                         // verify that the command can be run within Docker.
@@ -421,15 +421,15 @@ Docker issues are corrected.
 
                         if (shimInfo.EnsureConnection)
                         {
-                            if (ClusterLogin == null)
+                            if (HiveLogin == null)
                             {
                                 Console.Error.WriteLine(Program.MustLoginMessage);
                                 Program.Exit(1);
                             }
 
-                            if (ClusterLogin.ViaVpn)
+                            if (HiveLogin.ViaVpn)
                             {
-                                HiveHelper.VpnOpen(ClusterLogin,
+                                HiveHelper.VpnOpen(HiveLogin,
                                     onStatus: message => Console.Error.WriteLine(message),
                                     onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
                             }
@@ -460,7 +460,7 @@ Docker issues are corrected.
                         // Run the [neoncluster/neon-cli] Docker image, passing the modified command line 
                         // arguments and mounting the following read/write volumes:
                         //
-                        //      /neoncluster    - the root folder for this workstation's cluster logins
+                        //      /neoncluster    - the root folder for this workstation's hive logins
                         //      /shim           - the generated shim files
                         //      /log            - the logging folder (if logging is enabled)
                         //
@@ -731,9 +731,9 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                     }
                 }
 
-                // Load the current cluster if there is one.
+                // Load the current hive if there is one.
 
-                ClusterLogin = GetClusterLogin();
+                HiveLogin = GetHiveLogin();
 
                 // Run the command.
 
@@ -742,8 +742,8 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                     if (string.IsNullOrWhiteSpace(MachineUsername) || string.IsNullOrEmpty(MachinePassword))
                     {
                         Console.WriteLine();
-                        Console.WriteLine("    Enter cluster SSH credentials:");
-                        Console.WriteLine("    ------------------------------");
+                        Console.WriteLine("    Enter hive SSH credentials:");
+                        Console.WriteLine("    ---------------------------");
                     }
 
                     while (string.IsNullOrWhiteSpace(MachineUsername))
@@ -781,9 +781,9 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
         }
 
         /// <summary>
-        /// Message written then a user is not logged into a cluster.
+        /// Message written then a user is not logged into a hive.
         /// </summary>
-        public const string MustLoginMessage = "*** ERROR: You must first log into a cluster.";
+        public const string MustLoginMessage = "*** ERROR: You must first log into a hive.";
 
         /// <summary>
         /// Optionally set to the tag to be used to override any explicit or implicit <b>:latest</b>
@@ -798,7 +798,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
         /// </para>
         /// <para>
         /// This will direct <b>neon-cli</b> to use images built from the branch rather than the default
-        /// production images without needing to modify cluster configuration files.  All the developer
+        /// production images without needing to modify hive configuration files.  All the developer
         /// needs to do is ensure that all of the required images were built from that branch first and
         /// then published to Docker Hub.
         /// </para>
@@ -1024,9 +1024,9 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                 {
                     return osProperties;
                 }
-                else if (HiveHelper.Cluster != null)
+                else if (HiveHelper.Hive != null)
                 {
-                    return OSProperties.For(HiveHelper.Cluster.Definition.HostNode.OperatingSystem);
+                    return OSProperties.For(HiveHelper.Hive.Definition.HostNode.OperatingSystem);
                 }
                 else
                 {
@@ -1042,17 +1042,17 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
         /// folder and all subfolders are encrypted when supported by the current
         /// operating system.
         /// </summary>
-        public static string ClusterRootFolder { get; private set; }
+        public static string HiveRootFolder { get; private set; }
 
         /// <summary>
-        /// Returns the folder where <b>neon-cli</b> persists cluster login information.
+        /// Returns the folder where <b>neon-cli</b> persists hive login information.
         /// </summary>
-        public static string ClusterLoginFolder { get; private set; }
+        public static string HiveLoginFolder { get; private set; }
 
         /// <summary>
-        /// Returns the path to the file where the name of the current cluster is saved.
+        /// Returns the path to the file where the name of the current hive is saved.
         /// </summary>
-        public static string CurrentClusterPath { get; private set; }
+        public static string CurrentHivePath { get; private set; }
 
         /// <summary>
         /// Returns the path to the (hopefully) encrypted or tmpfs based temporary folder.
@@ -1060,38 +1060,38 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
         public static string ClusterTempFolder { get; private set; }
 
         /// <summary>
-        /// Returns the path to the cluster setup folder.
+        /// Returns the path to the hive setup folder.
         /// </summary>
-        public static string ClusterSetupFolder { get; private set; }
+        public static string HiveSetupFolder { get; private set; }
 
         /// <summary>
-        /// Returns the path to the login information for the named cluster.
+        /// Returns the path to the login information for the named hive.
         /// </summary>
         /// <param name="username">The operator's user name.</param>
-        /// <param name="clusterName">The cluster name.</param>
-        /// <returns>The path to the cluster's credentials file.</returns>
-        public static string GetClusterLoginPath(string username, string clusterName)
+        /// <param name="hiveName">The hive name.</param>
+        /// <returns>The path to the hive's credentials file.</returns>
+        public static string GetHiveLoginPath(string username, string hiveName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hiveName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
 
-            return Path.Combine(ClusterLoginFolder, $"{username}@{clusterName}.login.json");
+            return Path.Combine(HiveLoginFolder, $"{username}@{hiveName}.login.json");
         }
 
         /// <summary>
-        /// Returns the cluster login information for the currently logged in cluster.
-        /// The method also ensures that the current <b>neon-cli</b> satisfies the cluster's 
-        /// minimum version requirement when logged in.
+        /// Returns the hive login information for the currently logged in hive.
+        /// The method also ensures that the current <b>neon-cli</b> satisfies the
+        /// hive's  minimum version requirement when logged in.
         /// </summary>
         /// <param name="isRequired">Optionally ensures that a current login is required (defaults to <c>false</c>).</param>
-        /// <returns>The current cluster login or <c>null</c>.</returns>
-        public static ClusterLogin GetClusterLogin(bool isRequired = false)
+        /// <returns>The current hive login or <c>null</c>.</returns>
+        public static HiveLogin GetHiveLogin(bool isRequired = false)
         {
-            ClusterLogin clusterLogin;
+            HiveLogin hiveLogin;
 
             try
             {
-                clusterLogin = HiveHelper.GetLogin(!isRequired, Program.Version);
+                hiveLogin = HiveHelper.GetLogin(!isRequired, Program.Version);
             }
             catch (VersionException e)
             {
@@ -1100,74 +1100,74 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                 return null;
             }
 
-            if (isRequired && clusterLogin == null)
+            if (isRequired && hiveLogin == null)
             {
                 Console.Error.WriteLine(Program.MustLoginMessage);
                 Program.Exit(1);
             }
 
-            Program.ClusterLogin = clusterLogin;
+            Program.HiveLogin = hiveLogin;
 
-            return clusterLogin;
+            return hiveLogin;
         }
 
         /// <summary>
         /// Uses <see cref="HiveHelper.OpenRemoteCluster(DebugSecrets, string)"/> to 
-        /// ensure that there's a currently logged-in cluster and that the VPN connection
+        /// ensure that there's a currently logged-in hive and that the VPN connection
         /// is established if required.
         /// </summary>
-        /// <param name="allowPreparedOnly">Optionally allows partially initialized cluster logins (defaults to <c>false</c>).</param>
-        /// <returns>The current cluster login or <c>null</c>.</returns>
+        /// <param name="allowPreparedOnly">Optionally allows partially initialized hive logins (defaults to <c>false</c>).</param>
+        /// <returns>The current hive login or <c>null</c>.</returns>
         /// <remarks>
-        /// Nearly all commands required a fully initialized cluster login.  The only exception
-        /// at this time it the <b>neon cluster setup</b> command which can accept a login
-        /// created by the <b>neon prepare cluster</b> command that generates a login that
-        /// has been initialized enough to allow setup to connect to the cluster via a VPN
+        /// Nearly all commands required a fully initialized hive login.  The only exception
+        /// at this time it the <b>neon hive setup</b> command which can accept a login
+        /// created by the <b>neon hive prepare</b> command that generates a login that
+        /// has been initialized enough to allow setup to connect to the hive via a VPN
         /// if necessary, has the host root account credentials, and also includes the
-        /// cluster definition.  Partially intializated logins will have <see cref="ClusterLogin.SetupPending"/>
+        /// hive definition.  Partially intializated logins will have <see cref="HiveLogin.SetupPending"/>
         /// set to <c>true</c>.
         /// </remarks>
-        public static ClusterLogin ConnectCluster(bool allowPreparedOnly = false)
+        public static HiveLogin ConnectHive(bool allowPreparedOnly = false)
         {
-            var clusterLogin = Program.GetClusterLogin(isRequired: true);
+            var hiveLogin = Program.GetHiveLogin(isRequired: true);
 
-            if (clusterLogin.SetupPending && !allowPreparedOnly)
+            if (hiveLogin.SetupPending && !allowPreparedOnly)
             {
-                throw new Exception($"Cluster login [{clusterLogin.LoginName}] does not reference a fully configured cluster.  Use the [neon cluster setup...] command to complete cluster configuration.");
+                throw new Exception($"Hive login [{hiveLogin.LoginName}] does not reference a fully configured hive.  Use the [neon hive setup...] command to complete hive configuration.");
             }
 
-            HiveHelper.OpenRemoteCluster(loginPath: HiveHelper.GetLoginPath(HiveConst.RootUser, Program.ClusterLogin.ClusterName));
+            HiveHelper.OpenRemoteCluster(loginPath: HiveHelper.GetLoginPath(HiveConst.RootUser, Program.HiveLogin.HiveName));
 
             // Note that we never try to connect the VPN from within the
             // [neon-cli] container.  Its expected that the VPN is always
             // established on the operator's workstation.
 
-            if (!HiveHelper.InToolContainer && clusterLogin.ViaVpn)
+            if (!HiveHelper.InToolContainer && hiveLogin.ViaVpn)
             {
-                HiveHelper.VpnOpen(clusterLogin,
+                HiveHelper.VpnOpen(hiveLogin,
                     onStatus: message => Console.Error.WriteLine(message),
                     onError: message => Console.Error.WriteLine($"*** ERROR: {message}"));
             }
 
-            return clusterLogin;
+            return hiveLogin;
         }
 
         /// <summary>
-        /// Returns the username used to secure the cluster nodes before they are setup.  This
+        /// Returns the username used to secure the hive nodes before they are setup.  This
         /// defaults to <b>sysadmin</b> which is used for the neonHIVE machine templates.
         /// </summary>
         public static string MachineUsername { get; private set; }
 
         /// <summary>
-        /// Returns the password used to secure the cluster nodes before they are setup.  This
+        /// Returns the password used to secure the hive nodes before they are setup.  This
         /// defaults to <b>sysadmin0000</b> which is used for the neonHIVE machine templates.
         /// </summary>
         public static string MachinePassword { get; private set; }
 
         /// <summary>
-        /// Returns the cluster login information for the currently logged in cluster or <c>null</c>.
+        /// Returns the hive login information for the currently logged in hive or <c>null</c>.
         /// </summary>
-        public static ClusterLogin ClusterLogin { get; set; }
+        public static HiveLogin HiveLogin { get; set; }
 
         /// <summary>
         /// Returns the log folder path or a <c>null</c> or empty string 
@@ -1181,7 +1181,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
         public static int MaxParallel { get; set; }
 
         /// <summary>
-        /// The seconds to wait for cluster stablization.
+        /// The seconds to wait for hive stablization.
         /// </summary>
         public static double WaitSeconds { get; set; }
 
@@ -1229,9 +1229,9 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
             {
                 sshCredentials = SshCredentials.FromUserPassword(Program.MachineUsername, Program.MachinePassword);
             }
-            else if (Program.ClusterLogin != null)
+            else if (Program.HiveLogin != null)
             {
-                sshCredentials = Program.ClusterLogin.GetSshCredentials();
+                sshCredentials = Program.HiveLogin.GetSshCredentials();
             }
             else
             {
@@ -1319,12 +1319,12 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
         /// Uses WinSCP to convert an OpenSSH PEM formatted key to the PPK format
         /// required by PuTTY/WinSCP.  This works only on Windows.
         /// </summary>
-        /// <param name="cluster">The related cluster login information.</param>
+        /// <param name="hive">The related hive login information.</param>
         /// <param name="pemKey">The OpenSSH PEM key.</param>
         /// <returns>The converted PPPK key.</returns>
         /// <exception cref="NotImplementedException">Thrown when not running on Windows.</exception>
         /// <exception cref="Win32Exception">Thrown if WinSCP could not be executed.</exception>
-        public static string ConvertPUBtoPPK(ClusterLogin cluster, string pemKey)
+        public static string ConvertPUBtoPPK(HiveLogin hive, string pemKey)
         {
             if (!NeonHelper.IsWindows)
             {
@@ -1339,7 +1339,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
             {
                 File.WriteAllText(pemKeyPath, pemKey);
 
-                var result = NeonHelper.ExecuteCaptureStreams(programPath, $@"/keygen ""{pemKeyPath}"" /comment=""{cluster.Definition.Name} Key"" /output=""{ppkKeyPath}""");
+                var result = NeonHelper.ExecuteCaptureStreams(programPath, $@"/keygen ""{pemKeyPath}"" /comment=""{hive.Definition.Name} Key"" /output=""{ppkKeyPath}""");
 
                 if (result.ExitCode != 0)
                 {

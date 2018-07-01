@@ -114,7 +114,7 @@ http.max_content_length: 100mb
 
 # --------------------------------- Discovery ----------------------------------
 
-# Discovery infrastructure ensures nodes can be found within a cluster
+# Discovery infrastructure ensures nodes can be found within a hive
 # and master node is elected.  Elasticsearch 5.0 supports only unicast 
 # discovery.
 
@@ -149,7 +149,7 @@ discovery.zen.ping.unicast.hosts: ${ELASTICSEARCH_BOOTSTRAP_NODES}
 # a full cluster restart (to reuse as much local data as possible when using shared
 # gateway).
 
-# Allow recovery process after N nodes in a cluster are up:
+# Allow recovery process after N nodes in a hive are up:
 
 gateway.recover_after_nodes: ${ELASTICSEARCH_NODE_COUNT}
 

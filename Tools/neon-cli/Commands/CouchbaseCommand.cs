@@ -132,7 +132,7 @@ customize this in two ways:
                 Program.Exit(0);
             }
 
-            Program.ConnectCluster();
+            Program.ConnectHive();
 
             // Process the command arguments.
 

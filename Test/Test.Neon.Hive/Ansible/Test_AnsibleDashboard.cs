@@ -31,8 +31,8 @@ namespace TestNeonCluster
         //---------------------------------------------------------------------
         // Instance members
 
-        private HiveFixture     hive;
-        private ClusterProxy    cluster;
+        private HiveFixture     hiveFixture;
+        private HiveProxy       hive;
 
         public Test_AnsibleDashboard(HiveFixture fixture)
         {
@@ -42,8 +42,8 @@ namespace TestNeonCluster
 
             fixture.LoginAndInitialize(login: null);
 
-            this.hive    = fixture;
-            this.cluster = fixture.Cluster;
+            this.hiveFixture = fixture;
+            this.hive        = fixture.Hive;
         }
 
         /// <summary>
@@ -90,7 +90,7 @@ $@"
 
             // Should start out without this dashboard.
 
-            Assert.Null(cluster.Dashboard.Get(name));
+            Assert.Null(hive.Dashboard.Get(name));
 
             //-----------------------------------------------------------------
             // Create a dashboard and then verify that it was added.
@@ -118,7 +118,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var dashboard = cluster.Dashboard.Get(name);
+            var dashboard = hive.Dashboard.Get(name);
 
             Assert.NotNull(dashboard);
             Assert.Equal(name, dashboard.Name);
@@ -140,7 +140,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            dashboard = cluster.Dashboard.Get(name);
+            dashboard = hive.Dashboard.Get(name);
 
             Assert.NotNull(dashboard);
             Assert.Equal(name, dashboard.Name);
@@ -158,7 +158,7 @@ $@"
 
             // Should start out without this dashboard.
 
-            Assert.Null(cluster.Dashboard.Get(name));
+            Assert.Null(hive.Dashboard.Get(name));
 
             //-----------------------------------------------------------------
             // Create a dashboard and then verify that it was added.
@@ -186,7 +186,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var dashboard = cluster.Dashboard.Get(name);
+            var dashboard = hive.Dashboard.Get(name);
 
             Assert.NotNull(dashboard);
             Assert.Equal(name, dashboard.Name);
@@ -221,7 +221,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            dashboard = cluster.Dashboard.Get(name);
+            dashboard = hive.Dashboard.Get(name);
 
             Assert.NotNull(dashboard);
             Assert.Equal(name, dashboard.Name);
@@ -243,7 +243,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            dashboard = cluster.Dashboard.Get(name);
+            dashboard = hive.Dashboard.Get(name);
 
             Assert.NotNull(dashboard);
             Assert.Equal(name, dashboard.Name);
@@ -261,7 +261,7 @@ $@"
 
             // Should start out without this dashboard.
 
-            Assert.Null(cluster.Dashboard.Get(name));
+            Assert.Null(hive.Dashboard.Get(name));
 
             //-----------------------------------------------------------------
             // Create a dashboard and then verify that it was added.
@@ -289,7 +289,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var dashboard = cluster.Dashboard.Get(name);
+            var dashboard = hive.Dashboard.Get(name);
 
             Assert.NotNull(dashboard);
             Assert.Equal(name, dashboard.Name);
@@ -319,7 +319,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
-            Assert.Null(cluster.Dashboard.Get(name));
+            Assert.Null(hive.Dashboard.Get(name));
 
             //-----------------------------------------------------------------
             // Run the playbook again but this time nothing should
@@ -333,7 +333,7 @@ $@"
 
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
-            Assert.Null(cluster.Dashboard.Get(name));
+            Assert.Null(hive.Dashboard.Get(name));
         }
     }
 }

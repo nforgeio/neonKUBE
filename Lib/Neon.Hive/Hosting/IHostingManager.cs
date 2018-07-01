@@ -43,15 +43,15 @@ namespace Neon.Hive
         bool IsProvisionNOP { get; }
 
         /// <summary>
-        /// Verifies that a cluster is valid for the hosting manager, customizing 
+        /// Verifies that a hive is valid for the hosting manager, customizing 
         /// properties as required.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if any problems were detected.</exception>
-        void Validate(ClusterDefinition clusterDefinition);
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if any problems were detected.</exception>
+        void Validate(HiveDefinition hiveDefinition);
 
         /// <summary>
-        /// Creates and initializes the cluster resources such as the virtual machines,
+        /// Creates and initializes the hive resources such as the virtual machines,
         /// networks, load balancers, network security groups, public IP addresses etc.
         /// </summary>
         /// <param name="force">
@@ -71,7 +71,7 @@ namespace Neon.Hive
         /// <returns>A <b>(string Address, int Port)</b> tuple.</returns>
         /// <remarks>
         /// Hosting platforms such as Azure that may not assign public IP addresses
-        /// to cluster nodes will return the IP address of the load balancer and
+        /// to hive nodes will return the IP address of the load balancer and
         /// a temporary NAT port for the node.
         /// </remarks>
         (string Address, int Port) GetSshEndpoint(string nodeName);
@@ -95,13 +95,13 @@ namespace Neon.Hive
         List<HostedEndpoint> GetPublicEndpoints();
 
         /// <summary>
-        /// Returns <c>true</c> if the cluster manager is able to update the the deployment's load balancer and security rules.
+        /// Returns <c>true</c> if the hive manager is able to update the the deployment's load balancer and security rules.
         /// </summary>
         bool CanUpdatePublicEndpoints { get; }
 
         /// <summary>
         /// Updates the deployment's load balancer and security rules to allow traffic 
-        /// for the specified endpoints into the cluster.
+        /// for the specified endpoints into the hive.
         /// </summary>
         /// <param name="endpoints">The endpoints.</param>
         void UpdatePublicEndpoints(List<HostedEndpoint> endpoints);

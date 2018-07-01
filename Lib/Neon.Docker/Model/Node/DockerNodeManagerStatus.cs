@@ -41,7 +41,7 @@ namespace Neon.Docker
         public dynamic Inner { get; private set; }
 
         /// <summary>
-        /// Indicates whether the parent node is currently the cluster leader.
+        /// Indicates whether the parent node is currently the hive leader.
         /// </summary>
         public bool Leader { get; private set; }
 

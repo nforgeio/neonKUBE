@@ -27,7 +27,7 @@ namespace NeonCli
     public class ConsulCommand : CommandBase
     {
         private const string usage = @"
-Runs a HashiCorp Consul command on the cluster.  All command line arguments
+Runs a HashiCorp Consul command on the hive.  All command line arguments
 and options as well are passed through to the Consul CLI.
 
 USAGE:
@@ -48,10 +48,10 @@ OPTIONS :
 NOTE: [neon consul watch] command is not supported.
 
 NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
-      cluster host, not the local workstation and you'll need to specify
+      hive host, not the local workstation and you'll need to specify
       a fully qualified path.
 ";
-        private ClusterProxy cluster;
+        private HiveProxy hive;
 
         private const string remoteConsulPath = "/usr/local/bin/consul";
 
@@ -97,11 +97,11 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
                 Program.Exit(0);
             }
 
-            // Initialize the cluster.
+            // Initialize the hive.
 
-            var clusterLogin = Program.ConnectCluster();
+            var hiveLogin = Program.ConnectHive();
 
-            cluster = new ClusterProxy(clusterLogin);
+            hive = new HiveProxy(hiveLogin);
 
             // Determine which node we're going to target.
 
@@ -110,11 +110,11 @@ NOTE: [neon consul snapshot ...] commands reads or writes files on the remote
 
             if (!string.IsNullOrEmpty(nodeName))
             {
-                node = cluster.GetNode(nodeName);
+                node = hive.GetNode(nodeName);
             }
             else
             {
-                node = cluster.GetHealthyManager();
+                node = hive.GetHealthyManager();
             }
 
             var command = rightCommandLine.Arguments.FirstOrDefault();

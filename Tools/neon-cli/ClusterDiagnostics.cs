@@ -23,113 +23,113 @@ using Neon.Common;
 using Neon.Hive;
 using Neon.Net;
 
-// $todo(jeff.lill): Verify that there are no unexpected nodes in the cluster.
+// $todo(jeff.lill): Verify that there are no unexpected nodes in the hive.
 
 namespace NeonCli
 {
     /// <summary>
-    /// Methods to verify that cluster nodes are configured and functioning properly.
+    /// Methods to verify that hive nodes are configured and functioning properly.
     /// </summary>
     public static class ClusterDiagnostics
     {
         /// <summary>
-        /// Verifies that a cluster manager node is healthy.
+        /// Verifies that a hive manager node is healthy.
         /// </summary>
         /// <param name="node">The manager node.</param>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void CheckManager(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        /// <param name="hiveDefinition">The hive definition.</param>
+        public static void CheckManager(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
             Covenant.Requires<ArgumentException>(node.Metadata.IsManager);
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             if (!node.IsFaulted)
             {
-                CheckManagerNtp(node, clusterDefinition);
+                CheckManagerNtp(node, hiveDefinition);
             }
 
             if (!node.IsFaulted)
             {
-                CheckDocker(node, clusterDefinition);
+                CheckDocker(node, hiveDefinition);
             }
 
             if (!node.IsFaulted)
             {
-                CheckConsul(node, clusterDefinition);
+                CheckConsul(node, hiveDefinition);
             }
 
             if (!node.IsFaulted)
             {
-                CheckVault(node, clusterDefinition);
+                CheckVault(node, hiveDefinition);
             }
 
             node.Status = "healthy";
         }
 
         /// <summary>
-        /// Verifies that a cluster worker or pet node is healthy.
+        /// Verifies that a hive worker or pet node is healthy.
         /// </summary>
         /// <param name="node">The server node.</param>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        public static void CheckWorkersOrPet(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        /// <param name="hiveDefinition">The hive definition.</param>
+        public static void CheckWorkersOrPet(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
         {
             Covenant.Requires<ArgumentNullException>(node != null);
             Covenant.Requires<ArgumentException>(node.Metadata.IsWorker || node.Metadata.IsPet);
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             if (!node.IsFaulted)
             {
-                CheckWorkerNtp(node, clusterDefinition);
+                CheckWorkerNtp(node, hiveDefinition);
             }
 
             if (!node.IsFaulted)
             {
-                CheckDocker(node, clusterDefinition);
+                CheckDocker(node, hiveDefinition);
             }
 
             if (!node.IsFaulted)
             {
-                CheckConsul(node, clusterDefinition);
+                CheckConsul(node, hiveDefinition);
             }
 
             if (!node.IsFaulted)
             {
-                CheckVault(node, clusterDefinition);
+                CheckVault(node, hiveDefinition);
             }
 
             node.Status = "healthy";
         }
 
         /// <summary>
-        /// Verifies the cluster log service health.
+        /// Verifies the hive log service health.
         /// </summary>
-        /// <param name="cluster">The cluster proxy.</param>
-        public static void CheckLogServices(ClusterProxy cluster)
+        /// <param name="hive">The hive proxy.</param>
+        public static void CheckLogServices(HiveProxy hive)
         {
-            if (!cluster.Definition.Log.Enabled)
+            if (!hive.Definition.Log.Enabled)
             {
                 return;
             }
 
-            CheckLogEsDataService(cluster);
-            CheckLogCollectorService(cluster);
-            CheckLogKibanaService(cluster);
+            CheckLogEsDataService(hive);
+            CheckLogCollectorService(hive);
+            CheckLogKibanaService(hive);
         }
 
         /// <summary>
         /// Verifies the log collector service health.
         /// </summary>
-        /// <param name="cluster">The cluster proxy.</param>
-        private static void CheckLogCollectorService(ClusterProxy cluster)
+        /// <param name="hive">The hive proxy.</param>
+        private static void CheckLogCollectorService(HiveProxy hive)
         {
             // $todo(jeff.lill): Implement this.
         }
 
         /// <summary>
-        /// Verifies the log Elasticsearch cluster health.
+        /// Verifies the log Elasticsearch hive health.
         /// </summary>
-        /// <param name="cluster">The cluster proxy.</param>
-        private static void CheckLogEsDataService(ClusterProxy cluster)
+        /// <param name="hive">The hive proxy.</param>
+        private static void CheckLogEsDataService(HiveProxy hive)
         {
             // $todo(jeff.lill): Implement this.
         }
@@ -137,8 +137,8 @@ namespace NeonCli
         /// <summary>
         /// Verifies the log Kibana service health.
         /// </summary>
-        /// <param name="cluster">The cluster proxy.</param>
-        private static void CheckLogKibanaService(ClusterProxy cluster)
+        /// <param name="hive">The hive proxy.</param>
+        private static void CheckLogKibanaService(HiveProxy hive)
         {
             // $todo(jeff.lill): Implement this.
         }
@@ -147,8 +147,8 @@ namespace NeonCli
         /// Verifies that a manager node's NTP health.
         /// </summary>
         /// <param name="node">The manager node.</param>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckManagerNtp(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        /// <param name="hiveDefinition">The hive definition.</param>
+        private static void CheckManagerNtp(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
         {
             // We're going to use [ntpq -p] to query the configured time sources.
             // We should get something back that looks like
@@ -239,8 +239,8 @@ namespace NeonCli
         /// Verifies that a worker node's NTP health.
         /// </summary>
         /// <param name="node">The manager node.</param>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckWorkerNtp(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        /// <param name="hiveDefinition">The hive definition.</param>
+        private static void CheckWorkerNtp(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
         {
             // We're going to use [ntpq -p] to query the configured time sources.
             // We should get something back that looks like
@@ -265,7 +265,7 @@ namespace NeonCli
             {
                 var output = node.SudoCommand("/usr/bin/ntpq -pw", RunOptions.LogOutput).OutputText;
 
-                foreach (var manager in clusterDefinition.SortedManagers)
+                foreach (var manager in hiveDefinition.SortedManagers)
                 {
                     // We're going to check the for presence of the manager's IP address
                     // or its name, the latter because [ntpq] appears to attempt a reverse
@@ -295,9 +295,9 @@ namespace NeonCli
         /// <summary>
         /// Verifies Docker health.
         /// </summary>
-        /// <param name="node">The target cluster node.</param>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckDocker(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        /// <param name="node">The target hive node.</param>
+        /// <param name="hiveDefinition">The hive definition.</param>
+        private static void CheckDocker(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
         {
             node.Status = "checking: docker";
 
@@ -315,8 +315,8 @@ namespace NeonCli
         /// Verifies Consul health.
         /// </summary>
         /// <param name="node">The manager node.</param>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckConsul(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        /// <param name="hiveDefinition">The hive definition.</param>
+        private static void CheckConsul(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
         {
             node.Status = "checking: consul";
 
@@ -347,8 +347,8 @@ namespace NeonCli
         /// Verifies Vault health for a node.
         /// </summary>
         /// <param name="node">The node.</param>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        private static void CheckVault(SshProxy<NodeDefinition> node, ClusterDefinition clusterDefinition)
+        /// <param name="hiveDefinition">The hive definition.</param>
+        private static void CheckVault(SshProxy<NodeDefinition> node, HiveDefinition hiveDefinition)
         {
             // $todo(jeff.lill): Implement this.
 
@@ -364,7 +364,7 @@ namespace NeonCli
             // JSON content.  The reason for this is because we have not
             // yet initialized and unsealed the vault.
 
-            var targetUrl = $"http://{node.Metadata.PrivateAddress}:{clusterDefinition.Vault.Port}/v1/sys/health?standbycode=200";
+            var targetUrl = $"http://{node.Metadata.PrivateAddress}:{hiveDefinition.Vault.Port}/v1/sys/health?standbycode=200";
 
             using (var client = new HttpClient())
             {

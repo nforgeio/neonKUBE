@@ -68,11 +68,11 @@ namespace Neon.Hive
         }
 
         /// <inheritdoc/>
-        public override void Run(ClusterProxy cluster)
+        public override void Run(HiveProxy hive)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
 
-            var node   = cluster.GetNode(nodeName);
+            var node   = hive.GetNode(nodeName);
             var status = this.ToString();
 
             node.UploadText(path, text, tabStop, outputEncoding);

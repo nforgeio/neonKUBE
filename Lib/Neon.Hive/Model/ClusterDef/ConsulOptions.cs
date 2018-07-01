@@ -47,7 +47,7 @@ namespace Neon.Hive
         public string Version { get; set; } = defaultVersion;
 
         /// <summary>
-        /// The shared key used by Consul to encrypt network traffic between cluster nodes.
+        /// The shared key used by Consul to encrypt network traffic between hive nodes.
         /// This key must be 16-bytes, Base64 encoded.  This defaults to a generated 
         /// cryptographically random key.
         /// </summary>
@@ -87,7 +87,7 @@ namespace Neon.Hive
         /// <remarks>
         /// The default value allows for stale DNS responses to be returned indefinitely
         /// when Consul loses its quorum or a leader is not present.  This can help 
-        /// allow a cluster to continue to function during a partial Consul outage.
+        /// allow a hive to continue to function during a partial Consul outage.
         /// </remarks>
         [JsonProperty(PropertyName = "DnsMaxStale", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(315360000)]
@@ -97,21 +97,21 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition)
+        public void Validate(HiveDefinition hiveDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             if (!System.Version.TryParse(Version, out var version))
             {
-                throw new ClusterDefinitionException($"Invalid version [{nameof(ConsulOptions)}.{nameof(Version)}={Version}].");
+                throw new HiveDefinitionException($"Invalid version [{nameof(ConsulOptions)}.{nameof(Version)}={Version}].");
             }
 
             if (version < minVersion)
             {
-                throw new ClusterDefinitionException($"Minumim acceptable [{nameof(ConsulOptions)}.{nameof(Version)}={minVersion}].");
+                throw new HiveDefinitionException($"Minumim acceptable [{nameof(ConsulOptions)}.{nameof(Version)}={minVersion}].");
             }
 
             if (string.IsNullOrEmpty(EncryptionKey))
@@ -121,15 +121,15 @@ namespace Neon.Hive
 
             if (DnsTTL < 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(ConsulOptions)}.{nameof(DnsTTL)}={DnsTTL}] is not valid.");
+                throw new HiveDefinitionException($"[{nameof(ConsulOptions)}.{nameof(DnsTTL)}={DnsTTL}] is not valid.");
             }
 
             if (DnsMaxStale < 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(ConsulOptions)}.{nameof(DnsMaxStale)}={DnsMaxStale}] is not valid.");
+                throw new HiveDefinitionException($"[{nameof(ConsulOptions)}.{nameof(DnsMaxStale)}={DnsMaxStale}] is not valid.");
             }
 
-            ClusterDefinition.VerifyEncryptionKey(EncryptionKey);
+            HiveDefinition.VerifyEncryptionKey(EncryptionKey);
         }
     }
 }

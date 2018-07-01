@@ -29,7 +29,7 @@ namespace NeonCli
     public class DashboardCommand : CommandBase
     {
         private const string usage = @"
-Manages cluster dashboards.
+Manages hive dashboards.
 
 USAGE:
 
@@ -53,8 +53,8 @@ dashboard names are reserved for use as commands:
 
     get, list, ls, rm, remove, set
 ";
-        private ClusterLogin    clusterLogin;
-        private ClusterProxy    cluster;
+        private HiveLogin       hiveLogin;
+        private HiveProxy       hive;
         private HashSet<string> reserved;
 
         /// <inheritdoc/>
@@ -78,8 +78,8 @@ dashboard names are reserved for use as commands:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            clusterLogin = Program.ConnectCluster();
-            cluster      = new ClusterProxy(clusterLogin);
+            hiveLogin = Program.ConnectHive();
+            hive      = new HiveProxy(hiveLogin);
             reserved     = new HashSet<string>(StringComparer.InvariantCultureIgnoreCase)
             {
                 "get",
@@ -149,13 +149,13 @@ dashboard names are reserved for use as commands:
                 Program.Exit(1);
             }
 
-            if (!ClusterDefinition.IsValidName(name) || reserved.Contains(name))
+            if (!HiveDefinition.IsValidName(name) || reserved.Contains(name))
             {
                 Console.Error.WriteLine($"*** ERROR: [{name}] is not a valid dashboard name.");
                 Program.Exit(1);
             }
 
-            var dashboard = cluster.Dashboard.Get(name);
+            var dashboard = hive.Dashboard.Get(name);
 
             if (dashboard == null)
             {
@@ -172,7 +172,7 @@ dashboard names are reserved for use as commands:
         /// <param name="commandLine">The command line.</param>
         private void List(CommandLine commandLine)
         {
-            var dashboards   = cluster.Dashboard.List();
+            var dashboards   = hive.Dashboard.List();
             var maxNameWidth = dashboards.Max(d => d.Name.Length);
 
             Console.WriteLine();
@@ -201,7 +201,7 @@ dashboard names are reserved for use as commands:
                 Program.Exit(1);
             }
 
-            if (!ClusterDefinition.IsValidName(name) || reserved.Contains(name))
+            if (!HiveDefinition.IsValidName(name) || reserved.Contains(name))
             {
                 Console.Error.WriteLine($"*** ERROR: [{name}] is not a valid dashboard name.");
                 Program.Exit(1);
@@ -209,7 +209,7 @@ dashboard names are reserved for use as commands:
 
             name = name.ToLowerInvariant();
 
-            var existingDashboard = cluster.Dashboard.Get(name);
+            var existingDashboard = hive.Dashboard.Get(name);
 
             if (existingDashboard == null)
             {
@@ -217,7 +217,7 @@ dashboard names are reserved for use as commands:
                 Program.Exit(1);
             }
 
-            cluster.Dashboard.Remove(name);
+            hive.Dashboard.Remove(name);
             Console.WriteLine($"Removed [{name}] dashboard.");
         }
 
@@ -236,7 +236,7 @@ dashboard names are reserved for use as commands:
                 Program.Exit(1);
             }
 
-            if (!ClusterDefinition.IsValidName(name) || reserved.Contains(name))
+            if (!HiveDefinition.IsValidName(name) || reserved.Contains(name))
             {
                 Console.Error.WriteLine($"*** ERROR: [{name}] is not a valid dashboard name.");
                 Program.Exit(1);
@@ -263,7 +263,7 @@ dashboard names are reserved for use as commands:
                 Description = description
             };
 
-            var errors = dashboard.Validate(cluster.Definition);
+            var errors = dashboard.Validate(hive.Definition);
 
             if (errors.Count > 0)
             {
@@ -275,7 +275,7 @@ dashboard names are reserved for use as commands:
                 Program.Exit(1);
             }
 
-            cluster.Dashboard.Set(dashboard);
+            hive.Dashboard.Set(dashboard);
 
             Console.WriteLine();
             Console.WriteLine($"Saved [{name}] dashboard.");
@@ -289,9 +289,9 @@ dashboard names are reserved for use as commands:
         {
             var name = commandLine.Arguments.ElementAtOrDefault(0);
 
-            name = name ?? "cluster";   // Default to the neonHIVE dashboard
+            name = name ?? "hive";      // Default to the neonHIVE dashboard
 
-            var dashboard = cluster.Dashboard.Get(name);
+            var dashboard = hive.Dashboard.Get(name);
 
             if (dashboard == null)
             {
@@ -308,9 +308,9 @@ dashboard names are reserved for use as commands:
             if (url.Host.Equals("healthy-manager", StringComparison.InvariantCultureIgnoreCase))
             {
                 // Special case the [health-manager] hostname by replacing it with
-                // the IP address of a healthy cluster manager node.
+                // the IP address of a healthy hive manager node.
 
-                url = new Uri($"{url.Scheme}://{cluster.GetHealthyManager().PrivateAddress}:{url.Port}{url.PathAndQuery}");
+                url = new Uri($"{url.Scheme}://{hive.GetHealthyManager().PrivateAddress}:{url.Port}{url.PathAndQuery}");
             }
 
             NeonHelper.OpenBrowser(url.ToString());

@@ -27,7 +27,7 @@ namespace NeonCli
     public class LoginImportCommand : CommandBase
     {
         private const string usage = @"
-Imports a cluster login from a file.
+Imports a hive login from a file.
 
 USAGE:
 
@@ -35,8 +35,8 @@ USAGE:
 
 ARGUMENTS:
 
-    PATH        - Path to a cluster login file including the 
-                  cluster definition and user credentials.
+    PATH        - Path to a hive login file including the 
+                  hive definition and user credentials.
 ";
 
         /// <inheritdoc/>
@@ -60,20 +60,20 @@ ARGUMENTS:
                 Program.Exit(1);
             }
 
-            var clusterLogin     = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(commandLine.Arguments[0]));
-            var clusterLoginPath = Program.GetClusterLoginPath(clusterLogin.Username, clusterLogin.ClusterName);
-            var exists           = File.Exists(clusterLoginPath);
-            var newLoginJson     = NeonHelper.JsonSerialize(clusterLogin, Formatting.Indented);
+            var hiveLogin     = NeonHelper.JsonDeserialize<HiveLogin>(File.ReadAllText(commandLine.Arguments[0]));
+            var hiveLoginPath = Program.GetHiveLoginPath(hiveLogin.Username, hiveLogin.HiveName);
+            var exists        = File.Exists(hiveLoginPath);
+            var newLoginJson  = NeonHelper.JsonSerialize(hiveLogin, Formatting.Indented);
 
             if (exists)
             {
-                Console.Error.WriteLine($"*** ERROR: A login already exists for [{clusterLogin.LoginName}].");
-                Console.Error.WriteLine($"           Use [neon logins rm {clusterLogin.LoginName}] to delete this and then add the replacement.");
+                Console.Error.WriteLine($"*** ERROR: A login already exists for [{hiveLogin.LoginName}].");
+                Console.Error.WriteLine($"           Use [neon login rm {hiveLogin.LoginName}] to delete this and then add the replacement.");
                 Program.Exit(1);
             }
 
-            File.WriteAllText(clusterLoginPath, newLoginJson);
-            Console.Error.WriteLine($"Imported [{clusterLogin.LoginName}].");
+            File.WriteAllText(hiveLoginPath, newLoginJson);
+            Console.Error.WriteLine($"Imported [{hiveLogin.LoginName}].");
         }
 
         /// <inheritdoc/>

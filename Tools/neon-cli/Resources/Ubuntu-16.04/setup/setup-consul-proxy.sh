@@ -40,7 +40,7 @@ echo "**********************************************" 1>&2
 echo "** SETUP-CONSUL-PROXY                       **" 1>&2
 echo "**********************************************" 1>&2
 
-# Load the cluster configuration and setup utilities.
+# Load the hive configuration and setup utilities.
 
 . $<load-cluster-config>
 . setup-utility.sh

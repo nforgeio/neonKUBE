@@ -49,8 +49,8 @@ namespace NeonCli.Ansible.Couchbase
         /// <returns>The <see cref="CouchbaseArgs"/> or <c>null</c> if there's an error.</returns>
         public static CouchbaseArgs Parse(ModuleContext context)
         {
-            var cluster       = HiveHelper.Cluster;
-            var nodeGroups    = cluster.Definition.GetNodeGroups(excludeAllGroup: true);
+            var hive          = HiveHelper.Hive;
+            var nodeGroups    = hive.Definition.GetNodeGroups(excludeAllGroup: true);
             var couchbaseArgs = new CouchbaseArgs();
 
             var servers = context.ParseStringArray("servers");
@@ -73,8 +73,8 @@ namespace NeonCli.Ansible.Couchbase
 
             foreach (var server in servers)
             {
-                // The server can be an IP address, FQDN (with at least one dot), a cluster
-                // node name or a cluster node group name.
+                // The server can be an IP address, FQDN (with at least one dot), a hive
+                // node name or a hive node group name.
 
                 if (IPAddress.TryParse(server, out var address))
                 {
@@ -100,13 +100,13 @@ namespace NeonCli.Ansible.Couchbase
                 {
                     // Must be a node name.
 
-                    if (cluster.Definition.NodeDefinitions.TryGetValue(server, out var node))
+                    if (hive.Definition.NodeDefinitions.TryGetValue(server, out var node))
                     {
                         couchbaseArgs.Settings.Servers.Add(new Uri($"{scheme}://{node.PrivateAddress}:{port}"));
                     }
                     else
                     {
-                        context.WriteErrorLine($"[{server}] is not a valid IP address, FQDN, or known cluster node or node group name.");
+                        context.WriteErrorLine($"[{server}] is not a valid IP address, FQDN, or known hive node or node group name.");
                         return null;
                     }
                 }

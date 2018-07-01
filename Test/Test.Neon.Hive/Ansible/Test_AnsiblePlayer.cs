@@ -26,7 +26,7 @@ namespace TestNeonCluster
         {
             this.hive = fixture;
 
-            // NOTE: These tests do not require a cluster reset every time.
+            // NOTE: These tests do not require a hive reset every time.
 
             fixture.LoginAndInitialize();
         }

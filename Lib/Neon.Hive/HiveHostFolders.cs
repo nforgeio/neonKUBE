@@ -72,7 +72,7 @@ namespace Neon.Hive
         public const string Scripts = "/opt/neonscripts";
 
         /// <summary>
-        /// The folder where cluster tools can upload, unpack, and then
+        /// The folder where hive tools can upload, unpack, and then
         /// execute <see cref="CommandBundle"/>s as well as store temporary
         /// command output files.
         /// </summary>

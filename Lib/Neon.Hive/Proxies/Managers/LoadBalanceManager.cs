@@ -13,27 +13,27 @@ using System.Diagnostics.Contracts;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Handles cluster load balancer related operations for a <see cref="ClusterProxy"/>.
+    /// Handles hive load balancer related operations for a <see cref="HiveProxy"/>.
     /// </summary>
     public sealed class LoadBalanceManager
     {
         private const string proxyManagerPrefix = "neon/service/neon-proxy-manager";
         private const string vaultCertPrefix    = "neon-secret/cert";
 
-        private ClusterProxy cluster;
+        private HiveProxy hive;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="cluster">The parent <see cref="ClusterProxy"/>.</param>
+        /// <param name="hive">The parent <see cref="HiveProxy"/>.</param>
         /// <param name="name">The load balancer name (<b>public</b> or <b>private</b>).</param>
-        internal LoadBalanceManager(ClusterProxy cluster, string name)
+        internal LoadBalanceManager(HiveProxy hive, string name)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
             Covenant.Requires<ArgumentException>(name == "public" || name == "private");
 
-            this.cluster = cluster;
-            this.Name    = name;
+            this.hive = hive;
+            this.Name = name;
         }
 
         /// <summary>
@@ -66,7 +66,7 @@ namespace Neon.Hive
         /// <returns>The <see cref="LoadBalancerSettings"/>.</returns>
         public LoadBalancerSettings GetSettings()
         {
-            return cluster.Consul.Client.KV.GetObject<LoadBalancerSettings>(GetProxySettingsKey()).Result;
+            return hive.Consul.Client.KV.GetObject<LoadBalancerSettings>(GetProxySettingsKey()).Result;
         }
 
         /// <summary>
@@ -77,8 +77,8 @@ namespace Neon.Hive
         {
             Covenant.Requires<ArgumentNullException>(settings != null);
 
-            cluster.Consul.Client.KV.PutObject(GetProxySettingsKey(), settings, Formatting.Indented).Wait();
-            cluster.SignalLoadBalancerUpdate();
+            hive.Consul.Client.KV.PutObject(GetProxySettingsKey(), settings, Formatting.Indented).Wait();
+            hive.SignalLoadBalancerUpdate();
         }
 
         /// <summary>
@@ -93,9 +93,9 @@ namespace Neon.Hive
             var proxyDefinition  = new LoadBalancerDefinition() { Name = this.Name };
             var proxySettingsKey = GetProxySettingsKey();
 
-            if (cluster.Consul.Client.KV.Exists(proxySettingsKey).Result)
+            if (hive.Consul.Client.KV.Exists(proxySettingsKey).Result)
             {
-                proxyDefinition.Settings = LoadBalancerSettings.ParseJson(cluster.Consul.Client.KV.GetString(proxySettingsKey).Result);
+                proxyDefinition.Settings = LoadBalancerSettings.ParseJson(hive.Consul.Client.KV.GetString(proxySettingsKey).Result);
             }
             else
             {
@@ -115,8 +115,8 @@ namespace Neon.Hive
         /// </summary>
         public void Build()
         {
-            cluster.Consul.Client.KV.PutString($"{proxyManagerPrefix}/proxies/{Name}/hash", Convert.ToBase64String(new byte[16])).Wait();
-            cluster.Consul.Client.KV.PutString($"{proxyManagerPrefix}/conf/reload", DateTime.UtcNow).Wait();
+            hive.Consul.Client.KV.PutString($"{proxyManagerPrefix}/proxies/{Name}/hash", Convert.ToBase64String(new byte[16])).Wait();
+            hive.Consul.Client.KV.PutString($"{proxyManagerPrefix}/conf/reload", DateTime.UtcNow).Wait();
         }
 
         /// <summary>
@@ -126,14 +126,14 @@ namespace Neon.Hive
         /// <returns><c>true</c> if the rule existed and was deleted, <c>false</c> if it didn't exist.</returns>
         public bool RemoveRule(string ruleName)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(ruleName));
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(ruleName));
 
             var ruleKey = GetProxyRuleKey(ruleName);
 
-            if (cluster.Consul.Client.KV.Exists(ruleKey).Result)
+            if (hive.Consul.Client.KV.Exists(ruleKey).Result)
             {
-                cluster.Consul.Client.KV.Delete(ruleKey);
-                cluster.SignalLoadBalancerUpdate();
+                hive.Consul.Client.KV.Delete(ruleKey);
+                hive.SignalLoadBalancerUpdate();
 
                 return true;
             }
@@ -150,13 +150,13 @@ namespace Neon.Hive
         /// <returns>The <see cref="LoadBalancerRule"/> or <c>null</c>.</returns>
         public LoadBalancerRule GetRule(string ruleName)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(ruleName));
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(ruleName));
 
             var ruleKey = GetProxyRuleKey(ruleName);
 
-            if (cluster.Consul.Client.KV.Exists(ruleKey).Result)
+            if (hive.Consul.Client.KV.Exists(ruleKey).Result)
             {
-                return LoadBalancerRule.ParseJson(cluster.Consul.Client.KV.GetString(ruleKey).Result);
+                return LoadBalancerRule.ParseJson(hive.Consul.Client.KV.GetString(ruleKey).Result);
             }
             else
             {
@@ -172,20 +172,20 @@ namespace Neon.Hive
         /// <c>true</c> if it existed and was updated, <b>false</b>
         /// if the load balancer rule didn't already exist and was added.
         /// </returns>
-        /// <exception cref="ClusterDefinitionException">Thrown if the rule is not valid.</exception>
+        /// <exception cref="HiveDefinitionException">Thrown if the rule is not valid.</exception>
         public bool SetRule(LoadBalancerRule rule)
         {
             Covenant.Requires<ArgumentNullException>(rule != null);
-            Covenant.Requires<ArgumentNullException>(ClusterDefinition.IsValidName(rule.Name));
+            Covenant.Requires<ArgumentNullException>(HiveDefinition.IsValidName(rule.Name));
 
             var ruleKey = GetProxyRuleKey(rule.Name);
-            var update  = cluster.Consul.Client.KV.Exists(ruleKey).Result;
+            var update  = hive.Consul.Client.KV.Exists(ruleKey).Result;
 
-            // Load the the full proxy definition and cluster certificates, add/replace
+            // Load the the full proxy definition and hive certificates, add/replace
             // the rule being set and then verify that the rule is OK.
 
             var proxyDefinition = GetDefinition();
-            var certificates    = cluster.Certificate.GetAll();
+            var certificates    = hive.Certificate.GetAll();
 
             proxyDefinition.Rules[rule.Name] = rule;
             proxyDefinition.Validate(certificates);
@@ -194,11 +194,11 @@ namespace Neon.Hive
 
             validationContext.ThrowIfErrors();
 
-            // Save the rule to the cluster and signal that the
+            // Save the rule to the hive and signal that the
             // load balancers need to be updated.
 
-            cluster.Consul.Client.KV.PutObject(ruleKey, rule, Formatting.Indented).Wait();
-            cluster.SignalLoadBalancerUpdate();
+            hive.Consul.Client.KV.PutObject(ruleKey, rule, Formatting.Indented).Wait();
+            hive.SignalLoadBalancerUpdate();
 
             return update;
         }
@@ -210,7 +210,7 @@ namespace Neon.Hive
         /// <returns>The <see cref="IEnumerable{T}"/> of load balancer rules.</returns>
         public IEnumerable<LoadBalancerRule> ListRules(Func<LoadBalancerRule, bool> predicate = null)
         {
-            var rulesResponse = cluster.Consul.Client.KV.ListOrDefault<JObject>($"{proxyManagerPrefix}/conf/{Name}/rules/").Result;
+            var rulesResponse = hive.Consul.Client.KV.ListOrDefault<JObject>($"{proxyManagerPrefix}/conf/{Name}/rules/").Result;
 
             if (rulesResponse != null)
             {

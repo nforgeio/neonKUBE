@@ -41,66 +41,66 @@ namespace Neon.Hive
         /// <summary>
         /// Returns the <see cref="HostingManager"/> for a specific environment.
         /// </summary>
-        /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="hive">The hive being managed.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
         /// <returns>The <see cref="HostingManager"/>.</returns>
-        public static HostingManager GetManager(ClusterProxy cluster, string logFolder = null)
+        public static HostingManager GetManager(HiveProxy hive, string logFolder = null)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
 
-            switch (cluster.Definition.Hosting.Environment)
+            switch (hive.Definition.Hosting.Environment)
             {
                 case HostingEnvironments.Aws:
 
-                    return new AwsHostingManager(cluster, logFolder);
+                    return new AwsHostingManager(hive, logFolder);
 
                 case HostingEnvironments.Azure:
 
-                    return new AzureHostingManager(cluster, logFolder);
+                    return new AzureHostingManager(hive, logFolder);
 
                 case HostingEnvironments.Google:
 
-                    return new GoogleHostingManager(cluster, logFolder);
+                    return new GoogleHostingManager(hive, logFolder);
 
                 case HostingEnvironments.HyperV:
 
-                    return new HyperVHostingManager(cluster, logFolder);
+                    return new HyperVHostingManager(hive, logFolder);
 
                 case HostingEnvironments.LocalHyperV:
 
-                    return new LocalHyperVHostingManager(cluster, logFolder);
+                    return new LocalHyperVHostingManager(hive, logFolder);
 
                 case HostingEnvironments.Machine:
 
-                    return new MachineHostingManager(cluster, logFolder);
+                    return new MachineHostingManager(hive, logFolder);
 
                 case HostingEnvironments.XenServer:
 
-                    return new XenServerHostingManager(cluster, logFolder);
+                    return new XenServerHostingManager(hive, logFolder);
 
                 default:
 
-                    throw new NotImplementedException($"Hosting manager for [{cluster.Definition.Hosting.Environment}] is not implemented.");
+                    throw new NotImplementedException($"Hosting manager for [{hive.Definition.Hosting.Environment}] is not implemented.");
             }
         }
 
         /// <summary>
-        /// Verifies that a cluster is valid for the hosting manager, customizing 
+        /// Verifies that a hive is valid for the hosting manager, customizing 
         /// properties as required.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if any problems were detected.</exception>
-        public static void ValidateCluster(ClusterDefinition clusterDefinition)
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if any problems were detected.</exception>
+        public static void ValidateCluster(HiveDefinition hiveDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
-            var cluster = new ClusterProxy(clusterDefinition);
-            var manager = HostingManager.GetManager(cluster);
+            var hive    = new HiveProxy(hiveDefinition);
+            var manager = HostingManager.GetManager(hive);
 
-            manager.Validate(clusterDefinition);
+            manager.Validate(hiveDefinition);
         }
 
         /// <summary>
@@ -157,12 +157,12 @@ namespace Neon.Hive
         public abstract void Dispose(bool disposing);
 
         /// <summary>
-        /// The initial host username to use when creating and/or configuring cluster nodes.
+        /// The initial host username to use when creating and/or configuring hive nodes.
         /// </summary>
         public string HostUsername { get; set; }
 
         /// <summary>
-        /// The initial host password to use when creating and/or configuring cluster nodes.
+        /// The initial host password to use when creating and/or configuring hive nodes.
         /// </summary>
         public string HostPassword { get; set; }
 
@@ -191,7 +191,7 @@ namespace Neon.Hive
         }
 
         /// <inheritdoc/>
-        public abstract void Validate(ClusterDefinition clusterDefinition);
+        public abstract void Validate(HiveDefinition hiveDefinition);
 
         /// <inheritdoc/>
         public abstract bool Provision(bool force);

@@ -72,9 +72,9 @@ namespace Neon.Hive
         /// Called internally by <see cref="HiveHelper.OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> to 
         /// create any requested configs and add them to the dictionary.
         /// </summary>
-        /// <param name="cluster">The attached cluster.</param>
-        /// <param name="clusterLogin">The cluster login information.</param>
-        internal void Realize(ClusterProxy cluster, ClusterLogin clusterLogin)
+        /// <param name="hive">The attached hive.</param>
+        /// <param name="hiveLogin">The hive login.</param>
+        internal void Realize(HiveProxy hive, HiveLogin hiveLogin)
         {
             // This is a NOP because we already added all of the configs
             // to the base dictionary in the [Add()] methods.

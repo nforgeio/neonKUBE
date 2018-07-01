@@ -1,12 +1,12 @@
-# Cluster provisioning and management.
+# Hive provisioning and management.
 
-This folder holds the cluster definitions, scripts and other files required to provision and manage [TEST] clusters.
+This folder holds the hive definitions, scripts and other files required to provision and manage [TEST] hive.
 
-The `clusters` folder holds the possible target cluster definitions.  Each of these folders also hold the encrypted `secrets.yaml` and unencrypted `vars.yaml` Ansible files for the cluster.
+The `hive` folder holds the possible target hive definitions.  Each of these folders also hold the encrypted `secrets.yaml` and unencrypted `vars.yaml` Ansible files for the cluster.
 
 ## Secrets
 
-Cluster secrets are saved to `secrets.yaml` as an Ansible compatible variables file.  This file is encrypted at rest and when committed to the source repoisitory via Ansible encryption using the **neon-git** password managed by **neon-cli**.
+Hive secrets are saved to `secrets.yaml` as an Ansible compatible variables file.  This file is encrypted at rest and when committed to the source repoisitory via Ansible encryption using the **neon-git** password managed by **neon-cli**.
 
 You can view and edit this file via:
 
@@ -53,8 +53,8 @@ This file defines the variables described below.  These variables can be referen
 
 `_neonforge_net_pem` - **neonforge.net** (wildcard)
 
-# Cluster setup
+# Hive setup
 
-The `setup-all.ps1` script provisions and completely configures the cluster from a bare Hypervisor, XenServer for production and Hyper-V for development.  You'll need to pass the cluster name, like:
+The `setup-all.ps1` script provisions and completely configures the hive from a bare Hypervisor, XenServer for production and Hyper-V for development.  You'll need to pass the hive name, like:
 
 &nbsp;&nbsp;&nbsp;&nbsp;`powershell -file setup-all.ps1 home-small`

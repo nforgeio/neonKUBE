@@ -37,7 +37,7 @@ namespace NeonDnsMon
     /// <remarks>
     /// <para>
     /// It will be very common for clusters to have DNS host entries that reference
-    /// the same DNS names, cluster groups, and ultimate endpoint servers.  Rather
+    /// the same DNS names, hive groups, and ultimate endpoint servers.  Rather
     /// than repeat the DNS lookups and pings for the same endpoints, we're going
     /// to do this only once per health check pass.
     /// </para>

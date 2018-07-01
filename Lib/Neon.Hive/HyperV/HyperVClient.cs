@@ -482,7 +482,7 @@ namespace Neon.Hive.HyperV
         /// to the ethernet adapter named <b>Ethernet</b>.
         /// </summary>
         /// <param name="switchName">The new switch name.</param>
-        /// <param name="gateway">Address of the cluster network gateway, used to identify a connected network interface.</param>
+        /// <param name="gateway">Address of the hive network gateway, used to identify a connected network interface.</param>
         public void NewVMExternalSwitch(string switchName, IPAddress gateway)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(switchName));
@@ -500,17 +500,17 @@ namespace Neon.Hive.HyperV
             //
             // This may be a problem for machines with multiple active network interfaces
             // because I may choose the wrong one (e.g. the slower card).  It might be
-            // useful to have an optional cluster node definition property the explicitly
+            // useful to have an optional hive node definition property the explicitly
             // specifies the adapter to use for a given node.
             //
             // Another problem we'll see is for laptops with wi-fi adapters.  Lets say we
-            // setup a cluster when wi-fi is connected and then the user docks the laptop,
-            // connecting to a new wired adapter.  The cluster's virtual switch will still
+            // setup a hive when wi-fi is connected and then the user docks the laptop,
+            // connecting to a new wired adapter.  The hive's virtual switch will still
             // be configured to use the wi-fi adapter.  The only workaround for this is
             // probably for the user to modify the virtual switch.
             //
             // This last issue is really just another indication that neonHIVEs aren't 
-            // really portable in the sense that you can't expect to relocate a cluster 
+            // really portable in the sense that you can't expect to relocate a hive 
             // from one network environment to another (that's why we bought the portable 
             // routers for motel use). So we'll consider this as by design.
 

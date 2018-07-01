@@ -92,7 +92,7 @@ namespace Neon.Hive
         /// <summary>
         /// Throws an exception if any errors were detected.
         /// </summary>
-        /// <exception cref="ClusterDefinitionException">Thrown when there are errors.</exception>
+        /// <exception cref="HiveDefinitionException">Thrown when there are errors.</exception>
         public void ThrowIfErrors()
         {
             if (HasErrors)
@@ -104,7 +104,7 @@ namespace Neon.Hive
                     sb.AppendLine("ERROR: " + message);
                 }
 
-                throw new ClusterDefinitionException(sb.ToString());
+                throw new HiveDefinitionException(sb.ToString());
             }
         }
 

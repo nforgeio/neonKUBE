@@ -91,7 +91,7 @@ namespace Neon.Hive
             {
                 if (authenticationMethod == null)
                 {
-                    throw new HiveException("Cluster SSH credentials are not available.");
+                    throw new HiveException("Hive SSH credentials are not available.");
                 }
 
                 return authenticationMethod;

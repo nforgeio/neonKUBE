@@ -33,13 +33,13 @@ Manages the neonHIVE Docker registry configuration.
 
 USAGE:
 
-    Manage cluster registry logins:
-    -------------------------------
+    Manage hive registry logins:
+    ----------------------------
     neon registry login [REGISTRY [USERNAME [PASSWORD|-]]]
     neon registry logout [REGISTRY]
 
-    Manage an optional local cluster registry:
-    ------------------------------------------
+    Manage an optional local hive registry:
+    ---------------------------------------
     neon registry service create REGISTRY CERT-PATH SECRET [USERNAME [PASSWORD|-]]
     neon registry service prune
     neon registry service remove|rm
@@ -66,15 +66,15 @@ public registry without credentials by default.  You can use the
 [neon registry login] command to log into the public registry with
 credentials or to log into other registries.
 
-[neon registry login] ensures that all cluster nodes are logged in
+[neon registry login] ensures that all hive nodes are logged in
 to the target registry using the specified credentials.  You can
 submit this command when credentials change.
 
-[neon registry logout] logs all cluster nodes out of the target registry.
+[neon registry logout] logs all hive nodes out of the target registry.
 
 NOTE: If REGISTRY is deployed within the same datacenter and its
       DNS points to your router's public Internet address, you'll
-      likely need to configure a cluster DNS hostname that overrides
+      likely need to configure a hive DNS hostname that overrides
       this to point the local network address for the registry
       because most routers don't allow network traffic to loop
       back into the datacenter.
@@ -82,13 +82,13 @@ NOTE: If REGISTRY is deployed within the same datacenter and its
 Registry Service
 ----------------
 
-NOTE: The cluster registry service requires that the cluster was 
+NOTE: The hive registry service requires that the hive was 
       deployed with the Ceph file system enabled.
 
 A neonHIVE may deploy a locally hosted Docker registry.  This
-runs as the [neon-registry] Docker service on the cluster manager
+runs as the [neon-registry] Docker service on the hive manager
 nodes with the registry data persisted to a shared [neon] volume
-hosted on the cluster's Ceph file system.
+hosted on the hive's Ceph file system.
 
 The [neon-registry] service is not deployed by default.  You can
 use the [neon registry server add] command to do this or use
@@ -109,12 +109,12 @@ you'll need:
 
 [neon registry add] deploys the local registry if it's not
 already running otherwise it updates the registry credentials.
-The command also ensures that all cluster nodes are logged
+The command also ensures that all hive nodes are logged
 into the registry with the specified credentials.
 
 [neon registry service remove] removes the [neon-registry]
 service if deployed including deleting all registry data
-and then logs all cluster nodes out.
+and then logs all hive nodes out.
 
 [neon registry prune] temporarily puts [neon-registry] into
 READ-ONLY mode while it garbage collects unreferenced image
@@ -145,9 +145,9 @@ is running or EXITCODE=1 if it's not.
                 Program.Exit(0);
             }
 
-            Program.ConnectCluster();
+            Program.ConnectHive();
 
-            var cluster = HiveHelper.Cluster;
+            var hive = HiveHelper.Hive;
 
             // Parse the arguments.
 
@@ -175,7 +175,7 @@ is running or EXITCODE=1 if it's not.
 
                     if (!string.IsNullOrEmpty(registry))
                     {
-                        if (!ClusterDefinition.NameRegex.IsMatch(registry))
+                        if (!HiveDefinition.NameRegex.IsMatch(registry))
                         {
                             Console.Error.WriteLine($"*** ERROR: [{registry}] is not a valid hostname.");
                             Program.Exit(1);
@@ -202,7 +202,7 @@ is running or EXITCODE=1 if it's not.
 
                     // Execute the command.
 
-                    cluster.Registry.Login(registry, username, password);
+                    hive.Registry.Login(registry, username, password);
                     break;
 
                 case "logout":
@@ -211,7 +211,7 @@ is running or EXITCODE=1 if it's not.
 
                     registry = commandLine.Arguments.ElementAtOrDefault(1);
 
-                    if (!string.IsNullOrEmpty(registry) && !ClusterDefinition.NameRegex.IsMatch(registry))
+                    if (!string.IsNullOrEmpty(registry) && !HiveDefinition.NameRegex.IsMatch(registry))
                     {
                         Console.Error.WriteLine($"*** ERROR: [{registry}] is not a valid hostname.");
                         Program.Exit(1);
@@ -219,7 +219,7 @@ is running or EXITCODE=1 if it's not.
 
                     // Execute the command.
 
-                    cluster.Registry.Logout(registry);
+                    hive.Registry.Logout(registry);
                     break;
 
                 case "service":
@@ -244,7 +244,7 @@ is running or EXITCODE=1 if it's not.
                                 Program.Exit(1);
                             }
 
-                            if (!ClusterDefinition.NameRegex.IsMatch(registry))
+                            if (!HiveDefinition.NameRegex.IsMatch(registry))
                             {
                                 Console.Error.WriteLine($"*** ERROR: [{registry}] is not a valid hostname.");
                                 Program.Exit(1);
@@ -309,48 +309,48 @@ is running or EXITCODE=1 if it's not.
                             // Execute the command.
 
                             Console.WriteLine();
-                            cluster.Registry.CreateLocalRegistry(registry, username, password, secret, certificate,
+                            hive.Registry.CreateLocalRegistry(registry, username, password, secret, certificate,
                                 progress:  message => Console.WriteLine(message));
 
                             break;
 
                         case "prune":
 
-                            if (!cluster.Registry.HasLocalRegistry)
+                            if (!hive.Registry.HasLocalRegistry)
                             {
-                                Console.Error.WriteLine($"*** ERROR: The [{cluster.Name}] cluster does not have a local registry deployed.");
+                                Console.Error.WriteLine($"*** ERROR: The [{hive.Name}] hive does not have a local registry deployed.");
                                 Program.Exit(1);
                             }
 
                             Console.WriteLine();
-                            cluster.Registry.PruneLocalRegistry(progress: message => Console.WriteLine(message));
+                            hive.Registry.PruneLocalRegistry(progress: message => Console.WriteLine(message));
                             break;
 
                         case "remove":
                         case "rm":
 
-                            if (!cluster.Registry.HasLocalRegistry)
+                            if (!hive.Registry.HasLocalRegistry)
                             {
-                                Console.Error.WriteLine($"*** ERROR: The [{cluster.Name}] cluster does not have a local registry deployed.");
+                                Console.Error.WriteLine($"*** ERROR: The [{hive.Name}] hive does not have a local registry deployed.");
                                 Program.Exit(1);
                             }
 
                             Console.WriteLine();
-                            cluster.Registry.RemoveLocalRegistry(progress: message => Console.WriteLine(message));
+                            hive.Registry.RemoveLocalRegistry(progress: message => Console.WriteLine(message));
                             break;
 
                         case "status":
 
                             Console.WriteLine();
 
-                            if (cluster.Registry.HasLocalRegistry)
+                            if (hive.Registry.HasLocalRegistry)
                             {
-                                Console.WriteLine($"Local Docker registry is deployed on [{cluster.Name}].");
+                                Console.WriteLine($"Local Docker registry is deployed on [{hive.Name}].");
                                 Program.Exit(0);
                             }
                             else
                             {
-                                Console.WriteLine($"No local Docker registry is deployed on [{cluster.Name}].");
+                                Console.WriteLine($"No local Docker registry is deployed on [{hive.Name}].");
                                 Program.Exit(1);
                             }
                             break;

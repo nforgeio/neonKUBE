@@ -27,7 +27,7 @@ namespace NeonCli
     public class LogoutCommand : CommandBase
     {
         private const string usage = @"
-Logs out of a cluster.
+Logs out of a hive.
 
 USAGE:
 
@@ -49,13 +49,13 @@ USAGE:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            var clusterLogin = Program.ClusterLogin;
+            var hiveLogin = Program.HiveLogin;
 
             Console.WriteLine("");
 
             // Close all VPN connections even if we're not officially logged in.
             //
-            // We're passing NULL to close all cluster VPN connections to ensure that 
+            // We're passing NULL to close all hive VPN connections to ensure that 
             // we're only connected to one at a time.  It's very possible for a operator
             // to have to manage multiple disconnnected clusters that share the same
             // IP address space.
@@ -64,15 +64,15 @@ USAGE:
 
             // Actually logout.
 
-            if (clusterLogin == null)
+            if (hiveLogin == null)
             {
                 return; // Not logged in.
             }
 
-            Console.WriteLine($"Logging out of [{clusterLogin.ClusterName}].");
+            Console.WriteLine($"Logging out of [{hiveLogin.HiveName}].");
             Console.WriteLine("");
 
-            CurrentClusterLogin.Delete();
+            CurrentHiveLogin.Delete();
         }
 
         /// <inheritdoc/>

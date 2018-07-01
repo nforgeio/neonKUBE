@@ -1,5 +1,5 @@
 ---
-- name: Setup the cluster registry.
+- name: Setup the hive registry.
   hosts: swarm-manager
   vars_files: 
     - "secrets.yaml"

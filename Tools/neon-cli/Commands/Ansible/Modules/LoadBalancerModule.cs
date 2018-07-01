@@ -130,7 +130,7 @@ namespace NeonCli.Ansible
     //
     // This example adds a public TCP rule that forwards traffic
     // sent to port 5120 to each of the host nodes in the [DATABASE]
-    // cluster host group on port 8080.
+    // hive host group on port 8080.
     //
     //  - name: test
     //    hosts: localhost
@@ -200,7 +200,7 @@ namespace NeonCli.Ansible
                 throw new ArgumentException($"[rule_name] module argument is required.");
             }
 
-            if (!ClusterDefinition.IsValidName(ruleName))
+            if (!HiveDefinition.IsValidName(ruleName))
             {
                 throw new ArgumentException($"[rule_name={ruleName}] is not a valid load balancer rule name.");
             }
@@ -209,12 +209,12 @@ namespace NeonCli.Ansible
             {
                 case "private":
 
-                    loadBalancer = HiveHelper.Cluster.PrivateLoadBalancer;
+                    loadBalancer = HiveHelper.Hive.PrivateLoadBalancer;
                     break;
 
                 case "public":
 
-                    loadBalancer = HiveHelper.Cluster.PublicLoadBalancer;
+                    loadBalancer = HiveHelper.Hive.PublicLoadBalancer;
                     break;
 
                 default:
@@ -272,7 +272,7 @@ namespace NeonCli.Ansible
                         if (force)
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Rule [{ruleName}] does not exist but since [force=true] we're going to update anyway.");
-                            HiveHelper.Cluster.SignalLoadBalancerUpdate();
+                            HiveHelper.Hive.SignalLoadBalancerUpdate();
                             context.Changed = true;
                         }
                         else
@@ -354,9 +354,9 @@ namespace NeonCli.Ansible
                         throw new ArgumentException("Access Denied: Root Vault credentials are required.");
                     }
 
-                    context.WriteLine(AnsibleVerbosity.Trace, "Reading cluster certificates.");
+                    context.WriteLine(AnsibleVerbosity.Trace, "Reading hive certificates.");
 
-                    using (var vault = HiveHelper.OpenVault(Program.ClusterLogin.VaultCredentials.RootToken))
+                    using (var vault = HiveHelper.OpenVault(Program.HiveLogin.VaultCredentials.RootToken))
                     {
                         // List the certificate key/names and then fetch each one
                         // to capture details like the expiration date and covered
@@ -372,7 +372,7 @@ namespace NeonCli.Ansible
                         }
                     }
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"[{validationContext.Certificates.Count}] cluster certificates downloaded.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"[{validationContext.Certificates.Count}] hive certificates downloaded.");
 
                     // Actually perform the rule validation.
 
@@ -417,7 +417,7 @@ namespace NeonCli.Ansible
                             if (force)
                             {
                                 context.WriteLine(AnsibleVerbosity.Trace, $"Rules are the same but since [force=true] we're going to update anyway.");
-                                HiveHelper.Cluster.SignalLoadBalancerUpdate();
+                                HiveHelper.Hive.SignalLoadBalancerUpdate();
                                 changed = true;
                             }
                             else

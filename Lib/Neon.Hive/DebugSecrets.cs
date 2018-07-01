@@ -28,7 +28,7 @@ namespace Neon.Hive
     /// Add simple text secrets to the collection using <see cref="Add(string, string)"/>.
     /// </para>
     /// <para>
-    /// You can also create temporary cluster Vault and Consul credentials using
+    /// You can also create temporary hive Vault and Consul credentials using
     /// <see cref="VaultAppRole(string, string)"/> and <see cref="ConsulToken(string, string[])"/>.
     /// Temporary credentials have a lifespan of 1 day by default, but this can be
     /// changed by setting <see cref="CredentialTTL"/>.
@@ -58,7 +58,7 @@ namespace Neon.Hive
         // Implementation
 
         private List<CredentialRequest> credentialRequests = new List<CredentialRequest>();
-        private ClusterLogin            clusterLogin;
+        private HiveLogin               hiveLogin;
         private VaultClient             vaultClient;
 
         /// <summary>
@@ -107,7 +107,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Adds Vault token credentials to the dictionary.  The credentials will be
-        /// formatted as <see cref="ClusterCredentials"/> serialized to JSON.
+        /// formatted as <see cref="HiveCredentials"/> serialized to JSON.
         /// </summary>
         /// <param name="name">The secret name.</param>
         /// <param name="token">The Vault token.</param>
@@ -127,7 +127,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Adds Vault AppRole credentials to the dictionary.  The credentials will be
-        /// formatted as <see cref="ClusterCredentials"/> serialized to JSON.
+        /// formatted as <see cref="HiveCredentials"/> serialized to JSON.
         /// </summary>
         /// <param name="name">The secret name.</param>
         /// <param name="roleName">The Vault role name.</param>
@@ -160,7 +160,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns a <see cref="VaultClient"/> for the attached cluster using the root token.
+        /// Returns a <see cref="VaultClient"/> for the attached hive using the root token.
         /// </summary>
         private VaultClient VaultClient
         {
@@ -168,7 +168,7 @@ namespace Neon.Hive
             {
                 if (vaultClient == null)
                 {
-                    vaultClient = HiveHelper.OpenVault(ClusterCredentials.FromVaultToken(clusterLogin.VaultCredentials.RootToken));
+                    vaultClient = HiveHelper.OpenVault(HiveCredentials.FromVaultToken(hiveLogin.VaultCredentials.RootToken));
                 }
 
                 return vaultClient;
@@ -179,13 +179,13 @@ namespace Neon.Hive
         /// Called internally by <see cref="HiveHelper.OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> to 
         /// create any requested Vault and Consul credentials and add them to the dictionary.
         /// </summary>
-        /// <param name="cluster">The attached cluster.</param>
-        /// <param name="clusterLogin">The cluster login information.</param>
-        internal void Realize(ClusterProxy cluster, ClusterLogin clusterLogin)
+        /// <param name="hive">The attached hive.</param>
+        /// <param name="hiveLogin">The hive login.</param>
+        internal void Realize(HiveProxy hive, HiveLogin hiveLogin)
         {
-            this.clusterLogin = clusterLogin;
+            this.hiveLogin = hiveLogin;
 
-            ClusterCredentials credentials;
+            HiveCredentials credentials;
 
             foreach (var request in credentialRequests)
             {
@@ -195,7 +195,7 @@ namespace Neon.Hive
 
                         // Serialize the credentials as JSON and persist.
 
-                        credentials = ClusterCredentials.FromVaultToken(request.Token);
+                        credentials = HiveCredentials.FromVaultToken(request.Token);
 
                         Add(request.SecretName, NeonHelper.JsonSerialize(credentials, Formatting.Indented));
                         break;

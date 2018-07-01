@@ -211,11 +211,11 @@ namespace Neon.Hive
         }
 
         /// <inheritdoc/>
-        public override void Run(ClusterProxy cluster)
+        public override void Run(HiveProxy hive)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
 
-            var node = cluster.GetNode(nodeName);
+            var node = hive.GetNode(nodeName);
 
             if (operationName == null)
             {
@@ -340,7 +340,7 @@ namespace Neon.Hive
         /// <see cref="ToBash"/> does not support commands with attached files.
         /// </exception>
         /// <remarks>
-        /// This can be useful for making copies of cluster configuration commands
+        /// This can be useful for making copies of hive configuration commands
         /// on the server as scripts for situations where system operators need
         /// to manually tweak things.
         /// </remarks>

@@ -26,23 +26,23 @@ namespace Neon.Hive
     public static class HiveConst
     {
         /// <summary>
-        /// Name for the built-in cluster user that has the ability to manage other users.
+        /// Name for the built-in hive user that has the ability to manage other users.
         /// </summary>
         public const string RootUser = "root";
 
         /// <summary>
-        /// The local endpoint exposed by cluster docker instances to be monitored by the 
+        /// The local endpoint exposed by hivev docker instances to be monitored by the 
         /// <b>neon-log-metricbeat</b> container to capture Docker metrics.
         /// </summary>
         public readonly static string DockerApiInternalEndpoint = $"tcp://127.0.0.1:{NetworkPorts.Docker}";
 
         /// <summary>
-        /// Name of the standard cluster <b>public</b> overlay network.
+        /// Name of the standard hive <b>public</b> overlay network.
         /// </summary>
         public const string PublicNetwork = "neon-public";
 
         /// <summary>
-        /// Name of the standard cluster <b>private</b> overlay network.
+        /// Name of the standard hive <b>private</b> overlay network.
         /// </summary>
         public const string PrivateNetwork = "neon-private";
 
@@ -141,9 +141,9 @@ namespace Neon.Hive
         public const string GitProdBranch = "prod";
 
         /// <summary>
-        /// Consul root key for cluster globals. 
+        /// Consul root key for hive globals variables and settings. 
         /// </summary>
-        public static readonly string ClusterGlobalsKey = "neon/cluster";
+        public static readonly string GlobalKey = "neon/global";
 
         /// <summary>
         /// Consul root key for the Dynamic DNS service related values.
@@ -166,7 +166,7 @@ namespace Neon.Hive
         public static readonly string ConsulDnsHostsMd5Key = $"{ConsulDnsRootKey}/answers/hosts.md5";
 
         /// <summary>
-        /// Consul key where cluster dashboards are registered.
+        /// Consul key where hive dashboards are registered.
         /// </summary>
         public const string ConsulDashboardsKey = "neon/dashboards";
 
@@ -176,7 +176,7 @@ namespace Neon.Hive
         public const string ConsulRegistryRootKey = "neon/services/neon-registry";
 
         /// <summary>
-        /// Identifies the dashboard folder where built-in cluster dashboards will reside.
+        /// Identifies the dashboard folder where built-in hive dashboards will reside.
         /// </summary>
         public const string DashboardSystemFolder = "system";
 

@@ -24,7 +24,7 @@ using Neon.Net;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Azure specific options for a cluster node.  The default constructor
+    /// Azure specific options for a hive node.  The default constructor
     /// initializes reasonable defaults.
     /// </summary>
     public class AzureNodeOptions
@@ -109,29 +109,29 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="hiveDefinition">The hive definition.</param>
         /// <param name="nodeName">The associated node name.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition, string nodeName)
+        public void Validate(HiveDefinition hiveDefinition, string nodeName)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             var caps = AzureVmCapabilities.Get(VmSize);
 
             if (!caps.LoadBalancing)
             {
-                throw new ClusterDefinitionException($"Cluster node [{nodeName}] has size [{VmSize}] which does not support load balancing and cannot be used for a neonHIVE.");
+                throw new HiveDefinitionException($"Hive node [{nodeName}] has size [{VmSize}] which does not support load balancing and cannot be used for a neonHIVE.");
             }
 
             if (!caps.SupportsDataStorageType(StorageType))
             {
-                throw new ClusterDefinitionException($"Cluster node [{nodeName}] has size [{VmSize}] which does not support [{StorageType}] managed data drives.");
+                throw new HiveDefinitionException($"Hive node [{nodeName}] has size [{VmSize}] which does not support [{StorageType}] managed data drives.");
             }
 
             if (caps.DataDriveCount < HardDriveCount)
             {
-                throw new ClusterDefinitionException($"Cluster node [{nodeName}] has size [{VmSize}] which does not support [{HardDriveCount}] managed data drives. Up to [{caps.DataDriveCount}] drives are allowed.");
+                throw new HiveDefinitionException($"Hive node [{nodeName}] has size [{VmSize}] which does not support [{HardDriveCount}] managed data drives. Up to [{caps.DataDriveCount}] drives are allowed.");
             }
 
             AzureHelper.GetDiskSizeGB(StorageType, HardDriveSizeGB);

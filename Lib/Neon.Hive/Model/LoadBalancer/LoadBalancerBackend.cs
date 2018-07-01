@@ -75,14 +75,14 @@ namespace Neon.Hive
         /// <param name="ruleName">The parent rule name.</param>
         public virtual void Validate(LoadBalancerValidationContext context, string ruleName)
         {
-            if (!string.IsNullOrEmpty(Name) && !ClusterDefinition.IsValidName(Name))
+            if (!string.IsNullOrEmpty(Name) && !HiveDefinition.IsValidName(Name))
             {
                 context.Error($"Rule [{ruleName}] has backend server with invalid [{nameof(Name)}={Name}].");
             }
 
             if (!string.IsNullOrEmpty(Group))
             {
-                if (!ClusterDefinition.IsValidName(Group))
+                if (!HiveDefinition.IsValidName(Group))
                 {
                     context.Error($"Rule [{ruleName}] has backend with [{nameof(Group)}={Group}] which is not a valid group name.");
                 }
@@ -95,7 +95,7 @@ namespace Neon.Hive
             else
             {
                 if (string.IsNullOrEmpty(Server) ||
-                    (!IPAddress.TryParse(Server, out var address) && !ClusterDefinition.DnsHostRegex.IsMatch(Server)))
+                    (!IPAddress.TryParse(Server, out var address) && !HiveDefinition.DnsHostRegex.IsMatch(Server)))
                 {
                     context.Error($"Rule [{ruleName}] has backend server [{Server}] which is not valid.  A DNS name or IP address was expected.");
                 }
@@ -115,7 +115,7 @@ namespace Neon.Hive
         /// Dictionary mapping host group names to the list of host node 
         /// definitions within the named group.
         /// </param>
-        /// <returns>The selected cluster host node definitions.</returns>
+        /// <returns>The selected hive host node definitions.</returns>
         /// <exception cref="InvalidOperationException">Thrown if the backend does not target a group.</exception>
         public List<NodeDefinition> SelectGroupNodes(Dictionary<string, List<NodeDefinition>> hostGroups)
         {

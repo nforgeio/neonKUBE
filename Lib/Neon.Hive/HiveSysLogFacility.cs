@@ -13,14 +13,14 @@ namespace Neon.Hive
 {
     /// <summary>
     /// Maps neonHIVE services to <b>local#</b> SysLog facilities.  These mappings
-    /// will be used when ingesting SysLog messages into the cluster logging
+    /// will be used when ingesting SysLog messages into the hive logging
     /// infrastructure.
     /// </summary>
     /// <remarks>
     /// <note>
     /// <b>IMPORTANT:</b> Do not change any of these values without really knowing what
     /// you're doing.  It's likely that these values have been literally embedded
-    /// in cluster configuration scripts as well as Docker images.  Any change is likely
+    /// in hive configuration scripts as well as Docker images.  Any change is likely
     /// to break things.
     /// </note>
     /// <note>

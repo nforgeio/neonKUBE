@@ -125,7 +125,7 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var cluster = HiveHelper.Cluster;
+            var hive = HiveHelper.Hive;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {
@@ -140,7 +140,7 @@ namespace NeonCli.Ansible
                 throw new ArgumentException($"[name] module argument is required.");
             }
 
-            if (!ClusterDefinition.IsValidName(name))
+            if (!HiveDefinition.IsValidName(name))
             {
                 throw new ArgumentException($"[name={name}] is not a valid certificate name.");
             }
@@ -175,7 +175,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Vault: checking for [{name}] certificate");
 
-                    if (cluster.Certificate.Get(name) != null)
+                    if (hive.Certificate.Get(name) != null)
                     {
                         context.WriteLine(AnsibleVerbosity.Trace, $"Vault: [{name}] certificate exists");
 
@@ -186,7 +186,7 @@ namespace NeonCli.Ansible
                         else
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Removing [{name}] certyificate.");
-                            cluster.Certificate.Remove(name);
+                            hive.Certificate.Remove(name);
                             context.WriteLine(AnsibleVerbosity.Info, $"[{name}] certificate removed");
                         }
 
@@ -209,7 +209,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Reading [{name}] certificate");
 
-                    var existingCert = cluster.Certificate.Get(name);
+                    var existingCert = hive.Certificate.Get(name);
                     var changed      = false;
 
                     if (existingCert == null)
@@ -240,7 +240,7 @@ namespace NeonCli.Ansible
                         else
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Saving [{name}] certificate");
-                            cluster.Certificate.Set(name, certificate);
+                            hive.Certificate.Set(name, certificate);
                             context.WriteLine(AnsibleVerbosity.Info, $"[{name}] certificate saved");
                         }
                     }

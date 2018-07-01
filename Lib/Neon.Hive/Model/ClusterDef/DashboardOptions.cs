@@ -24,7 +24,7 @@ using Neon.Common;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Controls which built-in dashboards are to be enabled for the cluster.
+    /// Controls which built-in dashboards are to be enabled for the hive.
     /// </summary>
     public class DashboardOptions
     {
@@ -33,7 +33,7 @@ namespace Neon.Hive
         private const bool defaultCeph   = true;
 
         /// <summary>
-        /// Enables the Elastic Kibana dashboard if logging is enabled for the cluster.
+        /// Enables the Elastic Kibana dashboard if logging is enabled for the hive.
         /// This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Kibana", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -58,12 +58,12 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition)
+        public void Validate(HiveDefinition hiveDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
         }
     }
 }

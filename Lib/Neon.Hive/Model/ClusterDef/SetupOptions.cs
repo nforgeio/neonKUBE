@@ -34,8 +34,8 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// Indicates that cluster prepare and setup should be run in <b>debug mode</b>.
-        /// This is intended to help debugging cluster setup issues by having scripts
+        /// Indicates that hive prepare and setup should be run in <b>debug mode</b>.
+        /// This is intended to help debugging hive setup issues by having scripts
         /// uploaded multiple times at different stages of setup so that setup can
         /// be restarted with new scripts without having to restart setup from the
         /// beginning.  This defaults to <c>false</c>.
@@ -52,8 +52,8 @@ namespace Neon.Hive
         /// <summary>
         /// <para>
         /// Specifies the maximum delay to be added between steps at strategic points 
-        /// during cluster preparation and setup to help mitigate potential problems 
-        /// when mutiple cluster nodes are trying to access the same Internet resources,
+        /// during hive preparation and setup to help mitigate potential problems 
+        /// when mutiple hive nodes are trying to access the same Internet resources,
         /// potentially getting throttled by the remote endpoint.
         /// </para>
         /// <para>
@@ -69,13 +69,13 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        public void Validate(ClusterDefinition clusterDefinition)
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
+        public void Validate(HiveDefinition hiveDefinition)
         {
             if (StepStaggerSeconds < 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(SetupOptions)}.{nameof(StepStaggerSeconds)}={StepStaggerSeconds}] cannot be negative.");
+                throw new HiveDefinitionException($"[{nameof(SetupOptions)}.{nameof(StepStaggerSeconds)}={StepStaggerSeconds}] cannot be negative.");
             }
         }
     }

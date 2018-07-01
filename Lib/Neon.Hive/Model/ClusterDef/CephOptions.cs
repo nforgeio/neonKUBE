@@ -26,7 +26,7 @@ using Neon.IO;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Specifies the options for configuring the cluster integrated <a href="https://ceph.com/">Ceph</a>
+    /// Specifies the options for configuring the hive integrated <a href="https://ceph.com/">Ceph</a>
     /// distributed storage cluster.
     /// </summary>
     public class CephOptions
@@ -47,7 +47,7 @@ namespace Neon.Hive
         public const double CacheSizeFudge = 1.0/1.5;
 
         /// <summary>
-        /// Indicates whether Ceph storage is to be enabled for the cluster.  
+        /// Indicates whether Ceph storage is to be enabled for the hive.  
         /// This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Enabled", Required = Required.Default)]
@@ -146,9 +146,9 @@ namespace Neon.Hive
         public string OSDObjectSizeMax { get; set; } = defaultOSDObjectSizeMax;
 
         /// <summary>
-        /// Specifies the default number of object replicas to be stored in the cluster.
+        /// Specifies the default number of object replicas to be stored in the hive.
         /// This defaults to the minimum of 3 or the number of OSD nodes provisioned
-        /// in the cluster.
+        /// in the hive.
         /// </summary>
         [JsonProperty(PropertyName = "OSDReplicaCount", Required = Required.Default)]
         [DefaultValue(0)]
@@ -200,7 +200,7 @@ namespace Neon.Hive
         public string MDSCacheSize { get; set; } = defaultMDSCacheSize;
 
         /// <summary>
-        /// URL for the Docker volume plugin package to be installed on all cluster
+        /// URL for the Docker volume plugin package to be installed on all hive
         /// nodes when Ceph is enabled.  This defaults to the latest released version.
         /// </summary>
         [JsonProperty(PropertyName = "VolumePluginPackage", Required = Required.Default)]
@@ -211,9 +211,9 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
-        public void Validate(ClusterDefinition clusterDefinition)
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
+        public void Validate(HiveDefinition hiveDefinition)
         {
             if (!Enabled)
             {
@@ -224,10 +224,10 @@ namespace Neon.Hive
 
             if (string.IsNullOrEmpty(VolumePluginPackage) || !Uri.TryCreate(VolumePluginPackage, UriKind.Absolute, out var uri))
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(VolumePluginPackage)}={VolumePluginPackage}] must be set to a valid package URL.");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(VolumePluginPackage)}={VolumePluginPackage}] must be set to a valid package URL.");
             }
 
-            // Examine the Ceph related labels for the cluster nodes to verify that any 
+            // Examine the Ceph related labels for the hive nodes to verify that any 
             // specified Ceph service assignments are reasonable.  We will also try to
             // automatically assign Ceph services to nodes when there are no explicit
             // assignments.
@@ -237,16 +237,16 @@ namespace Neon.Hive
             // It's not super clean to be doing this here but it's easy and I believe
             // I've already done this sort of thing elsewhere.
 
-            var cephMONCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMON);
-            var cephOSDCount = clusterDefinition.Nodes.Count(n => n.Labels.CephOSD);
-            var cephMDSCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMDS);
+            var cephMONCount = hiveDefinition.Nodes.Count(n => n.Labels.CephMON);
+            var cephOSDCount = hiveDefinition.Nodes.Count(n => n.Labels.CephOSD);
+            var cephMDSCount = hiveDefinition.Nodes.Count(n => n.Labels.CephMDS);
 
             if (cephMONCount == 0)
             {
                 // No Ceph monitor/manager nodes are explicitly assigned so we're going to
-                // automatically place these on the cluster managers.
+                // automatically place these on the hive managers.
 
-                foreach (var node in clusterDefinition.Nodes.Where(n => n.IsManager))
+                foreach (var node in hiveDefinition.Nodes.Where(n => n.IsManager))
                 {
                     node.Labels.CephMON = true;
                 }
@@ -256,22 +256,22 @@ namespace Neon.Hive
             {
                 // No Ceph OSD nodes are explicitly assigned.
                 //
-                // If the cluster has at least three workers, we'll provision the
+                // If the hive has at least three workers, we'll provision the
                 // OSDs on all of the workers.
                 //
                 // If there are fewer than three workers, we'll provision ODSs on
                 // all managers and all workers (AKA the Swarm nodes).
 
-                if (clusterDefinition.Workers.Count() >= 3)
+                if (hiveDefinition.Workers.Count() >= 3)
                 {
-                    foreach (var node in clusterDefinition.Workers)
+                    foreach (var node in hiveDefinition.Workers)
                     {
                         node.Labels.CephOSD = true;
                     }
                 }
                 else
                 {
-                    foreach (var node in clusterDefinition.Swarm)
+                    foreach (var node in hiveDefinition.Swarm)
                     {
                         node.Labels.CephOSD = true;
                     }
@@ -283,7 +283,7 @@ namespace Neon.Hive
                 // No Ceph MDS nodes are explicitly assigned so we're going to provision
                 // these on the Ceph Monitor servers.
 
-                foreach (var node in clusterDefinition.Nodes.Where(n => n.Labels.CephMON))
+                foreach (var node in hiveDefinition.Nodes.Where(n => n.Labels.CephMON))
                 {
                     node.Labels.CephMDS = true;
                 }
@@ -292,9 +292,9 @@ namespace Neon.Hive
             // Recount the Ceph component instances to account for any the automatic
             // provisioning assignments that may have been performed above.
 
-            cephMONCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMON);
-            cephOSDCount = clusterDefinition.Nodes.Count(n => n.Labels.CephOSD);
-            cephMDSCount = clusterDefinition.Nodes.Count(n => n.Labels.CephMDS);
+            cephMONCount = hiveDefinition.Nodes.Count(n => n.Labels.CephMON);
+            cephOSDCount = hiveDefinition.Nodes.Count(n => n.Labels.CephOSD);
+            cephMDSCount = hiveDefinition.Nodes.Count(n => n.Labels.CephMDS);
 
             // Validate the properties.
 
@@ -305,47 +305,47 @@ namespace Neon.Hive
 
             if (Version == string.Empty)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(Version)}={Version}] is not a valid.  Please use something like [{defaultVersion}].");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(Version)}={Version}] is not a valid.  Please use something like [{defaultVersion}].");
             }
 
-            if (ClusterDefinition.ValidateSize(OSDDriveSize, this.GetType(), nameof(OSDDriveSize)) < NeonHelper.Giga)
+            if (HiveDefinition.ValidateSize(OSDDriveSize, this.GetType(), nameof(OSDDriveSize)) < NeonHelper.Giga)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDDriveSize)}={OSDDriveSize}] cannot be less than [1GB].");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDDriveSize)}={OSDDriveSize}] cannot be less than [1GB].");
             }
 
-            if (ClusterDefinition.ValidateSize(OSDCacheSize, this.GetType(), nameof(OSDCacheSize)) < 64 * NeonHelper.Mega)
+            if (HiveDefinition.ValidateSize(OSDCacheSize, this.GetType(), nameof(OSDCacheSize)) < 64 * NeonHelper.Mega)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDCacheSize)}={OSDCacheSize}] cannot be less than [64MB].");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDCacheSize)}={OSDCacheSize}] cannot be less than [64MB].");
             }
 
-            if (ClusterDefinition.ValidateSize(OSDJournalSize, this.GetType(), nameof(OSDJournalSize)) < 64 * NeonHelper.Mega)
+            if (HiveDefinition.ValidateSize(OSDJournalSize, this.GetType(), nameof(OSDJournalSize)) < 64 * NeonHelper.Mega)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDJournalSize)}={OSDJournalSize}] cannot be less than [64MB].");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDJournalSize)}={OSDJournalSize}] cannot be less than [64MB].");
             }
 
-            if (ClusterDefinition.ValidateSize(OSDObjectSizeMax, this.GetType(), nameof(OSDObjectSizeMax)) < 64 * NeonHelper.Mega)
+            if (HiveDefinition.ValidateSize(OSDObjectSizeMax, this.GetType(), nameof(OSDObjectSizeMax)) < 64 * NeonHelper.Mega)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDObjectSizeMax)}={OSDObjectSizeMax}] cannot be less than [64MB].");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDObjectSizeMax)}={OSDObjectSizeMax}] cannot be less than [64MB].");
             }
 
-            if (ClusterDefinition.ValidateSize(MDSCacheSize, this.GetType(), nameof(MDSCacheSize)) < 64 * NeonHelper.Mega)
+            if (HiveDefinition.ValidateSize(MDSCacheSize, this.GetType(), nameof(MDSCacheSize)) < 64 * NeonHelper.Mega)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(MDSCacheSize)}={MDSCacheSize}] cannot be less than [64MB].");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(MDSCacheSize)}={MDSCacheSize}] cannot be less than [64MB].");
             }
 
             if (cephMONCount == 0)
             {
-                throw new ClusterDefinitionException($"Ceph storage cluster requires at least one monitor node.");
+                throw new HiveDefinitionException($"Ceph storage cluster requires at least one monitor node.");
             }
 
             if (cephOSDCount == 0)
             {
-                throw new ClusterDefinitionException($"Ceph storage cluster requires at least one OSD (data) node.");
+                throw new HiveDefinitionException($"Ceph storage cluster requires at least one OSD (data) node.");
             }
 
             if (cephMDSCount == 0)
             {
-                throw new ClusterDefinitionException($"Ceph storage cluster requires at least one MDS (metadata) node.");
+                throw new HiveDefinitionException($"Ceph storage cluster requires at least one MDS (metadata) node.");
             }
 
             if (OSDReplicaCount == 0)
@@ -357,12 +357,12 @@ namespace Neon.Hive
 
             if (OSDReplicaCount < 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCount)}={OSDReplicaCount}] cannot be less than zero.");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCount)}={OSDReplicaCount}] cannot be less than zero.");
             }
 
             if (OSDReplicaCount > cephOSDCount)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCount)}={OSDReplicaCount}] cannot be greater than the number of OSD nodes [{cephOSDCount}].");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCount)}={OSDReplicaCount}] cannot be greater than the number of OSD nodes [{cephOSDCount}].");
             }
 
             if (OSDReplicaCountMin == 0)
@@ -381,22 +381,22 @@ namespace Neon.Hive
 
             if (OSDReplicaCountMin < 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be less than zero.");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be less than zero.");
             }
 
             if (OSDReplicaCountMin > OSDReplicaCount)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be less than [{nameof(OSDReplicaCount)}={OSDReplicaCount}].");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be less than [{nameof(OSDReplicaCount)}={OSDReplicaCount}].");
             }
 
             if (OSDReplicaCountMin > cephOSDCount)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be greater than the number of OSD nodes [{cephOSDCount}].");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDReplicaCountMin)}={OSDReplicaCountMin}] cannot be greater than the number of OSD nodes [{cephOSDCount}].");
             }
 
             if (OSDPlacementGroups < 8)
             {
-                throw new ClusterDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDPlacementGroups)}={OSDPlacementGroups}] cannot be less than [8].");
+                throw new HiveDefinitionException($"[{nameof(CephOptions)}.{nameof(OSDPlacementGroups)}={OSDPlacementGroups}] cannot be less than [8].");
             }
         }
     }

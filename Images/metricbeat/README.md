@@ -17,7 +17,7 @@ Elasticsearch, Kibana, and Metricbeat are designed to run together as a combined
 
 # Description
 
-[Metricbeat](https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-overview.html) is an agent that runs on each cluster node that captures and ships node and container metrics to the cluster Elasticsearch logs for analysis and viewing via Kibana.
+[Metricbeat](https://www.elastic.co/guide/en/beats/metricbeat/current/metricbeat-overview.html) is an agent that runs on each cluster node that captures and ships node and container metrics to the hive Elasticsearch logs for analysis and viewing via Kibana.
 
 By default, this container launches Metricbeat configured to capture the following node metrics:
 
@@ -28,7 +28,7 @@ By default, this container launches Metricbeat configured to capture the followi
 * Memory
 * Network
 
-You may may modify these behaviors by creating a derived image, modifying the `/metricbeat.yml.sh` configuration script and then redeploying the cluster's **neon-log-metricbeat** containers as described below.
+You may may modify these behaviors by creating a derived image, modifying the `/metricbeat.yml.sh` configuration script and then redeploying the hive's **neon-log-metricbeat** containers as described below.
 
 NOTE: Although it would be nice to run Metricbeat as a Docker service, that doesn't work because it has to run on the host network.
 
@@ -44,11 +44,11 @@ NOTE: Although it would be nice to run Metricbeat as a Docker service, that does
 
 # Deployment
 
-**metricbeat** is deployed as a container to all cluster nodes.  The container expects some volumes to be mounted and must be run on the host network as explained [here](https://www.elastic.co/guide/en/beats/metricbeat/current/running-in-container.html).
+**metricbeat** is deployed as a container to all hive nodes.  The container expects some volumes to be mounted and must be run on the host network as explained [here](https://www.elastic.co/guide/en/beats/metricbeat/current/running-in-container.html).
 
 You may also run this image with the `import-dashboards` argument.  This loads the metrics Kibana dashboards into the Elasticsearch log cluster.  
 
-**neon-cli** handles **neon-log-metricbeat** container deployment and dashboard initialization when the cluster is provisioned using the following Docker commands:
+**neon-cli** handles **neon-log-metricbeat** container deployment and dashboard initialization when the hive is provisioned using the following Docker commands:
 
 ````
 # Deploy the container.

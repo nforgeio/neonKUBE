@@ -77,15 +77,15 @@ namespace NeonCli.Ansible
         // By default, only the settings considered to be user modifiable may be changed using
         // this module.  You can override this by passing [validate: no].
         //
-        // Here are the user modifiable cluster settings:
+        // Here are the user modifiable hive settings:
         //
-        //      allow-unit-testing  - indicates whether ClusterFixture based unit tests are
-        //                            allowed for the cluster.  (yes/no/true/false/on/off/1/0)
+        //      allow-unit-testing  - indicates whether HiveFixture based unit tests are
+        //                            allowed for the hive.  (yes/no/true/false/on/off/1/0)
         //
         //      disable-auto-unseal - controls whether [neon-cluster-manager] will automatically
-        //                            unseal the cluster Vault.
+        //                            unseal the hive Vault.
         //
-        //      log-retention-days  - specifies the number of days of cluster logs to be 
+        //      log-retention-days  - specifies the number of days of hive logs to be 
         //                            maintained in the Elasticsearch cluster.  This must
         //                            be a positive integer.
         //
@@ -103,7 +103,7 @@ namespace NeonCli.Ansible
         //          name: allow-unit-testing
         //          value: yes
         //
-        // This example has the cluster retain 30 days of logs:
+        // This example has the hive retain 30 days of logs:
         //
         //  - name: test
         //    hosts: localhost
@@ -131,7 +131,7 @@ namespace NeonCli.Ansible
         //  - name: test
         //    hosts: localhost
         //    tasks:
-        //      - name: change cluster UUID
+        //      - name: change hive UUID
         //        neon_globals:
         //          state: set
         //          name: uuid
@@ -149,8 +149,8 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var cluster = HiveHelper.Cluster;
-            var consul  = HiveHelper.Consul;
+            var hive   = HiveHelper.Hive;
+            var consul = HiveHelper.Consul;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {
@@ -198,13 +198,13 @@ namespace NeonCli.Ansible
             {
                 case "get":
 
-                    if (cluster.Globals.TryGetString(name, out var output))
+                    if (hive.Globals.TryGetString(name, out var output))
                     {
                         context.WriteLine(AnsibleVerbosity.Important, output);
                     }
                     else
                     {
-                        context.WriteErrorLine($"Cluster global [{name}] does not exist.");
+                        context.WriteErrorLine($"Hive global [{name}] does not exist.");
                     }
                     break;
 
@@ -212,11 +212,11 @@ namespace NeonCli.Ansible
 
                     if (validate.Value)
                     {
-                        cluster.Globals.SetUser(name, value);
+                        hive.Globals.SetUser(name, value);
                     }
                     else
                     {
-                        cluster.Globals.Set(name, value);
+                        hive.Globals.Set(name, value);
                     }
                     break;
 

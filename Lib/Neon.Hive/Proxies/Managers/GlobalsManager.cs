@@ -24,21 +24,21 @@ using Neon.Time;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Manages cluster global settings.
+    /// Manages hive global settings.
     /// </summary>
     public sealed class GlobalsManager
     {
-        private ClusterProxy    cluster;
+        private HiveProxy    hive;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="cluster">The parent <see cref="ClusterProxy"/>.</param>
-        internal GlobalsManager(ClusterProxy cluster)
+        /// <param name="hive">The parent <see cref="HiveProxy"/>.</param>
+        internal GlobalsManager(HiveProxy hive)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
 
-            this.cluster = cluster;
+            this.hive = hive;
         }
 
         /// <summary>
@@ -58,25 +58,25 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Attempts to retrieve a named cluster global setting as a <c>string</c>.
+        /// Attempts to retrieve a named hive global setting as a <c>string</c>.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="output">Returns as the setting value.</param>
         /// <returns><c>true</c> if the setting exists and was returned.</returns>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="HiveGlobals"/>.
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
         /// </note>
         /// </remarks>
         public bool TryGetString(string name, out string output)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
 
             output = null;
 
-            var key   = $"{HiveConst.ClusterGlobalsKey}/{name}";
-            var value = cluster.Consul.Client.KV.GetStringOrDefault(key).Result;
+            var key   = $"{HiveConst.GlobalKey}/{name}";
+            var value = hive.Consul.Client.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
             {
@@ -89,7 +89,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Attempts to retrieve a named cluster global setting as a <c>bool</c>.
+        /// Attempts to retrieve a named hive global setting as a <c>bool</c>.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="output">Returns as the setting value.</param>
@@ -97,18 +97,18 @@ namespace Neon.Hive
         /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="HiveGlobals"/>.
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
         /// </note>
         /// </remarks>
         public bool TryGetBool(string name, out bool output)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
 
             output = default(bool);
 
-            var key   = $"{HiveConst.ClusterGlobalsKey}/{name}";
-            var value = cluster.Consul.Client.KV.GetStringOrDefault(key).Result;
+            var key   = $"{HiveConst.GlobalKey}/{name}";
+            var value = hive.Consul.Client.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
             {
@@ -121,7 +121,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Attempts to retrieve a named cluster global setting as an <c>int</c>.
+        /// Attempts to retrieve a named hive global setting as an <c>int</c>.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="output">Returns as the setting value.</param>
@@ -129,18 +129,18 @@ namespace Neon.Hive
         /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="HiveGlobals"/>.
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
         /// </note>
         /// </remarks>
         public bool TryGetInt(string name, out int output)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
 
             output = default(int);
 
-            var key   = $"{HiveConst.ClusterGlobalsKey}/{name}";
-            var value = cluster.Consul.Client.KV.GetStringOrDefault(key).Result;
+            var key   = $"{HiveConst.GlobalKey}/{name}";
+            var value = hive.Consul.Client.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
             {
@@ -153,7 +153,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Attempts to retrieve a named cluster global setting as a <c>long</c>.
+        /// Attempts to retrieve a named hive global setting as a <c>long</c>.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="output">Returns as the setting value.</param>
@@ -161,18 +161,18 @@ namespace Neon.Hive
         /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="HiveGlobals"/>.
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
         /// </note>
         /// </remarks>
         public bool TryGetLong(string name, out long output)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
 
             output = default(int);
 
-            var key   = $"{HiveConst.ClusterGlobalsKey}/{name}";
-            var value = cluster.Consul.Client.KV.GetStringOrDefault(key).Result;
+            var key   = $"{HiveConst.GlobalKey}/{name}";
+            var value = hive.Consul.Client.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
             {
@@ -185,7 +185,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Attempts to retrieve a named cluster global setting as a <c>double</c>.
+        /// Attempts to retrieve a named hive global setting as a <c>double</c>.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="output">Returns as the setting value.</param>
@@ -193,18 +193,18 @@ namespace Neon.Hive
         /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="HiveGlobals"/>.
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
         /// </note>
         /// </remarks>
         public bool TryGetDouble(string name, out double output)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
 
             output = default(double);
 
-            var key   = $"{HiveConst.ClusterGlobalsKey}/{name}";
-            var value = cluster.Consul.Client.KV.GetStringOrDefault(key).Result;
+            var key   = $"{HiveConst.GlobalKey}/{name}";
+            var value = hive.Consul.Client.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
             {
@@ -217,7 +217,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Attempts to retrieve a named cluster global setting as a <see cref="TimeSpan"/>.
+        /// Attempts to retrieve a named hive global setting as a <see cref="TimeSpan"/>.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="output">Returns as the setting value.</param>
@@ -225,18 +225,18 @@ namespace Neon.Hive
         /// <exception cref="FormatException">Thrown if the setting value could not be parsed.</exception>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="HiveGlobals"/>.
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
         /// </note>
         /// </remarks>
         public bool TryGetTimeSpan(string name, out TimeSpan output)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
 
             output = default(TimeSpan);
 
-            var key   = $"{HiveConst.ClusterGlobalsKey}/{name}";
-            var value = cluster.Consul.Client.KV.GetStringOrDefault(key).Result;
+            var key   = $"{HiveConst.GlobalKey}/{name}";
+            var value = hive.Consul.Client.KV.GetStringOrDefault(key).Result;
 
             if (value == null)
             {
@@ -249,7 +249,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Sets or removes a cluster global setting, verifying that the setting 
+        /// Sets or removes a hive global setting, verifying that the setting 
         /// is intended to be modified by end users, that it is allowed to be
         /// removed and that the value is reasonable.
         /// </summary>
@@ -268,7 +268,7 @@ namespace Neon.Hive
         /// <item>
         ///     <term><b>allow-unit-testing</b></term>
         ///     <description>
-        ///     Indicates whether unit testing via <c>ClusterFixture</c> is to be 
+        ///     Indicates whether unit testing via <c>HiveFixture</c> is to be 
         ///     allowed.  Possible values are: <b>true</b>, <b>false</b>, <b>yes</b>,
         ///     <b>no</b>, <b>on</b>, <b>off</b>, <b>1</b>, or <b>0</b>.
         ///     </description>
@@ -276,7 +276,7 @@ namespace Neon.Hive
         /// <item>
         ///     <term><b>log-rentention-days</b></term>
         ///     <description>
-        ///     Specifies the number of days the cluster should retain <b>logstash</b>
+        ///     Specifies the number of days the hive should retain <b>logstash</b>
         ///     and <b>metricbeat</b> logs.  This must be a positive integer.
         ///     </description>
         /// </item>
@@ -311,175 +311,175 @@ namespace Neon.Hive
 
                 default:
 
-                    throw new ArgumentException($"[name={name}] is not a user modifiable global cluster setting.");
+                    throw new ArgumentException($"[name={name}] is not a user modifiable global hive setting.");
             }
         }
 
         /// <summary>
-        /// Sets or removes a named <c>string</c> cluster global setting.
+        /// Sets or removes a named <c>string</c> hive global setting.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="HiveGlobals"/>.
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
         /// </note>
         /// </remarks>
         public void Set(string name, string value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
 
-            var key = $"{HiveConst.ClusterGlobalsKey}/{name}";
+            var key = $"{HiveConst.GlobalKey}/{name}";
 
             if (value == null)
             {
-                cluster.Consul.Client.KV.Delete(key).Wait();
+                hive.Consul.Client.KV.Delete(key).Wait();
             }
             else
             {
-                cluster.Consul.Client.KV.PutString(key, value).Wait();
+                hive.Consul.Client.KV.PutString(key, value).Wait();
             }
         }
 
         /// <summary>
-        /// Sets or removes a named <c>bool</c> cluster global setting.
+        /// Sets or removes a named <c>bool</c> hive global setting.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="HiveGlobals"/>.
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
         /// </note>
         /// </remarks>
         public void Set(string name, bool? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
 
-            var key = $"{HiveConst.ClusterGlobalsKey}/{name}";
+            var key = $"{HiveConst.GlobalKey}/{name}";
 
             if (value == null)
             {
-                cluster.Consul.Client.KV.Delete(key).Wait();
+                hive.Consul.Client.KV.Delete(key).Wait();
             }
             else
             {
-                cluster.Consul.Client.KV.PutString(key, value.Value ? "true" : "false").Wait();
+                hive.Consul.Client.KV.PutString(key, value.Value ? "true" : "false").Wait();
             }
         }
 
         /// <summary>
-        /// Sets or removes a named <c>int</c> cluster global setting.
+        /// Sets or removes a named <c>int</c> hive global setting.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="HiveGlobals"/>.
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
         /// </note>
         /// </remarks>
         public void Set(string name, int? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
 
-            var key = $"neon/cluster/{name}";
+            var key = $"{HiveConst.GlobalKey}/{name}";
 
             if (value == null)
             {
-                cluster.Consul.Client.KV.Delete(key).Wait();
+                hive.Consul.Client.KV.Delete(key).Wait();
             }
             else
             {
-                cluster.Consul.Client.KV.PutString(key, value.Value.ToString()).Wait();
+                hive.Consul.Client.KV.PutString(key, value.Value.ToString()).Wait();
             }
         }
 
         /// <summary>
-        /// Sets or removes a named <c>long</c> cluster global setting.
+        /// Sets or removes a named <c>long</c> hive global setting.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="HiveGlobals"/>.
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
         /// </note>
         /// </remarks>
         public void Set(string name, long? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
 
-            var key = $"neon/cluster/{name}";
+            var key = $"{HiveConst.GlobalKey}/{name}";
 
             if (value == null)
             {
-                cluster.Consul.Client.KV.Delete(key).Wait();
+                hive.Consul.Client.KV.Delete(key).Wait();
             }
             else
             {
-                cluster.Consul.Client.KV.PutString(key, value.Value.ToString()).Wait();
+                hive.Consul.Client.KV.PutString(key, value.Value.ToString()).Wait();
             }
         }
 
         /// <summary>
-        /// Sets or removes a named <c>double</c> cluster global setting.
+        /// Sets or removes a named <c>double</c> hive global setting.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="HiveGlobals"/>.
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
         /// </note>
         /// </remarks>
         public void Set(string name, double? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
 
-            var key = $"neon/cluster/{name}";
+            var key = $"{HiveConst.GlobalKey}/{name}";
 
             if (value == null)
             {
-                cluster.Consul.Client.KV.Delete(key).Wait();
+                hive.Consul.Client.KV.Delete(key).Wait();
             }
             else
             {
-                cluster.Consul.Client.KV.PutString(key, value.Value.ToString()).Wait();
+                hive.Consul.Client.KV.PutString(key, value.Value.ToString()).Wait();
             }
         }
 
         /// <summary>
-        /// Sets or removes a named <see cref="TimeSpan"/> cluster global setting.
+        /// Sets or removes a named <see cref="TimeSpan"/> hive global setting.
         /// </summary>
         /// <param name="name">The setting name.</param>
         /// <param name="value">The setting value or <c>null</c> to remove the setting if it exists.</param>
         /// <returns>The tracking <see cref="Task"/>.</returns>
         /// <remarks>
         /// <note>
-        /// Well known cluster setting names are defined in <see cref="HiveGlobals"/>.
+        /// Well known hive setting names are defined in <see cref="HiveGlobals"/>.
         /// </note>
         /// </remarks>
         public void Set(string name, TimeSpan? value)
         {
             Covenant.Requires(!string.IsNullOrEmpty(name));
-            Covenant.Requires(ClusterDefinition.IsValidName(name));
+            Covenant.Requires(HiveDefinition.IsValidName(name));
 
-            var key = $"neon/cluster/{name}";
+            var key = $"{HiveConst.GlobalKey}/{name}";
 
             if (value == null)
             {
-                cluster.Consul.Client.KV.Delete(key).Wait();
+                hive.Consul.Client.KV.Delete(key).Wait();
             }
             else
             {
-                cluster.Consul.Client.KV.PutString(key, value.Value.ToString()).Wait();
+                hive.Consul.Client.KV.PutString(key, value.Value.ToString()).Wait();
             }
         }
     }

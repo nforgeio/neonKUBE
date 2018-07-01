@@ -26,23 +26,23 @@ using Neon.Time;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Handles HashiCorp Vault related operations for a <see cref="ClusterProxy"/>.
+    /// Handles HashiCorp Vault related operations for a <see cref="HiveProxy"/>.
     /// </summary>
     public sealed class VaultManager : IDisposable
     {
         private object          syncRoot = new object();
-        private ClusterProxy    cluster;
+        private HiveProxy       hive;
         private VaultClient     client;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="cluster">The parent <see cref="ClusterProxy"/>.</param>
-        internal VaultManager(ClusterProxy cluster)
+        /// <param name="hive">The parent <see cref="HiveProxy"/>.</param>
+        internal VaultManager(HiveProxy hive)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
 
-            this.cluster = cluster;
+            this.hive = hive;
         }
 
         /// <summary>
@@ -76,14 +76,14 @@ namespace Neon.Hive
         /// Returns a Vault client using the root token.
         /// </summary>
         /// <returns>The <see cref="VaultClient"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if <see cref="ClusterLogin"/> has not yet been initialized with the Vault root token.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if <see cref="HiveLogin"/> has not yet been initialized with the Vault root token.</exception>
         public VaultClient Client
         {
             get
             {
-                if (!cluster.ClusterLogin.HasVaultRootCredentials)
+                if (!hive.HiveLogin.HasVaultRootCredentials)
                 {
-                    throw new InvalidOperationException($"[{nameof(ClusterProxy)}.{nameof(ClusterLogin)}] has not yet been initialized with the Vault root token.");
+                    throw new InvalidOperationException($"[{nameof(HiveProxy)}.{nameof(HiveLogin)}] has not yet been initialized with the Vault root token.");
                 }
 
                 lock (syncRoot)
@@ -93,7 +93,7 @@ namespace Neon.Hive
                         return client;
                     }
 
-                    client = VaultClient.OpenWithToken(new Uri(cluster.Definition.Vault.Uri), cluster.ClusterLogin.VaultCredentials.RootToken);
+                    client = VaultClient.OpenWithToken(new Uri(hive.Definition.Vault.Uri), hive.HiveLogin.VaultCredentials.RootToken);
                 }
 
                 return client;
@@ -106,9 +106,9 @@ namespace Neon.Hive
         /// <exception cref="InvalidOperationException">Thrown if the root token is not available.</exception>
         private void VerifyToken()
         {
-            if (!cluster.ClusterLogin.HasVaultRootCredentials)
+            if (!hive.HiveLogin.HasVaultRootCredentials)
             {
-                throw new InvalidOperationException($"[{nameof(ClusterProxy)}.{nameof(ClusterLogin)}] has not yet been initialized with the Vault root token.");
+                throw new InvalidOperationException($"[{nameof(HiveProxy)}.{nameof(HiveLogin)}] has not yet been initialized with the Vault root token.");
             }
         }
 
@@ -126,18 +126,18 @@ namespace Neon.Hive
 
             timer.Start();
 
-            foreach (var manager in cluster.Managers)
+            foreach (var manager in hive.Managers)
             {
                 manager.Status = "vault: verify unsealed";
             }
 
-            while (readyManagers.Count < cluster.Managers.Count())
+            while (readyManagers.Count < hive.Managers.Count())
             {
                 if (timer.Elapsed >= timeout)
                 {
                     var sbNotReadyManagers = new StringBuilder();
 
-                    foreach (var manager in cluster.Managers.Where(m => !readyManagers.Contains(m.Name)))
+                    foreach (var manager in hive.Managers.Where(m => !readyManagers.Contains(m.Name)))
                     {
                         sbNotReadyManagers.AppendWithSeparator(manager.Name, ", ");
                     }
@@ -145,7 +145,7 @@ namespace Neon.Hive
                     throw new HiveException($"Vault not unsealed after waiting [{timeout}] on: {sbNotReadyManagers}");
                 }
 
-                foreach (var manager in cluster.Managers.Where(m => !readyManagers.Contains(m.Name)))
+                foreach (var manager in hive.Managers.Where(m => !readyManagers.Contains(m.Name)))
                 {
                     var response = manager.SudoCommand("vault-direct status");
 
@@ -166,18 +166,18 @@ namespace Neon.Hive
             readyManagers.Clear();
             timer.Restart();
 
-            foreach (var manager in cluster.Managers)
+            foreach (var manager in hive.Managers)
             {
                 manager.Status = "vault: check ready";
             }
 
-            while (readyManagers.Count < cluster.Managers.Count())
+            while (readyManagers.Count < hive.Managers.Count())
             {
                 if (timer.Elapsed >= timeout)
                 {
                     var sbNotReadyManagers = new StringBuilder();
 
-                    foreach (var manager in cluster.Managers.Where(m => !readyManagers.Contains(m.Name)))
+                    foreach (var manager in hive.Managers.Where(m => !readyManagers.Contains(m.Name)))
                     {
                         sbNotReadyManagers.AppendWithSeparator(manager.Name, ", ");
                     }
@@ -185,7 +185,7 @@ namespace Neon.Hive
                     throw new HiveException($"Vault not ready after waiting [{timeout}] on: {sbNotReadyManagers}");
                 }
 
-                foreach (var manager in cluster.Managers.Where(m => !readyManagers.Contains(m.Name)))
+                foreach (var manager in hive.Managers.Where(m => !readyManagers.Contains(m.Name)))
                 {
                     var response = Command(manager, $"vault-direct write secret {manager.Name}-ready=true");
 
@@ -201,19 +201,19 @@ namespace Neon.Hive
 
             // Looks like all Vault instances are ready, so remove the secrets we added.
 
-            foreach (var manager in cluster.Managers.Where(m => !readyManagers.Contains(m.Name)))
+            foreach (var manager in hive.Managers.Where(m => !readyManagers.Contains(m.Name)))
             {
                 CommandNoFault(manager, $"vault-direct delete secret {manager.Name}-ready");
             }
 
-            foreach (var manager in cluster.Managers)
+            foreach (var manager in hive.Managers)
             {
                 manager.Status = string.Empty;
             }
         }
 
         /// <summary>
-        /// Executes a command on a healthy cluster manager node using the root Vault token.
+        /// Executes a command on a healthy hive manager node using the root Vault token.
         /// </summary>
         /// <param name="command">The command (including the <b>vault</b>).</param>
         /// <param name="args">The optional arguments.</param>
@@ -228,11 +228,11 @@ namespace Neon.Hive
         {
             Covenant.Requires<ArgumentNullException>(command != null);
 
-            return Command(cluster.GetHealthyManager(), command, args);
+            return Command(hive.GetHealthyManager(), command, args);
         }
 
         /// <summary>
-        /// Executes a command on a specific cluster manager node using the root Vault token.
+        /// Executes a command on a specific hive manager node using the root Vault token.
         /// </summary>
         /// <param name="manager">The target manager.</param>
         /// <param name="command">The command (including the <b>vault</b>).</param>
@@ -256,12 +256,12 @@ namespace Neon.Hive
 
             bundle.AddFile("vault-command.sh",
 $@"#!/bin/bash
-export VAULT_TOKEN={cluster.ClusterLogin.VaultCredentials.RootToken}
+export VAULT_TOKEN={hive.HiveLogin.VaultCredentials.RootToken}
 {scriptBundle}
 ",
                 isExecutable: true);
 
-            var response = manager.SudoCommand(bundle, cluster.SecureRunOptions | RunOptions.FaultOnError);
+            var response = manager.SudoCommand(bundle, hive.SecureRunOptions | RunOptions.FaultOnError);
 
             response.BashCommand = bundle.ToBash();
 
@@ -269,7 +269,7 @@ export VAULT_TOKEN={cluster.ClusterLogin.VaultCredentials.RootToken}
         }
 
         /// <summary>
-        /// Executes a command on a specific cluster manager node using the root Vault token.
+        /// Executes a command on a specific hive manager node using the root Vault token.
         /// </summary>
         /// <param name="manager">The target manager.</param>
         /// <param name="command">The command (including the <b>vault</b>).</param>
@@ -293,12 +293,12 @@ export VAULT_TOKEN={cluster.ClusterLogin.VaultCredentials.RootToken}
 
             bundle.AddFile("vault-command.sh",
 $@"#!/bin/bash
-export VAULT_TOKEN={cluster.ClusterLogin.VaultCredentials.RootToken}
+export VAULT_TOKEN={hive.HiveLogin.VaultCredentials.RootToken}
 {scriptBundle}
 ",
                 isExecutable: true);
 
-            var response = manager.SudoCommand(bundle, cluster.SecureRunOptions);
+            var response = manager.SudoCommand(bundle, hive.SecureRunOptions);
 
             response.BashCommand = bundle.ToBash();
 
@@ -306,7 +306,7 @@ export VAULT_TOKEN={cluster.ClusterLogin.VaultCredentials.RootToken}
         }
 
         /// <summary>
-        /// Executes a command on a healthy cluster manager node using the root Vault token.
+        /// Executes a command on a healthy hive manager node using the root Vault token.
         /// </summary>
         /// <param name="command">The command (including the <b>vault</b>).</param>
         /// <param name="args">The optional arguments.</param>
@@ -321,7 +321,7 @@ export VAULT_TOKEN={cluster.ClusterLogin.VaultCredentials.RootToken}
         {
             Covenant.Requires<ArgumentNullException>(command != null);
 
-            return CommandNoFault(cluster.GetHealthyManager(), command, args);
+            return CommandNoFault(hive.GetHealthyManager(), command, args);
         }
 
         /// <summary>
@@ -339,14 +339,14 @@ export VAULT_TOKEN={cluster.ClusterLogin.VaultCredentials.RootToken}
 
             bundle.AddFile("create-vault-policy.sh",
 $@"#!/bin/bash
-export VAULT_TOKEN={cluster.ClusterLogin.VaultCredentials.RootToken}
+export VAULT_TOKEN={hive.HiveLogin.VaultCredentials.RootToken}
 vault policy-write {policy.Name} policy.hcl
 ",
                 isExecutable: true);
 
             bundle.AddFile("policy.hcl", policy);
 
-            var response = cluster.GetHealthyManager().SudoCommand(bundle,cluster.SecureRunOptions | RunOptions.FaultOnError);
+            var response = hive.GetHealthyManager().SudoCommand(bundle,hive.SecureRunOptions | RunOptions.FaultOnError);
 
             response.BashCommand = bundle.ToBash();
 
@@ -360,7 +360,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <returns>The command response.</returns>
         public CommandResponse RemovePolicy(string policyName)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(policyName));
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(policyName));
 
             return Command($"vault policy-delete {policyName}");
         }
@@ -404,7 +404,7 @@ vault policy-write {policy.Name} policy.hcl
         /// <returns>The command response.</returns>
         public CommandResponse RemoveAppRole(string roleName)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(roleName));
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(roleName));
 
             return Command($"vault delete auth/approle/role/{roleName}");
         }
@@ -418,9 +418,9 @@ vault policy-write {policy.Name} policy.hcl
         {
             var failed = false;
 
-            cluster.EnsureRootPrivileges();
+            hive.EnsureRootPrivileges();
 
-            foreach (var manager in cluster.Managers)
+            foreach (var manager in hive.Managers)
             {
                 var response = manager.SudoCommand($"vault-direct status");
 
@@ -444,7 +444,7 @@ vault policy-write {policy.Name} policy.hcl
                 }
                 else
                 {
-                    response = manager.SudoCommand($"export VAULT_TOKEN={cluster.ClusterLogin.VaultCredentials.RootToken} && vault-direct operator seal", RunOptions.Redact);
+                    response = manager.SudoCommand($"export VAULT_TOKEN={hive.HiveLogin.VaultCredentials.RootToken} && vault-direct operator seal", RunOptions.Redact);
 
                     if (response.ExitCode != 0)
                     {
@@ -465,9 +465,9 @@ vault policy-write {policy.Name} policy.hcl
         {
             var failed = false;
 
-            cluster.EnsureRootPrivileges();
+            hive.EnsureRootPrivileges();
 
-            foreach (var manager in cluster.Managers)
+            foreach (var manager in hive.Managers)
             {
                 // Verify that the instance isn't already unsealed.
 
@@ -490,7 +490,7 @@ vault policy-write {policy.Name} policy.hcl
 
                 manager.SudoCommand($"vault-direct operator unseal -reset");
 
-                foreach (var key in cluster.ClusterLogin.VaultCredentials.UnsealKeys)
+                foreach (var key in hive.HiveLogin.VaultCredentials.UnsealKeys)
                 {
                     response = manager.SudoCommand($"vault-direct operator unseal {key}", RunOptions.None);
 

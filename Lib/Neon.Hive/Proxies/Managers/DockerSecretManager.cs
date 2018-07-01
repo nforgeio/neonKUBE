@@ -21,21 +21,21 @@ using Neon.Time;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Handles Docker secret related operations for a <see cref="ClusterProxy"/>.
+    /// Handles Docker secret related operations for a <see cref="HiveProxy"/>.
     /// </summary>
     public sealed class DockerSecretManager
     {
-        private ClusterProxy cluster;
+        private HiveProxy hive;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="cluster">The parent <see cref="ClusterProxy"/>.</param>
-        internal DockerSecretManager(ClusterProxy cluster)
+        /// <param name="hive">The parent <see cref="HiveProxy"/>.</param>
+        internal DockerSecretManager(HiveProxy hive)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
 
-            this.cluster = cluster;
+            this.hive = hive;
         }
 
         /// <summary>
@@ -46,7 +46,7 @@ namespace Neon.Hive
         /// <exception cref="HiveException">Thrown if the operation failed.</exception>
         public bool Exists(string secretName)
         {
-            var manager  = cluster.GetHealthyManager();
+            var manager  = hive.GetHealthyManager();
             var response = manager.DockerCommand(RunOptions.None, "docker secret inspect", secretName);
 
             if (response.ExitCode == 0)
@@ -74,7 +74,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Creates or updates a cluster Docker string secret.
+        /// Creates or updates a hive Docker string secret.
         /// </summary>
         /// <param name="secretName">The secret name.</param>
         /// <param name="value">The secret value.</param>
@@ -82,14 +82,14 @@ namespace Neon.Hive
         /// <exception cref="HiveException">Thrown if the operation failed.</exception>
         public void Set(string secretName, string value, RunOptions options = RunOptions.None)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(secretName));
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(secretName));
             Covenant.Requires<ArgumentNullException>(value != null);
 
             Set(secretName, Encoding.UTF8.GetBytes(value), options);
         }
 
         /// <summary>
-        /// Creates or updates a cluster Docker binary secret.
+        /// Creates or updates a hive Docker binary secret.
         /// </summary>
         /// <param name="secretName">The secret name.</param>
         /// <param name="value">The secret value.</param>
@@ -97,7 +97,7 @@ namespace Neon.Hive
         /// <exception cref="HiveException">Thrown if the operation failed.</exception>
         public void Set(string secretName, byte[] value, RunOptions options = RunOptions.None)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(secretName));
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(secretName));
             Covenant.Requires<ArgumentNullException>(value != null);
 
             var bundle = new CommandBundle("./create-secret.sh");
@@ -133,7 +133,7 @@ fi
 ",
                 isExecutable: true);
 
-            var response = cluster.GetHealthyManager().SudoCommand(bundle, options);
+            var response = hive.GetHealthyManager().SudoCommand(bundle, options);
 
             if (response.ExitCode != 0)
             {
@@ -142,14 +142,14 @@ fi
         }
 
         /// <summary>
-        /// Deletes a cluster Docker secret.
+        /// Deletes a hive Docker secret.
         /// </summary>
         /// <param name="secretName">The secret name.</param>
         /// <param name="options">Optional command run options.</param>
         /// <exception cref="HiveException">Thrown if the operation failed.</exception>
         public void Remove(string secretName, RunOptions options = RunOptions.None)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(secretName));
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(secretName));
 
             var bundle = new CommandBundle("./delete-secret.sh");
 
@@ -164,7 +164,7 @@ else
 fi
 ",              isExecutable: true);
 
-            var response = cluster.GetHealthyManager().SudoCommand(bundle, RunOptions.None);
+            var response = hive.GetHealthyManager().SudoCommand(bundle, RunOptions.None);
 
             if (response.ExitCode != 0)
             {

@@ -64,7 +64,7 @@ namespace Neon.Hive
         public string Password { get; set; }
 
         /// <summary>
-        /// Azure resource group where all cluster components are to be provisioned.
+        /// Azure resource group where all hive components are to be provisioned.
         /// </summary>
         [JsonProperty(PropertyName = "ResourceGroup", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -78,7 +78,7 @@ namespace Neon.Hive
         public string Region { get; set; }
 
         /// <summary>
-        /// The DNS domain prefix for the public IP address to be assigned to the cluster.
+        /// The DNS domain prefix for the public IP address to be assigned to the hive.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -95,11 +95,11 @@ namespace Neon.Hive
         /// DOMAINLABEL.AZURE-REGION.cloudapp.azure.com
         /// </para>
         /// <para>
-        /// For example, a public IP address with the <b>mycluster</b> deployed to the
+        /// For example, a public IP address with the <b>myhive</b> deployed to the
         /// Azure <b>westus</b> region would have this DNS name:
         /// </para>
         /// <para>
-        /// mycluster.westus.cloudapp.azure.com
+        /// myhive.westus.cloudapp.azure.com
         /// </para>
         /// <para>
         /// Labels can be up to 80 characters in length and may include letters, digits,
@@ -112,7 +112,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// Specifies whether a static external IP address will be created for the cluster.  A static
+        /// Specifies whether a static external IP address will be created for the hive.  A static
         /// IP address will never change and may be referenced via a DNS A record.  Static addresses
         /// may incur additional costs and Azure limits the number of static addresses that may be
         /// provisioned for a subscription.  This defaults to <c>false</c>.
@@ -128,12 +128,12 @@ namespace Neon.Hive
 
         /// <summary>
         /// <note>
-        /// <b>IMPORTANT:</b> assigning public IP addresses to cluster nodes is not currently
+        /// <b>IMPORTANT:</b> assigning public IP addresses to hive nodes is not currently
         /// implemented.
         /// </note>
         /// <para>
-        /// Specifies whether the cluster nodes should be provisioned with public IP addresses
-        /// in addition to the cluster wide public IP addresses assigned to the load balancer.
+        /// Specifies whether the hive nodes should be provisioned with public IP addresses
+        /// in addition to the hive wide public IP addresses assigned to the load balancer.
         /// This defaults to <c>false</c>.
         /// </para>
         /// <note>
@@ -146,22 +146,22 @@ namespace Neon.Hive
         /// </para>
         /// <list type="number">
         /// <item>
-        /// Outbound SNAT port exhaustion: This can occur when cluster nodes behind a load
+        /// Outbound SNAT port exhaustion: This can occur when hive nodes behind a load
         /// balancer have a high rate of outbound requests to the Internet.  The essential
         /// issue is that the load balancer can NAT a maximum of 64K outbound connections
-        /// for the entire cluster.  This is described in detail 
+        /// for the entire hive.  This is described in detail 
         /// <a href="https://docs.microsoft.com/en-us/azure/load-balancer/load-balancer-outbound-connections#load-balanced-vm-with-no-instance-level-public-ip-address">here</a>.
-        /// Assigning a public IP address to each node removes this cluster level restriction
+        /// Assigning a public IP address to each node removes this hive level restriction
         /// such that each node can have up to 64K outbound connections.
         /// </item>
         /// <item>
-        /// Occasionally, it's important to be able to reach specific cluster nodes directly
+        /// Occasionally, it's important to be able to reach specific hive nodes directly
         /// from the Internet.
         /// </item>
         /// </list>
         /// <para>
         /// Enabling this directs the <b>neon-cli</b> to create a dynamic instance level IP
-        /// address for each cluster node and add a public network interface to each cluster 
+        /// address for each hive node and add a public network interface to each cluster 
         /// virtual machine.
         /// </para>
         /// <note>
@@ -176,14 +176,14 @@ namespace Neon.Hive
         /// <summary>
         /// <para>
         /// neonHIVEs reserves some ports on the public Azure load balancer.
-        /// The cluster will reserve  <b>5 + node_count</b> ports beginning 
+        /// The hive will reserve  <b>5 + node_count</b> ports beginning 
         /// at this port number which defaults to <b>37100</b>.  The first five
         /// ports will be used to direct OpenVPN client traffic to the VPN
         /// servers, and the remaining ports may be used to NAT SSH traffic
-        /// to specific cluster nodes.
+        /// to specific hive nodes.
         /// </para>
         /// <para>
-        /// This port range should work for most cluster deployments, but you
+        /// This port range should work for most hive deployments, but you
         /// may need to modify this if you need to expose services that expose
         /// one or more conflicting ports. 
         /// </para>
@@ -202,7 +202,7 @@ namespace Neon.Hive
         public AzureCloudEnvironment Environment { get; set; } = null;
 
         /// <summary>
-        /// Specifies the number of Azure fault domains the cluster nodes should be
+        /// Specifies the number of Azure fault domains the hive nodes should be
         /// distributed across.  This defaults to <b>2</b> which should not be increased
         /// without making sure that your subscription supports the increase (most won't).
         /// </summary>
@@ -212,7 +212,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// Specifies the number of Azure update domains the cluster nodes will 
+        /// Specifies the number of Azure update domains the hive nodes will 
         /// distributed across.  This defaults to <b>5</b>  You may customize this
         /// with a value in the range of <b>2</b>...<b>20</b>.
         /// </para>
@@ -220,7 +220,7 @@ namespace Neon.Hive
         /// Larger clusters should increase this value to avoid losing significant capacity
         /// as Azure updates its underlying infrastructure in an update domain requiring
         /// VM shutdown and restarts.  A value of <b>2</b> indicates that one half of the
-        /// cluster servers may be restarted during an update domain upgrade.  A value
+        /// hive servers may be restarted during an update domain upgrade.  A value
         /// of <b>20</b> indicates that one twentieth of your VMs may be recycled at a
         /// time.
         /// </note>
@@ -231,7 +231,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// The first manager load balancer frontend port reserved for OpenVPN connections to individual manager nodes
-        /// in the cluster.  External port numbers in the range of <see cref="FirstVpnFrontendPort"/>...<see cref="LastVpnFrontendPort"/>
+        /// in the hive.  External port numbers in the range of <see cref="FirstVpnFrontendPort"/>...<see cref="LastVpnFrontendPort"/>
         /// inclusive are reserved for this.
         /// </summary>
         [JsonIgnore]
@@ -242,7 +242,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// The last manager load balancer frontend port reserved for OpenVPN connections to individual manager nodes
-        /// in the cluster.  External port numbers in the range of <see cref="FirstVpnFrontendPort"/>...<see cref="LastVpnFrontendPort"/>
+        /// in the hive.  External port numbers in the range of <see cref="FirstVpnFrontendPort"/>...<see cref="LastVpnFrontendPort"/>
         /// inclusive are reserved for this.
         /// </summary>
         [JsonIgnore]
@@ -252,7 +252,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// The first load balancer frontend port reserved for SSH connections to individual nodes in the cluster.
+        /// The first load balancer frontend port reserved for SSH connections to individual nodes in the hive.
         /// External port numbers in the range of <see cref="FirstSshFrontendPort"/>...<see cref="LastSshFrontendPort"/>
         /// inclusive are reserved for this.
         /// </summary>
@@ -263,7 +263,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// The last load balancer frontend port reserved for SSH connections to individual nodes in the cluster.
+        /// The last load balancer frontend port reserved for SSH connections to individual nodes in the hive.
         /// </summary>
         [JsonIgnore]
         public int LastSshFrontendPort
@@ -275,80 +275,80 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition)
+        public void Validate(HiveDefinition hiveDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
-            foreach (var ch in clusterDefinition.Name)
+            foreach (var ch in hiveDefinition.Name)
             {
                 if (char.IsLetterOrDigit(ch) || ch == '-' || ch == '_')
                 {
                     continue;
                 }
 
-                throw new ClusterDefinitionException($"Cluster name [{clusterDefinition.Name}] is not valid for Azure deployment.  Only letters, digits, dashes, or underscores are allowed.");
+                throw new HiveDefinitionException($"Hive name [{hiveDefinition.Name}] is not valid for Azure deployment.  Only letters, digits, dashes, or underscores are allowed.");
             }
 
             if (string.IsNullOrEmpty(SubscriptionId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(SubscriptionId)}] property cannot be empty.");
+                throw new HiveDefinitionException($"Azure hosting [{nameof(SubscriptionId)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(TenantId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(TenantId)}] property cannot be empty.");
+                throw new HiveDefinitionException($"Azure hosting [{nameof(TenantId)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(ApplicationId))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ApplicationId)}] property cannot be empty.");
+                throw new HiveDefinitionException($"Azure hosting [{nameof(ApplicationId)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(Password))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(Password)}] property cannot be empty.");
+                throw new HiveDefinitionException($"Azure hosting [{nameof(Password)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(Region))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(Region)}] property cannot be empty.");
+                throw new HiveDefinitionException($"Azure hosting [{nameof(Region)}] property cannot be empty.");
             }
 
             if (string.IsNullOrEmpty(DomainLabel))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(DomainLabel)}] property cannot be empty.");
+                throw new HiveDefinitionException($"Azure hosting [{nameof(DomainLabel)}] property cannot be empty.");
             }
 
             // Verify [ResourceGroup].
 
             if (string.IsNullOrEmpty(ResourceGroup))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property cannot be empty.");
+                throw new HiveDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property cannot be empty.");
             }
 
             if (ResourceGroup.Length > 64)
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property cannot be longer than 64 characters.");
+                throw new HiveDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property cannot be longer than 64 characters.");
             }
 
             if (!char.IsLetter(ResourceGroup.First()))
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must begin with a letter.");
+                throw new HiveDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must begin with a letter.");
             }
 
             if (ResourceGroup.Last() == '_' || ResourceGroup.Last() == '-')
             {
-                throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must not end with a dash or underscore.");
+                throw new HiveDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must not end with a dash or underscore.");
             }
 
             foreach (var ch in ResourceGroup)
             {
                 if (!(char.IsLetterOrDigit(ch) || ch == '_' || ch == '-'))
                 {
-                    throw new ClusterDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must include only letters, digits, dashes or underscores.");
+                    throw new HiveDefinitionException($"Azure hosting [{nameof(ResourceGroup)}] property must include only letters, digits, dashes or underscores.");
                 }
             }
 
@@ -356,19 +356,19 @@ namespace Neon.Hive
 
             if (Environment != null)
             {
-                Environment.Validate(clusterDefinition);
+                Environment.Validate(hiveDefinition);
             }
 
             // Check Azure cluster limits.
 
-            if (clusterDefinition.Managers.Count() > HiveConst.MaxManagers)
+            if (hiveDefinition.Managers.Count() > HiveConst.MaxManagers)
             {
-                throw new ClusterDefinitionException($"Cluster manager count [{clusterDefinition.Managers.Count()}] exceeds the [{HiveConst.MaxManagers}] limit for neonHIVEs.");
+                throw new HiveDefinitionException($"Hive manager count [{hiveDefinition.Managers.Count()}] exceeds the [{HiveConst.MaxManagers}] limit for neonHIVEs.");
             }
 
-            if (clusterDefinition.Nodes.Count() > AzureHelper.MaxClusterNodes)
+            if (hiveDefinition.Nodes.Count() > AzureHelper.MaxClusterNodes)
             {
-                throw new ClusterDefinitionException($"Cluster node count [{clusterDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxClusterNodes}] limit for neonHIVEs deployed to Azure.");
+                throw new HiveDefinitionException($"Hive node count [{hiveDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxClusterNodes}] limit for neonHIVEs deployed to Azure.");
             }
         }
     }

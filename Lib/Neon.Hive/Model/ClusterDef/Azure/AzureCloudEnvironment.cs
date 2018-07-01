@@ -116,10 +116,10 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition)
+        public void Validate(HiveDefinition hiveDefinition)
         {
             if (Name == AzureCloudEnvironments.Custom)
             {
@@ -127,22 +127,22 @@ namespace Neon.Hive
 
                 if (string.IsNullOrEmpty(AuthenticationEndpoint) || !Uri.TryCreate(AuthenticationEndpoint, UriKind.Absolute, out uri))
                 {
-                    throw new ClusterDefinitionException($"Invalid Azure environment [{nameof(AuthenticationEndpoint)}={AuthenticationEndpoint}].");
+                    throw new HiveDefinitionException($"Invalid Azure environment [{nameof(AuthenticationEndpoint)}={AuthenticationEndpoint}].");
                 }
 
                 if (string.IsNullOrEmpty(ResourceManagerEndpoint) || !Uri.TryCreate(ResourceManagerEndpoint, UriKind.Absolute, out uri))
                 {
-                    throw new ClusterDefinitionException($"Invalid Azure environment [{nameof(ResourceManagerEndpoint)}={ResourceManagerEndpoint}].");
+                    throw new HiveDefinitionException($"Invalid Azure environment [{nameof(ResourceManagerEndpoint)}={ResourceManagerEndpoint}].");
                 }
 
                 if (string.IsNullOrEmpty(GraphEndpoint) || !Uri.TryCreate(GraphEndpoint, UriKind.Absolute, out uri))
                 {
-                    throw new ClusterDefinitionException($"Invalid Azure environment [{nameof(GraphEndpoint)}={GraphEndpoint}].");
+                    throw new HiveDefinitionException($"Invalid Azure environment [{nameof(GraphEndpoint)}={GraphEndpoint}].");
                 }
 
                 if (string.IsNullOrEmpty(AuthenticationEndpoint) || !Uri.TryCreate(AuthenticationEndpoint, UriKind.Absolute, out uri))
                 {
-                    throw new ClusterDefinitionException($"Invalid Azure environment [{nameof(ManagementEnpoint)}={ManagementEnpoint}].");
+                    throw new HiveDefinitionException($"Invalid Azure environment [{nameof(ManagementEnpoint)}={ManagementEnpoint}].");
                 }
             }
         }

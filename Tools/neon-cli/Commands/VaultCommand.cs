@@ -29,9 +29,9 @@ namespace NeonCli
     public class VaultCommand : CommandBase
     {
         private const string usage = @"
-Runs a HashiCorp Vault command on the cluster.  All command line arguments
+Runs a HashiCorp Vault command on the hive.  All command line arguments
 and options as well are passed through to the Vault CLI.  The command also
-includes the root Vault token from the current cluster login.
+includes the root Vault token from the current hive login.
 
 USAGE:
 
@@ -48,7 +48,7 @@ OPTIONS:
                       this isn't specified.
 
 NOTE: Vault commands are automtaically provided with the root token from the 
-      current cluster login.
+      current hive login.
 
 NOTE: The [seal], [unseal], and [status] commands have been modified
       to operate on the entire Vault cluster unless a target [--node]
@@ -60,7 +60,7 @@ NOTE: The following Vault commands are not supported:
 
       init, rekey, server and ssh
 ";
-        private ClusterProxy        cluster;
+        private HiveProxy           hive;
         private VaultCredentials    vaultCredentials;
 
         private const string remoteVaultPath = "/usr/local/bin/vault";
@@ -107,12 +107,12 @@ NOTE: The following Vault commands are not supported:
                 Program.Exit(0);
             }
 
-            // Initialize the cluster.
+            // Initialize the hive.
 
-            var clusterLogin = Program.ConnectCluster();
+            var hiveLogin = Program.ConnectHive();
 
-            cluster          = new ClusterProxy(clusterLogin);
-            vaultCredentials = clusterLogin.VaultCredentials;
+            hive             = new HiveProxy(hiveLogin);
+            vaultCredentials = hiveLogin.VaultCredentials;
 
             // Determine which node we're going to target.
 
@@ -124,11 +124,11 @@ NOTE: The following Vault commands are not supported:
 
             if (!string.IsNullOrEmpty(nodeName))
             {
-                node = cluster.GetNode(nodeName);
+                node = hive.GetNode(nodeName);
             }
             else
             {
-                node = cluster.GetHealthyManager();
+                node = hive.GetHealthyManager();
             }
 
             var command = rightCommandLine.Arguments.FirstOrDefault(); ;
@@ -210,7 +210,7 @@ NOTE: The following Vault commands are not supported:
                     }
                     else
                     {
-                        foreach (var manager in cluster.Managers)
+                        foreach (var manager in hive.Managers)
                         {
                             try
                             {
@@ -270,7 +270,7 @@ NOTE: The following Vault commands are not supported:
                         {
                             // Disable auto unseal until the operator explicitly unseals Vault again.
 
-                            cluster.Consul.Client.KV.PutBool($"{HiveConst.ClusterGlobalsKey}/{HiveGlobals.UserDisableAutoUnseal}", true).Wait();
+                            hive.Consul.Client.KV.PutBool($"{HiveConst.GlobalKey}/{HiveGlobals.UserDisableAutoUnseal}", true).Wait();
                         }
 
                         Program.Exit(failed ? 1 : 0);
@@ -303,7 +303,7 @@ NOTE: The following Vault commands are not supported:
                     {
                         var allSealed = true;
 
-                        foreach (var manager in cluster.Managers)
+                        foreach (var manager in hive.Managers)
                         {
                             try
                             {
@@ -410,7 +410,7 @@ NOTE: The following Vault commands are not supported:
                     {
                         var commandFailed = false;
 
-                        foreach (var manager in cluster.Managers)
+                        foreach (var manager in hive.Managers)
                         {
                             // Verify that the instance isn't already unsealed.
 
@@ -467,7 +467,7 @@ NOTE: The following Vault commands are not supported:
                         {
                             // Reenable auto unseal.
 
-                            cluster.Consul.Client.KV.PutBool($"{HiveConst.ClusterGlobalsKey}/{HiveGlobals.UserDisableAutoUnseal}", false).Wait();
+                            hive.Consul.Client.KV.PutBool($"{HiveConst.GlobalKey}/{HiveGlobals.UserDisableAutoUnseal}", false).Wait();
                         }
 
                         Program.Exit(commandFailed ? 1 : 0);

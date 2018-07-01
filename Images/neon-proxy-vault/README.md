@@ -8,7 +8,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 # Configuration
 
-This image implements the **neon-proxy-vault** service which is responsible for forwarding internal requests to the HashiCorp Vault instances running on the cluster manager nodes.  This this function could not be handled by the **neon-proxy-private** service because that service needs to call Vault to retrieve secrets such as TLS certificates and keys. 
+This image implements the **neon-proxy-vault** service which is responsible for forwarding internal requests to the HashiCorp Vault instances running on the hive manager nodes.  This this function could not be handled by the **neon-proxy-private** service because that service needs to call Vault to retrieve secrets such as TLS certificates and keys. 
 
 This image derives from **neoncloud/haproxy** but deploys its own **haproxy.cfg** file.  It also ignores the `CONFIG_INTERVAL` environment variable, if passed.
 

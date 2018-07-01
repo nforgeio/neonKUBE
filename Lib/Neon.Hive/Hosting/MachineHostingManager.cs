@@ -32,26 +32,26 @@ using Neon.Time;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Manages cluster provisioning directly on bare metal or virtual machines.
+    /// Manages hive provisioning directly on bare metal or virtual machines.
     /// </summary>
     public partial class MachineHostingManager : HostingManager
     {
-        private ClusterProxy                    cluster;
+        private HiveProxy                       hive;
         private SetupController<NodeDefinition> controller;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="hive">The hive being managed.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public MachineHostingManager(ClusterProxy cluster, string logFolder = null)
+        public MachineHostingManager(HiveProxy hive, string logFolder = null)
         {
-            cluster.HostingManager = this;
+            hive.HostingManager = this;
 
-            this.cluster = cluster;
+            this.hive = hive;
         }
 
         /// <inheritdoc/>
@@ -70,17 +70,17 @@ namespace Neon.Hive
         }
 
         /// <inheritdoc/>
-        public override void Validate(ClusterDefinition clusterDefinition)
+        public override void Validate(HiveDefinition hiveDefinition)
         {
             // Ensure that the OSD Bluestore block device have been specified.
 
-            if (cluster.Definition.Ceph.Enabled)
+            if (hive.Definition.Ceph.Enabled)
             {
-                foreach (var node in cluster.Definition.Nodes.Where(n => n.Labels.CephOSD))
+                foreach (var node in hive.Definition.Nodes.Where(n => n.Labels.CephOSD))
                 {
                     if (string.IsNullOrEmpty(node.Labels.CephOSDDevice))
                     {
-                        throw new ClusterDefinitionException($"Hosting environment [{HostingEnvironments.Machine}] requires that the OSD node [{node.Name}] explicitly set [{nameof(NodeLabels)}.{nameof(NodeLabels.CephOSDDevice)}] to the target OSD block device (like: [/dev/sdb]).");
+                        throw new HiveDefinitionException($"Hosting environment [{HostingEnvironments.Machine}] requires that the OSD node [{node.Name}] explicitly set [{nameof(NodeLabels)}.{nameof(NodeLabels.CephOSDDevice)}] to the target OSD block device (like: [/dev/sdb]).");
                     }
                 }
             }
@@ -91,7 +91,7 @@ namespace Neon.Hive
         {
             // Perform the provisioning operations.
 
-            controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
+            controller = new SetupController<NodeDefinition>($"Provisioning [{hive.Definition.Name}] hive", hive.Nodes)
             {
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = this.MaxParallel
@@ -111,7 +111,7 @@ namespace Neon.Hive
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            return (Address: cluster.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
+            return (Address: hive.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
         }
 
         /// <inheritdoc/>
@@ -128,7 +128,7 @@ namespace Neon.Hive
         public override List<HostedEndpoint> GetPublicEndpoints()
         {
             // Note that public endpoints have to be managed manually for
-            // on-premise cluster deployments so we're going to return an 
+            // on-premise hive deployments so we're going to return an 
             // empty list.
 
             return new List<HostedEndpoint>();
@@ -141,7 +141,7 @@ namespace Neon.Hive
         public override void UpdatePublicEndpoints(List<HostedEndpoint> endpoints)
         {
             // Note that public endpoints have to be managed manually for
-            // on-premise cluster deployments.
+            // on-premise hive deployments.
         }
 
         /// <inheritdoc/>

@@ -13,7 +13,7 @@
 #
 # This script defines the current configuration of the neonHIVE as is
 # currently known to this node.  [neon-cli] generates this during initial
-# cluster deployment and may modify it as the cluster is reconfigured.
+# hive deployment and may modify it as the hive is reconfigured.
 #
 # This script also loads and exports environment variables from [/etc/environment]
 # so they will be available to scripts invoked remotely by [neon-cli].
@@ -27,7 +27,7 @@ else
 fi
 
 #------------------------------------------------------------------------------
-# This identifies the tool/version that deployed or upgraded the cluster.
+# This identifies the tool/version that deployed or upgraded the hive.
 
 NEON_CLUSTER_PROVISIONER=$<cluster.provisioner>
 
@@ -52,7 +52,7 @@ do
 done < /etc/environment
 
 #------------------------------------------------------------------------------
-# CURL download retry settings to make cluster setup more robust in the
+# CURL download retry settings to make hive setup more robust in the
 # face of transient network problems.
 
 export CURL_RETRY="--retry 10 --retry-delay 30"
@@ -72,7 +72,7 @@ export NEON_EXEC_FOLDER=$<neon.folders.exec>
 export PATH=${PATH}:${NEON_SETUP_FOLDER}:${NEON_TOOLS_FOLDER}
 
 #------------------------------------------------------------------------------
-# Describe the cluster manager nodes.  You can use the [getmanager] function
+# Describe the hive manager nodes.  You can use the [getmanager] function
 # below to retrieve node information using a zero-based index.
 #
 # You can access node properties using array syntax like:

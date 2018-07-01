@@ -129,7 +129,7 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var cluster = HiveHelper.Cluster;
+            var hive = HiveHelper.Hive;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {
@@ -169,8 +169,8 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting [{secretName}] secret.");
 
-            var manager = cluster.GetHealthyManager();
-            var exists  = cluster.Docker.Secret.Exists(secretName);
+            var manager = hive.GetHealthyManager();
+            var exists  = hive.Docker.Secret.Exists(secretName);
             var bytes   = (byte[])null;
 
             if (exists)
@@ -199,7 +199,7 @@ namespace NeonCli.Ansible
                             context.Changed = true;
                             context.WriteLine(AnsibleVerbosity.Trace, $"Removing secret [{secretName}].");
 
-                            cluster.Docker.Secret.Remove(secretName);
+                            hive.Docker.Secret.Remove(secretName);
                         }
                     }
                     else
@@ -251,11 +251,11 @@ namespace NeonCli.Ansible
 
                             if (bytes != null)
                             {
-                                cluster.Docker.Secret.Set(secretName, bytes);
+                                hive.Docker.Secret.Set(secretName, bytes);
                             }
                             else
                             {
-                                cluster.Docker.Secret.Set(secretName, secretText);
+                                hive.Docker.Secret.Set(secretName, secretText);
                             }
                         }
                     }
@@ -365,10 +365,10 @@ namespace NeonCli.Ansible
 // so that they use the latest version.  This module will handle this
 // if [update_services=yes].  Here's how this works:
 //
-//      1. All cluster secrets are listed so we'll be able to determine
+//      1. All hive secrets are listed so we'll be able to determine
 //         the latest version of MY-SECRET.
 //
-//      2. All cluster services are inspected to discover any services that
+//      2. All hive services are inspected to discover any services that
 //         reference MY-SECRET or any version the secret like: MY-SECRET-#.
 //
 //      3. Each of these discovered services will be updated to pickup

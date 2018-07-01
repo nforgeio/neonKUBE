@@ -18,25 +18,25 @@ using Neon.Retry;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Handles cluster Docker registry related operations for <see cref="ClusterProxy"/>.
+    /// Handles hive Docker registry related operations for <see cref="HiveProxy"/>.
     /// </summary>
     public sealed class RegistryManager
     {
-        private ClusterProxy cluster;
+        private HiveProxy hive;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="cluster">The parent <see cref="ClusterProxy"/>.</param>
-        internal RegistryManager(ClusterProxy cluster)
+        /// <param name="hive">The parent <see cref="HiveProxy"/>.</param>
+        internal RegistryManager(HiveProxy hive)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
 
-            this.cluster = cluster;
+            this.hive = hive;
         }
 
         /// <summary>
-        /// Lists the Docker registries currently connected to the cluster along
+        /// Lists the Docker registries currently connected to the hive along
         /// with the registry credentials.
         /// </summary>
         /// <returns>The list of credentials.</returns>
@@ -44,9 +44,9 @@ namespace Neon.Hive
         {
             var credentials = new List<RegistryCredentials>();
 
-            foreach (var hostname in cluster.Vault.Client.ListAsync(HiveConst.VaultRegistryCredentialsKey).Result)
+            foreach (var hostname in hive.Vault.Client.ListAsync(HiveConst.VaultRegistryCredentialsKey).Result)
             {
-                var usernamePassword = cluster.Vault.Client.ReadStringAsync($"{HiveConst.VaultRegistryCredentialsKey}/{hostname}").Result;
+                var usernamePassword = hive.Vault.Client.ReadStringAsync($"{HiveConst.VaultRegistryCredentialsKey}/{hostname}").Result;
                 var fields = usernamePassword.Split(new char[] { '/' }, 2);
 
                 if (fields.Length == 2)
@@ -69,29 +69,29 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Logs the cluster into a Docker registry or updates the registry credentials
+        /// Logs the hive into a Docker registry or updates the registry credentials
         /// if already logged in.
         /// </summary>
         /// <param name="registry">The registry hostname or <c>null</c> to specify the Docker public registry.</param>
         /// <param name="username">The username.</param>
         /// <param name="password">The password.</param>
-        /// <exception cref="HiveException">Thrown if one or more of the cluster nodes could not be logged in.</exception>
+        /// <exception cref="HiveException">Thrown if one or more of the hive nodes could not be logged in.</exception>
         public void Login(string registry, string username, string password)
         {
-            Covenant.Requires<ArgumentNullException>(string.IsNullOrEmpty(registry) || ClusterDefinition.DnsHostRegex.IsMatch(registry));
+            Covenant.Requires<ArgumentNullException>(string.IsNullOrEmpty(registry) || HiveDefinition.DnsHostRegex.IsMatch(registry));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
             Covenant.Requires<ArgumentNullException>(password != null);
 
             // Update the registry credentials in Vault.
 
-            cluster.Vault.Client.WriteStringAsync($"{HiveConst.VaultRegistryCredentialsKey}/{registry}", $"{username}/{password}").Wait();
+            hive.Vault.Client.WriteStringAsync($"{HiveConst.VaultRegistryCredentialsKey}/{registry}", $"{username}/{password}").Wait();
 
-            // Login all of the cluster nodes in parallel.
+            // Login all of the hive nodes in parallel.
 
             var actions = new List<Action>();
             var errors  = new List<string>();
 
-            foreach (var node in cluster.Nodes)
+            foreach (var node in hive.Nodes)
             {
                 actions.Add(
                     () =>
@@ -122,7 +122,7 @@ namespace Neon.Hive
                 var sb = new StringBuilder();
 
                 sb.AppendLine($"Could not login [{errors.Count}] nodes to the [{registry}] Docker registry.");
-                sb.AppendLine($"Your cluster may now be in an inconsistent state.");
+                sb.AppendLine($"Your hive may now be in an inconsistent state.");
                 sb.AppendLine();
 
                 foreach (var error in errors)
@@ -135,24 +135,24 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Logs the cluster out of a Docker registry.
+        /// Logs the hive out of a Docker registry.
         /// </summary>
         /// <param name="registry">The registry hostname.</param>
-        /// <exception cref="HiveException">Thrown if one or more of the cluster nodes could not be logged out.</exception>
+        /// <exception cref="HiveException">Thrown if one or more of the hive nodes could not be logged out.</exception>
         public void Logout(string registry)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
 
             // Remove the registry credentials from Vault.
 
-            cluster.Vault.Client.DeleteAsync($"{HiveConst.VaultRegistryCredentialsKey}/{registry}").Wait();
+            hive.Vault.Client.DeleteAsync($"{HiveConst.VaultRegistryCredentialsKey}/{registry}").Wait();
 
-            // Logout of all of the cluster nodes in parallel.
+            // Logout of all of the hive nodes in parallel.
 
             var actions = new List<Action>();
             var errors  = new List<string>();
 
-            foreach (var node in cluster.Nodes)
+            foreach (var node in hive.Nodes)
             {
                 actions.Add(
                     () =>
@@ -194,7 +194,7 @@ namespace Neon.Hive
                 var sb = new StringBuilder();
 
                 sb.AppendLine($"Could not logout [{errors.Count}] nodes from the [{registry}] Docker registry.");
-                sb.AppendLine($"Your cluster may now be in an inconsistent state.");
+                sb.AppendLine($"Your hive may now be in an inconsistent state.");
                 sb.AppendLine();
 
                 foreach (var error in errors)
@@ -255,7 +255,7 @@ fi
         }
 
         /// <summary>
-        /// Returns the credentials for a specific Docker registry connected to the cluster.
+        /// Returns the credentials for a specific Docker registry connected to the hive.
         /// </summary>
         /// <param name="registry">The target registry hostname.</param>
         /// <returns>The credentials or <c>null</c> if no credentials exists.</returns>
@@ -263,7 +263,7 @@ fi
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(registry));
 
-            var usernamePassword = cluster.Vault.Client.ReadStringOrDefaultAsync($"{HiveConst.VaultRegistryCredentialsKey}/{registry}").Result;
+            var usernamePassword = hive.Vault.Client.ReadStringOrDefaultAsync($"{HiveConst.VaultRegistryCredentialsKey}/{registry}").Result;
 
             if (usernamePassword == null)
             {
@@ -288,7 +288,7 @@ fi
         }
 
         /// <summary>
-        /// Restarts the cluster registry caches as required, using the 
+        /// Restarts the hive registry caches as required, using the 
         /// upstream credentials passed.
         /// </summary>
         /// <param name="registry">The target registry hostname.</param>
@@ -300,14 +300,14 @@ fi
         /// This method currently does nothing but return <c>true</c> if the 
         /// registry specified is not the Docker public registry because the 
         /// cache supports only the public registry or if the registry cache
-        /// is not enabled for this cluster.
+        /// is not enabled for this hive.
         /// </note>
         /// </remarks>
         public bool RestartCache(string registry, string username, string password)
         {
             // Return immediately if this is a NOP.
 
-            if (!HiveHelper.IsDockerPublicRegistry(registry) || !cluster.Definition.Docker.RegistryCache)
+            if (!HiveHelper.IsDockerPublicRegistry(registry) || !hive.Definition.Docker.RegistryCache)
             {
                 return true;
             }
@@ -317,7 +317,7 @@ fi
             // result in no cache downtime for clusters with multiple
             // managers.
 
-            foreach (var manager in cluster.Managers)
+            foreach (var manager in hive.Managers)
             {
                 if (!manager.RestartRegistryCache(registry, username, password))
                 {
@@ -334,7 +334,7 @@ fi
         /// <returns>The hostname or <c>null</c>.</returns>
         public string GetLocalHostname()
         {
-            return cluster.Consul.Client.KV.GetStringOrDefault($"{HiveConst.ConsulRegistryRootKey}/hostname").Result;
+            return hive.Consul.Client.KV.GetStringOrDefault($"{HiveConst.ConsulRegistryRootKey}/hostname").Result;
         }
 
         /// <summary>
@@ -343,15 +343,15 @@ fi
         /// <param name="hostname">The new hostname for the local Docker registry or <c>null</c> to remove it.</param>
         public void SetLocalHostname(string hostname)
         {
-            Covenant.Requires<ArgumentException>(string.IsNullOrEmpty(hostname) || ClusterDefinition.NameRegex.IsMatch(hostname));
+            Covenant.Requires<ArgumentException>(string.IsNullOrEmpty(hostname) || HiveDefinition.NameRegex.IsMatch(hostname));
 
             if (string.IsNullOrEmpty(hostname))
             {
-                cluster.Consul.Client.KV.Delete($"{HiveConst.ConsulRegistryRootKey}/hostname").Wait();
+                hive.Consul.Client.KV.Delete($"{HiveConst.ConsulRegistryRootKey}/hostname").Wait();
             }
             else
             {
-                cluster.Consul.Client.KV.PutString($"{HiveConst.ConsulRegistryRootKey}/hostname", hostname).Wait();
+                hive.Consul.Client.KV.PutString($"{HiveConst.ConsulRegistryRootKey}/hostname", hostname).Wait();
             }
         }
 
@@ -362,7 +362,7 @@ fi
         /// <returns>The hostname or <c>null</c>.</returns>
         public string GetLocalSecret()
         {
-            return cluster.Consul.Client.KV.GetStringOrDefault($"{HiveConst.ConsulRegistryRootKey}/secret").Result;
+            return hive.Consul.Client.KV.GetStringOrDefault($"{HiveConst.ConsulRegistryRootKey}/secret").Result;
         }
 
         /// <summary>
@@ -373,24 +373,24 @@ fi
         {
             if (string.IsNullOrEmpty(secret))
             {
-                cluster.Consul.Client.KV.Delete($"{HiveConst.ConsulRegistryRootKey}/secret").Wait();
+                hive.Consul.Client.KV.Delete($"{HiveConst.ConsulRegistryRootKey}/secret").Wait();
             }
             else
             {
-                cluster.Consul.Client.KV.PutString($"{HiveConst.ConsulRegistryRootKey}/secret", secret).Wait();
+                hive.Consul.Client.KV.PutString($"{HiveConst.ConsulRegistryRootKey}/secret", secret).Wait();
             }
         }
 
         /// <summary>
-        /// Determines whether a local Docker registry is deployed to the cluster.
+        /// Determines whether a local Docker registry is deployed to the hive.
         /// </summary>
         public bool HasLocalRegistry
         {
-            get { return cluster.Docker.InspectService("neon-registry") != null;  }
+            get { return hive.Docker.InspectService("neon-registry") != null;  }
         }
 
         /// <summary>
-        /// Deploys the local Docker registry to the cluster.
+        /// Deploys the local Docker registry to the hive.
         /// </summary>
         /// <param name="hostname">The registry hostname.</param>
         /// <param name="username">The registry username.</param>
@@ -400,7 +400,7 @@ fi
         /// <param name="image">Optionally specifies the Docker image to be deployed (defaults to <b>neoncluster/neon-registry</b>).</param>
         /// <param name="progress">Optional action that will be called with a progress message.</param>
         /// <exception cref="HiveException">Thrown if a registry is already deployed or deployment failed.</exception>
-        /// <exception cref="NotSupportedException">Thrown if the cluster does not support local registries.</exception>
+        /// <exception cref="NotSupportedException">Thrown if the hive does not support local registries.</exception>
         public void CreateLocalRegistry(
             string          hostname, 
             string          username, 
@@ -411,15 +411,15 @@ fi
             Action<string>  progress = null)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hostname));
-            Covenant.Requires<ArgumentException>(ClusterDefinition.DnsHostRegex.IsMatch(hostname));
+            Covenant.Requires<ArgumentException>(HiveDefinition.DnsHostRegex.IsMatch(hostname));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(password));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(secret));
             Covenant.Requires<ArgumentNullException>(certificate != null);
 
-            if (!cluster.Definition.Ceph.Enabled)
+            if (!hive.Definition.Ceph.Enabled)
             {
-                throw new NotSupportedException("Cannot deploy a local Docker registry to the cluster because the cluster's Cepf file system is not enabled.");
+                throw new NotSupportedException("Cannot deploy a local Docker registry to the hive because the hive's Cepf file system is not enabled.");
             }
 
             if (HasLocalRegistry)
@@ -428,21 +428,21 @@ fi
             }
 
             progress?.Invoke($"Setting certificate.");
-            cluster.Certificate.Set("neon-registry", certificate);
+            hive.Certificate.Set("neon-registry", certificate);
 
             progress?.Invoke($"Updating Consul settings.");
-            cluster.Registry.SetLocalHostname(hostname);
-            cluster.Registry.SetLocalSecret(secret);
+            hive.Registry.SetLocalHostname(hostname);
+            hive.Registry.SetLocalSecret(secret);
 
-            progress?.Invoke($"Adding cluster DNS host entry for [{hostname}] (60 seconds).");
-            cluster.DnsHosts.Set(GetRegistryDnsEntry(hostname), waitUntilPropagated: true);
+            progress?.Invoke($"Adding hive DNS host entry for [{hostname}] (60 seconds).");
+            hive.DnsHosts.Set(GetRegistryDnsEntry(hostname), waitUntilPropagated: true);
 
             progress?.Invoke($"Writing load balancer rule.");
-            cluster.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
+            hive.PublicLoadBalancer.SetRule(GetRegistryLoadBalancerRule(hostname));
 
             progress?.Invoke($"Creating [neon-registry] service.");
 
-            var manager = cluster.GetHealthyManager();
+            var manager = hive.GetHealthyManager();
 
             var createResponse = manager.DockerCommand(RunOptions.None,
                 "docker service create",
@@ -465,12 +465,12 @@ fi
             }
 
             progress?.Invoke($"Service created.");
-            progress?.Invoke($"Logging the cluster into the [{hostname}] registry.");
-            cluster.Registry.Login(hostname, username, password);
+            progress?.Invoke($"Logging the hive into the [{hostname}] registry.");
+            hive.Registry.Login(hostname, username, password);
         }
 
         /// <summary>
-        /// Removes then local Docker registry from the cluster.
+        /// Removes then local Docker registry from the hive.
         /// </summary>
         /// <param name="progress">Optional action that will be called with a progress message.</param>
         /// <exception cref="HiveException">Thrown if no registry is deployed or there was an error removing it.</exception>
@@ -482,13 +482,13 @@ fi
             }
 
             var syncLock = new object();
-            var manager  = cluster.GetHealthyManager();
-            var hostname = cluster.Registry.GetLocalHostname();
+            var manager  = hive.GetHealthyManager();
+            var hostname = hive.Registry.GetLocalHostname();
 
             // Logout of the registry.
 
-            progress?.Invoke($"Logging the cluster out of the [{hostname}] registry.");
-            cluster.Registry.Logout(hostname);
+            progress?.Invoke($"Logging the hive out of the [{hostname}] registry.");
+            hive.Registry.Logout(hostname);
 
             // Delete the [neon-registry] service and volume.  Note that
             // the volume should exist on all of the manager nodes.
@@ -501,7 +501,7 @@ fi
             var volumeRemoveActions = new List<Action>();
             var volumeRetryPolicy   = new LinearRetryPolicy(typeof(TransientException), maxAttempts: 10, retryInterval: TimeSpan.FromSeconds(2));
 
-            foreach (var node in cluster.Managers)
+            foreach (var node in hive.Managers)
             {
                 volumeRemoveActions.Add(
                     () =>
@@ -551,29 +551,29 @@ fi
             // Remove the load balancer rule and certificate.
 
             progress?.Invoke($"Removing the [neon-registry] load balancer rule.");
-            cluster.PublicLoadBalancer.RemoveRule("neon-registry");
+            hive.PublicLoadBalancer.RemoveRule("neon-registry");
             progress?.Invoke($"Removing the [neon-registry] load balancer certificate.");
-            cluster.Certificate.Remove("neon-registry");
+            hive.Certificate.Remove("neon-registry");
 
             // Remove any related Consul state.
 
             progress?.Invoke($"Removing the [neon-registry] Consul [hostname] and [secret].");
-            cluster.Registry.SetLocalHostname(null);
-            cluster.Registry.SetLocalSecret(null);
+            hive.Registry.SetLocalHostname(null);
+            hive.Registry.SetLocalSecret(null);
 
-            // Logout the cluster from the registry.
+            // Logout the hive from the registry.
 
-            progress?.Invoke($"Logging the cluster out of the [{hostname}] registry.");
-            cluster.Registry.Logout(hostname);
+            progress?.Invoke($"Logging the hive out of the [{hostname}] registry.");
+            hive.Registry.Logout(hostname);
 
-            // Remove the cluster DNS host entry.
+            // Remove the hive DNS host entry.
 
             progress?.Invoke($"Removing the [{hostname}] registry DNS hosts entry.");
-            cluster.DnsHosts.Remove(hostname);
+            hive.DnsHosts.Remove(hostname);
         }
 
         /// <summary>
-        /// Removes then local Docker registry from the cluster.
+        /// Removes then local Docker registry from the hive.
         /// </summary>
         /// <param name="progress">Optional action that will be called with a progress message.</param>
         /// <exception cref="HiveException">Thrown if no registry is deployed or there was an error removing it.</exception>
@@ -587,7 +587,7 @@ fi
             // The nice thing about this is that the operation will continue to
             // completion on the manager node even if we lose the SSH connection.
 
-            var manager      = cluster.GetHealthyManager();
+            var manager      = hive.GetHealthyManager();
             var updateScript =
 @"#!/bin/bash
 # Update [neon-registry] to READ-ONLY mode:
@@ -623,7 +623,7 @@ docker service update --env-rm READ_ONLY --env-add READ_ONLY=false neon-registry
         }
 
         /// <summary>
-        /// Returns the local cluster DNS override for the registry.
+        /// Returns the local hive DNS override for the registry.
         /// </summary>
         /// <param name="hostname">The registry hostname.</param>
         /// <returns>The <see cref="DnsEntry"/>.</returns>

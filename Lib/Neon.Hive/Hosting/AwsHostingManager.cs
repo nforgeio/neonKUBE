@@ -31,25 +31,25 @@ using Neon.Time;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Manages cluster provisioning on Amazon Web Services.
+    /// Manages hive provisioning on Amazon Web Services.
     /// </summary>
     public class AwsHostingManager : HostingManager
     {
-        private ClusterProxy cluster;
+        private HiveProxy hive;
 
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="hive">The hive being managed.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public AwsHostingManager(ClusterProxy cluster, string logFolder = null)
+        public AwsHostingManager(HiveProxy hive, string logFolder = null)
         {
-            cluster.HostingManager = this;
+            hive.HostingManager = this;
 
-            this.cluster = cluster;
+            this.hive = hive;
         }
 
         /// <inheritdoc/>
@@ -62,11 +62,11 @@ namespace Neon.Hive
         }
 
         /// <inheritdoc/>
-        public override void Validate(ClusterDefinition clusterDefinition)
+        public override void Validate(HiveDefinition hiveDefinition)
         {
             // Identify the OSD Bluestore block device for OSD nodes.
 
-            if (cluster.Definition.Ceph.Enabled)
+            if (hive.Definition.Ceph.Enabled)
             {
                 throw new NotImplementedException("$todo(jeff.lill): Implement this.");
             }
@@ -81,7 +81,7 @@ namespace Neon.Hive
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            return (Address: cluster.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
+            return (Address: hive.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
         }
 
         /// <inheritdoc/>

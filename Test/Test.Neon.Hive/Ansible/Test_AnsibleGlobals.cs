@@ -23,8 +23,8 @@ namespace TestNeonCluster
 {
     public class Test_AnsibleGlobals : IClassFixture<HiveFixture>
     {
-        private HiveFixture     hive;
-        private ClusterProxy    cluster;
+        private HiveFixture     hiveFixture;
+        private HiveProxy       hive;
 
         public Test_AnsibleGlobals(HiveFixture fixture)
         {
@@ -34,8 +34,8 @@ namespace TestNeonCluster
 
             fixture.LoginAndInitialize(login: null);
 
-            this.hive    = fixture;
-            this.cluster = fixture.Cluster;
+            this.hiveFixture = fixture;
+            this.hive        = fixture.Hive;
         }
 
         [Fact]

@@ -66,8 +66,8 @@ namespace NeonCli.Ansible
         //
         // servers      yes                                 array specifying one or more target
         //                                                  Couchbase nodes.  Each element can 
-        //                                                  be an IP address, a FQDN, cluster
-        //                                                  node name or cluster node group name
+        //                                                  be an IP address, a FQDN, hive
+        //                                                  node name or hive node group name
         //
         // port         no          8091                    Couchbase server port
         //                          18902 (for SSL)
@@ -145,7 +145,7 @@ namespace NeonCli.Ansible
         //
         // GSI Indexes
         // -----------
-        // By default, indexes will be hosted locally hosted within the cluster buckets.
+        // By default, indexes will be hosted locally hosted within the hive buckets.
         // For more advanced environments, it's possible to host indexes on separate
         // index nodes for more efficent use of memory and often better query performance.
         //
@@ -346,8 +346,8 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var cluster    = HiveHelper.Cluster;
-            var nodeGroups = cluster.Definition.GetNodeGroups(excludeAllGroup: true);
+            var hive       = HiveHelper.Hive;
+            var nodeGroups = hive.Definition.GetNodeGroups(excludeAllGroup: true);
 
             //-----------------------------------------------------------------
             // Parse the module arguments.
@@ -551,11 +551,11 @@ namespace NeonCli.Ansible
                                         sbWithSettings.AppendWithSeparator("\"defer_build\":true", ", ");
                                     }
 
-                                    context.WriteLine(AnsibleVerbosity.Trace, "Query for the cluster nodes.");
+                                    context.WriteLine(AnsibleVerbosity.Trace, "Query for the hive nodes.");
 
                                     var clusterNodes = await bucket.QuerySafeAsync<dynamic>("select nodes.name from system:nodes");
 
-                                    context.WriteLine(AnsibleVerbosity.Trace, $"Cluster has [{clusterNodes.Count}] nodes.");
+                                    context.WriteLine(AnsibleVerbosity.Trace, $"Hive has [{clusterNodes.Count}] nodes.");
 
                                     if ((!replicas.HasValue || replicas.Value == 0) && nodes.Count == 0)
                                     {
@@ -572,7 +572,7 @@ namespace NeonCli.Ansible
                                     {
                                         if (clusterNodes.Count <= replicas.Value)
                                         {
-                                            context.WriteErrorLine($"[replicas={replicas.Value}] cannot equal or exceed the number of Couchbase nodes.  [replicas={clusterNodes.Count - 1}] is the maximum allowed value for this cluster.");
+                                            context.WriteErrorLine($"[replicas={replicas.Value}] cannot equal or exceed the number of Couchbase nodes.  [replicas={clusterNodes.Count - 1}] is the maximum allowed value for this hive.");
                                             return;
                                         }
                                     }

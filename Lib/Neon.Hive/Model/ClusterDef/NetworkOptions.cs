@@ -33,15 +33,15 @@ namespace Neon.Hive
     /// neonHIVEs can be deployed in two basic environments, cloud or on-premise.  Cloud providers include
     /// <see cref="HostingEnvironments.Aws"/>, <see cref="HostingEnvironments.Azure"/>, and <see cref="HostingEnvironments.Google"/>
     /// and on-premise providers include <see cref="HostingEnvironments.LocalHyperV"/>, <see cref="HostingEnvironments.Machine"/> and
-    /// <see cref="HostingEnvironments.XenServer"/>.  Cluster network options are interpreted somewhat differently
-    /// depending on whether the the cluster is being provisioned to the cloud or to on-premise hardware.
+    /// <see cref="HostingEnvironments.XenServer"/>.  Hive network options are interpreted somewhat differently
+    /// depending on whether the the hive is being provisioned to the cloud or to on-premise hardware.
     /// </para>
     /// <para>
     /// Both cloud and on-premise clusters are provisioned with two standard overlay networks: <b>neon-public</b> and <b>neon-private</b>.
     /// These networks are used to as the service backend networks for the <b>neon-proxy-public</b> and <b>neon-proxy-private</b> TCP/HTTP
     /// network proxies used to forward external in internal traffic from Docker ingress/mesh networks to services.  Both of these
     /// networks are assigned reasonable default subnets for standalone clusters, but you'll need to take care to avoid conflicts
-    /// when deploying more than one cluster on a network.
+    /// when deploying more than one hive on a network.
     /// </para>
     /// <para>
     /// <see cref="PublicSubnet"/> is configured by default on the <b>10.249.0.0/16</b> subnet and is intended to
@@ -53,7 +53,7 @@ namespace Neon.Hive
     /// </para>
     /// <para><b>On-Premise Network Configuration</b></para>
     /// <para>
-    /// When deploying to an on-premise environment, you'll need to define up to four cluster subnets:
+    /// When deploying to an on-premise environment, you'll need to define up to four hive subnets:
     /// </para>
     /// <list type="table">
     /// <item>
@@ -101,16 +101,16 @@ namespace Neon.Hive
     /// <item>
     ///     <term><see cref="VpnPoolSubnet"/></term>
     ///     <description>
-    ///     This subnet is required if the cluster is deployed with an integrated VPN.
+    ///     This subnet is required if the hive is deployed with an integrated VPN.
     ///     This subnet must be a <b>/22</b> at this time and defaults to <b>10.169.0.0/22</b>.
     ///     </description>
     /// </item>
     /// </list>
     /// <para>
     /// In general, we recommend that you allocate two <b>/22</b> subnets for each on-premise
-    /// cluster.  One <b>/22</b> for <see cref="NodesSubnet"/> which allows for up to 1024 
+    /// hive.  One <b>/22</b> for <see cref="NodesSubnet"/> which allows for up to 1024 
     /// host nodes and the second <b>/22</b> for the <see cref="VpnPoolSubnet"/>.  This results
-    /// in each cluster being allocated a <b>/21</b> overall.
+    /// in each hive being allocated a <b>/21</b> overall.
     /// </para>
     /// <para><b>Cloud Network Configuration</b></para>
     /// <para>
@@ -189,7 +189,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <note>
         /// You must take care that this subnet does not conflict with any other subnets for this
-        /// cluster or any other clusters that may be deployed to the same network.
+        /// hive or any other clusters that may be deployed to the same network.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "PublicSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -197,7 +197,7 @@ namespace Neon.Hive
         public string PublicSubnet { get; set; } = defaultPublicSubnet;
 
         /// <summary>
-        /// Allow non-Docker swarm mode service containers to attach to the built-in <b>neon-public</b> cluster 
+        /// Allow non-Docker swarm mode service containers to attach to the built-in <b>neon-public</b> hive 
         /// overlay network.  This defaults to <b>true</b> for flexibility but you may consider disabling this for
         /// better security.
         /// </summary>
@@ -210,7 +210,7 @@ namespace Neon.Hive
         /// nodes to deploy a malicious service.
         /// </para>
         /// <para>
-        /// Unfortunately, it's not currently possible to change this setting after a cluster is deployed.
+        /// Unfortunately, it's not currently possible to change this setting after a hive is deployed.
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "PublicAttachable", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -223,7 +223,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <note>
         /// You must take care that this subnet does not conflict with any other subnets for this
-        /// cluster or any other clusters that may be deployed to the same network.
+        /// hive or any other clusters that may be deployed to the same network.
         /// </note>
         /// </remarks>
         [JsonProperty(PropertyName = "PrivateSubnet", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -231,7 +231,7 @@ namespace Neon.Hive
         public string PrivateSubnet { get; set; } = defaultPrivateSubnet;
 
         /// <summary>
-        /// Allow non-Docker swarm mode service containers to attach to the built-in <b>neon-private</b> cluster 
+        /// Allow non-Docker swarm mode service containers to attach to the built-in <b>neon-private</b> hive 
         /// overlay network.  This defaults to <b>true</b> for flexibility but you may consider disabling this for
         /// better security.
         /// </summary>
@@ -244,7 +244,7 @@ namespace Neon.Hive
         /// nodes to deploy a malicious service.
         /// </para>
         /// <para>
-        /// Unfortunately, it's not currently possible to change this setting after a cluster is deployed.
+        /// Unfortunately, it's not currently possible to change this setting after a hive is deployed.
         /// </para>
         /// </remarks>
         [JsonProperty(PropertyName = "PrivateAttachable", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -252,19 +252,19 @@ namespace Neon.Hive
         public bool PrivateAttachable { get; set; } = true;
 
         /// <summary>
-        /// The IP addresses of the upstream DNS nameservers to be used by the cluster.  This defaults to the 
+        /// The IP addresses of the upstream DNS nameservers to be used by the hive.  This defaults to the 
         /// Google Public DNS servers: <b>[ "8.8.8.8", "8.8.4.4" ]</b> when the property is <c>null</c> or empty.
         /// </summary>
         /// <remarks>
         /// <para>
         /// neonHIVEs configure the Consul servers running on the manager nodes to handle the DNS requests
-        /// from the cluster host nodes and containers by default.  This enables the registration of services
+        /// from the hive host nodes and containers by default.  This enables the registration of services
         /// with Consul that will be resolved to specific IP addresses.  This is used by the <b>proxy-manager</b>
         /// to support stateful services deployed as multiple containers and may also be used in other future
         /// scenarios.
         /// </para>
         /// <para>
-        /// neonHIVE Consul DNS servers answer requests for names with the <b>cluster</b> top-level domain.
+        /// neonHIVE Consul DNS servers answer requests for names with the <b>hive</b> top-level domain.
         /// Other requests will be handled recursively by forwarding the request to one of the IP addresses
         /// specified here.
         /// </para>
@@ -275,26 +275,26 @@ namespace Neon.Hive
 
         /// <summary>
         /// URI for the <a href="https://www.powerdns.com/recursor.html">PowerDNS Recursor</a> package 
-        /// to use for provisioning cluster DNS services.  This defaults to a known good release.
+        /// to use for provisioning hive DNS services.  This defaults to a known good release.
         /// </summary>
         [JsonProperty(PropertyName = "PdnsRecursorPackageUri", Required = Required.Default)]
         [DefaultValue(defaultPdnsRecursorPackagePackageUri)]
         public string PdnsRecursorPackageUri { get; set; } = defaultPdnsRecursorPackagePackageUri;
 
         /// <summary>
-        /// Optionally specifies the cluster's public FQDN or IP address where inbound 
-        /// cluster VPN traffic should be directed from VPN clients.
+        /// Optionally specifies the hive's public FQDN or IP address where inbound 
+        /// hive VPN traffic should be directed from VPN clients.
         /// </summary>
         /// <remarks>
         /// <para>
         /// For cloud deployments, the <b>neon-cli</b> will set this to IP address or
-        /// FQDN of the public cluster load balancer responsible for forwarding traffic
+        /// FQDN of the public hive load balancer responsible for forwarding traffic
         /// to the manager nodes.
         /// </para>
         /// <para>
         /// This needs to be explicitly defined for on-premise clusters that also
         /// deploy VPN servers.  In this case, you'll need to specify the public IP
-        /// address or FQDN of your cluster router that has forwarding rules for
+        /// address or FQDN of your hive router that has forwarding rules for
         /// the inbound VPN traffic.
         /// </para>
         /// </remarks>
@@ -303,13 +303,13 @@ namespace Neon.Hive
         public string ManagerPublicAddress { get; set; }
 
         /// <summary>
-        /// Optionally specifies the cluster's worker public FQDN or IP address during 
-        /// cluster provisioning.
+        /// Optionally specifies the hive's worker public FQDN or IP address during 
+        /// hive provisioning.
         /// </summary>
         /// <remarks>
         /// <para>
         /// For cloud deployments, the <b>neon-cli</b> will set this to IP address or
-        /// FQDN of the public cluster load balancer responsible for forwarding traffic
+        /// FQDN of the public hive load balancer responsible for forwarding traffic
         /// to the worker nodes.
         /// </para>
         /// <para>
@@ -322,7 +322,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// Specifies the overall cluster address space (CIDR) for cloud environments.  This must be a <b>/21</b>
+        /// Specifies the overall hive address space (CIDR) for cloud environments.  This must be a <b>/21</b>
         /// subnet with 2048 IP addresses for deployment to cloud providers.  This defaults to 
         /// <b>10.168.0.0/21</b>.
         /// </para>
@@ -335,11 +335,11 @@ namespace Neon.Hive
         /// IMPORTANT: You should take care to ensure that this subnet does not conflict
         /// with subnets assigned to your company or home networks and if you ever intend
         /// to deploy multiple clusters and link them via VPNs, you must ensure that
-        /// each cluster is assigned a unique address space.
+        /// each hive is assigned a unique address space.
         /// </note>
         /// <para>
         /// The <b>neon-cli</b> divides this address space into four subnets when deploying 
-        /// a cluster to a cloud platform such as AWS or Azure.  The table below
+        /// a hive to a cloud platform such as AWS or Azure.  The table below
         /// describes this using the the default address space <b>10.168.0.0/21</b>:
         /// </para>
         /// <list type="list">
@@ -348,7 +348,7 @@ namespace Neon.Hive
         ///     <description>
         ///     <see cref="CloudVNetSubnet"/>: The cloud address space is split in half and the 
         ///     first half will be used as the overall address space for the virtual network to
-        ///     be created for the cluster.  The VNET address space will be split into to equal
+        ///     be created for the hive.  The VNET address space will be split into to equal
         ///     sized subnets to be assigned to manager node NICs as well as NICs for all nodes.
         ///     </description>
         /// </item>
@@ -370,7 +370,7 @@ namespace Neon.Hive
         ///     <term><b>10.168.4.0/22</b></term>
         ///     <description>
         ///     <see cref="VpnPoolSubnet"/>: The second half of the cloud address space is 
-        ///     reserved for the OpenVPN tunnels with the OpenVPN tunnel on each cluster manager
+        ///     reserved for the OpenVPN tunnels with the OpenVPN tunnel on each hive manager
         ///     being assigned a <b>/25</b> subnet from this address space.
         ///     </description>
         /// </item>
@@ -395,7 +395,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// The <b>/22</b> address space to be assigned to the cluster's cloud virtual network.
+        /// The <b>/22</b> address space to be assigned to the hive's cloud virtual network.
         /// </para>
         /// <note>
         /// This property is ignored for the <see cref="HostingEnvironments.Machine"/> provider and is
@@ -408,7 +408,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// The cloud VPN server <b>/23</b> subnet.  Cluster managers will have a NIC attached to this subnet 
+        /// The cloud VPN server <b>/23</b> subnet.  Hive managers will have a NIC attached to this subnet 
         /// in addition to one attached to <see cref="NodesSubnet"/>.  These will be reponsible for forwarding
         /// return traffic from the nodes in the <see cref="NodesSubnet"/> back to the VPN clients.
         /// </para>
@@ -432,7 +432,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// The subnet where the cluster nodes reside.
+        /// The subnet where the hive nodes reside.
         /// </para>
         /// <note>
         /// This property must be configured for the on-premise providers (<see cref="HostingEnvironments.Machine"/>, 
@@ -458,7 +458,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// The cluster VPN client return <b>/22</b> subnet.  This where OpenVPN servers will 
+        /// The hive VPN client return <b>/22</b> subnet.  This where OpenVPN servers will 
         /// run and also acts as the pool of addresses that will be assigned to connecting VPN clients.
         /// This will be further split into <b>/25</b> subnets assigned to each manager/OpenVPN
         /// server.
@@ -536,32 +536,32 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition)
+        public void Validate(HiveDefinition hiveDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             var subnets = new List<SubnetDefinition>();
 
             if (!NetworkCidr.TryParse(PublicSubnet, out var cidr))
             {
-                throw new ClusterDefinitionException($"Invalid [{nameof(NetworkOptions)}.{nameof(PublicSubnet)}={PublicSubnet}].");
+                throw new HiveDefinitionException($"Invalid [{nameof(NetworkOptions)}.{nameof(PublicSubnet)}={PublicSubnet}].");
             }
 
             subnets.Add(new SubnetDefinition(nameof(PublicSubnet), cidr));
 
             if (!NetworkCidr.TryParse(PrivateSubnet, out cidr))
             {
-                throw new ClusterDefinitionException($"Invalid [{nameof(NetworkOptions)}.{nameof(PrivateSubnet)}={PrivateSubnet}].");
+                throw new HiveDefinitionException($"Invalid [{nameof(NetworkOptions)}.{nameof(PrivateSubnet)}={PrivateSubnet}].");
             }
 
             subnets.Add(new SubnetDefinition(nameof(PrivateSubnet), cidr));
 
             if (PublicSubnet == PrivateSubnet)
             {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PublicSubnet)}] cannot be the same as [{nameof(PrivateSubnet)}] .");
+                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PublicSubnet)}] cannot be the same as [{nameof(PrivateSubnet)}] .");
             }
 
             if (Nameservers == null || Nameservers.Length == 0)
@@ -573,7 +573,7 @@ namespace Neon.Hive
             {
                 if (!IPAddress.TryParse(nameserver, out var address))
                 {
-                    throw new ClusterDefinitionException($"[{nameserver}] is not a valid [{nameof(NetworkOptions)}.{nameof(Nameservers)}] IP address.");
+                    throw new HiveDefinitionException($"[{nameserver}] is not a valid [{nameof(NetworkOptions)}.{nameof(Nameservers)}] IP address.");
                 }
             }
 
@@ -581,10 +581,10 @@ namespace Neon.Hive
 
             if (!Uri.TryCreate(PdnsRecursorPackageUri, UriKind.Absolute, out var uri3))
             {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PdnsRecursorPackageUri)}={PdnsRecursorPackageUri}] is not a valid URI.");
+                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PdnsRecursorPackageUri)}={PdnsRecursorPackageUri}] is not a valid URI.");
             }
 
-            if (clusterDefinition.Hosting.IsCloudProvider)
+            if (hiveDefinition.Hosting.IsCloudProvider)
             {
                 // Verify [CloudSubnet].
 
@@ -595,12 +595,12 @@ namespace Neon.Hive
 
                 if (!NetworkCidr.TryParse(CloudSubnet, out var cloudSubnetCidr))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CloudSubnet)}={CloudSubnet}] is not a valid IPv4 subnet.");
+                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CloudSubnet)}={CloudSubnet}] is not a valid IPv4 subnet.");
                 }
 
                 if (cloudSubnetCidr.PrefixLength != 21)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CloudSubnet)}={CloudSubnet}] prefix length is not valid.  Only [/21] subnets are currently supported.");
+                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(CloudSubnet)}={CloudSubnet}] prefix length is not valid.  Only [/21] subnets are currently supported.");
                 }
 
                 // Compute [NodeSubnet] by splitting [ClusterSubnet] in quarters and taking the
@@ -616,14 +616,14 @@ namespace Neon.Hive
                 // Ensure that the node subnet is big enough to allocate an
                 // IP address for each node.
 
-                if (clusterDefinition.Nodes.Count() > nodesSubnetCidr.AddressCount - 4)
+                if (hiveDefinition.Nodes.Count() > nodesSubnetCidr.AddressCount - 4)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] subnet not large enough for the [{clusterDefinition.Nodes.Count()}] node addresses.");
+                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] subnet not large enough for the [{hiveDefinition.Nodes.Count()}] node addresses.");
                 }
 
                 // Verify/Compute VPN properties.
 
-                if (clusterDefinition.Vpn.Enabled)
+                if (hiveDefinition.Vpn.Enabled)
                 {
                     // Compute [CloudVpnSubnet] by taking the second quarter of [ClusterSubnet].
 
@@ -656,14 +656,14 @@ namespace Neon.Hive
 
                 if (!NetworkCidr.TryParse(PremiseSubnet, out var premiseCidr))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
+                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}] is not a valid IPv4 subnet.");
                 }
 
                 // Verify [Gateway]
 
                 if (string.IsNullOrEmpty(Gateway))
                 {
-                    // Default to the first valid address of the cluster nodes subnet 
+                    // Default to the first valid address of the hive nodes subnet 
                     // if this isn't already set.
 
                     Gateway = premiseCidr.FirstUsableAddress.ToString();
@@ -671,19 +671,19 @@ namespace Neon.Hive
 
                 if (!IPAddress.TryParse(Gateway, out var gateway) || gateway.AddressFamily != AddressFamily.InterNetwork)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
+                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] is not a valid IPv4 address.");
                 }
 
                 if (!premiseCidr.Contains(gateway))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodesSubnet)}={NodesSubnet}] subnet.");
+                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Gateway)}={Gateway}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodesSubnet)}={NodesSubnet}] subnet.");
                 }
 
                 // Verify [Broadcast]
 
                 if (string.IsNullOrEmpty(Broadcast))
                 {
-                    // Default to the first valid address of the cluster nodes subnet 
+                    // Default to the first valid address of the hive nodes subnet 
                     // if this isn't already set.
 
                     Broadcast = premiseCidr.LastAddress.ToString();
@@ -691,35 +691,35 @@ namespace Neon.Hive
 
                 if (!IPAddress.TryParse(Broadcast, out var broadcast) || broadcast.AddressFamily != AddressFamily.InterNetwork)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Broadcast)}={Broadcast}] is not a valid IPv4 address.");
+                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Broadcast)}={Broadcast}] is not a valid IPv4 address.");
                 }
 
                 if (!premiseCidr.Contains(broadcast))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Broadcast)}={Broadcast}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodesSubnet)}={NodesSubnet}] subnet.");
+                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(Broadcast)}={Broadcast}] address is not within the [{nameof(NetworkOptions)}.{nameof(NetworkOptions.NodesSubnet)}={NodesSubnet}] subnet.");
                 }
 
                 // Verify [NodesSubnet].
 
                 if (!NetworkCidr.TryParse(NodesSubnet, out var nodesSubnetCidr))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] is not a valid IPv4 subnet.");
+                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] is not a valid IPv4 subnet.");
                 }
 
                 if (!premiseCidr.Contains(nodesSubnetCidr))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] is not within [{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}].");
+                    throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] is not within [{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}].");
                 }
 
                 // Verify VPN properties for on-premise environments.
 
-                if (clusterDefinition.Vpn.Enabled)
+                if (hiveDefinition.Vpn.Enabled)
                 {
-                    if (clusterDefinition.Hosting.IsOnPremiseProvider)
+                    if (hiveDefinition.Hosting.IsOnPremiseProvider)
                     {
                         if (string.IsNullOrEmpty(ManagerPublicAddress))
                         {
-                            throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(ManagerPublicAddress)}] is required for on-premise deployments that enable VPN.  Set the public IP address or FQDN of your cluster router.");
+                            throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(ManagerPublicAddress)}] is required for on-premise deployments that enable VPN.  Set the public IP address or FQDN of your hive router.");
                         }
                     }
 
@@ -727,26 +727,26 @@ namespace Neon.Hive
 
                     if (!NetworkCidr.TryParse(VpnPoolSubnet, out var vpnPoolCidr))
                     {
-                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] is not a valid subnet.");
+                        throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] is not a valid subnet.");
                     }
 
                     if (vpnPoolCidr.PrefixLength > 23)
                     {
-                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] is too small.  The subnet prefix length cannot be longer than [23].");
+                        throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] is too small.  The subnet prefix length cannot be longer than [23].");
                     }
 
                     subnets.Add(new SubnetDefinition(nameof(VpnPoolSubnet), vpnPoolCidr));
 
                     if (nodesSubnetCidr.Overlaps(vpnPoolCidr))
                     {
-                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] and [{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] overlap.");
+                        throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NodesSubnet)}={NodesSubnet}] and [{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] overlap.");
                     }
 
                     subnets.Add(new SubnetDefinition(nameof(NodesSubnet), nodesSubnetCidr));
 
                     if (!premiseCidr.Contains(vpnPoolCidr))
                     {
-                        throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] is not within [{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}].");
+                        throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(VpnPoolSubnet)}={VpnPoolSubnet}] is not within [{nameof(NetworkOptions)}.{nameof(PremiseSubnet)}={PremiseSubnet}].");
                     }
                 }
             }
@@ -764,7 +764,7 @@ namespace Neon.Hive
 
                     if (subnet.Cidr.Overlaps(subnetTest.Cidr))
                     {
-                        throw new ClusterDefinitionException($"[{subnet.Name}={subnet.Cidr}] and [{subnetTest.Name}={subnetTest.Cidr}] overlap.");
+                        throw new HiveDefinitionException($"[{subnet.Name}={subnet.Cidr}] and [{subnetTest.Name}={subnetTest.Cidr}] overlap.");
                     }
                 }
             }

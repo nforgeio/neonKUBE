@@ -51,24 +51,24 @@ namespace Neon.Hive
         /// <summary>
         /// Validates the DNS entry.  Any warning/errors will be returned as a string list.
         /// </summary>
-        /// <param name="clusterDefinition">The current cluster definition,</param>
-        /// <param name="nodeGroups">The cluster node groups.</param>
+        /// <param name="hiveDefinition">The current hive definition,</param>
+        /// <param name="nodeGroups">The hive node groups.</param>
         /// <returns>The list of warnings (if any).</returns>
-        public List<string> Validate(ClusterDefinition clusterDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups)
+        public List<string> Validate(HiveDefinition hiveDefinition, Dictionary<string, List<NodeDefinition>> nodeGroups)
         {
-            Covenant.Requires<ArgumentException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentException>(hiveDefinition != null);
             Covenant.Requires<ArgumentException>(nodeGroups != null);
 
             var warnings = new List<string>();
 
-            if (string.IsNullOrEmpty(Hostname) || !ClusterDefinition.IsValidName(Hostname))
+            if (string.IsNullOrEmpty(Hostname) || !HiveDefinition.IsValidName(Hostname))
             {
                 warnings.Add($"Invalid [{nameof(DnsEntry)}.{nameof(Hostname)}={Hostname}].");
             }
 
             foreach (var endpoint in Endpoints)
             {
-                endpoint.Validate(warnings, clusterDefinition, nodeGroups, Hostname);
+                endpoint.Validate(warnings, hiveDefinition, nodeGroups, Hostname);
             }
 
             return warnings;

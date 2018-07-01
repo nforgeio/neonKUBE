@@ -25,10 +25,6 @@
     <ProjectReference Include="..\..\Lib\Neon.Xunit\Neon.Xunit.csproj" />
   </ItemGroup>
 
-  <ItemGroup>
-    <Folder Include="Xunit\" />
-  </ItemGroup>
-
   <Import Project="..\..\Lib\Neon.Global\Neon.Global.projitems" Label="Shared" />
 
 </Project>

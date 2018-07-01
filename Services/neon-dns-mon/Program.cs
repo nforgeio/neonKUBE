@@ -47,7 +47,7 @@ namespace NeonDnsMon
         private static TimeSpan             pingTimeout;
         private static TimeSpan             pollInterval;
         private static TimeSpan             warnInterval;
-        private static ClusterDefinition    clusterDefinition;
+        private static HiveDefinition       hiveDefinition;
         private static PolledTimer          warnTimer;
         private static HealthResolver       healthResolver;
 
@@ -87,7 +87,7 @@ namespace NeonDnsMon
 
             try
             {
-                // Establish the cluster connections.
+                // Establish the hive connections.
 
                 if (NeonHelper.IsDevWorkstation)
                 {
@@ -95,7 +95,7 @@ namespace NeonDnsMon
                 }
                 else
                 {
-                    HiveHelper.OpenCluster();
+                    HiveHelper.OpenHive();
                 }
 
                 // Open Consul and then start the main service task.
@@ -178,16 +178,16 @@ namespace NeonDnsMon
 
                     var hostAddresses = new HostAddresses();
 
-                    // Retrieve the current cluster definition from Consul if we don't already
+                    // Retrieve the current hive definition from Consul if we don't already
                     // have it or if it's different from what we've cached.
 
-                    clusterDefinition = await HiveHelper.GetDefinitionAsync(clusterDefinition, terminator.CancellationToken);
+                    hiveDefinition = await HiveHelper.GetDefinitionAsync(hiveDefinition, terminator.CancellationToken);
 
-                    log.LogDebug(() => $"Cluster has [{clusterDefinition.NodeDefinitions.Count}] nodes.");
+                    log.LogDebug(() => $"Hive has [{hiveDefinition.NodeDefinitions.Count}] nodes.");
 
                     // Add the [NAME.cluster] definitions for each cluster node.
 
-                    foreach (var node in clusterDefinition.Nodes)
+                    foreach (var node in hiveDefinition.Nodes)
                     {
                         hostAddresses.Add($"{node.Name}.cluster", IPAddress.Parse(node.PrivateAddress));
                     }
@@ -315,13 +315,13 @@ namespace NeonDnsMon
             // each of those tasks will create a task for each endpoint that
             // requires a health check.
 
-            var nodeGroups = clusterDefinition.GetNodeGroups();
+            var nodeGroups = hiveDefinition.GetNodeGroups();
             var entryTasks = new List<Task>();
             var warnings   = new List<string>();
 
             foreach (var target in targets)
             {
-                var targetWarnings = target.Validate(clusterDefinition, nodeGroups);
+                var targetWarnings = target.Validate(hiveDefinition, nodeGroups);
 
                 if (targetWarnings.Count > 0)
                 {

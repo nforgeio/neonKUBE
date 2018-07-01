@@ -31,14 +31,14 @@ namespace Neon.Hive
     {
         //---------------------------------------------------------------------
         // We manage VPN connections by launching OpenVPN specifying a configuration
-        // file for the target cluster.  These configuration files and keys will be 
+        // file for the target hive.  These configuration files and keys will be 
         // located in a (hopefully) encrypted or transient [tmpfs] folder.  Each
-        // cluster configuration file path will look something like:
+        // hive configuration file path will look something like:
         //
         //      .../vpn/CLUSTER/client.conf     *** on Linux
         //      ...\vpn\CLUSTER\client.conf     *** on Windows
         //
-        // where CLUSTER is the cluster name and [...] will vary based on the environment:
+        // where CLUSTER is the hive name and [...] will vary based on the environment:
         //
         //      1. Windows:         located in the user's [AppData] folder.
         //      2. Linux/OSX:       located in the user's home folder.
@@ -110,9 +110,9 @@ namespace Neon.Hive
             public string FolderPath { get; internal set; }
 
             /// <summary>
-            /// The cluster name.
+            /// The hive name.
             /// </summary>
-            public string ClusterName { get; internal set; }
+            public string HiveName { get; internal set; }
 
             /// <summary>
             /// The connection state.
@@ -126,7 +126,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the folder path where the VPN cluster client folders will
+        /// Returns the folder path where the VPN hive client folders will
         /// be located.
         /// </summary>
         /// <returns>The folder path.</returns>
@@ -149,7 +149,7 @@ namespace Neon.Hive
         public static List<VpnClient> VpnListClients()
         {
             // Build a hashset of the IDs of the processes that could conceivably
-            // be a cluster VPN client.
+            // be a hive VPN client.
 
             var openVpnProcessIds = new HashSet<int>();
 
@@ -194,10 +194,10 @@ namespace Neon.Hive
                     continue;
                 }
 
-                // We'll extract the cluster name from the last directory segment 
+                // We'll extract the hive name from the last directory segment 
                 // of the client folder.
 
-                var clusterName = clientFolder.Split('/', '\\').Last();
+                var hiveName = clientFolder.Split('/', '\\').Last();
                 
                 // Folders that map to a running process but without [status.txt]
                 // will have [Connecting] status.
@@ -275,10 +275,10 @@ namespace Neon.Hive
                 clients.Add(
                     new VpnClient()
                     {
-                        ClusterName = clusterName,
-                        FolderPath  = clientFolder,
-                        Pid         = pid,
-                        State       = state
+                        HiveName   = hiveName,
+                        FolderPath = clientFolder,
+                        Pid        = pid,
+                        State      = state
                     });
             }
 
@@ -286,25 +286,25 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the path to the client folder a named cluster.
+        /// Returns the path to the client folder a named hive.
         /// </summary>
-        /// <param name="clusterName">The cluster name.</param>
+        /// <param name="hiveName">The hive name.</param>
         /// <returns>The folder path.</returns>
-        private static string GetVpnClientFolder(string clusterName)
+        private static string GetVpnClientFolder(string hiveName)
         {
-            return Path.Combine(GetVpnFolder(), clusterName);
+            return Path.Combine(GetVpnFolder(), hiveName);
         }
 
         /// <summary>
-        /// Determines if a VPN client is running for a cluster and returns it.
+        /// Determines if a VPN client is running for a hive and returns it.
         /// </summary>
-        /// <param name="clusterName">The cluster name.</param>
+        /// <param name="hiveName">The hive name.</param>
         /// <returns>The <see cref="VpnClient"/> or <c>null</c>.</returns>
-        public static VpnClient VpnGetClient(string clusterName)
+        public static VpnClient VpnGetClient(string hiveName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hiveName));
 
-            return VpnListClients().FirstOrDefault(p => p.ClusterName.Equals(clusterName, StringComparison.OrdinalIgnoreCase));
+            return VpnListClients().FirstOrDefault(p => p.HiveName.Equals(hiveName, StringComparison.OrdinalIgnoreCase));
         }
 
         /// <summary>
@@ -326,9 +326,9 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Ensures that a cluster VPN connection is established and healthy.
+        /// Ensures that a hive VPN connection is established and healthy.
         /// </summary>
-        /// <param name="clusterLogin">The cluster login.</param>
+        /// <param name="hiveLogin">The hive login.</param>
         /// <param name="timeoutSeconds">Maximum seconds to wait for the VPN connection (defaults to 120 seconds).</param>
         /// <param name="onStatus">Optional callback that will be passed a status string.</param>
         /// <param name="onError">Optional callback that will be passed a error string.</param>
@@ -343,18 +343,18 @@ namespace Neon.Hive
         /// <exception cref="Exception">
         /// Thrown if the VPN connection is unhealthy.
         /// </exception>
-        public static void VpnOpen(ClusterLogin clusterLogin, int timeoutSeconds = 120, Action<string> onStatus = null, Action<string> onError = null, bool show = false)
+        public static void VpnOpen(HiveLogin hiveLogin, int timeoutSeconds = 120, Action<string> onStatus = null, Action<string> onError = null, bool show = false)
         {
-            Covenant.Requires<ArgumentNullException>(clusterLogin != null);
+            Covenant.Requires<ArgumentNullException>(hiveLogin != null);
 
-            var    vpnClient = VpnGetClient(clusterLogin.ClusterName);
+            var    vpnClient = VpnGetClient(hiveLogin.HiveName);
             string message;
 
             if (vpnClient != null)
             {
                 if (show)
                 {
-                    throw new HiveException("A VPN connection already exists for this cluster.");
+                    throw new HiveException("A VPN connection already exists for this hive.");
                 }
 
                 switch (vpnClient.State)
@@ -365,21 +365,21 @@ namespace Neon.Hive
 
                     case VpnState.Unhealthy:
 
-                        message = $"[{clusterLogin.ClusterName}] VPN connection is unhealthy.";
+                        message = $"[{hiveLogin.HiveName}] VPN connection is unhealthy.";
 
                         onError?.Invoke(message);
                         throw new Exception(message);
 
                     case VpnState.Connecting:
 
-                        onStatus?.Invoke($"Connecting [{clusterLogin.ClusterName}] VPN...");
+                        onStatus?.Invoke($"Connecting [{hiveLogin.HiveName}] VPN...");
 
                         try
                         {
                             NeonHelper.WaitFor(
                                 () =>
                                 {
-                                    vpnClient = VpnGetClient(clusterLogin.ClusterName);
+                                    vpnClient = VpnGetClient(hiveLogin.HiveName);
 
                                     if (vpnClient != null)
                                     {
@@ -405,28 +405,28 @@ namespace Neon.Hive
                 }
             }
 
-            // Initialize the VPN folder for the cluster (deleting any
+            // Initialize the VPN folder for the hive (deleting any
             // existing folder).
 
-            var clientFolder = GetVpnClientFolder(clusterLogin.ClusterName);
+            var clientFolder = GetVpnClientFolder(hiveLogin.HiveName);
 
             NeonHelper.DeleteFolderContents(clientFolder);
             Directory.CreateDirectory(clientFolder);
 
-            File.WriteAllText(Path.Combine(clientFolder, "ca.crt"), clusterLogin.VpnCredentials.CaCert);
-            File.WriteAllText(Path.Combine(clientFolder, "client.crt"), clusterLogin.VpnCredentials.UserCert);
-            File.WriteAllText(Path.Combine(clientFolder, "client.key"), clusterLogin.VpnCredentials.UserKey);
-            File.WriteAllText(Path.Combine(clientFolder, "ta.key"), clusterLogin.VpnCredentials.TaKey);
+            File.WriteAllText(Path.Combine(clientFolder, "ca.crt"), hiveLogin.VpnCredentials.CaCert);
+            File.WriteAllText(Path.Combine(clientFolder, "client.crt"), hiveLogin.VpnCredentials.UserCert);
+            File.WriteAllText(Path.Combine(clientFolder, "client.key"), hiveLogin.VpnCredentials.UserKey);
+            File.WriteAllText(Path.Combine(clientFolder, "ta.key"), hiveLogin.VpnCredentials.TaKey);
 
             // VPN servers are reached via the manager load balancer or router
             // using the forwarding port rule assigned to each manager node.
 
-            Covenant.Assert(clusterLogin.Definition.Network.ManagerPublicAddress != null, "Manager router address is required.");
+            Covenant.Assert(hiveLogin.Definition.Network.ManagerPublicAddress != null, "Manager router address is required.");
 
             var servers     = string.Empty;
             var firstServer = true;
 
-            foreach (var manager in clusterLogin.Definition.Managers)
+            foreach (var manager in hiveLogin.Definition.Managers)
             {
                 if (firstServer)
                 {
@@ -437,7 +437,7 @@ namespace Neon.Hive
                     servers += "\r\n";
                 }
 
-                servers += $"remote {clusterLogin.Definition.Network.ManagerPublicAddress} {manager.VpnFrontendPort}";
+                servers += $"remote {hiveLogin.Definition.Network.ManagerPublicAddress} {manager.VpnFrontendPort}";
             }
 
             // Generate the client side configuration.
@@ -627,11 +627,11 @@ verb 3
 
             // Wait for the VPN connection.
 
-            onStatus?.Invoke($"Connecting [{clusterLogin.ClusterName}] VPN...");
+            onStatus?.Invoke($"Connecting [{hiveLogin.HiveName}] VPN...");
 
             // $hack(jeff.lill):
             //
-            // Marcus had VPN problems on his workstation when logging into a cluster.
+            // Marcus had VPN problems on his workstation when logging into a hive.
             // The VPN would appear to connect but the SSH connection would fail.  The
             // underlying issue turned out be that the Windows-TAP driver wasn't
             // installed and the OpenVPN client failed to start.
@@ -651,7 +651,7 @@ verb 3
 
             // Wait for the VPN to connect.
 
-            vpnClient = VpnGetClient(clusterLogin.ClusterName);
+            vpnClient = VpnGetClient(hiveLogin.HiveName);
 
             if (vpnClient != null)
             {
@@ -662,7 +662,7 @@ verb 3
                 }
                 else if (vpnClient.State == VpnState.Unhealthy)
                 {
-                    message = $"[{clusterLogin.ClusterName}] VPN connection is unhealthy";
+                    message = $"[{hiveLogin.HiveName}] VPN connection is unhealthy";
 
                     if (onError != null)
                     {
@@ -678,7 +678,7 @@ verb 3
                 NeonHelper.WaitFor(
                     () =>
                     {
-                        vpnClient = VpnGetClient(clusterLogin.ClusterName);
+                        vpnClient = VpnGetClient(hiveLogin.HiveName);
 
                         if (vpnClient != null)
                         {
@@ -691,7 +691,7 @@ verb 3
                     },
                     TimeSpan.FromSeconds(timeoutSeconds));
 
-                onStatus?.Invoke($"Connected to [{clusterLogin.ClusterName}] VPN");
+                onStatus?.Invoke($"Connected to [{hiveLogin.HiveName}] VPN");
                 return;
             }
             catch (TimeoutException)
@@ -725,19 +725,19 @@ verb 3
             {
                 // Remove the VPN files for somewhat better security.
 
-                var clientFolder = GetVpnClientFolder(vpnClient.ClusterName);
+                var clientFolder = GetVpnClientFolder(vpnClient.HiveName);
 
                 NeonHelper.DeleteFolderContents(clientFolder);
             }
         }
 
         /// <summary>
-        /// Disconnects a VPN from a cluster or the VPNs for all clusters.
+        /// Disconnects a VPN from a hive or the VPNs for all clusters.
         /// </summary>
-        /// <param name="clusterName">The target cluster name or <c>null</c> if all clusters are to be disconnected.</param>
-        public static void VpnClose(string clusterName)
+        /// <param name="hiveName">The target hive name or <c>null</c> if all clusters are to be disconnected.</param>
+        public static void VpnClose(string hiveName)
         {
-            if (clusterName == null)
+            if (hiveName == null)
             {
                 foreach (var vpnClient in VpnListClients())
                 {
@@ -746,7 +746,7 @@ verb 3
             }
             else
             {
-                VpnDisconnect(VpnGetClient(clusterName));
+                VpnDisconnect(VpnGetClient(hiveName));
             }
         }
     }

@@ -235,7 +235,7 @@ namespace Neon.Hive
                     // as the HTTP frontend, if it doesn't already exist.
 
                     // Create a set of the hosts for the HTTP frontends explicitly specified 
-                    // by the cluster operator that already target the default HTTP port so
+                    // by the hive operator that already target the default HTTP port so
                     // we can avoid overwriting any explicit frontends below.  These will
                     // be keyed by: [host/path]
 
@@ -309,7 +309,7 @@ namespace Neon.Hive
                 context.Error($"Rule [{Name}] has invalid [{nameof(CheckVersion)}={CheckVersion}].");
             }
 
-            if (!string.IsNullOrEmpty(CheckHost) && !ClusterDefinition.DnsHostRegex.Match(CheckHost).Success)
+            if (!string.IsNullOrEmpty(CheckHost) && !HiveDefinition.DnsHostRegex.Match(CheckHost).Success)
             {
                 context.Error($"Rule [{Name}] has invalid [{nameof(CheckHost)}={CheckHost}].");
             }

@@ -34,7 +34,7 @@ using Neon.Time;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Manages cluster provisioning on the local workstation using Microsoft Hyper-V virtual machines.
+    /// Manages hive provisioning on the local workstation using Microsoft Hyper-V virtual machines.
     /// This is typically used for development and test purposes.
     /// </summary>
     public partial class LocalHyperVHostingManager : HostingManager
@@ -68,7 +68,7 @@ namespace Neon.Hive
 
         private const string defaultSwitchName = "neonHIVE";
 
-        private ClusterProxy                    cluster;
+        private HiveProxy                       hive;
         private SetupController<NodeDefinition> controller;
         private bool                            forceVmOverwrite;
         private string                          driveTemplatePath;
@@ -78,16 +78,16 @@ namespace Neon.Hive
         /// <summary>
         /// Constructor.
         /// </summary>
-        /// <param name="cluster">The cluster being managed.</param>
+        /// <param name="hive">The hive being managed.</param>
         /// <param name="logFolder">
         /// The folder where log files are to be written, otherwise or <c>null</c> or 
         /// empty if logging is disabled.
         /// </param>
-        public LocalHyperVHostingManager(ClusterProxy cluster, string logFolder = null)
+        public LocalHyperVHostingManager(HiveProxy hive, string logFolder = null)
         {
-            cluster.HostingManager = this;
+            hive.HostingManager = this;
 
-            this.cluster = cluster;
+            this.hive = hive;
         }
 
         /// <inheritdoc/>
@@ -106,13 +106,13 @@ namespace Neon.Hive
         }
 
         /// <inheritdoc/>
-        public override void Validate(ClusterDefinition clusterDefinition)
+        public override void Validate(HiveDefinition hiveDefinition)
         {
             // Identify the OSD Bluestore block device for OSD nodes.
 
-            if (cluster.Definition.Ceph.Enabled)
+            if (hive.Definition.Ceph.Enabled)
             {
-                foreach (var node in cluster.Definition.Nodes.Where(n => n.Labels.CephOSD))
+                foreach (var node in hive.Definition.Nodes.Where(n => n.Labels.CephOSD))
                 {
                     node.Labels.CephOSDDevice = "/dev/sdb";
                 }
@@ -128,7 +128,7 @@ namespace Neon.Hive
             // production clusters and especially when there are pet nodes.
             //
             // Perhaps it would make more sense to replace this with a
-            // [neon cluster remove] command.
+            // [neon hive remove] command.
             //
             //      https://github.com/jefflill/NeonForge/issues/156
 
@@ -144,7 +144,7 @@ namespace Neon.Hive
             // Update the node labels with the actual capabilities of the 
             // virtual machines being provisioned.
 
-            foreach (var node in cluster.Definition.Nodes)
+            foreach (var node in hive.Definition.Nodes)
             {
                 if (string.IsNullOrEmpty(node.Labels.PhysicalMachine))
                 {
@@ -153,24 +153,24 @@ namespace Neon.Hive
 
                 if (node.Labels.ComputeCores == 0)
                 {
-                    node.Labels.ComputeCores = cluster.Definition.Hosting.VmProcessors;
+                    node.Labels.ComputeCores = hive.Definition.Hosting.VmProcessors;
                 }
 
                 if (node.Labels.ComputeRamMB == 0)
                 {
-                    node.Labels.ComputeRamMB = (int)(ClusterDefinition.ValidateSize(cluster.Definition.Hosting.VmMemory, typeof(HostingOptions), nameof(HostingOptions.VmMemory))/NeonHelper.Mega);
+                    node.Labels.ComputeRamMB = (int)(HiveDefinition.ValidateSize(hive.Definition.Hosting.VmMemory, typeof(HostingOptions), nameof(HostingOptions.VmMemory))/NeonHelper.Mega);
                 }
 
                 if (node.Labels.StorageCapacityGB == 0)
                 {
-                    node.Labels.StorageCapacityGB = (int)(node.GetVmMemory(cluster.Definition) / NeonHelper.Giga);
+                    node.Labels.StorageCapacityGB = (int)(node.GetVmMemory(hive.Definition) / NeonHelper.Giga);
                 }
             }
 
             // If a public address isn't explicitly specified, we'll assume that the
             // tool is running inside the network and we can access the private address.
 
-            foreach (var node in cluster.Definition.Nodes)
+            foreach (var node in hive.Definition.Nodes)
             {
                 if (string.IsNullOrEmpty(node.PublicAddress))
                 {
@@ -180,7 +180,7 @@ namespace Neon.Hive
 
             // Perform the provisioning operations.
 
-            controller = new SetupController<NodeDefinition>($"Provisioning [{cluster.Definition.Name}] cluster", cluster.Nodes)
+            controller = new SetupController<NodeDefinition>($"Provisioning [{hive.Definition.Name}] hive", hive.Nodes)
             {
                 ShowStatus  = this.ShowStatus,
                 MaxParallel = 1     // We're only going to provision one VM at a time on a local Hyper-V instance.
@@ -202,7 +202,7 @@ namespace Neon.Hive
         /// <inheritdoc/>
         public override (string Address, int Port) GetSshEndpoint(string nodeName)
         {
-            return (Address: cluster.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
+            return (Address: hive.GetNode(nodeName).PrivateAddress.ToString(), Port: NetworkPorts.SSH);
         }
 
         /// <inheritdoc/>
@@ -219,7 +219,7 @@ namespace Neon.Hive
         public override List<HostedEndpoint> GetPublicEndpoints()
         {
             // Note that public endpoints have to be managed manually for
-            // on-premise cluster deployments so we're going to return an 
+            // on-premise hive deployments so we're going to return an 
             // empty list.
 
             return new List<HostedEndpoint>();
@@ -232,7 +232,7 @@ namespace Neon.Hive
         public override void UpdatePublicEndpoints(List<HostedEndpoint> endpoints)
         {
             // Note that public endpoints have to be managed manually for
-            // on-premise cluster deployments.
+            // on-premise hive deployments.
         }
 
         /// <inheritdoc/>
@@ -254,20 +254,20 @@ namespace Neon.Hive
         /// <returns>The virtual machine name.</returns>
         private string GetVmName(NodeDefinition node)
         {
-            return $"{cluster.Definition.Hosting.GetVmNamePrefix(cluster.Definition)}{node.Name}";
+            return $"{hive.Definition.Hosting.GetVmNamePrefix(hive.Definition)}{node.Name}";
         }
 
         /// <summary>
-        /// Attempts to extract the cluster node name from a virtual machine name.
+        /// Attempts to extract the hive node name from a virtual machine name.
         /// </summary>
         /// <param name="machineName">The virtual machine name.</param>
         /// <returns>
         /// The extracted node name if the virtual machine belongs to this 
-        /// cluster or else the empty string.
+        /// hive or else the empty string.
         /// </returns>
         private string ExtractNodeName(string machineName)
         {
-            var clusterPrefix = cluster.Definition.Hosting.GetVmNamePrefix(cluster.Definition);
+            var clusterPrefix = hive.Definition.Hosting.GetVmNamePrefix(hive.Definition);
 
             if (machineName.StartsWith(clusterPrefix))
             {
@@ -287,9 +287,9 @@ namespace Neon.Hive
             // Determine where we're going to place the VM hard drive files and
             // ensure that the directory exists.
 
-            if (!string.IsNullOrEmpty(cluster.Definition.Hosting.VmDriveFolder))
+            if (!string.IsNullOrEmpty(hive.Definition.Hosting.VmDriveFolder))
             {
-                vmDriveFolder = cluster.Definition.Hosting.VmDriveFolder;
+                vmDriveFolder = hive.Definition.Hosting.VmDriveFolder;
             }
             else
             {
@@ -307,14 +307,14 @@ namespace Neon.Hive
             // the download file.  The reason for this is that I want to avoid the
             // situation where the user has provisioned some nodes with one version
             // of the template and then goes on later to provision new nodes with
-            // an updated template.  The [neon cluster setup --remove-templates] 
+            // an updated template.  The [neon hive setup --remove-templates] 
             // option is provided to delete any cached templates.
             //
             // This should only be an issue for people using the default "latest"
             // drive template.  Production clusters should reference a specific
             // drive template.
 
-            var driveTemplateUri  = new Uri(cluster.Definition.Hosting.LocalHyperV.HostVhdxUri);
+            var driveTemplateUri  = new Uri(hive.Definition.Hosting.LocalHyperV.HostVhdxUri);
             var driveTemplateName = driveTemplateUri.Segments.Last();
 
             driveTemplatePath = Path.Combine(HiveHelper.GetVmTemplatesFolder(), driveTemplateName);
@@ -348,7 +348,7 @@ namespace Neon.Hive
 
             if (!driveTemplateIsCurrent)
             {
-                controller.SetOperationStatus($"Download Template VHDX: [{cluster.Definition.Hosting.LocalHyperV.HostVhdxUri}]");
+                controller.SetOperationStatus($"Download Template VHDX: [{hive.Definition.Hosting.LocalHyperV.HostVhdxUri}]");
 
                 Task.Run(
                     async () =>
@@ -357,7 +357,7 @@ namespace Neon.Hive
                         {
                             // Download the file.
 
-                            var response = await client.GetAsync(cluster.Definition.Hosting.LocalHyperV.HostVhdxUri, HttpCompletionOption.ResponseHeadersRead);
+                            var response = await client.GetAsync(hive.Definition.Hosting.LocalHyperV.HostVhdxUri, HttpCompletionOption.ResponseHeadersRead);
 
                             response.EnsureSuccessStatusCode();
 
@@ -387,11 +387,11 @@ namespace Neon.Hive
                                             {
                                                 var percentComplete = (int)(((double)fileStream.Length / (double)contentLength) * 100.0);
 
-                                                controller.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{cluster.Definition.Hosting.LocalHyperV.HostVhdxUri}]");
+                                                controller.SetOperationStatus($"Downloading VHDX: [{percentComplete}%] [{hive.Definition.Hosting.LocalHyperV.HostVhdxUri}]");
                                             }
                                             else
                                             {
-                                                controller.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{cluster.Definition.Hosting.LocalHyperV.HostVhdxUri}]");
+                                                controller.SetOperationStatus($"Downloading VHDX: [{fileStream.Length} bytes] [{hive.Definition.Hosting.LocalHyperV.HostVhdxUri}]");
                                             }
                                         }
                                     }
@@ -451,14 +451,14 @@ namespace Neon.Hive
 
                 if (externalSwitch == null)
                 {
-                    hyperv.NewVMExternalSwitch(switchName = defaultSwitchName, IPAddress.Parse(cluster.Definition.Network.Gateway));
+                    hyperv.NewVMExternalSwitch(switchName = defaultSwitchName, IPAddress.Parse(hive.Definition.Network.Gateway));
                 }
                 else
                 {
                     switchName = externalSwitch.Name;
                 }
 
-                // Ensure that the cluster virtual machines exist and are stopped,
+                // Ensure that the hive virtual machines exist and are stopped,
                 // taking care to issue a warning if any machines already exist 
                 // and we're not doing [force] mode.
 
@@ -473,7 +473,7 @@ namespace Neon.Hive
                 {
                     var nodeName    = ExtractNodeName(machine.Name);
                     var drivePath   = Path.Combine(vmDriveFolder, $"{machine.Name}.vhdx");
-                    var isClusterVM = cluster.FindNode(nodeName) != null;
+                    var isClusterVM = hive.FindNode(nodeName) != null;
 
                     if (isClusterVM)
                     {
@@ -481,9 +481,9 @@ namespace Neon.Hive
                         {
                             if (machine.State != VirtualMachineState.Off)
                             {
-                                cluster.GetNode(nodeName).Status = "stop virtual machine";
+                                hive.GetNode(nodeName).Status = "stop virtual machine";
                                 hyperv.StopVM(machine.Name);
-                                cluster.GetNode(nodeName).Status = string.Empty;
+                                hive.GetNode(nodeName).Status = string.Empty;
                             }
 
                             // The named machine already exists.  For force mode, we're going to stop and
@@ -501,9 +501,9 @@ namespace Neon.Hive
                             {
                                 // Remove the machine and recreate it below.
 
-                                cluster.GetNode(nodeName).Status = "delete virtual machine";
+                                hive.GetNode(nodeName).Status = "delete virtual machine";
                                 hyperv.RemoveVM(machine.Name);
-                                cluster.GetNode(nodeName).Status = string.Empty;
+                                hive.GetNode(nodeName).Status = string.Empty;
                             }
                             else
                             {
@@ -535,7 +535,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Creates a Hyper-V virtual machine for a cluster node.
+        /// Creates a Hyper-V virtual machine for a hive node.
         /// </summary>
         /// <param name="node">The target node.</param>
         private void ProvisionVM(SshProxy<NodeDefinition> node)
@@ -648,17 +648,17 @@ namespace Neon.Hive
                         new VirtualDrive()
                         {
                             IsDynamic = true,
-                            Size      = node.Metadata.GetCephOSDDriveSize(cluster.Definition),
+                            Size      = node.Metadata.GetCephOSDDriveSize(hive.Definition),
                             Path      = Path.Combine(vmDriveFolder, $"{vmName}-[1].vhdx")
                         });
                 }
 
                 // Create the virtual machine if it doesn't already exist.
 
-                var processors     = node.Metadata.GetVmProcessors(cluster.Definition);
-                var memoryBytes    = node.Metadata.GetVmMemory(cluster.Definition);
-                var minMemoryBytes = node.Metadata.GetVmMinimumMemory(cluster.Definition);
-                var diskBytes      = node.Metadata.GetVmDisk(cluster.Definition);
+                var processors     = node.Metadata.GetVmProcessors(hive.Definition);
+                var memoryBytes    = node.Metadata.GetVmMemory(hive.Definition);
+                var minMemoryBytes = node.Metadata.GetVmMinimumMemory(hive.Definition);
+                var diskBytes      = node.Metadata.GetVmDisk(hive.Definition);
 
                 node.Status = $"create virtual machine";
                 hyperv.AddVM(
@@ -684,9 +684,9 @@ namespace Neon.Hive
                 var adapters  = hyperv.ListVMNetworkAdapters(vmName, waitForAddresses: true);
                 var adapter   = adapters.FirstOrDefault();
                 var address   = adapter.Addresses.First();
-                var subnet    = NetworkCidr.Parse(cluster.Definition.Network.PremiseSubnet);
-                var gateway   = cluster.Definition.Network.Gateway;
-                var broadcast = cluster.Definition.Network.Broadcast;
+                var subnet    = NetworkCidr.Parse(hive.Definition.Network.PremiseSubnet);
+                var gateway   = hive.Definition.Network.Gateway;
+                var broadcast = hive.Definition.Network.Broadcast;
 
                 if (adapter == null)
                 {
@@ -702,7 +702,7 @@ namespace Neon.Hive
                 {
                     node.PrivateAddress = address;
 
-                    using (var nodeProxy = cluster.GetNode(node.Name))
+                    using (var nodeProxy = hive.GetNode(node.Name))
                     {
                         node.Status = $"connecting";
                         nodeProxy.WaitForBoot();
@@ -736,16 +736,16 @@ broadcast {broadcast}
 
                         // Temporarily configure the public Google DNS servers as
                         // the name servers so DNS will work after we reboot with
-                        // the static IP.  Note that cluster setup will eventually
-                        // configure the name servers specified in the cluster
+                        // the static IP.  Note that hive setup will eventually
+                        // configure the name servers specified in the hive
                         // definition.
 
                         // $todo(jeff.lill):
                         //
                         // Is there a good reason why we're not just configuring the
-                        // DNS servers from the cluster definition here???
+                        // DNS servers from the hive definition here???
                         //
-                        // Using the Google DNS seems like it could break some cluster
+                        // Using the Google DNS seems like it could break some hive
                         // network configurations (i.e. for clusters that don't have
                         // access to the public Internet).  Totally private clusters
                         // aren't really a supported scenario right now though because
@@ -789,7 +789,7 @@ nameserver 8.8.4.4
             // We need to do this so subsequent prepare steps will be
             // able to connect to the nodes via the correct addresses.
 
-            cluster.CreateNodes();
+            hive.CreateNodes();
         }
     }
 }

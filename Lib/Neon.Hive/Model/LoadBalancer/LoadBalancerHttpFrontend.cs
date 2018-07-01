@@ -191,7 +191,7 @@ namespace Neon.Hive
                 {
                     context.Error($"Rule [{rule.Name}] has a frontend without a [{nameof(Host)}] specified.  HTTP rules targeting the default load balancer HTTP/S ports, with more than one frontend, or secured by TLS requires frontend hostnames.");
                 }
-                else if (!ClusterDefinition.DnsHostRegex.IsMatch(Host))
+                else if (!HiveDefinition.DnsHostRegex.IsMatch(Host))
                 {
                     context.Error($"Rule [{rule.Name}] defines the invalid hostname [{Host}].");
                 }
@@ -200,7 +200,7 @@ namespace Neon.Hive
             {
                 // The hostname is not required but verify it if one is specified.
 
-                if (!string.IsNullOrEmpty(Host) && !ClusterDefinition.DnsHostRegex.IsMatch(Host))
+                if (!string.IsNullOrEmpty(Host) && !HiveDefinition.DnsHostRegex.IsMatch(Host))
                 {
                     context.Error($"Rule [{rule.Name}] defines the invalid hostname [{Host}].");
                 }

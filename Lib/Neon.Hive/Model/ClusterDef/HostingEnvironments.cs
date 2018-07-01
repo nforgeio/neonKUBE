@@ -11,7 +11,7 @@ using System.Text;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Enumerates the possible cluster hosting environments.
+    /// Enumerates the possible hive hosting environments.
     /// </summary>
     public enum HostingEnvironments
     {

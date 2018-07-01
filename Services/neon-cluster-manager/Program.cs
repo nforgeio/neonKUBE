@@ -40,11 +40,11 @@ namespace NeonClusterManager
         private static readonly string vaultPollSecondsKey   = $"{serviceRootKey}/vault_poll_seconds";
         private static readonly string managerPollSecondsKey = $"{serviceRootKey}/manager_poll_seconds";
         private static readonly string logPollSecondsKey     = $"{serviceRootKey}/log_poll_seconds";
-        private static readonly string clusterDefKey         = $"neon/cluster/{HiveGlobals.DefinitionDeflate}";
+        private static readonly string clusterDefKey         = $"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionDeflate}";
 
         private static ProcessTerminator        terminator;
         private static INeonLogger              log;
-        private static ClusterProxy             cluster;
+        private static HiveProxy                hive;
         private static ConsulClient             consul;
         private static DockerClient             docker;
         private static VaultCredentials         vaultCredentials;
@@ -52,7 +52,7 @@ namespace NeonClusterManager
         private static TimeSpan                 vaultPollInterval;
         private static TimeSpan                 managerPollInterval;
         private static TimeSpan                 logPollInterval;
-        private static ClusterDefinition        cachedClusterDefinition;
+        private static HiveDefinition           cachedHiveDefinition;
         private static List<string>             vaultUris;
 
         /// <summary>
@@ -72,7 +72,7 @@ namespace NeonClusterManager
 
             try
             {
-                // Establish the cluster connections.
+                // Establish the hive connections.
 
                 if (NeonHelper.IsDevWorkstation)
                 {
@@ -80,12 +80,12 @@ namespace NeonClusterManager
 
                     // NOTE: 
                     //
-                    // Add your target cluster's Vault credentials here for 
+                    // Add your target hive's Vault credentials here for 
                     // manual debugging.  Take care not to commit sensitive
                     // credentials for production clusters.
                     //
-                    // You'll find this information in the ROOT cluster login
-                    // for the target cluster.
+                    // You'll find this information in the ROOT hive login
+                    // for the target hive.
 
                     secrets.Add("neon-cluster-manager-vaultkeys",
                         new VaultCredentials()
@@ -102,10 +102,10 @@ namespace NeonClusterManager
                 }
                 else
                 {
-                    HiveHelper.OpenCluster(sshCredentialsSecret: "neon-ssh-credentials");
+                    HiveHelper.OpenHive(sshCredentialsSecret: "neon-ssh-credentials");
                 }
 
-                cluster = HiveHelper.Cluster;
+                hive = HiveHelper.Hive;
 
                 // Ensure that we're running on a manager node.  We won't be able
                 // to query swarm status otherwise.
@@ -120,11 +120,11 @@ namespace NeonClusterManager
 
                 if (!string.Equals(nodeRole, NodeRole.Manager, StringComparison.OrdinalIgnoreCase))
                 {
-                    log.LogCritical(() => $"[neon-cluster-manager] service is running on a [{nodeRole}] cluster node.  Running on only [{NodeRole.Manager}] nodes are supported.");
+                    log.LogCritical(() => $"[neon-cluster-manager] service is running on a [{nodeRole}] hive node.  Running on only [{NodeRole.Manager}] nodes are supported.");
                     Program.Exit(1);
                 }
 
-                // Open the cluster data services and then start the main service task.
+                // Open the hive data services and then start the main service task.
 
                 log.LogDebug(() => $"Connecting Consul");
 
@@ -262,7 +262,7 @@ namespace NeonClusterManager
 
             // We need to start a vault poller for the Vault instance running on each manager
             // node.  We're going to construct the direct Vault URIs by querying Docker for
-            // the current cluster nodes and looking for the managers.
+            // the current hive nodes and looking for the managers.
 
             vaultUris = await GetVaultUrisAsync();
 
@@ -271,7 +271,7 @@ namespace NeonClusterManager
                 tasks.Add(VaultPollerAsync(uri));
             }
 
-            // Start a task that periodically checks for changes to the set of cluster managers 
+            // Start a task that periodically checks for changes to the set of hive managers 
             // (e.g. if a manager is added or removed).  This task will cause the service to exit
             // so it can be restarted automatically by Docker to respond to the change.
 
@@ -305,7 +305,7 @@ namespace NeonClusterManager
                 return vaultUris;
             }
 
-            // Vault runs on the cluster managers so add a URI for each manager.
+            // Vault runs on the hive managers so add a URI for each manager.
             // Note that we also need to ensure that each Vault manager hostname
             // has an entry in [/etc/hosts].
             //
@@ -333,7 +333,7 @@ namespace NeonClusterManager
         }
 
         /// <summary>
-        /// Handles polling of Docker swarm about the cluster nodes and updating the cluster
+        /// Handles polling of Docker swarm about the hive nodes and updating the hive
         /// definition and hash when changes are detected.
         /// </summary>
         /// <returns>The tracking <see cref="Task"/>.</returns>
@@ -351,10 +351,10 @@ namespace NeonClusterManager
                         return;
                     }
 
-                    // Retrieve the current cluster definition from Consul if we don't already
+                    // Retrieve the current hive definition from Consul if we don't already
                     // have it or if it's different from what we've cached.
 
-                    cachedClusterDefinition = await HiveHelper.GetDefinitionAsync(cachedClusterDefinition, terminator.CancellationToken);
+                    cachedHiveDefinition = await HiveHelper.GetDefinitionAsync(cachedHiveDefinition, terminator.CancellationToken);
 
                     // Retrieve the swarm nodes from Docker.
 
@@ -363,12 +363,12 @@ namespace NeonClusterManager
                     var swarmNodes = await docker.NodeListAsync();
 
                     // Parse the node definitions from the swarm nodes and build a new definition with
-                    // using the new nodes.  Then compare the hashes of the cached and new cluster definitions
+                    // using the new nodes.  Then compare the hashes of the cached and new hive definitions
                     // and then update Consul if they're different.
 
-                    var currentClusterDefinition = NeonHelper.JsonClone<ClusterDefinition>(cachedClusterDefinition);
+                    var currentHiveDefinition = NeonHelper.JsonClone<HiveDefinition>(cachedHiveDefinition);
 
-                    currentClusterDefinition.NodeDefinitions.Clear();
+                    currentHiveDefinition.NodeDefinitions.Clear();
 
                     foreach (var swarmNode in swarmNodes)
                     {
@@ -376,62 +376,62 @@ namespace NeonClusterManager
 
                         nodeDefinition.Name = swarmNode.Hostname;
 
-                        currentClusterDefinition.NodeDefinitions.Add(nodeDefinition.Name, nodeDefinition);
+                        currentHiveDefinition.NodeDefinitions.Add(nodeDefinition.Name, nodeDefinition);
                     }
 
-                    log.LogDebug(() => $"STATE-POLLER: [{currentClusterDefinition.Managers.Count()}] managers and [{currentClusterDefinition.Workers.Count()}] workers in current cluster definition.");
+                    log.LogDebug(() => $"STATE-POLLER: [{currentHiveDefinition.Managers.Count()}] managers and [{currentHiveDefinition.Workers.Count()}] workers in current hive definition.");
 
-                    // Cluster pets are not part of the Swarm, so Docker won't return any information
-                    // about them.  We'll read the pet definitions from [neon/cluster/pets-definition] in 
+                    // Hive pets are not part of the Swarm, so Docker won't return any information
+                    // about them.  We'll read the pet definitions from [neon/global/pets-definition] in 
                     // Consul.  We'll assume that there are no pets if this key doesn't exist for
                     // backwards compatibility and robustness.
 
-                    var petsJson = await HiveHelper.Consul.KV.GetStringOrDefault($"neon/cluster/{HiveGlobals.PetsDefinition}", terminator.CancellationToken);
+                    var petsJson = await HiveHelper.Consul.KV.GetStringOrDefault($"{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}", terminator.CancellationToken);
 
                     if (petsJson == null)
                     {
-                        log.LogDebug(() => $"STATE-POLLER: [neon/cluster/{HiveGlobals.PetsDefinition}] Consul key not found.  Assuming no pets.");
+                        log.LogDebug(() => $"STATE-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] Consul key not found.  Assuming no pets.");
                     }
                     else
                     {
                         if (!string.IsNullOrWhiteSpace(petsJson))
                         {
-                            // Parse the pet node definitions and add them to the cluster definition.
+                            // Parse the pet node definitions and add them to the hive definition.
 
                             var petDefinitions = NeonHelper.JsonDeserialize<Dictionary<string, NodeDefinition>>(petsJson);
 
                             foreach (var item in petDefinitions)
                             {
-                                currentClusterDefinition.NodeDefinitions.Add(item.Key, item.Value);
+                                currentHiveDefinition.NodeDefinitions.Add(item.Key, item.Value);
                             }
 
-                            log.LogDebug(() => $"STATE-POLLER: [neon/cluster/{HiveGlobals.PetsDefinition}] defines [{petDefinitions.Count}] pets.");
+                            log.LogDebug(() => $"STATE-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] defines [{petDefinitions.Count}] pets.");
                         }
                         else
                         {
-                            log.LogDebug(() => $"STATE-POLLER: [neon/cluster/{HiveGlobals.PetsDefinition}] is empty.");
+                            log.LogDebug(() => $"STATE-POLLER: [{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}] is empty.");
                         }
                     }
 
-                    // Fetch the cluster summary and add it to the cluster definition.
+                    // Fetch the hive summary and add it to the hive definition.
 
-                    currentClusterDefinition.Summary = ClusterSummary.FromCluster(cluster, currentClusterDefinition);
+                    currentHiveDefinition.Summary = HiveSummary.FromHive(hive, currentHiveDefinition);
 
                     // Determine if the definition has changed.
 
-                    currentClusterDefinition.ComputeHash();
+                    currentHiveDefinition.ComputeHash();
 
-                    if (currentClusterDefinition.Hash != cachedClusterDefinition.Hash)
+                    if (currentHiveDefinition.Hash != cachedHiveDefinition.Hash)
                     {
-                        log.LogInfo(() => "STATE-POLLER: Cluster definition has CHANGED.  Updating Consul.");
+                        log.LogInfo(() => "STATE-POLLER: Hive definition has CHANGED.  Updating Consul.");
 
-                        await HiveHelper.PutDefinitionAsync(currentClusterDefinition, cancellationToken: terminator.CancellationToken);
+                        await HiveHelper.PutDefinitionAsync(currentHiveDefinition, cancellationToken: terminator.CancellationToken);
 
-                        cachedClusterDefinition = currentClusterDefinition;
+                        cachedHiveDefinition = currentHiveDefinition;
                     }
                     else
                     {
-                        log.LogDebug(() => "STATE-POLLER: Cluster definition is UNCHANGED.");
+                        log.LogDebug(() => "STATE-POLLER: Hive definition is UNCHANGED.");
                     }
                 }
                 catch (OperationCanceledException)
@@ -441,11 +441,11 @@ namespace NeonClusterManager
                 }
                 catch (KeyNotFoundException)
                 {
-                    // We'll see this when no cluster definition has been persisted to the
-                    // cluster.  This is a serious problem.  This is configured during setup
+                    // We'll see this when no hive definition has been persisted to the
+                    // hive.  This is a serious problem.  This is configured during setup
                     // and there should always be a definition in Consul.
 
-                    log.LogError(() => $"STATE-POLLER: No cluster definition has been found at [{clusterDefKey}] in Consul.  This is a serious error that will have to be corrected manually.");
+                    log.LogError(() => $"STATE-POLLER: No hive definition has been found at [{clusterDefKey}] in Consul.  This is a serious error that will have to be corrected manually.");
                 }
                 catch (Exception e)
                 {
@@ -494,7 +494,7 @@ namespace NeonClusterManager
                         log.LogDebug(() => $"VAULT-POLLER: Querying [{vaultUri}]");
 
                         var newVaultStatus     = await vault.GetHealthAsync(terminator.CancellationToken);
-                        var autoUnsealDisabled = consul.KV.GetBoolOrDefault($"{HiveConst.ClusterGlobalsKey}/{HiveGlobals.UserDisableAutoUnseal}").Result;
+                        var autoUnsealDisabled = consul.KV.GetBoolOrDefault($"{HiveConst.GlobalKey}/{HiveGlobals.UserDisableAutoUnseal}").Result;
                         var changed            = false;
 
                         if (lastVaultStatus == null)
@@ -533,7 +533,7 @@ namespace NeonClusterManager
 
                             if (newVaultStatus.IsSealed && autoUnsealDisabled)
                             {
-                                log.LogInfo(() => $"VAULT-POLLER: AUTO-UNSEAL is temporarily DISABLED because Consul [{HiveConst.ClusterGlobalsKey}/{HiveGlobals.UserDisableAutoUnseal}=true].");
+                                log.LogInfo(() => $"VAULT-POLLER: AUTO-UNSEAL is temporarily DISABLED because Consul [{HiveConst.GlobalKey}/{HiveGlobals.UserDisableAutoUnseal}=true].");
                             }
 
                             statusUpdateTimeUtc = DateTime.UtcNow + statusUpdateInterval;
@@ -583,7 +583,7 @@ namespace NeonClusterManager
         }
 
         /// <summary>
-        /// Handles detection of changes to the cluster's manager nodes.  The process will
+        /// Handles detection of changes to the hive's manager nodes.  The process will
         /// be terminated when manager nodes are added or removed so that Docker will restart
         /// the service to begin handling the changes.
         /// </summary>
@@ -600,7 +600,7 @@ namespace NeonClusterManager
                         return;
                     }
 
-                    log.LogDebug(() => "MANAGER-POLLER: Polling for cluster manager changes.");
+                    log.LogDebug(() => "MANAGER-POLLER: Polling for hive manager changes.");
 
                     var latestVaultUris = await GetVaultUrisAsync();
                     var changed         = vaultUris.Count != latestVaultUris.Count;
@@ -619,7 +619,7 @@ namespace NeonClusterManager
 
                     if (changed)
                     {
-                        log.LogInfo("MANAGER-POLLER: Detected one or more cluster manager node changes.");
+                        log.LogInfo("MANAGER-POLLER: Detected one or more hive manager node changes.");
                         log.LogInfo("MANAGER-POLLER: Exiting the service so that Docker will restart it to pick up the manager node changes.");
                         terminator.Exit();
                     }
@@ -638,7 +638,7 @@ namespace NeonClusterManager
                     log.LogError($"MANAGER-POLLER", e);
                 }
 
-                // We don't need to poll that often because cluster managers
+                // We don't need to poll that often because hive managers
                 // will rarely change.
 
                 await Task.Delay(managerPollInterval, terminator.CancellationToken);
@@ -655,7 +655,7 @@ namespace NeonClusterManager
             {
                 while (true)
                 {
-                    var manager = cluster.GetHealthyManager();
+                    var manager = hive.GetHealthyManager();
 
                     try
                     {
@@ -675,7 +675,7 @@ namespace NeonClusterManager
                         //
                         // The date is simply encodes the day covered by the index.
 
-                        if (!cluster.Globals.TryGetInt(HiveGlobals.UserLogRetentionDays, out var retentionDays))
+                        if (!hive.Globals.TryGetInt(HiveGlobals.UserLogRetentionDays, out var retentionDays))
                         {
                             retentionDays = 14;
                         }

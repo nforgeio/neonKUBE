@@ -24,7 +24,7 @@ using Neon.Net;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Cluster VPN options.
+    /// Hive VPN options.
     /// </summary>
     public class VpnOptions
     {
@@ -42,7 +42,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Enables built-in cluster VPN.  This defaults to <c>true</c>.
+        /// Enables built-in hive VPN.  This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "Enabled", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(true)]
@@ -51,7 +51,7 @@ namespace Neon.Hive
         /// <summary>
         /// <para>
         /// Specifies whether the same client certificate can be used to establish more than one connection
-        /// to the cluster VPN.  This enables a single operator to establish multiple connections (e.g. from
+        /// to the hive VPN.  This enables a single operator to establish multiple connections (e.g. from
         /// different computers) or for operators to share credentials to simplify certificate management.
         /// This defaults to <c>true</c>.
         /// </para>
@@ -73,7 +73,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Specifies the organization name to use for the VPN certificate authority.  This defaults 
-        /// to the cluster name with <b>"-cluster"</b> appended.
+        /// to the hive name with <b>"-hive"</b> appended.
         /// </summary>
         [JsonProperty(PropertyName = "CertOrganization", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(null)]
@@ -83,17 +83,17 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition)
+        public void Validate(HiveDefinition hiveDefinition)
         {
             if (!Enabled)
             {
                 return;
             }
 
-            if (clusterDefinition.Hosting.IsOnPremiseProvider)
+            if (hiveDefinition.Hosting.IsOnPremiseProvider)
             {
                 // Ensure that the manager nodes are assigned VPN frontend ports
                 // for on-premise deployments.  We're going to assign the standard
@@ -102,7 +102,7 @@ namespace Neon.Hive
 
                 var nextVpnFrontendPort = NetworkPorts.OpenVPN;
 
-                foreach (var manager in clusterDefinition.SortedManagers)
+                foreach (var manager in hiveDefinition.SortedManagers)
                 {
                     if (manager.VpnFrontendPort == 0)
                     {
@@ -111,41 +111,41 @@ namespace Neon.Hive
 
                     if (!NetHelper.IsValidPort(manager.VpnFrontendPort))
                     {
-                        throw new ClusterDefinitionException($"Manager node [{manager.Name}] assigns [{nameof(NodeDefinition.VpnFrontendPort)}={manager.VpnFrontendPort}] which is not a valid network port.");
+                        throw new HiveDefinitionException($"Manager node [{manager.Name}] assigns [{nameof(NodeDefinition.VpnFrontendPort)}={manager.VpnFrontendPort}] which is not a valid network port.");
                     }
                 }
 
                 // Ensure that manager VPN ports don't conflict.
 
-                foreach (var manager in clusterDefinition.SortedManagers)
+                foreach (var manager in hiveDefinition.SortedManagers)
                 {
-                    var conflictingManager = clusterDefinition.SortedManagers.FirstOrDefault(m => !object.ReferenceEquals(m, manager) && m.VpnFrontendPort == manager.VpnFrontendPort);
+                    var conflictingManager = hiveDefinition.SortedManagers.FirstOrDefault(m => !object.ReferenceEquals(m, manager) && m.VpnFrontendPort == manager.VpnFrontendPort);
 
                     if (conflictingManager != null)
                     {
-                        throw new ClusterDefinitionException($"Manager node [{manager.Name}] assigns [{nameof(NodeDefinition.VpnFrontendPort)}={manager.VpnFrontendPort}] which conflicts with the port assigned to [{conflictingManager.Name}].");
+                        throw new HiveDefinitionException($"Manager node [{manager.Name}] assigns [{nameof(NodeDefinition.VpnFrontendPort)}={manager.VpnFrontendPort}] which conflicts with the port assigned to [{conflictingManager.Name}].");
                     }
                 }
             }
 
             if (ServerAddressCount <= 0 || ServerAddressCount % 16 != 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(VpnOptions)}.{nameof(ServerAddressCount)}={ServerAddressCount}] is not a positive multiple of 16.");
+                throw new HiveDefinitionException($"[{nameof(VpnOptions)}.{nameof(ServerAddressCount)}={ServerAddressCount}] is not a positive multiple of 16.");
             }
 
             if (ServerAddressCount > 65536)
             {
-                throw new ClusterDefinitionException($"[{nameof(VpnOptions)}.{nameof(ServerAddressCount)}={ServerAddressCount}] exceeds the maximum possible value [65536].");
+                throw new HiveDefinitionException($"[{nameof(VpnOptions)}.{nameof(ServerAddressCount)}={ServerAddressCount}] exceeds the maximum possible value [65536].");
             }
 
             if (string.IsNullOrEmpty(CertOrganization))
             {
-                CertOrganization = $"{clusterDefinition.Name}-cluster";
+                CertOrganization = $"{hiveDefinition.Name}-hive";
             }
 
             if (string.IsNullOrEmpty(CertCountryCode) || CertCountryCode.Length != 2)
             {
-                throw new ClusterDefinitionException($"[{nameof(VpnOptions)}.{nameof(CertCountryCode)}] most be set to a two character country code.");
+                throw new HiveDefinitionException($"[{nameof(VpnOptions)}.{nameof(CertCountryCode)}] most be set to a two character country code.");
             }
         }
     }

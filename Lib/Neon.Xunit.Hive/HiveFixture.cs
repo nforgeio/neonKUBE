@@ -58,20 +58,20 @@ namespace Neon.Xunit.Hive
     /// </para>
     /// <para>
     /// neonHIVEs do not allow the <see cref="HiveFixture"/> to perform unit
-    /// tests by default, as a safety measure.  You can enable this before cluster
-    /// deployment by setting <see cref="ClusterDefinition.AllowUnitTesting"/><c>=true</c>
-    /// or by manually invoking this command for an existing cluster:
+    /// tests by default, as a safety measure.  You can enable this before hive
+    /// deployment by setting <see cref="HiveDefinition.AllowUnitTesting"/><c>=true</c>
+    /// or by manually invoking this command for an existing hive:
     /// </para>
     /// <code>
-    /// neon cluster set allow-unit-testing=yes
+    /// neon hive set allow-unit-testing=yes
     /// </code>
     /// <para>
     /// This fixture is pretty easy to use.  Simply have your test class inherit
-    /// from <see cref="IClassFixture{ClusterFixture}"/> and add a public constructor
+    /// from <see cref="IClassFixture{HiveFixture}"/> and add a public constructor
     /// that accepts a <see cref="HiveFixture"/> as the only argument.  Then
     /// you can call it's <see cref="LoginAndInitialize(string, Action)"/> method within
-    /// the constructor passing the cluster login name as well as an <see cref="Action"/>.
-    /// You may also use the fixture to initialize cluster services, networks, secrets,
+    /// the constructor passing the hive login name as well as an <see cref="Action"/>.
+    /// You may also use the fixture to initialize hive services, networks, secrets,
     /// load balancers, etc. within your custom action.
     /// </para>
     /// <note>
@@ -79,9 +79,9 @@ namespace Neon.Xunit.Hive
     /// is not supported by this fixture and will throw an exception.
     /// </note>
     /// <para>
-    /// The specified cluster login file must be already present on the current
+    /// The specified hive login file must be already present on the current
     /// machine for the current user.  The <see cref="LoginAndInitialize(string, Action)"/> method will
-    /// logout from the current cluster (if any) and then login to the one specified.
+    /// logout from the current hive (if any) and then login to the one specified.
     /// </para>
     /// <note>
     /// You can also specify a <c>null</c> or empty login name.  In this case,
@@ -92,7 +92,7 @@ namespace Neon.Xunit.Hive
     /// </note>
     /// <para>
     /// This fixture provides several methods and properties for managing the 
-    /// cluster state.  These may be called within the test class constructor's 
+    /// hive state.  These may be called within the test class constructor's 
     /// action method, within the test constructor but outside of the action, 
     /// or within the test class methods:
     /// </para>
@@ -102,7 +102,7 @@ namespace Neon.Xunit.Hive
     ///     <description>
     ///     <see cref="ClearConsul()"/>
     ///     <see cref="ClearVault()"/>
-    ///     <see cref="Cluster"/><br/>
+    ///     <see cref="Hive"/><br/>
     ///     <see cref="DockerExecute(string)"/><br/>
     ///     <see cref="DockerExecute(object[])"/>
     ///     <see cref="NeonExecute(string)"/><br/>
@@ -235,12 +235,12 @@ namespace Neon.Xunit.Hive
     ///     <term><b>initialize once</b></term>
     ///     <description>
     ///     <para>
-    ///     The basic idea here is to have your test class initialize the cluster
+    ///     The basic idea here is to have your test class initialize the hive
     ///     once within the test class constructor inside of the initialize action
     ///     with common state and services that all of the tests can access.
     ///     </para>
     ///     <para>
-    ///     This will be quite a bit faster than reconfiguring the cluster at the
+    ///     This will be quite a bit faster than reconfiguring the hive at the
     ///     beginning of every test and can work well for many situations.
     ///     </para>
     ///     </description>
@@ -248,9 +248,9 @@ namespace Neon.Xunit.Hive
     /// <item>
     ///     <term><b>initialize every test</b></term>
     ///     <description>
-    ///     For scenarios where the cluster must be cleared before every test,
+    ///     For scenarios where the hive must be cleared before every test,
     ///     you can use the <see cref="Reset()"/> method to reset its
-    ///     state within each test method, populate the cluster as necessary,
+    ///     state within each test method, populate the hive as necessary,
     ///     and then perform your tests.
     ///     </description>
     /// </item>
@@ -261,14 +261,14 @@ namespace Neon.Xunit.Hive
     {
         /// <summary>
         /// Used to track how many fixture instances for the current test run
-        /// remain so we can determine when to reset the cluster.
+        /// remain so we can determine when to reset the hive.
         /// </summary>
         private static int RefCount = 0;
 
         //---------------------------------------------------------------------
         // Instance members
 
-        private ClusterProxy                                cluster;
+        private HiveProxy                                   hive;
         private bool                                        resetOnInitialize;
         private bool                                        disableChecks;
         private Dictionary<string, List<NodeDefinition>>    nodeGroups;
@@ -282,7 +282,7 @@ namespace Neon.Xunit.Hive
             if (RefCount++ == 0)
             {
                 // We need to wait until after we've connected to the
-                // cluster before calling [Reset()].
+                // hive before calling [Reset()].
 
                 resetOnInitialize = true;
             }
@@ -326,12 +326,12 @@ namespace Neon.Xunit.Hive
 
         /// <summary>
         /// Initializes the fixture if it hasn't already been intialized by
-        /// connecting to a cluster and invoking the optional initialization
+        /// connecting to a hive and invoking the optional initialization
         /// <see cref="Action"/>.
         /// </summary>
         /// <param name="login">
-        /// Optionally specifies a cluster login like <b>USER@CLUSTER</b> or you can pass
-        /// <c>null</c> to connect to the cluster specified by the <b>NEON_TEST_CLUSTER</b>
+        /// Optionally specifies a hive login like <b>USER@HIVE</b> or you can pass
+        /// <c>null</c> to connect to the hive specified by the <b>NEON_TEST_CLUSTER</b>
         /// environment variable.
         /// </param>
         /// <param name="action">The optional initialization action.</param>
@@ -355,9 +355,9 @@ namespace Neon.Xunit.Hive
                 return false;
             }
 
-            // We need to connect the cluster before calling the base initialization
+            // We need to connect the hive before calling the base initialization
             // method.  We're going to use [neon-cli] to log out of the current
-            // cluster and log into the new one.
+            // hive and log into the new one.
 
             if (string.IsNullOrEmpty(login))
             {
@@ -366,26 +366,26 @@ namespace Neon.Xunit.Hive
 
             if (string.IsNullOrEmpty(login))
             {
-                throw new ArgumentException($"[{nameof(login)}] or the NEON_TEST_CLUSTER environment variable must specify the target cluster login.");
+                throw new ArgumentException($"[{nameof(login)}] or the NEON_TEST_CLUSTER environment variable must specify the target hive login.");
             }
 
             var loginInfo = HiveHelper.SplitLogin(login);
 
             if (!loginInfo.IsOK)
             {
-                throw new ArgumentException($"Invalid username/cluster [{login}].  Expected something like: USER@CLUSTER");
+                throw new ArgumentException($"Invalid username/hive [{login}].  Expected something like: USER@HIVE");
             }
 
-            var loginPath = HiveHelper.GetLoginPath(loginInfo.Username, loginInfo.ClusterName);
+            var loginPath = HiveHelper.GetLoginPath(loginInfo.Username, loginInfo.HiveName);
 
             if (!File.Exists(loginPath))
             {
                 throw new ArgumentException($"Cluster login [{login}] does not exist on the current machine and user account.");
             }
 
-            // Use [neon-cli] to login the local machine and user account to the cluster.
+            // Use [neon-cli] to login the local machine and user account to the hive.
             // We're going temporarily set [disableChecks=true] so [NeonExecute()] won't
-            // barf because we're not connected to the cluster yet.
+            // barf because we're not connected to the hive yet.
 
             try
             {
@@ -403,23 +403,23 @@ namespace Neon.Xunit.Hive
                 disableChecks = false;
             }
 
-            // Open a proxy to the cluster.
+            // Open a proxy to the hive.
 
-            cluster = HiveHelper.OpenRemoteCluster(loginPath: loginPath);
+            hive = HiveHelper.OpenRemoteCluster(loginPath: loginPath);
 
-            // Ensure that the target cluster allows unit testing.
+            // Ensure that the target hive allows unit testing.
 
-            if (!cluster.Globals.TryGetBool(HiveGlobals.UserAllowUnitTesting, out var allowUnitTesting))
+            if (!hive.Globals.TryGetBool(HiveGlobals.UserAllowUnitTesting, out var allowUnitTesting))
             {
                 allowUnitTesting = false;
             }
 
             if (!allowUnitTesting)
             {
-                throw new NotSupportedException($"The [{cluster.Name}] cluster does not support unit testing.  Use the [neon cluster set allow-unit-testing=true] command to enable this.");
+                throw new NotSupportedException($"The [{hive.Name}] hive does not support unit testing.  Use the [neon hive set allow-unit-testing=true] command to enable this.");
             }
 
-            // We needed to defer the [Reset()] call until after the cluster
+            // We needed to defer the [Reset()] call until after the hive
             // was connected.
 
             if (resetOnInitialize)
@@ -435,7 +435,7 @@ namespace Neon.Xunit.Hive
         }
 
         /// <summary>
-        /// Ensures that cluster is connected.
+        /// Ensures that hive is connected.
         /// </summary>
         private void CheckCluster()
         {
@@ -444,31 +444,31 @@ namespace Neon.Xunit.Hive
                 return;
             }
 
-            if (cluster == null)
+            if (hive == null)
             {
                 throw new InvalidOperationException("Cluster is not connected.");
             }
 
-            var currentClusterLogin = CurrentClusterLogin.Load();
+            var currentHiveLogin = CurrentHiveLogin.Load();
 
-            if (currentClusterLogin == null)
+            if (currentHiveLogin == null)
             {
-                throw new InvalidOperationException("Somebody logged out from under the test cluster while tests were running.");
+                throw new InvalidOperationException("Somebody logged out from under the test hive while tests were running.");
             }
 
-            var loginInfo = HiveHelper.SplitLogin(currentClusterLogin.Login);
+            var loginInfo = HiveHelper.SplitLogin(currentHiveLogin.Login);
 
-            if (!loginInfo.ClusterName.Equals(cluster.ClusterLogin.ClusterName, StringComparison.InvariantCultureIgnoreCase) ||
-                !loginInfo.Username.Equals(cluster.ClusterLogin.Username, StringComparison.InvariantCultureIgnoreCase))
+            if (!loginInfo.HiveName.Equals(hive.HiveLogin.HiveName, StringComparison.InvariantCultureIgnoreCase) ||
+                !loginInfo.Username.Equals(hive.HiveLogin.Username, StringComparison.InvariantCultureIgnoreCase))
             {
-                throw new InvalidOperationException($"Somebody logged into [{currentClusterLogin.Login}] while tests were running.");
+                throw new InvalidOperationException($"Somebody logged into [{currentHiveLogin.Login}] while tests were running.");
             }
         }
 
         /// <summary>
-        /// Returns the <see cref="global::Neon.Hive.ClusterProxy"/> for the test cluster
-        /// that can be used to get information about the cluster as well as to invoke commands
-        /// on individual cluster nodes.
+        /// Returns the <see cref="global::Neon.Hive.HiveProxy"/> for the test hive
+        /// that can be used to get information about the hive as well as to invoke commands
+        /// on individual hive nodes.
         /// </summary>
         /// <remarks>
         /// <para>
@@ -476,31 +476,31 @@ namespace Neon.Xunit.Hive
         /// unit tests:
         /// </para>
         /// <para>
-        /// <see cref="global::Neon.Hive.ClusterProxy.ClusterLogin"/> returns the desearialized
-        /// cluster login information, including host node and HashiCorp Vault credentials. 
-        /// <see cref="global::Neon.Hive.ClusterProxy.Definition"/> returns the cluster
-        /// definition.  You can also access the <see cref="global::Neon.Hive.ClusterProxy.Nodes"/>
+        /// <see cref="global::Neon.Hive.HiveProxy.HiveLogin"/> returns the desearialized
+        /// hive login information, including host node and HashiCorp Vault credentials. 
+        /// <see cref="global::Neon.Hive.HiveProxy.Definition"/> returns the hive
+        /// definition.  You can also access the <see cref="global::Neon.Hive.HiveProxy.Nodes"/>
         /// collection to obtain <see cref="SshProxy{NodeDefinition}"/> proxies that can be used
-        /// to submit SSH commands to cluster nodes.
+        /// to submit SSH commands to hive nodes.
         /// </para>
         /// <note>
         /// <b>IMPORTANT:</b> The <see cref="SshProxy{NodeDefinition}"/> class <b>is not thread-safe</b>,
         /// so you'll need to take care to run only one command at a time on each node.
         /// </note>
         /// </remarks>
-        public ClusterProxy Cluster
+        public HiveProxy Hive
         {
             get
             {
                 base.CheckDisposed();
                 this.CheckCluster();
 
-                return cluster;
+                return hive;
             }
         }
 
         /// <summary>
-        /// Returns a dictionary with the cluster node groups. 
+        /// Returns a dictionary with the hive node groups. 
         /// </summary>
         public Dictionary<string, List<NodeDefinition>> NodeGroups
         {
@@ -511,7 +511,7 @@ namespace Neon.Xunit.Hive
 
                 if (nodeGroups != null)
                 {
-                    nodeGroups = cluster.Definition.GetNodeGroups(excludeAllGroup: true);
+                    nodeGroups = hive.Definition.GetNodeGroups(excludeAllGroup: true);
                 }
 
                 return nodeGroups;
@@ -534,7 +534,7 @@ namespace Neon.Xunit.Hive
         }
 
         /// <summary>
-        /// Executes an arbitrary <b>docker</b> CLI command on a cluster manager, 
+        /// Executes an arbitrary <b>docker</b> CLI command on a hive manager, 
         /// passing unformatted arguments and returns the results.
         /// </summary>
         /// <param name="args">The <b>docker</b> command arguments.</param>
@@ -565,7 +565,7 @@ namespace Neon.Xunit.Hive
         }
 
         /// <summary>
-        /// Executes an arbitrary <b>docker</b> CLI command on a cluster manager, 
+        /// Executes an arbitrary <b>docker</b> CLI command on a hive manager, 
         /// passing  a pre-formatted argument string and returns the results.
         /// </summary>
         /// <param name="argString">The <b>docker</b> command arguments.</param>
@@ -713,7 +713,7 @@ namespace Neon.Xunit.Hive
 
         /// <summary>
         /// <b>DO NOTE USE:</b> This inherited method from <see cref="DockerFixture"/> doesn't
-        /// make sense for a multi-node cluster.
+        /// make sense for a multi-node hive.
         /// </summary>
         /// <param name="name">The container name.</param>
         /// <param name="image">Specifies the container image.</param>
@@ -731,7 +731,7 @@ namespace Neon.Xunit.Hive
 
         /// <summary>
         /// <b>DO NOTE USE:</b> This inherited method from <see cref="DockerFixture"/> doesn't
-        /// make sense for a multi-node cluster.
+        /// make sense for a multi-node hive.
         /// </summary>
         /// <param name="includeSystem">Optionally include built-in neonHIVE containers whose names start with <b>neon-</b>.</param>
         /// <returns>A list of <see cref="DockerFixture.ContainerInfo"/>.</returns>
@@ -746,7 +746,7 @@ namespace Neon.Xunit.Hive
 
         /// <summary>
         /// <b>DO NOTE USE:</b> This inherited method from <see cref="DockerFixture"/> doesn't
-        /// make sense for a multi-node cluster.
+        /// make sense for a multi-node hive.
         /// </summary>
         /// <param name="name">The container name.</param>
         /// <exception cref="InvalidOperationException">Thrown always.</exception>
@@ -760,7 +760,7 @@ namespace Neon.Xunit.Hive
 
         /// <summary>
         /// <b>DO NOTE USE:</b> This inherited method from <see cref="DockerFixture"/> doesn't
-        /// make sense for a multi-node cluster.
+        /// make sense for a multi-node hive.
         /// </summary>
         /// <param name="removeSystem">Optionally remove system services as well.</param>
         /// <remarks>
@@ -777,7 +777,7 @@ namespace Neon.Xunit.Hive
         // DNS
 
         /// <summary>
-        /// Removes all local cluster DNS entries.
+        /// Removes all local hive DNS entries.
         /// </summary>
         /// <param name="removeSystem">Optionally remove system entries as well.</param>
         /// <remarks>
@@ -789,16 +789,16 @@ namespace Neon.Xunit.Hive
         {
             var actions = new List<Action>();
 
-            foreach (var entry in cluster.DnsHosts.List(includeSystem: removeSystem))
+            foreach (var entry in hive.DnsHosts.List(includeSystem: removeSystem))
             {
-                actions.Add(() => cluster.DnsHosts.Remove(entry.Hostname));
+                actions.Add(() => hive.DnsHosts.Remove(entry.Hostname));
             }
 
             NeonHelper.WaitForParallel(actions);
         }
 
         /// <summary>
-        /// Lists the DNS entries persisted to the cluster.
+        /// Lists the DNS entries persisted to the hive.
         /// </summary>
         /// <param name="includeSystem">
         /// Optionally include the built-in system images whose names are 
@@ -807,11 +807,11 @@ namespace Neon.Xunit.Hive
         /// <returns>The list of <see cref="DnsEntry"/> instances.</returns>
         public List<DnsEntry> ListDnsEntries(bool includeSystem = false)
         {
-            return cluster.DnsHosts.List(includeSystem);
+            return hive.DnsHosts.List(includeSystem);
         }
 
         /// <summary>
-        /// Removes the named cluster DNS entry if it exists.
+        /// Removes the named hive DNS entry if it exists.
         /// </summary>
         /// <param name="name">
         /// The DNS entry name.  Note that system entry names are 
@@ -819,30 +819,30 @@ namespace Neon.Xunit.Hive
         /// </param>
         public void RemoveDnsEntry(string name)
         {
-            cluster.DnsHosts.Remove(name);
+            hive.DnsHosts.Remove(name);
         }
 
         /// <summary>
-        /// Sets a cluster DNS entry.
+        /// Sets a hive DNS entry.
         /// </summary>
         /// <param name="entry">The entry to be set.</param>
         /// <param name="waitUntilPropagated">
         /// Optionally waits for <see cref="DnsHostsManager.PropagationTimeout"/> 
-        /// for the change to be propagated across the cluster.  This defaults to
+        /// for the change to be propagated across the hive.  This defaults to
         /// <c>false</c>.
         /// </param>
         public void SetDnsEntry(DnsEntry entry, bool waitUntilPropagated = false)
         {
-            cluster.DnsHosts.Set(entry, waitUntilPropagated);
+            hive.DnsHosts.Set(entry, waitUntilPropagated);
         }
 
         /// <summary>
-        /// Waits for the cluster DNS state and the DNS entries to converge.
+        /// Waits for the hive DNS state and the DNS entries to converge.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// It may take some time for changes made to the cluster DNS to be
-        /// reflected in the DNS names actually resolved on the cluster nodes.
+        /// It may take some time for changes made to the hive DNS to be
+        /// reflected in the DNS names actually resolved on the hive nodes.
         /// </para>
         /// <para>
         /// See <see cref="DnsHostsManager.PropagationTimeout"/> for more
@@ -858,7 +858,7 @@ namespace Neon.Xunit.Hive
         // Images
 
         /// <summary>
-        /// Removes all unreferenced images from all cluster nodes.  <see cref="Reset"/>
+        /// Removes all unreferenced images from all hive nodes.  <see cref="Reset"/>
         /// does not do this for performance reasonse but tests may use this method
         /// if necessary.
         /// </summary>
@@ -883,7 +883,7 @@ namespace Neon.Xunit.Hive
 
             var actions = new List<Action>();
 
-            foreach (var node in cluster.Nodes)
+            foreach (var node in hive.Nodes)
             {
                 actions.Add(
                     () =>
@@ -899,7 +899,7 @@ namespace Neon.Xunit.Hive
         }
 
         /// <summary>
-        /// Pulls a specific image to all cluster nodes.
+        /// Pulls a specific image to all hive nodes.
         /// </summary>
         /// <param name="image">The image name.</param>
         public override void PullImage(string image)
@@ -908,7 +908,7 @@ namespace Neon.Xunit.Hive
 
             var actions = new List<Action>();
 
-            foreach (var node in cluster.Nodes)
+            foreach (var node in hive.Nodes)
             {
                 actions.Add(
                     () =>
@@ -927,7 +927,7 @@ namespace Neon.Xunit.Hive
         // Volumes
 
         /// <summary>
-        /// Removes all cluster volumes from the cluster nodes.
+        /// Removes all Docker volumes from the hive nodes.
         /// </summary>
         /// <param name="removeSystem">Optionally remove system volumes as well.</param>
         /// <remarks>
@@ -941,7 +941,7 @@ namespace Neon.Xunit.Hive
 
             var actions = new List<Action>();
 
-            foreach (var node in cluster.Nodes)
+            foreach (var node in hive.Nodes)
             {
                 actions.Add(
                     () =>
@@ -1007,7 +1007,7 @@ namespace Neon.Xunit.Hive
         }
 
         /// <summary>
-        /// Lists the volumes on a named cluster node.
+        /// Lists the volumes on a named hive node.
         /// </summary>
         /// <param name="nodeName">The target node name.</param>
         /// <returns>List the node volumes by name.</returns>
@@ -1016,7 +1016,7 @@ namespace Neon.Xunit.Hive
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(nodeName));
 
-            var node = cluster.GetNode(nodeName);
+            var node = hive.GetNode(nodeName);
             var list = new List<string>();
 
             var response = node.SudoCommand("docker volume ls --format \"{{.Name}}\"", RunOptions.None);
@@ -1041,7 +1041,7 @@ namespace Neon.Xunit.Hive
         // Load balancers/rules
 
         /// <summary>
-        /// Persists a load balancer rule object to the cluster.
+        /// Persists a load balancer rule object to the hive.
         /// </summary>
         /// <param name="loadBalancerName">The load balancer name (<b>public</b> or <b>private</b>).</param>
         /// <param name="rule">The rule.</param>
@@ -1053,13 +1053,13 @@ namespace Neon.Xunit.Hive
             base.CheckDisposed();
             this.CheckCluster();
 
-            var loadBalancer = cluster.GetLoadBalancerManager(loadBalancerName);
+            var loadBalancer = hive.GetLoadBalancerManager(loadBalancerName);
 
             loadBalancer.SetRule(rule);
         }
 
         /// <summary>
-        /// Persists a load balancer rule described as JSON or YAML text to the cluster.
+        /// Persists a load balancer rule described as JSON or YAML text to the hive.
         /// </summary>
         /// <param name="loadBalancer">The load balancer name (<b>public</b> or <b>private</b>).</param>
         /// <param name="jsonOrYaml">The route JSON or YAML description.</param>
@@ -1071,7 +1071,7 @@ namespace Neon.Xunit.Hive
             base.CheckDisposed();
             this.CheckCluster();
 
-            var loadbalancer = cluster.GetLoadBalancerManager(loadBalancer);
+            var loadbalancer = hive.GetLoadBalancerManager(loadBalancer);
             var rule         = LoadBalancerRule.Parse(jsonOrYaml);
 
             loadbalancer.SetRule(rule);
@@ -1090,7 +1090,7 @@ namespace Neon.Xunit.Hive
             base.CheckDisposed();
             this.CheckCluster();
 
-            var loadbalancer = cluster.GetLoadBalancerManager(loadBalancerName);
+            var loadbalancer = hive.GetLoadBalancerManager(loadBalancerName);
             var rules        = loadbalancer.ListRules();
 
             if (includeSystem)
@@ -1116,7 +1116,7 @@ namespace Neon.Xunit.Hive
             base.CheckDisposed();
             this.CheckCluster();
 
-            var loadBalancer = cluster.GetLoadBalancerManager(loadBalancerName);
+            var loadBalancer = hive.GetLoadBalancerManager(loadBalancerName);
 
             loadBalancer.RemoveRule(name);
         }
@@ -1128,7 +1128,7 @@ namespace Neon.Xunit.Hive
         /// <remarks>
         /// <note>
         /// This does not currently restart the proxy bridges running on 
-        /// cluster pet nodes.  This may change in future releases.
+        /// hive pet nodes.  This may change in future releases.
         /// </note>
         /// <para>
         /// By default, this method will not remove neonHIVE system rules
@@ -1156,13 +1156,13 @@ namespace Neon.Xunit.Hive
         }
 
         /// <summary>
-        /// Restarts cluster load balancers to ensure that they pick up any
+        /// Restarts hive load balancers to ensure that they pick up any
         /// load balancer definition changes.
         /// </summary>
         /// <remarks>
         /// <note>
         /// This does not currently restart the proxy bridges running on 
-        /// cluster pet nodes.  This may change in future releases.
+        /// hive pet nodes.  This may change in future releases.
         /// </note>
         /// </remarks>
         public void RestartLoadBalancers()
@@ -1183,7 +1183,7 @@ namespace Neon.Xunit.Hive
         /// <remarks>
         /// <note>
         /// This does not currently restart the proxy bridges running on 
-        /// cluster pet nodes.  This may change in future releases.
+        /// hive pet nodes.  This may change in future releases.
         /// </note>
         /// </remarks>
         public void RestartPublicLoadBalancers()
@@ -1203,7 +1203,7 @@ namespace Neon.Xunit.Hive
         /// <remarks>
         /// <note>
         /// This does not currently restart the proxy bridges running on 
-        /// cluster pet nodes.  This may change in future releases.
+        /// hive pet nodes.  This may change in future releases.
         /// </note>
         /// </remarks>
         public void RestartPrivateLoadbalancers()
@@ -1220,7 +1220,7 @@ namespace Neon.Xunit.Hive
         // Certificates
 
         /// <summary>
-        /// Persists a certificate to the cluster.
+        /// Persists a certificate to the hive.
         /// </summary>
         /// <param name="name">The certificate name.</param>
         /// <param name="certPem">The PEM encoded certificate and private key.</param>
@@ -1232,11 +1232,11 @@ namespace Neon.Xunit.Hive
             base.CheckDisposed();
             this.CheckCluster();
 
-            cluster.Certificate.Set(name, TlsCertificate.Parse(certPem));
+            hive.Certificate.Set(name, TlsCertificate.Parse(certPem));
         }
 
         /// <summary>
-        /// Creates and persists a self-signed certificate to the cluster.
+        /// Creates and persists a self-signed certificate to the hive.
         /// </summary>
         /// <param name="name">The certificate name.</param>
         /// <param name="hostname">
@@ -1266,11 +1266,11 @@ namespace Neon.Xunit.Hive
             base.CheckDisposed();
             this.CheckCluster();
 
-            cluster.Certificate.Set(name, TlsCertificate.CreateSelfSigned(hostname, wildcard: wildcard));
+            hive.Certificate.Set(name, TlsCertificate.CreateSelfSigned(hostname, wildcard: wildcard));
         }
 
         /// <summary>
-        /// Lists the names of the cluster certificates.
+        /// Lists the names of the hive certificates.
         /// </summary>
         /// <param name="includeSystem">Optionally include built-in neonHIVE containers whose names start with <b>neon-</b>.</param>
         /// <returns>The certificate names.</returns>
@@ -1279,7 +1279,7 @@ namespace Neon.Xunit.Hive
             base.CheckDisposed();
             this.CheckCluster();
 
-            var certificates = cluster.Certificate.List();
+            var certificates = hive.Certificate.List();
 
             if (includeSystem)
             {
@@ -1302,7 +1302,7 @@ namespace Neon.Xunit.Hive
             base.CheckDisposed();
             this.CheckCluster();
 
-            cluster.Certificate.Remove(name);
+            hive.Certificate.Remove(name);
         }
 
         /// <summary>
@@ -1327,7 +1327,7 @@ namespace Neon.Xunit.Hive
 
         /// <summary>
         /// <para>
-        /// Returns a client that can be used to access the cluster's key/value store.
+        /// Returns a client that can be used to access the hive's key/value store.
         /// </para>
         /// <note>
         /// <para>
@@ -1366,7 +1366,7 @@ namespace Neon.Xunit.Hive
 
             // Clear any non-system dashboards.
 
-            foreach (var dashboard in cluster.Dashboard.List())
+            foreach (var dashboard in hive.Dashboard.List())
             {
                 if (dashboard.Folder == null)
                 {
@@ -1375,7 +1375,7 @@ namespace Neon.Xunit.Hive
 
                 if (!dashboard.Folder.Equals(HiveConst.DashboardSystemFolder, StringComparison.InvariantCultureIgnoreCase))
                 {
-                    tasks.Add(Task.Run(() => cluster.Dashboard.Remove(dashboard.Name)));
+                    tasks.Add(Task.Run(() => hive.Dashboard.Remove(dashboard.Name)));
                 }
             }
 
@@ -1399,10 +1399,10 @@ namespace Neon.Xunit.Hive
         }
 
         //---------------------------------------------------------------------
-        // Cluster nodes
+        // Hive nodes
 
         /// <summary>
-        /// Remove containers as well as unreferenced volumes and networks from each cluster node.
+        /// Remove containers as well as unreferenced volumes and networks from each hive node.
         /// </summary>
         /// <param name="noContainers">Optionally disable container removal.</param>
         /// <param name="noVolumes">Optionally disable volume removal.</param>
@@ -1412,7 +1412,7 @@ namespace Neon.Xunit.Hive
         {
             var actions = new List<Action>();
 
-            foreach (var node in cluster.Nodes)
+            foreach (var node in hive.Nodes)
             {
                 actions.Add(
                     () =>

@@ -27,22 +27,22 @@ namespace NeonCli
     public class LoginCommand : CommandBase
     {
         private const string usage = @"
-Manages cluster logins for the current user on the local computer.
+Manages hive logins for the current user on the local computer.
 
 USAGE:
 
-    neon login          [--no-vpn] [--show-vpn] USER@CLUSTER
-    neon login export   USER@CLUSTER
+    neon login          [--no-vpn] [--show-vpn] USER@HIVE
+    neon login export   USER@HIVE
     neon login import   PATH
     neon login list
     neon login ls
-    neon login remove   USER@CLUSTER
-    neon login rm       USER@CLUSTER
+    neon login remove   USER@HIVE
+    neon login rm       USER@HIVE
     neon login status
 
 OPTIONS:
 
-    --no-vpn        - Don't connect using the cluster VPN
+    --no-vpn        - Don't connect using the hive VPN
                       (for on-premise clusters only)
 
     --show-vpn      - Displays the OpenVPN connection window
@@ -50,8 +50,8 @@ OPTIONS:
                    
 ARGUMENTS:
 
-    PATH            - Path to a cluster login file.
-    USER@CLUSTER    - Specifies a cluster login username and cluster.
+    PATH            - Path to a hive login file.
+    USER@HIVE       - Specifies a hive login username and hive.
 ";
 
         /// <inheritdoc/>
@@ -75,7 +75,7 @@ ARGUMENTS:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            ClusterProxy    clusterProxy;
+            HiveProxy    hiveProxy;
 
             if (commandLine.HasHelpOption || commandLine.Arguments.Length == 0)
             {
@@ -85,84 +85,84 @@ ARGUMENTS:
 
             Console.Error.WriteLine();
 
-            var clusterLogin = Program.ClusterLogin;
-            var login        = HiveHelper.SplitLogin(commandLine.Arguments[0]);
+            var hiveLogin = Program.HiveLogin;
+            var login     = HiveHelper.SplitLogin(commandLine.Arguments[0]);
 
             if (!login.IsOK)
             {
-                Console.Error.WriteLine($"*** ERROR: Invalid username/cluster [{commandLine.Arguments[0]}].  Expected something like: USER@CLUSTER");
+                Console.Error.WriteLine($"*** ERROR: Invalid username/hive [{commandLine.Arguments[0]}].  Expected something like: USER@HIVE");
                 Program.Exit(1);
             }
 
-            // Simply return if we're already logged into the cluster.
+            // Simply return if we're already logged into the hive.
 
-            var username    = login.Username;
-            var clusterName = login.ClusterName;
+            var username = login.Username;
+            var hiveName = login.HiveName;
 
-            if (clusterLogin != null && 
-                string.Equals(clusterLogin.ClusterName, clusterName, StringComparison.OrdinalIgnoreCase) &&
-                string.Equals(clusterLogin.Username, username, StringComparison.OrdinalIgnoreCase))
+            if (hiveLogin != null && 
+                string.Equals(hiveLogin.HiveName, hiveName, StringComparison.OrdinalIgnoreCase) &&
+                string.Equals(hiveLogin.Username, username, StringComparison.OrdinalIgnoreCase))
             {
-                // Ensure that the client is compatible with the cluster.
+                // Ensure that the client is compatible with the hive.
 
                 try
                 {
-                    HiveHelper.ValidateClientVersion(clusterLogin, Program.Version);
+                    HiveHelper.ValidateClientVersion(hiveLogin, Program.Version);
                 }
                 catch (VersionException e)
                 {
                     HiveHelper.VpnClose(null);
-                    CurrentClusterLogin.Delete();
+                    CurrentHiveLogin.Delete();
 
                     Console.Error.WriteLine($"*** ERROR: {e.Message}");
                     Program.Exit(0);
                 }
 
-                Console.Error.WriteLine($"*** You are already logged into [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
+                Console.Error.WriteLine($"*** You are already logged into [{Program.HiveLogin.Username}@{Program.HiveLogin.HiveName}].");
                 Program.Exit(0);
             }
 
-            // Logout of the current cluster.
+            // Logout of the current hive.
 
-            if (clusterLogin != null)
+            if (hiveLogin != null)
             {
-                Console.Error.WriteLine($"Logging out of [{Program.ClusterLogin.Username}@{Program.ClusterLogin.ClusterName}].");
-                CurrentClusterLogin.Delete();
+                Console.Error.WriteLine($"Logging out of [{Program.HiveLogin.Username}@{Program.HiveLogin.HiveName}].");
+                CurrentHiveLogin.Delete();
             }
 
-            // We're passing NULL to close all cluster VPN connections to ensure that 
+            // We're passing NULL to close all hive VPN connections to ensure that 
             // we're only connected to one at a time.  It's very possible for a operator
             // to have to manage multiple disconnnected clusters that share the same
             // IP address space.
 
             HiveHelper.VpnClose(null);
 
-            // Fetch the new cluster login.
+            // Fetch the new hive login.
 
-            var clusterLoginPath = Program.GetClusterLoginPath(username, clusterName);
+            var hiveLoginPath = Program.GetHiveLoginPath(username, hiveName);
 
-            if (!File.Exists(clusterLoginPath))
+            if (!File.Exists(hiveLoginPath))
             {
-                Console.Error.WriteLine($"*** ERROR: Cannot find login [{username}@{clusterName}].");
+                Console.Error.WriteLine($"*** ERROR: Cannot find login [{username}@{hiveName}].");
                 Program.Exit(1);
             }
 
-            clusterLogin = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(clusterLoginPath));
+            hiveLogin = NeonHelper.JsonDeserialize<HiveLogin>(File.ReadAllText(hiveLoginPath));
 
             // Determine whether we're going to use the VPN.
 
             var useVpn  = false;
             var showVpn = commandLine.HasOption("--show-vpn");
 
-            if (clusterLogin.Definition.Hosting.IsOnPremiseProvider)
+            if (hiveLogin.Definition.Hosting.IsOnPremiseProvider)
             {
-                if (clusterLogin.Definition.Vpn.Enabled)
+                if (hiveLogin.Definition.Vpn.Enabled)
                 {
                     if (!commandLine.HasOption("--no-vpn"))
                     {
-                        if (!clusterLogin.Definition.Vpn.Enabled)
+                        if (!hiveLogin.Definition.Vpn.Enabled)
                         {
-                            Console.Error.WriteLine($"*** ERROR: Cluster [{clusterLogin.ClusterName}] was not provisioned with a VPN.");
+                            Console.Error.WriteLine($"*** ERROR: Hive [{hiveLogin.HiveName}] was not provisioned with a VPN.");
                             Program.Exit(1);
                         }
 
@@ -188,7 +188,7 @@ ARGUMENTS:
 
             if (useVpn)
             {
-                HiveHelper.VpnOpen(clusterLogin,
+                HiveHelper.VpnOpen(hiveLogin,
                     onStatus: message => Console.Error.WriteLine($"{message}"),
                     onError: message => Console.Error.WriteLine($"*** ERROR {message}"),
                     show: showVpn);
@@ -198,30 +198,30 @@ ARGUMENTS:
 
             Console.Error.WriteLine("Authenticating...");
 
-            clusterProxy = new ClusterProxy(clusterLogin,
+            hiveProxy = new HiveProxy(hiveLogin,
                 (nodeName, publicAddress, privateAddress) =>
                 {
-                    return new SshProxy<NodeDefinition>(nodeName, publicAddress, privateAddress, clusterLogin.GetSshCredentials(), TextWriter.Null);
+                    return new SshProxy<NodeDefinition>(nodeName, publicAddress, privateAddress, hiveLogin.GetSshCredentials(), TextWriter.Null);
                 });
 
             var viaVpn = useVpn ? $" (via VPN)" : string.Empty;
 
             try
             {
-                clusterProxy.GetHealthyManager().Connect();
+                hiveProxy.GetHealthyManager().Connect();
 
                 var currentLogin =
-                    new CurrentClusterLogin()
+                    new CurrentHiveLogin()
                     {
-                        Login  = clusterLogin.LoginName,
+                        Login  = hiveLogin.LoginName,
                         ViaVpn = useVpn
                     };
 
                 currentLogin.Save();
 
-                // Call GetLogin() with the client version so that the current cluster
+                // Call GetLogin() with the client version so that the current hive
                 // definition will be downloaded and so we'll also verify that the 
-                // current client is capable of managing the cluster.
+                // current client is capable of managing the hive.
 
                 try
                 {
@@ -230,18 +230,18 @@ ARGUMENTS:
                 catch (VersionException e)
                 {
                     HiveHelper.VpnClose(null);
-                    CurrentClusterLogin.Delete();
+                    CurrentHiveLogin.Delete();
 
                     Console.Error.WriteLine($"*** ERROR: {e.Message}");
                     Program.Exit(1);
                 }
 
-                Console.Error.WriteLine($"Logged into [{clusterLogin.LoginName}]{viaVpn}.");
+                Console.Error.WriteLine($"Logged into [{hiveLogin.LoginName}]{viaVpn}.");
                 Console.Error.WriteLine("");
             }
             catch (Exception e)
             {
-                Console.Error.WriteLine($"*** ERROR: Cluster login failed{viaVpn}: {NeonHelper.ExceptionError(e)}");
+                Console.Error.WriteLine($"*** ERROR: Hive login failed{viaVpn}: {NeonHelper.ExceptionError(e)}");
                 Console.Error.WriteLine("");
                 Program.Exit(1);
             }

@@ -50,7 +50,7 @@ namespace Neon.Hive
         /// <summary>
         /// Validates the load balancer definition.
         /// </summary>
-        /// <param name="certificates">The dictionary of cluster certificates keyed by name.</param>
+        /// <param name="certificates">The dictionary of hive certificates keyed by name.</param>
         /// <param name="addImplicitFrontends">Optionally add any implicit frontends (e.g. for HTTPS redirect).</param>
         /// <returns>The <see cref="LoadBalancerValidationContext"/>.</returns>
         public LoadBalancerValidationContext Validate(Dictionary<string, TlsCertificate> certificates, bool addImplicitFrontends = false)

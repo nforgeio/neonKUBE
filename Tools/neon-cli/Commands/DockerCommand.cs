@@ -27,7 +27,7 @@ namespace NeonCli
     public class DockerCommand : CommandBase
     {
         private const string usage = @"
-Runs a Docker command on the cluster.  All command line arguments
+Runs a Docker command on the hive.  All command line arguments
 and options as well are passed through to the Docker CLI.
 
 USAGE:
@@ -66,7 +66,7 @@ The other Docker commands supporting file arguments or that take
 input from [stdin] will need to be run directly on the host using
 the [neon exec] command.
 ";
-        private ClusterProxy        cluster;
+        private HiveProxy        hive;
 
         private const string remoteDockerPath = "/usr/bin/docker";
 
@@ -112,11 +112,11 @@ the [neon exec] command.
                 Program.Exit(0);
             }
 
-            // Initialize the cluster and connect to a manager.
+            // Initialize the hive and connect to a manager.
 
-            var clusterLogin = Program.ConnectCluster();
+            var hiveLogin = Program.ConnectHive();
 
-            cluster = new ClusterProxy(clusterLogin);
+            hive = new HiveProxy(hiveLogin);
 
             // Determine which node we're going to target.
 
@@ -125,11 +125,11 @@ the [neon exec] command.
 
             if (!string.IsNullOrEmpty(nodeName))
             {
-                node = cluster.GetNode(nodeName);
+                node = hive.GetNode(nodeName);
             }
             else
             {
-                node = cluster.GetHealthyManager();
+                node = hive.GetHealthyManager();
             }
 
             // A handful commands upload files and need to be run as a bundle.

@@ -19,7 +19,7 @@ namespace Neon.Hive
     /// <note>
     /// <b>IMPORTANT:</b> Do not change any of these values without really knowing what
     /// you're doing.  It's likely that these values have been literally embedded
-    /// in cluster configuration scripts as well as Docker images.  Any change is likely
+    /// in hive configuration scripts as well as Docker images.  Any change is likely
     /// to break things.
     /// </note>
     /// <note>
@@ -67,10 +67,10 @@ namespace Neon.Hive
         public const int Last = 5499;
 
         //---------------------------------------------------------------------
-        // Cluster reserved ports.
+        // Hive reserved ports.
 
         /// <summary>
-        /// The local cluster Docker registry port.
+        /// The local hive Docker registry port.
         /// </summary>
         public const int DockerRegistryLocal = 5000;
 
@@ -123,7 +123,7 @@ namespace Neon.Hive
 
         //---------------------------------------------------------------------
         // Ports [5100-5299] are reserved for the public proxy that routes
-        // external traffic into the cluster.
+        // external traffic into the hive.
         //
         // [5100-5102] are used to route general purpose HTTP/S traffic
         //             to both neonHIVE and application services.
@@ -145,13 +145,13 @@ namespace Neon.Hive
 
         /// <summary>
         /// The <b>neon-proxy-public</b> service port for routing external HTTP
-        /// (e.g. Internet) requests to services within the cluster.
+        /// (e.g. Internet) requests to services within the hive.
         /// </summary>
         public const int ProxyPublicHttp = 5100;
 
         /// <summary>
         /// The <b>neon-proxy-public</b> service port for routing external HTTPS
-        /// (e.g. Internet) requests to services within the cluster.
+        /// (e.g. Internet) requests to services within the hive.
         /// </summary>
         public const int ProxyPublicHttps = 5101;
 
@@ -168,7 +168,7 @@ namespace Neon.Hive
         public const int ProxyPublicLastUserPort = 5299;
 
         //---------------------------------------------------------------------
-        // Ports [5300-5499] are reserved for the private cluster proxy.
+        // Ports [5300-5499] are reserved for the private hive proxy.
         //
         // [5300-5301] are used to route general purpose HTTP/S traffic
         //             to both neonHIVE and application services.
@@ -216,7 +216,7 @@ namespace Neon.Hive
         public const int ProxyPrivateHttpLogEsData = 5303;
 
         /// <summary>
-        /// The port assigned to the cluster Ceph web dashboard.
+        /// The port assigned to the hive Ceph web dashboard.
         /// </summary>
         public const int ProxyPrivateHttpCephDashboard = 5304;
 

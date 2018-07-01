@@ -201,7 +201,7 @@ namespace Neon.Hive
         /// <para>
         /// It can also be useful for reliability to explicitly identify the target
         /// nodes to ensure that they're running on different underlying hardware
-        /// for better reliability.  For example, if a cluster had <see cref="BridgeTargetCount "/>
+        /// for better reliability.  For example, if a hive had <see cref="BridgeTargetCount "/>
         /// or more nodes running as VMs on the same host or bare metal machines running
         /// in the same rack, it could be possible that all of the target nodes could
         /// be randomly selected to reside on the same host or rack resulting with all

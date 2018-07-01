@@ -37,19 +37,19 @@ namespace TestNeonCluster
 {
     public class Test_AnsibleDockerLogin : IClassFixture<HiveFixture>
     {
-        private HiveFixture     hive;
-        private ClusterProxy    cluster;
+        private HiveFixture     hiveFixture;
+        private HiveProxy       hive;
 
         public Test_AnsibleDockerLogin(HiveFixture fixture)
         {
             fixture.LoginAndInitialize();
 
-            this.hive = fixture;
-            this.cluster = fixture.Cluster;
+            this.hiveFixture = fixture;
+            this.hive        = fixture.Hive;
 
             // Ensure that we're not already logged into Docker Hub.
 
-            this.cluster.Registry.Logout(HiveConst.DockerPublicRegistry);
+            this.hive.Registry.Logout(HiveConst.DockerPublicRegistry);
         }
 
         [Fact]
@@ -85,15 +85,15 @@ namespace TestNeonCluster
 
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
-                Assert.NotNull(cluster.Registry.GetCredentials(HiveConst.DockerPublicRegistry));
+                Assert.NotNull(hive.Registry.GetCredentials(HiveConst.DockerPublicRegistry));
 
                 // Verify the login by examining the [/home/USER/.docker/conf.json] file on one
                 // of the nodes and then verifying that the file matches.
 
-                var userDockerConfPath   = $"/home/{cluster.ClusterLogin.SshUsername}/.docker/config.json";
+                var userDockerConfPath   = $"/home/{hive.HiveLogin.SshUsername}/.docker/config.json";
                 var rootDockerConfFolder = "/root/.docker";
                 var rootDockerConfPath   = $"{rootDockerConfFolder}/config.json";
-                var firstManager         = cluster.FirstManager;
+                var firstManager         = hive.FirstManager;
                 var dockerAuthId         = "https://index.docker.io/v1/";
 
                 Assert.True(firstManager.FileExists(userDockerConfPath));
@@ -133,7 +133,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.False(taskResult.Changed);
 
-                Assert.NotNull(cluster.Registry.GetCredentials(HiveConst.DockerPublicRegistry));
+                Assert.NotNull(hive.Registry.GetCredentials(HiveConst.DockerPublicRegistry));
 
                 Assert.True(firstManager.FileExists(userDockerConfPath));
                 Assert.True(firstManager.FileExists(rootDockerConfPath));
@@ -170,7 +170,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.True(taskResult.Changed);
 
-                Assert.Null(cluster.Registry.GetCredentials(HiveConst.DockerPublicRegistry));
+                Assert.Null(hive.Registry.GetCredentials(HiveConst.DockerPublicRegistry));
 
                 // Verify the logout by ensuring that either the [/home/USER/.docker/conf.json]
                 // and [/root/.docker.conf.json] files don't ecist on one of the nodes or that
@@ -215,7 +215,7 @@ namespace TestNeonCluster
                 Assert.True(taskResult.Success);
                 Assert.False(taskResult.Changed);
 
-                Assert.Null(cluster.Registry.GetCredentials(HiveConst.DockerPublicRegistry));
+                Assert.Null(hive.Registry.GetCredentials(HiveConst.DockerPublicRegistry));
 
                 // Verify the logout by ensuring that either the [/home/USER/.docker/conf.json]
                 // and [/root/.docker.conf.json] files don't ecist on one of the nodes or that

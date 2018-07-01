@@ -25,54 +25,54 @@ using Neon.Time;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Handles cluster dashboard related operations for a <see cref="ClusterProxy"/>.
+    /// Handles hive dashboard related operations for a <see cref="HiveProxy"/>.
     /// </summary>
     public sealed class DashboardManager
     {
-        private ClusterProxy cluster;
+        private HiveProxy hive;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="cluster">The parent <see cref="ClusterProxy"/>.</param>
-        internal DashboardManager(ClusterProxy cluster)
+        /// <param name="hive">The parent <see cref="HiveProxy"/>.</param>
+        internal DashboardManager(HiveProxy hive)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
 
-            this.cluster = cluster;
+            this.hive = hive;
         }
 
         /// <summary>
-        /// Removes a cluster dashboard if it exists.
+        /// Removes a hive dashboard if it exists.
         /// </summary>
         /// <param name="name">The dashboard name.</param>
         public void Remove(string name)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(name));
 
-            cluster.Consul.Client.KV.Delete(GetDashboardConsulKey(name)).Wait();
+            hive.Consul.Client.KV.Delete(GetDashboardConsulKey(name)).Wait();
         }
 
         /// <summary>
-        /// Retrieves a cluster dashboard.
+        /// Retrieves a hive dashboard.
         /// </summary>
         /// <param name="name">The dashboard name.</param>
         /// <returns>The dashboard if present or <c>null</c> if it doesn't exist.</returns>
         public ClusterDashboard Get(string name)
         {
-            Covenant.Requires<ArgumentException>(ClusterDefinition.IsValidName(name));
+            Covenant.Requires<ArgumentException>(HiveDefinition.IsValidName(name));
 
-            return cluster.Consul.Client.KV.GetObjectOrDefault<ClusterDashboard>(GetDashboardConsulKey(name)).Result;
+            return hive.Consul.Client.KV.GetObjectOrDefault<ClusterDashboard>(GetDashboardConsulKey(name)).Result;
 
         }
 
         /// <summary>
-        /// Lists the cluster dashboards.
+        /// Lists the hive dashboards.
         /// </summary>
-        /// <returns>The cluster dashboards.</returns>
+        /// <returns>The hive dashboards.</returns>
         public List<ClusterDashboard> List()
         {
-            var result = cluster.Consul.Client.KV.ListOrDefault<ClusterDashboard>(HiveConst.ConsulDashboardsKey).Result;
+            var result = hive.Consul.Client.KV.ListOrDefault<ClusterDashboard>(HiveConst.ConsulDashboardsKey).Result;
 
             if (result == null)
             {
@@ -85,22 +85,22 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Adds or updates a cluster dashboard.
+        /// Adds or updates a hive dashboard.
         /// </summary>
         /// <param name="dashboard">The dashboard.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the dashboard is not valid.</exception>
+        /// <exception cref="HiveDefinitionException">Thrown if the dashboard is not valid.</exception>
         public void Set(ClusterDashboard dashboard)
         {
             Covenant.Requires<ArgumentNullException>(dashboard != null);
 
-            var errors = dashboard.Validate(cluster.Definition);
+            var errors = dashboard.Validate(hive.Definition);
 
             if (errors.Count > 0)
             {
-                throw new ClusterDefinitionException($"Invalid dashboard: {errors.First()}");
+                throw new HiveDefinitionException($"Invalid dashboard: {errors.First()}");
             }
 
-            cluster.Consul.Client.KV.PutObject(GetDashboardConsulKey(dashboard.Name), dashboard, Formatting.Indented).Wait();
+            hive.Consul.Client.KV.PutObject(GetDashboardConsulKey(dashboard.Name), dashboard, Formatting.Indented).Wait();
         }
 
         /// <summary>

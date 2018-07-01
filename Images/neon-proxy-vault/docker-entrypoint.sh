@@ -92,7 +92,7 @@ defaults
 
     option tcplog
 
-    # Timeouts are relatively brief because Vault is cluster local and should be fast.
+    # Timeouts are relatively brief because Vault is hive local and should be fast.
 
     timeout             connect 5s
     timeout             client 10s

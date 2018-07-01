@@ -37,9 +37,9 @@ namespace NeonCli
         /// <summary>
         /// Executes a built-in neonHIVE Ansible module. 
         /// </summary>
-        /// <param name="login">The cluster login.</param>
+        /// <param name="login">The hive login.</param>
         /// <param name="commandLine">The module command line: MODULE ARGS...</param>
-        private void ExecuteModule(ClusterLogin login, CommandLine commandLine)
+        private void ExecuteModule(HiveLogin login, CommandLine commandLine)
         {
             var module = commandLine.Arguments.ElementAtOrDefault(0);
 
@@ -77,9 +77,9 @@ namespace NeonCli
 
                 context.SetArguments(argsPath);
 
-                // Connect to the cluster so the NeonClusterHelper methods will work.
+                // Connect to the hive so the NeonClusterHelper methods will work.
 
-                HiveHelper.OpenCluster(login);
+                HiveHelper.OpenHive(login);
 
                 // Run the module.
 

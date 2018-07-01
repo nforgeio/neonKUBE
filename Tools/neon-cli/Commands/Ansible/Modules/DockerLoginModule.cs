@@ -55,7 +55,7 @@ namespace NeonCli.Ansible
         // parameter    required    default     choices     comments
         // --------------------------------------------------------------------
         //
-        // state        no          present     present     indicates the cluster should be
+        // state        no          present     present     indicates the hive should be
         //                                      absent      logged into or out of a Docker
         // name         yes                                 registry.
         //
@@ -77,11 +77,11 @@ namespace NeonCli.Ansible
         // --------
         //
         // This module is used to have a neonHIVE log into or out from a Docker registry.
-        // All cluster nodes including managers, workers, and pets, will be logged in or out
-        // and registry credentials will be persisted to to the cluster Vault so they will
-        // be available if new nodes are added to the cluster at a later time.
+        // All hive nodes including managers, workers, and pets, will be logged in or out
+        // and registry credentials will be persisted to to the hive Vault so they will
+        // be available if new nodes are added to the hive at a later time.
         //
-        // Note that a cluster may be logged into multiple registries at any given time.
+        // Note that a hive may be logged into multiple registries at any given time.
         //
         // Examples:
         // ---------
@@ -119,7 +119,7 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var cluster = HiveHelper.Cluster;
+            var hive = HiveHelper.Hive;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {
@@ -152,7 +152,7 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Reading existing credentials for [{registry}].");
 
-            var existingCredentials = cluster.Registry.GetCredentials(registry);
+            var existingCredentials = hive.Registry.GetCredentials(registry);
 
             if (existingCredentials != null)
             {
@@ -179,16 +179,16 @@ namespace NeonCli.Ansible
                         return;
                     }
 
-                    // Log the cluster out of the registry.
+                    // Log the hive out of the registry.
 
                     if (existingCredentials != null)
                     {
                         context.Changed = true;
                     }
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster out of the [{registry}] registry.");
-                    cluster.Registry.Logout(registry);
-                    context.WriteLine(AnsibleVerbosity.Trace, $"All cluster nodes are logged out.");
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Logging the hive out of the [{registry}] registry.");
+                    hive.Registry.Logout(registry);
+                    context.WriteLine(AnsibleVerbosity.Trace, $"All hive nodes are logged out.");
                     break;
 
                 case "present":
@@ -219,8 +219,8 @@ namespace NeonCli.Ansible
                         throw new ArgumentException($"[password] module argument is required.");
                     }
 
-                    context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster into the [{registry}] registry.");
-                    cluster.Registry.Login(registry, username, password);
+                    context.WriteLine(AnsibleVerbosity.Trace, $"Logging the hive into the [{registry}] registry.");
+                    hive.Registry.Login(registry, username, password);
 
                     // Log all of the nodes in with the new registry credentials.
                     //
@@ -229,24 +229,24 @@ namespace NeonCli.Ansible
                     // configuration, only the registry cache needs the upstream credentials.
                     // The nodes don't authenticate against the local registry cache.
 
-                    if (!cluster.Definition.Docker.RegistryCache || !HiveHelper.IsDockerPublicRegistry(registry))
+                    if (!hive.Definition.Docker.RegistryCache || !HiveHelper.IsDockerPublicRegistry(registry))
                     {
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging the cluster into the [{registry}] registry.");
-                        cluster.Registry.Login(registry, username, password);
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Logging the hive into the [{registry}] registry.");
+                        hive.Registry.Login(registry, username, password);
                     }
                     else
                     {
-                        // Restart the cluster registry cache containers with the new credentials.
+                        // Restart the hive registry cache containers with the new credentials.
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Restarting the cluster registry caches.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Restarting the hive registry caches.");
 
-                        if (!cluster.Registry.RestartCache(registry, username, password))
+                        if (!hive.Registry.RestartCache(registry, username, password))
                         {
-                            context.WriteErrorLine("Unable to restart one or more of the cluster registry caches.");
+                            context.WriteErrorLine("Unable to restart one or more of the hive registry caches.");
                             return;
                         }
 
-                        context.WriteLine(AnsibleVerbosity.Trace, $"Cluster registry caches restarted.");
+                        context.WriteLine(AnsibleVerbosity.Trace, $"Hive registry caches restarted.");
                     }
 
                     context.Changed = existingCredentials == null;

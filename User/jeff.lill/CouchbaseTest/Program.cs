@@ -47,7 +47,7 @@ namespace CouchbaseTest
 
             try
             {
-                // Establish the cluster connections.
+                // Establish the hive connections.
 
                 if (NeonHelper.IsDevWorkstation)
                 {
@@ -55,7 +55,7 @@ namespace CouchbaseTest
                 }
                 else
                 {
-                    HiveHelper.OpenCluster();
+                    HiveHelper.OpenHive();
                 }
 
                 await RunAsync();

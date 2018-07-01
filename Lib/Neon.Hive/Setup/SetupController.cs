@@ -19,7 +19,7 @@ using Neon.Hive.XenServer;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Manages a cluster setup operation consisting of a series of  setup operations
+    /// Manages a hive setup operation consisting of a series of  setup operations
     /// steps, while displaying status to the <see cref="Console"/>.
     /// </summary>
     /// <typeparam name="NodeMetadata">Specifies the node metadata type.</typeparam>
@@ -69,7 +69,7 @@ namespace Neon.Hive
         /// Constructor.
         /// </summary>
         /// <param name="operationTitle">Summarizes the high-level operation being performed.</param>
-        /// <param name="nodes">The node proxies for the cluster nodes being manipulated.</param>
+        /// <param name="nodes">The node proxies for the hive nodes being manipulated.</param>
         public SetupController(string operationTitle, IEnumerable<SshProxy<NodeMetadata>> nodes)
             : this(new string[] { operationTitle }, nodes)
         {
@@ -79,7 +79,7 @@ namespace Neon.Hive
         /// Constructor.
         /// </summary>
         /// <param name="operationTitle">Summarizes the high-level operation being performed.</param>
-        /// <param name="nodes">The node proxies for the cluster nodes being manipulated.</param>
+        /// <param name="nodes">The node proxies for the hive nodes being manipulated.</param>
         public SetupController(string[] operationTitle, IEnumerable<SshProxy<NodeMetadata>> nodes)
         {
             var title = string.Empty;
@@ -203,7 +203,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Adds a global cluster configuration step.
+        /// Adds a global hive configuration step.
         /// </summary>
         /// <param name="stepLabel">Brief step summary.</param>
         /// <param name="action">The global action to be performed.</param>
@@ -757,15 +757,15 @@ namespace Neon.Hive
                 //
                 // I'm hardcoding the status display here for two scenarios:
                 //
-                //      1. Configuring cluster nodes with [NodeDefinition] metadata which.
-                //      2. Provisioning cluster nodes on XenServer and remote Hyper-V hosts.
+                //      1. Configuring hive nodes with [NodeDefinition] metadata which.
+                //      2. Provisioning hive nodes on XenServer and remote Hyper-V hosts.
                 //
                 // It would be more flexible to implement some kind of callback or virtual
                 // method to handle this.
 
                 if (typeof(NodeMetadata) == typeof(NodeDefinition))
                 {
-                    // Configuring cluster nodes with [NodeDefinition] metadata which.
+                    // Configuring hive nodes with [NodeDefinition] metadata which.
 
                     if (nodes.First().Metadata != null)
                     {
@@ -815,7 +815,7 @@ namespace Neon.Hive
                 }
                 else if (typeof(NodeMetadata) == typeof(XenClient))
                 {
-                    // Provisioning cluster nodes on XenServer hosts.
+                    // Provisioning hive nodes on XenServer hosts.
 
                     sbDisplay.AppendLine();
                     sbDisplay.AppendLine(" Xen Servers:");

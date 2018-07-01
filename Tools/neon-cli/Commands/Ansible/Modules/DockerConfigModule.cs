@@ -129,7 +129,7 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var cluster = HiveHelper.Cluster;
+            var hive = HiveHelper.Hive;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {
@@ -169,8 +169,8 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting [{configName}] config.");
 
-            var manager = cluster.GetHealthyManager();
-            var exists  = cluster.Docker.Config.Exists(configName);
+            var manager = hive.GetHealthyManager();
+            var exists  = hive.Docker.Config.Exists(configName);
             var bytes   = (byte[])null;
 
             if (exists)
@@ -199,7 +199,7 @@ namespace NeonCli.Ansible
                             context.Changed = true;
                             context.WriteLine(AnsibleVerbosity.Trace, $"Removing config [{configName}].");
 
-                            cluster.Docker.Config.Remove(configName);
+                            hive.Docker.Config.Remove(configName);
                         }
                     }
                     else
@@ -251,11 +251,11 @@ namespace NeonCli.Ansible
 
                             if (bytes != null)
                             {
-                                cluster.Docker.Config.Set(configName, bytes);
+                                hive.Docker.Config.Set(configName, bytes);
                             }
                             else
                             {
-                                cluster.Docker.Config.Set(configName, configText);
+                                hive.Docker.Config.Set(configName, configText);
                             }
                         }
                     }

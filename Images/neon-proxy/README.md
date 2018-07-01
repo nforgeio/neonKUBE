@@ -100,7 +100,7 @@ Two types of credentials are currently supported: **vault-token** and **vault-ap
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`"VaultSecretId": "6a174c20-f6de-a53c-74d2-6018fcceff64"`
 &nbsp;&nbsp;&nbsp;&nbsp;`}`
 
-**NOTE:** This container relies on an external agent to touch the Consul configuration key whenever one or more Vault secrets has changed, for example when a TLS certificate is renewed.  This is typically handled by the **neon-cli** cluster management tool.
+**NOTE:** This container relies on an external agent to touch the Consul configuration key whenever one or more Vault secrets has changed, for example when a TLS certificate is renewed.  This is typically handled by the **neon-cli** hive management tool.
 
 **NOTE:** By default, the image will use HAProxy's graceful stop (`-sf` option) when loading a new configuration.  This nearly eliminates the change of dropping active connections during the transition.  There can be scenarios though, where older instances of HAProxy cannot be terminated due to long-lived TCP connections.  You can enable HAProxy hard stop (`-st` option) by including a `.hardstop` file in the configuration archive (the contents don't matter).  Hard stop terminates the existing HAProxy process before starting the new one, dropping any active connections.
 

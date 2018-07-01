@@ -19,7 +19,7 @@ using Neon.Common;
 namespace Neon.Docker
 {
     /// <summary>
-    /// Describes a Docker cluster node.
+    /// Describes a Docker hive node.
     /// </summary>
     public class DockerNode
     {

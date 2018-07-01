@@ -74,50 +74,50 @@ namespace Neon.Hive
         }
 
         //---------------------------------------------------------------------
-        // Define global cluster and node definition labels.
+        // Define global hive and node definition labels.
 
         /// <summary>
         /// Reserved label name that identifies the datacenter.
         /// </summary>
-        public const string LabelDatacenter = ClusterDefinition.ReservedLabelPrefix + ".cluster.datacenter";
+        public const string LabelDatacenter = HiveDefinition.ReservedLabelPrefix + ".hive.datacenter";
 
         /// <summary>
-        /// Reserved label name that identifies the cluster environment.
+        /// Reserved label name that identifies the hive environment.
         /// </summary>
-        public const string LabelEnvironment = ClusterDefinition.ReservedLabelPrefix + ".cluster.environment";
+        public const string LabelEnvironment = HiveDefinition.ReservedLabelPrefix + ".hive.environment";
 
         /// <summary>
         /// Reserved label name that identifies the node's public IP address or FQDN.
         /// </summary>
-        public const string LabelPublicAddress = ClusterDefinition.ReservedLabelPrefix + ".node.public_address";
+        public const string LabelPublicAddress = HiveDefinition.ReservedLabelPrefix + ".node.public_address";
 
         /// <summary>
         /// Reserved label name that identifies the node's private IP address.
         /// </summary>
-        public const string LabelPrivateAddress = ClusterDefinition.ReservedLabelPrefix + ".node.private_address";
+        public const string LabelPrivateAddress = HiveDefinition.ReservedLabelPrefix + ".node.private_address";
 
         /// <summary>
         /// Reserved label name that identifies the node role.
         /// </summary>
-        public const string LabelRole = ClusterDefinition.ReservedLabelPrefix + ".node.role";
+        public const string LabelRole = HiveDefinition.ReservedLabelPrefix + ".node.role";
 
         /// <summary>
         /// Reserved label name that identifies the frontend port to be used to connect
         /// to a manager's VPN server (if it's hosting a VPN server).
         /// </summary>
-        public const string LabelVpnFrontendPort = ClusterDefinition.ReservedLabelPrefix + ".node.vpn_frontend_port";
+        public const string LabelVpnFrontendPort = HiveDefinition.ReservedLabelPrefix + ".node.vpn_frontend_port";
 
         /// <summary>
         /// Reserved label name that identifies a manager node's VPN pool address 
         /// (if it's hosting a VPN server).
         /// </summary>
-        public const string LabelVpnPoolAddress = ClusterDefinition.ReservedLabelPrefix + ".node.vpn_pool_address";
+        public const string LabelVpnPoolAddress = HiveDefinition.ReservedLabelPrefix + ".node.vpn_pool_address";
 
         /// <summary>
         /// Reserved label name that identifies a manager node's VPN address pool subnet 
         /// (if it's hosting a VPN server).
         /// </summary>
-        public const string LabelVpnPoolSubnet = ClusterDefinition.ReservedLabelPrefix + ".node.vpn_pool_subnet";
+        public const string LabelVpnPoolSubnet = HiveDefinition.ReservedLabelPrefix + ".node.vpn_pool_subnet";
 
         //---------------------------------------------------------------------
         // Azure hosting related labels.
@@ -125,22 +125,22 @@ namespace Neon.Hive
         /// <summary>
         /// Reserved label name that identifies the node's Azure VM size.
         /// </summary>
-        public const string LabelAzureVmSize = ClusterDefinition.ReservedLabelPrefix + ".azure.vm_size";
+        public const string LabelAzureVmSize = HiveDefinition.ReservedLabelPrefix + ".azure.vm_size";
 
         /// <summary>
         /// Reserved label name that identifies the node's Azure attached storage type.
         /// </summary>
-        public const string LabelAzureStorageType = ClusterDefinition.ReservedLabelPrefix + ".azure.storage_type";
+        public const string LabelAzureStorageType = HiveDefinition.ReservedLabelPrefix + ".azure.storage_type";
 
         /// <summary>
         /// Reserved label name that identifies the node's Azure attached drive count.
         /// </summary>
-        public const string LabelAzureDriveCount = ClusterDefinition.ReservedLabelPrefix + ".azure.drive_count";
+        public const string LabelAzureDriveCount = HiveDefinition.ReservedLabelPrefix + ".azure.drive_count";
 
         /// <summary>
         /// Reserved label name that identifies the node's Azure attached drive size in GB.
         /// </summary>
-        public const string LabelAzureDriveSizeGB = ClusterDefinition.ReservedLabelPrefix + ".azure.drive_size_gb";
+        public const string LabelAzureDriveSizeGB = HiveDefinition.ReservedLabelPrefix + ".azure.drive_size_gb";
 
         //---------------------------------------------------------------------
         // Define the node storage related labels.
@@ -148,27 +148,27 @@ namespace Neon.Hive
         /// <summary>
         /// Reserved label name for <see cref="StorageCapacityGB"/>.
         /// </summary>
-        public const string LabelStorageCapacityGB = ClusterDefinition.ReservedLabelPrefix + ".storage.capacity_gb";
+        public const string LabelStorageCapacityGB = HiveDefinition.ReservedLabelPrefix + ".storage.capacity_gb";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageLocal"/>.
         /// </summary>
-        public const string LabelStorageLocal = ClusterDefinition.ReservedLabelPrefix + ".storage.local";
+        public const string LabelStorageLocal = HiveDefinition.ReservedLabelPrefix + ".storage.local";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageSSD"/>.
         /// </summary>
-        public const string LabelStorageSSD = ClusterDefinition.ReservedLabelPrefix + ".storage.ssd";
+        public const string LabelStorageSSD = HiveDefinition.ReservedLabelPrefix + ".storage.ssd";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageRedundant"/>.
         /// </summary>
-        public const string LabelStorageRedundant = ClusterDefinition.ReservedLabelPrefix + ".storage.redundant";
+        public const string LabelStorageRedundant = HiveDefinition.ReservedLabelPrefix + ".storage.redundant";
 
         /// <summary>
         /// Reserved label name for <see cref="StorageEphemeral"/>.
         /// </summary>
-        public const string LabelStorageEphemeral = ClusterDefinition.ReservedLabelPrefix + ".storage.ephemral";
+        public const string LabelStorageEphemeral = HiveDefinition.ReservedLabelPrefix + ".storage.ephemral";
 
         /// <summary>
         /// <b>io.neon.storage.capacity_gb</b> [<c>int</c>]: Specifies the node primary drive 
@@ -220,22 +220,22 @@ namespace Neon.Hive
         /// <summary>
         /// Reserved label name for <see cref="ComputeCores"/>.
         /// </summary>
-        public const string LabelComputeCores = ClusterDefinition.ReservedLabelPrefix + ".compute.cores";
+        public const string LabelComputeCores = HiveDefinition.ReservedLabelPrefix + ".compute.cores";
 
         /// <summary>
         /// Reserved label name for <see cref="ComputeArchitecture"/>.
         /// </summary>
-        public const string LabelComputeArchitecture = ClusterDefinition.ReservedLabelPrefix + ".compute.architecture";
+        public const string LabelComputeArchitecture = HiveDefinition.ReservedLabelPrefix + ".compute.architecture";
 
         /// <summary>
         /// Reserved label name for <see cref="ComputeRamMB"/>.
         /// </summary>
-        public const string LabelComputeRamMB = ClusterDefinition.ReservedLabelPrefix + ".compute.ram_mb";
+        public const string LabelComputeRamMB = HiveDefinition.ReservedLabelPrefix + ".compute.ram_mb";
 
         /// <summary>
         /// Reserved label name for <see cref="ComputeSwap"/>.
         /// </summary>
-        public const string LabelComputeSwap = ClusterDefinition.ReservedLabelPrefix + ".compute.swap";
+        public const string LabelComputeSwap = HiveDefinition.ReservedLabelPrefix + ".compute.swap";
 
         /// <summary>
         /// <b>io.neon.compute.cores</b> [<c>int</c>]: Specifies the number of CPU cores.
@@ -279,22 +279,22 @@ namespace Neon.Hive
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalPower"/>.
         /// </summary>
-        public const string LabelPhysicalLocation = ClusterDefinition.ReservedLabelPrefix + ".physical.location";
+        public const string LabelPhysicalLocation = HiveDefinition.ReservedLabelPrefix + ".physical.location";
 
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalMachine"/>.
         /// </summary>
-        public const string LabelPhysicalMachine = ClusterDefinition.ReservedLabelPrefix + ".physical.machine";
+        public const string LabelPhysicalMachine = HiveDefinition.ReservedLabelPrefix + ".physical.machine";
 
         /// <summary>
         /// Reserved label name for <see cref="PhysicalFaultDomain"/>.
         /// </summary>
-        public const string LabelPhysicalFaultDomain = ClusterDefinition.ReservedLabelPrefix + ".physical.faultdomain";
+        public const string LabelPhysicalFaultDomain = HiveDefinition.ReservedLabelPrefix + ".physical.faultdomain";
 
         /// <summary>
         /// Reserved label name for <see cref="LabelPhysicalPower"/>.
         /// </summary>
-        public const string LabelPhysicalPower = ClusterDefinition.ReservedLabelPrefix + ".physical.power";
+        public const string LabelPhysicalPower = HiveDefinition.ReservedLabelPrefix + ".physical.power";
 
         /// <summary>
         /// <b>io.neon.physical.location</b> [<c>string</c>]: A free format string describing the
@@ -362,7 +362,7 @@ namespace Neon.Hive
         /// <item>
         ///     <term><b>Single Rack:</b></term>
         ///     <description>
-        ///     For a cluster deployed to a single rack with a shared network connection,
+        ///     For a hive deployed to a single rack with a shared network connection,
         ///     the fault domain will typically be the physical machine such that the 
         ///     loss of a machine can be tolerated.
         ///     </description>
@@ -421,12 +421,12 @@ namespace Neon.Hive
         // $todo(jeff.lill): Define the format of this string for APC PDUs.
 
         //---------------------------------------------------------------------
-        // Build-in cluster logging related labels.
+        // Build-in hive logging related labels.
 
         /// <summary>
         /// Reserved label name for <see cref="LogEsData"/>.
         /// </summary>
-        public const string LabelLogEsData = ClusterDefinition.ReservedLabelPrefix + ".log.esdata";
+        public const string LabelLogEsData = HiveDefinition.ReservedLabelPrefix + ".log.esdata";
 
         /// <summary>
         /// <b>io.neon.log.esdata</b> [<c>bool</c>]: Indicates that the node should host an
@@ -442,42 +442,42 @@ namespace Neon.Hive
         /// <summary>
         /// Reserved label name for <see cref="CephMON"/>.
         /// </summary>
-        public const string LabelCephMON = ClusterDefinition.ReservedLabelPrefix + ".ceph.mon";
+        public const string LabelCephMON = HiveDefinition.ReservedLabelPrefix + ".ceph.mon";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSD"/>.
         /// </summary>
-        public const string LabelCephOSD = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd";
+        public const string LabelCephOSD = HiveDefinition.ReservedLabelPrefix + ".ceph.osd";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSDDevice"/>.
         /// </summary>
-        public const string LabelCephOSDDevice = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_device";
+        public const string LabelCephOSDDevice = HiveDefinition.ReservedLabelPrefix + ".ceph.osd_device";
 
         /// <summary>
         /// Reserved label name for <see cref="CephMDS"/>.
         /// </summary>
-        public const string LabelCephMDS = ClusterDefinition.ReservedLabelPrefix + ".ceph.mds";
+        public const string LabelCephMDS = HiveDefinition.ReservedLabelPrefix + ".ceph.mds";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSDDriveSizeGB"/>.
         /// </summary>
-        public const string LabelCephOSDDriveSizeGB = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_drivesize_gb";
+        public const string LabelCephOSDDriveSizeGB = HiveDefinition.ReservedLabelPrefix + ".ceph.osd_drivesize_gb";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSDCacheSizeMB"/>.
         /// </summary>
-        public const string LabelCephOSDCacheSizeMB = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_cachesize_mb";
+        public const string LabelCephOSDCacheSizeMB = HiveDefinition.ReservedLabelPrefix + ".ceph.osd_cachesize_mb";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSDJournalSizeMB"/>.
         /// </summary>
-        public const string LabelCephOSDJournalSizeMB = ClusterDefinition.ReservedLabelPrefix + ".ceph.osd_journalsize_mb";
+        public const string LabelCephOSDJournalSizeMB = HiveDefinition.ReservedLabelPrefix + ".ceph.osd_journalsize_mb";
 
         /// <summary>
         /// Reserved label name for <see cref="CephOSDJournalSizeMB"/>.
         /// </summary>
-        public const string LabelCephMDSCacheSizeMB = ClusterDefinition.ReservedLabelPrefix + ".ceph.mds_cachesize_mb";
+        public const string LabelCephMDSCacheSizeMB = HiveDefinition.ReservedLabelPrefix + ".ceph.mds_cachesize_mb";
 
         /// <summary>
         /// <b>io.neon.ceph.monitor</b> [<c>bool</c>]: Indicates that the Ceph 
@@ -487,7 +487,7 @@ namespace Neon.Hive
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Monitors maintain maps of the cluster state, including the monitor map, 
+        /// Monitors maintain maps of the hive state, including the monitor map, 
         /// manager map, the OSD map, and the CRUSH map. These maps are critical 
         /// cluster state required for Ceph daemons to coordinate with each other. 
         /// Monitors are also responsible for managing authentication between 
@@ -862,28 +862,28 @@ namespace Neon.Hive
         /// <summary>
         /// Validates the node labels.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
+        /// <param name="hiveDefinition">The hive definition.</param>
         /// <exception cref="ArgumentException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition)
+        public void Validate(HiveDefinition hiveDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
-            if (clusterDefinition.Ceph.Enabled)
+            if (hiveDefinition.Ceph.Enabled)
             {
                 if (CephOSDDriveSizeGB > 0 && CephOSDDriveSizeGB < 1)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephOSDDriveSizeGB)}={CephOSDDriveSizeGB}] is cannot be less than [1GB].");
+                    throw new HiveDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephOSDDriveSizeGB)}={CephOSDDriveSizeGB}] is cannot be less than [1GB].");
                 }
 
                 if (CephOSDCacheSizeMB > 0 && CephOSDCacheSizeMB < 64)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephOSDCacheSizeMB)}={CephOSDCacheSizeMB}] is cannot be less than [64MB].");
+                    throw new HiveDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephOSDCacheSizeMB)}={CephOSDCacheSizeMB}] is cannot be less than [64MB].");
                 }
 
                 if (CephOSDJournalSizeMB > 0 && CephOSDJournalSizeMB < 64)
                 {
-                    throw new ClusterDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephOSDCacheSizeMB)}={CephOSDCacheSizeMB}] is cannot be less than [64MB].");
+                    throw new HiveDefinitionException($"[{nameof(NodeLabels)}.{nameof(CephOSDCacheSizeMB)}={CephOSDCacheSizeMB}] is cannot be less than [64MB].");
                 }
             }
 
@@ -900,23 +900,23 @@ namespace Neon.Hive
             {
                 if (item.Key.Length == 0)
                 {
-                    throw new ClusterDefinitionException($"Custom node label for value [{item.Value}] has no label name.");
+                    throw new HiveDefinitionException($"Custom node label for value [{item.Value}] has no label name.");
                 }
                 else if (item.Key.Contains(".."))
                 {
-                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] has consecutive dots.");
+                    throw new HiveDefinitionException($"Custom node name [{item.Key}] has consecutive dots.");
                 }
                 else if (item.Key.Contains("--"))
                 {
-                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] has consecutive dashes.");
+                    throw new HiveDefinitionException($"Custom node name [{item.Key}] has consecutive dashes.");
                 }
                 else if (!char.IsLetterOrDigit(item.Key.First()))
                 {
-                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] does not begin with a letter or digit.");
+                    throw new HiveDefinitionException($"Custom node name [{item.Key}] does not begin with a letter or digit.");
                 }
                 else if (!char.IsLetterOrDigit(item.Key.Last()))
                 {
-                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] does not begin with a letter or digit.");
+                    throw new HiveDefinitionException($"Custom node name [{item.Key}] does not begin with a letter or digit.");
                 }
 
                 foreach (var ch in item.Key)
@@ -926,14 +926,14 @@ namespace Neon.Hive
                         continue;
                     }
 
-                    throw new ClusterDefinitionException($"Custom node name [{item.Key}] has an illegal character.  Only letters, digits, dash and dots are allowed.");
+                    throw new HiveDefinitionException($"Custom node name [{item.Key}] has an illegal character.  Only letters, digits, dash and dots are allowed.");
                 }
 
                 foreach (var ch in item.Value.ToString())
                 {
                     if (char.IsWhiteSpace(ch))
                     {
-                        throw new ClusterDefinitionException($"Whitespace in the value of [{item.Key}={item.Value}] is not allowed.");
+                        throw new HiveDefinitionException($"Whitespace in the value of [{item.Key}={item.Value}] is not allowed.");
                     }
                 }
             }

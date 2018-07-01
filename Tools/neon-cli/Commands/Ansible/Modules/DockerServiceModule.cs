@@ -477,7 +477,7 @@ namespace NeonCli.Ansible
         /// <inheritdoc/>
         public void Run(ModuleContext context)
         {
-            var cluster = HiveHelper.Cluster;
+            var hive = HiveHelper.Hive;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {
@@ -494,7 +494,7 @@ namespace NeonCli.Ansible
                 throw new ArgumentException($"[name] module argument is required.");
             }
 
-            if (!ClusterDefinition.IsValidName(name))
+            if (!HiveDefinition.IsValidName(name))
             {
                 throw new ArgumentException($"[name={name}] is not a valid Docker service name.");
             }
@@ -597,7 +597,7 @@ namespace NeonCli.Ansible
 
             context.WriteLine(AnsibleVerbosity.Trace, $"Inspecting [{service.Name}] service.");
 
-            var manager        = cluster.GetHealthyManager();
+            var manager        = hive.GetHealthyManager();
             var response       = manager.DockerCommand(RunOptions.None, "docker service inspect", service.Name);
             var serviceDetails = (ServiceDetails)null;
 

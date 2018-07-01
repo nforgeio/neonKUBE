@@ -64,10 +64,10 @@ namespace NeonCli.Ansible
         public bool CheckMode { get; set; }
 
         /// <summary>
-        /// The cluster login.
+        /// The hive login.
         /// </summary>
         [JsonIgnore]
-        public ClusterLogin Login { get; set; }
+        public HiveLogin Login { get; set; }
 
         /// <summary>
         /// Initializes the Ansible module arguments.

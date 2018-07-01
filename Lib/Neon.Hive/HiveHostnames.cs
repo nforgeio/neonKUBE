@@ -29,17 +29,17 @@ namespace Neon.Hive
     public static class HiveHostNames
     {
         /// <summary>
-        /// The base DNS name for the internal cluster Docker registry cache instances deployed on the manager nodes.
+        /// The base DNS name for the internal hive Docker registry cache instances deployed on the manager nodes.
         /// </summary>
         public const string RegistryCache = "neon-registry-cache.cluster";
 
         /// <summary>
-        /// The DNS name for the Elasticsearch containers used to store the cluster logs.
+        /// The DNS name for the Elasticsearch containers used to store the hive logs.
         /// </summary>
         /// <remarks>
         /// <para>
         /// These are individual containers that attached to the <see cref="HiveConst.PrivateNetwork"/>,
-        /// forming an Elasticsearch cluster that is deployed behind the cluster's <b>private</b> proxy.  A DNS entry
+        /// forming an Elasticsearch cluster that is deployed behind the hive's <b>private</b> proxy.  A DNS entry
         /// is configured in the each Docker node's <b>hosts</b> file to reference the node's IP address as well 
         /// as in the <b>/etc/neoncluster/env-host</b> file that may be mounted into Docker containers and services.
         /// </para>
@@ -51,16 +51,16 @@ namespace Neon.Hive
         public const string LogEsData = "neon-log-esdata.cluster";
 
         /// <summary>
-        /// The DNS name used to access the cluster's HashiCorp Consul service.
+        /// The DNS name used to access the hive's HashiCorp Consul service.
         /// </summary>
         public const string Consul = "neon-consul.cluster";
 
         /// <summary>
-        /// The DNS name for the cluster's HashiCorp Vault service.
+        /// The DNS name for the hive's HashiCorp Vault service.
         /// </summary>
         /// <remarks>
         /// <para>
-        /// Cluster services access Vault using this hostname to take advantage of the <b>neon-proxy-vault</b>
+        /// Hive services access Vault using this hostname to take advantage of the <b>neon-proxy-vault</b>
         /// which provides for failover.
         /// </para>
         /// <para>

@@ -68,7 +68,7 @@ namespace NeonDns
 
             try
             {
-                // Establish the cluster connections.
+                // Establish the hive connections.
 
                 if (NeonHelper.IsDevWorkstation)
                 {
@@ -76,7 +76,7 @@ namespace NeonDns
 
                     // For testing and development, we're going to write a test
                     // hosts file to [%NF_TEMP\neon-dns-hosts.txt] so we can see
-                    // what's happening outside of a cluster.
+                    // what's happening outside of a hive.
 
                     powerDnsHostsPath = Environment.ExpandEnvironmentVariables("%NF_TEMP%\\neon-dns-hosts.txt");
 
@@ -86,16 +86,16 @@ namespace NeonDns
 
 10.0.0.30       neon-consul.cluster
 
-# Internal cluster Vault mappings:
+# Internal hive Vault mappings:
 
 10.0.0.30       neon-vault.cluster
 10.0.0.30       manager-0.neon-vault.cluster
 
-# Internal cluster registry cache related mappings:
+# Internal hive registry cache related mappings:
 
 10.0.0.30       manager-0.neon-registry-cache.cluster
 
-# Internal cluster log pipeline related mappings:
+# Internal hive log pipeline related mappings:
 
 10.0.0.30       neon-log-esdata.cluster
 ");
@@ -107,7 +107,7 @@ namespace NeonDns
                 }
                 else
                 {
-                    HiveHelper.OpenCluster();
+                    HiveHelper.OpenHive();
                 }
 
                 // Ensure that we're running on a manager node.  This is required because
@@ -124,7 +124,7 @@ namespace NeonDns
 
                 if (!string.Equals(nodeRole, NodeRole.Manager, StringComparison.OrdinalIgnoreCase))
                 {
-                    log.LogCritical(() => $"[neon-dns] service is running on a [{nodeRole}] cluster node.  Only [{NodeRole.Manager}] nodes are supported.");
+                    log.LogCritical(() => $"[neon-dns] service is running on a [{nodeRole}] hive node.  Only [{NodeRole.Manager}] nodes are supported.");
                     Program.Exit(1);
                 }
 

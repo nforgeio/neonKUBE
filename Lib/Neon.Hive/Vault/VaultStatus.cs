@@ -128,7 +128,7 @@ namespace Neon.Hive
         public string Version { get; private set; }
 
         /// <summary>
-        /// Returns the Vault cluster name.
+        /// Returns the Vault hive name.
         /// </summary>
         public string ClusterName { get; private set; }
 
@@ -143,7 +143,7 @@ namespace Neon.Hive
         public bool HAEnabled { get; private set; }
 
         /// <summary>
-        /// Returns the internal Vault API URL of the Vault node currently acting as the cluster leader.
+        /// Returns the internal Vault API URL of the Vault node currently acting as the hive leader.
         /// </summary>
         public string HACluster { get; private set; }
 
@@ -153,7 +153,7 @@ namespace Neon.Hive
         public string HAMode { get; private set; }
 
         /// <summary>
-        /// Returns the Vault API URL of the Vault node currently acting as the cluster leader.
+        /// Returns the Vault API URL of the Vault node currently acting as the hive leader.
         /// </summary>
         public string ActiveNode { get; private set; }
     }

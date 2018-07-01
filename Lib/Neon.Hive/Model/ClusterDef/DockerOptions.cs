@@ -67,7 +67,7 @@ namespace Neon.Hive
         /// <para>
         /// Production clusters should always install a specific version of Docker so 
         /// it will be easy to add new hosts in the future that will have the same 
-        /// Docker version as the rest of the cluster.  This also prevents the package
+        /// Docker version as the rest of the hive.  This also prevents the package
         /// manager from inadvertently upgrading Docker.
         /// </para>
         /// </note>
@@ -136,7 +136,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Specifies the Docker Registries and the required credentials that will
-        /// be made available to the cluster.  Note that the Docker public registry
+        /// be made available to the hive.  Note that the Docker public registry
         /// will always be available to new clusters.
         /// </summary>
         [JsonProperty(PropertyName = "Registries", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -145,7 +145,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Optionally indicates that local pull-thru Docker registry caches are to be deployed
-        /// on the cluster manager nodes.  This defaults to <c>true</c>.
+        /// on the hive manager nodes.  This defaults to <c>true</c>.
         /// </summary>
         [JsonProperty(PropertyName = "RegistryCache", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue(defaultRegistryCache)]
@@ -167,7 +167,7 @@ namespace Neon.Hive
         /// --log-driver=fluentd --log-opt tag= --log-opt fluentd-async-connect=true
         /// </code>
         /// <para>
-        /// which by default, will forward container logs to the cluster logging pipeline.
+        /// which by default, will forward container logs to the hive logging pipeline.
         /// </para>
         /// </summary>
         /// <remarks>
@@ -177,7 +177,7 @@ namespace Neon.Hive
         /// the logging pipeline is not ready when the container starts.
         /// </note>
         /// <para>
-        /// You may have individual services and containers opt out of cluster logging by setting
+        /// You may have individual services and containers opt out of hive logging by setting
         /// <b>--log-driver=json-text</b> or <b>--log-driver=none</b>.  This can be handy while
         /// debugging Docker images.
         /// </para>
@@ -205,15 +205,15 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Avoid using the Docker Ingress network for cluster proxies.  This defaults to <c>true</c>.
+        /// Avoid using the Docker Ingress network for hive proxies.  This defaults to <c>true</c>.
         /// </summary>
         /// <remarks>
         /// <para>
         /// Docker releases made during the first three quarters of 2017 appear to have serious
         /// problems with the ingress mesh network.  This problem seems to have been fixed but
         /// this setting is available just in case.  Setting this property to <c>true</c> will
-        /// avoid this network by deploying the cluster's public, private, and Vault proxies
-        /// on all cluster Swarm nodes, effectively providing the same feature.
+        /// avoid this network by deploying the hive's public, private, and Vault proxies
+        /// on all hive Swarm nodes, effectively providing the same feature.
         /// </para>
         /// <para>
         /// Here's the issue describing this: https://github.com/jefflill/NeonForge/issues/104
@@ -234,12 +234,12 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition)
+        public void Validate(HiveDefinition hiveDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             Version             = Version ?? "latest";
             Registries = Registries ?? new List<RegistryCredentials>();
@@ -265,7 +265,7 @@ namespace Neon.Hive
 
                 if (!version.EndsWith("-ce"))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(DockerOptions)}.{Version}] does not specify a Docker community edition.  neonHIVE only supports Docker Community Edition at this time.");
+                    throw new HiveDefinitionException($"[{nameof(DockerOptions)}.{Version}] does not specify a Docker community edition.  neonHIVE only supports Docker Community Edition at this time.");
                 }
             }
 
@@ -308,7 +308,7 @@ namespace Neon.Hive
                     }
                     catch (Exception e)
                     {
-                        throw new ClusterDefinitionException($"Cannot confirm that Docker release [{version}] exists at [{uri}].  {NeonHelper.ExceptionError(e)}");
+                        throw new HiveDefinitionException($"Cannot confirm that Docker release [{version}] exists at [{uri}].  {NeonHelper.ExceptionError(e)}");
                     }
                 }
             }
@@ -317,9 +317,9 @@ namespace Neon.Hive
             {
                 var hostname = registry.Registry;
 
-                if (string.IsNullOrEmpty(hostname) || !ClusterDefinition.DnsHostRegex.IsMatch(hostname))
+                if (string.IsNullOrEmpty(hostname) || !HiveDefinition.DnsHostRegex.IsMatch(hostname))
                 {
-                    throw new ClusterDefinitionException($"[{nameof(DockerOptions)}.{nameof(Registries)}] includes a [{nameof(Neon.Hive.RegistryCredentials.Registry)}={hostname}] is not a valid registry hostname.");
+                    throw new HiveDefinitionException($"[{nameof(DockerOptions)}.{nameof(Registries)}] includes a [{nameof(Neon.Hive.RegistryCredentials.Registry)}={hostname}] is not a valid registry hostname.");
                 }
             }
         }

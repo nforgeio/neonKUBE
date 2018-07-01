@@ -37,7 +37,7 @@ namespace Neon.Hive
         public string Fsid { get; set; } = null;
 
         /// <summary>
-        /// The cluster name.  This defaults to <b>ceph</b>.
+        /// The hive name.  This defaults to <b>ceph</b>.
         /// </summary>
         [JsonProperty(PropertyName = "Name", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
         [DefaultValue("ceph")]

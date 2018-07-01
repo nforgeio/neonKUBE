@@ -27,23 +27,23 @@ using Neon.Time;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Handles HashiCorp Consul related operations for a <see cref="ClusterProxy"/>.
+    /// Handles HashiCorp Consul related operations for a <see cref="HiveProxy"/>.
     /// </summary>
     public sealed class ConsulManager : IDisposable
     {
         private object          syncRoot = new object();
-        private ClusterProxy    cluster;
+        private HiveProxy       hive;
         private ConsulClient    client;
 
         /// <summary>
         /// Internal constructor.
         /// </summary>
-        /// <param name="cluster">The parent <see cref="ClusterProxy"/>.</param>
-        internal ConsulManager(ClusterProxy cluster)
+        /// <param name="hive">The parent <see cref="HiveProxy"/>.</param>
+        internal ConsulManager(HiveProxy hive)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
 
-            this.cluster = cluster;
+            this.hive = hive;
         }
 
         /// <summary>

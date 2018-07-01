@@ -40,13 +40,13 @@ namespace Neon.Hive
     /// <para>
     /// A hosted endpoint controls which external network traffic is routed into
     /// a neonHIVE by specifying the external network port where the traffic is
-    /// received and the internal cluster port where the traffic will be routed.
+    /// received and the internal hive port where the traffic will be routed.
     /// This also specifies whether the traffic is to be treated as TCP or UDP.
     /// </para>
     /// <para>
     /// This is typically used to route external TCP or UDP traffic to the
-    /// cluster's <b>neon-proxy-public</b> via the Docker ingress network during
-    /// cluster setup, by configuring a load balancer to balance traffic across
+    /// hive's <b>neon-proxy-public</b> via the Docker ingress network during
+    /// hive setup, by configuring a load balancer to balance traffic across
     /// all Docker nodes.  The ingress network will take care of forwarding traffic
     /// to the <b>neon-proxy-public</b> instances which will handle SSL termination
     /// (if required) and then forward traffic onto the target Docker service.
@@ -68,7 +68,7 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="protocol">Specifies the protocol.</param>
         /// <param name="externalPort">Specifies the external network port.</param>
-        /// <param name="internalPort">Specifies the internal cluster network port.</param>
+        /// <param name="internalPort">Specifies the internal hive network port.</param>
         public HostedEndpoint(HostedEndpointProtocol protocol, int externalPort, int internalPort)
         {
             this.Protocol     = protocol;
@@ -84,13 +84,13 @@ namespace Neon.Hive
         public HostedEndpointProtocol Protocol { get; set; } = HostedEndpointProtocol.Tcp;
 
         /// <summary>
-        /// Specifies the external network port from which traffic is to be routed into the cluster.
+        /// Specifies the external network port from which traffic is to be routed into the hive.
         /// </summary>
         [JsonProperty(PropertyName = "FrontendPort", Required = Required.Always)]
         public int FrontendPort { get; set; }
 
         /// <summary>
-        /// Specifies the internal cluster port where the traffic is to be routed.
+        /// Specifies the internal hive port where the traffic is to be routed.
         /// </summary>
         [JsonProperty(PropertyName = "BackendPort", Required = Required.Always)]
         public int BackendPort { get; set; }
@@ -134,19 +134,19 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition)
+        public void Validate(HiveDefinition hiveDefinition)
         {
             if (!NetHelper.IsValidPort(FrontendPort))
             {
-                throw new ClusterDefinitionException($"[{nameof(HostedEndpoint)}.{nameof(FrontendPort)}] value [{FrontendPort}] is outside the range of a valid network port.");
+                throw new HiveDefinitionException($"[{nameof(HostedEndpoint)}.{nameof(FrontendPort)}] value [{FrontendPort}] is outside the range of a valid network port.");
             }
 
             if (!NetHelper.IsValidPort(FrontendPort))
             {
-                throw new ClusterDefinitionException($"[{nameof(HostedEndpoint)}.{nameof(BackendPort)}] value [{BackendPort}] is outside the range of a valid network port.");
+                throw new HiveDefinitionException($"[{nameof(HostedEndpoint)}.{nameof(BackendPort)}] value [{BackendPort}] is outside the range of a valid network port.");
             }
         }
     }

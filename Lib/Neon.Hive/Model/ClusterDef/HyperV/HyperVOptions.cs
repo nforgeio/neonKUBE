@@ -34,8 +34,8 @@ namespace Neon.Hive
         /// which is the latest supported Ubuntu 16.04 image.
         /// </para>
         /// <note>
-        /// Production cluster definitions should be configured with an VHDX with a specific version
-        /// of the host operating system to ensure that cluster nodes are provisioned with the same
+        /// Production hive definitions should be configured with an VHDX with a specific version
+        /// of the host operating system to ensure that hive nodes are provisioned with the same
         /// operating system version.
         /// </note>
         /// <note>
@@ -50,25 +50,25 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition)
+        public void Validate(HiveDefinition hiveDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
-            if (!clusterDefinition.Network.StaticIP)
+            if (!hiveDefinition.Network.StaticIP)
             {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.StaticIP)}] must be [true] when deploying to Hyper-V.");
+                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.StaticIP)}] must be [true] when deploying to Hyper-V.");
             }
 
             if (string.IsNullOrEmpty(HostVhdxUri) || !Uri.TryCreate(HostVhdxUri, UriKind.Absolute, out Uri uri))
             {
-                throw new ClusterDefinitionException($"[{nameof(LocalHyperVOptions)}.{nameof(HostVhdxUri)}] is required when deploying to Hyper-V.");
+                throw new HiveDefinitionException($"[{nameof(LocalHyperVOptions)}.{nameof(HostVhdxUri)}] is required when deploying to Hyper-V.");
             }
 
-            clusterDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.
-            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition, remoteHypervisors: false);  // Hypervisor options must be valid.
+            hiveDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.
+            hiveDefinition.Hosting.ValidateHypervisor(hiveDefinition, remoteHypervisors: false);  // Hypervisor options must be valid.
         }
     }
 }

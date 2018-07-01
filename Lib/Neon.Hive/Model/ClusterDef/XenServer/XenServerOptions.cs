@@ -36,8 +36,8 @@ namespace Neon.Hive
         /// which is the latest supported Ubuntu 16.04 image.
         /// </para>
         /// <note>
-        /// Production cluster definitions should be configured with an XVA with a specific version
-        /// of the host operating system to ensure that cluster nodes are provisioned with the same
+        /// Production hive definitions should be configured with an XVA with a specific version
+        /// of the host operating system to ensure that hive nodes are provisioned with the same
         /// operating system version.
         /// </note>
         /// <note>
@@ -59,7 +59,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// Identifies the XenServer storage repository to be used to store the XenServer
-        /// node template as well as the cluster virtual machine images.  This may be the
+        /// node template as well as the hive virtual machine images.  This may be the
         /// name of the target repository or its UUID.  This defaults to <b>Local storage</b>.
         /// </summary>
         [JsonProperty(PropertyName = "StorageRepository", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -70,34 +70,34 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition)
+        public void Validate(HiveDefinition hiveDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             HostXvaUri        = HostXvaUri ?? defaultHostXvaUri;
             TemplateName      = TemplateName ?? defaultTemplate;
             StorageRepository = StorageRepository ?? defaultStorageRepository;
 
-            if (!clusterDefinition.Network.StaticIP)
+            if (!hiveDefinition.Network.StaticIP)
             {
-                throw new ClusterDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.StaticIP)}] must be [true] when deploying to XenServer.");
+                throw new HiveDefinitionException($"[{nameof(NetworkOptions)}.{nameof(NetworkOptions.StaticIP)}] must be [true] when deploying to XenServer.");
             }
 
             if (string.IsNullOrEmpty(HostXvaUri) || !Uri.TryCreate(HostXvaUri, UriKind.Absolute, out Uri uri))
             {
-                throw new ClusterDefinitionException($"[{nameof(XenServerOptions)}.{nameof(HostXvaUri)}] is required when deploying to XenServer.");
+                throw new HiveDefinitionException($"[{nameof(XenServerOptions)}.{nameof(HostXvaUri)}] is required when deploying to XenServer.");
             }
 
             if (string.IsNullOrEmpty(StorageRepository))
             {
-                throw new ClusterDefinitionException($"[{nameof(XenServerOptions)}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
+                throw new HiveDefinitionException($"[{nameof(XenServerOptions)}.{nameof(StorageRepository)}] is required when deploying to XenServer.");
             }
 
-            clusterDefinition.ValidatePrivateNodeAddresses();                                           // Private node IP addresses must be assigned and valid.
-            clusterDefinition.Hosting.ValidateHypervisor(clusterDefinition, remoteHypervisors: true);   // Hypervisor options must be valid.
+            hiveDefinition.ValidatePrivateNodeAddresses();                                          // Private node IP addresses must be assigned and valid.
+            hiveDefinition.Hosting.ValidateHypervisor(hiveDefinition, remoteHypervisors: true);     // Hypervisor options must be valid.
         }
     }
 }

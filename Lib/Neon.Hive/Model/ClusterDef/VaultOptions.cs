@@ -67,8 +67,8 @@ namespace Neon.Hive
         public int KeyThreshold { get; set; } = defaultKeyThreshold;
 
         /// <summary>
-        /// Specifies whether the cluster should automatically unseal the Vault
-        /// after a cluster, manager node, or Vault service restart.  This defaults
+        /// Specifies whether the hive should automatically unseal the Vault
+        /// after a hive, manager node, or Vault service restart.  This defaults
         /// to <c>true</c>.
         /// </summary>
         /// <remarks>
@@ -107,7 +107,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the proxied URI to the cluster's Vault service.
+        /// Returns the proxied URI to the hive's Vault service.
         /// </summary>
         [JsonIgnore]
         public string Uri
@@ -166,51 +166,51 @@ namespace Neon.Hive
         /// Validates the options and also ensures that all <c>null</c> properties are
         /// initialized to their default values.
         /// </summary>
-        /// <param name="clusterDefinition">The cluster definition.</param>
-        /// <exception cref="ClusterDefinitionException">Thrown if the definition is not valid.</exception>
+        /// <param name="hiveDefinition">The hive definition.</param>
+        /// <exception cref="HiveDefinitionException">Thrown if the definition is not valid.</exception>
         [Pure]
-        public void Validate(ClusterDefinition clusterDefinition)
+        public void Validate(HiveDefinition hiveDefinition)
         {
-            Covenant.Requires<ArgumentNullException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentNullException>(hiveDefinition != null);
 
             if (string.IsNullOrWhiteSpace(Version))
             {
-                throw new ClusterDefinitionException($"Invalid version [{nameof(VaultOptions)}.{nameof(Version)}={Version}].");
+                throw new HiveDefinitionException($"Invalid version [{nameof(VaultOptions)}.{nameof(Version)}={Version}].");
             }
 
             if (!System.Version.TryParse(Version, out var version))
             {
-                throw new ClusterDefinitionException($"Invalid version [{nameof(VaultOptions)}.{nameof(Version)}={Version}].");
+                throw new HiveDefinitionException($"Invalid version [{nameof(VaultOptions)}.{nameof(Version)}={Version}].");
             }
 
             if (version < minVersion)
             {
-                throw new ClusterDefinitionException($"Minumim acceptable [{nameof(VaultOptions)}.{nameof(Version)}={minVersion}].");
+                throw new HiveDefinitionException($"Minumim acceptable [{nameof(VaultOptions)}.{nameof(Version)}={minVersion}].");
             }
 
             if (KeyCount <= 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(VaultOptions)}.{nameof(KeyCount)}] must be greater than zero.");
+                throw new HiveDefinitionException($"[{nameof(VaultOptions)}.{nameof(KeyCount)}] must be greater than zero.");
             }
 
             if (KeyThreshold <= 0)
             {
-                throw new ClusterDefinitionException($"[{nameof(VaultOptions)}.{nameof(KeyThreshold)}] must be greater than zero.");
+                throw new HiveDefinitionException($"[{nameof(VaultOptions)}.{nameof(KeyThreshold)}] must be greater than zero.");
             }
 
             if (KeyThreshold > KeyCount)
             {
-                throw new ClusterDefinitionException($"[{nameof(VaultOptions)}.{nameof(KeyThreshold)}] cannot be greater than [{nameof(VaultOptions)}.{nameof(KeyCount)}].");
+                throw new HiveDefinitionException($"[{nameof(VaultOptions)}.{nameof(KeyThreshold)}] cannot be greater than [{nameof(VaultOptions)}.{nameof(KeyCount)}].");
             }
 
             if (!GoTimeSpan.TryParse(MaximimLease, out var goMaximumLease))
             {
-                throw new ClusterDefinitionException($"[{nameof(VaultOptions)}.{nameof(MaximimLease)}={MaximimLease}] is not a valid GO duration.");
+                throw new HiveDefinitionException($"[{nameof(VaultOptions)}.{nameof(MaximimLease)}={MaximimLease}] is not a valid GO duration.");
             }
 
             if (!GoTimeSpan.TryParse(DefaultLease, out var goDefaultLease))
             {
-                throw new ClusterDefinitionException($"[{nameof(VaultOptions)}.{nameof(DefaultLease)}={DefaultLease}] is not a valid GO duration.");
+                throw new HiveDefinitionException($"[{nameof(VaultOptions)}.{nameof(DefaultLease)}={DefaultLease}] is not a valid GO duration.");
             }
 
             // Treat zero lease values as essentially unlimited.
@@ -229,7 +229,7 @@ namespace Neon.Hive
 
             if (goDefaultLease.TimeSpan > goMaximumLease.TimeSpan)
             {
-                throw new ClusterDefinitionException($"[{nameof(VaultOptions)}.{nameof(DefaultLease)}= {DefaultLease}] is greater than [{nameof(MaximimLease)}={MaximimLease}].");
+                throw new HiveDefinitionException($"[{nameof(VaultOptions)}.{nameof(DefaultLease)}= {DefaultLease}] is greater than [{nameof(MaximimLease)}={MaximimLease}].");
             }
         }
     }

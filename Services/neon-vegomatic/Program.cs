@@ -55,7 +55,7 @@ namespace NeonVegomatic
 
             try
             {
-                // Establish the cluster connections.
+                // Establish the hive connections.
 
                 if (NeonHelper.IsDevWorkstation)
                 {
@@ -63,7 +63,7 @@ namespace NeonVegomatic
                 }
                 else
                 {
-                    HiveHelper.OpenCluster();
+                    HiveHelper.OpenHive();
                 }
 
                 var commandLine = new CommandLine(args);

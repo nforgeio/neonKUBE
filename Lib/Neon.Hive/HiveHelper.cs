@@ -31,7 +31,7 @@ using Neon.Net;
 // $todo(jeff.lill): 
 //
 // This class being static doesn't support dependency injection.  I'm not sure it's
-// worth changing this now.  Perhaps when we start doing more cluster unit testing.
+// worth changing this now.  Perhaps when we start doing more hive unit testing.
 
 namespace Neon.Hive
 {
@@ -102,7 +102,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the path the folder holding the user specific cluster files.
+        /// Returns the path the folder holding the user specific hive files.
         /// </summary>
         /// <param name="ignoreNeonToolContainerVar">
         /// Optionally ignore the presence of a <b>NEON_TOOL_CONTAINER</b> environment 
@@ -112,7 +112,7 @@ namespace Neon.Hive
         /// <remarks>
         /// The actual path return depends on the presence of the <b>NEON_TOOL_CONTAINER</b>
         /// environment variable.  <b>NEON_TOOL_CONTAINER=1</b> then we're running in a 
-        /// shimmed Docker container and we'll expect the cluster login information to be mounted
+        /// shimmed Docker container and we'll expect the hive login information to be mounted
         /// at <b>/neoncluster</b>.  Otherwise, we'll return a suitable path within the 
         /// current user's home directory.
         /// </remarks>
@@ -172,12 +172,12 @@ namespace Neon.Hive
         /// <remarks>
         /// <para>
         /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
-        /// to deploy and manage neonHIVEs.  Each known cluster will have a JSON file named
-        /// <b><i>cluster-name</i>.json</b> holding the serialized <see cref="Hive.ClusterLogin"/> 
-        /// information for the cluster.
+        /// to deploy and manage neonHIVEs.  Each known hive will have a JSON file named
+        /// <b><i>hive-name</i>.json</b> holding the serialized <see cref="Hive.HiveLogin"/> 
+        /// information for the hive.
         /// </para>
         /// <para>
-        /// The <b>.current</b> file (if present) specifies the name of the cluster to be considered
+        /// The <b>.current</b> file (if present) specifies the name of the hive to be considered
         /// to be currently logged in.
         /// </para>
         /// </remarks>
@@ -217,7 +217,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the path to the file indicating which cluster is currently logged in.
+        /// Returns the path to the file indicating which hive is currently logged in.
         /// </summary>
         public static string CurrentPath
         {
@@ -225,21 +225,21 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the path to the login information for the named cluster.
+        /// Returns the path to the login information for the named hive.
         /// </summary>
         /// <param name="username">The operator's user name.</param>
-        /// <param name="clusterName">The cluster name.</param>
-        /// <returns>The path to the cluster's credentials file.</returns>
-        public static string GetLoginPath(string username, string clusterName)
+        /// <param name="hiveName">The hive name.</param>
+        /// <returns>The path to the hive's credentials file.</returns>
+        public static string GetLoginPath(string username, string hiveName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hiveName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
 
-            return Path.Combine(GetLoginFolder(), $"{username}@{clusterName}.login.json");
+            return Path.Combine(GetLoginFolder(), $"{username}@{hiveName}.login.json");
         }
 
         /// <summary>
-        /// Returns the path to the current user's cluster virtual machine templates
+        /// Returns the path to the current user's hive virtual machine templates
         /// folder, creating the directory if it doesn't already exist.
         /// </summary>
         /// <returns>The path to the nenCLUSTER setup folder.</returns>
@@ -253,23 +253,23 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Ensures that the client version specified is capable of managing a cluster.
+        /// Ensures that the client version specified is capable of managing a hive.
         /// </summary>
-        /// <param name="login">The target cluster login.</param>
+        /// <param name="login">The target hive login.</param>
         /// <param name="clientVersion">The optional client version string.</param>
-        /// <exception cref="VersionException">Thrown if the client is not capable of managing the cluster.</exception>
+        /// <exception cref="VersionException">Thrown if the client is not capable of managing the hive.</exception>
         /// <remarks>
         /// <note>
         /// No compatiblility check is performed if <paramref name="clientVersion"/> is passed
         /// as <c>null</c> or empty.
         /// </note>
         /// </remarks>
-        public static void ValidateClientVersion(ClusterLogin login, string clientVersion = null)
+        public static void ValidateClientVersion(HiveLogin login, string clientVersion = null)
         {
             Covenant.Requires<ArgumentNullException>(login != null);
 
             // Ensure that the current version of the client is compatible with
-            // the connected cluster.
+            // the connected hive.
 
             if (!string.IsNullOrEmpty(clientVersion) && login.Definition.Summary != null)
             {
@@ -278,7 +278,7 @@ namespace Neon.Hive
                 // compare the version numbers.
 
                 var curVersion = clientVersion;
-                var minVersion = login.Definition.Summary.NeonCliVersionMinimum;
+                var minVersion = login.Definition.Summary.NeonCliVersion;
                 var dashPos    = curVersion.IndexOf('-');
 
                 if (dashPos != -1)
@@ -295,37 +295,37 @@ namespace Neon.Hive
 
                 if (new Version(curVersion) < new Version(minVersion))
                 {
-                    throw new HiveException($"neon-cli v{clientVersion} cannot manage cluster [{login.Definition.Name}].  Use neon-cli v{login.Definition.Summary.NeonCliVersionMinimum} or greater.");
+                    throw new HiveException($"neon-cli v{clientVersion} cannot manage hive [{login.Definition.Name}].  Use neon-cli v{login.Definition.Summary.NeonCliVersion} or greater.");
                 }
             }
         }
 
         /// <summary>
-        /// Returns the cluster login for the currently logged in cluster and
-        /// establishes a cluster connection.
+        /// Returns the hive login for the currently logged in hive and
+        /// establishes a hive connection.
         /// </summary>
         /// <param name="noConnect">
-        /// Optionally indicates that the method should not connect to the cluster
+        /// Optionally indicates that the method should not connect to the hive
         /// and should simply return the current login in if one is available.
         /// </param>
         /// <param name="clientVersion">
         /// Optionally specifies the current <b>neon-cli</b> version to be checked
-        /// against the cluster's minimum required client.
+        /// against the hive's minimum required client.
         /// </param>
-        /// <exception cref="VersionException">Thrown if the client is not capable of managing the cluster.</exception>
-        /// <returns>The current cluster login or <c>null</c>.</returns>
+        /// <exception cref="VersionException">Thrown if the client is not capable of managing the hive.</exception>
+        /// <returns>The current hive login or <c>null</c>.</returns>
         /// <remarks>
         /// <note>
-        /// The tricky thing here is that the cluster definition nodes 
-        /// within the cluster login returned will actually be loaded from
-        /// the cluster itself or the cached copy.
+        /// The tricky thing here is that the hive definition nodes 
+        /// within the hive login returned will actually be loaded from
+        /// the hive itself or the cached copy.
         /// </note>
         /// </remarks>
-        public static ClusterLogin GetLogin(bool noConnect = false, string clientVersion = null)
+        public static HiveLogin GetLogin(bool noConnect = false, string clientVersion = null)
         {
             if (File.Exists(CurrentPath))
             {
-                var current = CurrentClusterLogin.Load();
+                var current = CurrentHiveLogin.Load();
                 var login   = HiveHelper.SplitLogin(current.Login);
 
                 if (!login.IsOK)
@@ -334,35 +334,35 @@ namespace Neon.Hive
                     return null;
                 }
 
-                var username         = login.Username;
-                var clusterName      = login.ClusterName;
-                var clusterLoginPath = GetLoginPath(username, clusterName);
+                var username      = login.Username;
+                var hiveName      = login.HiveName;
+                var hiveLoginPath = GetLoginPath(username, hiveName);
 
-                if (File.Exists(clusterLoginPath))
+                if (File.Exists(hiveLoginPath))
                 {
-                    var clusterLogin = HiveHelper.LoadClusterLogin(username, clusterName);
+                    var hiveLogin = HiveHelper.LoadHiveLogin(username, hiveName);
 
-                    clusterLogin.ViaVpn = current.ViaVpn && clusterLogin.VpnCredentials != null;
+                    hiveLogin.ViaVpn = current.ViaVpn && hiveLogin.VpnCredentials != null;
 
                     if (noConnect)
                     {
-                        return clusterLogin;
+                        return hiveLogin;
                     }
 
-                    OpenCluster(clusterLogin);
+                    OpenHive(hiveLogin);
 
-                    var liveDefinition = GetLiveDefinition(username, clusterName);
+                    var liveDefinition = GetLiveDefinition(username, hiveName);
 
-                    clusterLogin.Definition.NodeDefinitions = liveDefinition.NodeDefinitions;
-                    clusterLogin.Definition.Summary         = liveDefinition.Summary;
+                    hiveLogin.Definition.NodeDefinitions = liveDefinition.NodeDefinitions;
+                    hiveLogin.Definition.Summary         = liveDefinition.Summary;
 
-                    ValidateClientVersion(clusterLogin, clientVersion);
+                    ValidateClientVersion(hiveLogin, clientVersion);
 
-                    return clusterLogin;
+                    return hiveLogin;
                 }
                 else
                 {
-                    // The referenced cluster file doesn't exist so quietly remove the ".current" file.
+                    // The referenced hive file doesn't exist so quietly remove the ".current" file.
 
                     File.Delete(CurrentPath);
                 }
@@ -372,53 +372,53 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the path to the cached cluster definition for the named cluster.
+        /// Returns the path to the cached hive definition for the named hive.
         /// </summary>
         /// <param name="username">The operator's user name.</param>
-        /// <param name="clusterName">The cluster name.</param>
-        /// <returns>The path to the cluster's credentials file.</returns>
-        public static string GetCachedDefinitionPath(string username, string clusterName)
+        /// <param name="hiveName">The hive name.</param>
+        /// <returns>The path to the hive's credentials file.</returns>
+        public static string GetCachedDefinitionPath(string username, string hiveName)
         {
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hiveName));
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
 
-            return Path.Combine(GetLoginFolder(), $"{username}@{clusterName}.def.json");
+            return Path.Combine(GetLoginFolder(), $"{username}@{hiveName}.def.json");
         }
 
         /// <summary>
-        /// Returns the current cluster definition from the cluster if we're
+        /// Returns the current hive definition from the hive if we're
         /// currently logged in.
         /// </summary>
         /// <param name="username">The operator's user name.</param>
-        /// <param name="clusterName">The cluster name.</param>
-        /// <returns>The current cluster definition or <c>null</c>.</returns>
-        public static ClusterDefinition GetLiveDefinition(string username, string clusterName)
+        /// <param name="hiveName">The hive name.</param>
+        /// <returns>The current hive definition or <c>null</c>.</returns>
+        public static HiveDefinition GetLiveDefinition(string username, string hiveName)
         {
-            var clusterLoginPath = GetLoginPath(username, clusterName);
+            var hiveLoginPath = GetLoginPath(username, hiveName);
 
-            if (!File.Exists(clusterLoginPath))
+            if (!File.Exists(hiveLoginPath))
             {
                 return null;    // We're not logged in.
             }
 
             // We're going to optimize the retrieval by attempting to cache
-            // a copy of the cluster definition obtained from the cluster and
+            // a copy of the hive definition obtained from the hive and
             // then comparing hashes of the cached definition with the hash
             // saved on the server to determine whether we really need to
             // download the whole definition again.
             //
             // This should make make the [neon-cli] a lot snappier because
-            // cluster definitions will change relatively infrequently for
+            // hive definitions will change relatively infrequently for
             // many clusters.
 
-            var cachedDefinitionPath = GetCachedDefinitionPath(username, clusterName);
-            var cachedDefinition     = (ClusterDefinition)null;
+            var cachedDefinitionPath = GetCachedDefinitionPath(username, hiveName);
+            var cachedDefinition     = (HiveDefinition)null;
 
             if (File.Exists(cachedDefinitionPath))
             {
                 try
                 {
-                    cachedDefinition = NeonHelper.JsonDeserialize<ClusterDefinition>(File.ReadAllText(cachedDefinitionPath));
+                    cachedDefinition = NeonHelper.JsonDeserialize<HiveDefinition>(File.ReadAllText(cachedDefinitionPath));
                 }
                 catch
                 {
@@ -435,26 +435,26 @@ namespace Neon.Hive
                 }
             }
 
-            var clusterDefinition = GetDefinitionAsync(cachedDefinition).Result;
+            var hiveDefinition = GetDefinitionAsync(cachedDefinition).Result;
 
-            if (!object.ReferenceEquals(clusterDefinition, cachedDefinition))
+            if (!object.ReferenceEquals(hiveDefinition, cachedDefinition))
             {
-                // It looks like we received an updated defintion from the cluster
+                // It looks like we received an updated defintion from the hive
                 // so cache it.
 
-                File.WriteAllText(cachedDefinitionPath, NeonHelper.JsonSerialize(clusterDefinition, Formatting.Indented));
+                File.WriteAllText(cachedDefinitionPath, NeonHelper.JsonSerialize(hiveDefinition, Formatting.Indented));
             }
 
-            return clusterDefinition;
+            return hiveDefinition;
         }
 
         /// <summary>
-        /// Splits a cluster login in the form of <b>USER@CLUSTER</b> into
-        /// the operator's username and the cluster name.
+        /// Splits a hive login in the form of <b>USER@HIVE</b> into
+        /// the operator's username and the hive name.
         /// </summary>
-        /// <param name="login">The cluster identifier.</param>
-        /// <returns>The username and cluster name parts.</returns>
-        public static (bool IsOK, string Username, string ClusterName) SplitLogin(string login)
+        /// <param name="login">The hive identifier.</param>
+        /// <returns>The username and hive name parts.</returns>
+        public static (bool IsOK, string Username, string HiveName) SplitLogin(string login)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(login));
 
@@ -462,29 +462,29 @@ namespace Neon.Hive
 
             if (fields.Length != 2 || string.IsNullOrEmpty(fields[0]) || string.IsNullOrEmpty(fields[1]))
             {
-                return (IsOK: false, Username: null, ClusterName: null);
+                return (IsOK: false, Username: null, HiveName: null);
             }
 
-            return (IsOK: true, Username: fields[0], ClusterName: fields[1]);
+            return (IsOK: true, Username: fields[0], HiveName: fields[1]);
         }
 
         /// <summary>
-        /// Loads the cluster login information for the current cluster, performing any necessary decryption.
+        /// Loads the hive login information for the current hive, performing any necessary decryption.
         /// </summary>
         /// <param name="username">The operator's user name.</param>
-        /// <param name="clusterName">The name of the target cluster.</param>
-        /// <returns>The <see cref="Hive.ClusterLogin"/>.</returns>
-        public static ClusterLogin LoadClusterLogin(string username, string clusterName)
+        /// <param name="hiveName">The name of the target hive.</param>
+        /// <returns>The <see cref="Hive.HiveLogin"/>.</returns>
+        public static HiveLogin LoadHiveLogin(string username, string hiveName)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(username));
-            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(clusterName));
+            Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(hiveName));
 
-            var path         = Path.Combine(GetLoginFolder(), $"{username}@{clusterName}.login.json");
-            var clusterLogin = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(path));
+            var path      = Path.Combine(GetLoginFolder(), $"{username}@{hiveName}.login.json");
+            var hiveLogin = NeonHelper.JsonDeserialize<HiveLogin>(File.ReadAllText(path));
 
-            clusterLogin.Path = path;
+            hiveLogin.Path = path;
 
-            return clusterLogin;
+            return hiveLogin;
         }
 
         /// <summary>
@@ -498,7 +498,7 @@ namespace Neon.Hive
         /// </remarks>
         public static string GetVaultCertificateKey(string name)
         {
-            if (!ClusterDefinition.IsValidName(name))
+            if (!HiveDefinition.IsValidName(name))
             {
                 throw new ArgumentException($"[{name}] is not a valid certificate name.  Only letters, numbers, periods, dashes, and underscores are allowed.");
             }
@@ -507,7 +507,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the cluster's Vault URI.
+        /// Returns the hive's Vault URI.
         /// </summary>
         public static Uri VaultUri
         {
@@ -517,7 +517,7 @@ namespace Neon.Hive
 
                 if (string.IsNullOrEmpty(vaultUri))
                 {
-                    throw new NotSupportedException("Cannot access cluster Vault because the [VAULT_ADDR] environment variable was not passed to this container.");
+                    throw new NotSupportedException("Cannot access hive Vault because the [VAULT_ADDR] environment variable was not passed to this container.");
                 }
 
                 return new Uri(vaultUri);
@@ -525,7 +525,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the cluster's Consul URI.
+        /// Returns the hive's Consul URI.
         /// </summary>
         public static Uri ConsulUri
         {
@@ -535,7 +535,7 @@ namespace Neon.Hive
 
                 if (string.IsNullOrEmpty(consulUri))
                 {
-                    throw new NotSupportedException("Cannot access cluster Consul because the [CONSUL_HTTP_FULLADDR] environment variable was not passed to this container.");
+                    throw new NotSupportedException("Cannot access hive Consul because the [CONSUL_HTTP_FULLADDR] environment variable was not passed to this container.");
                 }
 
                 return new Uri(Environment.GetEnvironmentVariable("CONSUL_HTTP_FULLADDR"));
@@ -545,20 +545,20 @@ namespace Neon.Hive
         /// <summary>
         /// Indicates whether the application is running outside of a Docker container
         /// but we're going to try to simulate the environment such that the application
-        /// believe it is running in a container within a Docker cluster.  See 
+        /// believe it is running in a container within a Docker hive.  See 
         /// <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> for more information.
         /// </summary>
         public static bool IsConnected { get; private set; } = false;
 
         /// <summary>
-        /// Returns the <see cref="Hive.ClusterLogin"/> for the opened cluster. 
+        /// Returns the <see cref="Hive.HiveLogin"/> for the opened hive. 
         /// </summary>
-        public static ClusterLogin ClusterLogin { get; private set; } = null;
+        public static HiveLogin HiveLogin { get; private set; } = null;
 
         /// <summary>
-        /// Returns the <see cref="ClusterProxy"/> for the opened cluster.
+        /// Returns the <see cref="HiveProxy"/> for the opened hive.
         /// </summary>
-        public static ClusterProxy Cluster { get; private set; } = null;
+        public static HiveProxy Hive { get; private set; } = null;
 
         /// <summary>
         /// Simulates running the current application within the currently logged-in
@@ -566,9 +566,9 @@ namespace Neon.Hive
         /// </summary>
         /// <param name="secrets">Optional emulated Docker secrets.</param>
         /// <param name="configs">Optional emulated Docker configs.</param>
-        /// <param name="loginPath">Optional path to a specific cluster login to override the current login.</param>
-        /// <returns>The <see cref="ClusterProxy"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if a cluster is already connected.</exception>
+        /// <param name="loginPath">Optional path to a specific hive login to override the current login.</param>
+        /// <returns>The <see cref="HiveProxy"/>.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if a hive is already connected.</exception>
         /// <remarks>
         /// <note>
         /// This method requires elevated administrative permissions for the local operating
@@ -579,21 +579,21 @@ namespace Neon.Hive
         /// exits to reset any temporary settings like the DNS resolver <b>hosts</b> file.
         /// </note>
         /// <note>
-        /// This method currently simulates running the application on a cluster manager node.
+        /// This method currently simulates running the application on a hive manager node.
         /// In the future, we may provide a way to simulate running on a specific node.
         /// </note>
         /// <para>
         /// In an ideal world, Microsoft/Docker would provide a way to deploy, run and
-        /// debug applications into an existing Docker cluster as a container or swarm
+        /// debug applications into an existing Docker hive as a container or swarm
         /// mode service.  At this time, there are baby steps in this direction: it's
         /// possible to F5 an application into a standalone container but this method
         /// currently supports running the application directly on Windows while trying
-        /// to emulate some of the cluster environment.  Eventually, it will be possible
+        /// to emulate some of the hive environment.  Eventually, it will be possible
         /// to do the same in a local Docker container.
         /// </para>
         /// <para>
         /// This method provides a somewhat primitive simulation of running within a
-        /// cluster by:
+        /// hive by:
         /// </para>
         /// <list type="bullet">
         ///     <item>
@@ -613,9 +613,9 @@ namespace Neon.Hive
         ///     </item>
         /// </list>
         /// <note>
-        /// This is also useful for external tools that are not executed on a cluster node
+        /// This is also useful for external tools that are not executed on a hive node
         /// (such as the <b>neon-cli</b>).  For example, class configures the local <n>hosts</n>
-        /// file such that we'll be able to access the Cluster Vault and Consul servers over
+        /// file such that we'll be able to access the hive Vault and Consul servers over
         /// TLS.
         /// </note>
         /// <para>
@@ -636,35 +636,35 @@ namespace Neon.Hive
         /// this.
         /// </note>
         /// </remarks>
-        public static ClusterProxy OpenRemoteCluster(DebugSecrets secrets = null, DebugConfigs configs = null, string loginPath = null)
+        public static HiveProxy OpenRemoteCluster(DebugSecrets secrets = null, DebugConfigs configs = null, string loginPath = null)
         {
             if (IsConnected)
             {
-                return HiveHelper.Cluster;
+                return HiveHelper.Hive;
             }
 
             if (loginPath != null)
             {
-                ClusterLogin      = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(loginPath));
-                ClusterLogin.Path = loginPath;
+                HiveLogin      = NeonHelper.JsonDeserialize<HiveLogin>(File.ReadAllText(loginPath));
+                HiveLogin.Path = loginPath;
             }
             else
             {
-                ClusterLogin = HiveHelper.GetLogin();
+                HiveLogin = HiveHelper.GetLogin();
 
-                if (ClusterLogin == null)
+                if (HiveLogin == null)
                 {
-                    throw new InvalidOperationException("Connect failed due to not being logged into a cluster.");
+                    throw new InvalidOperationException("Connect failed due to not being logged into a hive.");
                 }
             }
 
-            log.LogInfo(() => $"Connecting to cluster [{ClusterLogin}].");
+            log.LogInfo(() => $"Connecting to hive [{HiveLogin}].");
 
-            OpenCluster(
-                new Hive.ClusterProxy(ClusterLogin,
+            OpenHive(
+                new Hive.HiveProxy(HiveLogin,
                     (name, publicAddress, privateAddress) =>
                     {
-                        var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, ClusterLogin.GetSshCredentials(), null);
+                        var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, HiveLogin.GetSshCredentials(), null);
 
                         proxy.RemotePath += $":{HiveHostFolders.Setup}";
                         proxy.RemotePath += $":{HiveHostFolders.Tools}";
@@ -677,37 +677,37 @@ namespace Neon.Hive
 
             // Support emulated secrets and configs too.
 
-            secrets?.Realize(Cluster, ClusterLogin);
-            configs?.Realize(Cluster, ClusterLogin);
+            secrets?.Realize(Hive, HiveLogin);
+            configs?.Realize(Hive, HiveLogin);
 
             HiveHelper.secrets = secrets;
             HiveHelper.configs = configs;
 
-            return HiveHelper.Cluster;
+            return HiveHelper.Hive;
         }
 
         /// <summary>
-        /// Simulates connecting the current application to the cluster.
+        /// Simulates connecting the current application to the hive.
         /// </summary>
-        /// <param name="login">The cluster login information.</param>
-        /// <returns>The <see cref="ClusterProxy"/>.</returns>
-        public static ClusterProxy OpenCluster(ClusterLogin login)
+        /// <param name="login">The hive login information.</param>
+        /// <returns>The <see cref="HiveProxy"/>.</returns>
+        public static HiveProxy OpenHive(HiveLogin login)
         {
             if (IsConnected)
             {
-                return HiveHelper.Cluster;
+                return HiveHelper.Hive;
             }
 
-            log.LogInfo(() => $"Connecting to [{login.Username}@{login.ClusterName}].");
+            log.LogInfo(() => $"Connecting to [{login.Username}@{login.HiveName}].");
 
-            ClusterLogin     = login;
+            HiveLogin        = login;
             remoteConnection = true;
 
-            OpenCluster(
-                new Hive.ClusterProxy(ClusterLogin,
+            OpenHive(
+                new Hive.HiveProxy(HiveLogin,
                     (name, publicAddress, privateAddress) =>
                     {
-                        var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, ClusterLogin.GetSshCredentials(), null);
+                        var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, HiveLogin.GetSshCredentials(), null);
 
                         proxy.RemotePath += $":{HiveHostFolders.Setup}";
                         proxy.RemotePath += $":{HiveHostFolders.Tools}";
@@ -715,46 +715,46 @@ namespace Neon.Hive
                         return proxy;
                     }));
 
-            return HiveHelper.Cluster;
+            return HiveHelper.Hive;
         }
 
         /// <summary>
         /// <para>
-        /// Connects the current application to the cluster.
+        /// Connects the current application to the hive.
         /// </para>
         /// <note>
         /// This should only be called by services that are actually deployed in running 
-        /// cluster containers that have mapped in the cluster node environment variables
+        /// hive containers that have mapped in the hive node environment variables
         /// and host DNS mappings from <b>/etc/neoncluster/env-host</b>.
         /// </note>
         /// </summary>
-        /// <param name="sshCredentialsSecret">Optionally identifies the Docker secret the cluster SSH credentials.</param>
+        /// <param name="sshCredentialsSecret">Optionally identifies the Docker secret the hive SSH credentials.</param>
         /// <exception cref="InvalidOperationException">
-        /// Thrown if the current process does not appear to be running as a cluster container
+        /// Thrown if the current process does not appear to be running as a hive container
         /// with the node environment variables mapped in.
         /// </exception>
-        /// <returns>The <see cref="ClusterProxy"/>.</returns>
+        /// <returns>The <see cref="HiveProxy"/>.</returns>
         /// <remarks>
         /// <para>
         /// The <paramref name="sshCredentialsSecret"/> parameter optionally specifies the name
-        /// of the Docker secret containing the cluster's SSH credentials formatted as: <b>username/password</b>.  
-        /// These credentials are required to be able to open SSH/SCP connections to cluster nodes.
+        /// of the Docker secret containing the hive's SSH credentials formatted as: <b>username/password</b>.  
+        /// These credentials are required to be able to open SSH/SCP connections to hive nodes.
         /// </para>
         /// </remarks>
-        public static ClusterProxy OpenCluster(string sshCredentialsSecret = null)
+        public static HiveProxy OpenHive(string sshCredentialsSecret = null)
         {
-            log.LogInfo(() => "Connecting to cluster.");
+            log.LogInfo(() => "Connecting to hive.");
 
             if (IsConnected)
             {
-                return Cluster;
+                return Hive;
             }
 
             if (Environment.GetEnvironmentVariable("NEON_CLUSTER") == null)
             {
                 // It looks like the host node's [/etc/neoncluster/env-host] script was not
                 // mapped into the current container/process and executed to initialize 
-                // important cluster service environment variables.  We'll go ahead and
+                // important hive service environment variables.  We'll go ahead and
                 // set the important ones here.
 
                 Environment.SetEnvironmentVariable("VAULT_ADDR", $"https://neon-vault.cluster:{HiveHostPorts.ProxyVault}");
@@ -778,11 +778,11 @@ namespace Neon.Hive
                 }
             }
 
-            // Load the cluster definition from Consul and initialize the [Cluster] property.
-            // Note that we need to hack [GetDefinitionAsync()] into believing that the cluster
+            // Load the hive definition from Consul and initialize the [Hive] property.
+            // Note that we need to hack [GetDefinitionAsync()] into believing that the hive
             // is already connected for this to work.
 
-            ClusterDefinition definition;
+            HiveDefinition definition;
 
             try
             {
@@ -796,13 +796,13 @@ namespace Neon.Hive
 
             log.LogInfo(() => $"Connecting to [{definition.Name}].");
 
-            ClusterLogin = new ClusterLogin()
+            HiveLogin = new HiveLogin()
             {
                 Definition = definition
             };
 
-            var cluster = OpenCluster(
-                new Hive.ClusterProxy(ClusterLogin,
+            var hive = OpenHive(
+                new Hive.HiveProxy(HiveLogin,
                     (name, publicAddress, privateAddress) =>
                     {
                         var proxy = new SshProxy<NodeDefinition>(name, publicAddress, privateAddress, sshCredentials, null);
@@ -813,66 +813,66 @@ namespace Neon.Hive
                         return proxy;
                     }));
 
-            return cluster;
+            return hive;
         }
 
         /// <summary>
-        /// Connects to a cluster using a <see cref="ClusterProxy"/>.  Note that this version does not
-        /// fully initialize the <see cref="ClusterLogin"/> property.
+        /// Connects to a hive using a <see cref="HiveProxy"/>.  Note that this version does not
+        /// fully initialize the <see cref="HiveLogin"/> property.
         /// </summary>
-        /// <param name="cluster">The cluster proxy.</param>
-        /// <returns>The <see cref="ClusterProxy"/>.</returns>
-        public static ClusterProxy OpenCluster(ClusterProxy cluster)
+        /// <param name="hive">The hive proxy.</param>
+        /// <returns>The <see cref="HiveProxy"/>.</returns>
+        public static HiveProxy OpenHive(HiveProxy hive)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
 
             if (IsConnected)
             {
-                return HiveHelper.Cluster;
+                return HiveHelper.Hive;
             }
 
             IsConnected = true;
-            Cluster     = cluster;
+            Hive       = hive;
 
-           if (ClusterLogin == null)
+           if (HiveLogin == null)
             {
-                ClusterLogin =
-                    new ClusterLogin()
+                HiveLogin =
+                    new HiveLogin()
                     {
-                        Definition = cluster.Definition
+                        Definition = hive.Definition
                     };
             }
 
             // Initialize some properties.
 
-            var clusterDefinition = Cluster.Definition;
-            var manager           = Cluster.GetHealthyManager(ClusterProxy.HealthyManagerMode.ReturnFirst);
+            var hiveDefinition = Hive.Definition;
+            var manager        = Hive.GetHealthyManager(HiveProxy.HealthyManagerMode.ReturnFirst);
 
             // Simulate the environment variables initialized by a mounted [env-host] script.
 
             var hostingProvider = string.Empty;
 
-            if (cluster.Definition.Hosting != null)
+            if (hive.Definition.Hosting != null)
             {
-                hostingProvider = cluster.Definition.Hosting.Environment.ToString().ToLowerInvariant();
+                hostingProvider = hive.Definition.Hosting.Environment.ToString().ToLowerInvariant();
             }
 
-            Environment.SetEnvironmentVariable("NEON_CLUSTER", clusterDefinition.Name);
-            Environment.SetEnvironmentVariable("NEON_DATACENTER", clusterDefinition.Datacenter);
-            Environment.SetEnvironmentVariable("NEON_ENVIRONMENT", clusterDefinition.Environment.ToString().ToUpperInvariant());
+            Environment.SetEnvironmentVariable("NEON_CLUSTER", hiveDefinition.Name);
+            Environment.SetEnvironmentVariable("NEON_DATACENTER", hiveDefinition.Datacenter);
+            Environment.SetEnvironmentVariable("NEON_ENVIRONMENT", hiveDefinition.Environment.ToString().ToUpperInvariant());
             Environment.SetEnvironmentVariable("NEON_HOSTING", hostingProvider);
             Environment.SetEnvironmentVariable("NEON_NODE_NAME", manager.Name);
             Environment.SetEnvironmentVariable("NEON_NODE_ROLE", manager.Metadata.Role);
             Environment.SetEnvironmentVariable("NEON_NODE_IP", manager.Metadata.PrivateAddress.ToString());
             Environment.SetEnvironmentVariable("NEON_NODE_SSD", manager.Metadata.Labels.StorageSSD ? "true" : "false");
-            Environment.SetEnvironmentVariable("VAULT_ADDR", $"{clusterDefinition.Vault.GetDirectUri(manager.Name)}");
-            Environment.SetEnvironmentVariable("VAULT_DIRECT_ADDR", $"{clusterDefinition.Vault.GetDirectUri(manager.Name)}");
-            Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"{HiveHostNames.Consul}:{clusterDefinition.Consul.Port}");
-            Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{HiveHostNames.Consul}:{clusterDefinition.Consul.Port}");
-            Environment.SetEnvironmentVariable("NEON_APT_PROXY", GetPackageProxyReferences(clusterDefinition));
+            Environment.SetEnvironmentVariable("VAULT_ADDR", $"{hiveDefinition.Vault.GetDirectUri(manager.Name)}");
+            Environment.SetEnvironmentVariable("VAULT_DIRECT_ADDR", $"{hiveDefinition.Vault.GetDirectUri(manager.Name)}");
+            Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+            Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{HiveHostNames.Consul}:{hiveDefinition.Consul.Port}");
+            Environment.SetEnvironmentVariable("NEON_APT_PROXY", GetPackageProxyReferences(hiveDefinition));
 
             // Temporarily modify the local DNS resolver hosts file so we'll be able
-            // resolve common cluster hostnames.
+            // resolve common hive hostnames.
 
             var hosts = new Dictionary<string, IPAddress>();
 
@@ -886,7 +886,7 @@ namespace Neon.Hive
             HiveHelper.secrets = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
             HiveHelper.configs = new Dictionary<string, string>(StringComparer.InvariantCultureIgnoreCase);
 
-            return HiveHelper.Cluster;
+            return HiveHelper.Hive;
         }
 
         /// <summary>
@@ -904,34 +904,34 @@ namespace Neon.Hive
             IsConnected      = false;
             remoteConnection = false;
 
-            log.LogInfo("Emulating cluster close.");
+            log.LogInfo("Emulating hive close.");
 
             NetHelper.ModifyHostsFile();
         }
 
         /// <summary>
-        /// Verifies that a cluster is connected.
+        /// Verifies that a hive is connected.
         /// </summary>
-        /// <exception cref="InvalidOperationException">Thrown if a cluster is not connected.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if a hive is not connected.</exception>
         private static void VerifyConnected()
         {
             if (!IsConnected)
             {
-                throw new InvalidOperationException("Cluster is not connected.");
+                throw new InvalidOperationException("Hive is not connected.");
             }
         }
 
         /// <summary>
-        /// Returns the APT package proxy references for a cluster definition as a space separated list.
+        /// Returns the APT package proxy references for a hive definition as a space separated list.
         /// </summary>
         /// <returns>The space separated list of package proxy references formatted as HOST_OR_IP:PORT.</returns>
-        public static string GetPackageProxyReferences(ClusterDefinition clusterDefinition)
+        public static string GetPackageProxyReferences(HiveDefinition hiveDefinition)
         {
             // Convert the package cache URIs from a list of comma separated HTTP URIs to
             // a space separated list of hostname/ports.  Note that we'll use the proxy
             // caches on the manager nodes if no cache URIs are specified.
 
-            var packageProxy     = clusterDefinition.PackageProxy ?? string.Empty;
+            var packageProxy     = hiveDefinition.PackageProxy ?? string.Empty;
             var packageCacheRefs = string.Empty;
 
             foreach (var uriString in packageProxy.Split(','))
@@ -954,7 +954,7 @@ namespace Neon.Hive
                 // Configure the managers as proxy caches if no other
                 // proxies are specified.
 
-                foreach (var manager in clusterDefinition.Managers)
+                foreach (var manager in hiveDefinition.Managers)
                 {
                     if (packageCacheRefs.Length > 0)
                     {
@@ -977,7 +977,7 @@ namespace Neon.Hive
         /// <para>
         /// This method can be used to retrieve a secret provisioned to a service via the
         /// Docker secrets feature or a secret provided to <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> 
-        /// when we're emulating running the application as a cluster container.
+        /// when we're emulating running the application as a hive container.
         /// </para>
         /// <para>
         /// Docker provisions secrets by mounting a <b>tmpfs</b> file system at <b>/var/run/secrets</b>
@@ -1029,7 +1029,7 @@ namespace Neon.Hive
         /// <para>
         /// This method can be used to retrieve a secret provisioned to a service via the
         /// Docker secrets feature or a secret provided to <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> 
-        /// when we're emulating running the application as a cluster container.
+        /// when we're emulating running the application as a hive container.
         /// </para>
         /// <para>
         /// Docker provisions secrets by mounting a <b>tmpfs</b> file system at <b>/var/run/secrets</b>
@@ -1067,7 +1067,7 @@ namespace Neon.Hive
         /// <para>
         /// This method can be used to retrieve a config provisioned to a service via the
         /// Docker configs feature or a config provided to <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> 
-        /// when we're emulating running the application as a cluster container.
+        /// when we're emulating running the application as a hive container.
         /// </para>
         /// <para>
         /// Docker provisions configs by mounting the file at <b>/CONFIG-NAME</b> by default.
@@ -1118,7 +1118,7 @@ namespace Neon.Hive
         /// <para>
         /// This method can be used to retrieve a config provisioned to a container via the
         /// Docker configs feature or a config provided to <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> 
-        /// when we're emulating running the application as a cluster container.
+        /// when we're emulating running the application as a hive container.
         /// </para>
         /// <para>
         /// Docker provisions configs by mounting the file at <b>/CONFIG-NAME</b> by default.
@@ -1147,10 +1147,10 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns a client that can access the cluster Consul service.
+        /// Returns a client that can access the hive Consul service.
         /// </summary>
         /// <returns>A <see cref="ConsulClient"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if no cluster is connected.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if no hive is connected.</exception>
         public static ConsulClient OpenConsul()
         {
             VerifyConnected();
@@ -1164,7 +1164,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns an open cluster Consul client.
+        /// Returns an open hive Consul client.
         /// </summary>
         /// <remarks>
         /// <note>
@@ -1195,7 +1195,7 @@ namespace Neon.Hive
 
             if (remoteConnection)
             {
-                settings = new DockerSettings(Cluster.GetHealthyManager().PrivateAddress);
+                settings = new DockerSettings(Hive.GetHealthyManager().PrivateAddress);
             }
             else
             {
@@ -1206,29 +1206,29 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Retrieves the current cluster definition from Consul, optionally comparing the
-        /// the hashes of the persisted cluster with the cluster passed as a performance 
+        /// Retrieves the current hive definition from Consul, optionally comparing the
+        /// the hashes of the persisted hive with the hive passed as a performance 
         /// improvement.
         /// </summary>
         /// <param name="cachedDefinition">The optional cached definition to be compared.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
-        /// <returns>The cluster definition.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if no cluster is connected.</exception>
-        /// <exception cref="KeyNotFoundException">Thrown if the cluster definition has not been persisted to the cluster.</exception>
+        /// <returns>The hive definition.</returns>
+        /// <exception cref="InvalidOperationException">Thrown if no hive is connected.</exception>
+        /// <exception cref="KeyNotFoundException">Thrown if the hive definition has not been persisted to the hive.</exception>
         /// <remarks>
         /// <para>
         /// If <paramref name="cachedDefinition"/> is passed as non-null then the method will first compute
-        /// its hash and then retrieve the hash for current cluster definition from Consul.  Then the method
+        /// its hash and then retrieve the hash for current hive definition from Consul.  Then the method
         /// compares the hash returned with the hash for the definition passed.  If the two hashes 
         /// match, then the definition passed is returned (avoiding a potentially large download from Consul).
         /// Otherwise, we'll retrieve the entire definition.
         /// </para>
         /// <para>
-        /// This optimizes the common case where the <b>neon-cli</b> is caching the cluster definition
-        /// locally within the cluster login and where the cluster definition changes infrequently.
+        /// This optimizes the common case where the <b>neon-cli</b> is caching the hive definition
+        /// locally within the hive login and where the hive definition changes infrequently.
         /// </para>
         /// </remarks>
-        public static async Task<ClusterDefinition> GetDefinitionAsync(ClusterDefinition cachedDefinition = null, CancellationToken cancellationToken = default)
+        public static async Task<HiveDefinition> GetDefinitionAsync(HiveDefinition cachedDefinition = null, CancellationToken cancellationToken = default)
         {
             VerifyConnected();
 
@@ -1240,16 +1240,16 @@ namespace Neon.Hive
                 return cachedDefinition;
             }
 
-            // If we're not running inside the cluster, we'll do a quick check to see 
+            // If we're not running inside the hive, we'll do a quick check to see 
             // if we have any healthy manager nodes.  If not, then we'll return the 
             // cached definition (if there is one).
             //
-            // We'll query Consul directly if we're running in the cluster.
+            // We'll query Consul directly if we're running in the hive.
 
             if (remoteConnection && cachedDefinition != null)
             {
-                var cluster = new ClusterProxy(cachedDefinition);
-                var manager = cluster.GetHealthyManager(ClusterProxy.HealthyManagerMode.ReturnNull);
+                var hive    = new HiveProxy(cachedDefinition);
+                var manager = hive.GetHealthyManager(HiveProxy.HealthyManagerMode.ReturnNull);
 
                 if (manager == null)
                 {
@@ -1267,11 +1267,11 @@ namespace Neon.Hive
 
                     try
                     {
-                        var hash = await consul.KV.GetStringOrDefault($"neon/cluster/{HiveGlobals.DefinitionHash}");
+                        var hash = await consul.KV.GetStringOrDefault($"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionHash}");
 
                         if (hash == null)
                         {
-                            // It's possible (but super rare) that the cluster definition might
+                            // It's possible (but super rare) that the hive definition might
                             // exist without the hash.  In this case, we'll just drop through
                             // and try reading the full definition below.
                         }
@@ -1283,8 +1283,8 @@ namespace Neon.Hive
                     catch (Exception e)
                     {
                         // This is probably an [HttpRequestException] or [SocketException]
-                        // indicating that we could not contact the cluster Consul.  We'll 
-                        // just returned the cached cluster definition in this situation 
+                        // indicating that we could not contact the hive Consul.  We'll 
+                        // just returned the cached hive definition in this situation 
                         // (if we have one).
 
                         if (cachedDefinition != null)
@@ -1300,16 +1300,16 @@ namespace Neon.Hive
 
                 try
                 {
-                    var deflated = await consul.KV.GetBytes($"neon/cluster/{HiveGlobals.DefinitionDeflate}");
+                    var deflated = await consul.KV.GetBytes($"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionDeflate}");
                     var json     = NeonHelper.DecompressString(deflated);
 
                     try
                     {
-                        return NeonHelper.JsonDeserialize<ClusterDefinition>(json);
+                        return NeonHelper.JsonDeserialize<HiveDefinition>(json);
                     }
                     catch (Exception e2)
                     {
-                        throw new HiveException($"[{e2.GetType().Name}]: Cannot deserialize remote cluster definition.", e2);
+                        throw new HiveException($"[{e2.GetType().Name}]: Cannot deserialize remote hive definition.", e2);
                     }
                 }
                 catch (HiveException)
@@ -1319,8 +1319,8 @@ namespace Neon.Hive
                 catch (Exception e)
                 {
                     // This is probably an [HttpRequestException] or [SocketException]
-                    // indicating that we could not contact the cluster Consul.  We'll 
-                    // just returned the cached cluster definition in this situation 
+                    // indicating that we could not contact the hive Consul.  We'll 
+                    // just returned the cached hive definition in this situation 
                     // (if we have one).
 
                     if (cachedDefinition != null)
@@ -1336,13 +1336,13 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Persists the cluster definition to Consul.
+        /// Persists the hive definition to Consul.
         /// </summary>
-        /// <param name="definition">The cluster definition.</param>
+        /// <param name="definition">The hive definition.</param>
         /// <param name="savePets">Optionally persists the pet definitions to Consul.</param>
         /// <param name="cancellationToken">The optional cancellation token.</param>
-        /// <exception cref="InvalidOperationException">Thrown if no cluster is connected.</exception>
-        public async static Task PutDefinitionAsync(ClusterDefinition definition, bool savePets = false, CancellationToken cancellationToken = default)
+        /// <exception cref="InvalidOperationException">Thrown if no hive is connected.</exception>
+        public async static Task PutDefinitionAsync(HiveDefinition definition, bool savePets = false, CancellationToken cancellationToken = default)
         {
             Covenant.Requires<ArgumentNullException>(definition != null);
 
@@ -1354,9 +1354,9 @@ namespace Neon.Hive
             var deflatedFullJson = NeonHelper.CompressString(fullJson);
 
             // [neon-cluster-manager] expects the pet node definitions to be persisted to
-            // Consul at [neon/cluster/pets-definition] so that it can include any pets in the
-            // cluster definition file consumed by [neon-cli] before it executes any 
-            // cluster related commands.
+            // Consul at [neon/global/pets-definition] so that it can include any pets
+            // in the hive definition file consumed by [neon-cli] before it executes any 
+            // hive related commands.
 
             var petDefinitions = new Dictionary<string, NodeDefinition>();
 
@@ -1376,15 +1376,15 @@ namespace Neon.Hive
 
                 var operations = new List<KVTxnOp>()
                     {
-                        new KVTxnOp($"neon/cluster/{HiveGlobals.DefinitionDeflate}", KVTxnVerb.Set) { Value = deflatedFullJson },
-                        new KVTxnOp($"neon/cluster/{HiveGlobals.DefinitionHash}", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(definition.Hash) }
+                        new KVTxnOp($"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionDeflate}", KVTxnVerb.Set) { Value = deflatedFullJson },
+                        new KVTxnOp($"{HiveConst.GlobalKey}/{HiveGlobals.DefinitionHash}", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(definition.Hash) }
                     };
 
                 // Add any pets to the transaction if enabled.
 
                 if (savePets)
                 {
-                    operations.Add(new KVTxnOp($"neon/cluster/{HiveGlobals.PetsDefinition}", KVTxnVerb.Set) { Value = petsJsonBytes });
+                    operations.Add(new KVTxnOp($"{HiveConst.GlobalKey}/{HiveGlobals.PetsDefinition}", KVTxnVerb.Set) { Value = petsJsonBytes });
                 }
 
                 await consul.KV.Txn(operations);
@@ -1392,11 +1392,11 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns a client that can access the cluster Vault secret management service using a Vault token.
+        /// Returns a client that can access the hive Vault secret management service using a Vault token.
         /// </summary>
         /// <param name="token">The Vault token.</param>
         /// <returns>A <see cref="VaultClient"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if no cluster is connected.</exception>
+        /// <exception cref="InvalidOperationException">Thrown if no hive is connected.</exception>
         public static VaultClient OpenVault(string token)
         {
             Covenant.Requires<ArgumentNullException>(!string.IsNullOrEmpty(token));
@@ -1417,12 +1417,12 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns a client that can access the cluster Vault secret management service specified credentials.
+        /// Returns a client that can access the hive Vault secret management service specified credentials.
         /// </summary>
         /// <param name="credentials">The credentials.</param>
         /// <returns>A <see cref="VaultClient"/>.</returns>
-        /// <exception cref="InvalidOperationException">Thrown if no cluster is connected.</exception>
-        public static VaultClient OpenVault(ClusterCredentials credentials)
+        /// <exception cref="InvalidOperationException">Thrown if no hive is connected.</exception>
+        public static VaultClient OpenVault(HiveCredentials credentials)
         {
             Covenant.Requires<ArgumentNullException>(credentials != null);
 
@@ -1432,11 +1432,11 @@ namespace Neon.Hive
 
             switch (credentials.Type)
             {
-                case ClusterCredentialsType.VaultAppRole:
+                case HiveCredentialsType.VaultAppRole:
 
                     return VaultClient.OpenWithAppRole(VaultUri, credentials.VaultRoleId, credentials.VaultSecretId);
 
-                case ClusterCredentialsType.VaultToken:
+                case HiveCredentialsType.VaultToken:
 
                     return VaultClient.OpenWithToken(VaultUri, credentials.VaultToken);
 

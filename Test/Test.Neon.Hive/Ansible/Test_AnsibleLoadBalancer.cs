@@ -31,8 +31,8 @@ namespace TestNeonCluster
 {
     public class Test_AnsibleLoadBalancer : IClassFixture<HiveFixture>
     {
-        private HiveFixture     hive;
-        private ClusterProxy    cluster;
+        private HiveFixture     hiveFixture;
+        private HiveProxy       hive;
 
         public Test_AnsibleLoadBalancer(HiveFixture fixture)
         {
@@ -41,8 +41,8 @@ namespace TestNeonCluster
                 fixture.ClearLoadBalancers();
             }
 
-            this.hive    = fixture;
-            this.cluster = fixture.Cluster;
+            this.hiveFixture = fixture;
+            this.hive        = fixture.Hive;
         }
 
         [Fact]
@@ -76,7 +76,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var rule = (LoadBalancerHttpRule)cluster.PublicLoadBalancer.GetRule("test");
+            var rule = (LoadBalancerHttpRule)hive.PublicLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -115,7 +115,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)cluster.PublicLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)hive.PublicLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -155,7 +155,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)cluster.PublicLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)hive.PublicLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -194,7 +194,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)cluster.PublicLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)hive.PublicLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -226,7 +226,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)cluster.PublicLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)hive.PublicLoadBalancer.GetRule("test");
 
             Assert.Null(rule);
 
@@ -250,7 +250,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)cluster.PublicLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)hive.PublicLoadBalancer.GetRule("test");
 
             Assert.Null(rule);
 
@@ -275,7 +275,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)cluster.PublicLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)hive.PublicLoadBalancer.GetRule("test");
 
             Assert.Null(rule);
         }
@@ -311,7 +311,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            var rule = (LoadBalancerHttpRule)cluster.PrivateLoadBalancer.GetRule("test");
+            var rule = (LoadBalancerHttpRule)hive.PrivateLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -350,7 +350,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)cluster.PrivateLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)hive.PrivateLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -390,7 +390,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)cluster.PrivateLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)hive.PrivateLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -429,7 +429,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)cluster.PrivateLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)hive.PrivateLoadBalancer.GetRule("test");
 
             Assert.NotNull(rule);
             Assert.Equal("test", rule.Name);
@@ -461,7 +461,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)cluster.PrivateLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)hive.PrivateLoadBalancer.GetRule("test");
 
             Assert.Null(rule);
 
@@ -485,7 +485,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.False(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)cluster.PrivateLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)hive.PrivateLoadBalancer.GetRule("test");
 
             Assert.Null(rule);
 
@@ -510,7 +510,7 @@ $@"
             Assert.True(taskResult.Success);
             Assert.True(taskResult.Changed);
 
-            rule = (LoadBalancerHttpRule)cluster.PrivateLoadBalancer.GetRule("test");
+            rule = (LoadBalancerHttpRule)hive.PrivateLoadBalancer.GetRule("test");
 
             Assert.Null(rule);
         }

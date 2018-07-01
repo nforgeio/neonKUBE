@@ -12,7 +12,7 @@ This service dynamically generates HAProxy configurations from load balancer rul
 
 neonHIVEs deploy two general purpose reverse HTTP/TCP proxy services:
 
-* **neon-proxy-public** which implements the public load balancer and is responsible for routing external network traffic (e.g. from an Internet facing load balancer or router) to cluster services.
+* **neon-proxy-public** which implements the public load balancer and is responsible for routing external network traffic (e.g. from an Internet facing load balancer or router) to hive services.
 
 * **neon-proxy-private** which implements the private load balancer is used for internal routing for the scenarios the Docker overlay ingress network doesn't address out-of-the-box (e.g. load balancing and fail-over for groups of stateful containers that cannot be deployed as Docker swarm mode services).
 
@@ -49,7 +49,7 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 
 # Consul Settings
 
-**neon-proxy-manager** retrieves its settings from Consul as well as the active route definitions for the **public** and **private** cluster proxies.  Consul also holds the generated HAProxy configurations that the **neon-proxy** service instances serve.
+**neon-proxy-manager** retrieves its settings from Consul as well as the active route definitions for the **public** and **private** hive proxies.  Consul also holds the generated HAProxy configurations that the **neon-proxy** service instances serve.
 
 &nbsp;&nbsp;&nbsp;&nbsp;`neon/service:`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`neon-proxy-manager:`
@@ -95,15 +95,15 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 
 * **cert-warn-days** (*double*) - number of days in advance to begin warning of certificate expirations.
 
-* **proxies/*/cache-conf** - Holds public or private proxy’s generated Varnish Cache VCL configuration file as plain text.
+* **proxies/*/cache-conf** - Holds public or private proxyï¿½s generated Varnish Cache VCL configuration file as plain text.
 
-* **proxies/*/cache-hash** - MD5 hash of the public or private proxy’s **cache-conf**.  This is used by **neon-proxy-cache** service instances to detect when the caching configuration has changed.
+* **proxies/*/cache-hash** - MD5 hash of the public or private proxyï¿½s **cache-conf**.  This is used by **neon-proxy-cache** service instances to detect when the caching configuration has changed.
 
 * **proxies/.../proxy-conf** - public or private proxy's generated HAProxy configuration as a ZIP archive.
 
 * **proxies/.../proxy-hash** - MD5 hash of the public or private load balancer's **-proxy-conf** archive combined with the hash of all of the referenced certificates.  This is used by **neon-proxy** instances to detect when the proxy configuration has changed.
 
-* **status/...** (*json*) - proxy rule status at the time the **neon-proxy-manager** last processed cluster rules for the named load balancer.
+* **status/...** (*json*) - proxy rule status at the time the **neon-proxy-manager** last processed hive rules for the named load balancer.
 
 * **conf** - root key for proxy settings that need to be monitored for changes.
 
@@ -127,7 +127,7 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 
 **neon-proxy-manager** is typically deployed only to manager nodes.  The best practice is to deploy this as a Docker swarm mode service with one replica constrained to manager nodes with **mode=global**.  This relies on Docker to ensure that only one instance is running.
 
-**neon-cli** deploys **neon-proxy-manager** when the cluster is provisioned using this Docker command:
+**neon-cli** deploys **neon-proxy-manager** when the hive is provisioned using this Docker command:
 
 ````
 docker service create \

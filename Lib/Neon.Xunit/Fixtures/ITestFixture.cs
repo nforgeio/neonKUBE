@@ -40,7 +40,7 @@ namespace Neon.Xunit
     /// <item>
     /// Initializing a neonHIVE and then configuring it with certificates,
     /// routes, services etc. and then performing tests against the
-    /// actual cluster.
+    /// actual hive.
     /// </item>
     /// </list>
     /// <para>

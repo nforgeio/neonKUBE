@@ -14,12 +14,12 @@ namespace Neon.Hive
     public static class NodeRole
     {
         /// <summary>
-        /// The node is a a cluster manager.
+        /// The node is a a hive manager.
         /// </summary>
         public const string Manager = "manager";
 
         /// <summary>
-        /// The node is a cluster worker.
+        /// The node is a hive worker.
         /// </summary>
         public const string Worker = "worker";
 

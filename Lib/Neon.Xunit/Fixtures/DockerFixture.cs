@@ -49,8 +49,8 @@ namespace Neon.Xunit
     /// </para>
     /// <note>
     /// This fixture works only for local Docker instances that <b>ARE NOT</b>
-    /// members of a multi-node cluster as a safety measure to help avoid the
-    /// possiblity of accidentially wiping out a production cluster.
+    /// members of a multi-node hive as a safety measure to help avoid the
+    /// possiblity of accidentially wiping out a production hive.
     /// </note>
     /// <note>
     /// The fixture <see cref="Reset"/> method does not purge images from the target
@@ -65,10 +65,10 @@ namespace Neon.Xunit
     /// that accepts a <see cref="DockerFixture"/> as the only argument.  Then
     /// you can call it's <see cref="TestFixture.Initialize(Action)"/> method
     /// within the constructor and optionally have your custom <see cref="Action"/>
-    /// use the fixture to initialize cluster services, networks, secrets, etc.
+    /// use the fixture to initialize hive services, networks, secrets, etc.
     /// </para>
     /// <para>
-    /// This fixture provides several methods for managing the cluster state.
+    /// This fixture provides several methods for managing the hive state.
     /// These may be called within the test class constructor's action method,
     /// within the test constructor but outside of tha action, or within
     /// the test methods:
@@ -169,12 +169,12 @@ namespace Neon.Xunit
     ///     <term><b>initialize once</b></term>
     ///     <description>
     ///     <para>
-    ///     The basic idea here is to have your test class initialize the cluster
+    ///     The basic idea here is to have your test class initialize the hive
     ///     once within the test class constructor inside of the initialize action
     ///     with common state and services that all of the tests can access.
     ///     </para>
     ///     <para>
-    ///     This will be quite a bit faster than reconfiguring the cluster at the
+    ///     This will be quite a bit faster than reconfiguring the hive at the
     ///     beginning of every test and can work well for many situations but it
     ///     assumes that your test methods guarantee that running any test in 
     ///     any order will not impact the results of subsequent tests.  A good 
@@ -186,10 +186,10 @@ namespace Neon.Xunit
     /// <item>
     ///     <term><b>initialize every test</b></term>
     ///     <description>
-    ///     For common scenarios where the cluster must be reset before every test,
+    ///     For common scenarios where the hive must be reset before every test,
     ///     you can call <see cref="Reset()"/> within the test class constructor
     ///     (but outside of the custom initialization <see cref="Action"/> to
-    ///     reset the cluster state before the next test method is invoked.
+    ///     reset the hive state before the next test method is invoked.
     ///     </description>
     /// </item>
     /// </list>
@@ -538,7 +538,7 @@ namespace Neon.Xunit
         /// </para>
         /// <note>
         /// This method is defined as <c>virtual</c> so that derived classes
-        /// can modify how Docker is called.  For example, the <c>ClusterFixture</c>
+        /// can modify how Docker is called.  For example, the <c>HiveFixture</c>
         /// class implemented in another assembly will override this to run
         /// the <b>docker</b> within a neonHIVE using <b>neon-cli</b>.
         /// </note>
@@ -563,7 +563,7 @@ namespace Neon.Xunit
         /// </para>
         /// <note>
         /// This method is defined as <c>virtual</c> so that derived classes
-        /// can modify how Docker is called.  For example, the <c>ClusterFixture</c>
+        /// can modify how Docker is called.  For example, the <c>HiveFixture</c>
         /// class implemented in another assembly will override this to run
         /// the <b>docker</b> within a neonHIVE using <b>neon-cli</b>.
         /// </note>
@@ -620,7 +620,7 @@ namespace Neon.Xunit
 
             if (result.OutputText.Contains("Swarm: active"))
             {
-                // Ensure that this is a single node cluster.
+                // Ensure that this is a single node hive.
 
                 var isSingleNode = false;
 
@@ -638,7 +638,7 @@ namespace Neon.Xunit
 
                 if (!isSingleNode)
                 {
-                    throw new InvalidOperationException("Cannot reset the cluster because it has more than one node.  Testing on multi-node clusters is not allowed as a safety measure to avoid accidentially wiping out a production cluster.");
+                    throw new InvalidOperationException("Cannot reset the hive because it has more than one node.  Testing on multi-node clusters is not allowed as a safety measure to avoid accidentially wiping out a production hive.");
                 }
 
                 // Leave the swarm, effectively reseting all swarm state.
@@ -1744,7 +1744,7 @@ namespace Neon.Xunit
         // Volumes
 
         /// <summary>
-        /// Removes all cluster volumes.
+        /// Removes all hive volumes.
         /// </summary>
         /// <param name="removeSystem">Optionally remove system volumes as well.</param>
         /// <remarks>

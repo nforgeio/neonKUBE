@@ -31,14 +31,14 @@ namespace NeonCli
 
         private class LoginInfo
         {
-            public LoginInfo(ClusterLogin clusterLogin, bool viaVpn)
+            public LoginInfo(HiveLogin hiveLogin, bool viaVpn)
             {
-                Name   = clusterLogin.LoginName;
+                Name   = hiveLogin.LoginName;
                 ViaVpn = viaVpn;
 
                 var info = string.Empty;
 
-                if (clusterLogin.IsRoot)
+                if (hiveLogin.IsRoot)
                 {
                     if (info.Length > 0)
                     {
@@ -48,7 +48,7 @@ namespace NeonCli
                     info += "root";
                 }
 
-                if (clusterLogin.SetupPending)
+                if (hiveLogin.SetupPending)
                 {
                     if (info.Length > 0)
                     {
@@ -87,7 +87,7 @@ namespace NeonCli
         // Implementation
         
         private const string usage = @"
-Lists the cluster logins available on the local computer.
+Lists the hive logins available on the local computer.
 
 USAGE:
 
@@ -117,14 +117,14 @@ USAGE:
         /// <inheritdoc/>
         public override void Run(CommandLine commandLine)
         {
-            var current = CurrentClusterLogin.Load();
+            var current = CurrentHiveLogin.Load();
             var logins  = new List<LoginInfo>();
 
-            foreach (var file in Directory.EnumerateFiles(Program.ClusterLoginFolder, "*.login.json", SearchOption.TopDirectoryOnly))
+            foreach (var file in Directory.EnumerateFiles(Program.HiveLoginFolder, "*.login.json", SearchOption.TopDirectoryOnly))
             {
                 try
                 {
-                    var login  = NeonHelper.JsonDeserialize<ClusterLogin>(File.ReadAllText(file));
+                    var login  = NeonHelper.JsonDeserialize<HiveLogin>(File.ReadAllText(file));
                     var useVpn = false;
 
                     if (current != null && string.Equals(current.Login, login.LoginName, StringComparison.OrdinalIgnoreCase))
@@ -145,7 +145,7 @@ USAGE:
 
             if (logins.Count == 0)
             {
-                Console.Error.WriteLine("*** No cluster logins");
+                Console.Error.WriteLine("*** No hive logins");
             }
             else
             {

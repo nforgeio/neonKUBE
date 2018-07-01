@@ -16,7 +16,7 @@ namespace Neon.Hive
 {
     /// <summary>
     /// Manages the VPN certificate authority files  These files are packaged into a
-    /// ZIP archive, encrypted and then stored in the cluster's Vault.
+    /// ZIP archive, encrypted and then stored in the hive's Vault.
     /// </summary>
     public sealed class VpnCaFiles : IDisposable
     {
@@ -398,8 +398,8 @@ namespace Neon.Hive
         /// Returns the certificate for the named entity where <b>server</b> is reserved
         /// for the OpenVPN servers, <b>ca</b> is reserved for the certificate authority,
         /// and <b>root</b> is reserved for the initial operator credentials when the
-        /// cluster was first provisioned.  Other names can be assigned to specific 
-        /// cluster operators.
+        /// hive was first provisioned.  Other names can be assigned to specific 
+        /// hive operators.
         /// </summary>
         /// <param name="name">The entity name.</param>
         /// <returns>The entity's certificate.</returns>
@@ -418,8 +418,8 @@ namespace Neon.Hive
         /// Returns the private key for the named entity where <b>server</b> is reserved
         /// for the OpenVPN servers, <b>ca</b> is reserved for the certificate authority,
         /// and <b>root</b> is reserved for the initial operator credentials when the
-        /// cluster was first provisioned.  Other names can be assigned to specific 
-        /// cluster operators.
+        /// hive was first provisioned.  Other names can be assigned to specific 
+        /// hive operators.
         /// </summary>
         /// <param name="name">The entity name.</param>
         /// <returns>The entity's private key.</returns>

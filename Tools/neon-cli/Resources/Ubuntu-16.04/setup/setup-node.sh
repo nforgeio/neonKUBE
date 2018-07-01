@@ -28,7 +28,7 @@ echo "**********************************************" 1>&2
 echo "** SETUP-NODE                               **" 1>&2
 echo "**********************************************" 1>&2
 
-# Load the cluster configuration and setup utilities.
+# Load the hive configuration and setup utilities.
 
 . $<load-cluster-config>
 . setup-utility.sh
@@ -325,7 +325,7 @@ systemctl restart neon-disable-thp
 # packets hitting ports 80 and 443 on any of the [eth#] network interfaces
 # to the [neon-proxy-public] on ports 5100 and 5101.
 #
-# This allows the cluster to handle standard HTTP and HTTPS traffic without
+# This allows the hive to handle standard HTTP and HTTPS traffic without
 # having to bind to the protected system ports.  This is especially usefuly
 # for deployments with brain-dead consumer quality routers that cannot forward
 # packets to a different port.
@@ -333,7 +333,7 @@ systemctl restart neon-disable-thp
 # $todo(jeff.lill):
 #
 # For now, this is hardcoded for just ports 80 & 443.  Eventually, it might be
-# handy to make this a cluster configuration setting or perhaps a [neon-cli]
+# handy to make this a hive configuration setting or perhaps a [neon-cli]
 # command so SMTP or other traffic can also be handled.
 
 # $hack(jeff.lill):
@@ -464,7 +464,7 @@ systemctl restart neon-iptables
 # We're also setting [MaxRetentionSec=86400] which limits log local retention 
 # to one day.  This overrides the default policy which will consume up to 10%
 # of the local file system while still providing enough time for operators
-# to manually review local logs when something bad happened to cluster logging.
+# to manually review local logs when something bad happened to hive logging.
 
 cat <<EOF >> /etc/systemd/journald.conf
 #------------------------------------------------------------------------------
@@ -474,13 +474,13 @@ cat <<EOF >> /etc/systemd/journald.conf
 #
 # Configure the systemd journal to perist the journal to the file system at
 # [/var/log/journal].  We need this so the node's [neon-log-host] service
-# will be able to forward the system logs to the cluster log aggregation
+# will be able to forward the system logs to the hive log aggregation
 # pipeline.
 #
 # We're also setting [MaxRetentionSec=86400] which limits log local retention 
 # to one day.  This overrides the default policy which will consume up to 10%
 # of the local file system while still providing enough time for operators
-# to manually review local logs when something bad happened to cluster logging.
+# to manually review local logs when something bad happened to hive logging.
 # 
 # See: https://www.freedesktop.org/software/systemd/man/journald.conf.html
 

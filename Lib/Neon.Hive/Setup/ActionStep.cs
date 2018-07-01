@@ -17,7 +17,7 @@ using Neon.Common;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Runs an <see cref="Action{SshProxy}"/> as a cluster setup step.
+    /// Runs an <see cref="Action{SshProxy}"/> as a hive setup step.
     /// </summary>
     public class ActionStep : ConfigStep
     {
@@ -60,11 +60,11 @@ namespace Neon.Hive
         }
 
         /// <inheritdoc/>
-        public override void Run(ClusterProxy cluster)
+        public override void Run(HiveProxy hive)
         {
-            Covenant.Requires<ArgumentNullException>(cluster != null);
+            Covenant.Requires<ArgumentNullException>(hive != null);
 
-            var node = cluster.GetNode(nodeName);
+            var node = hive.GetNode(nodeName);
 
             if (operationName != null)
             {

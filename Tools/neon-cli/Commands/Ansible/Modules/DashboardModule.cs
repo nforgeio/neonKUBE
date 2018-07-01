@@ -57,11 +57,11 @@ namespace NeonCli.Ansible
     //                                      absent
     //
     // title        no                                  title to be used for this dashboard 
-    //                                                  when displayed in the global cluster
+    //                                                  when displayed in the global hive
     //                                                  dashboard
     //
     // folder       no                                  folder where this dashboard will be in 
-    //                                                  the global cluster dashboard.
+    //                                                  the global hive dashboard.
     //
     // url          see comment                         dashboard URL. Required when [state=present]
     //
@@ -116,8 +116,8 @@ namespace NeonCli.Ansible
         /// <param name="context">The module context.</param>
         public void Run(ModuleContext context)
         {
-            var cluster = HiveHelper.Cluster;
-            var consul  = HiveHelper.Consul;
+            var hive   = HiveHelper.Hive;
+            var consul = HiveHelper.Consul;
 
             if (!context.ValidateArguments(context.Arguments, validModuleArgs))
             {
@@ -134,7 +134,7 @@ namespace NeonCli.Ansible
                 throw new ArgumentException($"[name] module argument is required.");
             }
 
-            if (!ClusterDefinition.IsValidName(name))
+            if (!HiveDefinition.IsValidName(name))
             {
                 throw new ArgumentException($"[{name}] is not a valid dashboard name.");
             }
@@ -161,7 +161,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Check if dashboard [{name}] exists.");
 
-                    if (cluster.Dashboard.Get(name) != null)
+                    if (hive.Dashboard.Get(name) != null)
                     {
                         context.WriteLine(AnsibleVerbosity.Trace, $"Dashboard [{name}] already exists.");
 
@@ -172,7 +172,7 @@ namespace NeonCli.Ansible
                         else
                         {
                             context.WriteLine(AnsibleVerbosity.Info, $"Deleting dashboard [{name}].");
-                            cluster.Dashboard.Remove(name);
+                            hive.Dashboard.Remove(name);
                             context.WriteLine(AnsibleVerbosity.Trace, $"Dashboard [{name}] deleted.");
                             context.Changed = true;
                         }
@@ -225,7 +225,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, "Validating dashboard.");
 
-                    var errors = newDashboard.Validate(cluster.Definition);
+                    var errors = newDashboard.Validate(hive.Definition);
 
                     if (errors.Count > 0)
                     {
@@ -248,7 +248,7 @@ namespace NeonCli.Ansible
 
                     context.WriteLine(AnsibleVerbosity.Trace, $"Looking for existing dashboard [{name}]");
 
-                    var existingDashboard = cluster.Dashboard.Get(name);
+                    var existingDashboard = hive.Dashboard.Get(name);
                     var changed           = false;
 
                     if (existingDashboard != null)
@@ -281,7 +281,7 @@ namespace NeonCli.Ansible
                         else
                         {
                             context.WriteLine(AnsibleVerbosity.Trace, $"Updating dashboard.");
-                            cluster.Dashboard.Set(newDashboard);
+                            hive.Dashboard.Set(newDashboard);
                             context.WriteLine(AnsibleVerbosity.Info, $"Dashboard updated.");
 
                             context.Changed = true;

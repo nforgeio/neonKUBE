@@ -205,7 +205,7 @@ namespace Neon.Hive
                 context.Error($"Load balancer rule name is required.");
             }
 
-            if (!ClusterDefinition.NameRegex.IsMatch(Name))
+            if (!HiveDefinition.NameRegex.IsMatch(Name))
             {
                 context.Error($"Load balancer rule name [{nameof(Name)}={Name}] is not valid.");
             }

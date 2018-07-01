@@ -20,7 +20,7 @@ using Neon.Net;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Describes a cluster dashboard.
+    /// Describes a hive dashboard.
     /// </summary>
     public class ClusterDashboard
     {
@@ -34,7 +34,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// The title to be used for this dashboard when displayed in the global 
-        /// cluster dashboard.
+        /// hive dashboard.
         /// This defaults to <see cref="Name"/>.
         /// </summary>
         [JsonProperty(PropertyName = "Title", Required = Required.Default, DefaultValueHandling = DefaultValueHandling.IgnoreAndPopulate)]
@@ -58,7 +58,7 @@ namespace Neon.Hive
         /// </para>
         /// <note>
         /// You may set the URL hostname to <b>healthy-manager</b> to target
-        /// the private IP address of the first healthy cluster manager node.
+        /// the private IP address of the first healthy hive manager node.
         /// </note>
         /// </summary>
         [JsonProperty(PropertyName = "Url", Required = Required.Always)]
@@ -74,11 +74,11 @@ namespace Neon.Hive
         /// <summary>
         /// Validates the dashboard.  Any warning/errors will be returned as a string list.
         /// </summary>
-        /// <param name="clusterDefinition">The current cluster definition,</param>
+        /// <param name="hiveDefinition">The current hive definition,</param>
         /// <returns>The list of warnings (if any).</returns>
-        public List<string> Validate(ClusterDefinition clusterDefinition)
+        public List<string> Validate(HiveDefinition hiveDefinition)
         {
-            Covenant.Requires<ArgumentException>(clusterDefinition != null);
+            Covenant.Requires<ArgumentException>(hiveDefinition != null);
 
             var warnings = new List<string>();
 

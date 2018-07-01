@@ -9,7 +9,7 @@ using System.Runtime.Serialization;
 namespace Neon.Hive
 {
     /// <summary>
-    /// Enumerates the types of cluster operating environments.
+    /// Enumerates the types of hive operating environments.
     /// </summary>
     public enum EnvironmentType
     {
