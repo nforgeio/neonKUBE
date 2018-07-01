@@ -10,7 +10,7 @@ From time-to-time you may see images tagged like `:BRANCH-*` where **BRANCH** id
 
 This service dynamically generates HAProxy configurations from load balancer rules and certificates persisted to Consul and Vault for neonHIVE proxies based on the [neon-proxy](https://hub.docker.com/r/neoncluster/neon-proxy/) image.
 
-neonCLUSTERs deploy two general purpose reverse HTTP/TCP proxy services:
+neonHIVEs deploy two general purpose reverse HTTP/TCP proxy services:
 
 * **neon-proxy-public** which implements the public load balancer and is responsible for routing external network traffic (e.g. from an Internet facing load balancer or router) to cluster services.
 
@@ -62,11 +62,15 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
         
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`proxies:`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`public:`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`conf: haproxy.zip`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`hash: <MD5 hash of conf+certs>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`cache-conf: varnish.vcl`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`cache-hash: <MD5 hash of cache-conf + certs>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`proxy-conf: haproxy.zip`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`proxy-hash: <MD5 hash of proxy-conf + certs>`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`private:`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`conf: haproxy.zip`
-&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`hash: <MD5 hash of conf+certs>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`cache-conf: varnish.vcl`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`cache-hash: <MD5 hash of cache-conf + certs>`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`proxy-conf: haproxy.zip`
+&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`proxy-hash: <MD5 hash of proxy-conf + certs>`
 
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`conf:`
 &nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;&nbsp;`reload`
@@ -91,9 +95,13 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 
 * **cert-warn-days** (*double*) - number of days in advance to begin warning of certificate expirations.
 
-* **proxies/.../conf** - public or private proxy's generated HAProxy configuration as a ZIP archive.
+* **proxies/*/cache-conf** - Holds public or private proxy’s generated Varnish Cache VCL configuration file as plain text.
 
-* **proxies/.../hash** - MD5 hash of the public or private load balancer's conf archive combined with the hash of all of the referenced certificates.  This is used by **neon-proxy** instances to detect when the proxy configuration has changed.
+* **proxies/*/cache-hash** - MD5 hash of the public or private proxy’s **cache-conf**.  This is used by **neon-proxy-cache** service instances to detect when the caching configuration has changed.
+
+* **proxies/.../proxy-conf** - public or private proxy's generated HAProxy configuration as a ZIP archive.
+
+* **proxies/.../proxy-hash** - MD5 hash of the public or private load balancer's **-proxy-conf** archive combined with the hash of all of the referenced certificates.  This is used by **neon-proxy** instances to detect when the proxy configuration has changed.
 
 * **status/...** (*json*) - proxy rule status at the time the **neon-proxy-manager** last processed cluster rules for the named load balancer.
 

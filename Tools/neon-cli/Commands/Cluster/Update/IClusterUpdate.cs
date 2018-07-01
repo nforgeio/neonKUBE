@@ -23,7 +23,7 @@ namespace NeonCli
     /// </summary>
     /// <remarks>
     /// <para>
-    /// neonCLUSTERs are versioned using the version number of the <b>neon-cli</b> used
+    /// neonHIVEs are versioned using the version number of the <b>neon-cli</b> used
     /// to deploy or update the cluster.  An instance of this class will be able to
     /// upgrade the cluster from an older <b>neon-cli</b> version to a newer version.
     /// Multiple updates may need to be applied to upgrade a cluster.

@@ -175,7 +175,7 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// neonCLUSTERs reserves some ports on the public Azure load balancer.
+        /// neonHIVEs reserves some ports on the public Azure load balancer.
         /// The cluster will reserve  <b>5 + node_count</b> ports beginning 
         /// at this port number which defaults to <b>37100</b>.  The first five
         /// ports will be used to direct OpenVPN client traffic to the VPN
@@ -363,12 +363,12 @@ namespace Neon.Hive
 
             if (clusterDefinition.Managers.Count() > HiveConst.MaxManagers)
             {
-                throw new ClusterDefinitionException($"Cluster manager count [{clusterDefinition.Managers.Count()}] exceeds the [{HiveConst.MaxManagers}] limit for neonCLUSTERs.");
+                throw new ClusterDefinitionException($"Cluster manager count [{clusterDefinition.Managers.Count()}] exceeds the [{HiveConst.MaxManagers}] limit for neonHIVEs.");
             }
 
             if (clusterDefinition.Nodes.Count() > AzureHelper.MaxClusterNodes)
             {
-                throw new ClusterDefinitionException($"Cluster node count [{clusterDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxClusterNodes}] limit for neonCLUSTERs deployed to Azure.");
+                throw new ClusterDefinitionException($"Cluster node count [{clusterDefinition.Nodes.Count()}] exceeds the [{AzureHelper.MaxClusterNodes}] limit for neonHIVEs deployed to Azure.");
             }
         }
     }

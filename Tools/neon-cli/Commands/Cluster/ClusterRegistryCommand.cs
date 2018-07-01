@@ -80,7 +80,7 @@ when these aren't specified.
                     registries = cluster.Registry.List();
 
                     // Special-case the Docker public registry if it's not
-                    // set explicitly.  All neonCLUSTERs implicitly reference
+                    // set explicitly.  All neonHIVEs implicitly reference
                     // the public registry.
 
                     if (!registries.Exists(r => HiveHelper.IsDockerPublicRegistry(r.Registry)))

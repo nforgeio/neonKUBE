@@ -218,6 +218,7 @@ EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "neon-cli", "neon-cli", "{17B43B9A-131C-4722-BF67-86959E2E9F85}"
 	ProjectSection(SolutionItems) = preProject
 		Releases\neon-cli\1.2.84.md = Releases\neon-cli\1.2.84.md
+		Releases\neon-cli\1.2.99.md = Releases\neon-cli\1.2.99.md
 	EndProjectSection
 EndProject
 Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "home-small2", "home-small2", "{18973726-A5D3-4706-8658-9ED658C631CE}"

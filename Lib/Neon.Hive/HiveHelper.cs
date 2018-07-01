@@ -172,7 +172,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <para>
         /// This folder will exist on developer/operator workstations that have used the <b>neon-cli</b>
-        /// to deploy and manage neonCLUSTERs.  Each known cluster will have a JSON file named
+        /// to deploy and manage neonHIVEs.  Each known cluster will have a JSON file named
         /// <b><i>cluster-name</i>.json</b> holding the serialized <see cref="Hive.ClusterLogin"/> 
         /// information for the cluster.
         /// </para>

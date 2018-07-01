@@ -1,6 +1,6 @@
 # neon-volume Docker plugin
 
-This Docker volume plugin is intended for use by neonCLUSTERs to easily bind containers and services to volumes hosted on the cluster's **CephFS** distributed file system (if this was enabled when the cluster was deployed).
+This Docker volume plugin is intended for use by neonHIVEs to easily bind containers and services to volumes hosted on the cluster's **CephFS** distributed file system (if this was enabled when the cluster was deployed).
 
 # CephFS and neonHIVE
 

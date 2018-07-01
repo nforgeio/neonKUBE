@@ -57,7 +57,7 @@ namespace Neon.Xunit.Hive
     /// neonHIVE.
     /// </para>
     /// <para>
-    /// neonCLUSTERs do not allow the <see cref="HiveFixture"/> to perform unit
+    /// neonHIVEs do not allow the <see cref="HiveFixture"/> to perform unit
     /// tests by default, as a safety measure.  You can enable this before cluster
     /// deployment by setting <see cref="ClusterDefinition.AllowUnitTesting"/><c>=true</c>
     /// or by manually invoking this command for an existing cluster:
