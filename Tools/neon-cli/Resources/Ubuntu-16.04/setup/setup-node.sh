@@ -35,8 +35,9 @@ echo "**********************************************" 1>&2
 
 # Verify that the node has been prepared.
 
-if [ ! -f ${NEON_STATE_FOLDER}/setup/setup-prep-node ] ; then
+if [ ! -f ${NEON_STATE_FOLDER}/setup/prepared ] ; then
     echo "*** ERROR: This node has not been prepared." 1>&2
+    exit 1
 fi
 
 # Ensure that setup is idempotent.
