@@ -531,7 +531,7 @@ namespace Neon.Hive
                             // happened on the first manager node because there's no
                             // other place to log this in the current design.
                             //
-                            // I suppose we could create a "global.log" file or something
+                            // I suppose we could create a [global.log] file or something
                             // and put this there and also indicate this somewhere in
                             // the console output, but this is not worth messing with
                             // right now.

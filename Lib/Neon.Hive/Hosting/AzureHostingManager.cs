@@ -51,7 +51,7 @@ namespace Neon.Hive
         // --------------------
         // The cluster is deployed behind an Azure load balancer which is configured to forward
         // TCP traffic on specified frontend ports to an internal port on any cluster node.
-        // neonCLUSTERs will encounter three types of network traffic:
+        // neonHIVEs will encounter three types of network traffic:
         //
         //      1. We provision the cluster in two available sets: one for the manager nodes
         //         and the other for the workers.  This is required because we need to tightly
@@ -82,7 +82,7 @@ namespace Neon.Hive
         //         first)  and then node name.   These load balancer mappings will be deleted once
         //         the cluster has been fully provisioned.
         //
-        //      5. VPN traffic: neonCLUSTERs deploy an internal VPN, with the cluster manager
+        //      5. VPN traffic: neonHIVEs deploy an internal VPN, with the cluster manager
         //         nodes running OpenVPN running and listening on it's standard port (1194).
         //         The Azure load balancer will be configured to NAT TCP connections from 
         //         reserved frontend ports starting at [37100] by default to internal port 1194 
@@ -100,7 +100,7 @@ namespace Neon.Hive
         //         route through the load balancers.
         //
         // Azure limits its load balancers to a maximum of 150 port mapping rules.  To make
-        // things easy, we're going to limit neonCLUSTERs deployed to Azure to 100 nodes and 150 
+        // things easy, we're going to limit neonHIVEs deployed to Azure to 100 nodes and 150 
         // hosted frontend application endpoints.  This means that we can have one SSH NAT rule
         // for each node during setup and one OpenVPN NAT rule for each manager node.
         //

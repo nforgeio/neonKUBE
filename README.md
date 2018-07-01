@@ -194,7 +194,7 @@ For example to publish a production change, a developer would:
 
 ## Cloud Environments
 
-neonCLUSTERs can currently be deployed to Microsoft Azure.  To test this, you'll need an Azure subscription and then gather the required authentication information.  The following sections describe how to accomplish this.
+neonHIVEs can currently be deployed to Microsoft Azure.  To test this, you'll need an Azure subscription and then gather the required authentication information.  The following sections describe how to accomplish this.
 
 ## Microsoft Azure
 

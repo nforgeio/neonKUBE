@@ -740,7 +740,7 @@ USAGE:
         // Management nodes host Consul service discovery, Vault secret 
         // management, and the Docker Swarm managers.
         // 
-        // neonCLUSTERs must have at least one manager node.  To have
+        // neonHIVEs must have at least one manager node.  To have
         // high availability, you may deploy three or five management node.
         // Only an odd number of management nodes are allowed up to a
         // maximum of five.  A majority of these must be healthy for the 
