@@ -1396,8 +1396,8 @@ backend http:{httpRule.Name}
 
             try
             {
-                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{loadBalancerName}/hash", cancellationToken) || 
-                    !await consul.KV.Exists($"{consulPrefix}/proxies/{loadBalancerName}/conf", cancellationToken))
+                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{loadBalancerName}/proxy-hash", cancellationToken) || 
+                    !await consul.KV.Exists($"{consulPrefix}/proxies/{loadBalancerName}/proxy-conf", cancellationToken))
                 {
                     publish = true; // Nothing published yet.
                 }
@@ -1421,8 +1421,8 @@ backend http:{httpRule.Name}
 
                     var operations = new List<KVTxnOp>()
                     {
-                        new KVTxnOp($"{consulPrefix}/proxies/{loadBalancerName}/hash", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(combinedHash) },
-                        new KVTxnOp($"{consulPrefix}/proxies/{loadBalancerName}/conf", KVTxnVerb.Set) { Value = zipBytes }
+                        new KVTxnOp($"{consulPrefix}/proxies/{loadBalancerName}/proxy-hash", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(combinedHash) },
+                        new KVTxnOp($"{consulPrefix}/proxies/{loadBalancerName}/proxy-conf", KVTxnVerb.Set) { Value = zipBytes }
                     };
 
                     await consul.KV.Txn(operations, cancellationToken);
@@ -1709,8 +1709,8 @@ listen tcp:port-{port}
 
             try
             {
-                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{proxyBridgeName}/hash", cancellationToken) ||
-                    !await consul.KV.Exists($"{consulPrefix}/proxies/{proxyBridgeName}/conf", cancellationToken))
+                if (!await consul.KV.Exists($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-hash", cancellationToken) ||
+                    !await consul.KV.Exists($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-conf", cancellationToken))
                 {
                     publish = true; // Nothing published yet.
                 }
@@ -1734,8 +1734,8 @@ listen tcp:port-{port}
 
                     var operations = new List<KVTxnOp>()
                     {
-                        new KVTxnOp($"{consulPrefix}/proxies/{proxyBridgeName}/hash", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(combinedHash) },
-                        new KVTxnOp($"{consulPrefix}/proxies/{proxyBridgeName}/conf", KVTxnVerb.Set) { Value = zipBytes }
+                        new KVTxnOp($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-hash", KVTxnVerb.Set) { Value = Encoding.UTF8.GetBytes(combinedHash) },
+                        new KVTxnOp($"{consulPrefix}/proxies/{proxyBridgeName}/proxy-conf", KVTxnVerb.Set) { Value = zipBytes }
                     };
 
                     await consul.KV.Txn(operations, cancellationToken);
