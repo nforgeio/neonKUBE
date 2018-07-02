@@ -41,7 +41,7 @@ namespace Neon.Hive
         /// These are individual containers that attached to the <see cref="HiveConst.PrivateNetwork"/>,
         /// forming an Elasticsearch cluster that is deployed behind the hive's <b>private</b> proxy.  A DNS entry
         /// is configured in the each Docker node's <b>hosts</b> file to reference the node's IP address as well 
-        /// as in the <b>/etc/neoncluster/env-host</b> file that may be mounted into Docker containers and services.
+        /// as in the <b>/etc/neon/env-host</b> file that may be mounted into Docker containers and services.
         /// </para>
         /// <para>
         /// HTTP traffic should be directed to the <see cref="HiveHostPorts.ProxyPrivateHttpLogEsData"/> port which

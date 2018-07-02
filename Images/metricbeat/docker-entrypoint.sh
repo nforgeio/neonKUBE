@@ -10,14 +10,14 @@ PATH=${PATH}:/
 
 # Load the Docker host node environment variables if present.
 
-if [ -f /etc/neoncluster/env-host ] ; then
-    . /etc/neoncluster/env-host
+if [ -f /etc/neon/env-host ] ; then
+    . /etc/neon/env-host
 fi
 
-# Load the [/etc/neoncluster/env-container] environment variables if present.
+# Load the [/etc/neon/env-container] environment variables if present.
 
-if [ -f /etc/neoncluster/env-container ] ; then
-    . /etc/neoncluster/env-container
+if [ -f /etc/neon/env-container ] ; then
+    . /etc/neon/env-container
 fi
 
 # Load the neonHIVE constants.

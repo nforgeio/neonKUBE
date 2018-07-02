@@ -597,7 +597,7 @@ namespace Neon.Hive
         /// </para>
         /// <list type="bullet">
         ///     <item>
-        ///     Simulating the presence of a mounted and executed <b>/etc/neoncluster/env-host</b> script.
+        ///     Simulating the presence of a mounted and executed <b>/etc/neon/env-host</b> script.
         ///     </item>
         ///     <item>
         ///     Emulated mounted Docker secrets via <paramref name="secrets"/> 
@@ -725,7 +725,7 @@ namespace Neon.Hive
         /// <note>
         /// This should only be called by services that are actually deployed in running 
         /// hive containers that have mapped in the hive node environment variables
-        /// and host DNS mappings from <b>/etc/neoncluster/env-host</b>.
+        /// and host DNS mappings from <b>/etc/neon/env-host</b>.
         /// </note>
         /// </summary>
         /// <param name="sshCredentialsSecret">Optionally identifies the Docker secret the hive SSH credentials.</param>
@@ -752,7 +752,7 @@ namespace Neon.Hive
 
             if (Environment.GetEnvironmentVariable("NEON_CLUSTER") == null)
             {
-                // It looks like the host node's [/etc/neoncluster/env-host] script was not
+                // It looks like the host node's [/etc/neon/env-host] script was not
                 // mapped into the current container/process and executed to initialize 
                 // important hive service environment variables.  We'll go ahead and
                 // set the important ones here.

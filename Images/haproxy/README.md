@@ -27,7 +27,7 @@ To use this, all you need to do is copy or mount the HAProxy configuration file 
 
 The container polls the configuration file for changes and cleanly restarts the proxy when any are detected.  Polling defaults to a 5 second interval but this can be controlled by passing the **CONFIG_INTERVAL** environment variable as the desired interval in seconds.  Pass 0 to disable polling.
 
-Note: This container will load environment variables from `/etc/neoncluster/env-host` and/or `/etc/neoncluster/env-container` if either of these files have been mounted to the container.
+Note: This container will load environment variables from `/etc/neon/env-host` and/or `/etc/neon/env-container` if either of these files have been mounted to the container.
 
 # Additional Packages
 

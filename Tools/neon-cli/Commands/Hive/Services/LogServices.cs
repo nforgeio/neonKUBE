@@ -312,8 +312,8 @@ namespace NeonCli
             //
             // We're mounting three volumes to the container:
             //
-            //      /etc/neoncluster/env-host         - Generic host specific environment variables
-            //      /etc/neoncluster/env-log-esdata   - Elasticsearch node host specific environment variables
+            //      /etc/neon/env-host         - Generic host specific environment variables
+            //      /etc/neon/env-log-esdata   - Elasticsearch node host specific environment variables
             //      neon-log-esdata-#                 - Persistent Elasticsearch data folder
 
             var esBootstrapNodes = new StringBuilder();
@@ -339,7 +339,7 @@ namespace NeonCli
                     "--name", containerName,
                     "--detach",
                     "--restart", "always",
-                    "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
+                    "--volume", "/etc/neon/env-host:/etc/neon/env-host:ro",
                     "--volume", $"{containerName}:/mnt/esdata",
                     "--env", $"ELASTICSEARCH_CLUSTER={hive.Definition.Datacenter}.{hive.Definition.Name}.neon-log-esdata",
                     "--env", $"ELASTICSEARCH_NODE_MASTER={isMaster}",
@@ -485,7 +485,7 @@ namespace NeonCli
                 "--network", HiveConst.PrivateNetwork,
                 "--constraint", $"node.role==manager",
                 "--publish", $"{HiveHostPorts.Kibana}:{NetworkPorts.Kibana}",
-                "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
+                "--mount", "type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true",
                 "--env", $"ELASTICSEARCH_URL=http://{HiveHostNames.LogEsData}:{HiveHostPorts.ProxyPrivateHttpLogEsData}",
                 "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
                 Program.ResolveDockerImage(hive.Definition.Log.KibanaImage));
@@ -512,7 +512,7 @@ namespace NeonCli
                 "--endpoint-mode", "vip",
                 "--network", $"{HiveConst.PrivateNetwork}",
                 "--constraint", $"node.role==manager",
-                "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
+                "--mount", "type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true",
                 "--log-driver", "json-file",    // Ensure that we don't log to the pipeline to avoid cascading events.
                 Program.ResolveDockerImage(hive.Definition.Log.CollectorImage));
 
@@ -572,7 +572,7 @@ namespace NeonCli
                         "--name", "neon-log-host",
                         "--detach",
                         "--restart", "always",
-                        "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
+                        "--volume", "/etc/neon/env-host:/etc/neon/env-host:ro",
                         "--volume", "/var/log:/hostfs/var/log",
                         "--network", "host",
                         "--log-driver", "json-file",        // Ensure that we don't log to the pipeline to avoid cascading events.
@@ -592,7 +592,7 @@ namespace NeonCli
                         "--detach",
                         "--net", "host",
                         "--restart", "always",
-                        "--volume", "/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro",
+                        "--volume", "/etc/neon/env-host:/etc/neon/env-host:ro",
                         "--volume", "/proc:/hostfs/proc:ro",
                         "--volume", "/:/hostfs:ro",
                         "--log-driver", "json-file",

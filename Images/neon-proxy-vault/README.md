@@ -14,7 +14,7 @@ This image derives from **neoncloud/haproxy** but deploys its own **haproxy.cfg*
 
 The load balancer service listens internally on the standard Vault **port 8200** which should be published to the Docker ingress network on port `NeonHostPorts.ProxyVault` (**5003**) to make the service available to Docker hosts.
 
-Note that this image will load environment variables from `/etc/neoncluster/env-host` and `/etc/neoncluster/env-container` if either of these files have been volume mapped into the container.
+Note that this image will load environment variables from `/etc/neon/env-host` and `/etc/neon/env-container` if either of these files have been volume mapped into the container.
 
 # Environment Variables
 

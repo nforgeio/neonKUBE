@@ -357,7 +357,7 @@ export HiveHostnames_RegistryCache=neon-registry-cache.cluster
 # These are individual containers that attached to the [neon-private] network,
 # forming an Elasticsearch cluster that is deployed behind the hive's [private] proxy.  A DNS entry
 # is configured in the each Docker node's [hosts] file to reference the node's IP address as well 
-# as in the [/etc/neoncluster/env-host] file that may be mounted into Docker containers and services.
+# as in the [/etc/neon/env-host] file that may be mounted into Docker containers and services.
 #
 # HTTP traffic should be directed to the [HiveHostPorts_ProxyPrivateHttpLogEsData] port which will be
 # routed to the [neon-proxy-private] service via the Docker ingress network.

@@ -22,7 +22,7 @@
 # The script returns 0 if the endpoint is ready, non-zero if it's unavailable, 
 # sealed, or is not the active leader.
 #
-# NOTE: This relies on [/etc/neoncluster/env-host] being mounted and that it
+# NOTE: This relies on [/etc/neon/env-host] being mounted and that it
 #       adds the vault instance host definitions to the container's [/etc/hosts].
 
 set -e

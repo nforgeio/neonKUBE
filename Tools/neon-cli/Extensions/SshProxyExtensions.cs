@@ -244,7 +244,7 @@ namespace NeonCli
                 }
 
                 // The blanks below are just enough so that the "=" sign lines up
-                // with the summary output from [cluster.conf.sh].
+                // with the summary output from [hive.conf.sh].
 
                 if (sbManagerNodesSummary.Length == 0)
                 {
@@ -410,8 +410,8 @@ namespace NeonCli
 
             // Set the variables.
 
-            preprocessReader.Set("load-cluster-config", HiveHostFolders.Config + "/cluster.conf.sh --echo-summary");
-            preprocessReader.Set("load-cluster-config-quiet", HiveHostFolders.Config + "/cluster.conf.sh");
+            preprocessReader.Set("load-cluster-config", HiveHostFolders.Config + "/hive.conf.sh --echo-summary");
+            preprocessReader.Set("load-cluster-config-quiet", HiveHostFolders.Config + "/hive.conf.sh");
 
             SetBashVariable(preprocessReader, "cluster.provisioner", hiveDefinition.Provisioner);
             SetBashVariable(preprocessReader, "cluster.rootuser", Program.MachineUsername);

@@ -1,6 +1,6 @@
 #!/bin/bash
 #------------------------------------------------------------------------------
-# FILE:         cluster.conf.sh
+# FILE:         hive.conf.sh
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 # REQUIRES:     
@@ -18,7 +18,7 @@
 # This script also loads and exports environment variables from [/etc/environment]
 # so they will be available to scripts invoked remotely by [neon-cli].
 #
-# Usage: cluster.conf.sh [ --echo-summary ]
+# Usage: hive.conf.sh [ --echo-summary ]
 
 if [ "${1-none}" == "--echo-summary" ] ; then
     summary=true

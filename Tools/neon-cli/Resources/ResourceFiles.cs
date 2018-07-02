@@ -256,7 +256,7 @@ namespace NeonCli
                             new Folder("conf",
                                 files: new List<File>()
                                 {
-                                    new File("cluster.conf.sh", hasVariables: true),
+                                    new File("hive.conf.sh", hasVariables: true),
                                 }),
                             new Folder("setup",
                                 files: new List<File>()

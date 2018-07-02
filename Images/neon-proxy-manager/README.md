@@ -133,7 +133,7 @@ This service also requires Consul read/write access to `neon/service/neon-proxy-
 docker service create \
     --name neon-proxy-manager \
     --detach=false \
-    --mount type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true \
+    --mount type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
     --env VAULT_CREDENTIALS=neon-proxy-manager-credentials \
     --env LOG_LEVEL=INFO \

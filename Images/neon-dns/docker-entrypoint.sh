@@ -9,8 +9,8 @@
 
 # Load the Docker host node environment variables if present.
 
-if [ -f /etc/neoncluster/env-host ] ; then
-    . /etc/neoncluster/env-host
+if [ -f /etc/neon/env-host ] ; then
+    . /etc/neon/env-host
 fi
 
 # Launch the service.

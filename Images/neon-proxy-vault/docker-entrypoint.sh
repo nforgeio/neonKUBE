@@ -16,22 +16,22 @@ PATH=${PATH}:/
 
 # Load the Docker host node environment variables if present.
 
-if [ -f /etc/neoncluster/env-host ] ; then
-    . /etc/neoncluster/env-host
+if [ -f /etc/neon/env-host ] ; then
+    . /etc/neon/env-host
 else
 
     # Initialize NEON_NODE_IP to the loopback address if host environment
     # variables weren't mapped.  We're doing this so the SYSLOG log line 
-    # below will be valid when event when no [/etc/neoncluster/env-host] 
+    # below will be valid when event when no [/etc/neon/env-host] 
     # file is mounted.
 
     NEON_NODE_IP=127.0.0.1
 fi
 
-# Load the [/etc/neoncluster/env-container] environment variables if present.
+# Load the [/etc/neon/env-container] environment variables if present.
 
-if [ -f /etc/neoncluster/env-container ] ; then
-    . /etc/neoncluster/env-container
+if [ -f /etc/neon/env-container ] ; then
+    . /etc/neon/env-container
 fi
 
 # Load the neonHIVE definitions.

@@ -48,7 +48,7 @@ docker service create \
     --endpoint-mode vip \
     --network neon-private \
     --constraint node.role==manager \
-    --mount type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true \
+    --mount type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true \
     --env SHARD_COUNT=5 \
     --env REPLICA_COUNT=0 \
     --log-driver json-file \

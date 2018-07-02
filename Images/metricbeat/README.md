@@ -58,7 +58,7 @@ docker run \
     --detatch \
     --net host \
     --restart always \
-    --volume /etc/neoncluster/env-host:/etc/neoncluster/env-host:ro \
+    --volume /etc/neon/env-host:/etc/neon/env-host:ro \
     --volume /proc:/hostfs/proc:ro \
     --volume /:/hostfs:ro \
     --log-driver json-file \
@@ -67,7 +67,7 @@ docker run \
 # Install the dashboards.
     
 docker run --rm --name neon-log-metricbeat-dash \
-    --volume=/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro \
+    --volume=/etc/neon/env-host:/etc/neon/env-host:ro \
     neoncluster/metricbeat import-dashboards
 ````
 &nbsp;
@@ -90,7 +90,7 @@ docker run \
     --detatch \
     --net host \
     --restart always \
-    --volume /etc/neoncluster/env-host:/etc/neoncluster/env-host:ro \
+    --volume /etc/neon/env-host:/etc/neon/env-host:ro \
     --volume /proc:/hostfs/proc:ro \
     --volume /:/hostfs:ro \
     --log-driver json-file \
@@ -100,7 +100,7 @@ docker run \
 and then run this command on a single node to upgrade the dashboards:
 ````
 docker run --rm --name neon-log-metricbeat-dash \
-    --volume=/etc/neoncluster/env-host:/etc/neoncluster/env-host:ro \
+    --volume=/etc/neon/env-host:/etc/neon/env-host:ro \
     neoncluster/metricbeat import-dashboards
 ````
 &nbsp;

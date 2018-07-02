@@ -8,8 +8,8 @@
 # ElasticSearch image.  This image includes:
 #
 #   * A custom entry point script that loads environment variables and other
-#     settings via the mounted [/etc/neoncluster/env-host] and
-#     [/etc/neoncluster/env-host] files.
+#     settings via the mounted [/etc/neon/env-host] and
+#     [/etc/neon/env-host] files.
 #
 #   * Elasticsearch X-PACK plugins.
 #
@@ -46,7 +46,7 @@ MAINTAINER  jeff@lilltek.com
 ARG         VERSION
 
 # Overwrite the default Elasticsearch entrypoint to load the Docker host environment 
-# variables from [/etc/neoncluster/node-env] so they can be referenced by the Elasticsearch
+# variables from [/etc/neon/node-env] so they can be referenced by the Elasticsearch
 # configuration file.
 
 # Install Elasticsearch to: /usr/share/elasticsearch

@@ -852,7 +852,7 @@ ff02::2         ip6-allrouters
         }
 
         /// <summary>
-        /// Generates and uploads the <b>/etc/neoncluster/env-host</b> file for a node.
+        /// Generates and uploads the <b>/etc/neon/env-host</b> file for a node.
         /// </summary>
         /// <param name="node">The target node.</param>
         private void UploadHostEnvFile(SshProxy<NodeDefinition> node)
@@ -867,16 +867,16 @@ ff02::2         ip6-allrouters
 
             if (!node.Metadata.IsPet)
             {
-                // Upload the full [/etc/neoncluster/env-host] file for Docker Swarm nodes.
+                // Upload the full [/etc/neon/env-host] file for Docker Swarm nodes.
 
                 sbEnvHost.AppendLine(
 $@"#------------------------------------------------------------------------------
-# FILE:         /etc/neoncluster/env-host
+# FILE:         /etc/neon/env-host
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
 # This script can be mounted into containers that required extended knowledge
-# about the hive and host node.  This will be mounted to [/etc/neoncluster/env-host]
+# about the hive and host node.  This will be mounted to [/etc/neon/env-host]
 # such that the container entrypoint script can execute it.
 
 # Define the hive and Docker host related environment variables.
@@ -899,16 +899,16 @@ export CONSUL_HTTP_FULLADDR=http://{HiveHostNames.Consul}:{hive.Definition.Consu
             }
             else
             {
-                // Upload a more limited [/etc/neoncluster/env-host] file for external nodes.
+                // Upload a more limited [/etc/neon/env-host] file for external nodes.
 
                 sbEnvHost.AppendLine(
 $@"#------------------------------------------------------------------------------
-# FILE:         /etc/neoncluster/env-host
+# FILE:         /etc/neon/env-host
 # CONTRIBUTOR:  Jeff Lill
 # COPYRIGHT:    Copyright (c) 2016-2018 by neonFORGE, LLC.  All rights reserved.
 #
 # This script can be mounted into containers that required extended knowledge
-# about the hive and host node.  This will be mounted to [/etc/neoncluster/env-host]
+# about the hive and host node.  This will be mounted to [/etc/neon/env-host]
 # such that the container entrypoint script can execute it.
 
 # Define the hive and Docker host related environment variables.
@@ -2778,7 +2778,7 @@ systemctl start neon-volume-plugin
                         "--endpoint-mode", "vip",
                         "--network", HiveConst.PrivateNetwork,
                         options,
-                        "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
+                        "--mount", "type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true",
                         "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                         "--env", $"LOG_LEVEL=INFO",
                         "--restart-delay", hive.Definition.Docker.RestartDelay,
@@ -2811,7 +2811,7 @@ systemctl start neon-volume-plugin
                                     "--name", "neon-proxy-vault",
                                     "--detach",
                                     "--publish", $"{HiveHostPorts.ProxyVault}:{NetworkPorts.Vault}",
-                                    "--mount", "type=bind,source=/etc/neoncluster/env-host,destination=/etc/neoncluster/env-host,readonly=true",
+                                    "--mount", "type=bind,source=/etc/neon/env-host,destination=/etc/neon/env-host,readonly=true",
                                     "--env", $"VAULT_ENDPOINTS={sbEndpoints}",
                                     "--env", $"LOG_LEVEL=INFO",
                                     "--restart", "always",

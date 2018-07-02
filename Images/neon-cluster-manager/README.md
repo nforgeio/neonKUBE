@@ -83,7 +83,7 @@ You'll need to restart the containers to pick up any changes.
 docker service create \
     --name neon-cluster-manager \
     --detach=false \
-    --mount type=bind,src=/etc/neoncluster/env-host,dst=/etc/neoncluster/env-host,readonly=true \
+    --mount type=bind,src=/etc/neon/env-host,dst=/etc/neon/env-host,readonly=true \
     --mount type=bind,src=/etc/ssl/certs,dst=/etc/ssl/certs,readonly=true \
     --mount type=bind,src=/var/run/docker.sock,dst=/var/run/docker.sock \
     --env LOG_LEVEL=INFO \

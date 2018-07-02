@@ -39,7 +39,7 @@ namespace Neon.Hive
         /// <summary>
         /// Path to the neonHIVE configuration directory.
         /// </summary>
-        public const string Config = "/etc/neoncluster";
+        public const string Config = "/etc/neon";
 
         /// <summary>
         /// Path to the neonHIVE secrets directory.
