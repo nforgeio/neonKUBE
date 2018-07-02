@@ -54,35 +54,35 @@ namespace Neon.Hive
         /// <summary>
         /// Path to the neonHIVE setup state directory.
         /// </summary>
-        public const string State = "/var/local/neoncluster";
+        public const string State = "/var/local/neon";
 
         /// <summary>
         /// Path to the neonHIVE setup scripts directory.
         /// </summary>
-        public const string Setup = "/opt/neonsetup";
+        public const string Setup = "/lib/neon/setup";
 
         /// <summary>
         /// Path to the neonHIVE tools directory.
         /// </summary>
-        public const string Tools = "/opt/neontools";
+        public const string Tools = "/lib/neon/tools";
 
         /// <summary>
         /// Path to the neonHIVE management scripts directory.
         /// </summary>
-        public const string Scripts = "/opt/neonscripts";
+        public const string Scripts = "/lib/neon/scripts";
 
         /// <summary>
         /// The folder where hive tools can upload, unpack, and then
         /// execute <see cref="CommandBundle"/>s as well as store temporary
         /// command output files.
         /// </summary>
-        public const string Exec = "/var/lib/neoncluster/exec";
+        public const string Exec = "/var/lib/neon/exec";
 
         /// <summary>
         /// Root folder on the local tmpfs (shared memory) folder where 
         /// neonHIVE will persist misc temporary files.
         /// </summary>
-        public const string ClusterTmpfs = "/dev/shm/neoncluster";
+        public const string ClusterTmpfs = "/dev/shm/neon";
 
         /// <summary>
         /// The folder where Docker writes secrets provisioned to a container.

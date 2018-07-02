@@ -541,7 +541,7 @@ cat <<EOF > /usr/local/bin/neon-cleaner
 #      sensitive information such as credentials, etc.
 #
 #   2. Purge temporary Neon command files uploaded by SshProxy.  These
-#      are located within folder beneath [/dev/shm/neoncluster/cmd].  Although
+#      are located within folder beneath [/dev/shm/neon/cmd].  Although
 #      SshProxy removes these files after commands finish executing, it
 #      is possible to see these accumulate if the session was interrupted.
 #      We'll purge folders and files older than one day.
@@ -576,9 +576,9 @@ do
 
     # Clean the [SshProxy] temporary command files.
 
-    if [ -d /dev/shm/neoncluster/cmd ] ; then
-        echo "[INFO] Cleaning: /dev/shm/neoncluster/cmd"
-        find /dev/shm/neoncluster/cmd ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
+    if [ -d /dev/shm/neon/cmd ] ; then
+        echo "[INFO] Cleaning: /dev/shm/neon/cmd"
+        find /dev/shm/neon/cmd ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
     fi
 
     # Clean the [SshProxy] temporary upload files.
@@ -597,9 +597,9 @@ do
 
     # Clean the [SshProxy] temporary exec files.
 
-    if [ -d /var/lib/neoncluster/exec ] ; then
-        echo "[INFO] Cleaning: /var/lib/neoncluster/exec"
-        find /var/lib/neoncluster/exec ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
+    if [ -d /var/lib/neon/exec ] ; then
+        echo "[INFO] Cleaning: /var/lib/neon/exec"
+        find /var/lib/neon/exec ! -name . -type d -mtime +0 -exec rm -rf {} \; -prune
     fi
 
     # Sleep for a while before trying again.

@@ -96,7 +96,7 @@ namespace NeonCli
             // with 1.2.98, we're also allow for tracking hive updates and perhaps
             // other types of operations in the future.
             //
-            // We need to create a new [/var/local/neoncluster/setup] folder and relocate
+            // We need to create a new [/var/local/neon/setup] folder and relocate
             // the setup idempotent files names like [finished-*] there, and then
             // strip off the "finished-" prefix because we're no longer including that.
 
