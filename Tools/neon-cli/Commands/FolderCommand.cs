@@ -103,7 +103,7 @@ OPTIONS:
 
                 case "temp":
 
-                    path = Program.ClusterTempFolder;
+                    path = Program.HiveTempFolder;
                     break;
 
                 case "vpn":

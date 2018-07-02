@@ -138,7 +138,7 @@ namespace Neon.Hive
             }
             else
             {
-                return Path.Combine(HiveHelper.GetRootFolder(), "vpn");
+                return Path.Combine(HiveHelper.GetHiveUserFolder(), "vpn");
             }
         }
 

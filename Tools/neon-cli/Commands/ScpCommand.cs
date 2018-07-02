@@ -172,7 +172,7 @@ OPTIONS:
                         hiveLogin.Save();
                     }
 
-                    var keyPath = Path.Combine(Program.ClusterTempFolder, $"{hiveLogin.HiveName}.key");
+                    var keyPath = Path.Combine(Program.HiveTempFolder, $"{hiveLogin.HiveName}.key");
 
                     File.WriteAllText(keyPath, hiveLogin.SshClientKey.PrivatePPK);
 

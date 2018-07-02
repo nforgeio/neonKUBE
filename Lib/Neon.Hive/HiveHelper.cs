@@ -102,7 +102,8 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Returns the path the folder holding the user specific hive files.
+        /// Returns the path the folder holding the user specific hive files such
+        /// as hive logins, Ansible passwords, etc.
         /// </summary>
         /// <param name="ignoreNeonToolContainerVar">
         /// Optionally ignore the presence of a <b>NEON_TOOL_CONTAINER</b> environment 
@@ -116,7 +117,7 @@ namespace Neon.Hive
         /// at <b>/neoncluster</b>.  Otherwise, we'll return a suitable path within the 
         /// current user's home directory.
         /// </remarks>
-        public static string GetRootFolder(bool ignoreNeonToolContainerVar = false)
+        public static string GetHiveUserFolder(bool ignoreNeonToolContainerVar = false)
         {
             if (!ignoreNeonToolContainerVar && InToolContainer)
             {
@@ -157,7 +158,7 @@ namespace Neon.Hive
         /// <returns>The folder path.</returns>
         public static string GetRunFolder()
         {
-            var path = Path.Combine(GetRootFolder(), "run");
+            var path = Path.Combine(GetHiveUserFolder(), "run");
 
             Directory.CreateDirectory(path);
 
@@ -183,7 +184,7 @@ namespace Neon.Hive
         /// </remarks>
         public static string GetLoginFolder()
         {
-            var path = Path.Combine(GetRootFolder(), "logins");
+            var path = Path.Combine(GetHiveUserFolder(), "logins");
 
             Directory.CreateDirectory(path);
 
@@ -196,7 +197,7 @@ namespace Neon.Hive
         /// <returns>The folder path.</returns>
         public static string GetAnsibleRolesFolder()
         {
-            var path = Path.Combine(GetRootFolder(), "ansible", "roles");
+            var path = Path.Combine(GetHiveUserFolder(), "ansible", "roles");
 
             Directory.CreateDirectory(path);
 
@@ -209,7 +210,7 @@ namespace Neon.Hive
         /// <returns>The folder path.</returns>
         public static string GetAnsiblePasswordsFolder()
         {
-            var path = Path.Combine(GetRootFolder(), "ansible", "passwords");
+            var path = Path.Combine(GetHiveUserFolder(), "ansible", "passwords");
 
             Directory.CreateDirectory(path);
 
@@ -245,7 +246,7 @@ namespace Neon.Hive
         /// <returns>The path to the nenCLUSTER setup folder.</returns>
         public static string GetVmTemplatesFolder()
         {
-            var path = Path.Combine(GetRootFolder(), "vm-templates");
+            var path = Path.Combine(GetHiveUserFolder(), "vm-templates");
 
             Directory.CreateDirectory(path);
 
@@ -546,7 +547,7 @@ namespace Neon.Hive
         /// Indicates whether the application is running outside of a Docker container
         /// but we're going to try to simulate the environment such that the application
         /// believe it is running in a container within a Docker hive.  See 
-        /// <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> for more information.
+        /// <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/> for more information.
         /// </summary>
         public static bool IsConnected { get; private set; } = false;
 
@@ -636,7 +637,7 @@ namespace Neon.Hive
         /// this.
         /// </note>
         /// </remarks>
-        public static HiveProxy OpenRemoteCluster(DebugSecrets secrets = null, DebugConfigs configs = null, string loginPath = null)
+        public static HiveProxy OpenHiveRemote(DebugSecrets secrets = null, DebugConfigs configs = null, string loginPath = null)
         {
             if (IsConnected)
             {
@@ -720,7 +721,9 @@ namespace Neon.Hive
 
         /// <summary>
         /// <para>
-        /// Connects the current application to the hive.
+        /// Connects the current application to the hive.  This only works for applications
+        /// actually running in the hive.  Use <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/>
+        /// when running applications remotely.
         /// </para>
         /// <note>
         /// This should only be called by services that are actually deployed in running 
@@ -757,7 +760,7 @@ namespace Neon.Hive
                 // important hive service environment variables.  We'll go ahead and
                 // set the important ones here.
 
-                Environment.SetEnvironmentVariable("VAULT_ADDR", $"https://neon-vault.cluster:{HiveHostPorts.ProxyVault}");
+                Environment.SetEnvironmentVariable("VAULT_ADDR", $"https://neon-vault.hive:{HiveHostPorts.ProxyVault}");
                 Environment.SetEnvironmentVariable("CONSUL_HTTP_ADDR", $"neon-consul.cluster:{NetworkPorts.Consul}");
                 Environment.SetEnvironmentVariable("CONSUL_HTTP_FULLADDR", $"http://{HiveHostNames.Consul}:{NetworkPorts.Consul}");
             }
@@ -812,6 +815,8 @@ namespace Neon.Hive
 
                         return proxy;
                     }));
+
+            log.LogInfo(() => $"Connected to [{definition.Name}].");
 
             return hive;
         }
@@ -890,7 +895,7 @@ namespace Neon.Hive
         }
 
         /// <summary>
-        /// Resets any temporary configurations made by <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/>
+        /// Resets any temporary configurations made by <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/>
         /// such as the modifications to the DNS resolver <b>hosts</b> file.  This should be called just
         /// before the application exits.
         /// </summary>
@@ -976,7 +981,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <para>
         /// This method can be used to retrieve a secret provisioned to a service via the
-        /// Docker secrets feature or a secret provided to <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> 
+        /// Docker secrets feature or a secret provided to <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/> 
         /// when we're emulating running the application as a hive container.
         /// </para>
         /// <para>
@@ -1028,7 +1033,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <para>
         /// This method can be used to retrieve a secret provisioned to a service via the
-        /// Docker secrets feature or a secret provided to <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> 
+        /// Docker secrets feature or a secret provided to <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/> 
         /// when we're emulating running the application as a hive container.
         /// </para>
         /// <para>
@@ -1066,7 +1071,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <para>
         /// This method can be used to retrieve a config provisioned to a service via the
-        /// Docker configs feature or a config provided to <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> 
+        /// Docker configs feature or a config provided to <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/> 
         /// when we're emulating running the application as a hive container.
         /// </para>
         /// <para>
@@ -1117,7 +1122,7 @@ namespace Neon.Hive
         /// <remarks>
         /// <para>
         /// This method can be used to retrieve a config provisioned to a container via the
-        /// Docker configs feature or a config provided to <see cref="OpenRemoteCluster(DebugSecrets, DebugConfigs, string)"/> 
+        /// Docker configs feature or a config provided to <see cref="OpenHiveRemote(DebugSecrets, DebugConfigs, string)"/> 
         /// when we're emulating running the application as a hive container.
         /// </para>
         /// <para>

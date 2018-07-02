@@ -98,7 +98,7 @@ namespace NeonClusterManager
                             }
                         });
 
-                    HiveHelper.OpenRemoteCluster(secrets);
+                    HiveHelper.OpenHiveRemote(secrets);
                 }
                 else
                 {
@@ -319,7 +319,7 @@ namespace NeonClusterManager
             foreach (var managerNode in clusterNodes.Where(n => n.Role == "manager")
                 .OrderBy(n => n.Hostname))
             {
-                var vaultHostname = $"{managerNode.Hostname}.neon-vault.cluster";
+                var vaultHostname = $"{managerNode.Hostname}.neon-vault.hive";
 
                 vaultUris.Add($"https://{vaultHostname}:{NetworkPorts.Vault}");
 

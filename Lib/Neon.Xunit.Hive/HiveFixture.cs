@@ -405,7 +405,7 @@ namespace Neon.Xunit.Hive
 
             // Open a proxy to the hive.
 
-            hive = HiveHelper.OpenRemoteCluster(loginPath: loginPath);
+            hive = HiveHelper.OpenHiveRemote(loginPath: loginPath);
 
             // Ensure that the target hive allows unit testing.
 

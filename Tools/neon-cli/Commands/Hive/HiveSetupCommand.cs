@@ -632,8 +632,8 @@ OPTIONS:
                         return;
                     }
 
-                    var pemKeyPath = Path.Combine(Program.ClusterTempFolder, Guid.NewGuid().ToString("D"));
-                    var ppkKeyPath = Path.Combine(Program.ClusterTempFolder, Guid.NewGuid().ToString("D"));
+                    var pemKeyPath = Path.Combine(Program.HiveTempFolder, Guid.NewGuid().ToString("D"));
+                    var ppkKeyPath = Path.Combine(Program.HiveTempFolder, Guid.NewGuid().ToString("D"));
 
                     try
                     {
@@ -964,7 +964,7 @@ export NEON_APT_PROXY={HiveHelper.GetPackageProxyReferences(hive.Definition)}
             consulConf.Add("leave_on_terminate", false);
             consulConf.Add("skip_leave_on_interrupt", true);
             consulConf.Add("disable_remote_exec", true);
-            consulConf.Add("domain", "cluster");
+            consulConf.Add("domain", "hive");
 
             var recursors = new JArray();
 
@@ -3273,8 +3273,8 @@ chmod 666 /run/ssh-key*
 
             if (NeonHelper.IsWindows)
             {
-                var pemKeyPath = Path.Combine(Program.ClusterTempFolder, Guid.NewGuid().ToString("D"));
-                var ppkKeyPath = Path.Combine(Program.ClusterTempFolder, Guid.NewGuid().ToString("D"));
+                var pemKeyPath = Path.Combine(Program.HiveTempFolder, Guid.NewGuid().ToString("D"));
+                var ppkKeyPath = Path.Combine(Program.HiveTempFolder, Guid.NewGuid().ToString("D"));
 
                 try
                 {

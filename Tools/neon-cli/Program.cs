@@ -196,7 +196,7 @@ Docker issues are corrected.
             // Configure the encrypted user-specific application data folder and initialize
             // the subfolders.
 
-            HiveRootFolder  = HiveHelper.GetRootFolder();
+            HiveRootFolder  = HiveHelper.GetHiveUserFolder();
             HiveLoginFolder = HiveHelper.GetLoginFolder();
             HiveSetupFolder = HiveHelper.GetVmTemplatesFolder();
             CurrentHivePath = HiveHelper.CurrentPath;
@@ -204,10 +204,10 @@ Docker issues are corrected.
             // We're going to special case the temp folder and locate this within the [/dev/shm] 
             // tmpfs based RAM drive if we're running in the tool container.
 
-            ClusterTempFolder  = HiveHelper.InToolContainer ? "/dev/shm/temp" : Path.Combine(HiveRootFolder, "temp");
+            HiveTempFolder  = HiveHelper.InToolContainer ? "/dev/shm/temp" : Path.Combine(HiveRootFolder, "temp");
 
             Directory.CreateDirectory(HiveLoginFolder);
-            Directory.CreateDirectory(ClusterTempFolder);
+            Directory.CreateDirectory(HiveTempFolder);
 
             // Process the command line.
 
@@ -410,7 +410,7 @@ Docker issues are corrected.
 
                     using (var shim = new DockerShim(CommandLine))
                     {
-                        var secretsRoot = HiveHelper.GetRootFolder(ignoreNeonToolContainerVar: true);
+                        var secretsRoot = HiveHelper.GetHiveUserFolder(ignoreNeonToolContainerVar: true);
 
                         HiveLogin = GetHiveLogin();
 
@@ -1057,7 +1057,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
         /// <summary>
         /// Returns the path to the (hopefully) encrypted or tmpfs based temporary folder.
         /// </summary>
-        public static string ClusterTempFolder { get; private set; }
+        public static string HiveTempFolder { get; private set; }
 
         /// <summary>
         /// Returns the path to the hive setup folder.
@@ -1136,7 +1136,7 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
                 throw new Exception($"Hive login [{hiveLogin.LoginName}] does not reference a fully configured hive.  Use the [neon hive setup...] command to complete hive configuration.");
             }
 
-            HiveHelper.OpenRemoteCluster(loginPath: HiveHelper.GetLoginPath(HiveConst.RootUser, Program.HiveLogin.HiveName));
+            HiveHelper.OpenHiveRemote(loginPath: HiveHelper.GetLoginPath(HiveConst.RootUser, Program.HiveLogin.HiveName));
 
             // Note that we never try to connect the VPN from within the
             // [neon-cli] container.  Its expected that the VPN is always
@@ -1332,8 +1332,8 @@ $@"*** ERROR: Cannot pull: neoncluster/neon-cli:{imageTag}
             }
 
             var programPath = "winscp.com";
-            var pemKeyPath  = Path.Combine(Program.ClusterTempFolder, Guid.NewGuid().ToString("D"));
-            var ppkKeyPath  = Path.Combine(Program.ClusterTempFolder, Guid.NewGuid().ToString("D"));
+            var pemKeyPath  = Path.Combine(Program.HiveTempFolder, Guid.NewGuid().ToString("D"));
+            var ppkKeyPath  = Path.Combine(Program.HiveTempFolder, Guid.NewGuid().ToString("D"));
 
             try
             {

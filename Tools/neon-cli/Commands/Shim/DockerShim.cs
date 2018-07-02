@@ -50,7 +50,7 @@ namespace NeonCli
             // Note that we're also generating a unique folder name so that multiple commands
             // may be running in parallel.
 
-            ShimExternalFolder = Path.Combine(Program.ClusterTempFolder, $"shim-{Guid.NewGuid().ToString("D")}");
+            ShimExternalFolder = Path.Combine(Program.HiveTempFolder, $"shim-{Guid.NewGuid().ToString("D")}");
 
             Directory.CreateDirectory(ShimExternalFolder);
 

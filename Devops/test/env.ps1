@@ -53,7 +53,7 @@ unix-text --recursive $env:CLUSTER_SETUP_PATH\*.yaml
 
 # Ensure that the setup log folder exists and is cleared.
 
-$env:CLUSTER_LOG_FOLDER = "D:\VM\cluster-logs\$env:CLUSTER"
+$env:CLUSTER_LOG_FOLDER = "C:\hive-logs\$env:CLUSTER"
 
 if (Test-Path $env:CLUSTER_LOG_FOLDER)
 {

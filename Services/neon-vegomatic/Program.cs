@@ -59,7 +59,7 @@ namespace NeonVegomatic
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    HiveHelper.OpenRemoteCluster();
+                    HiveHelper.OpenHiveRemote();
                 }
                 else
                 {

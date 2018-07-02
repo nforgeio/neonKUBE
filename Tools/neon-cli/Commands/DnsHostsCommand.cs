@@ -111,7 +111,7 @@ The YAML example below defines [my-managers] using the [managers] group:
       check: true
 
 Note that [neon-dns-mon] automatically creates DNS entries for all hive 
-host groups if they don't already exist (named like: [GROUPNAME.cluster]).
+host groups if they don't already exist (named like: [GROUPNAME.hive]).
 ";
 
         private HiveLogin    hiveLogin;

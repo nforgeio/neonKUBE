@@ -450,7 +450,7 @@ Server Requirements:
             }
             else
             {
-                tempCaFolder = Path.Combine(Program.ClusterTempFolder, Guid.NewGuid().ToString("D"));
+                tempCaFolder = Path.Combine(Program.HiveTempFolder, Guid.NewGuid().ToString("D"));
             }
 
             try

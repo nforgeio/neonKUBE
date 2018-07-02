@@ -91,7 +91,7 @@ namespace NeonDnsMon
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    HiveHelper.OpenRemoteCluster();
+                    HiveHelper.OpenHiveRemote();
                 }
                 else
                 {
@@ -185,11 +185,11 @@ namespace NeonDnsMon
 
                     log.LogDebug(() => $"Hive has [{hiveDefinition.NodeDefinitions.Count}] nodes.");
 
-                    // Add the [NAME.cluster] definitions for each cluster node.
+                    // Add the [NAME.hive] definitions for each cluster node.
 
                     foreach (var node in hiveDefinition.Nodes)
                     {
-                        hostAddresses.Add($"{node.Name}.cluster", IPAddress.Parse(node.PrivateAddress));
+                        hostAddresses.Add($"{node.Name}.hive", IPAddress.Parse(node.PrivateAddress));
                     }
 
                     // Read the DNS entry definitions from Consul and add the appropriate 

@@ -23,7 +23,7 @@ namespace Neon.Hive
     /// </para>
     /// <para>
     /// By convention, built-in DNS hostnames will be prefixed by <b>neon-*</b> and
-    /// will have the <b>.cluster</b> top-level domain.
+    /// will have the <b>.hive</b> top-level domain.
     /// </para>
     /// </remarks>
     public static class HiveHostNames
@@ -31,7 +31,7 @@ namespace Neon.Hive
         /// <summary>
         /// The base DNS name for the internal hive Docker registry cache instances deployed on the manager nodes.
         /// </summary>
-        public const string RegistryCache = "neon-registry-cache.cluster";
+        public const string RegistryCache = "neon-registry-cache.hive";
 
         /// <summary>
         /// The DNS name for the Elasticsearch containers used to store the hive logs.
@@ -48,12 +48,12 @@ namespace Neon.Hive
         /// will be routed to the <b>neon-proxy-private</b> service via the Docker ingress network.
         /// </para>
         /// </remarks>
-        public const string LogEsData = "neon-log-esdata.cluster";
+        public const string LogEsData = "neon-log-esdata.hive";
 
         /// <summary>
         /// The DNS name used to access the hive's HashiCorp Consul service.
         /// </summary>
-        public const string Consul = "neon-consul.cluster";
+        public const string Consul = "neon-consul.hive";
 
         /// <summary>
         /// The DNS name for the hive's HashiCorp Vault service.
@@ -65,10 +65,10 @@ namespace Neon.Hive
         /// </para>
         /// <para>
         /// This is also the base name for the manager node specific endpoints like
-        /// <b><i>manager-name</i>.neon-vault.cluster</b>, which are used by <b>neon-proxy-vault</b>
+        /// <b><i>manager-name</i>.neon-vault.hive</b>, which are used by <b>neon-proxy-vault</b>
         /// to check instance health.
         /// </para>
         /// </remarks>
-        public const string Vault = "neon-vault.cluster";
+        public const string Vault = "neon-vault.hive";
     }
 }

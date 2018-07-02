@@ -51,7 +51,7 @@ namespace CouchbaseTest
 
                 if (NeonHelper.IsDevWorkstation)
                 {
-                    HiveHelper.OpenRemoteCluster();
+                    HiveHelper.OpenHiveRemote();
                 }
                 else
                 {
